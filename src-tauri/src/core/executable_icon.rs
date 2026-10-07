@@ -297,6 +297,6 @@ pub fn shortcut_icon_at(executable: &Path, directory: &Path) -> io::Result<PathB
     cache_png(directory, &png)
 }
 pub fn shortcut_icon(executable: &Path) -> Option<PathBuf> {
-    let directory = dirs::config_dir()?.join("peligames/icons/executables");
+    let directory = super::paths::app_root().ok()?.join("icons/executables");
     shortcut_icon_at(executable, &directory).ok()
 }

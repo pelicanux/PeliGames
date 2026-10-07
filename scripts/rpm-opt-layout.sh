@@ -11,13 +11,13 @@ if [[ -n "${signature//[[:space:]]/}" ]]; then
   echo 'Finalize o layout /opt antes de assinar o RPM.' >&2
   exit 1
 fi
-work=$(mktemp -d /tmp/dlssnr-rpm-layout-XXXXXX)
+work=$(mktemp -d /tmp/peligames-rpm-layout-XXXXXX)
 trap 'rm -rf "$work"' EXIT
 mkdir -p "$work/payload" "$work/SPECS" "$work/RPMS"
 (cd "$work/payload"; rpm2cpio "$package" | cpio -idm --quiet --no-absolute-filenames)
 test -x "$work/payload/opt/PeliGames/PeliGames"
 test -x "$work/payload/opt/PeliGames/Pelinstall"
-install -m 755 "$root/src-tauri/packaging/dlssnr-x-amd" "$work/payload/usr/bin/dlssnr-x-amd"
+install -m 755 "$root/src-tauri/packaging/PeliGames" "$work/payload/usr/bin/PeliGames"
 install -m 755 "$root/src-tauri/packaging/Pelinstall" "$work/payload/usr/bin/Pelinstall"
 name=$(rpm -qp --qf '%{NAME}' "$package")
 version=$(rpm -qp --qf '%{VERSION}' "$package")

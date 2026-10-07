@@ -40,7 +40,7 @@ pub async fn clear_game_caches(app: tauri::AppHandle) -> Result<(), String> {
 
 // The frontend cannot provide a deletion path. Never follow a redirected app folder.
 fn remove_launcher_directory(config_root: &std::path::Path) -> Result<(), String> {
-    let target = config_root.join("dlssnr-x-amd");
+    let target = config_root.join(crate::core::paths::APP_DIRECTORY);
     match std::fs::symlink_metadata(&target) {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
         Err(error) => return Err(error.to_string()),
@@ -48,7 +48,27 @@ fn remove_launcher_directory(config_root: &std::path::Path) -> Result<(), String
             return Err("The launcher configuration folder is not a regular directory".to_string()),
         Ok(_) => {},
     }
-    std::fs::remove_dir_all(target).map_err(|error| error.to_string())
+    // Reset settings and mod data; preserve the installed library and runners.
+    for file in ["config.json", "launcher.log", "launcher.previous.log"] {
+        let path = target.join(file);
+        match std::fs::remove_file(path) {
+            Ok(()) => {},
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {},
+            Err(error) => return Err(error.to_string()),
+        }
+    }
+    let mods = target.join("Mod");
+    if let Ok(meta) = std::fs::symlink_metadata(&mods) {
+        if meta.file_type().is_symlink() || !meta.is_dir() { return Err("A pasta Mod não é um diretório regular.".into()); }
+        let mod_data = mods.join("DLSSNR");
+        match std::fs::symlink_metadata(&mod_data) {
+            Ok(meta) if meta.is_dir() && !meta.file_type().is_symlink() => std::fs::remove_dir_all(mod_data).map_err(|e| e.to_string())?,
+            Ok(_) => return Err("A pasta do mod não é um diretório regular.".into()),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {},
+            Err(error) => return Err(error.to_string()),
+        }
+    }
+    Ok(())
 }
 
 #[tauri::command]

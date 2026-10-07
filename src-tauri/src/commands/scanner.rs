@@ -557,15 +557,15 @@ pub fn open_folder(path: String) -> Result<(), String> {
 #[tauri::command]
 pub fn collect_and_open_logs(app: tauri::AppHandle, game_name: String, game_dir: String) -> Result<(), String> {
     use std::fs;
-    let config_dir = app.path().config_dir().map_err(|_| "Failed to get config dir".to_string())?;
+    let mod_dir = crate::core::paths::mod_root()?;
     
     if game_name.is_empty() {
-        let base_logs_dir = config_dir.join("dlssnr-x-amd").join("logs");
+        let base_logs_dir = mod_dir.join("logs");
         let _ = fs::create_dir_all(&base_logs_dir);
         return open_folder(base_logs_dir.to_string_lossy().to_string());
     }
 
-    let logs_dir = config_dir.join("dlssnr-x-amd").join("logs").join(&game_name);
+    let logs_dir = mod_dir.join("logs").join(&game_name);
     
     // Create logs directory if it doesn't exist
     fs::create_dir_all(&logs_dir).map_err(|e| format!("Failed to create logs directory: {}", e))?;

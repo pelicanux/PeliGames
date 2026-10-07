@@ -10,7 +10,7 @@ Baixe AppImage, RPM ou DEB em [Releases](https://github.com/pelicanux/PeliGames/
 - AppImage reúne os dois módulos. Dê permissão de execução e abra o arquivo. A primeira abertura registra o launcher e “Abrir com Pelinstall” para o usuário. Mantenha o AppImage no mesmo local para preservar os atalhos.
 - Para abrir um executável Windows no instalador: `./PeliGames.AppImage --install /caminho/programa.exe`.
 
-Proton, UMU e Winetricks são baixados conforme necessário. Prefixos, configurações e dados ficam nos diretórios do usuário, fora do pacote. Capas do SteamGridDB exigem uma chave pessoal opcional, configurada em Preferências.
+Proton, UMU e Winetricks são baixados conforme necessário. Configurações e ferramentas ficam em `~/.config/PeliGames`. O backend e os arquivos do mod ficam em `~/.config/PeliGames/Mod/DLSSNR`. As pastas antigas são migradas automaticamente, preservando arquivos existentes. Prefixos e jogos permanecem nos diretórios escolhidos pelo usuário. Capas do SteamGridDB exigem uma chave pessoal opcional, configurada em Preferências.
 
 ## Desenvolvimento e compilação
 

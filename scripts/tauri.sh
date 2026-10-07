@@ -32,8 +32,8 @@ output="$target_root/${build_target:+$build_target/}$profile"
 # Resolve the compiled executable for release/debug and custom Cargo target directories.
 # Tauri patches its bundle type before reading these files for each DEB/RPM bundle.
 if [[ "$(uname -s)" == Linux && ( -z "$build_target" || "$build_target" == *linux* ) ]]; then
-  layout_config=$(mktemp /tmp/dlssnr-package-layout-XXXXXX.json)
-  bun -e 'const binary = process.argv[1]; const installer = process.argv[2]; const files = {"/opt/PeliGames/PeliGames": binary, "/opt/PeliGames/Pelinstall": installer}; console.log(JSON.stringify({bundle:{linux:{deb:{files},rpm:{files},appimage:{files:{"usr/bin/Pelinstall":installer}}}}}))' "$output/dlssnr-x-amd" "$output/Pelinstall" > "$layout_config"
+  layout_config=$(mktemp /tmp/peligames-package-layout-XXXXXX.json)
+  bun -e 'const binary = process.argv[1]; const installer = process.argv[2]; const files = {"/opt/PeliGames/PeliGames": binary, "/opt/PeliGames/Pelinstall": installer}; console.log(JSON.stringify({bundle:{linux:{deb:{files},rpm:{files},appimage:{files:{"usr/bin/Pelinstall":installer}}}}}))' "$output/PeliGames" "$output/Pelinstall" > "$layout_config"
   bun "$root/node_modules/@tauri-apps/cli/tauri.js" "$@" --config "$layout_config"
 else
   bun "$root/node_modules/@tauri-apps/cli/tauri.js" "$@"
@@ -67,6 +67,6 @@ if [[ -d "$output/bundle" ]]; then
     copy_to_release "$package"
   done < <(find "$output/bundle" -maxdepth 2 -type f -newer "$marker" \( -name '*.AppImage' -o -name '*.AppImage.sig' -o -name '*.deb' -o -name '*.rpm' \) -print0)
 fi
-if [[ -f "$output/dlssnr-x-amd" && "$output/dlssnr-x-amd" -nt "$marker" ]]; then
-  copy_to_release "$output/dlssnr-x-amd"
+if [[ -f "$output/PeliGames" && "$output/PeliGames" -nt "$marker" ]]; then
+  copy_to_release "$output/PeliGames"
 fi

@@ -11,10 +11,10 @@ export PATH="${BUN_INSTALL:-$HOME/.bun}/bin:${CARGO_HOME:-$HOME/.cargo}/bin:$PAT
 findmnt -no TARGET,FSTYPE -T "$build_target"
 bun run build
 cargo build --manifest-path src-tauri/Cargo.toml --release --bins --features custom-protocol --offline -j "$CARGO_BUILD_JOBS"
-"$build_target/release/dlssnr-x-amd" --verify-ui
+"$build_target/release/PeliGames" --verify-ui
 "$build_target/release/Pelinstall" --verify-ui
 mkdir -p Release
-install -m755 "$build_target/release/dlssnr-x-amd" Release/.PeliGames.new
+install -m755 "$build_target/release/PeliGames" Release/.PeliGames.new
 install -m755 "$build_target/release/Pelinstall" Release/.Pelinstall.new
 mv -f Release/.PeliGames.new Release/PeliGames
 mv -f Release/.Pelinstall.new Release/Pelinstall

@@ -51,28 +51,10 @@ pub async fn open_backend_folder(app: tauri::AppHandle, gpu_arch: String) -> Res
     Ok(())
 }
 
-pub fn get_backend_dir(app: &AppHandle) -> Result<PathBuf, String> {
-    use tauri::Manager;
-
-    #[cfg(target_os = "windows")]
-    {
-        let exe_dir = std::env::current_exe()
-            .ok()
-            .and_then(|p| p.parent().map(|parent| parent.to_path_buf()));
-
-        if let Some(mut dir) = exe_dir {
-            dir.push("backend-files");
-            if std::fs::create_dir_all(&dir).is_ok() {
-                return Ok(dir);
-            }
-        }
-    }
-
-    // Always use config_dir for Linux/macOS or fallback for Windows
-    let config_dir = app.path().config_dir().map_err(|e| e.to_string())?;
-    let fallback_dir = config_dir.join("dlssnr-x-amd").join("backend-files");
-    std::fs::create_dir_all(&fallback_dir).map_err(|e| format!("Failed creating config dir: {}", e))?;
-    Ok(fallback_dir)
+pub fn get_backend_dir(_app: &AppHandle) -> Result<PathBuf, String> {
+    let backend_dir = crate::core::paths::mod_root()?.join("backend-files");
+    std::fs::create_dir_all(&backend_dir).map_err(|e| format!("Failed creating mod backend directory: {e}"))?;
+    Ok(backend_dir)
 }
 
 use std::sync::atomic::{AtomicBool, Ordering};

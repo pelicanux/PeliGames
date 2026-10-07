@@ -28,6 +28,7 @@ fn run_mode(installer: bool) {
         if !embedded { std::process::exit(1); }
         return;
     }
+    if let Err(error) = core::paths::initialize() { eprintln!("Migração PeliGames: {error}"); }
     let mut startup = core::pelinstall::parse_args(&args, installer).unwrap_or_else(|error| core::pelinstall::StartupInfo {
         module: "pelinstall".into(), error: Some(error), ..Default::default()
     });
@@ -70,7 +71,7 @@ fn run_mode(installer: bool) {
             crate::core::logger::log_launcher(
                 &app_handle,
                 "INFO",
-                &format!("DLSSNR X AMD v{} iniciado", env!("CARGO_PKG_VERSION")),
+                &format!("PeliGames v{} iniciado", env!("CARGO_PKG_VERSION")),
             );
             commands::app_updates::cleanup_obsolete_updates(&app_handle);
             Ok(())

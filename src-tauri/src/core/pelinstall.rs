@@ -310,9 +310,7 @@ pub struct LaunchReport {
     pub log: Option<String>,
 }
 fn report_path(entry: &str) -> Result<PathBuf, String> {
-    Ok(dirs::config_dir()
-        .ok_or("Configuração indisponível.")?
-        .join("peligames/launch-reports")
+    Ok(super::paths::app_root()?.join("launch-reports")
         .join(format!("{:x}.json", Sha256::digest(entry.as_bytes()))))
 }
 pub fn save_report(report: &LaunchReport) -> Result<(), String> {

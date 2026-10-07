@@ -12,9 +12,7 @@ struct Record {
     status: ExecutionStatus,
 }
 pub(crate) fn directory() -> Result<PathBuf, String> {
-    Ok(dirs::config_dir()
-        .ok_or("Configuração indisponível.")?
-        .join("peligames/executions"))
+    Ok(super::paths::app_root()?.join("executions"))
 }
 fn valid_id(id: &str) -> bool {
     uuid::Uuid::parse_str(id).is_ok()

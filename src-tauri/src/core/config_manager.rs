@@ -47,12 +47,7 @@ pub fn preserve_saved_preferences(config: &mut AppConfig, previous: AppConfig) {
 }
 
 pub fn get_config_path() -> PathBuf {
-    // Save to ~/.config/dlssnr-x-amd/config.json
-    let config_dir = dirs::config_dir().unwrap_or_else(|| PathBuf::from("."));
-    let app_dir = config_dir.join("dlssnr-x-amd");
-    if !app_dir.exists() {
-        let _ = fs::create_dir_all(&app_dir);
-    }
+    let app_dir = super::paths::app_root().unwrap_or_else(|_| dirs::config_dir().unwrap_or_else(|| PathBuf::from(".")).join(super::paths::APP_DIRECTORY));
     app_dir.join("config.json")
 }
 

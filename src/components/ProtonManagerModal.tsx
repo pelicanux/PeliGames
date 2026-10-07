@@ -61,7 +61,7 @@ export function ProtonManagerModal({ initialFamily, onClose, onInstalled, isEmbe
       </div>
       {busy && <p className="proton-manager-description" role="status">{t("runners", "keepOpen")}</p>}
       {message && <p className="proton-manager-status" role="status">{message}</p>}
-      <p className="proton-manager-location">{t("runners", "location")}<code>~/.config/peligames/runners/proton</code></p>
+      <p className="proton-manager-location">{t("runners", "location")}<code>~/.config/PeliGames/runners/proton</code></p>
     </ModalSurface>;
   return isEmbedded ? content : <div className="modal-overlay" onClick={event => { if (event.target === event.currentTarget && !busy) onClose(); }}>{content}</div>;
 }

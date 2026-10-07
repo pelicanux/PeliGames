@@ -73,9 +73,7 @@ struct Manifest {
 }
 
 pub fn runners_dir() -> Result<PathBuf, String> {
-    Ok(dirs::config_dir()
-        .ok_or("Não foi possível localizar .config.")?
-        .join("peligames/runners/proton"))
+    Ok(super::paths::app_root()?.join("runners/proton"))
 }
 fn safe_name(name: &str) -> bool {
     !name.is_empty()

@@ -5,7 +5,7 @@ use std::{fs, io::{Read, Seek, SeekFrom}, path::{Path, PathBuf}};
 #[derive(Serialize)]
 pub struct GameLogs { pub current: String, pub previous: String }
 fn root(path: &str) -> Result<PathBuf, String> {
-    Ok(dirs::config_dir().ok_or("Configuração indisponível.")?.join("peligames/game-logs").join(format!("{:x}", Sha256::digest(path.as_bytes()))))
+    Ok(super::paths::app_root()?.join("game-logs").join(format!("{:x}", Sha256::digest(path.as_bytes()))))
 }
 fn rotate_at(root: &Path) -> Result<PathBuf, String> {
     fs::create_dir_all(root).map_err(|e|e.to_string())?;

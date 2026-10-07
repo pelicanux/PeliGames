@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# DLSSNR Installer - Portable Setup
+# PeliGames - Portable Setup
 APP_NAME="PeliGames"
 BIN_NAME="PeliGames"
 ICON_NAME="peligames.png"

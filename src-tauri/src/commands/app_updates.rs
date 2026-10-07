@@ -176,7 +176,7 @@ fn apply_downloaded_update(app: tauri::AppHandle, update: DownloadedUpdate) -> R
         if lower_path.ends_with(".appimage") {
             let current = PathBuf::from(std::env::var_os("APPIMAGE").ok_or("manualInstall")?);
             use std::os::unix::fs::PermissionsExt;
-            let staged = current.with_file_name(format!(".dlssnr-update-{}.AppImage", uuid::Uuid::new_v4()));
+            let staged = current.with_file_name(format!(".peligames-update-{}.AppImage", uuid::Uuid::new_v4()));
             let backup = current.with_extension("AppImage.previous");
             let result = (|| {
                 std::fs::copy(&downloaded, &staged).map_err(|_| "apply".to_string())?;
