@@ -27,3 +27,5 @@ pub mod installation_targets;
 pub mod execution_registry;
 
 pub mod game_logs;
+
+pub mod paths;

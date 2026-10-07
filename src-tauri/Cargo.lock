@@ -936,34 +936,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dlssnr-x-amd"
-version = "0.8.0"
-dependencies = [
- "dirs 5.0.1",
- "flate2",
- "ico",
- "libc",
- "png 0.17.16",
- "reqwest",
- "semver",
- "serde",
- "serde_json",
- "sha2",
- "tar",
- "tauri",
- "tauri-build",
- "tauri-plugin-clipboard-manager",
- "tauri-plugin-dialog",
- "tauri-plugin-opener",
- "tauri-plugin-shell",
- "tokio",
- "urlencoding",
- "uuid",
- "walkdir",
- "xz2",
-]
-
-[[package]]
 name = "dom_query"
 version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2848,6 +2820,34 @@ dependencies = [
  "redox_syscall",
  "smallvec",
  "windows-link",
+]
+
+[[package]]
+name = "peligames"
+version = "0.8.1"
+dependencies = [
+ "dirs 5.0.1",
+ "flate2",
+ "ico",
+ "libc",
+ "png 0.17.16",
+ "reqwest",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tar",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-clipboard-manager",
+ "tauri-plugin-dialog",
+ "tauri-plugin-opener",
+ "tauri-plugin-shell",
+ "tokio",
+ "urlencoding",
+ "uuid",
+ "walkdir",
+ "xz2",
 ]
 
 [[package]]

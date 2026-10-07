@@ -6,6 +6,10 @@ use std::{
     path::{Path, PathBuf},
     sync::Mutex,
 };
+fn deserialize_proton<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<String, D::Error> {
+    let value = String::deserialize(deserializer)?;
+    Ok(super::paths::migrated_runner_path(&value))
+}
 static LIBRARY_LOCK: Mutex<()> = Mutex::new(());
 // The launcher and Pelinstall are separate processes sharing the same manifests.
 fn process_lock(index: &Path) -> Result<fs::File, String> {
@@ -27,6 +31,7 @@ pub struct InstalledEntry {
     pub directory: String,
     pub executable: String,
     pub prefix: String,
+    #[serde(deserialize_with = "deserialize_proton")]
     pub proton: String,
     pub cover_url: Option<String>,
     pub launcher: String,
@@ -41,6 +46,7 @@ pub struct EntryOverride {
     pub prefix: Option<String>,
     pub source: String,
     pub name: String,
+    #[serde(deserialize_with = "deserialize_proton")]
     pub proton: String,
     pub executable: String,
 }
@@ -52,6 +58,7 @@ pub struct EntrySettings {
     pub prefix: Option<String>,
     pub path: String,
     pub name: String,
+    #[serde(deserialize_with = "deserialize_proton")]
     pub proton: String,
     pub executable: String,
 }
@@ -60,6 +67,7 @@ pub struct InstallationRecord {
     pub name: String,
     pub directory: String,
     pub prefix: String,
+    #[serde(deserialize_with = "deserialize_proton")]
     pub proton: String,
     pub installer: String,
     pub cover_url: Option<String>,
@@ -68,9 +76,7 @@ pub struct InstallationRecord {
     pub overrides: Vec<EntryOverride>,
 }
 fn library_file() -> Result<PathBuf, String> {
-    Ok(dirs::config_dir()
-        .ok_or("Pasta de configuração indisponível.")?
-        .join("peligames/installed-destinations.json"))
+    Ok(super::paths::app_root()?.join("installed-destinations.json"))
 }
 fn write_json(path: &Path, value: &impl Serialize) -> Result<(), String> {
     fs::create_dir_all(path.parent().ok_or("Destino inválido.")?).map_err(|e| e.to_string())?;

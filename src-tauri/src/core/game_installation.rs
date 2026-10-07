@@ -150,7 +150,7 @@ fn run_inner(request: InstallationRequest, repair: Option<(super::installed_libr
             .to_string_lossy()
             .into_owned(),
         prefix: result.prefix.clone(),
-        proton: absolute(&request.proton)?
+        proton: absolute(&super::paths::migrated_runner_path(&request.proton))?
             .canonicalize()
             .map_err(|e| e.to_string())?
             .to_string_lossy()
@@ -244,6 +244,8 @@ pub(crate) fn lock_prefix(prefix: &Path) -> Result<File,String> {
     Ok(file)
 }
 pub(crate) fn validate_proton(value: &str) -> Result<PathBuf, String> {
+    let migrated = super::paths::migrated_runner_path(value);
+    let value = migrated.as_str();
     let proton = absolute(value)?
         .canonicalize()
         .map_err(|e| format!("Proton não encontrado: {e}"))?;

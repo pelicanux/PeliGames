@@ -1,5 +1,4 @@
 use std::{fs::OpenOptions, io::Write, path::Path, sync::Mutex};
-use tauri::Manager;
 
 static LOG_LOCK: Mutex<()> = Mutex::new(());
 const MAX_LOG_BYTES: u64 = 1024 * 1024;
@@ -25,9 +24,9 @@ fn append_log(log_dir: &Path, level: &str, message: &str) -> std::io::Result<()>
     writeln!(file, "[{timestamp}] [{level}] {message}")
 }
 
-pub fn log_launcher(app: &tauri::AppHandle, level: &str, message: &str) {
-    let Ok(config_dir) = app.path().config_dir() else { return };
-    let _ = append_log(&config_dir.join("dlssnr-x-amd"), level, message);
+pub fn log_launcher(_app: &tauri::AppHandle, level: &str, message: &str) {
+    let Ok(config_dir) = super::paths::app_root() else { return };
+    let _ = append_log(&config_dir, level, message);
 }
 
 pub fn log_result<T>(app: &tauri::AppHandle, operation: &str, result: &Result<T, String>) {

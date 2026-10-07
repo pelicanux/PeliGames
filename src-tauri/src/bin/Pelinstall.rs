@@ -1,3 +1,3 @@
 fn main() {
-    dlssnr_installer_lib::run_installer();
+    peligames_lib::run_installer();
 }

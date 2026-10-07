@@ -50,8 +50,8 @@ export function EmergencyResetFlow({ stage, onStage }: { stage: number; onStage:
         <span className="emergency-eyebrow">{en ? "POINT OF NO RETURN" : "PONTO SEM RETORNO"}</span>
         <h2 id="emergency-quote">{en ? "With great power comes great responsibility." : "Com grandes poderes vêm grandes responsabilidades."}</h2>
         <p id="emergency-warning">{en
-          ? "This deletes the launcher's dlssnr-x-amd folder in your configuration directory: settings, backend files, AI model and logs. Custom cover selections, cached game information and preferences will also be reset. The application will restart automatically and return to initial setup. Your games and mods installed in them remain untouched."
-          : "Isso apaga a pasta dlssnr-x-amd do launcher no seu diretório de configuração: configurações, arquivos do backend, modelo de IA e logs. As escolhas de capas personalizadas, as informações em cache e as preferências também serão redefinidas. O aplicativo reiniciará automaticamente e voltará à configuração inicial. Seus jogos e os mods instalados neles serão preservados."}</p>
+          ? "This resets the PeliGames settings, mod backend, AI model and logs in PeliGames/Mod/DLSSNR. The installed library and runners are preserved. Custom cover selections, cached game information and preferences will also be reset. The application will restart automatically and return to initial setup. Your games and mods installed in them remain untouched."
+          : "Isso redefine as configurações do PeliGames, o backend do mod, o modelo de IA e os logs em PeliGames/Mod/DLSSNR. A biblioteca instalada e os runners serão preservados. As escolhas de capas personalizadas, as informações em cache e as preferências também serão redefinidas. O aplicativo reiniciará automaticamente e voltará à configuração inicial. Seus jogos e os mods instalados neles serão preservados."}</p>
         {error && <p role="alert" className="emergency-error">{error}</p>}
         <div className="emergency-actions">
           <button ref={cancel} className="btn btn-secondary" disabled={busy} onClick={() => onStage(0)}>{en ? "Cancel" : "Cancelar"}</button>

@@ -39,9 +39,7 @@ fn safe_version(value: &str) -> bool {
             .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_'))
 }
 pub fn runners_dir() -> Result<PathBuf, String> {
-    Ok(dirs::config_dir()
-        .ok_or("Pasta de configuração indisponível.")?
-        .join("peligames/runners/umu"))
+    Ok(super::paths::app_root()?.join("runners/umu"))
 }
 fn cached(base: &Path) -> Option<PathBuf> {
     let installed: Installed =

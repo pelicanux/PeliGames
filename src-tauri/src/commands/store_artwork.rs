@@ -7,7 +7,7 @@ pub(super) fn client() -> &'static Client {
     static CLIENT: OnceLock<Client> = OnceLock::new();
     CLIENT.get_or_init(|| {
         Client::builder()
-            .user_agent("DLSSNR-X-AMD/0.7")
+            .user_agent("PeliGames/0.8.1")
             .connect_timeout(Duration::from_secs(5))
             .timeout(Duration::from_secs(12))
             .build()
