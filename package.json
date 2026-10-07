@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:ui": "vite --host 127.0.0.1 --port 1424 --open /preview.html",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "bash scripts/tauri.sh"

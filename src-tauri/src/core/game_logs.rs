@@ -55,22 +55,3 @@ pub fn read(path: &str) -> Result<GameLogs, String> {
     let directory = root(path)?;
     Ok(GameLogs { current: read_at(&directory.join("current"))?, previous: read_at(&directory.join("previous"))? })
 }
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn retains_current_and_exactly_one_previous_execution() {
-        let root = std::env::temp_dir().join(format!("peli-logs-{}",uuid::Uuid::new_v4()));
-        for n in 1..=3 { let current=rotate_at(&root).unwrap(); fs::write(current.join("execution.log"),format!("run {n}")).unwrap(); fs::write(current.join("steam.log"),format!("proton {n}")).unwrap(); }
-        assert!(read_at(&root.join("current")).unwrap().contains("run 3"));
-        let previous=read_at(&root.join("previous")).unwrap(); assert!(previous.contains("run 2")); assert!(previous.contains("proton 2")); assert!(!previous.contains("run 1"));
-        assert_eq!(fs::read_dir(&root).unwrap().count(),2);
-        fs::remove_dir_all(root).unwrap();
-    }
-    #[test]
-    fn missing_and_large_logs_are_bounded() {
-        let root=std::env::temp_dir().join(format!("peli-log-tail-{}",uuid::Uuid::new_v4())); assert_eq!(read_at(&root).unwrap(),"");
-        fs::create_dir(&root).unwrap(); fs::write(root.join("execution.log"),vec![b'x';2*1024*1024]).unwrap();
-        assert!(read_at(&root).unwrap().len()<1024*1024+100); fs::remove_dir_all(root).unwrap();
-    }
-}

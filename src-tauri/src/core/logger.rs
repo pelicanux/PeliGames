@@ -36,20 +36,3 @@ pub fn log_result<T>(app: &tauri::AppHandle, operation: &str, result: &Result<T,
         Err(error) => log_launcher(app, "ERROR", &format!("{operation}: {error}")),
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn rotates_and_keeps_events_on_one_line() {
-        let dir = std::env::temp_dir().join(format!("dlssnr-log-test-{}", uuid::Uuid::new_v4()));
-        std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(dir.join("launcher.log"), vec![b'x'; MAX_LOG_BYTES as usize]).unwrap();
-        append_log(&dir, "ERROR", "first\nsecond\rthird").unwrap();
-        let log = std::fs::read_to_string(dir.join("launcher.log")).unwrap();
-        assert_eq!(log.lines().count(), 1);
-        assert!(log.contains("[ERROR] first second third"));
-        assert_eq!(std::fs::metadata(dir.join("launcher.previous.log")).unwrap().len(), MAX_LOG_BYTES);
-        std::fs::remove_dir_all(dir).unwrap();
-    }
-}

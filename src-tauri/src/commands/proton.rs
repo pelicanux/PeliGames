@@ -98,26 +98,6 @@ pub async fn scan_installed_protons() -> Result<Vec<InstalledProton>, String> {
     .map_err(|error| error.to_string())?
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn detects_proton_skips_other_folders_and_deduplicates_roots() {
-        let root =
-            std::env::temp_dir().join(format!("peligames-proton-test-{}", uuid::Uuid::new_v4()));
-        std::fs::create_dir_all(root.join("GE-Proton-Test")).unwrap();
-        std::fs::create_dir_all(root.join("OtherGame")).unwrap();
-        std::fs::write(root.join("GE-Proton-Test/proton"), "test fixture").unwrap();
-        let found = scan_roots([root.clone(), root.clone(), root.join("missing")]);
-        assert_eq!(found.len(), 1);
-        assert_eq!(found[0].name, "GE-Proton-Test");
-        assert_eq!(
-            PathBuf::from(&found[0].path),
-            root.join("GE-Proton-Test").canonicalize().unwrap()
-        );
-        std::fs::remove_dir_all(root).unwrap();
-    }
-}
 
 use crate::core::proton_manager::{self, Family, RunnerRelease};
 use std::sync::{

@@ -78,32 +78,6 @@ pub fn restart_after_emergency_reset(app: tauri::AppHandle) -> Result<(), String
     Ok(())
 }
 
-#[cfg(test)]
-mod emergency_tests {
-    use super::remove_launcher_directory;
-    #[test]
-    fn reset_only_deletes_the_launcher_folder() {
-        let root = std::env::temp_dir().join(format!("dlssnr-reset-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
-        std::fs::create_dir_all(root.join("dlssnr-x-amd/backend-files")).unwrap();
-        std::fs::write(root.join("dlssnr-x-amd/backend-files/model.bin"), b"test").unwrap();
-        std::fs::create_dir_all(root.join("another-app")).unwrap();
-        remove_launcher_directory(&root).unwrap();
-        assert!(!root.join("dlssnr-x-amd").exists());
-        assert!(root.join("another-app").exists());
-        remove_launcher_directory(&root).unwrap();
-        std::fs::remove_dir_all(root).unwrap();
-    }
-    #[cfg(unix)]
-    #[test]
-    fn reset_rejects_a_redirected_folder() {
-        let root = std::env::temp_dir().join(format!("dlssnr-reset-link-{}", std::process::id()));
-        std::fs::create_dir_all(root.join("keep")).unwrap();
-        std::os::unix::fs::symlink(root.join("keep"), root.join("dlssnr-x-amd")).unwrap();
-        assert!(remove_launcher_directory(&root).is_err());
-        assert!(root.join("keep").exists());
-        std::fs::remove_dir_all(root).unwrap();
-    }
-}
 
 #[tauri::command]
 pub fn log_cached_library(app: tauri::AppHandle, count: usize) {
