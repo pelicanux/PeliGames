@@ -52,3 +52,18 @@ dist-ssr
 /Pelicano.md
 /PELICANO.md
 /icon_peligames_test.png
+
+# Local preview, tests and development captures
+/tools/
+/docs/
+/preview.html
+/src/preview.ts
+/scripts/preview-*.ts
+/scripts/*.test.*
+/src/**/*.test.*
+/vite.preview.config.ts
+/.local-test-sources/
+/scripts/publish-release.sh
+/public/tauri.svg
+/public/vite.svg
+/.env.example

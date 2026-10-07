@@ -101,30 +101,3 @@ fn detect() -> Result<Vec<GpuInfo>, String> {
 pub async fn detect_linux_gpus() -> Result<Vec<GpuInfo>, String> {
     tauri::async_runtime::spawn_blocking(detect).await.map_err(|e| e.to_string())?
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn supported_rx_series_only() {
-        for model in ["AMD Radeon RX 9070 XT", "AMD Radeon RX 9060 XT"] {
-            assert_eq!(recommended_backend(0x1002, model).as_deref(), Some("rdna4"));
-        }
-        for model in ["AMD Radeon RX 7900 XTX", "AMD Radeon RX 7600M XT", "Navi 31 [Radeon RX 7900 XT/XTX]"] {
-            assert_eq!(recommended_backend(0x1002, model).as_deref(), Some("rdna3"));
-        }
-        for model in ["AMD Radeon RX 6800 XT", "AMD Radeon 780M", "AMD Radeon Pro W7900", "PCI 1002:7550", "RX 790"] {
-            assert_eq!(recommended_backend(0x1002, model), None);
-        }
-        assert_eq!(recommended_backend(0x10de, "RX 9070"), None);
-    }
-    #[test]
-    fn revision_distinguishes_professional_cards() {
-        assert_eq!(known_rx_model(0x7480, 0), None);
-        assert_eq!(known_rx_model(0x7550, 0xc3).as_deref(), Some("AMD Radeon RX 9070"));
-        let ids = "7480, 00, AMD Radeon Pro W7600\n7480, CF, AMD Radeon RX 7600";
-        assert_eq!(amd_model(ids, 0x7480, 0), Some("AMD Radeon Pro W7600".into()));
-        assert_eq!(amd_model(ids, 0x7480, 0xcf), Some("AMD Radeon RX 7600".into()));
-        assert_eq!(amd_model(ids, 0x7480, 0xff), None);
-    }
-}

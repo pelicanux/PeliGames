@@ -1,9 +1,5 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { previewRunners } from "./scripts/preview-runners";
-import { previewInstallation } from "./scripts/preview-installation";
-import { previewSystem } from "./scripts/preview-system";
-import { previewCovers } from "./scripts/preview-covers";
 // @ts-expect-error type error without @types/node package
 import process from "node:process";
 // @ts-expect-error type error without @types/node package
@@ -18,7 +14,7 @@ const now = new Date();
 const buildSuffix = `${now.getDate().toString().padStart(2, '0')}${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
 
 export default defineConfig(() => ({
-  plugins: [react(), previewCovers(), previewSystem(), previewRunners(), previewInstallation()],
+  plugins: [react()],
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
     __BUILD_SUFFIX__: JSON.stringify(buildSuffix),

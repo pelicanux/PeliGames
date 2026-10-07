@@ -18,22 +18,14 @@ Requer Linux, Rust, Bun e as dependências de compilação do [Tauri 2](https://
 
 ```sh
 bun install --frozen-lockfile
-bun run dev:ui
+bun run tauri dev
 # Binários locais:
 bash scripts/build-binaries.sh
 # Binários + AppImage, RPM e DEB:
 bash scripts/build-release.sh
 ```
 
-Os scripts usam todos os threads disponíveis e um diretório temporário em `/tmp`. Para compilar em RAM, `/tmp` deve ser tmpfs. As saídas ficam em `Release/`. A prévia do navegador usa o serviço Rust local; os binários de produção incluem a interface e não dependem de localhost.
-
-## Documentação
-
-- [Pelinstall](docs/pelinstall.md)
-- [Empacotamento](docs/packaging.md)
-- [Configurações avançadas](docs/advanced-settings.md)
-- [Ferramentas Wine](docs/wine-tools.md)
-- [Arquitetura](docs/architecture.md)
+Os scripts usam todos os threads disponíveis e um diretório temporário em `/tmp`. Para compilar em RAM, `/tmp` deve ser tmpfs. As saídas ficam em `Release/`. Os binários incluem a interface e não dependem de localhost.
 
 ## Créditos e licença
 

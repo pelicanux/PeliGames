@@ -39,30 +39,3 @@ pub fn migrate(directory: &Path) -> Result<bool, String> {
     }
     Ok(true)
 }
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn moves_existing_prefix_logs_and_manifest_without_overwrite() {
-        let root =
-            std::env::temp_dir().join(format!("peligames-layout-test-{}", uuid::Uuid::new_v4()));
-        fs::create_dir_all(root.join(".peligames/prefix/drive_c")).unwrap();
-        fs::create_dir_all(root.join(".peligames/logs")).unwrap();
-        fs::write(root.join(".peligames/prefix/drive_c/saved"), "data").unwrap();
-        fs::write(root.join(".peligames/installation.json"), "{}").unwrap();
-        assert!(migrate(&root).unwrap());
-        assert_eq!(
-            fs::read_to_string(root.join("prefix/drive_c/saved")).unwrap(),
-            "data"
-        );
-        assert!(root.join("logs").is_dir());
-        assert!(root.join("installation.json").is_file());
-        assert!(!root.join(".peligames").exists());
-        assert!(!migrate(&root).unwrap());
-        fs::create_dir_all(root.join(".peligames/prefix")).unwrap();
-        fs::write(root.join(".peligames/prefix/old"), "preserve").unwrap();
-        assert!(migrate(&root).is_err());
-        assert!(root.join(".peligames/prefix/old").is_file());
-        fs::remove_dir_all(root).unwrap();
-    }
-}

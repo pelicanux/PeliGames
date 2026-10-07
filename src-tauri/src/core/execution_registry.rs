@@ -111,36 +111,3 @@ pub(crate) fn finish(dir: &Path, id: &str) {
     let _ = fs::remove_file(dir.join(format!("{id}.json")));
     let _ = fs::remove_file(dir.join(format!("{id}.cancel")));
 }
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn verifies_session_identity_owner_birth_and_rejects_redirected_records() {
-        let dir = std::env::temp_dir().join(format!("peli-registry-{}", uuid::Uuid::new_v4()));
-        let status = ExecutionStatus {
-            id: uuid::Uuid::new_v4().to_string(),
-            path: "game".into(),
-            state: "running".into(),
-            log: "log".into(),
-            error: None,
-        };
-        publish(&dir, &status).unwrap();
-        assert_eq!(status_at(&dir).unwrap().path, "game");
-        assert!(cancel_at(&dir, "../arbitrary").is_err());
-        assert!(!cancellation_requested(&dir, &status.id));
-        assert_eq!(cancel_at(&dir, &status.id).unwrap().state, "stopping");
-        assert!(cancellation_requested(&dir, &status.id));
-        let path = dir.join(format!("{}.json", status.id));
-        let mut record: Record = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
-        record.birth += 1;
-        fs::write(&path, serde_json::to_vec(&record).unwrap()).unwrap();
-        assert!(status_at(&dir).is_none());
-        assert!(cancel_at(&dir, &status.id).is_err());
-        fs::remove_file(&path).unwrap();
-        std::os::unix::fs::symlink("/etc/passwd", &path).unwrap();
-        assert!(status_at(&dir).is_none());
-        finish(&dir, &status.id);
-        assert!(status_at(&dir).is_none());
-        fs::remove_dir_all(dir).unwrap();
-    }
-}

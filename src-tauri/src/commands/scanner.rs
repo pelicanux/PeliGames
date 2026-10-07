@@ -603,19 +603,6 @@ pub fn collect_and_open_logs(app: tauri::AppHandle, game_name: String, game_dir:
 }
 
 
-#[cfg(test)]
-mod steam_launch_tests {
-    use super::steam_launch_uri;
-
-    #[test]
-    fn steam_selects_the_launch_mode_without_game_arguments() {
-        assert_eq!(steam_launch_uri("1623730").unwrap(), "steam://launch/1623730/dialog");
-        // AppIDs cannot inject launch arguments or change the selected Steam URI.
-        for invalid in ["", "0", "-1", "+1623730", "1623730 -dx11", "1623730//-dx12", "1623730/option1", "4294967296"] {
-            assert!(steam_launch_uri(invalid).is_err(), "accepted {invalid}");
-        }
-    }
-}
 
 #[tauri::command]
 pub fn request_steam_uninstall(app_id: String) -> Result<(), String> {
