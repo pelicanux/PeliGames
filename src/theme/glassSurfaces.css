@@ -1,0 +1,153 @@
+/* One corner-lit surface for panels, dialogs and portal menus. */
+:root {
+  --glass-base-start: 12, 17, 32;
+  --glass-base-end: 19, 13, 27;
+  --glass-opacity-start: .9;
+  --glass-opacity-end: .84;
+  --glass-neutral-border: 153, 163, 198;
+  --glass-corner-fill: .13;
+  --glass-shadow: rgba(0, 0, 0, .25);
+}
+:root[data-appearance="light"] {
+  --glass-base-start: 236, 241, 248;
+  --glass-base-end: 222, 231, 243;
+  --glass-opacity-start: .84;
+  --glass-opacity-end: .78;
+  --glass-neutral-border: 115, 134, 159;
+  --glass-corner-fill: .16;
+  --glass-shadow: rgba(35, 50, 75, .18);
+}
+:root[data-appearance] :is(
+  .menu-glass-panel, .modal-content, .dialog-popover, .cover-context-menu,
+  .ui-hover-tooltip, .installation-name-hint, .effects-menu, .custom-select-menu,
+  .text-context-menu, .model-source-tooltip, .launcher-update-tooltip
+) {
+  isolation: isolate;
+  border: 1px solid rgba(var(--glass-neutral-border), .25) !important;
+  background:
+    radial-gradient(ellipse at 0 0, rgba(var(--accent-rgb), var(--glass-corner-fill)), transparent 52%),
+    radial-gradient(ellipse at 100% 100%, rgba(var(--accent-rgb), var(--glass-corner-fill)), transparent 44%),
+    linear-gradient(125deg, rgba(var(--glass-base-start), var(--glass-opacity-start)), rgba(var(--glass-base-end), var(--glass-opacity-end))) !important;
+  backdrop-filter: blur(16px) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.15) !important;
+  box-shadow: inset 0 1px rgba(217, 225, 255, .04), 0 10px 28px var(--glass-shadow) !important;
+}
+/* The masked layer traces the border without tinting the other two corners. */
+:root[data-appearance] :is(
+  .menu-glass-panel, .modal-content, .dialog-popover, .cover-context-menu,
+  .ui-hover-tooltip, .installation-name-hint, .effects-menu, .custom-select-menu,
+  .text-context-menu, .model-source-tooltip, .launcher-update-tooltip
+)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(130deg,
+    rgba(var(--accent-rgb), .72),
+    rgba(var(--glass-neutral-border), .2) 23%,
+    rgba(var(--glass-neutral-border), .18) 66%,
+    rgba(var(--accent-rgb), .85));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+:root .menu-glass-panel {
+  --glass-opacity-start: .76;
+  --glass-opacity-end: .67;
+}
+:root[data-appearance="light"] .menu-glass-panel {
+  --glass-opacity-start: .68;
+  --glass-opacity-end: .56;
+}
+/* The gear menu sits above busy content and needs a denser base. */
+:root .dialog-popover {
+  --glass-opacity-start: .98;
+  --glass-opacity-end: .96;
+}
+:root[data-appearance] :is(.performance-mode, .performance-mode *) :is(
+  .menu-glass-panel, .modal-content, .dialog-popover, .cover-context-menu,
+  .ui-hover-tooltip, .installation-name-hint, .effects-menu, .custom-select-menu,
+  .text-context-menu, .model-source-tooltip, .launcher-update-tooltip
+) {
+  background: rgb(var(--glass-base-end)) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+:root .performance-mode :is(
+  .menu-glass-panel, .modal-content, .dialog-popover, .cover-context-menu,
+  .ui-hover-tooltip, .installation-name-hint, .effects-menu, .custom-select-menu,
+  .text-context-menu, .model-source-tooltip, .launcher-update-tooltip
+)::before { content: none; }
+
+/* Scroll only the inner viewport; the border and corner lighting stay still. */
+:root .modal-content.fixed-glass-frame {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+.modal-scroll-body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--modal-content-padding);
+  box-sizing: border-box;
+  border-radius: inherit;
+}
+.license-dialog > .modal-scroll-body { display: flex; flex-direction: column; }
+@media (max-width: 600px) {
+  .dialog-glass > .modal-scroll-body { padding: 1.2rem; }
+  .setup-wizard > .modal-scroll-body { padding: 20px; }
+  .emergency-dialog > .modal-scroll-body { padding: 22px; }
+}
+
+/* Reserve the close-control row even when compact dialog padding is applied. */
+:root .fixed-glass-frame.has-surface-close > .modal-scroll-body { padding-top: max(54px, var(--modal-content-padding)); }
+
+/* Overlay header: content passes behind its translucent, blurred surface. */
+.dialog-titlebar {
+  position: absolute; inset: 12px 18px auto; z-index: 4;
+  height: 48px; box-sizing: border-box;
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 54px 10px 20px;
+  border: 1px solid rgba(var(--accent-rgb), .3);
+  background: linear-gradient(125deg, rgba(var(--glass-base-start), .64), rgba(var(--glass-base-end), .42));
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  border-radius: inherit;
+  box-shadow: inset 0 1px rgba(var(--surface-255-255-255, 255,255,255), .1);
+}
+:root .dialog-titlebar :is(h2, h3) {
+  margin: 0 !important; padding: 0 !important; border: 0 !important;
+  font-family: inherit !important; font-size: 1.15rem !important; line-height: 1.3;
+  font-weight: 650; color: var(--tone-edf0fd, #edf0fd) !important;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
+:root .dialog-titlebar > .surface-close-button { top: 9px; right: 10px; }
+:root .fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body {
+  padding-top: calc(60px + var(--modal-content-padding));
+  scroll-padding-top: 72px;
+}
+:root .fixed-glass-frame.has-dialog-titlebar::before { z-index: 6; }
+:root .performance-mode .dialog-titlebar { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgb(var(--glass-base-start)); }
+
+/* The full dialog backs the clear header surround; only the inset header blurs
+   the dialog content scrolling underneath it, without exposing the library. */
+:root[data-appearance] .modal-content.fixed-glass-frame.has-dialog-titlebar {
+  background:
+    radial-gradient(ellipse at 0 0, rgba(var(--accent-rgb), var(--glass-corner-fill)), transparent 52%),
+    radial-gradient(ellipse at 100% 100%, rgba(var(--accent-rgb), var(--glass-corner-fill)), transparent 44%),
+    linear-gradient(125deg, rgb(var(--glass-base-start)), rgb(var(--glass-base-end))) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+:root[data-appearance] .performance-mode .modal-content.fixed-glass-frame.has-dialog-titlebar {
+  background: rgb(var(--glass-base-end)) !important;
+}
+@media (max-width: 480px) {
+  .dialog-titlebar { left: 10px; right: 10px; padding-left: 15px; }
+  :root .dialog-titlebar :is(h2, h3) { font-size: 1rem !important; }
+}

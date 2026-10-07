@@ -1,0 +1,46 @@
+{
+  "dependencies": [
+    [
+      "vulkan_reflex",
+      "vulkan_latency",
+      "Reflex requer a camada Vulkan de baixa latência."
+    ],
+    [
+      "mlfg",
+      "fsr4",
+      "Ative FSR 4 antes de habilitar a geração ML de quadros."
+    ],
+    [
+      "rdna3_workaround",
+      "mlfg",
+      "O ajuste RDNA3 requer a geração ML de quadros."
+    ],
+    [
+      "hdr",
+      "wayland",
+      "Ative Wine-Wayland antes de habilitar HDR."
+    ]
+  ],
+  "conflicts": [
+    [
+      "vkd3d_latency",
+      "mlfg",
+      "Baixa latência DX12 e geração ML de quadros não podem ser combinadas."
+    ],
+    [
+      "vulkan_latency",
+      "mesa_antilag",
+      "A camada Vulkan do CachyOS conflita com Anti-Lag do Mesa."
+    ],
+    [
+      "vulkan_latency",
+      "fsr4",
+      "A camada Vulkan do CachyOS conflita com a atualização FSR 4."
+    ],
+    [
+      "mangohud",
+      "mangohud_env",
+      "Escolha apenas um modo de MangoHud: painel ou ambiente Vulkan."
+    ]
+  ]
+}

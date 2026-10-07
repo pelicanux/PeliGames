@@ -1,0 +1,22 @@
+pub mod installer;
+pub mod updater;
+pub mod scanner;
+pub mod analyzer;
+pub mod config;
+pub mod covers;
+
+mod heroic_library;
+mod store_artwork;
+
+pub mod app_updates;
+
+pub mod gpu;
+
+mod upscalers;
+pub mod neural_settings;
+
+pub mod proton;
+
+pub mod installation_paths;
+pub mod game_installation;
+pub mod pelinstall;

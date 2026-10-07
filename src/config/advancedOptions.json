@@ -1,0 +1,202 @@
+[
+  {
+    "group": "cachyos",
+    "id": "dxvk_latency",
+    "title": "DX9–11 com menor latência",
+    "key": "PROTON_DXVK_LOWLATENCY",
+    "value": "1",
+    "enabled": false,
+    "description": "Usa o DXVK de baixa latência. Requer uma versão compatível do Proton-CachyOS.",
+    "kind": "env"
+  },
+  {
+    "group": "cachyos",
+    "id": "vkd3d_latency",
+    "title": "DX12 com menor latência",
+    "key": "PROTON_VKD3D_LOWLATENCY",
+    "value": "1",
+    "enabled": false,
+    "description": "Usa o VKD3D de baixa latência. Exige suporte do jogo; não combine com geração de quadros.",
+    "kind": "env"
+  },
+  {
+    "group": "cachyos",
+    "id": "vulkan_latency",
+    "title": "Camada Vulkan Anti-Lag 2",
+    "key": "LOW_LATENCY_LAYER",
+    "value": "1",
+    "enabled": false,
+    "description": "Ativa a camada de baixa latência. O jogo e o Proton precisam oferecer suporte ao Anti-Lag 2.",
+    "kind": "env"
+  },
+  {
+    "group": "cachyos",
+    "id": "vulkan_reflex",
+    "title": "Reflex na camada Vulkan",
+    "key": "LOW_LATENCY_LAYER_REFLEX",
+    "value": "1",
+    "enabled": false,
+    "description": "Troca a interface Anti-Lag 2 por Reflex. Depende da camada Vulkan e do suporte do jogo.",
+    "kind": "env"
+  },
+  {
+    "group": "hardware",
+    "id": "mesa_antilag",
+    "title": "Reduzir latência com Mesa",
+    "key": "ENABLE_LAYER_MESA_ANTI_LAG",
+    "value": "1",
+    "enabled": false,
+    "description": "Para GPUs AMD com Mesa compatível. Pode reduzir a latência de entrada.",
+    "kind": "env"
+  },
+  {
+    "group": "hardware",
+    "id": "fsr4",
+    "title": "Atualizar FSR para a versão 4",
+    "key": "PROTON_FSR4_UPGRADE",
+    "value": "1",
+    "enabled": false,
+    "description": "Usa FSR 4 em jogos compatíveis com FSR 3.1. Requer Proton customizado, GPU e drivers compatíveis.",
+    "kind": "env"
+  },
+  {
+    "group": "hardware",
+    "id": "mlfg",
+    "title": "Geração de quadros por aprendizado de máquina",
+    "key": "PROTON_MLFG_UPGRADE",
+    "value": "1",
+    "enabled": false,
+    "description": "Solicita MLFG com FSR 4.0.3 ou superior. Depende do FSR 4 e do suporte da GPU.",
+    "kind": "env"
+  },
+  {
+    "group": "hardware",
+    "id": "rdna3_workaround",
+    "title": "Ajuste de geração de quadros para RDNA3",
+    "key": "DXIL_SPIRV_CONFIG",
+    "value": "wmma_rdna3_workaround",
+    "enabled": false,
+    "description": "Ajuste específico para RDNA3 quando necessário ao MLFG. Desative em outras gerações de GPU.",
+    "kind": "env"
+  },
+  {
+    "group": "compatibility",
+    "id": "wow64",
+    "title": "Compatibilidade WoW64",
+    "key": "PROTON_USE_WOW64",
+    "value": "1",
+    "enabled": false,
+    "description": "Executa aplicativos de 32 bits usando o suporte WoW64 do Proton de 64 bits.",
+    "kind": "env"
+  },
+  {
+    "group": "compatibility",
+    "id": "optiscaler",
+    "title": "Ativar integração OptiScaler",
+    "key": "PROTON_USE_OPTISCALER",
+    "value": "1",
+    "enabled": false,
+    "description": "Ativa a integração fornecida pelo Proton customizado; requer uma versão que inclua esse recurso.",
+    "kind": "env"
+  },
+  {
+    "group": "compatibility",
+    "id": "discord",
+    "title": "Integrar presença no Discord",
+    "key": "PROTON_DISCORD_BRIDGE",
+    "value": "1",
+    "enabled": false,
+    "description": "Permite ao jogo atualizar a presença no Discord através da ponte incluída no Proton.",
+    "kind": "env"
+  },
+  {
+    "group": "compatibility",
+    "id": "dll_overrides",
+    "title": "Prioridade das DLLs do Wine",
+    "key": "WINEDLLOVERRIDES",
+    "value": "dxgi=n,b",
+    "enabled": false,
+    "description": "Define a ordem de carregamento das DLLs. O exemplo dxgi=n,b prioriza a DLL nativa e depois a interna.",
+    "kind": "env"
+  },
+  {
+    "group": "display",
+    "id": "wayland",
+    "title": "Executar com Wayland nativo",
+    "key": "PROTON_ENABLE_WAYLAND",
+    "value": "1",
+    "enabled": false,
+    "description": "Usa o driver Wayland do Wine quando disponível; exige uma sessão e um Proton compatíveis.",
+    "kind": "env"
+  },
+  {
+    "group": "display",
+    "id": "hdr",
+    "title": "Habilitar HDR com Wayland",
+    "key": "PROTON_ENABLE_HDR",
+    "value": "1",
+    "enabled": false,
+    "description": "Requer Wayland ativado, Proton com suporte a HDR, jogo, monitor e compositor compatíveis. Pode atender DX11 e DX12; depende da implementação do jogo.",
+    "kind": "env"
+  },
+  {
+    "group": "performance",
+    "id": "mangohud",
+    "title": "Painel de desempenho MangoHud",
+    "key": "mangohud",
+    "value": "",
+    "enabled": false,
+    "description": "Mostra FPS, carga e temperaturas. O MangoHud precisa estar instalado.",
+    "kind": "wrapper"
+  },
+  {
+    "group": "performance",
+    "id": "gamemode",
+    "title": "Otimizações temporárias com GameMode",
+    "key": "gamemoderun",
+    "value": "",
+    "enabled": false,
+    "description": "Solicita otimizações enquanto o jogo estiver aberto. Requer o GameMode instalado.",
+    "kind": "wrapper"
+  },
+  {
+    "group": "performance",
+    "id": "mangohud_env",
+    "title": "MangoHud pelo ambiente Vulkan",
+    "key": "MANGOHUD",
+    "value": "1",
+    "enabled": false,
+    "description": "Ativa a camada Vulkan com MANGOHUD=1. Requer MangoHud; para OpenGL use o painel MangoHud acima.",
+    "kind": "env"
+  },
+  {
+    "group": "performance",
+    "id": "obs_capture",
+    "title": "Captura de jogo pelo OBS",
+    "key": "OBS_VKCAPTURE",
+    "value": "1",
+    "enabled": false,
+    "description": "Ativa obs-vkcapture para Vulkan/OpenGL. Requer o pacote de captura e uma instalação compatível do OBS.",
+    "kind": "env"
+  },
+  {
+    "group": "performance",
+    "id": "priority",
+    "title": "Prioridade maior para o processo",
+    "key": "PROTON_PRIORITY_HIGH",
+    "value": "1",
+    "enabled": false,
+    "description": "Solicita ao Proton maior prioridade de CPU para o processo do jogo.",
+    "kind": "env"
+  },
+  {
+    "group": "performance",
+    "id": "shader_cache",
+    "title": "Cache de shaders separado por jogo",
+    "key": "PROTON_LOCAL_SHADER_CACHE",
+    "value": "1",
+    "enabled": false,
+    "description": "Solicita um cache próprio para este jogo nas versões do Proton que aceitam essa opção.",
+    "kind": "env"
+  }
+]

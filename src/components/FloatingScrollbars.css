@@ -1,0 +1,13 @@
+.floating-scroll-host { scrollbar-width: none !important; }
+.floating-scroll-host::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.floating-scroll-layer { position: fixed; inset: 0; pointer-events: none; z-index: 10000; }
+.floating-scroll-track { position: absolute; width: 6px; opacity: 0; transition: opacity .2s ease; pointer-events: none; }
+.floating-scroll-track.is-active { opacity: 1; }
+.floating-scroll-track[hidden] { display: none; }
+.floating-scroll-thumb {
+  width: 6px; border-radius: 999px; background: rgba(var(--accent-rgb), .55);
+  box-shadow: 0 0 5px rgba(var(--accent-rgb), .12); touch-action: none; cursor: default;
+}
+.floating-scroll-track.is-active .floating-scroll-thumb { pointer-events: auto; }
+.floating-scroll-thumb:hover { background: rgba(var(--accent-rgb), .8); }
+@media (prefers-reduced-motion: reduce) { .floating-scroll-track { transition: none; } }

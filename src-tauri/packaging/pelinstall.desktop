@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Pelinstall
+Comment=Instalar ou adicionar executáveis Windows com PeliGames
+Exec=/opt/PeliGames/Pelinstall %f
+Icon=dlssnr-x-amd
+Terminal=false
+Categories=Game;
+MimeType=application/x-ms-dos-executable;application/x-msdownload;application/x-msi;
+NoDisplay=true

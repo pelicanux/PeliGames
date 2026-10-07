@@ -1,0 +1,170 @@
+/* Light neutral palette; fallback values in components preserve the dark theme. */
+:root[data-appearance="light"] {
+  color-scheme: light;
+  --tone-0c0207: #e0e6ef;
+  --tone-0c1120: #e0e6ef;
+  --tone-10b981: #047857;
+  --tone-111111: #e0e6ef;
+  --tone-12121b: #e0e6ef;
+  --tone-151422: #e0e6ef;
+  --tone-160b12: #e0e6ef;
+  --tone-169bff: #0070bd;
+  --tone-170a12: #e0e6ef;
+  --tone-171722: #e0e6ef;
+  --tone-180d1d: #e0e6ef;
+  --tone-1e1b4b: #e0e6ef;
+  --tone-1e1e2f: #e0e6ef;
+  --tone-1e293b: #e0e6ef;
+  --tone-202330: #e0e6ef;
+  --tone-221a29: #e0e6ef;
+  --tone-23232e: #e0e6ef;
+  --tone-250c10: #e0e6ef;
+  --tone-262631: #e0e6ef;
+  --tone-292936: #e0e6ef;
+  --tone-343442: #e0e6ef;
+  --tone-34d399: #047857;
+  --tone-40131c: #e0e6ef;
+  --tone-451111: #e0e6ef;
+  --tone-47b9fc: #0369a1;
+  --tone-60a5fa: #2563eb;
+  --tone-64748b: #44546b;
+  --tone-6b7280: #44546b;
+  --tone-6ee7b7: #047857;
+  --tone-87aeb5: #3e4e63;
+  --tone-8c98b1: #44546b;
+  --tone-8faca8: #3e4e63;
+  --tone-93c5fd: #1d4ed8;
+  --tone-94a3b8: #3e4e63;
+  --tone-99a9c7: #3e4e63;
+  --tone-9ca3af: #3e4e63;
+  --tone-a7b7cb: #3e4e63;
+  --tone-a7f3d0: #047857;
+  --tone-a9aec0: #3e4e63;
+  --tone-aaaaaa: #3e4e63;
+  --tone-aab0c0: #3e4e63;
+  --tone-aab6ce: #3e4e63;
+  --tone-aebbd3: #3e4e63;
+  --tone-b2c4e5: #3e4e63;
+  --tone-b3c0dd: #3e4e63;
+  --tone-b6c2dc: #3e4e63;
+  --tone-b8c3db: #3e4e63;
+  --tone-b9c4dc: #3e4e63;
+  --tone-c5cbd8: #1e293b;
+  --tone-c7a1fa: #6d28d9;
+  --tone-cbd5e1: #1e293b;
+  --tone-d5d8eb: #1e293b;
+  --tone-d6dff4: #1e293b;
+  --tone-ded1ce: #1e293b;
+  --tone-e2e5ef: #1e293b;
+  --tone-e2e8f0: #1e293b;
+  --tone-e9edf9: #1e293b;
+  --tone-ed354b: #b91c1c;
+  --tone-edf0fd: #1e293b;
+  --tone-edf4ff: #1e293b;
+  --tone-ef4444: #b91c1c;
+  --tone-f1f1f1: #1e293b;
+  --tone-f1f5f9: #1e293b;
+  --tone-f2f3fb: #1e293b;
+  --tone-f3a0ca: #9d174d;
+  --tone-f59aa9: #9d174d;
+  --tone-f5d66f: #806300;
+  --tone-f87171: #b91c1c;
+  --tone-f8fafc: #1e293b;
+  --tone-ffe1cf: #1e293b;
+  --tone-ffe2c0: #1e293b;
+  --tone-ffffff: #1e293b;
+  --surface-0-80-75: 226, 233, 243;
+  --surface-10-5-10: 226, 233, 243;
+  --surface-12-17-32: 226, 233, 243;
+  --surface-13-18-30: 226, 233, 243;
+  --surface-15-10-28: 226, 233, 243;
+  --surface-15-15-26: 226, 233, 243;
+  --surface-15-18-32: 226, 233, 243;
+  --surface-15-20-32: 226, 233, 243;
+  --surface-16-24-39: 226, 233, 243;
+  --surface-19-13-27: 226, 233, 243;
+  --surface-20-20-20: 226, 233, 243;
+  --surface-20-20-25: 226, 233, 243;
+  --surface-23-13-27: 226, 233, 243;
+  --surface-25-15-45: 226, 233, 243;
+  --surface-255-255-255: 35, 50, 75;
+  --surface-26-24-38: 226, 233, 243;
+  --surface-26-26-26: 226, 233, 243;
+  --surface-35-20-65: 226, 233, 243;
+  --surface-35-32-45: 226, 233, 243;
+  --surface-64-52-76: 226, 233, 243;
+  --surface-7-10-20: 226, 233, 243;
+}
+:root[data-appearance="light"] body { background-color: #dce3ec; color: #1e293b; }
+:root[data-appearance="light"] body::before { opacity: .55; filter: hue-rotate(var(--background-hue)) brightness(1.65) saturate(1.15); }
+:root[data-appearance="light"] .app-wrapper { background: rgba(226,233,243,.6); }
+:root[data-appearance="light"] .app-titlebar { background: rgba(226,233,243,.64) !important; }
+:root[data-appearance="light"] .modal-content,
+:root[data-appearance="light"] .dialog-popover,
+:root[data-appearance="light"] .cover-context-menu,
+:root[data-appearance="light"] .ui-hover-tooltip,
+:root[data-appearance="light"] .installation-name-hint,
+:root[data-appearance="light"] .effects-menu,
+:root[data-appearance="light"] .custom-select-menu,
+:root[data-appearance="light"] .text-context-menu {
+  background: linear-gradient(125deg, rgba(236,241,248,.84), rgba(222,231,243,.78)) !important;
+  color: #334155;
+}
+:root[data-appearance="light"] .menu-glass-panel {
+  background: radial-gradient(ellipse at 100% 100%, rgba(var(--accent-rgb),.08), transparent 44%),
+    linear-gradient(125deg, rgba(236,241,248,.68), rgba(222,231,243,.56));
+}
+:root[data-appearance="light"] input,
+:root[data-appearance="light"] textarea,
+:root[data-appearance="light"] select,
+:root[data-appearance="light"] .game-directory-value,
+:root[data-appearance="light"] .installation-path-box,
+:root[data-appearance="light"] .custom-select-trigger {
+  background: rgba(236,241,248,.72) !important; color: #334155 !important;
+  border-color: #b8c5d7;
+}
+:root[data-appearance="light"] input::placeholder { color: #44546b; opacity: 1; }
+:root[data-appearance="light"] pre { background: rgba(225,233,243,.62); color: #334155; }
+:root[data-appearance="light"] body.performance-mode { background-color: #dce3ec; }
+:root[data-appearance="light"] .performance-mode .menu-glass-panel,
+:root[data-appearance="light"] .performance-mode .modal-content,
+:root[data-appearance="light"] .performance-mode .dialog-popover { background: #e0e6ef !important; }
+:root[data-appearance="light"] .ui-hover-tooltip,
+:root[data-appearance="light"] .installation-name-hint { box-shadow: 0 8px 24px rgba(35,50,75,.15); }
+:root[data-appearance="light"] .library-view-toggle { background: rgba(35,50,75,.05); }
+:root[data-appearance="light"] .library-game-card { background: rgba(226,233,243,.42) !important; }
+:root[data-appearance="light"] .game-library--grid .game-launcher-badge > div { color: #d1d5db !important; }
+:root[data-appearance="light"] .info-game-logs { color: #994500; }
+:root[data-appearance="light"] .installation-cover-placeholder {
+  background: linear-gradient(135deg, rgba(var(--accent-rgb),.18), rgba(226,233,243,.6));
+}
+:root[data-appearance="light"] :is(
+  .menu-glass-panel, .modal-content, .dialog-popover, .cover-context-menu,
+  .ui-hover-tooltip, .installation-name-hint, .effects-menu, .custom-select-menu,
+  .text-context-menu, .model-source-tooltip, .launcher-update-tooltip
+) {
+  border: 1px solid rgba(var(--accent-rgb),.65) !important;
+  backdrop-filter: blur(16px) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.15) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.5),
+    inset 0 0 12px rgba(var(--accent-rgb),.07),
+    0 0 20px rgba(var(--accent-rgb),.28),
+    0 10px 28px rgba(35,50,75,.2) !important;
+}
+:root[data-appearance="light"] :is(.model-source-tooltip, .launcher-update-tooltip) {
+  background: linear-gradient(125deg, rgba(236,241,248,.84), rgba(222,231,243,.78)) !important;
+}
+:root[data-appearance="light"] .performance-mode :is(
+  .menu-glass-panel, .modal-content, .dialog-popover, .cover-context-menu,
+  .ui-hover-tooltip, .installation-name-hint, .effects-menu, .custom-select-menu,
+  .text-context-menu, .model-source-tooltip, .launcher-update-tooltip
+) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+:root[data-appearance="light"] :is(.dialog-backdrop, .modal-overlay) {
+  background: rgba(24,34,50,.38) !important;
+}
+:root[data-appearance="light"] { --tone-c084fc: #7e22ce; }
