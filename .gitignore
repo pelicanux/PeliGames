@@ -1,0 +1,54 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Native builds and release artifacts
+**/target/
+/release/
+*.AppImage
+*.AppImage.sig
+
+# Local credentials, updater signing keys and personal tooling
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+/.aws/
+/.codex/
+/.agents/
+
+# Internal project documentation (keep locally only)
+/V3_DOCUMENTATION.md
+
+# Local builds and private project notes
+/Release/
+/PELIGAMES.md
+/PL Games.md
+/PLGames.md
+/PeliGames.md
+/Pelicano.md
+/PELICANO.md
+/icon_peligames_test.png
