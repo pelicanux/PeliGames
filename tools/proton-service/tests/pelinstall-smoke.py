@@ -104,9 +104,12 @@ esac
     finally:
         if handoff.poll() is None: handoff.kill();handoff.wait()
     # No display server: successful native shortcuts must not initialize a GUI.
-    native_env=dict(env, PELI_TEST_MODE='success')
+    native_env=dict(env, PELI_TEST_MODE='success', APPIMAGE_EXTRACT_AND_RUN='1')
+    native_binaries=['PeliGames','Pelinstall']
+    appimages=list((Path.cwd()/'Release').glob('PeliGames_*.AppImage'))
+    if len(appimages)==1: native_binaries.append(appimages[0].name)
     native_env.pop('DISPLAY',None); native_env.pop('WAYLAND_DISPLAY',None)
-    for binary in ['PeliGames','Pelinstall']:
+    for binary in native_binaries:
         executable=Path.cwd()/'Release'/binary
         if executable.is_file():
             ui=subprocess.run([str(executable),'--verify-ui'],env=native_env,capture_output=True,text=True,timeout=15)
@@ -131,7 +134,7 @@ esac
     assert call('launch-shortcut', duplicate['path'], mode='success')['result']['state'] == 'exited'
     listed = call('list-games', 'true')['result']
     assert len([item for item in listed if item['executable'] == str(portable)]) == 2
-    for binary in ['PeliGames', 'Pelinstall']:
+    for binary in native_binaries:
         native = subprocess.run([str(Path.cwd()/'Release'/binary), '--launch-game', duplicate['path']], env=native_env, capture_output=True, text=True, timeout=15)
         assert native.returncode == 0, (binary, native.stderr, native.stdout)
     # The actual native headless launcher publishes the same session to a later process.
