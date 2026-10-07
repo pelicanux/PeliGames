@@ -11,6 +11,7 @@ interface Props {
   onClose: () => void;
   isEmbedded?: boolean;
   onBack?: () => void;
+  onBusyChange?: (busy: boolean) => void;
 }
 
 interface ProgressPayload {
@@ -25,7 +26,7 @@ interface BackendVersionStatus {
   needs_update: boolean;
 }
 
-export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbedded, onBack }) => {
+export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbedded, onBack, onBusyChange }) => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState(false);
@@ -39,6 +40,7 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
   const [versionStatus, setVersionStatus] = useState<BackendVersionStatus | null>(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const { t } = useI18n();
+  useEffect(() => { onBusyChange?.(loading || isDownloading); }, [loading, isDownloading, onBusyChange]);
 
   useEffect(() => {
     const checkVersion = async () => {

@@ -5,7 +5,7 @@ import { useI18n } from "../i18n/I18nContext";
 import { checkRunner, installRunner, cancelRunner, type ProtonFamily, type RunnerRelease, type RunnerProgress } from "../services/protonService";
 const families: ProtonFamily[] = ["ge-proton", "cachyos-proton"];
 const names = { "ge-proton": "GE-Proton", "cachyos-proton": "Proton CachyOS" };
-export function ProtonManagerModal({ initialFamily, onClose, onInstalled, isEmbedded = false, onBack, onBusyChange }: { initialFamily: ProtonFamily; onClose: () => void; onInstalled: (path: string) => void; isEmbedded?: boolean; onBack?: () => void; onBusyChange?: (busy: boolean) => void }) {
+export function ProtonManagerModal({ initialFamily, onClose, onInstalled, isEmbedded = false, hideNavigation = false, onBack, onBusyChange }: { initialFamily: ProtonFamily; onClose: () => void; onInstalled: (path: string) => void; isEmbedded?: boolean; hideNavigation?: boolean; onBack?: () => void; onBusyChange?: (busy: boolean) => void }) {
   const { t } = useI18n();
   const [family, setFamily] = useState(initialFamily);
   const [releases, setReleases] = useState<Partial<Record<ProtonFamily, RunnerRelease>>>({});
@@ -37,7 +37,7 @@ export function ProtonManagerModal({ initialFamily, onClose, onInstalled, isEmbe
   const cancel = async () => { setCancelPending(true); try { await cancelRunner(); } catch (e) { setMessage(e instanceof Error ? e.message : String(e)); setCancelPending(false); } };
   const phase = progress?.phase ?? "downloading";
   const content = <ModalSurface className={isEmbedded ? "proton-manager-embedded" : "modal-content proton-manager-modal"} header={isEmbedded ? undefined : <h2>{t("runners", "title")}</h2>} onDismiss={onClose} closeDisabled={busy}>
-      {isEmbedded && <>
+      {isEmbedded && !hideNavigation && <>
         <button type="button" className="btn btn-secondary backend-back-button" disabled={busy} onClick={onBack ?? onClose}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5m7-7-7 7 7 7" /></svg>{t("updater", "back")}
         </button>

@@ -16,6 +16,8 @@ pub struct AppConfig {
     pub steamgriddb_api_key: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scan_steam_protons: Option<bool>,
+    #[serde(default)]
+    pub preferred_proton_family: Option<String>,
 }
 
 impl Default for AppConfig {
@@ -28,6 +30,7 @@ impl Default for AppConfig {
             custom_game_paths: HashMap::new(),
             steamgriddb_api_key: None,
             scan_steam_protons: None,
+            preferred_proton_family: None,
         }
     }
 }
@@ -41,6 +44,7 @@ pub fn preserve_saved_preferences(config: &mut AppConfig, previous: AppConfig) {
     if config.scan_steam_protons.is_none() {
         config.scan_steam_protons = previous.scan_steam_protons;
     }
+    if config.preferred_proton_family.is_none() { config.preferred_proton_family = previous.preferred_proton_family; }
     let incoming = std::mem::take(&mut config.game_shortcut_keys);
     config.game_shortcut_keys = previous.game_shortcut_keys;
     config.game_shortcut_keys.extend(incoming);
