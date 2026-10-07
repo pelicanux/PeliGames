@@ -306,7 +306,7 @@ export const translations = {
       show: "Mostrar", hide: "Ocultar", remove: "Remover",
       localOnly: "Salva somente nas configurações deste computador.",
       getKey: "Obter minha chave",
-      rescanHint: "Clique em Salvar para aplicar. Depois, use Escanear para buscar as capas que faltam. Remover a chave desativa essa consulta opcional.",
+      rescanHint: "A chave é salva automaticamente. Use Escanear para buscar as capas que faltam. Remover a chave desativa essa consulta opcional.",
       missingHint: "Para buscar capas no SteamGridDB, adicione sua chave pessoal em Preferências. Essa integração é opcional.",
       configuredHint: "Sua chave do SteamGridDB está configurada. Gerencie ou remova em Preferências.",
       configure: "Preferências → SteamGridDB"
@@ -733,7 +733,7 @@ export const translations = {
       show: "Show", hide: "Hide", remove: "Remove",
       localOnly: "Saved only in this computer's application settings.",
       getKey: "Get my key",
-      rescanHint: "Click Save to apply. Then use Scan to find missing covers. Removing the key disables this optional lookup.",
+      rescanHint: "The key is saved automatically. Use Scan to find missing covers. Removing the key disables this optional lookup.",
       missingHint: "To search SteamGridDB for cover art, add your personal API key in Preferences. This integration is optional.",
       configuredHint: "Your SteamGridDB key is configured. Manage or remove it in Preferences.",
       configure: "Preferences → SteamGridDB"

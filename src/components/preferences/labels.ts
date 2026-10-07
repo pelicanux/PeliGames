@@ -1,0 +1,18 @@
+import { useI18n } from "../../i18n/I18nContext";
+const pt = {
+  home: "Configurações", interface: "Interface", mods: "Configuração de mods", protons: "Gerenciador de Proton", covers: "Capas e imagens", tools: "Ferramentas",
+  interfaceHint: "Tema e cor de destaque", modsHint: "Projeto e atualização do backend", protonsHint: "Versões e integração com a Steam", coversHint: "Chave de API do SteamGridDB", toolsHint: "Diretórios e logs",
+  themes: "Temas", themesHint: "Personalize a aparência do launcher.", darkHint: "Tema escuro do launcher", lightHint: "Tema claro do launcher", accent: "Cor de destaque", preview: "Pré-visualização da interface", library: "Biblioteca", play: "Jogar",
+  project: "Projeto Backend", projectHint: "Selecione o projeto que deseja utilizar.", rdna4: "Projeto otimizado para RDNA 4 / RX 9000.", rdna3: "Projeto otimizado para RDNA 3 / RX 7000.", backendUpdate: "Atualização do backend", backendHint: "Atualize os arquivos do projeto selecionado.", modTools: "Ferramentas do mod",
+  distribution: "Distribuição preferida", distributionHint: "Selecione a distribuição do Proton que deseja utilizar.", steam: "Integração com a Steam", steamScan: "Buscar versões instaladas da Steam", steamHint: "Inclui instalações nativas e Flatpak.", runnerUpdate: "Atualizar Proton", selected: "Projeto selecionado",
+  automatic: "Preferências salvas automaticamente", saving: "Salvando…", saved: "Configurações salvas", applied: "Alterações aplicadas", close: "Fechar", back: "Voltar", retry: "Tentar novamente", noFolders: "Nenhum diretório adicional configurado.", logsHint: "Consulte os logs coletados pelo gerenciador de mods.", openLogs: "Exibir logs", showKey: "Mostrar chave", hideKey: "Ocultar chave",
+};
+const en: typeof pt = {
+  home: "Settings", interface: "Interface", mods: "Mod settings", protons: "Proton manager", covers: "Covers and images", tools: "Tools",
+  interfaceHint: "Theme and accent color", modsHint: "Backend project and updates", protonsHint: "Versions and Steam integration", coversHint: "SteamGridDB API key", toolsHint: "Directories and logs",
+  themes: "Themes", themesHint: "Customize the launcher's appearance.", darkHint: "Dark launcher theme", lightHint: "Light launcher theme", accent: "Accent color", preview: "Interface preview", library: "Library", play: "Play",
+  project: "Backend project", projectHint: "Choose the project to use.", rdna4: "Optimized for RDNA 4 / RX 9000.", rdna3: "Optimized for RDNA 3 / RX 7000.", backendUpdate: "Backend updates", backendHint: "Update the selected project's files.", modTools: "Mod tools",
+  distribution: "Preferred distribution", distributionHint: "Choose the Proton distribution to use.", steam: "Steam integration", steamScan: "Find installed Steam versions", steamHint: "Includes native and Flatpak installations.", runnerUpdate: "Update Proton", selected: "Selected project",
+  automatic: "Preferences are saved automatically", saving: "Saving…", saved: "Settings saved", applied: "Changes applied", close: "Close", back: "Back", retry: "Try again", noFolders: "No additional directories configured.", logsHint: "View logs collected by the mod manager.", openLogs: "View logs", showKey: "Show key", hideKey: "Hide key",
+};
+export function usePreferencesText() { return useI18n().language === "pt" ? pt : en; }
