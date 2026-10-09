@@ -29,3 +29,17 @@ PeliGames é desenvolvido por Pelicano e distribuído sob [GNU GPL 3.0](LICENSE)
 Integra [DLSSNR-AMD, de mochizuki0323](https://github.com/mochizuki0323/DLSSNR-AMD), e [DLSSNR-RDNA3, de mauri870](https://github.com/mauri870/DLSSNR-RDNA3).
 
 Os componentes de terceiros mantêm suas próprias licenças. Os [créditos e avisos completos](licenses/README.md) acompanham o programa e podem ser consultados na janela **Sobre**.
+
+## Agradecimentos especiais
+
+Obrigado aos desenvolvedores e às comunidades dos projetos que tornam possível jogar no Linux e dão suporte às ferramentas utilizadas pelo PeliGames:
+
+- [GE-Proton — GloriousEggroll](https://github.com/GloriousEggroll/proton-ge-custom)
+- [Proton CachyOS — equipe CachyOS](https://github.com/CachyOS/proton-cachyos)
+- [UMU Launcher — Open Wine Components](https://github.com/Open-Wine-Components/umu-launcher)
+- [Wine](https://www.winehq.org/) e [Proton — Valve e colaboradores](https://github.com/ValveSoftware/Proton)
+- [DXVK](https://github.com/doitsujin/dxvk)
+- [VKD3D-Proton](https://github.com/HansKristian-Work/vkd3d-proton)
+- [Winetricks](https://github.com/Winetricks/winetricks)
+
+Conheça e apoie esses projetos. Nosso agradecimento também a quem testa, relata problemas e contribui para melhorar os jogos no Linux.
