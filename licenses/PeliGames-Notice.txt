@@ -1,0 +1,10 @@
+PeliGames
+Copyright (C) 2026 Pelicano
+SPDX-License-Identifier: GPL-3.0-only
+
+The original PeliGames code is licensed under the GNU General Public License,
+version 3 only. You may redistribute and modify it under those terms.
+PeliGames is provided without warranty, to the extent permitted by law.
+Third-party components retain their own copyright notices and license terms.
+Source code: https://github.com/pelicanux/PeliGames
+

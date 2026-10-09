@@ -24,7 +24,9 @@ O suporte depende do jogo e do formato do pacote. A chave fica no chaveiro do si
 
 ## Créditos e licença
 
-O código próprio do PeliGames, desenvolvido por Pelicano, é distribuído sob a licença [MIT](LICENSE). Os componentes de terceiros mantêm suas respectivas licenças e autorias.
+O código próprio do PeliGames, desenvolvido por Pelicano, é distribuído sob a licença [GNU GPL 3.0](LICENSE) (`GPL-3.0-only`). Os componentes de terceiros mantêm suas respectivas licenças e autorias.
+
+Ao distribuir o programa ou versões derivadas, disponibilize o código-fonte correspondente sob GPL 3.0, mantendo os avisos de autoria e licença. O programa é fornecido sem garantia, nos limites permitidos por lei.
 
 | Componente | Autoria e licença |
 | --- | --- |
@@ -36,6 +38,6 @@ O código próprio do PeliGames, desenvolvido por Pelicano, é distribuído sob 
 | [Ícone Nexus Mods](public/nexus-mods.svg), obtido do [Vortex](https://github.com/Nexus-Mods/Vortex) | Nexus Mods / Black Tree Gaming e colaboradores — repositório de origem sob GPL-3.0; a marca pertence ao seu titular. |
 | Bibliotecas Rust e componentes nativos Linux | Autores e licenças individuais, incluindo MIT, Apache-2.0, BSD, ISC, Unicode, MPL, GPL e LGPL; consulte os avisos completos. |
 
-Os [textos de licença, copyrights e avisos de terceiros](licenses/README.md) são preservados separadamente. A licença MIT do PeliGames não substitui as licenças desses componentes nem concede direitos sobre marcas ou conteúdo de jogos.
+Os [textos de licença, copyrights e avisos de terceiros](licenses/README.md) são preservados separadamente. A licença GPL do PeliGames não substitui as licenças desses componentes nem concede direitos sobre marcas ou conteúdo de jogos.
 
 Proton, UMU, Winetricks e os backends são obtidos separadamente pelo aplicativo e mantêm suas próprias licenças. A DLL e os pesos de modelos da NVIDIA não são incluídos no launcher.
