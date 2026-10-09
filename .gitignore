@@ -67,3 +67,6 @@ dist-ssr
 /public/tauri.svg
 /public/vite.svg
 /.env.example
+
+# Local mod archives used for manual validation
+/teste_mods_nexus/

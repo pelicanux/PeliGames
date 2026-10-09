@@ -15,10 +15,10 @@ work=$(mktemp -d /tmp/peligames-rpm-layout-XXXXXX)
 trap 'rm -rf "$work"' EXIT
 mkdir -p "$work/payload" "$work/SPECS" "$work/RPMS"
 (cd "$work/payload"; rpm2cpio "$package" | cpio -idm --quiet --no-absolute-filenames)
-test -x "$work/payload/opt/PeliGames/PeliGames"
-test -x "$work/payload/opt/PeliGames/Pelinstall"
-install -m 755 "$root/src-tauri/packaging/PeliGames" "$work/payload/usr/bin/PeliGames"
-install -m 755 "$root/src-tauri/packaging/Pelinstall" "$work/payload/usr/bin/Pelinstall"
+test -x "$work/payload/opt/PeliGames/peligames"
+test -x "$work/payload/opt/PeliGames/pelinstall"
+install -m 755 "$root/src-tauri/packaging/peligames" "$work/payload/usr/bin/peligames"
+install -m 755 "$root/src-tauri/packaging/pelinstall" "$work/payload/usr/bin/pelinstall"
 name=$(rpm -qp --qf '%{NAME}' "$package")
 version=$(rpm -qp --qf '%{VERSION}' "$package")
 release=$(rpm -qp --qf '%{RELEASE}' "$package")

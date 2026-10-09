@@ -5,7 +5,7 @@ import { MenuIcon } from "./MenuIcon";
 import { useI18n } from "../i18n/I18nContext";
 
 // Extend the catalog when another mod integration is available.
-const availableMods = [{ id: "dlssnr-amd", name: "DLSSNR-AMD" }] as const;
+const availableMods = [{ id: "dlssnr-amd", name: "DLSSNR-AMD" }, { id: "nexus", name: "Nexus Mods" }] as const;
 export type ModIntegration = typeof availableMods[number]["id"];
 
 export function ModManagerModal({ onClose, onSelect, disabled = false }: {
@@ -35,7 +35,7 @@ export function ModManagerModal({ onClose, onSelect, disabled = false }: {
       <div className="backend-options mod-manager-options">
         {availableMods.map((mod, index) => <button key={mod.id} type="button" ref={index === 0 ? firstOption : undefined}
           className="backend-option proton-preference-option mod-manager-option" disabled={disabled} onClick={() => onSelect(mod.id)}>
-          <MenuIcon name="puzzle" /><span>{mod.name}</span>
+          <>{mod.id === "nexus" ? <img className="nexus-icon" src="/nexus-mods.svg" alt="" /> : <MenuIcon name="puzzle" />}</><span>{mod.name}</span>
         </button>)}
       </div>
     </ModalSurface>

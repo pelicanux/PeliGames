@@ -20,14 +20,28 @@ export function FloatingScrollbars() {
         if (!bar.dragging && !bar.hovering) bar.track.classList.remove("is-active");
       }, 1000);
     };
-    const position = (host: HTMLElement, bar: Scrollbar) => {
+    const activeModal = () => Array.from(document.querySelectorAll<HTMLElement>(".modal-overlay, .preferences-overlay"))
+      .filter(overlay => overlay.getClientRects().length > 0)
+      .sort((a, b) => (Number.parseInt(getComputedStyle(a).zIndex, 10) || 0) - (Number.parseInt(getComputedStyle(b).zIndex, 10) || 0)).slice(-1)[0];
+    const position = (host: HTMLElement, bar: Scrollbar, modal?: HTMLElement) => {
       const rect = host.getBoundingClientRect();
       const headerInset = host.classList.contains("modal-scroll-body") && host.parentElement?.classList.contains("has-dialog-titlebar") ? 72 : 12;
-      const top = Math.max(12, rect.top + headerInset);
-      const bottom = Math.min(window.innerHeight - 12, rect.bottom - 12);
+      let top = Math.max(12, rect.top + headerInset);
+      let bottom = Math.min(window.innerHeight - 12, rect.bottom - 12);
+      let right = rect.right;
+      for (let parent = host.parentElement; parent; parent = parent.parentElement) {
+        if (!/^(auto|scroll|hidden|clip)$/.test(getComputedStyle(parent).overflowY)) continue;
+        const bounds = parent.getBoundingClientRect();
+        top = Math.max(top, bounds.top);
+        bottom = Math.min(bottom, bounds.bottom);
+        right = Math.min(right, bounds.right);
+      }
       const height = Math.max(0, bottom - top);
-      bar.track.style.cssText = `top:${top}px;left:${rect.right - 13}px;height:${height}px`;
-      bar.track.hidden = height < 28 || rect.width === 0 || host.scrollHeight <= host.clientHeight;
+      // Panels can place the overlay in their existing outer padding, keeping content margins equal.
+      const outside = host.dataset.scrollbarOutside === "true";
+      const left = Math.min(window.innerWidth - 10, right + (outside ? 3 : -13));
+      bar.track.style.cssText = `top:${top}px;left:${left}px;height:${height}px`;
+      bar.track.hidden = Boolean(modal && !modal.contains(host)) || !host.getClientRects().length || height < 28 || rect.width === 0 || host.scrollHeight <= host.clientHeight;
       const thumbHeight = Math.min(height, Math.max(28, height * host.clientHeight / host.scrollHeight));
       bar.thumb.style.height = `${thumbHeight}px`;
       bar.thumb.style.transform = `translateY(${(height - thumbHeight) * host.scrollTop / Math.max(1, host.scrollHeight - host.clientHeight)}px)`;
@@ -71,13 +85,14 @@ export function FloatingScrollbars() {
           thumb.addEventListener("pointercancel", end);
         });
       }
+      const modal = activeModal();
       for (const [host, bar] of bars) {
         if (!host.isConnected) {
           window.clearTimeout(bar.timer);
           resize.unobserve(host);
           bar.track.remove();
           bars.delete(host);
-        } else position(host, bar);
+        } else position(host, bar, modal);
       }
     };
     function schedule() { if (!frame) frame = requestAnimationFrame(scan); }
@@ -87,9 +102,9 @@ export function FloatingScrollbars() {
       schedule();
     };
     const pointer = (event: PointerEvent) => {
-      for (const [host, bar] of bars) {
-        const rect = host.getBoundingClientRect();
-        const near = event.clientX >= rect.right - 24 && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
+      for (const bar of bars.values()) {
+        const rect = bar.track.getBoundingClientRect();
+        const near = !bar.track.hidden && event.clientX >= rect.left - 11 && event.clientX <= rect.right + 7 && event.clientY >= rect.top && event.clientY <= rect.bottom;
         const wasHovering = bar.hovering;
         bar.hovering = near;
         if (near || wasHovering) reveal(bar);

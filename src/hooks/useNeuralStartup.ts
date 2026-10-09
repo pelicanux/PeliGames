@@ -7,6 +7,16 @@ const KEY = "neural_startup_preferences";
 function readPreferences(): Record<string, boolean> {
   try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { return {}; }
 }
+let migration: Promise<void> | undefined;
+function migratePreferences(): Promise<void> {
+  if (!migration) {
+    const preferences = readPreferences();
+    migration = Object.keys(preferences).length
+      ? invoke<void>("migrate_neural_preferences", { preferences }).then(() => { localStorage.removeItem(KEY); }).catch(error => { migration = undefined; throw error; })
+      : Promise.resolve();
+  }
+  return migration;
+}
 export function useNeuralStartup(path: string | undefined, installed: boolean) {
   const identity = JSON.stringify([path, installed]);
   const initial = path ? readPreferences()[path] ?? true : true;
@@ -20,26 +30,27 @@ export function useNeuralStartup(path: string | undefined, installed: boolean) {
     const writer = createLatestWriteQueue<boolean, Feedback>(async value => {
       const feedback: Feedback = "nextLaunch";
       if (path && installed) {
+        await migratePreferences();
         await invoke<void>("set_neural_startup", { gameDir: path, enabled: value });
       }
       confirmed = value;
-      if (path) localStorage.setItem(KEY, JSON.stringify({ ...readPreferences(), [path]: value }));
       return feedback;
     }, (value, feedback, error) => {
       if (active) setState({ identity, enabled: error === undefined ? value : confirmed, busy: false, initializing: false, error: error === undefined ? "" : String(error), feedback: error === undefined ? feedback ?? "" : "" });
     });
     queue.current = writer;
     queueIdentity.current = identity;
-    if (path && installed) {
-      invoke<boolean>("get_neural_startup", { gameDir: path })
-        .then(enabled => {
-          if (active) {
-            confirmed = enabled;
-            setState({ identity, enabled, busy: false, initializing: false, error: "", feedback: "" as Feedback });
-          }
-        })
-        .catch(error => { if (active) setState({ identity, enabled: initial, busy: false, initializing: false, error: String(error), feedback: "" as Feedback }); });
-    }
+    migratePreferences().then(async () => {
+      const preferences = await invoke<Record<string, boolean>>("load_neural_preferences");
+      return path && installed
+        ? invoke<boolean>("get_neural_startup", { gameDir: path })
+        : path ? preferences[path] ?? true : true;
+    }).then(enabled => {
+      if (active) {
+        confirmed = enabled;
+        setState({ identity, enabled, busy: false, initializing: false, error: "", feedback: "" as Feedback });
+      }
+    }).catch(error => { if (active) setState({ identity, enabled: initial, busy: false, initializing: false, error: String(error), feedback: "" as Feedback }); });
     return () => { active = false; writer.dispose(); if (queue.current === writer) queue.current = null; };
   }, [path, installed]);
   useEffect(() => {

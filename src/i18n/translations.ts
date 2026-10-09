@@ -121,7 +121,7 @@ export const translations = {
       "checksumMissing": "Este pacote não tem uma soma SHA-256 fornecida pelo GitHub. Publique o arquivo novamente para habilitar o download verificado.",
       "checksum": "O arquivo baixado não passou na verificação de integridade. Tente baixar novamente.",
       "apply": "Não foi possível substituir ou iniciar o AppImage. Verifique as permissões da pasta ou use o arquivo baixado.",
-      "download": "Não foi possível salvar ou abrir o arquivo. Verifique o espaço e as permissões da pasta."
+      "download": "Não foi possível salvar ou abrir o pacote no cache de atualizações. Os detalhes abaixo indicam a pasta e o erro."
 },
     textContext: { title: "Texto", copy: "Copiar", paste: "Colar", error: "Não foi possível acessar a área de transferência." },
     gameCache: {
@@ -207,7 +207,8 @@ export const translations = {
       deleteConfirmBtn: "Excluir Arquivos",
       currentArch: "Arquitetura Atual: ",
       downloadingPct: "Baixando...",
-      openModFolder: "Abrir Pasta do Mod"
+      openModFolder: "Abrir Pasta do Mod",
+      openFolderError: "Não foi possível abrir a pasta do mod.",
     },
     confirm: {
       uninstallGame: "Tem certeza que deseja desinstalar o mod deste jogo?",
@@ -548,7 +549,7 @@ export const translations = {
       "checksumMissing": "This package has no SHA-256 digest provided by GitHub. Upload it again to enable verified downloading.",
       "checksum": "The downloaded file failed the integrity check. Try downloading again.",
       "apply": "Could not replace or launch the AppImage. Check folder permissions or use the downloaded file.",
-      "download": "Could not save or open the file. Check free space and folder permissions."
+      "download": "Could not save or open the package in the update cache. Details below identify the folder and the error."
 },
     textContext: { title: "Text", copy: "Copy", paste: "Paste", error: "Could not access the clipboard." },
     gameCache: {
@@ -634,7 +635,8 @@ export const translations = {
       deleteConfirmBtn: "Delete Files",
       currentArch: "Current Architecture: ",
       downloadingPct: "Downloading...",
-      openModFolder: "Open Mod Folder"
+      openModFolder: "Open Mod Folder",
+      openFolderError: "Could not open the mod folder.",
     },
     confirm: {
       uninstallGame: "Are you sure you want to uninstall the mod from this game?",

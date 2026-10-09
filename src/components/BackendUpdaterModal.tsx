@@ -36,6 +36,7 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
   const [progressPct, setProgressPct] = useState(0);
   const [speedStr, setSpeedStr] = useState("");
   const [downloadComplete, setDownloadComplete] = useState(false);
+  const [openingFolder, setOpeningFolder] = useState(false);
   const [checkingVersion, setCheckingVersion] = useState(true);
   const [versionStatus, setVersionStatus] = useState<BackendVersionStatus | null>(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -168,11 +169,14 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
   };
 
   const handleOpenFolder = async () => {
+    if (openingFolder) return;
+    setOpeningFolder(true); setError(false); setStatus("");
     try {
       await invoke("open_backend_folder", { gpuArch });
     } catch (err) {
-      console.error("Failed to open folder:", err);
-    }
+      setError(true);
+      setStatus(`${t("updater", "openFolderError")} ${String(err)}`);
+    } finally { setOpeningFolder(false); }
   };
 
 
@@ -274,7 +278,7 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
 
           <button 
             onClick={handleOpenFolder} 
-            disabled={loading}
+            disabled={loading || openingFolder}
             style={{ padding: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
@@ -292,7 +296,7 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
         </div>
 
         {status && (
-          <div style={{ 
+          <div role={error ? "alert" : "status"} style={{
             marginTop: "1rem", 
             padding: "0.8rem", 
             background: "rgba(0,0,0,0.3)", 

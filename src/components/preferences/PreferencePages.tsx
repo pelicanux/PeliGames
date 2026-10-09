@@ -1,6 +1,5 @@
 import { useState, type RefObject } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { invoke } from "@tauri-apps/api/core";
 import type { AppConfig } from "../SetupWizard";
 import type { ProtonFamily } from "../../services/protonService";
 import { MenuIcon } from "../MenuIcon";
@@ -53,11 +52,11 @@ export function CoverPreferences({ config, disabled, save, focusRef, onError }: 
     <div className="steamgrid-settings-footer"><small>{t("steamgrid", "localOnly")}</small><button type="button" onClick={() => void openUrl("https://www.steamgriddb.com/profile/preferences/api").catch(error => onError(String(error)))}>{t("steamgrid", "getKey")} ↗</button></div><p>{t("steamgrid", "rescanHint")}</p>
   </section></>;
 }
-export function ToolsPreferences({ onError }: { onError: (error: string) => void }) {
+export function ToolsPreferences({ onError, onLogs }: { onError: (error: string) => void; onLogs: () => void }) {
   const text = usePreferencesText(), { t } = useI18n();
   const [folders, setFolders] = useState<string[]>(() => { try { const value = JSON.parse(localStorage.getItem("custom_folders") ?? "[]"); return Array.isArray(value) ? value.filter(item => typeof item === "string") : []; } catch { return []; } });
   const remove = (folder: string) => { const next = folders.filter(item => item !== folder); try { localStorage.setItem("custom_folders", JSON.stringify(next)); setFolders(next); window.dispatchEvent(new Event("refreshGames")); } catch (error) { onError(String(error)); } };
-  return <><h2>{text.tools}</h2><section className="preference-section first"><h3>{text.openLogs}</h3><p>{text.logsHint}</p><button type="button" className="preference-outline" onClick={() => void invoke("collect_and_open_logs", { gameName: "", gameDir: "" }).catch(error => onError(String(error)))}><MenuIcon name="logs"/>{text.openLogs}</button></section>
+  return <><h2>{text.tools}</h2><section className="preference-section first"><h3>{text.openLogs}</h3><p>{text.logsHint}</p><button type="button" className="preference-outline" onClick={onLogs}><MenuIcon name="logs"/>{text.openLogs}</button></section>
     <section className="preference-section"><h3>{t("settings", "manualDirs")}</h3><p>{t("settings", "manualDirsDesc")}</p>{folders.length ? <div className="preference-folders">{folders.map(folder => <div key={folder}><span>{folder}</span><button type="button" aria-label={`${t("settings", "removeDir")}: ${folder}`} onClick={() => remove(folder)}><MenuIcon name="trash"/></button></div>)}</div> : <p>{text.noFolders}</p>}</section>
   </>;
 }

@@ -1,0 +1,18 @@
+<!doctype html><meta charset="utf-8"><title>Teste de descrição Nexus</title><pre id="results">Executando…</pre>
+<script type="module">
+import { plainNexusText } from '/src/modules/nexus/nexusLinks.ts';
+const cases = [
+ ['Caminho da imagem', '...&#92;Pal&#92;Content&#92;Paks&#92;LogicMods&#92;PalAnalyzerConfig.json', '...\\Pal\\Content\\Paks\\LogicMods\\PalAnalyzerConfig.json'],
+ ['Entidades hexadecimais e emoji', '&#x5c; &#x1F9E9;', '\\ 🧩'],
+ ['Acentos e aspas', 'Configura&ccedil;&atilde;o &quot;A&amp;B&quot; &#39;teste&#39;', 'Configuração "A&B" \'teste\''],
+ ['Dupla codificação', '&amp;#92;Pal &amp;quot;Mods&amp;quot;', '\\Pal "Mods"'],
+ ['HTML, BBCode e quebras', '&lt;p&gt;[b]Título[/b]&lt;/p&gt;Linha<br>Fim&nbsp;!', 'Título\nLinha\nFim !'],
+ ['Unicode inválido', '&#x110000; &#xD800; &#0;', '&#x110000; &#xD800; &#0;'],
+ ['Texto e entidade desconhecida', 'a < 2 > 1 &notARealEntity;', 'a < 2 > 1 &notARealEntity;'],
+ ['Marcação remota inerte', '&lt;img src=x onerror=alert(1)&gt;Descrição', 'Descrição']
+];
+const results = cases.map(([name,input,expected]) => ({name, actual:plainNexusText(input), expected}));
+const failed = results.filter(r => r.actual !== r.expected);
+document.querySelector('#results').textContent = results.map(r => `${r.actual === r.expected ? 'PASS' : 'FAIL'} ${r.name}: ${JSON.stringify(r.actual)}`).join('\n') + `\n\n${results.length-failed.length}/${results.length} passaram`;
+if (failed.length) throw Error(JSON.stringify(failed));
+</script>
