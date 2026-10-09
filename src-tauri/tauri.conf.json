@@ -45,7 +45,9 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": [],
+    "resources": {
+      "../licenses/": "licenses/"
+    },
     "linux": {
       "deb": {
         "desktopTemplate": "packaging/launcher.desktop",
