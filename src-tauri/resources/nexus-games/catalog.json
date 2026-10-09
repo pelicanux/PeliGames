@@ -1,0 +1,6159 @@
+[
+  {
+    "schema": 1,
+    "version": "1.1.2",
+    "domain": "cyberpunk2077",
+    "name": "Cyberpunk 2077",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "bin/x64/Cyberpunk2077.exe",
+    "required": [
+      "bin/x64/Cyberpunk2077.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1091500",
+    "destinations": [
+      "archive/pc/mod",
+      "bin/x64/plugins",
+      "r6/scripts",
+      "r6/tweaks",
+      "red4ext/plugins",
+      "engine/tools",
+      "r6/config"
+    ],
+    "allowed_files": [
+      "bin/x64/version.dll",
+      "bin/x64/winmm.dll",
+      "red4ext/RED4ext.dll"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "archive/pc/patch/",
+        "target": "archive/pc/mod/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "archive/pc/mod/",
+        "target": "archive/pc/mod/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "bin/x64/plugins/cyber_engine_tweaks.asi",
+        "target": "bin/x64/plugins/cyber_engine_tweaks.asi",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "bin/x64/plugins/cyber_engine_tweaks/",
+        "target": "bin/x64/plugins/cyber_engine_tweaks/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "bin/x64/plugins/",
+        "target": "bin/x64/plugins/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "r6/scripts/",
+        "target": "r6/scripts/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "r6/tweaks/",
+        "target": "r6/tweaks/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "red4ext/plugins/",
+        "target": "red4ext/plugins/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "engine/tools/",
+        "target": "engine/tools/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "r6/config/",
+        "target": "r6/config/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "bin/x64/version.dll",
+        "target": "bin/x64/version.dll"
+      },
+      {
+        "kind": "file",
+        "source": "bin/x64/winmm.dll",
+        "target": "bin/x64/winmm.dll"
+      },
+      {
+        "kind": "file",
+        "source": "red4ext/RED4ext.dll",
+        "target": "red4ext/RED4ext.dll"
+      },
+      {
+        "kind": "file",
+        "source": "version.dll",
+        "target": "bin/x64/version.dll"
+      },
+      {
+        "kind": "file",
+        "source": "winmm.dll",
+        "target": "bin/x64/winmm.dll"
+      },
+      {
+        "kind": "extension",
+        "extension": ".archive",
+        "target": "archive/pc/mod/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".xl",
+        "target": "archive/pc/mod/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/game-cyberpunk2077",
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/Cyberpunk%202077/cyberpunk_2077.py"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala pacotes archive, CET, RED4ext, Redscript e TweakXL com estrutura reconhecida. REDmod exige compilação própria e não é instalado por este módulo."
+    ],
+    "rejected_prefixes": [
+      "mods/"
+    ],
+    "frameworks": [
+      {
+        "name": "Cyber Engine Tweaks",
+        "nexus_name": "Cyber Engine Tweaks",
+        "mod_id": 107,
+        "required_files": [
+          "bin/x64/plugins/cyber_engine_tweaks.asi"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "bin/x64/plugins/cyber_engine_tweaks/mods/"
+        ],
+        "for_extensions": []
+      },
+      {
+        "name": "RED4ext",
+        "nexus_name": "RED4ext",
+        "mod_id": 2380,
+        "required_files": [
+          "red4ext/RED4ext.dll",
+          "bin/x64/winmm.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "red4ext/plugins/"
+        ],
+        "for_extensions": []
+      },
+      {
+        "name": "Redscript",
+        "nexus_name": "redscript",
+        "mod_id": 1511,
+        "required_files": [
+          "engine/tools/scc.exe"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "r6/scripts/"
+        ],
+        "for_extensions": []
+      },
+      {
+        "name": "ArchiveXL",
+        "nexus_name": "ArchiveXL",
+        "mod_id": 4198,
+        "required_files": [
+          "red4ext/plugins/ArchiveXL/ArchiveXL.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "archive/pc/mod/"
+        ],
+        "for_extensions": [
+          ".xl"
+        ]
+      },
+      {
+        "name": "TweakXL",
+        "nexus_name": "TweakXL",
+        "mod_id": 4197,
+        "required_files": [
+          "red4ext/plugins/TweakXL/TweakXL.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "r6/tweaks/"
+        ],
+        "for_extensions": []
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "version",
+        "file": "bin/x64/version.dll"
+      },
+      {
+        "name": "winmm",
+        "file": "bin/x64/winmm.dll"
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.1.0",
+    "domain": "stardewvalley",
+    "name": "Stardew Valley",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "Stardew Valley.exe",
+    "required": [
+      "Stardew Valley.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "413150",
+    "destinations": [
+      "Mods",
+      "smapi-internal"
+    ],
+    "allowed_files": [
+      "StardewModdingAPI.exe",
+      "StardewModdingAPI.dll",
+      "StardewModdingAPI.exe.config",
+      "StardewModdingAPI.deps.json",
+      "StardewModdingAPI.runtimeconfig.json",
+      "StardewModdingAPI.xml",
+      "steam_appid.txt"
+    ],
+    "routes": [
+      {
+        "kind": "file",
+        "source": "StardewModdingAPI.exe",
+        "target": "StardewModdingAPI.exe"
+      },
+      {
+        "kind": "file",
+        "source": "StardewModdingAPI.dll",
+        "target": "StardewModdingAPI.dll"
+      },
+      {
+        "kind": "file",
+        "source": "StardewModdingAPI.exe.config",
+        "target": "StardewModdingAPI.exe.config"
+      },
+      {
+        "kind": "file",
+        "source": "StardewModdingAPI.deps.json",
+        "target": "StardewModdingAPI.deps.json"
+      },
+      {
+        "kind": "file",
+        "source": "StardewModdingAPI.runtimeconfig.json",
+        "target": "StardewModdingAPI.runtimeconfig.json"
+      },
+      {
+        "kind": "file",
+        "source": "StardewModdingAPI.xml",
+        "target": "StardewModdingAPI.xml"
+      },
+      {
+        "kind": "file",
+        "source": "steam_appid.txt",
+        "target": "steam_appid.txt"
+      },
+      {
+        "kind": "prefix",
+        "source": "smapi-internal/",
+        "target": "smapi-internal/"
+      },
+      {
+        "kind": "manifest",
+        "marker": "manifest.json",
+        "target": "Mods/"
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-stardewvalley/src/index.ts",
+      "https://stardewvalleywiki.com/Modding:Player_Guide/Getting_Started",
+      "https://github.com/Pathoschild/SMAPI/blob/develop/src/SMAPI.Installer/assets/README.txt"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Windows/Proton: o instalador SMAPI usa somente internal/windows/install.dat, cria StardewModdingAPI.deps.json a partir das dependências do jogo e preserva os arquivos originais. Scripts de instalação não são executados. Mods com manifest.json continuam na pasta Mods. Iniciar com mods usa StardewModdingAPI.exe. Linux nativo ainda não atendido por este módulo."
+    ],
+    "rejected_prefixes": [],
+    "frameworks": [
+      {
+        "name": "SMAPI",
+        "nexus_name": "SMAPI - Stardew Modding API",
+        "mod_id": 2400,
+        "required_files": [
+          "StardewModdingAPI.exe",
+          "StardewModdingAPI.dll",
+          "StardewModdingAPI.deps.json",
+          "StardewModdingAPI.runtimeconfig.json"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "Mods/"
+        ],
+        "for_extensions": [],
+        "url": "https://www.nexusmods.com/stardewvalley/mods/2400"
+      }
+    ],
+    "mod_launch_executable": "StardewModdingAPI.exe"
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "readyornot",
+    "name": "Ready or Not",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "ReadyOrNot/Binaries/Win64/ReadyOrNot-Win64-Shipping.exe",
+    "required": [
+      "ReadyOrNot/Binaries/Win64/ReadyOrNot-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1144200",
+    "destinations": [
+      "ReadyOrNot/Content/Paks"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "ReadyOrNot/Content/Paks/",
+        "target": "ReadyOrNot/Content/Paks/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".pak",
+        "target": "ReadyOrNot/Content/Paks/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".utoc",
+        "target": "ReadyOrNot/Content/Paks/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ucas",
+        "target": "ReadyOrNot/Content/Paks/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://www.nexusmods.com/readyornot/articles/21"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala pacotes de dados .pak/.utoc/.ucas. Scripts e carregadores UE4SS exigem um módulo específico adicional."
+    ],
+    "rejected_prefixes": [
+      "ue4ss/",
+      "LogicMods/"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "hogwartslegacy",
+    "name": "Hogwarts Legacy",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "HogwartsLegacy.exe",
+    "required": [
+      "HogwartsLegacy.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "990080",
+    "destinations": [
+      "Phoenix/Content/Paks/~mods"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Phoenix/Content/Paks/~mods/",
+        "target": "Phoenix/Content/Paks/~mods/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".pak",
+        "target": "Phoenix/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".utoc",
+        "target": "Phoenix/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ucas",
+        "target": "Phoenix/Content/Paks/~mods/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/game-hogwartslegacy"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala pacotes de dados .pak/.utoc/.ucas. Scripts e carregadores UE4SS exigem um módulo específico adicional."
+    ],
+    "rejected_prefixes": [
+      "ue4ss/",
+      "LogicMods/"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "stellarblade",
+    "name": "Stellar Blade",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "SB/Binaries/Win64/SB-Win64-Shipping.exe",
+    "required": [
+      "SB/Binaries/Win64/SB-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "3489700",
+    "destinations": [
+      "SB/Content/Paks/~mods"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "SB/Content/Paks/~mods/",
+        "target": "SB/Content/Paks/~mods/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".pak",
+        "target": "SB/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".utoc",
+        "target": "SB/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ucas",
+        "target": "SB/Content/Paks/~mods/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://www.nexusmods.com/stellarblade/mods/2650"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala pacotes de dados .pak/.utoc/.ucas. Scripts e carregadores UE4SS exigem um módulo específico adicional."
+    ],
+    "rejected_prefixes": [
+      "ue4ss/",
+      "LogicMods/"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "stalker2heartofchornobyl",
+    "name": "S.T.A.L.K.E.R. 2: Heart of Chornobyl",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "Stalker2/Binaries/Win64/Stalker2-Win64-Shipping.exe",
+    "required": [
+      "Stalker2/Binaries/Win64/Stalker2-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1643320",
+    "destinations": [
+      "Stalker2/Content/Paks/~mods"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Stalker2/Content/Paks/~mods/",
+        "target": "Stalker2/Content/Paks/~mods/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".pak",
+        "target": "Stalker2/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".utoc",
+        "target": "Stalker2/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ucas",
+        "target": "Stalker2/Content/Paks/~mods/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://github.com/tnebes/stalker2mods/blob/master/GUIDE.md"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala pacotes de dados .pak/.utoc/.ucas. Scripts e carregadores UE4SS exigem um módulo específico adicional."
+    ],
+    "rejected_prefixes": [
+      "ue4ss/",
+      "LogicMods/"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "finalfantasy7remake",
+    "name": "Final Fantasy VII Remake",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "End/Binaries/Win64/ff7remake_.exe",
+    "required": [
+      "End/Binaries/Win64/ff7remake_.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1462040",
+    "destinations": [
+      "End/Content/Paks/~mods"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "End/Content/Paks/~mods/",
+        "target": "End/Content/Paks/~mods/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".pak",
+        "target": "End/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".utoc",
+        "target": "End/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ucas",
+        "target": "End/Content/Paks/~mods/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://www.nexusmods.com/finalfantasy7remake/mods/74"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala pacotes de dados .pak/.utoc/.ucas. Scripts e carregadores UE4SS exigem um módulo específico adicional."
+    ],
+    "rejected_prefixes": [
+      "ue4ss/",
+      "LogicMods/"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "finalfantasy7rebirth",
+    "name": "Final Fantasy VII Rebirth",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "End/Binaries/Win64/ff7rebirth_.exe",
+    "required": [
+      "End/Binaries/Win64/ff7rebirth_.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "2909400",
+    "destinations": [
+      "End/Content/Paks/~mods"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "End/Content/Paks/~mods/",
+        "target": "End/Content/Paks/~mods/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".pak",
+        "target": "End/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".utoc",
+        "target": "End/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ucas",
+        "target": "End/Content/Paks/~mods/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://www.nexusmods.com/finalfantasy7rebirth/mods/392"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala pacotes de dados .pak/.utoc/.ucas. Scripts e carregadores UE4SS exigem um módulo específico adicional."
+    ],
+    "rejected_prefixes": [
+      "ue4ss/",
+      "LogicMods/"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "codevein",
+    "name": "Code Vein",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "CodeVein/Binaries/Win64/CodeVein-Win64-Shipping.exe",
+    "required": [
+      "CodeVein/Binaries/Win64/CodeVein-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "678960",
+    "destinations": [
+      "CodeVein/Content/Paks/~mods"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "CodeVein/Content/Paks/~mods/",
+        "target": "CodeVein/Content/Paks/~mods/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".pak",
+        "target": "CodeVein/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".utoc",
+        "target": "CodeVein/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ucas",
+        "target": "CodeVein/Content/Paks/~mods/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-codevein/src/common.ts"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala pacotes de dados .pak/.utoc/.ucas. Scripts e carregadores UE4SS exigem um módulo específico adicional."
+    ],
+    "rejected_prefixes": [
+      "ue4ss/",
+      "LogicMods/"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "clairobscurexpedition33",
+    "name": "Clair Obscur: Expedition 33",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "Sandfall/Binaries/Win64/SandFall-Win64-Shipping.exe",
+    "required": [
+      "Sandfall/Binaries/Win64/SandFall-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1903340",
+    "destinations": [
+      "Sandfall/Content/Paks/~mods"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Sandfall/Content/Paks/~mods/",
+        "target": "Sandfall/Content/Paks/~mods/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".pak",
+        "target": "Sandfall/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".utoc",
+        "target": "Sandfall/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ucas",
+        "target": "Sandfall/Content/Paks/~mods/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://www.nexusmods.com/clairobscurexpedition33/mods/704"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala pacotes de dados .pak/.utoc/.ucas. Scripts e carregadores UE4SS exigem um módulo específico adicional."
+    ],
+    "rejected_prefixes": [
+      "ue4ss/",
+      "LogicMods/"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "monsterhunterrise",
+    "name": "Monster Hunter Rise",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "MonsterHunterRise.exe",
+    "required": [
+      "MonsterHunterRise.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1446780",
+    "destinations": [
+      "reframework/autorun",
+      "reframework/plugins",
+      "reframework/data"
+    ],
+    "allowed_files": [
+      "dinput8.dll"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "reframework/autorun/",
+        "target": "reframework/autorun/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/plugins/",
+        "target": "reframework/plugins/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/data/",
+        "target": "reframework/data/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "dinput8.dll",
+        "target": "dinput8.dll"
+      },
+      {
+        "kind": "extension",
+        "extension": ".lua",
+        "target": "reframework/autorun/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_LooseLoading/monster_hunter_rise.py",
+      "https://github.com/praydog/REFramework"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Suporte a scripts e plugins REFramework. Pacotes natives, Fluffy e substituição de arquivos .pak não são aplicados por este módulo."
+    ],
+    "rejected_prefixes": [
+      "natives/",
+      "pak_mods/"
+    ],
+    "frameworks": [
+      {
+        "name": "REFramework",
+        "mod_id": 0,
+        "required_files": [
+          "dinput8.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "reframework/"
+        ],
+        "for_extensions": [],
+        "url": "https://github.com/praydog/REFramework/releases"
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "dinput8",
+        "file": "dinput8.dll"
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "monsterhunterwilds",
+    "name": "Monster Hunter Wilds",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "MonsterHunterWilds.exe",
+    "required": [
+      "MonsterHunterWilds.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "2246340",
+    "destinations": [
+      "reframework/autorun",
+      "reframework/plugins",
+      "reframework/data"
+    ],
+    "allowed_files": [
+      "dinput8.dll"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "reframework/autorun/",
+        "target": "reframework/autorun/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/plugins/",
+        "target": "reframework/plugins/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/data/",
+        "target": "reframework/data/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "dinput8.dll",
+        "target": "dinput8.dll"
+      },
+      {
+        "kind": "extension",
+        "extension": ".lua",
+        "target": "reframework/autorun/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_LooseLoading/monster_hunter_wilds.py",
+      "https://github.com/praydog/REFramework"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Suporte a scripts e plugins REFramework. Pacotes natives, Fluffy e substituição de arquivos .pak não são aplicados por este módulo."
+    ],
+    "rejected_prefixes": [
+      "natives/",
+      "pak_mods/"
+    ],
+    "frameworks": [
+      {
+        "name": "REFramework",
+        "mod_id": 0,
+        "required_files": [
+          "dinput8.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "reframework/"
+        ],
+        "for_extensions": [],
+        "url": "https://github.com/praydog/REFramework/releases"
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "dinput8",
+        "file": "dinput8.dll"
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "residentevil22019",
+    "name": "Resident Evil 2 (2019)",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "re2.exe",
+    "required": [
+      "re2.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "883710",
+    "destinations": [
+      "reframework/autorun",
+      "reframework/plugins",
+      "reframework/data"
+    ],
+    "allowed_files": [
+      "dinput8.dll"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "reframework/autorun/",
+        "target": "reframework/autorun/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/plugins/",
+        "target": "reframework/plugins/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/data/",
+        "target": "reframework/data/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "dinput8.dll",
+        "target": "dinput8.dll"
+      },
+      {
+        "kind": "extension",
+        "extension": ".lua",
+        "target": "reframework/autorun/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_Invalidation/resident_evil_2.py",
+      "https://github.com/praydog/REFramework"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Suporte a scripts e plugins REFramework. Pacotes natives, Fluffy e substituição de arquivos .pak não são aplicados por este módulo."
+    ],
+    "rejected_prefixes": [
+      "natives/",
+      "pak_mods/"
+    ],
+    "frameworks": [
+      {
+        "name": "REFramework",
+        "mod_id": 0,
+        "required_files": [
+          "dinput8.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "reframework/"
+        ],
+        "for_extensions": [],
+        "url": "https://github.com/praydog/REFramework/releases"
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "dinput8",
+        "file": "dinput8.dll"
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "residentevil32020",
+    "name": "Resident Evil 3 (2020)",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "re3.exe",
+    "required": [
+      "re3.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "952060",
+    "destinations": [
+      "reframework/autorun",
+      "reframework/plugins",
+      "reframework/data"
+    ],
+    "allowed_files": [
+      "dinput8.dll"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "reframework/autorun/",
+        "target": "reframework/autorun/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/plugins/",
+        "target": "reframework/plugins/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/data/",
+        "target": "reframework/data/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "dinput8.dll",
+        "target": "dinput8.dll"
+      },
+      {
+        "kind": "extension",
+        "extension": ".lua",
+        "target": "reframework/autorun/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_Invalidation/resident_evil_3.py",
+      "https://github.com/praydog/REFramework"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Suporte a scripts e plugins REFramework. Pacotes natives, Fluffy e substituição de arquivos .pak não são aplicados por este módulo."
+    ],
+    "rejected_prefixes": [
+      "natives/",
+      "pak_mods/"
+    ],
+    "frameworks": [
+      {
+        "name": "REFramework",
+        "mod_id": 0,
+        "required_files": [
+          "dinput8.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "reframework/"
+        ],
+        "for_extensions": [],
+        "url": "https://github.com/praydog/REFramework/releases"
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "dinput8",
+        "file": "dinput8.dll"
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "residentevil42023",
+    "name": "Resident Evil 4 (2023)",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "re4.exe",
+    "required": [
+      "re4.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "2050650",
+    "destinations": [
+      "reframework/autorun",
+      "reframework/plugins",
+      "reframework/data"
+    ],
+    "allowed_files": [
+      "dinput8.dll"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "reframework/autorun/",
+        "target": "reframework/autorun/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/plugins/",
+        "target": "reframework/plugins/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/data/",
+        "target": "reframework/data/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "dinput8.dll",
+        "target": "dinput8.dll"
+      },
+      {
+        "kind": "extension",
+        "extension": ".lua",
+        "target": "reframework/autorun/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_Invalidation/resident_evil_4.py",
+      "https://github.com/praydog/REFramework"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Suporte a scripts e plugins REFramework. Pacotes natives, Fluffy e substituição de arquivos .pak não são aplicados por este módulo."
+    ],
+    "rejected_prefixes": [
+      "natives/",
+      "pak_mods/"
+    ],
+    "frameworks": [
+      {
+        "name": "REFramework",
+        "mod_id": 0,
+        "required_files": [
+          "dinput8.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "reframework/"
+        ],
+        "for_extensions": [],
+        "url": "https://github.com/praydog/REFramework/releases"
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "dinput8",
+        "file": "dinput8.dll"
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "residentevilvillage",
+    "name": "Resident Evil Village",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "re8.exe",
+    "required": [
+      "re8.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1196590",
+    "destinations": [
+      "reframework/autorun",
+      "reframework/plugins",
+      "reframework/data"
+    ],
+    "allowed_files": [
+      "dinput8.dll"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "reframework/autorun/",
+        "target": "reframework/autorun/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/plugins/",
+        "target": "reframework/plugins/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/data/",
+        "target": "reframework/data/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "dinput8.dll",
+        "target": "dinput8.dll"
+      },
+      {
+        "kind": "extension",
+        "extension": ".lua",
+        "target": "reframework/autorun/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_Invalidation/resident_evil_village.py",
+      "https://github.com/praydog/REFramework"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Suporte a scripts e plugins REFramework. Pacotes natives, Fluffy e substituição de arquivos .pak não são aplicados por este módulo."
+    ],
+    "rejected_prefixes": [
+      "natives/",
+      "pak_mods/"
+    ],
+    "frameworks": [
+      {
+        "name": "REFramework",
+        "mod_id": 0,
+        "required_files": [
+          "dinput8.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "reframework/"
+        ],
+        "for_extensions": [],
+        "url": "https://github.com/praydog/REFramework/releases"
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "dinput8",
+        "file": "dinput8.dll"
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "devilmaycry5",
+    "name": "Devil May Cry 5",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "DevilMayCry5.exe",
+    "required": [
+      "DevilMayCry5.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "601150",
+    "destinations": [
+      "reframework/autorun",
+      "reframework/plugins",
+      "reframework/data"
+    ],
+    "allowed_files": [
+      "dinput8.dll"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "reframework/autorun/",
+        "target": "reframework/autorun/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/plugins/",
+        "target": "reframework/plugins/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/data/",
+        "target": "reframework/data/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "dinput8.dll",
+        "target": "dinput8.dll"
+      },
+      {
+        "kind": "extension",
+        "extension": ".lua",
+        "target": "reframework/autorun/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_Invalidation/devil_may_cry_5.py",
+      "https://github.com/praydog/REFramework"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Suporte a scripts e plugins REFramework. Pacotes natives, Fluffy e substituição de arquivos .pak não são aplicados por este módulo."
+    ],
+    "rejected_prefixes": [
+      "natives/",
+      "pak_mods/"
+    ],
+    "frameworks": [
+      {
+        "name": "REFramework",
+        "mod_id": 0,
+        "required_files": [
+          "dinput8.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "reframework/"
+        ],
+        "for_extensions": [],
+        "url": "https://github.com/praydog/REFramework/releases"
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "dinput8",
+        "file": "dinput8.dll"
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "dragonsdogma2",
+    "name": "Dragon's Dogma 2",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "DD2.exe",
+    "required": [
+      "DD2.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "2054970",
+    "destinations": [
+      "reframework/autorun",
+      "reframework/plugins",
+      "reframework/data"
+    ],
+    "allowed_files": [
+      "dinput8.dll"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "reframework/autorun/",
+        "target": "reframework/autorun/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/plugins/",
+        "target": "reframework/plugins/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/data/",
+        "target": "reframework/data/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "dinput8.dll",
+        "target": "dinput8.dll"
+      },
+      {
+        "kind": "extension",
+        "extension": ".lua",
+        "target": "reframework/autorun/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_Invalidation/dragons_dogma_2.py",
+      "https://github.com/praydog/REFramework"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Suporte a scripts e plugins REFramework. Pacotes natives, Fluffy e substituição de arquivos .pak não são aplicados por este módulo."
+    ],
+    "rejected_prefixes": [
+      "natives/",
+      "pak_mods/"
+    ],
+    "frameworks": [
+      {
+        "name": "REFramework",
+        "mod_id": 0,
+        "required_files": [
+          "dinput8.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "reframework/"
+        ],
+        "for_extensions": [],
+        "url": "https://github.com/praydog/REFramework/releases"
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "dinput8",
+        "file": "dinput8.dll"
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "streetfighter6",
+    "name": "Street Fighter 6",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "StreetFighter6.exe",
+    "required": [
+      "StreetFighter6.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1364780",
+    "destinations": [
+      "reframework/autorun",
+      "reframework/plugins",
+      "reframework/data"
+    ],
+    "allowed_files": [
+      "dinput8.dll"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "reframework/autorun/",
+        "target": "reframework/autorun/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/plugins/",
+        "target": "reframework/plugins/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/data/",
+        "target": "reframework/data/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "dinput8.dll",
+        "target": "dinput8.dll"
+      },
+      {
+        "kind": "extension",
+        "extension": ".lua",
+        "target": "reframework/autorun/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_Invalidation/street_fighter_6.py",
+      "https://github.com/praydog/REFramework"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Suporte a scripts e plugins REFramework. Pacotes natives, Fluffy e substituição de arquivos .pak não são aplicados por este módulo."
+    ],
+    "rejected_prefixes": [
+      "natives/",
+      "pak_mods/"
+    ],
+    "frameworks": [
+      {
+        "name": "REFramework",
+        "mod_id": 0,
+        "required_files": [
+          "dinput8.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "reframework/"
+        ],
+        "for_extensions": [],
+        "url": "https://github.com/praydog/REFramework/releases"
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "dinput8",
+        "file": "dinput8.dll"
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "residentevilrequiem",
+    "name": "Resident Evil Requiem",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "re9.exe",
+    "required": [
+      "re9.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "3764200",
+    "destinations": [
+      "reframework/autorun",
+      "reframework/plugins",
+      "reframework/data"
+    ],
+    "allowed_files": [
+      "dinput8.dll"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "reframework/autorun/",
+        "target": "reframework/autorun/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/plugins/",
+        "target": "reframework/plugins/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "reframework/data/",
+        "target": "reframework/data/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "dinput8.dll",
+        "target": "dinput8.dll"
+      },
+      {
+        "kind": "extension",
+        "extension": ".lua",
+        "target": "reframework/autorun/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_LooseLoading/resident_evil_requiem.py",
+      "https://github.com/praydog/REFramework"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Suporte a scripts e plugins REFramework. Pacotes natives, Fluffy e substituição de arquivos .pak não são aplicados por este módulo."
+    ],
+    "rejected_prefixes": [
+      "natives/",
+      "pak_mods/"
+    ],
+    "frameworks": [
+      {
+        "name": "REFramework",
+        "mod_id": 0,
+        "required_files": [
+          "dinput8.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "reframework/"
+        ],
+        "for_extensions": [],
+        "url": "https://github.com/praydog/REFramework/releases"
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "dinput8",
+        "file": "dinput8.dll"
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "subnautica",
+    "name": "Subnautica",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "Subnautica.exe",
+    "required": [
+      "Subnautica.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "264710",
+    "destinations": [
+      "BepInEx"
+    ],
+    "allowed_files": [
+      "winhttp.dll",
+      "doorstop_config.ini"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "BepInEx/",
+        "target": "BepInEx/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "winhttp.dll",
+        "target": "winhttp.dll"
+      },
+      {
+        "kind": "file",
+        "source": "doorstop_config.ini",
+        "target": "doorstop_config.ini"
+      },
+      {
+        "kind": "extension",
+        "extension": ".dll",
+        "target": "BepInEx/plugins/{mod_id}/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/BepInEx/BepInEx.py",
+      "https://docs.bepinex.dev/articles/user_guide/installation/index.html"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Plugins BepInEx com estrutura explícita ou DLL solta. Use a versão BepInEx compatível com o jogo; instaladores QMod/SML antigos não são convertidos."
+    ],
+    "rejected_prefixes": [
+      "QMods/"
+    ],
+    "frameworks": [
+      {
+        "name": "BepInEx (Mono)",
+        "mod_id": 0,
+        "required_files": [
+          "BepInEx/core/BepInEx.Preloader.dll",
+          "winhttp.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "BepInEx/plugins/"
+        ],
+        "for_extensions": [],
+        "url": "https://github.com/BepInEx/BepInEx/releases"
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "winhttp",
+        "file": "winhttp.dll"
+      }
+    ],
+    "config_files": [
+      "doorstop_config.ini"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "subnauticabelowzero",
+    "name": "Subnautica: Below Zero",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "SubnauticaZero.exe",
+    "required": [
+      "SubnauticaZero.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "848450",
+    "destinations": [
+      "BepInEx"
+    ],
+    "allowed_files": [
+      "winhttp.dll",
+      "doorstop_config.ini"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "BepInEx/",
+        "target": "BepInEx/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "winhttp.dll",
+        "target": "winhttp.dll"
+      },
+      {
+        "kind": "file",
+        "source": "doorstop_config.ini",
+        "target": "doorstop_config.ini"
+      },
+      {
+        "kind": "extension",
+        "extension": ".dll",
+        "target": "BepInEx/plugins/{mod_id}/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/BepInEx/BepInEx.py",
+      "https://docs.bepinex.dev/articles/user_guide/installation/index.html"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Plugins BepInEx com estrutura explícita ou DLL solta. Use a versão BepInEx compatível com o jogo; instaladores QMod/SML antigos não são convertidos."
+    ],
+    "rejected_prefixes": [
+      "QMods/"
+    ],
+    "frameworks": [
+      {
+        "name": "BepInEx (Mono)",
+        "mod_id": 0,
+        "required_files": [
+          "BepInEx/core/BepInEx.Preloader.dll",
+          "winhttp.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "BepInEx/plugins/"
+        ],
+        "for_extensions": [],
+        "url": "https://github.com/BepInEx/BepInEx/releases"
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "winhttp",
+        "file": "winhttp.dll"
+      }
+    ],
+    "config_files": [
+      "doorstop_config.ini"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "tcgcardshopsimulator",
+    "name": "TCG Card Shop Simulator",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "Card Shop Simulator.exe",
+    "required": [
+      "Card Shop Simulator.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "3070070",
+    "destinations": [
+      "BepInEx"
+    ],
+    "allowed_files": [
+      "winhttp.dll",
+      "doorstop_config.ini"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "BepInEx/",
+        "target": "BepInEx/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "winhttp.dll",
+        "target": "winhttp.dll"
+      },
+      {
+        "kind": "file",
+        "source": "doorstop_config.ini",
+        "target": "doorstop_config.ini"
+      },
+      {
+        "kind": "extension",
+        "extension": ".dll",
+        "target": "BepInEx/plugins/{mod_id}/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/BepInEx/BepInEx.py",
+      "https://docs.bepinex.dev/articles/user_guide/installation/index.html"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Plugins BepInEx com estrutura explícita ou DLL solta. Use a versão BepInEx compatível com o jogo; instaladores QMod/SML antigos não são convertidos."
+    ],
+    "rejected_prefixes": [
+      "QMods/"
+    ],
+    "frameworks": [
+      {
+        "name": "BepInEx (Mono)",
+        "mod_id": 0,
+        "required_files": [
+          "BepInEx/core/BepInEx.Preloader.dll",
+          "winhttp.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "BepInEx/plugins/"
+        ],
+        "for_extensions": [],
+        "url": "https://github.com/BepInEx/BepInEx/releases"
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "winhttp",
+        "file": "winhttp.dll"
+      }
+    ],
+    "config_files": [
+      "doorstop_config.ini"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "supermarketsimulator",
+    "name": "Supermarket Simulator",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "Supermarket Simulator.exe",
+    "required": [
+      "Supermarket Simulator.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "2670630",
+    "destinations": [
+      "BepInEx"
+    ],
+    "allowed_files": [
+      "winhttp.dll",
+      "doorstop_config.ini"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "BepInEx/",
+        "target": "BepInEx/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "winhttp.dll",
+        "target": "winhttp.dll"
+      },
+      {
+        "kind": "file",
+        "source": "doorstop_config.ini",
+        "target": "doorstop_config.ini"
+      },
+      {
+        "kind": "extension",
+        "extension": ".dll",
+        "target": "BepInEx/plugins/{mod_id}/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/BepInEx/BepInEx.py",
+      "https://docs.bepinex.dev/articles/user_guide/installation/index.html"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Plugins BepInEx com estrutura explícita ou DLL solta. Use a versão BepInEx compatível com o jogo; instaladores QMod/SML antigos não são convertidos."
+    ],
+    "rejected_prefixes": [
+      "QMods/"
+    ],
+    "frameworks": [
+      {
+        "name": "BepInEx (Mono)",
+        "mod_id": 0,
+        "required_files": [
+          "BepInEx/core/BepInEx.Preloader.dll",
+          "winhttp.dll"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "BepInEx/plugins/"
+        ],
+        "for_extensions": [],
+        "url": "https://github.com/BepInEx/BepInEx/releases"
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "winhttp",
+        "file": "winhttp.dll"
+      }
+    ],
+    "config_files": [
+      "doorstop_config.ini"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "7daystodie",
+    "name": "7 Days To Die",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "7DaysToDie.exe",
+    "required": [
+      "7DaysToDie.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "251570",
+    "destinations": [
+      "Mods"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Mods/",
+        "target": "Mods/",
+        "search": true
+      },
+      {
+        "kind": "manifest",
+        "marker": "ModInfo.xml",
+        "target": "Mods/"
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/7%20Days%20to%20Die/7_days_to_die.py"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Mods com ModInfo.xml. Mods DLL exigem iniciar o jogo sem EAC; substituições de assets originais não são aplicadas."
+    ],
+    "rejected_prefixes": []
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "kingdomcomedeliverance",
+    "name": "Kingdom Come: Deliverance",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "bin/Win64/KingdomCome.exe",
+    "required": [
+      "bin/Win64/KingdomCome.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "379430",
+    "destinations": [
+      "Mods"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Mods/",
+        "target": "Mods/",
+        "search": true
+      },
+      {
+        "kind": "manifest",
+        "marker": "mod.manifest",
+        "target": "Mods/"
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-kingdomcome-deliverance/src/index.ts"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Mods com mod.manifest ou estrutura Mods explícita; conflitos de conteúdo continuam a exigir escolha do usuário."
+    ],
+    "rejected_prefixes": []
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "kingdomcomedeliverance2",
+    "name": "Kingdom Come: Deliverance II",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "bin/Win64MasterMasterSteamPGO/KingdomCome.exe",
+    "required": [
+      "bin/Win64MasterMasterSteamPGO/KingdomCome.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1771300",
+    "destinations": [
+      "mods"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "mods/",
+        "target": "mods/",
+        "search": true
+      },
+      {
+        "kind": "manifest",
+        "marker": "mod.manifest",
+        "target": "mods/"
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/Kingdom%20Come%20Deliverance%20II/kingdom_come_deliverance_2.py"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Mods com mod.manifest ou estrutura mods explícita."
+    ],
+    "rejected_prefixes": []
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "mountandblade2bannerlord",
+    "name": "Mount & Blade II: Bannerlord",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "bin/Win64_Shipping_Client/Bannerlord.Native.exe",
+    "required": [
+      "bin/Win64_Shipping_Client/Bannerlord.Native.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "261550",
+    "destinations": [
+      "Modules"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Modules/",
+        "target": "Modules/",
+        "search": true
+      },
+      {
+        "kind": "manifest",
+        "marker": "SubModule.xml",
+        "target": "Modules/"
+      }
+    ],
+    "sources": [
+      "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/Mount%20%26%20Blade%20II%20Bannerlord/mount_and_blade_2_bannerlord.py"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala módulos com SubModule.xml. A seleção e a ordem de módulos devem ser feitas no launcher do jogo."
+    ],
+    "rejected_prefixes": []
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "darkestdungeon",
+    "name": "Darkest Dungeon",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "_windows/win64/Darkest.exe",
+    "required": [
+      "_windows/win64/Darkest.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "262060",
+    "destinations": [
+      "mods"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "mods/",
+        "target": "mods/",
+        "search": true
+      },
+      {
+        "kind": "manifest",
+        "marker": "project.xml",
+        "target": "mods/"
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-darkestdungeon/src/index.js"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Mods com project.xml. Ative os mods na seleção de campanha do jogo."
+    ],
+    "rejected_prefixes": []
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "bladeandsorcery",
+    "name": "Blade & Sorcery",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "BladeAndSorcery.exe",
+    "required": [
+      "BladeAndSorcery.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "629730",
+    "destinations": [
+      "BladeAndSorcery_Data/StreamingAssets/Mods"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "BladeAndSorcery_Data/StreamingAssets/Mods/",
+        "target": "BladeAndSorcery_Data/StreamingAssets/Mods/",
+        "search": true
+      },
+      {
+        "kind": "manifest",
+        "marker": "manifest.json",
+        "target": "BladeAndSorcery_Data/StreamingAssets/Mods/"
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-bladeandsorcery/src/index.js"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Mods com manifest.json; confira a versão do jogo indicada pelo autor."
+    ],
+    "rejected_prefixes": []
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "x4foundations",
+    "name": "X4: Foundations",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "X4.exe",
+    "required": [
+      "X4.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "392160",
+    "destinations": [
+      "extensions"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "extensions/",
+        "target": "extensions/",
+        "search": true
+      },
+      {
+        "kind": "manifest",
+        "marker": "content.xml",
+        "target": "extensions/"
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-x4foundations/src/index.js"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Extensões com content.xml. Confira a seleção de extensões no próprio jogo."
+    ],
+    "rejected_prefixes": []
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "monsterhunterworld",
+    "name": "Monster Hunter: World",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "MonsterHunterWorld.exe",
+    "required": [
+      "MonsterHunterWorld.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "582010",
+    "destinations": [
+      "nativePC"
+    ],
+    "allowed_files": [
+      "loader.dll",
+      "loader-config.json",
+      "dtdata.dll",
+      "dtdata.pdb"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "nativePC/",
+        "target": "nativePC/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "loader.dll",
+        "target": "loader.dll"
+      },
+      {
+        "kind": "file",
+        "source": "loader-config.json",
+        "target": "loader-config.json"
+      },
+      {
+        "kind": "file",
+        "source": "dtdata.dll",
+        "target": "dtdata.dll"
+      },
+      {
+        "kind": "file",
+        "source": "dtdata.pdb",
+        "target": "dtdata.pdb"
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-monster-hunter-world/src/index.js"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Mods nativePC e Stracker Loader; arquivos de dados originais do jogo permanecem protegidos."
+    ],
+    "rejected_prefixes": [],
+    "frameworks": [
+      {
+        "name": "Stracker's Loader",
+        "nexus_name": "Stracker's Loader",
+        "mod_id": 1982,
+        "required_files": [
+          "loader.dll",
+          "loader-config.json"
+        ],
+        "any_files": [],
+        "for_paths": [
+          "nativePC/"
+        ],
+        "for_extensions": []
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "dtdata",
+        "file": "dtdata.dll"
+      }
+    ],
+    "config_files": [
+      "loader-config.json"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "daggerfallunity",
+    "name": "Daggerfall Unity",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "DaggerfallUnity.exe",
+    "required": [
+      "DaggerfallUnity.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [
+      "DaggerfallUnity_Data/StreamingAssets/Mods"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "DaggerfallUnity_Data/StreamingAssets/Mods/",
+        "target": "DaggerfallUnity_Data/StreamingAssets/Mods/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".dfmod",
+        "target": "DaggerfallUnity_Data/StreamingAssets/Mods/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-daggerfallunity/src/index.js"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Pacotes .dfmod; ativação e ordem no menu de mods do jogo."
+    ],
+    "rejected_prefixes": []
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "witcher",
+    "name": "The Witcher",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "System/witcher.exe",
+    "required": [
+      "System/witcher.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "20900",
+    "destinations": [
+      "Data/Override"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Data/Override/",
+        "target": "Data/Override/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "Override/",
+        "target": "Data/Override/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".2da",
+        "target": "Data/Override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".dds",
+        "target": "Data/Override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".mdl",
+        "target": "Data/Override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".msh",
+        "target": "Data/Override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".w2ent",
+        "target": "Data/Override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".uti",
+        "target": "Data/Override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".utc",
+        "target": "Data/Override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".utp",
+        "target": "Data/Override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".dlg",
+        "target": "Data/Override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".ncs",
+        "target": "Data/Override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".nss",
+        "target": "Data/Override/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-witcher/src/index.js"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Mods de arquivos soltos para Data/Override. Patches de executável e instaladores externos não são aplicados."
+    ],
+    "rejected_prefixes": []
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "witcher2",
+    "name": "The Witcher 2",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "bin/witcher2.exe",
+    "required": [
+      "bin/witcher2.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "20920",
+    "destinations": [
+      "CookedPC"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "CookedPC/",
+        "target": "CookedPC/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".dzip",
+        "target": "CookedPC/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".w2ent",
+        "target": "CookedPC/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".w2mesh",
+        "target": "CookedPC/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".xbm",
+        "target": "CookedPC/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-witcher2/src/index.js"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Mods de arquivos novos em CookedPC; arquivos originais não são sobrescritos."
+    ],
+    "rejected_prefixes": []
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "kotor",
+    "name": "Knights of the Old Republic",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "swkotor.exe",
+    "required": [
+      "swkotor.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "32370",
+    "destinations": [
+      "override"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "override/",
+        "target": "override/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".2da",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".dds",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".tga",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".txi",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".mdl",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".mdx",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".uti",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".utc",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".utp",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".dlg",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".ncs",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".nss",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".are",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".git",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".ifo",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".utc",
+        "target": "override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".utw",
+        "target": "override/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-sw-kotor/src/index.js"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Arquivos soltos para override. Mods TSLPatcher/HoloPatcher exigem patching especializado e não são instalados por este módulo."
+    ],
+    "rejected_prefixes": [
+      "tslpatchdata/",
+      "TSLPatcher.exe",
+      "HoloPatcher.exe"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "skyrimspecialedition",
+    "name": "Skyrim Special Edition",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "SkyrimSE.exe",
+    "required": [
+      "SkyrimSE.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "489830",
+    "destinations": [
+      "Data",
+      "Data/meshes",
+      "Data/textures",
+      "Data/scripts",
+      "Data/interface",
+      "Data/sound",
+      "Data/music",
+      "Data/strings",
+      "Data/shaders",
+      "Data/materials",
+      "Data/video",
+      "Data/SKSE",
+      "Data/F4SE",
+      "Data/NVSE",
+      "Data/FOSE",
+      "Data/OBSE",
+      "Data/SFSE"
+    ],
+    "allowed_files": [
+      "@local/Skyrim Special Edition/plugins.txt"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Data/",
+        "target": "Data/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "meshes/",
+        "target": "Data/meshes/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "textures/",
+        "target": "Data/textures/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "scripts/",
+        "target": "Data/scripts/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "interface/",
+        "target": "Data/interface/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "sound/",
+        "target": "Data/sound/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "music/",
+        "target": "Data/music/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "strings/",
+        "target": "Data/strings/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "shaders/",
+        "target": "Data/shaders/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "materials/",
+        "target": "Data/materials/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "video/",
+        "target": "Data/video/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "SKSE/",
+        "target": "Data/SKSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "F4SE/",
+        "target": "Data/F4SE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "NVSE/",
+        "target": "Data/NVSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "FOSE/",
+        "target": "Data/FOSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "OBSE/",
+        "target": "Data/OBSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "SFSE/",
+        "target": "Data/SFSE/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".esp",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".esm",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".esl",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".bsa",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ba2",
+        "target": "Data/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-skyrimse"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Ativa e desativa os plugins gerenciados no prefixo selecionado, preservando entradas externas. Não substitui LOOT, patches de compatibilidade nem geradores externos."
+    ],
+    "rejected_prefixes": [],
+    "activation": {
+      "kind": "bethesda",
+      "path": "@local/Skyrim Special Edition/plugins.txt",
+      "data": "Data",
+      "starred": true
+    },
+    "config_files": [
+      "@local/Skyrim Special Edition/plugins.txt"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "skyrim",
+    "name": "Skyrim",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "TESV.exe",
+    "required": [
+      "TESV.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "72850",
+    "destinations": [
+      "Data",
+      "Data/meshes",
+      "Data/textures",
+      "Data/scripts",
+      "Data/interface",
+      "Data/sound",
+      "Data/music",
+      "Data/strings",
+      "Data/shaders",
+      "Data/materials",
+      "Data/video",
+      "Data/SKSE",
+      "Data/F4SE",
+      "Data/NVSE",
+      "Data/FOSE",
+      "Data/OBSE",
+      "Data/SFSE"
+    ],
+    "allowed_files": [
+      "@local/Skyrim/plugins.txt"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Data/",
+        "target": "Data/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "meshes/",
+        "target": "Data/meshes/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "textures/",
+        "target": "Data/textures/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "scripts/",
+        "target": "Data/scripts/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "interface/",
+        "target": "Data/interface/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "sound/",
+        "target": "Data/sound/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "music/",
+        "target": "Data/music/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "strings/",
+        "target": "Data/strings/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "shaders/",
+        "target": "Data/shaders/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "materials/",
+        "target": "Data/materials/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "video/",
+        "target": "Data/video/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "SKSE/",
+        "target": "Data/SKSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "F4SE/",
+        "target": "Data/F4SE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "NVSE/",
+        "target": "Data/NVSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "FOSE/",
+        "target": "Data/FOSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "OBSE/",
+        "target": "Data/OBSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "SFSE/",
+        "target": "Data/SFSE/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".esp",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".esm",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".esl",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".bsa",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ba2",
+        "target": "Data/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-skyrim"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Ativa e desativa os plugins gerenciados no prefixo selecionado, preservando entradas externas. Não substitui LOOT, patches de compatibilidade nem geradores externos."
+    ],
+    "rejected_prefixes": [],
+    "activation": {
+      "kind": "bethesda",
+      "path": "@local/Skyrim/plugins.txt",
+      "data": "Data",
+      "starred": false
+    },
+    "config_files": [
+      "@local/Skyrim/plugins.txt"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "fallout4",
+    "name": "Fallout 4",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "Fallout4.exe",
+    "required": [
+      "Fallout4.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "377160",
+    "destinations": [
+      "Data",
+      "Data/meshes",
+      "Data/textures",
+      "Data/scripts",
+      "Data/interface",
+      "Data/sound",
+      "Data/music",
+      "Data/strings",
+      "Data/shaders",
+      "Data/materials",
+      "Data/video",
+      "Data/SKSE",
+      "Data/F4SE",
+      "Data/NVSE",
+      "Data/FOSE",
+      "Data/OBSE",
+      "Data/SFSE"
+    ],
+    "allowed_files": [
+      "@local/Fallout4/plugins.txt"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Data/",
+        "target": "Data/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "meshes/",
+        "target": "Data/meshes/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "textures/",
+        "target": "Data/textures/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "scripts/",
+        "target": "Data/scripts/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "interface/",
+        "target": "Data/interface/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "sound/",
+        "target": "Data/sound/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "music/",
+        "target": "Data/music/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "strings/",
+        "target": "Data/strings/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "shaders/",
+        "target": "Data/shaders/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "materials/",
+        "target": "Data/materials/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "video/",
+        "target": "Data/video/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "SKSE/",
+        "target": "Data/SKSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "F4SE/",
+        "target": "Data/F4SE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "NVSE/",
+        "target": "Data/NVSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "FOSE/",
+        "target": "Data/FOSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "OBSE/",
+        "target": "Data/OBSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "SFSE/",
+        "target": "Data/SFSE/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".esp",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".esm",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".esl",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".bsa",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ba2",
+        "target": "Data/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-fallout4"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Ativa e desativa os plugins gerenciados no prefixo selecionado, preservando entradas externas. Não substitui LOOT, patches de compatibilidade nem geradores externos."
+    ],
+    "rejected_prefixes": [],
+    "activation": {
+      "kind": "bethesda",
+      "path": "@local/Fallout4/plugins.txt",
+      "data": "Data",
+      "starred": true
+    },
+    "config_files": [
+      "@local/Fallout4/plugins.txt"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "newvegas",
+    "name": "Fallout New Vegas",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "FalloutNV.exe",
+    "required": [
+      "FalloutNV.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "22380",
+    "destinations": [
+      "Data",
+      "Data/meshes",
+      "Data/textures",
+      "Data/scripts",
+      "Data/interface",
+      "Data/sound",
+      "Data/music",
+      "Data/strings",
+      "Data/shaders",
+      "Data/materials",
+      "Data/video",
+      "Data/SKSE",
+      "Data/F4SE",
+      "Data/NVSE",
+      "Data/FOSE",
+      "Data/OBSE",
+      "Data/SFSE"
+    ],
+    "allowed_files": [
+      "@local/FalloutNV/plugins.txt"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Data/",
+        "target": "Data/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "meshes/",
+        "target": "Data/meshes/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "textures/",
+        "target": "Data/textures/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "scripts/",
+        "target": "Data/scripts/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "interface/",
+        "target": "Data/interface/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "sound/",
+        "target": "Data/sound/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "music/",
+        "target": "Data/music/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "strings/",
+        "target": "Data/strings/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "shaders/",
+        "target": "Data/shaders/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "materials/",
+        "target": "Data/materials/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "video/",
+        "target": "Data/video/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "SKSE/",
+        "target": "Data/SKSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "F4SE/",
+        "target": "Data/F4SE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "NVSE/",
+        "target": "Data/NVSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "FOSE/",
+        "target": "Data/FOSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "OBSE/",
+        "target": "Data/OBSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "SFSE/",
+        "target": "Data/SFSE/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".esp",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".esm",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".esl",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".bsa",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ba2",
+        "target": "Data/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-falloutnv"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Ativa e desativa os plugins gerenciados no prefixo selecionado, preservando entradas externas. Não substitui LOOT, patches de compatibilidade nem geradores externos."
+    ],
+    "rejected_prefixes": [],
+    "activation": {
+      "kind": "bethesda",
+      "path": "@local/FalloutNV/plugins.txt",
+      "data": "Data",
+      "starred": false
+    },
+    "config_files": [
+      "@local/FalloutNV/plugins.txt"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "fallout3",
+    "name": "Fallout 3",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "Fallout3.exe",
+    "required": [
+      "Fallout3.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "22300",
+    "destinations": [
+      "Data",
+      "Data/meshes",
+      "Data/textures",
+      "Data/scripts",
+      "Data/interface",
+      "Data/sound",
+      "Data/music",
+      "Data/strings",
+      "Data/shaders",
+      "Data/materials",
+      "Data/video",
+      "Data/SKSE",
+      "Data/F4SE",
+      "Data/NVSE",
+      "Data/FOSE",
+      "Data/OBSE",
+      "Data/SFSE"
+    ],
+    "allowed_files": [
+      "@local/Fallout3/plugins.txt"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Data/",
+        "target": "Data/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "meshes/",
+        "target": "Data/meshes/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "textures/",
+        "target": "Data/textures/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "scripts/",
+        "target": "Data/scripts/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "interface/",
+        "target": "Data/interface/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "sound/",
+        "target": "Data/sound/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "music/",
+        "target": "Data/music/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "strings/",
+        "target": "Data/strings/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "shaders/",
+        "target": "Data/shaders/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "materials/",
+        "target": "Data/materials/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "video/",
+        "target": "Data/video/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "SKSE/",
+        "target": "Data/SKSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "F4SE/",
+        "target": "Data/F4SE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "NVSE/",
+        "target": "Data/NVSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "FOSE/",
+        "target": "Data/FOSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "OBSE/",
+        "target": "Data/OBSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "SFSE/",
+        "target": "Data/SFSE/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".esp",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".esm",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".esl",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".bsa",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ba2",
+        "target": "Data/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-fallout3"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Ativa e desativa os plugins gerenciados no prefixo selecionado, preservando entradas externas. Não substitui LOOT, patches de compatibilidade nem geradores externos."
+    ],
+    "rejected_prefixes": [],
+    "activation": {
+      "kind": "bethesda",
+      "path": "@local/Fallout3/plugins.txt",
+      "data": "Data",
+      "starred": false
+    },
+    "config_files": [
+      "@local/Fallout3/plugins.txt"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "oblivion",
+    "name": "Oblivion",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "Oblivion.exe",
+    "required": [
+      "Oblivion.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "22330",
+    "destinations": [
+      "Data",
+      "Data/meshes",
+      "Data/textures",
+      "Data/scripts",
+      "Data/interface",
+      "Data/sound",
+      "Data/music",
+      "Data/strings",
+      "Data/shaders",
+      "Data/materials",
+      "Data/video",
+      "Data/SKSE",
+      "Data/F4SE",
+      "Data/NVSE",
+      "Data/FOSE",
+      "Data/OBSE",
+      "Data/SFSE"
+    ],
+    "allowed_files": [
+      "@local/Oblivion/plugins.txt"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Data/",
+        "target": "Data/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "meshes/",
+        "target": "Data/meshes/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "textures/",
+        "target": "Data/textures/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "scripts/",
+        "target": "Data/scripts/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "interface/",
+        "target": "Data/interface/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "sound/",
+        "target": "Data/sound/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "music/",
+        "target": "Data/music/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "strings/",
+        "target": "Data/strings/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "shaders/",
+        "target": "Data/shaders/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "materials/",
+        "target": "Data/materials/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "video/",
+        "target": "Data/video/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "SKSE/",
+        "target": "Data/SKSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "F4SE/",
+        "target": "Data/F4SE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "NVSE/",
+        "target": "Data/NVSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "FOSE/",
+        "target": "Data/FOSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "OBSE/",
+        "target": "Data/OBSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "SFSE/",
+        "target": "Data/SFSE/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".esp",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".esm",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".esl",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".bsa",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ba2",
+        "target": "Data/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-oblivion"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Ativa e desativa os plugins gerenciados no prefixo selecionado, preservando entradas externas. Não substitui LOOT, patches de compatibilidade nem geradores externos."
+    ],
+    "rejected_prefixes": [],
+    "activation": {
+      "kind": "bethesda",
+      "path": "@local/Oblivion/plugins.txt",
+      "data": "Data",
+      "starred": false
+    },
+    "config_files": [
+      "@local/Oblivion/plugins.txt"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "starfield",
+    "name": "Starfield",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "Starfield.exe",
+    "required": [
+      "Starfield.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1716740",
+    "destinations": [
+      "Data",
+      "Data/meshes",
+      "Data/textures",
+      "Data/scripts",
+      "Data/interface",
+      "Data/sound",
+      "Data/music",
+      "Data/strings",
+      "Data/shaders",
+      "Data/materials",
+      "Data/video",
+      "Data/SKSE",
+      "Data/F4SE",
+      "Data/NVSE",
+      "Data/FOSE",
+      "Data/OBSE",
+      "Data/SFSE"
+    ],
+    "allowed_files": [
+      "@local/Starfield/Plugins.txt"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Data/",
+        "target": "Data/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "meshes/",
+        "target": "Data/meshes/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "textures/",
+        "target": "Data/textures/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "scripts/",
+        "target": "Data/scripts/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "interface/",
+        "target": "Data/interface/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "sound/",
+        "target": "Data/sound/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "music/",
+        "target": "Data/music/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "strings/",
+        "target": "Data/strings/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "shaders/",
+        "target": "Data/shaders/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "materials/",
+        "target": "Data/materials/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "video/",
+        "target": "Data/video/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "SKSE/",
+        "target": "Data/SKSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "F4SE/",
+        "target": "Data/F4SE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "NVSE/",
+        "target": "Data/NVSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "FOSE/",
+        "target": "Data/FOSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "OBSE/",
+        "target": "Data/OBSE/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "SFSE/",
+        "target": "Data/SFSE/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".esp",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".esm",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".esl",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".bsa",
+        "target": "Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ba2",
+        "target": "Data/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-starfield"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Ativa e desativa os plugins gerenciados no prefixo selecionado, preservando entradas externas. Não substitui LOOT, patches de compatibilidade nem geradores externos."
+    ],
+    "rejected_prefixes": [],
+    "activation": {
+      "kind": "bethesda",
+      "path": "@local/Starfield/Plugins.txt",
+      "data": "Data",
+      "starred": true
+    },
+    "config_files": [
+      "@local/Starfield/Plugins.txt"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "morrowind",
+    "name": "Morrowind",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "Morrowind.exe",
+    "required": [
+      "Morrowind.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "22320",
+    "destinations": [
+      "Data Files",
+      "Data Files/Meshes",
+      "Data Files/Textures",
+      "Data Files/Sound",
+      "Data Files/Music",
+      "Data Files/Icons",
+      "Data Files/BookArt"
+    ],
+    "allowed_files": [
+      "Morrowind.ini"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Data Files/",
+        "target": "Data Files/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "Meshes/",
+        "target": "Data Files/Meshes/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "Textures/",
+        "target": "Data Files/Textures/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "Sound/",
+        "target": "Data Files/Sound/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "Music/",
+        "target": "Data Files/Music/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "Icons/",
+        "target": "Data Files/Icons/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "BookArt/",
+        "target": "Data Files/BookArt/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".esp",
+        "target": "Data Files/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".esm",
+        "target": "Data Files/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".bsa",
+        "target": "Data Files/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-morrowind"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Gerencia a seção Game Files do Morrowind.ini. Este módulo atende a edição Windows original, não o OpenMW."
+    ],
+    "rejected_prefixes": [],
+    "activation": {
+      "kind": "morrowind",
+      "path": "Morrowind.ini",
+      "data": "Data Files",
+      "starred": false
+    },
+    "config_files": [
+      "Morrowind.ini"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "crisiscoreff7reunion",
+    "name": "Crisis Core Final Fantasy VII Reunion",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "CCFF7R/Binaries/Win64/CCFF7R-Win64-Shipping.exe",
+    "required": [
+      "CCFF7R/Binaries/Win64/CCFF7R-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1608070",
+    "destinations": [
+      "CCFF7R/Content/Paks/~mods"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "CCFF7R/Content/Paks/~mods/",
+        "target": "CCFF7R/Content/Paks/~mods/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".pak",
+        "target": "CCFF7R/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".utoc",
+        "target": "CCFF7R/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ucas",
+        "target": "CCFF7R/Content/Paks/~mods/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://www.nexusmods.com/crisiscoreff7reunion/mods/32"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Alguns pacotes IoStore exigem o patch UTOC-PAK do executável, instalado separadamente. O gerenciador não altera o executável original."
+    ],
+    "rejected_prefixes": [],
+    "launch_arguments": [
+      "-fileopenlog"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "finalfantasy16",
+    "name": "Final Fantasy XVI",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "ffxvi.exe",
+    "required": [
+      "ffxvi.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "2515020",
+    "destinations": [
+      "Reloaded/Mods"
+    ],
+    "allowed_files": [
+      "dinput8.dll",
+      "dxgi.dll",
+      "version.dll",
+      "Reloaded/Apps/PeliGames.finalfantasy16/AppConfig.json",
+      "Reloaded/portable.txt"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Reloaded/Mods/",
+        "target": "Reloaded/Mods/",
+        "search": true
+      },
+      {
+        "kind": "manifest",
+        "marker": "ModConfig.json",
+        "target": "Reloaded/Mods/"
+      },
+      {
+        "kind": "file",
+        "source": "dinput8.dll",
+        "target": "dinput8.dll"
+      },
+      {
+        "kind": "file",
+        "source": "dxgi.dll",
+        "target": "dxgi.dll"
+      },
+      {
+        "kind": "file",
+        "source": "version.dll",
+        "target": "version.dll"
+      }
+    ],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/tree/main/game-finalfantasy16"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Registra o aplicativo, ativa os ModIds e lança pelo Reloaded-II local em modo portátil. O carregador e suas dependências .NET/Wine devem estar instalados no mesmo prefixo."
+    ],
+    "rejected_prefixes": [],
+    "dll_overrides": [
+      {
+        "name": "dinput8",
+        "file": "dinput8.dll"
+      },
+      {
+        "name": "dxgi",
+        "file": "dxgi.dll"
+      },
+      {
+        "name": "version",
+        "file": "version.dll"
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "Reloaded-II",
+        "mod_id": 0,
+        "url": "https://github.com/Reloaded-Project/Reloaded-II/releases",
+        "required_files": [
+          "Reloaded/Reloaded-II.exe"
+        ],
+        "for_paths": [
+          "Reloaded/Mods/"
+        ]
+      }
+    ],
+    "activation": {
+      "kind": "reloaded",
+      "path": "Reloaded/Apps/PeliGames.finalfantasy16/AppConfig.json",
+      "data": "Reloaded/Mods",
+      "starred": false
+    },
+    "config_files": [
+      "Reloaded/Apps/PeliGames.finalfantasy16/AppConfig.json",
+      "Reloaded/portable.txt"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "finalfantasytacticstheivalicechronicles",
+    "name": "Final Fantasy Tactics The Ivalice Chronicles",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "FFT_enhanced.exe",
+    "required": [
+      "FFT_enhanced.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1004640",
+    "destinations": [
+      "Reloaded/Mods"
+    ],
+    "allowed_files": [
+      "dinput8.dll",
+      "dxgi.dll",
+      "version.dll",
+      "Reloaded/Apps/PeliGames.finalfantasytacticstheivalicechronicles/AppConfig.json",
+      "Reloaded/portable.txt"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Reloaded/Mods/",
+        "target": "Reloaded/Mods/",
+        "search": true
+      },
+      {
+        "kind": "manifest",
+        "marker": "ModConfig.json",
+        "target": "Reloaded/Mods/"
+      },
+      {
+        "kind": "file",
+        "source": "dinput8.dll",
+        "target": "dinput8.dll"
+      },
+      {
+        "kind": "file",
+        "source": "dxgi.dll",
+        "target": "dxgi.dll"
+      },
+      {
+        "kind": "file",
+        "source": "version.dll",
+        "target": "version.dll"
+      }
+    ],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/tree/main/game-finalfantasytacticstheivalicechronicles"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Registra o aplicativo, ativa os ModIds e lança pelo Reloaded-II local em modo portátil. O carregador e suas dependências .NET/Wine devem estar instalados no mesmo prefixo."
+    ],
+    "rejected_prefixes": [],
+    "dll_overrides": [
+      {
+        "name": "dinput8",
+        "file": "dinput8.dll"
+      },
+      {
+        "name": "dxgi",
+        "file": "dxgi.dll"
+      },
+      {
+        "name": "version",
+        "file": "version.dll"
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "Reloaded-II",
+        "mod_id": 0,
+        "url": "https://github.com/Reloaded-Project/Reloaded-II/releases",
+        "required_files": [
+          "Reloaded/Reloaded-II.exe"
+        ],
+        "for_paths": [
+          "Reloaded/Mods/"
+        ]
+      }
+    ],
+    "activation": {
+      "kind": "reloaded",
+      "path": "Reloaded/Apps/PeliGames.finalfantasytacticstheivalicechronicles/AppConfig.json",
+      "data": "Reloaded/Mods",
+      "starred": false
+    },
+    "config_files": [
+      "Reloaded/Apps/PeliGames.finalfantasytacticstheivalicechronicles/AppConfig.json",
+      "Reloaded/portable.txt"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "finalfantasy9",
+    "name": "Final Fantasy IX",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "x64/FF9.exe",
+    "required": [
+      "x64/FF9.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "377840",
+    "destinations": [
+      "PeliGamesMods"
+    ],
+    "allowed_files": [
+      "Memoria.ini"
+    ],
+    "routes": [
+      {
+        "kind": "manifest",
+        "marker": "ModDescription.xml",
+        "target": "PeliGamesMods/"
+      }
+    ],
+    "sources": [
+      "https://github.com/Albeoris/Memoria"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala pacotes Memoria com ModDescription.xml e atualiza FolderNames no Memoria.ini. Instale o Memoria previamente. Patches de Assembly-CSharp e executáveis não são aplicados."
+    ],
+    "rejected_prefixes": [],
+    "activation": {
+      "kind": "memoria",
+      "path": "Memoria.ini",
+      "data": "PeliGamesMods",
+      "starred": false
+    },
+    "config_files": [
+      "Memoria.ini"
+    ],
+    "frameworks": [
+      {
+        "name": "Memoria",
+        "mod_id": 0,
+        "url": "https://github.com/Albeoris/Memoria/releases",
+        "required_files": [
+          "Memoria.ini"
+        ],
+        "for_paths": [
+          "PeliGamesMods/"
+        ]
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "baldursgate3",
+    "name": "Baldur’s Gate 3",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "bin/bg3_dx11.exe",
+    "required": [
+      "bin/bg3_dx11.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1086940",
+    "destinations": [
+      "Data/Generated",
+      "Data/Public",
+      "bin/NativeMods",
+      "@local/Larian Studios/Baldur's Gate 3/Mods"
+    ],
+    "allowed_files": [
+      "bin/DWrite.dll",
+      "@local/Larian Studios/Baldur's Gate 3/PlayerProfiles/Public/modsettings.lsx"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Data/Generated/",
+        "target": "Data/Generated/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "Data/Public/",
+        "target": "Data/Public/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "bin/NativeMods/",
+        "target": "bin/NativeMods/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "bin/DWrite.dll",
+        "target": "bin/DWrite.dll"
+      },
+      {
+        "kind": "file",
+        "source": "DWrite.dll",
+        "target": "bin/DWrite.dll"
+      },
+      {
+        "kind": "extension",
+        "extension": ".pak",
+        "target": "@local/Larian Studios/Baldur's Gate 3/Mods/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-baldursgate3"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Pacotes LSPK usam a pasta Mods do prefixo e ativação pelo modsettings.lsx. Arquivos loose em Data e NativeMods mantêm seus destinos próprios."
+    ],
+    "rejected_prefixes": [],
+    "dll_overrides": [
+      {
+        "name": "DWrite",
+        "file": "bin/DWrite.dll"
+      }
+    ],
+    "activation": {
+      "kind": "baldurs_gate3",
+      "path": "@local/Larian Studios/Baldur's Gate 3/PlayerProfiles/Public/modsettings.lsx",
+      "data": "@local/Larian Studios/Baldur's Gate 3/Mods",
+      "starred": false
+    },
+    "config_files": [
+      "@local/Larian Studios/Baldur's Gate 3/PlayerProfiles/Public/modsettings.lsx"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "dragonage",
+    "name": "Dragon Age Origins",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "bin_ship/DAOrigins.exe",
+    "required": [
+      "bin_ship/DAOrigins.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "47810",
+    "destinations": [
+      "@documents/BioWare/Dragon Age/packages/core/override"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "override/",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "packages/core/override/",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".uti",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".utc",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".utp",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".gda",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".mor",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".mop",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".dds",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".nif",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".mdl",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".mmh",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".msh",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".mao",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".tga",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".wav",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".dlg",
+        "target": "@documents/BioWare/Dragon Age/packages/core/override/",
+        "root_only": true
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-dragonage"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala pacotes override no Documents do usuário do prefixo. Instaladores DAZIP e alterações AddIns.xml precisam de um instalador específico e são recusados."
+    ],
+    "rejected_prefixes": []
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "witcher3",
+    "name": "The Witcher 3 Wild Hunt",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "bin/x64/witcher3.exe",
+    "required": [
+      "bin/x64/witcher3.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "292030",
+    "destinations": [
+      "Mods",
+      "DLC"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Mods/",
+        "target": "Mods/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "DLC/",
+        "target": "DLC/",
+        "search": true
+      },
+      {
+        "kind": "manifest",
+        "marker": "metadata.xml",
+        "target": "Mods/"
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-witcher3"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala pastas Mods e DLC. Conflitos de scripts são detectados por arquivo; merges exigem o Script Merger, não são resolvidos por ordem de cópia."
+    ],
+    "rejected_prefixes": []
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "reddeadredemption2",
+    "name": "Red Dead Redemption 2",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "RDR2.exe",
+    "required": [
+      "RDR2.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1174180",
+    "destinations": [
+      "lml",
+      "scripts"
+    ],
+    "allowed_files": [
+      "dinput8.dll",
+      "version.dll",
+      "ScriptHookRDR2.dll",
+      "ScriptHookRDRNetAPI.dll",
+      "vfs.asi"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "lml/",
+        "target": "lml/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "scripts/",
+        "target": "scripts/",
+        "search": true
+      },
+      {
+        "kind": "manifest",
+        "marker": "install.xml",
+        "target": "lml/"
+      },
+      {
+        "kind": "extension",
+        "extension": ".asi",
+        "target": "",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".ini",
+        "target": "",
+        "root_only": true
+      },
+      {
+        "kind": "file",
+        "source": "dinput8.dll",
+        "target": "dinput8.dll"
+      },
+      {
+        "kind": "file",
+        "source": "version.dll",
+        "target": "version.dll"
+      },
+      {
+        "kind": "file",
+        "source": "ScriptHookRDR2.dll",
+        "target": "ScriptHookRDR2.dll"
+      },
+      {
+        "kind": "file",
+        "source": "ScriptHookRDRNetAPI.dll",
+        "target": "ScriptHookRDRNetAPI.dll"
+      },
+      {
+        "kind": "file",
+        "source": "vfs.asi",
+        "target": "vfs.asi"
+      }
+    ],
+    "sources": [
+      "https://www.nexusmods.com/site/mods/68"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala LML/install.xml, scripts e plugins ASI. Carregadores dependem da versão do jogo e do prefixo."
+    ],
+    "rejected_prefixes": [],
+    "root_extensions": [
+      ".asi",
+      ".ini"
+    ],
+    "dll_overrides": [
+      {
+        "name": "dinput8",
+        "file": "dinput8.dll"
+      },
+      {
+        "name": "version",
+        "file": "version.dll"
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "Lenny’s Mod Loader",
+        "mod_id": 0,
+        "url": "https://www.rdr2mods.com/downloads/rdr2/tools/76-lennys-mod-loader-rdr/",
+        "required_files": [
+          "vfs.asi"
+        ],
+        "for_paths": [
+          "lml/"
+        ]
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "eldenring",
+    "name": "Elden Ring",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "Game/eldenring.exe",
+    "required": [
+      "Game/eldenring.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1245620",
+    "destinations": [
+      "Game/mods",
+      "Game/mod",
+      "Game/mod/chr",
+      "Game/mod/parts",
+      "Game/mod/sfx",
+      "Game/mod/material",
+      "Game/mod/event",
+      "Game/mod/script",
+      "Game/mod/menu",
+      "Game/mod/msg",
+      "Game/mod/param",
+      "Game/mod/map",
+      "modengine2"
+    ],
+    "allowed_files": [
+      "Game/mod/regulation.bin",
+      "Game/dinput8.dll",
+      "modengine2_launcher.exe",
+      "PeliGamesModEngine.toml"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "mods/",
+        "target": "Game/mods/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "mod/",
+        "target": "Game/mod/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "chr/",
+        "target": "Game/mod/chr/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "parts/",
+        "target": "Game/mod/parts/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "sfx/",
+        "target": "Game/mod/sfx/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "material/",
+        "target": "Game/mod/material/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "event/",
+        "target": "Game/mod/event/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "script/",
+        "target": "Game/mod/script/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "menu/",
+        "target": "Game/mod/menu/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "msg/",
+        "target": "Game/mod/msg/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "param/",
+        "target": "Game/mod/param/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "map/",
+        "target": "Game/mod/map/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "regulation.bin",
+        "target": "Game/mod/regulation.bin"
+      },
+      {
+        "kind": "file",
+        "source": "dinput8.dll",
+        "target": "Game/dinput8.dll"
+      },
+      {
+        "kind": "file",
+        "source": "modengine2_launcher.exe",
+        "target": "modengine2_launcher.exe"
+      },
+      {
+        "kind": "prefix",
+        "source": "modengine2/",
+        "target": "modengine2/",
+        "search": true
+      }
+    ],
+    "sources": [
+      "https://github.com/soulsmods/ModEngine2"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Executa mods de dados pelo Mod Engine 2, que desativa EAC. Não entre no modo online com mods. Plugins DLL usam Elden Mod Loader."
+    ],
+    "rejected_prefixes": [],
+    "frameworks": [
+      {
+        "name": "Mod Engine 2",
+        "mod_id": 0,
+        "url": "https://github.com/soulsmods/ModEngine2/releases",
+        "required_files": [
+          "modengine2_launcher.exe"
+        ],
+        "for_paths": [
+          "Game/mod/"
+        ]
+      },
+      {
+        "name": "Elden Mod Loader",
+        "mod_id": 0,
+        "url": "https://www.nexusmods.com/eldenring/mods/117",
+        "required_files": [
+          "Game/dinput8.dll"
+        ],
+        "for_paths": [
+          "Game/mods/"
+        ]
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "dinput8",
+        "file": "Game/dinput8.dll"
+      }
+    ],
+    "activation": {
+      "kind": "elden",
+      "path": "PeliGamesModEngine.toml",
+      "data": "Game/mod",
+      "starred": false
+    },
+    "config_files": [
+      "PeliGamesModEngine.toml"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "marvelrivals",
+    "name": "Marvel Rivals",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "MarvelGame/Marvel.exe",
+    "required": [
+      "MarvelGame/Marvel.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "2767030",
+    "destinations": [
+      "MarvelGame/Marvel/Content/Paks/~mods"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "MarvelGame/Marvel/Content/Paks/~mods/",
+        "target": "MarvelGame/Marvel/Content/Paks/~mods/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".pak",
+        "target": "MarvelGame/Marvel/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".utoc",
+        "target": "MarvelGame/Marvel/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ucas",
+        "target": "MarvelGame/Marvel/Content/Paks/~mods/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/tree/main/game-marvelrivals"
+    ],
+    "credits": [
+      "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala pacotes PAK/IoStore completos. Compatibilidade depende da versão do jogo e das restrições de carregamento; não altera anti-cheat nem aplica bypasses de assinatura. Inicie pela Steam/Epic."
+    ],
+    "rejected_prefixes": [
+      "ue4ss/",
+      "LogicMods/"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "dragonage2",
+    "name": "Dragon Age 2",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "bin_ship/DragonAge2.exe",
+    "required": [
+      "bin_ship/DragonAge2.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1238040",
+    "destinations": [
+      "@documents/BioWare/Dragon Age 2/packages/core/override"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "packages/core/override/",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "override/",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".gda",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".erf",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".dds",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".mmh",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".msh",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".mao",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".mor",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".mop",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".uti",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".utc",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".utp",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".dlg",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".wav",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".tga",
+        "target": "@documents/BioWare/Dragon Age 2/packages/core/override/",
+        "root_only": false
+      }
+    ],
+    "frameworks": [],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-dragonage2"
+    ],
+    "credits": [
+      "Definições factuais de extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Override de arquivos soltos no Documents do usuário do prefixo. DAZIP e patching de arquivos originais não são tratados como simples cópia."
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "thesims4",
+    "name": "The Sims 4",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "Game/Bin/TS4_x64.exe",
+    "required": [
+      "Game/Bin/TS4_x64.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1222670",
+    "destinations": [
+      "@documents/Electronic Arts/The Sims 4/Mods/PeliGames",
+      "@documents/Electronic Arts/The Sims 4/Tray"
+    ],
+    "allowed_files": [
+      "@documents/Electronic Arts/The Sims 4/Mods/Resource.cfg",
+      "@documents/Electronic Arts/The Sims 4/Options.ini"
+    ],
+    "routes": [
+      {
+        "kind": "extension",
+        "extension": ".ts4script",
+        "target": "@documents/Electronic Arts/The Sims 4/Mods/PeliGames/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".package",
+        "target": "@documents/Electronic Arts/The Sims 4/Mods/PeliGames/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".py",
+        "target": "@documents/Electronic Arts/The Sims 4/Mods/PeliGames/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".pyc",
+        "target": "@documents/Electronic Arts/The Sims 4/Mods/PeliGames/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".pyo",
+        "target": "@documents/Electronic Arts/The Sims 4/Mods/PeliGames/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".bpi",
+        "target": "@documents/Electronic Arts/The Sims 4/Tray/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".blueprint",
+        "target": "@documents/Electronic Arts/The Sims 4/Tray/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".trayitem",
+        "target": "@documents/Electronic Arts/The Sims 4/Tray/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".sfx",
+        "target": "@documents/Electronic Arts/The Sims 4/Tray/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ion",
+        "target": "@documents/Electronic Arts/The Sims 4/Tray/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".householdbinary",
+        "target": "@documents/Electronic Arts/The Sims 4/Tray/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".sgi",
+        "target": "@documents/Electronic Arts/The Sims 4/Tray/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".hhi",
+        "target": "@documents/Electronic Arts/The Sims 4/Tray/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".room",
+        "target": "@documents/Electronic Arts/The Sims 4/Tray/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".midi",
+        "target": "@documents/Electronic Arts/The Sims 4/Tray/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".rmi",
+        "target": "@documents/Electronic Arts/The Sims 4/Tray/",
+        "root_only": false
+      }
+    ],
+    "frameworks": [],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-sims4"
+    ],
+    "credits": [
+      "Definições factuais de extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "CC/package e ts4script instalados em Mods/PeliGames; arquivos de lotes/famílias em Tray. Detecta pasta localizada já criada pelo jogo no prefixo. Inicie o jogo uma vez antes de instalar. Resource.cfg e Options.ini preservam os demais ajustes."
+    ],
+    "config_files": [
+      "@documents/Electronic Arts/The Sims 4/Mods/Resource.cfg",
+      "@documents/Electronic Arts/The Sims 4/Options.ini"
+    ],
+    "activation": {
+      "kind": "sims4",
+      "path": "@documents/Electronic Arts/The Sims 4/Mods/Resource.cfg",
+      "data": "@documents/Electronic Arts/The Sims 4/Mods/PeliGames"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "mysummercar",
+    "name": "My Summer Car",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "mysummercar.exe",
+    "required": [
+      "mysummercar.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "516750",
+    "destinations": [
+      "@msc"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Mods/",
+        "target": "@msc/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "Assets/",
+        "target": "@msc/Assets/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "Settings/",
+        "target": "@msc/Settings/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "References/",
+        "target": "@msc/References/",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".dll",
+        "target": "@msc/",
+        "root_only": false
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "MSC Mod Loader",
+        "mod_id": 0,
+        "required_files": [
+          "mysummercar_Data/Managed/MSCLoader.dll"
+        ],
+        "for_paths": [
+          "@msc/"
+        ],
+        "url": "https://github.com/piotrulos/MSCModLoader/releases"
+      }
+    ],
+    "sources": [
+      "https://github.com/piotrulos/MSCModLoader"
+    ],
+    "credits": [
+      "Definições factuais de extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Detecta o ajuste GF/MD/AD em doorstop_config.ini: pasta do jogo, Documents ou AppData/LocalLow no prefixo. Preserva Assets, Settings e References. Instale/configure MSC Mod Loader antes; não mistura mods do My Winter Car."
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "helldivers2",
+    "name": "Helldivers 2",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "bin/helldivers2.exe",
+    "required": [
+      "bin/helldivers2.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "553850",
+    "destinations": [
+      "data"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "patch",
+        "target": "data/"
+      },
+      {
+        "kind": "extension",
+        "extension": ".dl_bin",
+        "target": "data/game/",
+        "root_only": false
+      }
+    ],
+    "frameworks": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/tree/main/game-helldivers2"
+    ],
+    "credits": [
+      "Definições factuais de extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Patches hash.patch_N, .stream/.gpu_resources associados e .dl_bin. Recalcula índices contíguos por arquivo base e preserva patches externos. Alternativas devem ser escolhidas antes da importação; não escolhe opções de mod_manifest.json automaticamente. Inicie pela Steam."
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "oblivionremastered",
+    "name": "Oblivion Remastered",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "OblivionRemastered.exe",
+    "required": [
+      "OblivionRemastered.exe",
+      "OblivionRemastered/Content/Dev/ObvData/Data/Oblivion.esm"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "2623190",
+    "destinations": [
+      "OblivionRemastered/Content/Dev/ObvData/Data",
+      "OblivionRemastered/Content/Paks/~mods",
+      "OblivionRemastered/Content/Paks/LogicMods",
+      "OblivionRemastered/Binaries/Win64/ue4ss"
+    ],
+    "allowed_files": [
+      "OblivionRemastered/Content/Dev/ObvData/Data/plugins.txt",
+      "OblivionRemastered/Binaries/Win64/dwmapi.dll"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "OblivionRemastered/Content/Dev/ObvData/Data/",
+        "target": "OblivionRemastered/Content/Dev/ObvData/Data/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "Data/",
+        "target": "OblivionRemastered/Content/Dev/ObvData/Data/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "LogicMods/",
+        "target": "OblivionRemastered/Content/Paks/LogicMods/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "ue4ss/",
+        "target": "OblivionRemastered/Binaries/Win64/ue4ss/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "Mods/",
+        "target": "OblivionRemastered/Binaries/Win64/ue4ss/Mods/",
+        "search": true
+      },
+      {
+        "kind": "manifest",
+        "marker": "Scripts/main.lua",
+        "target": "OblivionRemastered/Binaries/Win64/ue4ss/Mods/"
+      },
+      {
+        "kind": "file",
+        "source": "dwmapi.dll",
+        "target": "OblivionRemastered/Binaries/Win64/dwmapi.dll"
+      },
+      {
+        "kind": "extension",
+        "extension": ".esp",
+        "target": "OblivionRemastered/Content/Dev/ObvData/Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".esm",
+        "target": "OblivionRemastered/Content/Dev/ObvData/Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".bsa",
+        "target": "OblivionRemastered/Content/Dev/ObvData/Data/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".pak",
+        "target": "OblivionRemastered/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".utoc",
+        "target": "OblivionRemastered/Content/Paks/~mods/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".ucas",
+        "target": "OblivionRemastered/Content/Paks/~mods/",
+        "root_only": false
+      }
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/game-oblivionremastered"
+    ],
+    "credits": [
+      "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Edição Windows Steam/Win64: plugins ESP/ESM/BSA e ativação em Data/plugins.txt; pacotes Unreal/LogicMods e scripts UE4SS. Não reutiliza o diretório do Oblivion clássico. UE4SS específico do jogo deve estar instalado; OBSE64 e INI merges ficam separados."
+    ],
+    "rejected_prefixes": [],
+    "activation": {
+      "kind": "bethesda",
+      "path": "OblivionRemastered/Content/Dev/ObvData/Data/plugins.txt",
+      "data": "OblivionRemastered/Content/Dev/ObvData/Data",
+      "starred": false
+    },
+    "config_files": [
+      "OblivionRemastered/Content/Dev/ObvData/Data/plugins.txt"
+    ],
+    "frameworks": [
+      {
+        "name": "UE4SS para Oblivion Remastered",
+        "nexus_name": "UE4SS for OblivionRemastered",
+        "mod_id": 32,
+        "required_files": [
+          "OblivionRemastered/Binaries/Win64/dwmapi.dll",
+          "OblivionRemastered/Binaries/Win64/ue4ss/UE4SS.dll"
+        ],
+        "for_paths": [
+          "OblivionRemastered/Binaries/Win64/ue4ss/Mods/",
+          "OblivionRemastered/Content/Paks/LogicMods/"
+        ]
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "dwmapi",
+        "file": "OblivionRemastered/Binaries/Win64/dwmapi.dll"
+      }
+    ],
+    "protected_files": [
+      "OblivionRemastered/Content/Dev/ObvData/Data/Oblivion.esm"
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "dragonageinquisition",
+    "name": "Dragon Age: Inquisition",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "DragonAgeInquisition.exe",
+    "required": [
+      "DragonAgeInquisition.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1222690",
+    "destinations": [
+      "FrostyModManager/Mods/dragonageinquisition",
+      "DAIMod"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "extension",
+        "extension": ".fbmod",
+        "target": "FrostyModManager/Mods/dragonageinquisition/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".archive",
+        "target": "FrostyModManager/Mods/dragonageinquisition/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".daimod",
+        "target": "DAIMod/",
+        "root_only": false
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "Frosty Mod Manager",
+        "mod_id": 0,
+        "required_files": [
+          "FrostyModManager/FrostyModManager.exe"
+        ],
+        "for_paths": [
+          "FrostyModManager/Mods/dragonageinquisition/"
+        ],
+        "url": "https://github.com/CadeEvs/FrostyToolsuite/releases"
+      },
+      {
+        "name": "DAI Mod Manager",
+        "mod_id": 0,
+        "required_files": [
+          "DAIModManager.exe"
+        ],
+        "for_paths": [
+          "DAIMod/"
+        ],
+        "url": "https://www.nexusmods.com/dragonageinquisition/mods/693"
+      }
+    ],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/tree/main/game-dragonageinquisition"
+    ],
+    "credits": [
+      "Definições factuais de extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Prepara pacotes FBMOD/ARCHIVE na biblioteca do Frosty e DAIMOD na pasta de entrada do DAI Mod Manager. Use o botão do respectivo gerenciador para selecionar e aplicar/mesclar; copiar esses pacotes não altera os dados do jogo. ModData/Update não são substituídos automaticamente."
+    ],
+    "tools": [
+      {
+        "name": "Frosty Mod Manager",
+        "executable": "FrostyModManager/FrostyModManager.exe",
+        "arguments": []
+      },
+      {
+        "name": "DAI Mod Manager",
+        "executable": "DAIModManager.exe",
+        "arguments": []
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "masseffectlegendaryedition",
+    "name": "Mass Effect Legendary Edition",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "Game/Launcher/MassEffectLauncher.exe",
+    "required": [
+      "Game/Launcher/MassEffectLauncher.exe",
+      "Game/ME1/Binaries/Win64/MassEffect1.exe",
+      "Game/ME2/Binaries/Win64/MassEffect2.exe",
+      "Game/ME3/Binaries/Win64/MassEffect3.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1328670",
+    "destinations": [
+      "Game/ME1/BioGame/DLC",
+      "Game/ME2/BioGame/DLC",
+      "Game/ME3/BioGame/DLC"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "Game/ME1/BioGame/DLC/",
+        "target": "Game/ME1/BioGame/DLC/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "Game/ME2/BioGame/DLC/",
+        "target": "Game/ME2/BioGame/DLC/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "Game/ME3/BioGame/DLC/",
+        "target": "Game/ME3/BioGame/DLC/",
+        "search": true
+      }
+    ],
+    "frameworks": [],
+    "sources": [
+      "https://github.com/Nexus-Mods/game-masseffectlegendaryedition",
+      "https://github.com/ME3Tweaks/ME3TweaksModManager"
+    ],
+    "credits": [
+      "Definições factuais de extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Instala DLC pronto com caminho explícito Game/ME1, ME2 ou ME3/BioGame/DLC/DLC_MOD_*. Não deduz qual dos três jogos usar pelo nome do mod. Pacotes moddesc.ini com escolhas/patches e texturas MEM devem ser aplicados pelo ME3Tweaks/Mass Effect Modder; bypass DLC e autoload exigidos pelo mod devem estar instalados."
+    ],
+    "tools": [
+      {
+        "name": "ME3Tweaks Mod Manager",
+        "executable": "ME3TweaksModManager.exe",
+        "arguments": []
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "starwarsbattlefront22017",
+    "name": "Star Wars: Battlefront II (2017)",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "starwarsbattlefrontii.exe",
+    "required": [
+      "starwarsbattlefrontii.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "1237950",
+    "destinations": [
+      "FrostyModManager/Mods/StarWarsBattlefrontII"
+    ],
+    "allowed_files": [],
+    "routes": [
+      {
+        "kind": "extension",
+        "extension": ".fbmod",
+        "target": "FrostyModManager/Mods/StarWarsBattlefrontII/",
+        "root_only": false
+      },
+      {
+        "kind": "extension",
+        "extension": ".fbpack",
+        "target": "FrostyModManager/Mods/StarWarsBattlefrontII/",
+        "root_only": false
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "Frosty Mod Manager",
+        "mod_id": 0,
+        "required_files": [
+          "FrostyModManager/FrostyModManager.exe"
+        ],
+        "for_paths": [
+          "FrostyModManager/Mods/StarWarsBattlefrontII/"
+        ],
+        "url": "https://github.com/CadeEvs/FrostyToolsuite/releases"
+      }
+    ],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/tree/main/game-starwarsbattlefront22017"
+    ],
+    "credits": [
+      "Definições factuais de extensões públicas; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Prepara FBMOD/FBPACK na biblioteca FrostyModManager/Mods/StarWarsBattlefrontII. Abra Frosty no mesmo prefixo para selecionar/aplicar os mods e iniciar o jogo. ModData e dados originais não são sobrescritos pelo PeliGames; o gerenciador faz o processamento."
+    ],
+    "tools": [
+      {
+        "name": "Frosty Mod Manager",
+        "executable": "FrostyModManager/FrostyModManager.exe",
+        "arguments": []
+      }
+    ]
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "repo",
+    "name": "R.E.P.O.",
+    "platform": "proton",
+    "engine": "deployment",
+    "executable": "REPO.exe",
+    "required": [
+      "REPO.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "steam_id": "3241660",
+    "destinations": [
+      "BepInEx"
+    ],
+    "allowed_files": [
+      "winhttp.dll",
+      "doorstop_config.ini"
+    ],
+    "routes": [
+      {
+        "kind": "prefix",
+        "source": "BepInEx/",
+        "target": "BepInEx/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "winhttp.dll",
+        "target": "winhttp.dll"
+      },
+      {
+        "kind": "file",
+        "source": "BepInExPack/winhttp.dll",
+        "target": "winhttp.dll",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "doorstop_config.ini",
+        "target": "doorstop_config.ini"
+      },
+      {
+        "kind": "file",
+        "source": "BepInExPack/doorstop_config.ini",
+        "target": "doorstop_config.ini",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "plugins/",
+        "target": "BepInEx/plugins/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "patchers/",
+        "target": "BepInEx/patchers/",
+        "search": true
+      },
+      {
+        "kind": "prefix",
+        "source": "config/",
+        "target": "BepInEx/config/",
+        "search": true
+      },
+      {
+        "kind": "file",
+        "source": "REPOLib.dll",
+        "target": "BepInEx/plugins/REPOLib.dll",
+        "search": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".dll",
+        "target": "BepInEx/plugins/{mod_id}/",
+        "root_only": true
+      },
+      {
+        "kind": "extension",
+        "extension": ".repobundle",
+        "target": "BepInEx/plugins/{mod_id}/",
+        "root_only": true
+      },
+      {
+        "kind": "manifest",
+        "marker": "manifest.json",
+        "target": "BepInEx/plugins/"
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "BepInEx 5 (Mono, Windows x64)",
+        "mod_id": 0,
+        "url": "https://thunderstore.io/c/repo/p/BepInEx/BepInExPack/",
+        "required_files": [
+          "BepInEx/core/BepInEx.Preloader.dll",
+          "BepInEx/core/BepInEx.dll",
+          "winhttp.dll",
+          "doorstop_config.ini"
+        ],
+        "for_paths": [
+          "BepInEx/plugins/",
+          "BepInEx/patchers/"
+        ],
+        "for_extensions": []
+      },
+      {
+        "name": "REPOLib",
+        "mod_id": 0,
+        "url": "https://thunderstore.io/c/repo/p/Zehs/REPOLib/",
+        "required_files": [
+          "BepInEx/plugins/REPOLib.dll"
+        ],
+        "for_paths": [
+          "BepInEx/plugins/"
+        ],
+        "for_extensions": [
+          ".repobundle"
+        ]
+      }
+    ],
+    "dll_overrides": [
+      {
+        "name": "winhttp",
+        "file": "winhttp.dll"
+      }
+    ],
+    "config_files": [
+      "doorstop_config.ini"
+    ],
+    "rejected_prefixes": [
+      "MelonLoader/",
+      "Mods/",
+      "UserLibs/",
+      "REPO_Data/"
+    ],
+    "sources": [
+      "https://www.nexusmods.com/site/mods/1218",
+      "https://thunderstore.io/c/repo/p/BepInEx/BepInExPack/",
+      "https://docs.bepinex.dev/articles/advanced/proton_wine.html",
+      "https://thunderstore.io/c/repo/p/Zehs/REPOLib/",
+      "https://thunderstore.io/c/repo/p/nickklmao/MenuLib/",
+      "https://thunderstore.io/c/repo/p/nickklmao/REPOConfig/",
+      "https://www.nexusmods.com/repo/mods/201",
+      "https://github.com/ZehsTeam/REPOLib/blob/main/REPOLib/Plugin.cs",
+      "https://github.com/ZehsTeam/REPOLib/blob/main/REPOLib/Thunderstore/thunderstore.toml"
+    ],
+    "credits": [
+      "Regras factuais de documentação pública; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Edição Windows x64 via Proton: BepInEx 5 Mono usa UnityDoorstop/winhttp.dll; o override Wine é aplicado ao iniciar com mods pelo launcher.",
+      "Reconhece BepInExPack, pastas BepInEx/plugins/patchers/config, DLLs soltas, bundles .repobundle e pacotes de plugins com manifest.json. REPOLib, MenuLib e REPOConfig seguem este modelo; instale as dependências declaradas pelo autor. Importar ZIP do Thunderstore não baixa automaticamente suas dependências.",
+      "MelonLoader e substituições de REPO_Data exigem instalação especializada e são recusados. Não instala uma edição Linux nativa nem executa scripts de instalação."
+    ]
+  }
+]

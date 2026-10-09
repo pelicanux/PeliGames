@@ -147,6 +147,13 @@ fn scan_heroic(home: &Path) -> Vec<GameInfo> {
         }).collect()
 }
 
+/// Store manifests already identify installation roots; do not apply DLSS executable heuristics.
+pub(super) fn nexus_store_games(home: &Path) -> Vec<GameInfo> {
+    let mut games = scan_steam(home);
+    games.extend(scan_heroic(home));
+    games
+}
+
 async fn fetch_best_cover(name: &str, api_key: &str) -> Option<String> {
     let name = super::store_artwork::catalog_title(name);
     // Try Steam Store first since it might have games SteamGridDB doesn't have yet, and it's official

@@ -1,10 +1,15 @@
 import type { ReactNode } from "react";
 
-type IconName = "image" | "tools" | "gamepad" | "heart" | "wine" | "search" | "info" | "home" | "plus" | "plusCircle" | "back" | "play" | "trash" | "folderSearch" | "edit" | "check" | "folder" | "calendar" | "platform" | "chip" | "graphics" | "puzzle" | "logs" | "document" | "settings" | "cube" | "keyboard" | "download" | "repair" | "bolt" | "neural";
+type IconName = "copy" | "discord" | "eye" | "language" | "image" | "tools" | "gamepad" | "gamepadSearch" | "heart" | "wine" | "search" | "info" | "home" | "plus" | "plusCircle" | "back" | "play" | "trash" | "folderSearch" | "edit" | "check" | "folder" | "calendar" | "platform" | "chip" | "graphics" | "puzzle" | "logs" | "document" | "settings" | "cube" | "keyboard" | "download" | "repair" | "bolt" | "neural";
 const drawings: Record<IconName, ReactNode> = {
+  copy: <><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></>,
+  discord: <path fill="currentColor" stroke="none" d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.33-.35-.76-.53-1.09a.09.09 0 0 0-.07-.03c-1.5.26-2.93.71-4.27 1.33-.01 0-.02.01-.03.02-2.72 4.07-3.47 8.03-3.1 11.95 0 .02.01.04.03.05 1.8 1.32 3.53 2.12 5.24 2.65.03.01.06 0 .07-.02.4-.55.76-1.13 1.07-1.74.02-.04 0-.08-.04-.09-.57-.22-1.11-.48-1.64-.78-.04-.02-.04-.08-.01-.11.11-.08.22-.17.33-.25.02-.02.05-.02.07-.01 3.44 1.57 7.15 1.57 10.55 0 .02-.01.05-.01.07.01.11.09.22.17.33.26.03.03.03.09-.01.11-.52.31-1.07.56-1.64.78-.04.01-.05.06-.04.09.32.61.68 1.19 1.07 1.74.01.02.04.03.07.02 1.71-.53 3.44-1.33 5.24-2.65.02-.01.03-.03.03-.05.44-4.53-.73-8.46-3.1-11.95-.01-.01-.02-.02-.03-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.83 2.12-1.89 2.12z"/>,
+  eye: <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></>,
+  language: <><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></>,
   image: <><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/></>,
   tools: <path d="M14 6a5 5 0 0 0-6 6L3 17a3 3 0 0 0 4 4l5-5a5 5 0 0 0 6-6l-3 3-4-4 3-3Z"/>,
   gamepad: <><path d="M7 6h10c2 0 3 2 4 6l1 6c0 2-2 3-3 1l-3-3H8l-3 3c-1 2-3 1-3-1l1-6c1-4 2-6 4-6Z"/><path d="M7 9v5M4.5 11.5h5M16 10h.01M19 13h.01"/></>,
+  gamepadSearch: <path fill="currentColor" stroke="none" fillRule="evenodd" d="M7 5.5h10c2.5 0 3.7 2.2 4.5 6l1 5.5c.5 2.8-2.2 4-4 2l-3-3h-7l-3 3c-1.8 2-4.5.8-4-2l1-5.5C3.3 7.7 4.5 5.5 7 5.5ZM14.8 10.5a3.8 3.8 0 1 0-6.7 2.4 3.8 3.8 0 0 0 6.7-2.4Zm-1.6 0a2.2 2.2 0 1 1-4.4 0 2.2 2.2 0 0 1 4.4 0Zm.1 3.4 1.1-1.1 2.9 2.9-1.1 1.1-2.9-2.9Z" />,
   heart: <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />,
   wine: <><path d="M7 3h10l1 6a6 6 0 0 1-12 0l1-6ZM12 15v6M8 21h8M6 8h12" /></>,
   search: <><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></>,

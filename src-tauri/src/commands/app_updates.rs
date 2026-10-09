@@ -1,7 +1,15 @@
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{io::{Read, Write}, path::PathBuf, sync::{Mutex, atomic::{AtomicBool, Ordering}}, time::{Duration, Instant}};
-use tauri::{Emitter, Manager};
+use tauri::Emitter;
+
+#[path = "update_storage.rs"]
+mod update_storage;
+
+fn update_cache_root() -> Result<PathBuf, String> {
+    dirs::cache_dir().map(|base| update_storage::cache_root(&base))
+        .ok_or_else(|| "download|Cache directory unavailable".to_string())
+}
 
 const API: &str = "https://api.github.com/repos/pelicanux/PeliGames/releases/latest";
 const DOWNLOAD_PREFIX: &str = "https://github.com/pelicanux/PeliGames/releases/download/";
@@ -100,13 +108,13 @@ async fn download_launcher_update_inner(app: tauri::AppHandle, state: tauri::Sta
     if !is_newer(&release.tag_name, env!("CARGO_PKG_VERSION"))? { return Err("upToDate".into()); }
     let asset = release.assets.into_iter().find(|a| a.id == asset_id && compatible(&a.name) && update_policy::package_matches_format(&a.name, preferred_format()) && a.browser_download_url.starts_with(DOWNLOAD_PREFIX)).ok_or("noPackage")?;
     let expected = asset.digest.as_deref().and_then(|d| d.strip_prefix("sha256:")).filter(|d| d.len() == 64 && d.bytes().all(|b| b.is_ascii_hexdigit())).ok_or("checksumMissing")?.to_ascii_lowercase();
-    let folder = app.path().app_cache_dir().map_err(|_| "download".to_string())?.join("updates");
-    std::fs::create_dir_all(&folder).map_err(|_| "download".to_string())?;
+    let folder = update_storage::prepare(&update_cache_root()?)?;
+    crate::core::logger::log_launcher(&app, "INFO", &format!("Cache de atualização: {}", folder.display()));
     let target = folder.join(&asset.name);
     let partial = folder.join(format!("{}.part", uuid::Uuid::new_v4()));
     let result = async {
+        let mut file = update_storage::create_partial(&partial)?;
         let mut response = client()?.get(&asset.browser_download_url).send().await.map_err(|_| "network".to_string())?.error_for_status().map_err(|_| "network".to_string())?;
-        let mut file = std::fs::File::create(&partial).map_err(|_| "download".to_string())?;
         let mut hash = Sha256::new();
         let mut received = 0u64;
         let mut sampled_at = Instant::now();
@@ -115,7 +123,7 @@ async fn download_launcher_update_inner(app: tauri::AppHandle, state: tauri::Sta
         while let Some(chunk) = response.chunk().await.map_err(|_| "network".to_string())? {
             received += chunk.len() as u64;
             if received > asset.size { return Err("checksum".into()); }
-            file.write_all(&chunk).map_err(|_| "download".to_string())?;
+            file.write_all(&chunk).map_err(|error| update_storage::io_error("write file", &partial, error))?;
             hash.update(&chunk);
             let percent = received.saturating_mul(100) / asset.size.max(1);
             // Sample by time, so speed updates even when the integer percentage stays unchanged.
@@ -126,14 +134,14 @@ async fn download_launcher_update_inner(app: tauri::AppHandle, state: tauri::Sta
                 sampled_at = Instant::now(); sampled_bytes = received;
             }
         }
-        file.sync_all().map_err(|_| "download".to_string())?;
+        file.sync_all().map_err(|error| update_storage::io_error("sync file", &partial, error))?;
         if received != asset.size || format!("{:x}", hash.finalize()) != expected { return Err("checksum".into()); }
         #[cfg(unix)]
         if asset.name.to_ascii_lowercase().ends_with(".appimage") {
             use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(&partial, std::fs::Permissions::from_mode(0o755)).map_err(|_| "download".to_string())?;
+            std::fs::set_permissions(&partial, std::fs::Permissions::from_mode(0o755)).map_err(|error| update_storage::io_error("make executable", &partial, error))?;
         }
-        std::fs::rename(&partial, &target).map_err(|_| "download".to_string())?;
+        std::fs::rename(&partial, &target).map_err(|error| update_storage::io_error("save package", &target, error))?;
         Ok::<(), String>(())
     }.await;
     if result.is_err() { let _ = std::fs::remove_file(&partial); }
@@ -162,11 +170,11 @@ fn apply_downloaded_update(app: tauri::AppHandle, update: DownloadedUpdate) -> R
     let lower_path = downloaded.to_string_lossy().to_ascii_lowercase();
     if !lower_path.ends_with(preferred_format()) { return Err("manualInstall".into()); }
     // Detect cache changes between downloading and applying a package.
-    let mut file = std::fs::File::open(&downloaded).map_err(|_| "download".to_string())?;
+    let mut file = std::fs::File::open(&downloaded).map_err(|error| update_storage::io_error("open package", &downloaded, error))?;
     let mut hash = Sha256::new();
     let mut buffer = [0u8; 65536];
     loop {
-        let count = file.read(&mut buffer).map_err(|_| "download".to_string())?;
+        let count = file.read(&mut buffer).map_err(|error| update_storage::io_error("read package", &downloaded, error))?;
         if count == 0 { break; }
         hash.update(&buffer[..count]);
     }
@@ -183,7 +191,7 @@ fn apply_downloaded_update(app: tauri::AppHandle, update: DownloadedUpdate) -> R
                 std::fs::set_permissions(&staged, std::fs::Permissions::from_mode(0o755)).map_err(|_| "apply".to_string())?;
                 std::fs::copy(&current, &backup).map_err(|_| "apply".to_string())?;
                 std::fs::rename(&staged, &current).map_err(|_| "apply".to_string())?;
-                if std::process::Command::new(&current).env_remove("APPIMAGE").env_remove("APPDIR").env_remove("LD_LIBRARY_PATH").env_remove("LD_PRELOAD").spawn().is_err() {
+                if std::process::Command::new(&current).env("PELIGAMES_RESTART_PARENT_PID", std::process::id().to_string()).env_remove("APPIMAGE").env_remove("APPDIR").env_remove("LD_LIBRARY_PATH").env_remove("LD_PRELOAD").spawn().is_err() {
                     let _ = std::fs::rename(&backup, &current);
                     return Err("apply".into());
                 }
@@ -206,7 +214,7 @@ fn apply_downloaded_update(app: tauri::AppHandle, update: DownloadedUpdate) -> R
             update_policy::installation_result(status.code())?;
             cleanup_installed_update(&app);
             // Only the package manager ran as root; the relaunched UI keeps the user's identity.
-            std::process::Command::new(executable).spawn().map_err(|_| "restartFailed".to_string())?;
+            std::process::Command::new(executable).env("PELIGAMES_RESTART_PARENT_PID", std::process::id().to_string()).spawn().map_err(|_| "restartFailed".to_string())?;
             crate::core::logger::log_launcher(&app, "INFO", "Atualização aplicada; reiniciando launcher");
             app.exit(0);
             return Ok(());
@@ -265,7 +273,7 @@ fn cleanup_obsolete_packages(cache_root: &std::path::Path, current: &semver::Ver
 
 pub fn cleanup_obsolete_updates(app: &tauri::AppHandle) {
     let current = semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("valid application version");
-    let result = app.path().app_cache_dir().map_err(|error| error.to_string())
+    let result = update_cache_root()
         .and_then(|root| cleanup_obsolete_packages(&root, &current).map_err(|error| error.to_string()));
     match result {
         Ok(count) if count > 0 => crate::core::logger::log_launcher(app, "INFO", &format!("Cache de atualizações: {count} pacotes já instalados ou antigos removidos")),
@@ -275,7 +283,7 @@ pub fn cleanup_obsolete_updates(app: &tauri::AppHandle) {
 }
 
 fn cleanup_installed_update(app: &tauri::AppHandle) {
-    let result = app.path().app_cache_dir().map_err(|error| error.to_string())
+    let result = update_cache_root()
         .and_then(|root| clear_update_cache(&root).map_err(|error| error.to_string()));
     match result {
         Ok(()) => crate::core::logger::log_launcher(app, "INFO", "Pacotes temporários removidos após instalação da atualização"),

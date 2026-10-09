@@ -8,9 +8,10 @@ interface Props {
   children: ReactNode;
   installation: ReactNode;
   installed: ReactNode;
+  nexus?: ReactNode;
 }
 
-export function GamePanelCarousel({ mode, reducedMotion, children, installation, installed }: Props) {
+export function GamePanelCarousel({ mode, reducedMotion, children, installation, installed, nexus }: Props) {
   const frame = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number>();
   // Preserve panel dimensions while their contents slide between modes.
@@ -34,7 +35,7 @@ export function GamePanelCarousel({ mode, reducedMotion, children, installation,
         animate={{ y: 0, opacity: 1 }} exit={{ y: reducedMotion ? 0 : 180, opacity: reducedMotion ? 1 : 0 }}
         transition={{ duration: reducedMotion ? 0 : 0.35, ease: [0.4, 0, 0.2, 1] }}
         style={{ minHeight: height }}>
-        {mode === "mods" ? children : mode === "installed" ? installed : installation}
+        {mode === "nexus" ? nexus : mode === "mods" ? children : mode === "installed" ? installed : installation}
       </motion.div>
     </AnimatePresence>
   </div>;

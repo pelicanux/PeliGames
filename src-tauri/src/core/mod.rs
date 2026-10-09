@@ -29,3 +29,8 @@ pub mod execution_registry;
 pub mod game_logs;
 
 pub mod paths;
+
+#[cfg(unix)]
+pub mod launcher_instance;
+
+pub mod nxm;

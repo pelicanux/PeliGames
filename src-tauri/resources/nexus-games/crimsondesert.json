@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "version": "1.0.0",
+  "domain": "crimsondesert",
+  "name": "Crimson Desert",
+  "platform": "proton",
+  "engine": "deployment",
+  "executable": "bin64/CrimsonDesert.exe",
+  "required": [
+    "bin64/CrimsonDesert.exe"
+  ],
+  "header": [
+    77,
+    90
+  ],
+  "steam_id": "3321460",
+  "destinations": [
+    "bin64"
+  ],
+  "protected_files": [
+    "bin64/CrimsonDesert.exe"
+  ],
+  "allowed_files": [],
+  "routes": [
+    {
+      "kind": "prefix",
+      "source": "bin64/",
+      "target": "bin64/",
+      "search": true
+    },
+    {
+      "kind": "file",
+      "source": "winmm.dll",
+      "target": "bin64/winmm.dll",
+      "search": true
+    },
+    {
+      "kind": "file",
+      "source": "version.dll",
+      "target": "bin64/version.dll",
+      "search": true
+    },
+    {
+      "kind": "extension",
+      "extension": ".asi",
+      "target": "bin64/",
+      "root_only": false
+    },
+    {
+      "kind": "extension",
+      "extension": ".ini",
+      "target": "bin64/",
+      "root_only": false
+    }
+  ],
+  "frameworks": [
+    {
+      "name": "Ultimate ASI Loader (x64)",
+      "mod_id": 0,
+      "url": "https://github.com/ThirteenAG/Ultimate-ASI-Loader/releases",
+      "required_files": [],
+      "any_files": [
+        "bin64/winmm.dll",
+        "bin64/version.dll"
+      ],
+      "for_paths": [
+        "bin64/"
+      ],
+      "for_extensions": [
+        ".asi"
+      ]
+    }
+  ],
+  "dll_overrides": [
+    {
+      "name": "winmm",
+      "file": "bin64/winmm.dll"
+    },
+    {
+      "name": "version",
+      "file": "bin64/version.dll"
+    }
+  ],
+  "sources": [
+    "https://store.steampowered.com/app/3321460/",
+    "https://crimsondesert.pearlabyss.com/pt-br/News/Notice/Detail?_boardNo=40",
+    "https://www.nexusmods.com/crimsondesert/mods/366",
+    "https://www.nexusmods.com/crimsondesert/mods/95",
+    "https://www.nexusmods.com/crimsondesert/mods/107?tab=files",
+    "https://github.com/faisalkindi/CrimsonDesert-UltimateModsManager/blob/master/LINUX.md",
+    "https://github.com/faisalkindi/CrimsonDesert-UltimateModsManager#supported-formats",
+    "https://github.com/ThirteenAG/Ultimate-ASI-Loader"
+  ],
+  "credits": [
+    "Regras factuais pesquisadas nas instruções dos autores; implementação independente PeliGames. Nenhum código dos gerenciadores foi incorporado."
+  ],
+  "notes": [
+    "Suporte inicial a plugins ASI x64 e seus INIs em bin64 (incluindo plugins/ com caminho explícito). Requer Ultimate ASI Loader x64 como winmm.dll ou version.dll.",
+    "JSON/modpatch/CDMOD, PAZ/PAMT/PAPGT/PATHC, XML, texturas, áudio, scripts instaladores e ReShade exigem processamento ou instalação especializados; este módulo não os aplica.",
+    "A identificação da pasta e das dependências não garante que o plugin funcione na versão atual do jogo. Validar cada mod no jogo, especialmente após atualizações."
+  ]
+}

@@ -1,7 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "PeliGames",
-  "version": "0.8.2",
+  "mainBinaryName": "peligames",
+  "version": "0.3.0",
   "identifier": "com.pelicano.peligames",
   "build": {
     "beforeDevCommand": "bun run dev",
@@ -50,16 +51,24 @@
         "desktopTemplate": "packaging/launcher.desktop",
         "files": {
           "/usr/share/applications/pelinstall.desktop": "packaging/pelinstall.desktop",
-          "/usr/bin/Pelinstall": "packaging/Pelinstall",
-          "/usr/bin/PeliGames": "packaging/PeliGames"
-        }
+          "/usr/bin/pelinstall": "packaging/pelinstall",
+          "/usr/bin/peligames": "packaging/peligames"
+        },
+        "depends": [
+          "libsecret-tools",
+          "libarchive13 | libarchive13t64"
+        ]
       },
       "rpm": {
         "desktopTemplate": "packaging/launcher.desktop",
         "files": {
           "/usr/share/applications/pelinstall.desktop": "packaging/pelinstall.desktop",
-          "/usr/bin/Pelinstall": "packaging/Pelinstall"
-        }
+          "/usr/bin/pelinstall": "packaging/pelinstall"
+        },
+        "depends": [
+          "libsecret",
+          "libarchive"
+        ]
       }
     }
   }
