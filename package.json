@@ -4,10 +4,11 @@
   "version": "0.3.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "bun run icons && vite",
+    "build": "bun run icons && tsc && vite build",
     "preview": "vite preview",
-    "tauri": "bash scripts/tauri.sh"
+    "tauri": "bash scripts/tauri.sh",
+    "icons": "bun node_modules/@tauri-apps/cli/tauri.js icon public/peligames.svg --output src-tauri/icons/generated"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",

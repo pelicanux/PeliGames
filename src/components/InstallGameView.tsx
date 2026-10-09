@@ -37,7 +37,7 @@ export function InstallGameSummary({ draft, onCollapse, onCoverMove, onCoverLeav
         <div className="glare" />
         {mode !== "mods" && draft.coverUrl ? <img className="installation-cover-image" src={draft.coverUrl} alt={draft.name}
           onError={() => draft.coverUrl && draft.coverFailed(draft.coverUrl)} /> : <div className="installation-cover-placeholder">
-          <img src="/peligames.png" alt="Icon" />
+          <img src="/peligames.svg" alt="Icon" />
         </div>}
       </motion.div>
       <button type="button" disabled={busy} className="btn game-back-button installation-collapse" onClick={onCollapse}>

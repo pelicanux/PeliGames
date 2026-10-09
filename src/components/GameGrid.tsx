@@ -292,7 +292,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
               onError={() => setImageErrors(prev => new Set(prev).add(game.path))} />
           ) : (
             <div className="selected-cover-copy selected-cover-copy--fallback" aria-hidden="true">
-              <img src="/peligames.png" alt="" />
+              <img src="/peligames.svg" alt="" />
               {viewMode === "grid" && <span>{game.name}</span>}
             </div>
           )}
@@ -368,7 +368,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         }}
       >
         <span style={{ position: "absolute", top: "1rem", left: "0.5rem", right: "0.5rem", fontWeight: "bold", fontSize: "0.9rem", textShadow: "0 2px 4px rgba(0,0,0,0.8)" }}>{game.name}</span>
-        <img src="/peligames.png" alt="Icon" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "48px", height: "48px", opacity: 0.5 }} />
+        <img src="/peligames.svg" alt="Icon" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "48px", height: "48px", opacity: 0.5 }} />
       </div>
       
       </motion.div>
@@ -470,7 +470,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
             </button></HoverTooltip>
           </div>
 
-          {(managedLibrary || libraryScope === "all") && <HoverTooltip text={t("gameModes", "goHome")}><button type="button" className="library-mode-button library-home-button" disabled={modeDisabled || managedLibrary?.busy} onClick={onHome}><img src="/peligames.png" alt="" /><span>{t("gameModes", "home")}</span></button></HoverTooltip>}
+          {(managedLibrary || libraryScope === "all") && <HoverTooltip text={t("gameModes", "goHome")}><button type="button" className="library-mode-button library-home-button" disabled={modeDisabled || managedLibrary?.busy} onClick={onHome}><img src="/peligames.svg" alt="" /><span>{t("gameModes", "home")}</span></button></HoverTooltip>}
           <div style={{ width: "1px", height: "20px", background: "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)" }}></div>
 
           <div className="library-view-toggle" role="group" aria-label={t("gameGrid", "viewMode")}>

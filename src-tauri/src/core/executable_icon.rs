@@ -273,16 +273,16 @@ pub fn extract_png(executable: &Path) -> io::Result<Vec<u8>> {
     }
     Err(invalid())
 }
-fn cache_png(directory: &Path, png: &[u8]) -> io::Result<PathBuf> {
+fn cache_icon(directory: &Path, bytes: &[u8], extension: &str) -> io::Result<PathBuf> {
     fs::create_dir_all(directory)?;
-    let target = directory.join(format!("{:x}.png", Sha256::digest(png)));
+    let target = directory.join(format!("{:x}.{extension}", Sha256::digest(bytes)));
     let temp = directory.join(format!("{}.tmp", uuid::Uuid::new_v4()));
     let result = (|| {
         let mut file = fs::OpenOptions::new()
             .create_new(true)
             .write(true)
             .open(&temp)?;
-        file.write_all(png)?;
+        file.write_all(bytes)?;
         fs::rename(&temp, &target)?;
         Ok(target)
     })();
@@ -292,9 +292,10 @@ fn cache_png(directory: &Path, png: &[u8]) -> io::Result<PathBuf> {
     result
 }
 pub fn shortcut_icon_at(executable: &Path, directory: &Path) -> io::Result<PathBuf> {
-    let png = extract_png(executable)
-        .unwrap_or_else(|_| include_bytes!("../../../public/peligames.png").to_vec());
-    cache_png(directory, &png)
+    match extract_png(executable) {
+        Ok(png) => cache_icon(directory, &png, "png"),
+        Err(_) => cache_icon(directory, include_bytes!("../../../public/peligames.svg"), "svg"),
+    }
 }
 pub fn shortcut_icon(executable: &Path) -> Option<PathBuf> {
     let directory = super::paths::app_root().ok()?.join("icons/executables");

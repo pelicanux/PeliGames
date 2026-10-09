@@ -24,7 +24,7 @@ root = Path.cwd()
 def arg(value):
     return '"' + value.replace('\\', '\\\\\\\\').replace('"', '\\\\"').replace('`', '\\\\`').replace('$', '\\\\$').replace('%', '%%') + '"'
 entry = root / 'Release/pelinstall.desktop'
-entry.write_text('[Desktop Entry]\nVersion=1.0\nType=Application\nName=Pelinstall\nComment=Instalar jogos e programas Windows com PeliGames\nExec=' + arg(str(root / 'Release/pelinstall')) + ' %f\nIcon=' + str(root / 'public/peligames.png') + '\nTerminal=false\nCategories=Game;\nMimeType=application/x-ms-dos-executable;application/x-msdownload;application/x-msi;\n')
+entry.write_text('[Desktop Entry]\nVersion=1.0\nType=Application\nName=Pelinstall\nComment=Instalar jogos e programas Windows com PeliGames\nExec=' + arg(str(root / 'Release/pelinstall')) + ' %f\nIcon=' + str(root / 'public/peligames.svg') + '\nTerminal=false\nCategories=Game;\nMimeType=application/x-ms-dos-executable;application/x-msdownload;application/x-msi;\n')
 entry.chmod(0o755)
 PY
 file Release/peligames Release/pelinstall
