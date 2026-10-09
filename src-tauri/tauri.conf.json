@@ -46,7 +46,8 @@
       "icons/icon.ico"
     ],
     "resources": {
-      "../licenses/": "licenses/"
+      "../licenses/": "licenses/",
+      "../LICENSE": "licenses/PeliGames-GPL-3.0.txt"
     },
     "linux": {
       "deb": {

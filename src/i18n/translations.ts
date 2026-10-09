@@ -246,7 +246,8 @@ export const translations = {
       readLicense: "Ler licença / avisos",
       backToCredits: "Voltar aos créditos",
       viewSource: "Abrir página original",
-      originalNotice: "Texto original preservado em inglês. Disponível para consulta mesmo sem internet."
+      originalNotice: "Texto original preservado em inglês. Disponível para consulta mesmo sem internet.",
+      launcherLicenseNotice: "© 2026 Pelicano. PeliGames sob GPL 3.0: você pode redistribuir e modificar conforme a licença, disponibilizando o código-fonte correspondente. Sem garantia, nos limites permitidos por lei."
     },
     gameDir: {
       title: "Diretório do Jogo",
@@ -674,7 +675,8 @@ export const translations = {
       readLicense: "Read license / notices",
       backToCredits: "Back to credits",
       viewSource: "Open original page",
-      originalNotice: "Original English text preserved. Available to read even without an internet connection."
+      originalNotice: "Original English text preserved. Available to read even without an internet connection.",
+      launcherLicenseNotice: "© 2026 Pelicano. PeliGames is licensed under GPL 3.0: you may redistribute and modify it under the license, providing the corresponding source code. No warranty, to the extent permitted by law."
     },
     gameDir: {
       title: "Game Directory",

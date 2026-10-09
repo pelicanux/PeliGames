@@ -3,7 +3,7 @@ name = "peligames"
 version = "0.3.0"
 description = "A Tauri App"
 authors = ["Pelicano"]
-license = "MIT"
+license = "GPL-3.0-only"
 edition = "2021"
 default-run = "peligames"
 

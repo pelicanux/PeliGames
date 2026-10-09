@@ -4,6 +4,8 @@ Base: código e histórico Git disponíveis até `0de82a3c372359e9a1a59128742c49
 
 AppImage examinado: `PeliGames_0.3.0_amd64.AppImage`, SHA-256 `43c5bb35ffb72ac48fd2c0636d86a6b761b5a4da072516c0d228b7156b39ee8a`.
 
+Após esta auditoria, o titular solicitou a adoção de GPL-3.0-only para o código próprio atual. LICENSE, manifests, créditos e empacotamento foram atualizados. Isso não revoga permissões MIT já concedidas para cópias anteriores, não altera os binários publicados e não elimina as pendências de terceiros abaixo. A distribuição de novos binários deverá disponibilizar o código-fonte correspondente, incluindo os scripts necessários à compilação, conforme a GPL 3.0.
+
 ## Escopo e evidências
 
 - Foram examinados os commits disponíveis, comentários de procedência, manifests, lockfiles, assets e avisos existentes.
@@ -16,7 +18,7 @@ AppImage examinado: `PeliGames_0.3.0_amd64.AppImage`, SHA-256 `43c5bb35ffb72ac48
 | Material | Evidência e tratamento |
 | --- | --- |
 | DLSSNR-AMD e DLSSNR-RDNA3 | Integração com backends obtidos separadamente. Licenças MIT e avisos internos preservados; autoria original de mochizuki0323 e manutenção do fork por mauri870 distinguidas. |
-| React, Motion, APIs Tauri e bibliotecas Rust | Dependências reais declaradas nos manifests e lockfiles. Textos, autores declarados e versões preservados no inventário. As licenças dessas dependências não são substituídas pelo MIT do launcher. |
+| React, Motion, APIs Tauri e bibliotecas Rust | Dependências reais declaradas nos manifests e lockfiles. Textos, autores declarados e versões preservados no inventário. As licenças dessas dependências não são substituídas pela licença do launcher. |
 | Jersey 10 | Fonte distribuída em `public/fonts/jersey-10/`, com copyright The Soft Type Project Authors e OFL 1.1 original. |
 | `public/nexus-mods.svg` | O próprio arquivo registra cópia de `Nexus-Mods/Vortex/assets/images/nexus.svg`. O repositório de origem declara GPL-3.0; o texto foi preservado. A alteração local registrada é o dimensionamento responsivo. Não foi encontrada uma licença específica alternativa para esse asset; sua condição e o uso da marca precisam ser confirmados. |
 | `src/assets/bg_main.jpg` e `public/peligames.png` | O responsável pelo projeto informou nesta auditoria que foram feitos com IA. Modelo, termos do serviço e eventuais imagens de entrada não foram informados; esse relato não atribui uma licença de terceiros ou direitos exclusivos por presunção. |
