@@ -1,16 +1,22 @@
-# Índice de licenças e avisos
+# Licenças e avisos de terceiros
 
-O launcher e os componentes de terceiros mantêm suas respectivas autorias e licenças. Os textos abaixo são preservados e disponibilizados offline na interface, em **Sobre → Licenças e avisos**.
+O código próprio do PeliGames usa [MIT](../LICENSE). Dependências, fontes, imagens e ferramentas externas não são relicenciadas automaticamente pelo launcher. Créditos resumidos não substituem os textos e copyrights exigidos por cada licença.
 
-| Projeto ou aviso | Autoria | Texto incluído | Fonte original |
-| --- | --- | --- | --- |
-| DLSSNR X AMD | Pelicano · pelicanux — frontend/interface gráfica | [MIT do launcher](../LICENSE) | [Repositório do launcher](https://github.com/pelicanux/dlssnr-x-amd-launcher) |
-| DLSSNR-AMD | mochizuki0323 — backend e instalador do mod | [MIT original](DLSSNR-AMD-LICENSE.txt) | [LICENSE do backend](https://github.com/mochizuki0323/DLSSNR-AMD/blob/main/LICENSE) |
-| DLSSNR-RDNA3 | mauri870, a partir do projeto de mochizuki0323 | [MIT do fork](DLSSNR-RDNA3-LICENSE.txt) | [LICENSE do fork](https://github.com/mauri870/DLSSNR-RDNA3/blob/main/LICENSE) |
-| Componentes de terceiros do backend | Autores identificados nos avisos originais | [Avisos de terceiros](DLSSNR-AMD-THIRD-PARTY.md) | [THIRD_PARTY.md do backend](https://github.com/mochizuki0323/DLSSNR-AMD/blob/main/THIRD_PARTY.md) |
+| Componente | Avisos preservados |
+| --- | --- |
+| DLSSNR-AMD — mochizuki0323 | [MIT original](DLSSNR-AMD-LICENSE.txt) e [componentes do backend](DLSSNR-AMD-THIRD-PARTY.md) |
+| DLSSNR-RDNA3 — mauri870, a partir de mochizuki0323 | [MIT original do fork](DLSSNR-RDNA3-LICENSE.txt); o copyright original de mochizuki0323 foi mantido |
+| React, React DOM, Scheduler, Motion e APIs Tauri | [Avisos das dependências da interface](Frontend-Dependencies.txt) |
+| Bibliotecas Rust, inclusive dependências transitivas e de compilação | [Avisos completos](Rust-Dependencies.txt) e [inventário por versão](dependency-inventory.json) |
+| Jersey 10 — The Soft Type Project Authors | [SIL OFL 1.1 original](../public/fonts/jersey-10/OFL.txt) |
+| SVG Nexus Mods copiado do Vortex | [GPL-3.0 do repositório de origem](upstream/Vortex-Nexus-Icon/LICENSE.md); [arquivo-fonte e origem](../public/nexus-mods.svg) |
+| Bibliotecas nativas presentes no AppImage 0.3.0 | [Copyrights e avisos originais dos pacotes](AppImage-Native-Notices.txt) |
+| Extração de ícones de executáveis — ico e png | [Avisos preservados](Executable-Icon-LICENSES.txt) |
 
-As cópias dos avisos dos backends foram consultadas em **4 de outubro de 2026**. O texto original de copyright é preservado, inclusive **Copyright (c) 2026 mochizuki0323** na licença do fork RDNA3. O crédito ao mantenedor do fork não substitui esse aviso.
+O inventário Rust é conservador: inclui dependências de compilação e não afirma que todos os pacotes são redistribuídos no executável. Os documentos idênticos são deduplicados pelo hash SHA-256; cada componente aponta para os textos originais correspondentes. As expressões `OR` representam alternativas de licença, e `AND` exige a combinação indicada; preservamos os documentos disponibilizados pelo pacote, sem transformar essas expressões em uma licença única.
 
-Os componentes baixados pelo aplicativo mantêm suas próprias licenças. Estes arquivos não substituem os avisos que acompanham cada pacote ou versão, nem alteram a licença dos componentes para MIT. A DLL e os pesos do modelo da NVIDIA não estão incluídos e não são cobertos pela licença MIT do launcher.
+As fontes originais das dependências MPL-2.0 estão em [sources/](sources/README.md). Os textos adicionais obtidos dos repositórios oficiais têm suas URLs e referências registradas em [upstream/sources.json](upstream/sources.json).
 
-As bibliotecas Rust usadas para decodificar os ícones embutidos (`ico` e `png`) têm seus avisos preservados em [Licenças da extração de ícones](Executable-Icon-LICENSES.txt), também incluídos na pasta Release.
+**Pendências e limites da verificação:** consulte a [auditoria](AUDIT.md). A presença destes avisos, por si só, não certifica o cumprimento de todas as obrigações de distribuição GPL/LGPL do AppImage.
+
+Proton, UMU, Winetricks e os backends são baixados separadamente. Seus pacotes e componentes internos mantêm as próprias licenças. Os avisos do backend não demonstram que esses componentes estão dentro do binário PeliGames. A DLL e os pesos de modelos da NVIDIA não são incluídos nem cobertos pelo MIT do launcher.

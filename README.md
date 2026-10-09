@@ -24,8 +24,18 @@ O suporte depende do jogo e do formato do pacote. A chave fica no chaveiro do si
 
 ## Créditos e licença
 
-PeliGames é desenvolvido por Pelicano e distribuído sob a licença [MIT](LICENSE).
+O código próprio do PeliGames, desenvolvido por Pelicano, é distribuído sob a licença [MIT](LICENSE). Os componentes de terceiros mantêm suas respectivas licenças e autorias.
 
-O gerenciador de mods integra os projetos [DLSSNR-AMD, de mochizuki0323](https://github.com/mochizuki0323/DLSSNR-AMD), e [DLSSNR-RDNA3, de mauri870](https://github.com/mauri870/DLSSNR-RDNA3). As licenças e avisos desses componentes estão em [licenses/](licenses/README.md) e na janela Sobre do aplicativo.
+| Componente | Autoria e licença |
+| --- | --- |
+| [DLSSNR-AMD](https://github.com/mochizuki0323/DLSSNR-AMD) e [DLSSNR-RDNA3](https://github.com/mauri870/DLSSNR-RDNA3) | mochizuki0323 e mauri870 — MIT; os avisos dos componentes internos acompanham os backends. |
+| [React](https://github.com/facebook/react) e React DOM | Meta e colaboradores — MIT. |
+| [Motion](https://github.com/motiondivision/motion) | Framer, Matt Perry e colaboradores — MIT. |
+| [Tauri e plugins](https://github.com/tauri-apps) | The Tauri Programme in the Commons Conservancy e colaboradores — MIT ou Apache-2.0. |
+| [Jersey 10](https://github.com/scfried/soft-type-jersey) | The Soft Type Project Authors — SIL Open Font License 1.1. |
+| [Ícone Nexus Mods](public/nexus-mods.svg), obtido do [Vortex](https://github.com/Nexus-Mods/Vortex) | Nexus Mods / Black Tree Gaming e colaboradores — repositório de origem sob GPL-3.0; a marca pertence ao seu titular. |
+| Bibliotecas Rust e componentes nativos Linux | Autores e licenças individuais, incluindo MIT, Apache-2.0, BSD, ISC, Unicode, MPL, GPL e LGPL; consulte os avisos completos. |
 
-O launcher utiliza Proton, UMU e Winetricks, mantidos por seus respectivos projetos. Esses componentes têm suas próprias licenças e são obtidos separadamente pelo aplicativo.
+Os [textos de licença, copyrights e avisos de terceiros](licenses/README.md) são preservados separadamente. A licença MIT do PeliGames não substitui as licenças desses componentes nem concede direitos sobre marcas ou conteúdo de jogos.
+
+Proton, UMU, Winetricks e os backends são obtidos separadamente pelo aplicativo e mantêm suas próprias licenças. A DLL e os pesos de modelos da NVIDIA não são incluídos no launcher.

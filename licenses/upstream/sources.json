@@ -1,0 +1,94 @@
+[
+  {
+    "component": "alloc-stdlib",
+    "repository": "dropbox/rust-alloc-no-stdlib",
+    "ref": "0a81fd6928ea3b33c8cd484aa4575d50ffb98012",
+    "files": [
+      {
+        "path": "licenses/upstream/alloc-stdlib/LICENSE",
+        "url": "https://raw.githubusercontent.com/dropbox/rust-alloc-no-stdlib/0a81fd6928ea3b33c8cd484aa4575d50ffb98012/LICENSE"
+      }
+    ]
+  },
+  {
+    "component": "defmt-parser",
+    "repository": "knurling-rs/defmt",
+    "ref": "4a8cdb44891ed57b8ff5a023b6bec7137c48708f",
+    "files": [
+      {
+        "path": "licenses/upstream/defmt-parser/LICENSE-MIT",
+        "url": "https://raw.githubusercontent.com/knurling-rs/defmt/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-MIT"
+      },
+      {
+        "path": "licenses/upstream/defmt-parser/LICENSE-APACHE",
+        "url": "https://raw.githubusercontent.com/knurling-rs/defmt/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-APACHE"
+      }
+    ]
+  },
+  {
+    "component": "dlopen2",
+    "repository": "OpenByteDev/dlopen2",
+    "ref": "cc80e4a0a90d499b677fdf7743699b4b3a43a989",
+    "files": [
+      {
+        "path": "licenses/upstream/dlopen2/LICENSE",
+        "url": "https://raw.githubusercontent.com/OpenByteDev/dlopen2/cc80e4a0a90d499b677fdf7743699b4b3a43a989/LICENSE"
+      }
+    ]
+  },
+  {
+    "component": "dlopen2_derive",
+    "repository": "OpenByteDev/dlopen2",
+    "ref": "cc80e4a0a90d499b677fdf7743699b4b3a43a989",
+    "files": [
+      {
+        "path": "licenses/upstream/dlopen2_derive/LICENSE",
+        "url": "https://raw.githubusercontent.com/OpenByteDev/dlopen2/cc80e4a0a90d499b677fdf7743699b4b3a43a989/LICENSE"
+      }
+    ]
+  },
+  {
+    "component": "selectors",
+    "repository": "servo/stylo",
+    "ref": "572ecba2d1600e7c3d490586692a209faf703baa",
+    "files": [
+      {
+        "path": "licenses/upstream/selectors/LICENSE-MPL-2.0",
+        "url": "https://www.mozilla.org/MPL/2.0/",
+        "note": "Standard MPL-2.0 text, copied verbatim from cssparser 0.37.0; selectors source headers declare MPL-2.0."
+      }
+    ]
+  },
+  {
+    "component": "sigchld",
+    "repository": "oconnor663/sigchld.rs",
+    "ref": "0f279e73cefdac2cc66f19357df30a2682fb1570",
+    "files": []
+  },
+  {
+    "component": "tauri-plugin",
+    "repository": "tauri-apps/tauri",
+    "ref": "30da1fd6e17de6107ecc850c95dfb16b5729f2dd",
+    "files": [
+      {
+        "path": "licenses/upstream/tauri-plugin/LICENSE-MIT",
+        "url": "https://raw.githubusercontent.com/tauri-apps/tauri/30da1fd6e17de6107ecc850c95dfb16b5729f2dd/LICENSE-MIT"
+      },
+      {
+        "path": "licenses/upstream/tauri-plugin/LICENSE-APACHE-2.0",
+        "url": "https://raw.githubusercontent.com/tauri-apps/tauri/30da1fd6e17de6107ecc850c95dfb16b5729f2dd/LICENSE-APACHE-2.0"
+      }
+    ]
+  },
+  {
+    "component": "Vortex-Nexus-Icon",
+    "repository": "Nexus-Mods/Vortex",
+    "ref": "master",
+    "files": [
+      {
+        "path": "licenses/upstream/Vortex-Nexus-Icon/LICENSE.md",
+        "url": "https://raw.githubusercontent.com/Nexus-Mods/Vortex/master/LICENSE.md"
+      }
+    ]
+  }
+]
