@@ -293,7 +293,7 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
     <ModalSurface className="modal-content dialog-glass pelinstall-surface" onDismiss={requestClose} closeDisabled={(busy && step !== 3) || cancelPending}
       onHeaderMouseDown={event => dragPelinstallWindow(event, setError)}
       headerActions={<><InstallerSettingsMenu /><button type="button" className="titlebar-title pelinstall-launcher-button" aria-label={tr("Abrir PeliGames")} title={tr("Abrir PeliGames")} disabled={launcherOpening} onClick={() => void openLauncherFromTitle()}><BrandName /></button><PelinstallMinimizeButton onError={setError} /></>}
-      header={<h2><img src="/peligames.png" alt="" /><span className="pelinstall-brand">Pel<span className="titlebar-games">install</span></span></h2>}>
+      header={<h2><img src="/peligames.svg" alt="" /><span className="pelinstall-brand">Pel<span className="titlebar-games">install</span></span></h2>}>
       {step !== 4 && <div className="pelinstall-step-layout"><div className="pelinstall-step-content">
       {step === -1 && checking && <p role="status">{tr("Consultando a biblioteca…")}</p>}
       {step === -1 && !checking && !matches.length && <section className="pelinstall-entry">

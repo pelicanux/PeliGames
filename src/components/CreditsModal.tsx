@@ -77,7 +77,7 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
             width: "80px", height: "80px", flexShrink: 0, boxSizing: "border-box", borderRadius: "12px", background: "rgba(var(--accent-rgb),0.1)",
             border: "1px solid rgba(var(--accent-rgb),0.5)", overflow: "hidden", boxShadow: "0 0 20px rgba(var(--accent-rgb),0.4)"
           }}>
-            <img src="/peligames.png" alt="Logo" style={{ display: "block", width: "100%", height: "100%", objectFit: "contain" }} />
+            <img src="/peligames.svg" alt="Logo" style={{ display: "block", width: "100%", height: "100%", objectFit: "contain" }} />
           </div>
           <div>
             <h3 className="titlebar-title" style={{ margin: 0, width: "fit-content", color: "var(--tone-edf4ff, #edf4ff)" }}><BrandName /></h3>

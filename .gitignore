@@ -24,6 +24,7 @@ dist-ssr
 *.sw?
 
 # Native builds and release artifacts
+/src-tauri/icons/generated/
 **/target/
 /release/
 *.AppImage

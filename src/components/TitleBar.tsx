@@ -49,7 +49,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
     >
       {/* Left section: Icon and Title */}
       <div data-tauri-drag-region="true" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', height: '100%' }}>
-        <img src="/peligames.png" alt="Icon" style={{ width: '24px', height: '24px', objectFit: 'contain', pointerEvents: 'none' }} />
+        <img src="/peligames.svg" alt="Icon" style={{ width: '24px', height: '24px', objectFit: 'contain', pointerEvents: 'none' }} />
         <button type="button" className="titlebar-title titlebar-home" data-tauri-drag-region="false" onClick={onHome} disabled={disabled || homeDisabled} aria-label={t("gameModes", "goHome")} title={t("gameModes", "goHome")} style={{ 
           margin: 0, 
           color: "var(--tone-edf4ff, #edf4ff)" 

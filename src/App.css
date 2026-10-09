@@ -1107,7 +1107,7 @@ body { height: 100dvh; min-height: 0; }
   white-space: nowrap;
 }
 .titlebar-games { color: var(--accent); }
-img[src="/peligames.png"] { filter: hue-rotate(var(--brand-hue, 0deg)); }
+img[src="/peligames.svg"] { filter: hue-rotate(var(--brand-hue, 0deg)); }
 /* Reserve room inside the scrollport for the enlarged edge covers. */
 .game-collection--grid { padding: 12px 14px 20px; }
 

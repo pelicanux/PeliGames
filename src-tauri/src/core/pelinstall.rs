@@ -112,8 +112,8 @@ pub fn register_appimage() -> Result<(), String> {
     let data = dirs::data_dir().ok_or("Pasta de aplicativos indisponível.")?;
     let applications = data.join("applications"); let icons = data.join("peligames");
     fs::create_dir_all(&applications).and_then(|_|fs::create_dir_all(&icons)).map_err(|e|e.to_string())?;
-    let icon = icons.join("appimage-icon.png");
-    fs::write(&icon, include_bytes!("../../icons/128x128.png")).map_err(|e|e.to_string())?;
+    let icon = icons.join("appimage-icon.svg");
+    fs::write(&icon, include_bytes!("../../../public/peligames.svg")).map_err(|e|e.to_string())?;
     for (name, filename, arguments, extra) in [
         ("PeliGames", "peligames-appimage.desktop", "%u", "MimeType=x-scheme-handler/nxm;\n"),
         ("Pelinstall", "pelinstall-appimage.desktop", "--install %f", "NoDisplay=true\nMimeType=application/x-ms-dos-executable;application/x-msdownload;application/x-msi;\n"),
