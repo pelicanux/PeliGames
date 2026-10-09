@@ -2,7 +2,7 @@
 
 Launcher de jogos Windows para Linux com Proton, biblioteca de jogos, Pelinstall, ferramentas Wine, integração Nexus Mods e gerenciador de mods DLSSNR-AMD.
 
-**0.3.0 — versão experimental para testes muito iniciais.** A numeração do novo launcher começa em 0.3.0, separada da linha antiga 0.8.x. A publicação serve somente para testes e poderá ser removida posteriormente.
+**0.3.0 — versão experimental para testes muito iniciais.** A publicação serve somente para testes e poderá ser removida posteriormente.
 
 ## Instalação
 
