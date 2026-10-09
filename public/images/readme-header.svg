@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1307" height="228" viewBox="0 0 1306.71 228" role="img" aria-labelledby="brand-title brand-desc">
-  <title id="brand-title">PL Games</title>
-  <desc id="brand-desc">PeliGames logo on the left and PL Games in white and blue Jersey 10 pixel lettering.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1379" height="228" viewBox="0 0 1378.71 228" role="img" aria-labelledby="brand-title brand-desc">
+  <title id="brand-title">PeliGames</title>
+  <desc id="brand-desc">PeliGames logo on the left and PeliGames in white and blue Jersey 10 pixel lettering.</desc>
   <!--Jersey 10 outlines: Copyright 2023 The Soft Type Project Authors; SIL OFL 1.1. License preserved in public/fonts/jersey-10/OFL.txt.-->
   <defs>
     <filter id="glow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
@@ -1123,11 +1123,13 @@
   </g>
   <g transform="translate(220.714 204) scale(0.24 -0.24)" stroke="#16354b" stroke-width="10" stroke-linejoin="miter" paint-order="stroke fill" shape-rendering="crispEdges">
     <path transform="translate(0 0)" fill="#f8fbff" d="M0 750H450V675H525V300H450V225H150V0H0ZM375 600H150V375H375Z" />
-    <path transform="translate(600 0)" fill="#f8fbff" d="M150 150H375V0H0V750H150Z" />
-    <path transform="translate(1350 0)" fill="#169bff" d="M225 450H525V75H450V0H75V75H0V675H75V750H450V675H525V525H375V600H225V525H150V225H225V150H375V300H225Z" />
-    <path transform="translate(1950 0)" fill="#169bff" d="M75 75H0V300H75V375H375V450H0V525H75V600H450V525H525V0H375V75H300V0H75ZM150 150H375V225H150Z" />
-    <path transform="translate(2550 0)" fill="#169bff" d="M150 525H225V600H375V525H525V600H675V525H750V0H600V450H450V0H300V450H150V0H0V600H150Z" />
-    <path transform="translate(3375 0)" fill="#169bff" d="M0 525H75V600H450V525H525V225H150V150H525V75H450V0H75V75H0ZM150 375H375V450H150Z" />
-    <path transform="translate(3975 0)" fill="#169bff" d="M75 75H0V150H300V225H75V300H0V525H75V600H375V525H450V450H150V375H375V300H450V75H375V0H75Z" />
+    <path transform="translate(600 0)" fill="#f8fbff" d="M0 525H75V600H450V525H525V225H150V150H525V75H450V0H75V75H0ZM150 375H375V450H150Z" />
+    <path transform="translate(1200 0)" fill="#f8fbff" d="M0 750H150V0H0Z" />
+    <path transform="translate(1425 0)" fill="#f8fbff" d="M0 750H150V600H0ZM0 525H150V0H0Z" />
+    <path transform="translate(1650 0)" fill="#169bff" d="M225 450H525V75H450V0H75V75H0V675H75V750H450V675H525V525H375V600H225V525H150V225H225V150H375V300H225Z" />
+    <path transform="translate(2250 0)" fill="#169bff" d="M75 75H0V300H75V375H375V450H0V525H75V600H450V525H525V0H375V75H300V0H75ZM150 150H375V225H150Z" />
+    <path transform="translate(2850 0)" fill="#169bff" d="M150 525H225V600H375V525H525V600H675V525H750V0H600V450H450V0H300V450H150V0H0V600H150Z" />
+    <path transform="translate(3675 0)" fill="#169bff" d="M0 525H75V600H450V525H525V225H150V150H525V75H450V0H75V75H0ZM150 375H375V450H150Z" />
+    <path transform="translate(4275 0)" fill="#169bff" d="M75 75H0V150H300V225H75V300H0V525H75V600H375V525H450V450H150V375H375V300H450V75H375V0H75Z" />
   </g>
 </svg>
