@@ -16,6 +16,8 @@ fn app_context() -> tauri::Context<tauri::Wry> {
 }
 
 fn run_mode(installer: bool) {
+    #[cfg(unix)]
+    if let Err(error) = core::launcher_instance::wait_for_restart_parent() { eprintln!("{error}"); return; }
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args == ["--verify-ui"] {
         let context = app_context();
@@ -29,7 +31,9 @@ fn run_mode(installer: bool) {
         return;
     }
     if let Err(error) = core::paths::initialize() { eprintln!("Migração PeliGames: {error}"); }
-    let mut startup = core::pelinstall::parse_args(&args, installer).unwrap_or_else(|error| core::pelinstall::StartupInfo {
+    let nxm_start = if args.len() == 1 && args[0].get(..4).is_some_and(|s| s.eq_ignore_ascii_case("nxm:")) { Some(args[0].clone()) } else { None };
+    let launcher_args = if nxm_start.is_some() { Vec::new() } else { args };
+    let mut startup = core::pelinstall::parse_args(&launcher_args, installer && nxm_start.is_none()).unwrap_or_else(|error| core::pelinstall::StartupInfo {
         module: "pelinstall".into(), error: Some(error), ..Default::default()
     });
     if startup.module == "background" {
@@ -46,6 +50,14 @@ fn run_mode(installer: bool) {
             startup.error = Some(report.error); startup.log = report.log;
         }
     }
+    #[cfg(unix)]
+    let launcher_instance = if startup.module == "launcher" {
+        match core::paths::app_root().and_then(|root| core::launcher_instance::LauncherInstance::claim_at(&root, nxm_start.as_deref().or(startup.entry.as_deref()))) {
+            Ok(Some(instance)) => Some(instance),
+            Ok(None) => return,
+            Err(error) => { eprintln!("Não foi possível abrir o launcher: {error}"); return; }
+        }
+    } else { None };
     if let Err(error) = core::pelinstall::register_appimage() { eprintln!("Integração AppImage: {error}"); }
     let mut context = app_context();
     if startup.module != "launcher" {
@@ -60,14 +72,39 @@ fn run_mode(installer: bool) {
     }
     tauri::Builder::default()
         .manage(startup)
+        .manage(commands::nexus_downloads::Downloads::default())
+        .manage(commands::nexus_browser::NexusBrowser::default())
+        .manage(commands::pelinstall::LauncherOpenRequest::default())
         .manage(commands::app_updates::AppUpdateState::default())
         .manage(commands::proton::ProtonDownloadState::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .setup(|app| {
+        .setup(move |app| {
+            #[cfg(unix)]
+            if let Some(instance) = launcher_instance {
+                use tauri::{Emitter, Manager};
+                let handle = app.handle().clone();
+                std::thread::spawn(move || instance.serve(move |entry| {
+                    let window = handle.get_window("main").ok_or("Janela do launcher indisponível.")?;
+                    window.show().map_err(|e| e.to_string())?;
+                    window.unminimize().map_err(|e| e.to_string())?;
+                    window.set_focus().map_err(|e| e.to_string())?;
+                    if let Some(entry) = entry {
+                        if entry.get(..4).is_some_and(|s| s.eq_ignore_ascii_case("nxm:")) {
+                            return commands::nexus_downloads::receive(&handle, &entry);
+                        }
+                        *handle.state::<commands::pelinstall::LauncherOpenRequest>().0.lock().unwrap_or_else(|e| e.into_inner()) = Some(entry);
+                        handle.emit("launcher-open-request", ()).map_err(|e| e.to_string())?;
+                    }
+                    Ok(())
+                }));
+            }
             let app_handle = app.handle().clone();
+            if let Some(link) = nxm_start {
+                if let Err(error) = commands::nexus_downloads::receive(&app_handle, &link) { eprintln!("Nexus: {error}"); }
+            }
             crate::core::logger::log_launcher(
                 &app_handle,
                 "INFO",
@@ -76,8 +113,54 @@ fn run_mode(installer: bool) {
             commands::app_updates::cleanup_obsolete_updates(&app_handle);
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![
+        .invoke_handler({
+            let handler: Box<dyn Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync> = Box::new(tauri::generate_handler![
+            commands::nexus_downloads::list_nexus_downloads,
+            commands::nexus_local::refresh_nexus_mod_labels,
+            commands::nexus_browser::open_nexus_browser,
+            commands::nexus_browser::nexus_browser_session,
+            commands::nexus_browser::resize_nexus_browser,
+            commands::nexus_browser::close_nexus_browser,
+            commands::nexus_browser::nexus_browser_action,
+            commands::nexus_downloads::retry_nexus_download,
+            commands::nexus_downloads::start_nexus_download,
+            commands::nexus_downloads::request_nexus_dependency,
+            commands::nexus_downloads::queue_nexus_downloads,
+            commands::nexus_downloads::cancel_nexus_download,
+            commands::nexus_downloads::register_nexus_handler,
+            commands::nexus_catalog::list_nexus_catalog_games,
+            commands::nexus_catalog::list_nexus_catalog_mods,
+            commands::nexus_catalog::list_nexus_catalog_page,
+            commands::nexus_catalog::get_nexus_catalog_mod,
+            commands::nexus_translation::translate_nexus_description,
+            commands::nexus_local::configure_nexus_domain,
+            commands::nexus_account::connect_nexus_account,
+            commands::nexus_account::load_nexus_account,
+            commands::nexus_account::disconnect_nexus_account,
+            commands::nexus_local::load_nexus_workspace,
+            commands::nexus_local::scan_nexus_library,
+            commands::nexus_local::add_nexus_game,
+            commands::nexus_local::inspect_nexus_game,
+            commands::nexus_local::plan_nexus_installation,
+            commands::nexus_modules::list_nexus_modules,
+            commands::nexus_local::set_nexus_game_cover,
+            commands::nexus_local::import_nexus_archive,
+            commands::nexus_local::remove_nexus_archive,
+            commands::nexus_local::install_nexus_mod,
+            commands::nexus_local::set_nexus_mod_enabled,
+            commands::nexus_local::launch_nexus_game,
+            commands::nexus_local::open_nexus_game_tool,
+            commands::nexus_local::stop_nexus_game,
+            commands::nexus_local::read_nexus_logs,
+            commands::nexus_local::read_nexus_mod_logs,
+            commands::nexus_reports::export_nexus_report,
+            commands::browser::open_browser_url,
+            commands::nexus_local::configure_nexus_proton,
+            commands::nexus_local::configure_nexus_settings,
+            commands::nexus_local::configure_nexus_deploy,
+            commands::nexus_local::nexus_deploy_options,
             commands::pelinstall::get_startup_context,
+            commands::pelinstall::take_launcher_open_request,
             commands::pelinstall::find_pelinstall_matches,
             commands::game_installation::repair_peligames_entry,
             commands::pelinstall::validate_pelinstall_file,
@@ -136,14 +219,24 @@ fn run_mode(installer: bool) {
             commands::scanner::fetch_steamgriddb_cover_command,
             commands::analyzer::analyze_game,
             commands::config::load_app_config,
+            commands::config::get_launcher_log,
             commands::config::save_app_config,
+            commands::config::migrate_neural_preferences,
+            commands::config::load_neural_preferences,
             commands::config::delete_app_config,
             commands::config::save_custom_game_path,
             commands::config::clear_game_caches,
             commands::config::log_cached_library,
             commands::config::emergency_reset_launcher,
             commands::config::restart_after_emergency_reset
-        ])
+        ]);
+            move |invoke: tauri::ipc::Invoke<tauri::Wry>| {
+                if invoke.message.webview().label().starts_with("nexus-browser-") {
+                    invoke.resolver.reject("A página Nexus não tem acesso aos comandos do launcher.");
+                    true
+                } else { handler(invoke) }
+            }
+        })
         .run(context)
         .expect("error while running tauri application");
 }

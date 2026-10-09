@@ -22,8 +22,9 @@ pub async fn create_peligames_shortcut(path: String) -> Result<String, String> {
         .map_err(|e| e.to_string())?
 }
 #[tauri::command]
-pub fn open_peligames_launcher(path: Option<String>) -> Result<(), String> {
-    crate::core::pelinstall::open_launcher(path.as_deref())
+pub async fn open_peligames_launcher(path: Option<String>) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || crate::core::pelinstall::open_launcher(path.as_deref()))
+        .await.map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
@@ -57,4 +58,12 @@ pub fn launch_pelinstall_entry(path: String) -> Result<(), String> {
 #[tauri::command]
 pub async fn update_peligames_shortcuts(path: String) -> Result<usize, String> {
     tauri::async_runtime::spawn_blocking(move || crate::core::pelinstall::update_shortcuts(&path)).await.map_err(|e| e.to_string())?
+}
+
+#[derive(Default)]
+pub struct LauncherOpenRequest(pub std::sync::Mutex<Option<String>>);
+
+#[tauri::command]
+pub fn take_launcher_open_request(request: tauri::State<'_, LauncherOpenRequest>) -> Option<String> {
+    request.0.lock().unwrap_or_else(|e| e.into_inner()).take()
 }

@@ -1015,8 +1015,8 @@ body { height: 100dvh; min-height: 0; }
 .installation-path-tooltip-anchor { display: flex; flex: 1; min-width: 0; width: 100%; }
 .installation-path-tooltip-anchor > .game-directory-value { width: 100%; min-width: 0; box-sizing: border-box; }
 .ui-hover-tooltip {
-  position: fixed; width: 260px; max-width: calc(100vw - 16px);
-  padding: 10px; box-sizing: border-box; border: 1px solid rgba(var(--accent-rgb), .35); border-radius: 9px;
+  position: fixed; width: max-content; max-width: min(260px, calc(100vw - 16px));
+  overflow-wrap: anywhere; padding: 8px 10px; box-sizing: border-box; border: 1px solid rgba(var(--accent-rgb), .35); border-radius: 9px;
   background: linear-gradient(125deg, var(--tone-0c1120, #0c1120), var(--tone-180d1d, #180d1d)); color: var(--tone-aebbd3, #aebbd3);
   font-size: .78rem; line-height: 1.45; z-index: 1100; box-shadow: 0 10px 30px rgba(0,0,0,.4); pointer-events: none;
 }
@@ -1116,7 +1116,14 @@ img[src="/peligames.png"] { filter: hue-rotate(var(--brand-hue, 0deg)); }
 
 .game-collection--grid .library-game-card:hover { will-change: transform; transform-style: preserve-3d !important; }
 /* Continue scrolling the launcher when the library reaches either edge. */
-.game-grid-container { overscroll-behavior: auto; }
+/* Reserve paint space inside the scrolling viewport for tilted covers and glows.
+   Extend the viewport into the launcher gutter to keep covers aligned with headers. */
+.game-grid-container {
+  overscroll-behavior: auto;
+  margin-inline: -12px;
+  padding: 16px 32px 32px 24px;
+  box-sizing: border-box;
+}
 
 .performance-mode .game-collection--grid .library-game-card:hover { transform-style: flat !important; will-change: auto !important; }
 
@@ -1180,7 +1187,7 @@ img[src="/peligames.png"] { filter: hue-rotate(var(--brand-hue, 0deg)); }
 .app-update-notes { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 160px; overflow: auto; padding: 12px; background: rgba(var(--surface-255-255-255, 255, 255, 255), .04); border-radius: 8px; font: inherit; font-size: .85rem; }
 .app-update-package { display: grid; gap: 8px; font-size: .9rem; }
 .app-update-dialog progress { width: 100%; accent-color: var(--accent); }
-.app-update-error { color: var(--accent-light); }
+.app-update-error { color: var(--accent-light); white-space: pre-wrap; overflow-wrap: anywhere; }
 .app-update-dialog .modal-actions { flex-wrap: wrap; gap: 8px; }
 .app-update-dialog .btn-primary { background: #d51420; border: 1px solid #ef3340; color: white; }
 
@@ -1310,6 +1317,13 @@ img[src="/peligames.png"] { filter: hue-rotate(var(--brand-hue, 0deg)); }
 .installation-cover .glare { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .2s ease-out; z-index: 10; }
 .installation-config-panel { gap: 12px; }
 .installation-fields { display: flex; flex-direction: column; gap: 12px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.game-detail-panels > .installation-config-panel--nexus-add { grid-column: 1 / -1; container-type: inline-size; }
+.installation-config-panel--nexus-add .installation-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.installation-config-panel--nexus-add .installation-fields-section { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.installation-config-panel--nexus-add .nexus-hint { margin: 0; }
+@container (max-width: 480px) {
+  .installation-config-panel--nexus-add .installation-fields { grid-template-columns: minmax(0, 1fr); }
+}
 .installation-fields:disabled { opacity: .7; }
 .installation-fields:disabled .installation-confirmed-name { pointer-events: none; }
 .installation-process-feedback { font-size: .75rem; line-height: 1.45; color: var(--tone-b9c4dc, #b9c4dc); overflow-wrap: anywhere; }
@@ -1606,3 +1620,26 @@ button.advanced-toggle.enabled { background: rgba(var(--accent-rgb), .4); border
 .credits-mod-grid > div > div { min-width: 0; }
 .credits-mod-grid > div > div > div { overflow: hidden; }
 @media (max-width: 560px) { .credits-mod-grid { grid-template-columns: 1fr; } }
+
+.launcher-logs-overlay { z-index: 12000; }
+.launcher-log-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.launcher-log-toolbar code { flex: 1; min-width: 0; overflow-wrap: anywhere; color: var(--text-secondary); font-size: 12px; }
+.launcher-log-toolbar button { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.launcher-build-label { position: fixed; bottom: .5rem; right: 1.5rem; z-index: 5; font: .75rem monospace; opacity: .6; pointer-events: none; }
+
+/* Shared geometry only: each library retains its own actions. */
+.library-toolbar-controls .library-mode-button { height: 34px; min-height: 34px; line-height: 1; margin: 0; }
+.library-toolbar-controls .library-view-toggle { height: 34px; box-sizing: border-box; align-items: center; }
+ .library-toolbar-controls .library-home-button {
+  flex-shrink: 0; color: var(--accent); border-color: rgba(var(--accent-rgb), .4);
+  background: rgba(var(--accent-rgb), .08); gap: .4rem;
+  transition: background .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+.library-home-button > span { font-family: "Jersey 10", monospace; font-size: 21px; font-weight: 400; font-synthesis: none; letter-spacing: 0; line-height: 1; transition: text-shadow .22s ease; }
+.library-home-button > img { width: 18px; height: 18px; object-fit: contain; transition: filter .22s ease; }
+.library-toolbar-controls .library-home-button:is(:hover, :focus-visible):not(:disabled) {
+  color: var(--accent-light); border-color: var(--accent); background: rgba(var(--accent-rgb), .14); box-shadow: 0 0 12px rgba(var(--accent-rgb), .16);
+}
+.library-home-button:is(:hover, :focus-visible):not(:disabled) > span { text-shadow: 0 0 7px rgba(var(--accent-rgb), .75), 0 0 18px rgba(var(--accent-rgb), .35); }
+.library-home-button:is(:hover, :focus-visible):not(:disabled) > img { filter: hue-rotate(var(--brand-hue, 0deg)) drop-shadow(0 0 5px rgba(var(--accent-rgb), .5)); }

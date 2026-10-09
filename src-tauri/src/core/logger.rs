@@ -35,3 +35,21 @@ pub fn log_result<T>(app: &tauri::AppHandle, operation: &str, result: &Result<T,
         Err(error) => log_launcher(app, "ERROR", &format!("{operation}: {error}")),
     }
 }
+
+#[derive(serde::Serialize)]
+pub struct LauncherLog {
+    pub path: String,
+    pub content: String,
+}
+
+pub fn read_launcher_log() -> Result<LauncherLog, String> {
+    let root = super::paths::app_root()?;
+    let _guard = LOG_LOCK.lock().unwrap_or_else(|error| error.into_inner());
+    let path = root.join("launcher.log");
+    let content = match std::fs::read_to_string(&path) {
+        Ok(content) => content,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => String::new(),
+        Err(error) => return Err(format!("{}: {error}", path.display())),
+    };
+    Ok(LauncherLog { path: path.to_string_lossy().into_owned(), content })
+}

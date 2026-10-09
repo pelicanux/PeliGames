@@ -26,9 +26,13 @@ export function AppUpdateModal({ onClose, initialInfo, onDownloadProgress }: { o
   const progressListener = useRef<Promise<() => void> | null>(null);
   const dialog = useRef<HTMLDivElement>(null);
   const errorText = (error: unknown) => {
-    const code = String(error);
+    const raw = String(error);
+    const separator = raw.indexOf("|");
+    const code = separator < 0 ? raw : raw.slice(0, separator);
+    const detail = separator < 0 ? "" : raw.slice(separator + 1);
     const keys = ["network", "rateLimit", "invalidRelease", "noPackage", "checksumMissing", "checksum", "apply", "download", "manualInstall", "pkexecFailed", "authCancelled", "packageInstallFailed", "restartFailed"] as const;
-    return t("launcherUpdate", keys.find(key => key === code) ?? "network");
+    const message = t("launcherUpdate", keys.find(key => key === code) ?? "network");
+    return detail ? `${message}\n${detail}` : message;
   };
   useEffect(() => {
     let active = true;
