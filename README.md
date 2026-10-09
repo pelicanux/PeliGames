@@ -12,7 +12,7 @@ Baixe AppImage, RPM ou DEB em [Releases](https://github.com/pelicanux/PeliGames/
 - AppImage reúne os dois módulos. Dê permissão de execução e abra o arquivo. A primeira abertura registra o launcher e “Abrir com Pelinstall” para o usuário. Mantenha o AppImage no mesmo local para preservar os atalhos.
 - Para abrir um executável Windows no instalador: `./PeliGames.AppImage --install /caminho/programa.exe`.
 
-Proton, UMU e Winetricks são baixados conforme necessário. Configurações e ferramentas ficam em `~/.config/PeliGames`. O backend e os arquivos do mod ficam em `~/.config/PeliGames/Mod/DLSSNR`. O setup do mod, as teclas por jogo e os diretórios personalizados ficam em `~/.config/PeliGames/Mod/DLSSNR/config.json`; as preferências de inicialização do Neural Rendering ficam em `neural-startup.json` nessa mesma pasta. As preferências de capas e Proton permanecem em `~/.config/PeliGames/config.json`. As configurações antigas são separadas automaticamente, preservando os valores existentes. Prefixos e jogos permanecem nos diretórios escolhidos pelo usuário. Capas do SteamGridDB exigem uma chave pessoal opcional, configurada em Preferências.
+Proton, UMU e Winetricks são baixados conforme necessário. Configurações e ferramentas ficam em `~/.config/PeliGames`. O backend e os arquivos do mod ficam em `~/.config/PeliGames/Mod/DLSSNR`. O setup do mod, as teclas por jogo e os diretórios personalizados ficam em `~/.config/PeliGames/Mod/DLSSNR/config.json`; as preferências de inicialização do Neural Rendering ficam em `neural-startup.json` nessa mesma pasta. As preferências de capas e Proton permanecem em `~/.config/PeliGames/config.json`. Prefixos e jogos permanecem nos diretórios escolhidos pelo usuário. Capas do SteamGridDB exigem uma chave pessoal opcional, configurada em Preferências.
 
 ## Mods locais do Nexus
 
@@ -47,7 +47,7 @@ O launcher utiliza Proton, UMU e Winetricks, mantidos por seus respectivos proje
 
 ## Módulos de suporte a jogos
 
-O gerenciador Nexus identifica a pasta pelos arquivos exigidos e pelo cabeçalho do executável. O nome do jogo e seu catálogo Nexus não habilitam instalação por conta própria. Os módulos incluídos ficam em `src-tauri/resources/nexus-games/`, com definições pesquisadas nas fontes dos autores e nas extensões de suporte do Vortex. As regras desses módulos já são utilizadas pelo instalador; os perfis e arquivos anteriormente gerenciados permanecem no mesmo formato.
+O gerenciador Nexus identifica a pasta pelos arquivos exigidos e pelo cabeçalho do executável. O nome do jogo e seu catálogo Nexus não habilitam instalação por conta própria. Os módulos incluídos ficam em `src-tauri/resources/nexus-games/`, com definições pesquisadas nas fontes dos autores e nas extensões de suporte do Vortex. O instalador utiliza essas definições para reconhecer os destinos e requisitos dos pacotes.
 
 Módulos locais adicionais são arquivos JSON em `~/.config/PeliGames/Mod/Nexus/modules` (ou no diretório de configuração definido por XDG). Eles são lidos nas consultas à biblioteca. Em **Configurações** do jogo, o launcher mostra o módulo identificado, sua versão, os destinos e eventuais erros ao carregar módulos. Definições inválidas são ignoradas e não substituem módulos já existentes para o mesmo jogo e plataforma.
 
@@ -76,4 +76,4 @@ Pacotes sem regras reconhecidas ou dependências presentes são recusados. Algun
 
 Perfis, arquivos importados, configurações preservadas e downloads temporários ficam em `~/.config/PeliGames/Mod/Nexus/games/<nome-do-jogo>--<id>/`, com subpastas `archives`, `profiles`, `settings` e `downloads`. O identificador diferencia instalações do mesmo jogo; o nome da pasta permanece estável quando o título da biblioteca é editado.
 
-As pastas antigas que continham apenas o ID são renomeadas automaticamente quando não há uma sessão em execução. Um link de compatibilidade mantém os caminhos antigos funcionando para perfis, backups e mods já aplicados. Os caminhos dos arquivos importados na biblioteca são atualizados. Se houver conflito entre uma pasta antiga e uma nova, nenhuma delas é sobrescrita. Os logs continuam em `Logs/Nexus/<nome>-<id>/erro`.
+Os relatórios e registros de erro ficam em `Logs/Nexus/<nome>-<id>/erro`.
