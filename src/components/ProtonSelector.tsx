@@ -7,7 +7,7 @@ import { HoverTooltip } from "./HoverTooltip";
 
 export interface InstalledProton { name: string; path: string; }
 
-export function ProtonSelector({ value, onChange, label, disabled = false }: { value: string; onChange: (value: string) => void; label?: string; disabled?: boolean }) {
+export function ProtonSelector({ value, onChange, label, disabled = false, compactStyle = false }: { value: string; onChange: (value: string) => void; label?: string; disabled?: boolean; compactStyle?: boolean }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [installed, setInstalled] = useState<InstalledProton[]>([]);
@@ -43,12 +43,12 @@ export function ProtonSelector({ value, onChange, label, disabled = false }: { v
       </HoverTooltip>
     </div>
     <div ref={anchor}>
-      <button type="button" className="custom-select-trigger proton-trigger" aria-haspopup="listbox" aria-expanded={open}
+      <button type="button" className={`custom-select-trigger proton-trigger ${compactStyle ? "nexus-compact-select" : ""} ${compactStyle && open ? "open" : ""}`} aria-haspopup="listbox" aria-expanded={open}
         disabled={disabled} aria-label={label ?? t("gameModes", "installerType")} aria-controls={open ? id : undefined} onClick={() => setOpen(value => !value)}>
-        <span>{selected?.name ?? (value ? value.split(/[\\/]/).pop() : t("gameModes", "selectProton"))}</span><span className="select-arrow">▼</span>
+        <span>{selected?.name ?? (value ? value.split(/[\\/]/).pop() : t("gameModes", "selectProton"))}</span><span className="select-arrow">{compactStyle ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg> : "▼"}</span>
       </button>
       {open && createPortal(<div ref={menu} id={id} role="listbox" aria-label={label ?? t("gameModes", "installerType")}
-        className="custom-select-menu route-select-menu proton-options select-scroll-frame" style={position}
+        className={`custom-select-menu route-select-menu proton-options select-scroll-frame ${compactStyle ? "nexus-compact-select-menu" : ""}`} style={position}
         onKeyDown={event => {
           if (event.key === "Escape") { setOpen(false); anchor.current?.querySelector<HTMLButtonElement>("button")?.focus(); }
           if (event.key === "Tab") setOpen(false);

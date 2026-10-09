@@ -1,0 +1,196 @@
+{
+  "schema": 1,
+  "version": "1.1.0",
+  "domain": "finalfantasy12",
+  "name": "Final Fantasy XII The Zodiac Age",
+  "platform": "proton",
+  "engine": "deployment",
+  "executable": "x64/FFXII_TZA.exe",
+  "required": [
+    "x64/FFXII_TZA.exe",
+    "FFXII_TZA.vbf"
+  ],
+  "header": [
+    77,
+    90
+  ],
+  "steam_id": "595520",
+  "destinations": [
+    "mods/deploy/ff12data",
+    "x64/scripts",
+    "x64/modules"
+  ],
+  "allowed_files": [
+    "x64/dinput8.dll",
+    "x64/hook.ini",
+    "x64/dxgi.dll",
+    "x64/ff12-trampoline.dll",
+    "x64/simpleLog.dll",
+    "x64/hook.log",
+    "x64/ff12-launcher.log",
+    "x64/ff12-launcher.ini",
+    "x64/ff12-launcher.exe",
+    "x64/launcher.dll"
+  ],
+  "routes": [
+    {
+      "kind": "prefix",
+      "source": "ff12data/",
+      "target": "mods/deploy/ff12data/",
+      "search": true
+    },
+    {
+      "kind": "prefix",
+      "source": "gamedata/",
+      "target": "mods/deploy/ff12data/gamedata/",
+      "search": true
+    },
+    {
+      "kind": "prefix",
+      "source": "jsondata/",
+      "target": "mods/deploy/ff12data/jsondata/",
+      "search": true
+    },
+    {
+      "kind": "prefix",
+      "source": "prefetchdata/",
+      "target": "mods/deploy/ff12data/prefetchdata/",
+      "search": true
+    },
+    {
+      "kind": "prefix",
+      "source": "ps2data/",
+      "target": "mods/deploy/ff12data/ps2data/",
+      "search": true
+    },
+    {
+      "kind": "prefix",
+      "source": "scripts/",
+      "target": "x64/scripts/",
+      "search": true
+    },
+    {
+      "kind": "prefix",
+      "source": "modules/",
+      "target": "x64/modules/",
+      "search": true
+    },
+    {
+      "kind": "file",
+      "source": "dinput/dinput8.dll",
+      "target": "x64/dinput8.dll"
+    },
+    {
+      "kind": "file",
+      "source": "x64/dinput8.dll",
+      "target": "x64/dinput8.dll"
+    },
+    {
+      "kind": "file",
+      "source": "dinput8.dll",
+      "target": "x64/dinput8.dll"
+    },
+    {
+      "kind": "file",
+      "source": "x64/hook.ini",
+      "target": "x64/hook.ini"
+    },
+    {
+      "kind": "file",
+      "source": "x64/dxgi.dll",
+      "target": "x64/dxgi.dll"
+    },
+    {
+      "kind": "file",
+      "source": "x64/ff12-trampoline.dll",
+      "target": "x64/ff12-trampoline.dll"
+    },
+    {
+      "kind": "file",
+      "source": "x64/simpleLog.dll",
+      "target": "x64/simpleLog.dll"
+    },
+    {
+      "kind": "file",
+      "source": "x64/hook.log",
+      "target": "x64/hook.log"
+    },
+    {
+      "kind": "file",
+      "source": "x64/ff12-launcher.log",
+      "target": "x64/ff12-launcher.log"
+    },
+    {
+      "kind": "file",
+      "source": "x64/ff12-launcher.ini",
+      "target": "x64/ff12-launcher.ini"
+    },
+    {
+      "kind": "file",
+      "source": "x64/ff12-launcher.exe",
+      "target": "x64/ff12-launcher.exe"
+    },
+    {
+      "kind": "file",
+      "source": "x64/launcher.dll",
+      "target": "x64/launcher.dll"
+    }
+  ],
+  "frameworks": [
+    {
+      "name": "FF12 External File Loader",
+      "nexus_name": "FF12 External File Loader",
+      "mod_id": 170,
+      "required_files": [
+        "x64/modules/ff12-file-loader.dll"
+      ],
+      "any_files": [
+        "x64/dinput8.dll",
+        "x64/dxgi.dll",
+        "x64/launcher.dll"
+      ],
+      "for_paths": [
+        "mods/deploy/ff12data/",
+        "x64/scripts/"
+      ]
+    },
+    {
+      "name": "FF12 LUA Loader",
+      "nexus_name": "FF12 LUA Loader",
+      "mod_id": 171,
+      "required_files": [
+        "x64/modules/ff12-lua-loader.dll"
+      ],
+      "for_paths": [
+        "x64/scripts/"
+      ]
+    }
+  ],
+  "dll_overrides": [
+    {
+      "name": "dinput8",
+      "file": "x64/dinput8.dll"
+    },
+    {
+      "name": "dxgi",
+      "file": "x64/dxgi.dll"
+    }
+  ],
+  "config_files": [
+    "x64/hook.ini",
+    "x64/modules/config/ff12-file-loader.ini",
+    "x64/modules/config/ff12-lua-loader.ini",
+    "x64/ff12-launcher.ini",
+    "x64/hook.log",
+    "x64/ff12-launcher.log"
+  ],
+  "sources": [
+    "https://www.nexusmods.com/site/mods/59",
+    "https://www.nexusmods.com/finalfantasy12/mods/170",
+    "https://github.com/FF12-Modding/FF12-MO2-Plugin/blob/master/ff12/ModDataChecker.py"
+  ],
+  "credits": [
+    "ffgriever",
+    "Xeavin"
+  ]
+}

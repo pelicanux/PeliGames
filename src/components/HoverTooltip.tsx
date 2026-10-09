@@ -6,15 +6,16 @@ interface Props {
   children: ReactElement<HTMLAttributes<HTMLElement>>;
   anchorClassName?: string;
   tooltipClassName?: string;
+  showOnFocus?: boolean;
 }
 
 /** Render outside the toolbar so its stacking context cannot clip the hint. */
-export function HoverTooltip({ text, children, anchorClassName = "", tooltipClassName = "" }: Props) {
+export function HoverTooltip({ text, children, anchorClassName = "", tooltipClassName = "", showOnFocus = true }: Props) {
   const id = useId();
   const anchor = useRef<HTMLSpanElement>(null);
   const tooltip = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
-  const [position, setPosition] = useState<{ left: number; top: number } | null>(null);
+  const [position, setPosition] = useState<{ left: number; top: number; zIndex: number } | null>(null);
 
   useLayoutEffect(() => {
     if (!hovered) return;
@@ -27,7 +28,13 @@ export function HoverTooltip({ text, children, anchorClassName = "", tooltipClas
       const minTop = titlebarBottom + margin;
       const above = bounds.top - hint.height - margin;
       const top = above >= minTop ? above : bounds.bottom + margin;
+      let zIndex = 1100;
+      for (let parent = anchor.current.parentElement; parent; parent = parent.parentElement) {
+        const layer = Number.parseInt(getComputedStyle(parent).zIndex, 10);
+        if (Number.isFinite(layer)) zIndex = Math.max(zIndex, layer + 1);
+      }
       setPosition({
+        zIndex,
         left: Math.max(margin, Math.min(bounds.right - hint.width, window.innerWidth - hint.width - margin)),
         top: Math.max(minTop, Math.min(top, window.innerHeight - hint.height - margin)),
       });
@@ -46,10 +53,10 @@ export function HoverTooltip({ text, children, anchorClassName = "", tooltipClas
 
   const close = () => { setHovered(false); setPosition(null); };
   return <span ref={anchor} className={`hover-tooltip-anchor ${anchorClassName}`}
-    onMouseEnter={() => text.trim() && setHovered(true)} onMouseLeave={close} onPointerDown={close}>
+    onMouseEnter={() => text.trim() && setHovered(true)} onMouseLeave={close} onFocus={() => showOnFocus && text.trim() && setHovered(true)} onBlur={close} onPointerDown={close}>
     {cloneElement(children, { "aria-describedby": hovered ? id : undefined })}
     {hovered && text.trim() && createPortal(<div ref={tooltip} id={id} role="tooltip" className={`ui-hover-tooltip ${tooltipClassName}`}
-      style={{ left: position?.left ?? 0, top: position?.top ?? 0, visibility: position ? "visible" : "hidden" }}>
+      style={{ zIndex: position?.zIndex, left: position?.left ?? 0, top: position?.top ?? 0, visibility: position ? "visible" : "hidden" }}>
       {text}
     </div>, document.body)}
   </span>;

@@ -29,7 +29,7 @@ pub fn parse_args(args: &[String], installer: bool) -> Result<StartupInfo, Strin
         [flag, entry] if flag == "--launch-game" => { info.module = "background".into(); info.entry = Some(entry.clone()); },
         [flag, entry] if flag == "--show-game" => { info.module = "launcher".into(); info.entry = Some(entry.clone()); },
         [file] if !file.starts_with('-') => { info.module = "pelinstall".into(); info.executable = Some(file.clone()); },
-        _ => return Err("Use Pelinstall /caminho/instalador.exe, PeliGames --install ARQUIVO ou PeliGames --launch-game EXECUTÁVEL_REGISTRADO.".into()),
+        _ => return Err("Use pelinstall /caminho/instalador.exe, peligames --install ARQUIVO ou peligames --launch-game EXECUTÁVEL_REGISTRADO.".into()),
     }
     if let Some(file) = &info.executable {
         let absolute = if Path::new(file).is_absolute() {
@@ -57,7 +57,7 @@ fn desktop_value(value: &str) -> String {
         .replace('\r', "\\r")
         .replace('\t', "\\t")
 }
-fn exec_arg(value: &str) -> Result<String, String> {
+pub(crate) fn exec_arg(value: &str) -> Result<String, String> {
     if value.contains(['\0', '\n', '\r']) {
         return Err("Caminho inválido para o atalho.".into());
     }
@@ -81,7 +81,7 @@ pub fn launcher_binary() -> Result<PathBuf, String> {
     if let (Some(image), Some(appdir)) = (std::env::var_os("APPIMAGE"), std::env::var_os("APPDIR")) {
         if let Some(image) = appimage_binary(&current, Path::new(&appdir), Path::new(&image)) { return Ok(image); }
     }
-    for name in ["PeliGames", "dlssnr-x-amd"] {
+    for name in ["peligames", "PeliGames", "dlssnr-x-amd"] {
         let candidate = current
             .parent()
             .ok_or("Pasta do programa indisponível.")?
@@ -115,7 +115,7 @@ pub fn register_appimage() -> Result<(), String> {
     let icon = icons.join("appimage-icon.png");
     fs::write(&icon, include_bytes!("../../icons/128x128.png")).map_err(|e|e.to_string())?;
     for (name, filename, arguments, extra) in [
-        ("PeliGames", "peligames-appimage.desktop", "--launcher", ""),
+        ("PeliGames", "peligames-appimage.desktop", "%u", "MimeType=x-scheme-handler/nxm;\n"),
         ("Pelinstall", "pelinstall-appimage.desktop", "--install %f", "NoDisplay=true\nMimeType=application/x-ms-dos-executable;application/x-msdownload;application/x-msi;\n"),
     ] {
         let text=format!("[Desktop Entry]\nVersion=1.0\nType=Application\nName={name}\nExec={} {arguments}\nIcon={}\nTerminal=false\nCategories=Game;\n{extra}",exec_arg(&binary.to_string_lossy())?,desktop_value(&icon.to_string_lossy()));
@@ -205,7 +205,7 @@ fn shortcut_matches_text(text: &str, entry: &str) -> Result<bool, String> {
             if let Some(command) = line.strip_prefix("Exec=") {
                 if let Some(args) = desktop_exec_args(command) {
                     let launcher = args.first().and_then(|arg| Path::new(arg).file_name()).and_then(|name| name.to_str());
-                    if launcher.is_some_and(|name| matches!(name, "PeliGames" | "Pelinstall") || (name.starts_with("PeliGames") && name.ends_with(".AppImage"))) && args.len() == 3 && args[1] == "--launch-game" && args[2] == entry { return Ok(true); }
+                    if launcher.is_some_and(|name| matches!(name, "peligames" | "pelinstall" | "PeliGames" | "Pelinstall") || (name.to_ascii_lowercase().starts_with("peligames") && name.ends_with(".AppImage"))) && args.len() == 3 && args[1] == "--launch-game" && args[2] == entry { return Ok(true); }
                 }
             }
         }
@@ -280,6 +280,8 @@ pub fn create_shortcut(path: &str) -> Result<String, String> {
         .map(|path| path.to_string_lossy().into_owned())
 }
 pub fn open_launcher(entry: Option<&str>) -> Result<(), String> {
+    #[cfg(unix)]
+    if super::launcher_instance::focus_running(entry)? { return Ok(()); }
     let mut command = launcher_command()?;
     if let Some(entry) = entry {
         command.arg("--show-game").arg(entry);

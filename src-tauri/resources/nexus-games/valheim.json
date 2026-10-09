@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "version": "1.0.0",
+  "domain": "valheim",
+  "name": "Valheim",
+  "platform": "native",
+  "engine": "valheim_profile",
+  "executable": "valheim.x86_64",
+  "required": [
+    "valheim.x86_64",
+    "valheim_Data/globalgamemanagers"
+  ],
+  "header": [
+    127,
+    69,
+    76,
+    70
+  ],
+  "steam_id": "892970",
+  "destinations": [
+    "BepInEx",
+    "doorstop_libs"
+  ],
+  "allowed_files": [
+    "start_game_bepinex.sh"
+  ],
+  "routes": [
+    {
+      "kind": "prefix",
+      "source": "BepInExPack_Valheim/BepInEx/",
+      "target": "BepInEx/"
+    },
+    {
+      "kind": "prefix",
+      "source": "BepInExPack_Valheim/doorstop_libs/",
+      "target": "doorstop_libs/"
+    },
+    {
+      "kind": "file",
+      "source": "BepInExPack_Valheim/start_game_bepinex.sh",
+      "target": "start_game_bepinex.sh"
+    },
+    {
+      "kind": "prefix",
+      "source": "BepInEx/plugins/",
+      "target": "BepInEx/plugins/"
+    },
+    {
+      "kind": "prefix",
+      "source": "BepInEx/config/",
+      "target": "BepInEx/config/"
+    },
+    {
+      "kind": "prefix",
+      "source": "Jotunn/",
+      "target": "BepInEx/plugins/Jotunn/"
+    },
+    {
+      "kind": "extension",
+      "extension": ".dll",
+      "root_only": true,
+      "target": "BepInEx/plugins/{mod_id}/"
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "version": "1.0.0",
+  "domain": "palworld",
+  "name": "Palworld",
+  "platform": "proton",
+  "engine": "deployment",
+  "executable": "Pal/Binaries/Win64/Palworld-Win64-Shipping.exe",
+  "launch_executable": "Palworld.exe",
+  "required": [
+    "Palworld.exe",
+    "Pal/Binaries/Win64/Palworld-Win64-Shipping.exe"
+  ],
+  "header": [
+    77,
+    90
+  ],
+  "steam_id": "1623730",
+  "destinations": [
+    "Pal/Content/Paks/~mods",
+    "Pal/Content/Paks/LogicMods",
+    "Pal/Binaries/Win64/ue4ss"
+  ],
+  "allowed_files": [
+    "Pal/Binaries/Win64/dwmapi.dll"
+  ],
+  "routes": [
+    {
+      "kind": "file",
+      "source": "dwmapi.dll",
+      "target": "Pal/Binaries/Win64/dwmapi.dll"
+    },
+    {
+      "kind": "prefix",
+      "source": "ue4ss/",
+      "target": "Pal/Binaries/Win64/ue4ss/"
+    },
+    {
+      "kind": "prefix",
+      "source": "LogicMods/",
+      "target": "Pal/Content/Paks/LogicMods/"
+    },
+    {
+      "kind": "extension",
+      "extension": ".pak",
+      "root_only": true,
+      "target": "Pal/Content/Paks/~mods/"
+    },
+    {
+      "kind": "prefix",
+      "source": "Pal/Content/Paks/~mods/",
+      "target": "Pal/Content/Paks/~mods/"
+    },
+    {
+      "kind": "prefix",
+      "source": "Pal/Content/Paks/LogicMods/",
+      "target": "Pal/Content/Paks/LogicMods/"
+    },
+    {
+      "kind": "prefix",
+      "source": "Pal/Binaries/Win64/ue4ss/",
+      "target": "Pal/Binaries/Win64/ue4ss/"
+    },
+    {
+      "kind": "file",
+      "source": "Pal/Binaries/Win64/dwmapi.dll",
+      "target": "Pal/Binaries/Win64/dwmapi.dll"
+    }
+  ]
+}

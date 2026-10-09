@@ -55,12 +55,22 @@
   pointer-events: none;
 }
 :root .menu-glass-panel {
-  --glass-opacity-start: .76;
-  --glass-opacity-end: .67;
+  --glass-base-start: 35, 43, 60;
+  --glass-base-end: 30, 34, 49;
+  --glass-opacity-start: .38;
+  --glass-opacity-end: .30;
+  --glass-corner-fill: .09;
 }
 :root[data-appearance="light"] .menu-glass-panel {
-  --glass-opacity-start: .68;
-  --glass-opacity-end: .56;
+  --glass-base-start: 236, 241, 248;
+  --glass-base-end: 222, 231, 243;
+  --glass-opacity-start: .56;
+  --glass-opacity-end: .44;
+}
+/* Let the selected cover tint carousel panels while keeping a readable veil. */
+:root[data-appearance] .menu-glass-panel {
+  backdrop-filter: blur(20px) saturate(1.35) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
 }
 /* The gear menu sits above busy content and needs a denser base. */
 :root .dialog-popover {

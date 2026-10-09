@@ -1,8 +1,8 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Capability for the main window",
-  "windows": [
+  "description": "Capability for the local main webview only; remote Nexus content has no native permissions",
+  "webviews": [
     "main"
   ],
   "permissions": [

@@ -233,7 +233,8 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
       };
       
       await invoke("save_app_config", { config });
-      onComplete(config);
+      const saved = await invoke<AppConfig | null>("load_app_config");
+      onComplete(saved ?? config);
     } catch (err) {
       console.error("Failed to save config:", err);
       setErrorMsg(t("setupWizard", "saveError"));

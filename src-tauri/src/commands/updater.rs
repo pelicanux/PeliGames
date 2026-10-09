@@ -1,3 +1,5 @@
+#[path = "backend_folder.rs"]
+mod backend_folder;
 use tauri::AppHandle;
 use serde::{Deserialize, Serialize};
 use reqwest::Client;
@@ -27,28 +29,14 @@ pub async fn get_backend_path(app: tauri::AppHandle, gpu_arch: String) -> Result
 
 #[tauri::command]
 pub async fn open_backend_folder(app: tauri::AppHandle, gpu_arch: String) -> Result<(), String> {
-    let backend_dir = get_backend_dir(&app)?.join(&gpu_arch);
-    // Create dir if it doesn't exist so it doesn't fail
-    if !backend_dir.exists() {
-        let _ = std::fs::create_dir_all(&backend_dir);
-    }
-    
-    #[cfg(target_os = "windows")]
-    {
-        std::process::Command::new("explorer")
-            .arg(&backend_dir)
-            .spawn()
-            .map_err(|e| format!("Failed to open folder: {}", e))?;
-    }
-    
-    #[cfg(target_os = "linux")]
-    {
-        std::process::Command::new("xdg-open")
-            .arg(&backend_dir)
-            .spawn()
-            .map_err(|e| format!("Failed to open folder: {}", e))?;
-    }
-    Ok(())
+    let result = async {
+        let backend_dir = backend_folder::prepare(&get_backend_dir(&app)?, &gpu_arch)?;
+        crate::core::logger::log_launcher(&app, "INFO", &format!("Abrindo pasta do mod: {}", backend_dir.display()));
+        tauri::async_runtime::spawn_blocking(move || backend_folder::open(&backend_dir))
+            .await.map_err(|error| error.to_string())?
+    }.await;
+    crate::core::logger::log_result(&app, "Abrir pasta do mod", &result);
+    result
 }
 
 pub fn get_backend_dir(_app: &AppHandle) -> Result<PathBuf, String> {

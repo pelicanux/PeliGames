@@ -79,3 +79,24 @@ html.pelinstall-mode body::before { display: none; }
 .pelinstall-launcher-button.titlebar-title:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 2px; }
 .pelinstall-launcher-button.titlebar-title:disabled { opacity: .5; cursor: default; }
 @media (max-width: 420px) { .pelinstall-surface .pelinstall-brand { font-size: 26px; } .pelinstall-launcher-button.titlebar-title { width: 98px; font-size: 24px; right: 86px; } .pelinstall-surface .dialog-titlebar h2 { max-width: calc(100% - 142px); gap: 6px; } }
+
+.pelinstall-surface .dialog-titlebar h2 { max-width: calc(100% - 246px); }
+.pelinstall-settings-button { position: absolute; right: 222px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; padding: 5px; display: grid; place-items: center; border: 0; border-radius: 5px; background: transparent; color: var(--tone-94a3b8, #94a3b8); cursor: pointer; }
+.pelinstall-settings-button:hover, .pelinstall-settings-button[aria-expanded=true] { background: rgba(var(--surface-255-255-255,255,255,255), .1); color: var(--accent-soft); }
+.pelinstall-settings-button .menu-icon { width: 16px; height: 16px; }
+.pelinstall-settings-menu { position: fixed; z-index: 1200; box-sizing: border-box; padding: 10px; border: 1px solid rgba(var(--accent-rgb), .3); border-radius: 12px; backdrop-filter: blur(16px); overflow-y: auto; color: var(--tone-e2e8f0, #e2e8f0); font-size: 14px; line-height: 1.4; }
+.pelinstall-settings-menu .effects-preference { font-size: inherit; padding: 8px 12px; gap: 8px; }
+.pelinstall-settings-menu .effects-preference-label { gap: 8px; }
+.pelinstall-settings-menu select { box-sizing: border-box; min-width: 0; max-width: 100%; padding: 8px 10px; font: inherit; background: var(--tone-292936, #292936); color: inherit; }
+.pelinstall-settings-menu select option { color: var(--tone-e2e8f0, #e2e8f0); }
+.pelinstall-scale-preference { padding: 10px 12px; display: grid; gap: 10px; }
+.pelinstall-scale-preference > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pelinstall-scale-preference button { flex: 0 0 32px; width: 32px; min-height: 32px; font-size: 16px; line-height: 1; padding: 3px; border: 1px solid rgba(var(--surface-255-255-255,255,255,255), .15); border-radius: 5px; background: rgba(var(--surface-255-255-255,255,255,255), .08); color: inherit; cursor: pointer; }
+.pelinstall-scale-preference button:disabled { opacity: .4; cursor: default; }
+.pelinstall-settings-menu :is(button,select):focus-visible, .pelinstall-settings-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media(max-width:420px) { .pelinstall-settings-button { right: 194px; } .pelinstall-surface .dialog-titlebar h2 { max-width: calc(100% - 218px); } }
+
+.pelinstall-settings-menu .pelinstall-language-trigger { width: 100%; min-width: 0; min-height: 36px; padding: 8px 10px; gap: 8px; font: inherit; background: var(--tone-292936, #292936); color: inherit; }
+.pelinstall-language-trigger > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pelinstall-language-trigger .select-arrow { flex-shrink: 0; }
+.pelinstall-language-menu button.custom-select-option { min-height: 36px; padding: 8px 10px; font-size: 14px; line-height: 1.4; }

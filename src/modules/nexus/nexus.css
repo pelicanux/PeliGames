@@ -1,0 +1,501 @@
+.nexus-icon { width: 24px; height: 24px; object-fit: contain; flex-shrink: 0; }
+.nexus-panel { flex: 1; min-width: 0; align-self: stretch; }
+.nexus-tabs { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.nexus-tabs .btn { display: inline-flex; gap: .5rem; align-items: center; }
+.nexus-tabs .active { border-color: var(--accent); background: rgba(var(--accent-rgb), .13); color: var(--accent-light); }
+.nexus-tab-content { padding: 1.2rem; min-height: 230px; }
+.nexus-panel-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
+.nexus-panel h3, .nexus-picker h2 { display: flex; align-items: center; gap: .6rem; margin: 0; }
+.nexus-panel .btn { display: inline-flex; gap: .5rem; align-items: center; margin: .3rem .4rem .3rem 0; }
+.nexus-hint, .nexus-picker p { color: var(--tone-94a3b8, #94a3b8); line-height: 1.6; font-size: .9rem; }
+.nexus-empty-mods { display: flex; gap: .6rem; align-items: center; justify-content: center; min-height: 120px; color: var(--tone-94a3b8, #94a3b8); }
+.nexus-mod-list { display: flex; flex-direction: column; gap: .6rem; max-height: 280px; overflow: auto; }
+.nexus-mod-row { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; padding: .7rem; background: rgba(var(--surface-255-255-255, 255, 255, 255), .045); border-radius: 8px; }
+.nexus-mod-row > div { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.nexus-mod-row small, .nexus-game-options small { display: block; font-size: .78rem; margin-top: .25rem; color: var(--tone-94a3b8, #94a3b8); }
+.nexus-info { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1rem; margin: 1.5rem 0; }
+.nexus-info dt { color: var(--tone-94a3b8, #94a3b8); }
+.nexus-info dd { margin: 0; overflow-wrap: anywhere; }
+.nexus-status { display: inline-block; margin-top: 1rem; border-radius: 6px; padding: .3rem .6rem; background: rgba(var(--accent-rgb), .1); color: var(--accent-light); font-size: .8rem; }
+.nexus-error { color: var(--tone-ef4444, #ef4444); overflow-wrap: anywhere; }
+.nexus-picker { width: min(680px, calc(100vw - 32px)); }
+.nexus-game-options { display: grid; gap: .5rem; max-height: 260px; overflow-y: auto; margin: 1rem 0; }
+.nexus-game-options button { display: flex; gap: .75rem; align-items: center; text-align: left; }
+.nexus-fields { display: grid; gap: 1rem; }
+.nexus-fields label { display: grid; gap: .5rem; }
+.nexus-fields input { box-sizing: border-box; width: 100%; background: var(--input-bg, rgba(0,0,0,.2)); border: 1px solid rgba(var(--surface-255-255-255, 255, 255, 255), .18); color: var(--tone-e2e8f0, #e2e8f0); border-radius: 8px; padding: .7rem; }
+.nexus-directory { display: flex; gap: .5rem; }
+.nexus-directory input { min-width: 0; }
+.nexus-catalog-searches { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; }
+.nexus-fields .nexus-catalog-search { position: relative; display: block; width: min(100%, 280px); flex: 0 1 280px; }
+.nexus-catalog-search > svg { position: absolute; left: .65rem; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; pointer-events: none; color: var(--tone-94a3b8,#94a3b8); }
+.nexus-fields .nexus-catalog-search input { padding: .5rem .65rem .5rem 2rem; height: 36px; }
+.nexus-catalog-searches .nexus-directory { flex: 1 1 300px; margin: 0; }
+.nexus-catalog-searches .nexus-directory input { padding: .5rem .65rem; height: 36px; }
+.nexus-catalog-searches .nexus-directory .btn { margin: 0; padding: .4rem .75rem; }
+.nexus-catalog-pagination, .nexus-catalog-pagination > div, .nexus-catalog-pagination > label { display: flex; align-items: center; gap: .6rem; }
+.nexus-catalog-pagination { justify-content: space-between; flex-wrap: wrap; margin-top: .75rem; font-size: .85rem; }
+.nexus-catalog-pagination .btn { margin: 0; }
+.nexus-platform { border: 0; padding: 0; margin: 1.2rem 0; display: flex; flex-wrap: wrap; gap: 1rem; }
+.nexus-platform legend { margin-bottom: .7rem; }
+.nexus-platform label { display: flex; gap: .5rem; align-items: center; }
+.nexus-footer { display: flex; justify-content: flex-end; gap: .6rem; margin-top: 1rem; }
+.nexus-library-title { display: inline-flex; gap: .4rem; align-items: center; }
+.nexus-library-title .nexus-icon { width: 18px; height: 18px; transition: filter .22s ease; }
+.nexus-library-wordmark { display: inline-flex; align-items: baseline; font-family: "Roboto Condensed", "Arial Narrow", sans-serif; font-size: .85rem; letter-spacing: -.5px; color: var(--tone-e2e8f0, #e2e8f0); line-height: 1; }
+.nexus-library-wordmark > span { font-weight: 300; }
+.nexus-library-wordmark > strong { color: #faa431; font-weight: 800; }
+.nexus-library-wordmark > * { transition: text-shadow .22s ease; }
+.nexus-library-title:is(:hover, :focus-visible) .nexus-library-wordmark > span { text-shadow: 0 0 7px rgba(var(--surface-255-255-255,255,255,255),.4), 0 0 18px rgba(211,219,244,.2); }
+.nexus-library-title:is(:hover, :focus-visible) .nexus-library-wordmark > strong { text-shadow: 0 0 7px rgba(var(--accent-rgb),.75), 0 0 18px rgba(var(--accent-rgb),.35); }
+.nexus-library-title:is(:hover, :focus-visible) .nexus-icon { filter: drop-shadow(0 0 5px rgba(var(--accent-rgb),.5)); }
+.game-detail-panels > .nexus-panel { grid-column: 1 / -1; }
+.library-mode-buttons:has(.nexus-library-title) { flex-wrap: wrap; }
+
+.nexus-account-summary { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; margin: 1rem 0; }
+.nexus-account-summary .nexus-status { margin-top: 0; }
+.nexus-account-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: 1rem; }
+
+.nexus-catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: .65rem; margin-top: .8rem; max-height: clamp(180px, calc(100dvh - 400px), 720px); overflow: auto; }
+.nexus-catalog-grid article { display: flex; flex-direction: column; border: 1px solid rgba(var(--surface-255-255-255,255,255,255),.13); border-radius: 10px; padding: .6rem; min-width: 0; overflow-wrap: anywhere; }
+.nexus-catalog-grid article > .btn { margin-top: auto; align-self: flex-start; }
+.nexus-catalog-grid .nexus-catalog-card { cursor: pointer; transition: border-color .15s ease, background .15s ease, box-shadow .15s ease; }
+.nexus-catalog-card:not([aria-disabled="true"]):hover { border-color: rgba(var(--accent-rgb), .6); background: rgba(var(--accent-rgb), .07); box-shadow: 0 0 14px rgba(var(--accent-rgb), .12); }
+.nexus-catalog-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.nexus-catalog-card[aria-disabled="true"] { cursor: wait; }
+@media (prefers-reduced-motion: reduce) { .nexus-catalog-grid .nexus-catalog-card { transition: none; } }
+.nexus-catalog-grid .nexus-mod-thumbnail { flex-shrink: 0; margin-bottom: .55rem; }
+.nexus-catalog-grid h4 { margin: 0 0 .35rem; font-size: .9rem; line-height: 1.35; }
+.nexus-catalog-grid p { margin: .5rem 0 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.nexus-mod-thumbnail { width: 100%; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: rgba(var(--surface-255-255-255,255,255,255),.06); margin-bottom: .8rem; }
+.nexus-mod-thumbnail img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.nexus-thumbnail-placeholder { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6rem; color: var(--tone-94a3b8,#94a3b8); font-size: .85rem; }
+.nexus-thumbnail-placeholder .menu-icon { width: 32px; height: 32px; }
+.nexus-mod-detail-heading { display: grid; grid-template-columns: minmax(0, 280px) minmax(0, 1fr); align-items: center; gap: 1rem; margin-top: 1rem; overflow-wrap: anywhere; }
+.nexus-mod-detail-heading .nexus-mod-thumbnail { margin-bottom: 0; }
+@media (max-width: 600px) { .nexus-mod-detail-heading { grid-template-columns: minmax(0, 1fr); } }
+.nexus-catalog-grid p, .nexus-catalog-grid small { color: var(--tone-94a3b8,#94a3b8); font-size: .78rem; line-height: 1.4; }
+.nexus-mod-description { max-height: 260px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; font-size: .9rem; margin: .8rem 0; }
+
+.nexus-downloads { padding-bottom: 1rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(var(--surface-255-255-255,255,255,255),.12); }
+.nexus-downloads progress { width: 100%; accent-color: var(--accent); margin-top: .6rem; }
+
+.nexus-file-description { margin: .65rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; font-size: .88rem; color: var(--tone-e2e8f0, #e2e8f0); }
+
+.nexus-requirements, .nexus-download-review { margin: 1rem 0; padding: 1rem; border: 1px solid rgba(var(--surface-255-255-255,255,255,255),.15); border-radius: 12px; background: rgba(var(--surface-255-255-255,255,255,255),.025); }
+.nexus-requirements h4, .nexus-download-review h4 { margin: 0 0 .6rem; }
+.nexus-requirement-list { display: grid; gap: .65rem; }
+.nexus-requirement-list article { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; padding: .75rem; border: 1px solid rgba(var(--surface-255-255-255,255,255,255),.15); border-radius: 8px; }
+.nexus-requirement-list article > div { flex: 1; min-width: 160px; overflow-wrap: anywhere; }
+.nexus-requirement-list small, .nexus-download-review > small, .nexus-download-review > strong { display: block; margin-top: .25rem; }
+.nexus-requirement-list small { color: var(--tone-94a3b8,#94a3b8); }
+.nexus-requirements-warning { color: var(--warning-color, #f59e0b); }
+.nexus-download-review { border-color: var(--accent); }
+.nexus-file-group { display: grid; gap: .5rem; }
+.nexus-file-group > h4 { margin: .7rem 0 .2rem; }
+.nexus-download-requirements summary { cursor: pointer; margin-top: .75rem; }
+.nexus-download-requirements { width: 100%; }
+.nexus-requirement-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; }
+.nexus-dependency-files { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(var(--surface-255-255-255,255,255,255),.15); }
+
+.nexus-downloads-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; margin-bottom: .8rem; }
+.nexus-popup { width: min(800px, calc(100vw - 32px)); max-width: 100%; }
+:root .modal-content.nexus-popup.nexus-browser-popup { width: min(1400px, calc(100vw - 48px)) !important; height: calc(100dvh - 100px); max-height: calc(100dvh - 100px); animation: none; }
+:root .nexus-browser-popup.has-dialog-titlebar > .modal-scroll-body { flex: 1; overflow: hidden; padding: 70px 18px 18px; min-height: 0; }
+.nexus-browser-content { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 8px; }
+.nexus-browser-origin { font-size: .7rem; color: var(--tone-94a3b8, #94a3b8); }
+.nexus-browser-controls { display: flex; gap: .4rem; margin-left: auto; }
+.nexus-browser-controls .btn { height: 32px; padding: .3rem .5rem; font-size: .75rem; white-space: nowrap; }
+.nexus-browser-viewport { flex: 1; min-height: 0; background: #202020; border-radius: 0; }
+.nexus-browser-placeholder { display: grid; place-items: center; height: 100%; margin: 0; padding: 2rem; box-sizing: border-box; color: #94a3b8; text-align: center; }
+.nexus-popup .btn { display: inline-flex; align-items: center; gap: .5rem; }
+.nexus-popup .nexus-mod-list { max-height: none; overflow: visible; }
+.nexus-popup .nexus-requirements { border: 0; background: none; padding: 0; margin: 1rem 0; }
+.nexus-popup .nexus-downloads { margin: 0; padding: 0; border: 0; }
+.nexus-popup .nexus-requirement-list article { background: rgba(var(--surface-255-255-255,255,255,255),.04); }
+.nexus-popup .nexus-mod-detail-heading { margin-top: 0; }
+.nexus-popup .nexus-mod-detail-heading h3 { margin-top: 0; }
+.nexus-popup .nexus-requirement-actions { flex: 0 1 auto; }
+.nexus-popup-footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .6rem; padding: 1rem 2rem; border-top: 1px solid rgba(var(--surface-255-255-255,255,255,255),.12); }
+.nexus-requirements-link { margin-top: .4rem !important; font-size: .8rem; }
+@media (max-width: 600px) { .nexus-popup-footer { padding: 1rem; } .nexus-popup .nexus-requirement-list article { align-items: flex-start; } }
+:root .modal-content.nexus-popup { width: min(800px, calc(100vw - 32px)) !important; }
+:root .modal-content.nexus-popup.nexus-catalog-popup { width: min(1600px, calc(100vw - 48px)) !important; }
+:root .modal-content.nexus-catalog-browser { height: min(1000px, calc(100dvh - 82px)); }
+.nexus-catalog-browser > .modal-scroll-body { display: flex; flex: 1; overflow: hidden; }
+.nexus-catalog-browser .nexus-catalog,
+.nexus-catalog-browser .nexus-catalog > div:not([hidden]) { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; }
+.nexus-catalog-browser .nexus-catalog > div > :not(.nexus-catalog-grid) { flex-shrink: 0; }
+.nexus-catalog-browser .nexus-catalog-grid { flex: 1; min-height: 0; max-height: none; }
+.nexus-catalog-browser .nexus-catalog > div > .nexus-hint { margin: .5rem 0; }
+.nexus-catalog-browser :is(.nexus-panel-heading, .nexus-tabs, .nexus-catalog-searches) .btn { font-size: .82rem; padding: .45rem .65rem; }
+@media (max-height: 550px) {
+  .nexus-catalog-browser > .modal-scroll-body { overflow-y: auto; }
+  .nexus-catalog-browser .nexus-catalog-grid { flex: none; height: 180px; }
+}
+:root .modal-content.nexus-popup.nexus-queue-popup { width: min(720px, calc(100vw - 32px)) !important; }
+.nexus-popup .dialog-titlebar h2 { display: flex; align-items: center; gap: .55rem; }
+.nexus-popup .nexus-tabs { margin-top: .8rem; }
+
+.nexus-catalog-more { display: flex; flex-direction: column; align-items: center; gap: .5rem; padding: 1.2rem 0 .3rem; }
+
+.nexus-cover-preview { display: flex; align-items: center; gap: 1rem; margin: 1rem 0; }
+.nexus-cover-preview img { width: 80px; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 8px; }
+
+.nexus-navigation { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+.nexus-navigation > .nexus-tabs, .nexus-navigation > .nexus-downloads-toolbar { margin-bottom: 0; }
+.nexus-panel .nexus-navigation { gap: .4rem; margin-bottom: .65rem; }
+.nexus-panel .nexus-navigation .btn { margin: 0; padding: .5rem .75rem; }
+.nexus-panel .nexus-navigation .nexus-tabs { gap: .4rem; }
+.nexus-panel .nexus-mods-content { padding: .8rem; }
+.nexus-mods-content .nexus-panel-heading { gap: .5rem; }
+.nexus-mod-search-trigger { margin-left: auto; flex-shrink: 0; }
+.nexus-mod-search-icon { display: grid; place-items: center; width: 24px; height: 28px; padding: 0; border: 0; background: transparent; color: var(--accent-soft); box-shadow: none; transition: color .2s, filter .2s; }
+.nexus-mod-search-icon:is(:hover, :focus-visible) { background: transparent; color: var(--accent-light); filter: drop-shadow(0 0 5px rgba(var(--accent-rgb), .8)); }
+.nexus-mod-search-icon:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+.nexus-mod-search-field { display: flex; align-items: center; gap: .5rem; flex-shrink: 0; padding: .4rem .55rem; border: 1px solid rgba(var(--accent-rgb), .3); border-radius: 8px; background: var(--input-bg); }
+.nexus-mod-search-field .menu-icon { width: 16px; height: 16px; color: var(--accent-soft); }
+.nexus-mod-search-field input { min-width: 0; width: 100%; padding: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: .8rem; color: inherit; }
+.nexus-mod-search-field:focus-within { border-color: var(--accent); }
+.nexus-mods-content .btn { margin: 0; }
+.nexus-mods-content > .nexus-hint { margin: .55rem 0 .65rem; line-height: 1.4; font-size: .85rem; }
+.nexus-mods-content > .nexus-mod-list { gap: .4rem; max-height: clamp(280px, 48vh, 520px); overflow-x: hidden; scrollbar-width: none; }
+.nexus-mods-content > .nexus-mod-list::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+.nexus-mods-content .nexus-installed-mod-row { flex-shrink: 0; box-sizing: border-box; border: 1px solid transparent; display: flex; flex-direction: column; align-items: stretch; gap: .55rem; padding: .55rem .65rem; }
+.nexus-installed-mod-row > .nexus-installed-mod-info { flex: none; width: 100%; }
+.nexus-installed-mod-info strong { display: block; line-height: 1.35; }
+.nexus-installed-mod-info small { margin-top: .25rem; }
+.nexus-installed-mod-row > .nexus-installed-mod-actions { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .45rem; flex: none; width: 100%; }
+.nexus-installed-mod-actions .btn { margin: 0; height: 34px; min-height: 34px; box-sizing: border-box; padding: .35rem .5rem; font-size: .8rem; gap: .35rem; white-space: nowrap; }
+.nexus-installed-mod-actions .nexus-requirements-link { justify-self: start; margin: 0 !important; min-width: 0; max-width: 100%; display: block; overflow: hidden; text-overflow: ellipsis; }
+.nexus-installed-mod-actions .btn:last-child { grid-column: 3; }
+.nexus-mod-summary { display: flex; align-items: center; gap: .5rem; width: 100%; padding: 0; border: 0; border-radius: 4px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.nexus-mod-summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.nexus-mod-summary:hover { background: transparent; }
+.nexus-local-identification-note { font-size: .7rem; line-height: 1.4; color: var(--tone-94a3b8, #94a3b8); }
+.nexus-mod-summary .nexus-installed-mod-info { flex: 1; min-width: 0; }
+.nexus-mod-title { display: flex; align-items: baseline; gap: .4rem; flex-wrap: wrap; }
+.nexus-mod-title strong { min-width: 0; overflow-wrap: anywhere; }
+.nexus-mod-version { font-size: .68rem; font-weight: 400; color: var(--tone-94a3b8, #94a3b8); white-space: nowrap; }
+.nexus-mod-chevron { flex-shrink: 0; color: var(--tone-94a3b8, #94a3b8); transition: transform .16s; }
+.nexus-mod-chevron.expanded { transform: rotate(180deg); }
+.nexus-mods-content .nexus-installed-mod-row.nexus-mod-active { background: rgba(var(--accent-rgb),.09); border-color: rgba(var(--accent-rgb),.25); }
+.nexus-mod-active .nexus-mod-title strong { color: var(--accent-soft); }
+.nexus-mods-content .nexus-installed-mod-row.nexus-mod-inactive { background: rgba(148,163,184,.045); border-color: rgba(148,163,184,.12); }
+.nexus-mod-inactive .nexus-mod-title strong { color: #919aaa; }
+.nexus-mod-inactive .nexus-installed-mod-info small { color: #778195; }
+.nexus-mods-content .nexus-installed-mod-row.collapsed { gap: 0; }
+@media (prefers-reduced-motion: reduce) { .nexus-mod-chevron { transition: none; } }
+.nexus-mod-tools { display: flex; align-items: center; flex-wrap: nowrap; gap: .4rem; margin-top: .5rem; }
+.nexus-mod-tools > .btn { box-sizing: border-box; height: 36px; min-width: 0; white-space: nowrap; padding-inline: .6rem; }
+
+.nexus-fomod fieldset { border: 1px solid rgba(var(--surface-255-255-255,255,255,255),.14); border-radius: 12px; padding: .8rem; margin: 1rem 0; min-width: 0; }
+.nexus-fomod legend { padding: 0 .4rem; font-size: .9rem; color: var(--tone-94a3b8, #94a3b8); }
+.nexus-fomod-option { display: flex; align-items: flex-start; gap: .75rem; padding: .85rem; margin: .4rem 0; border: 1px solid transparent; border-radius: 9px; background: rgba(var(--surface-255-255-255,255,255,255),.04); cursor: pointer; }
+.nexus-fomod-option.selected { border-color: var(--accent); background: rgba(var(--accent-rgb),.1); }
+.nexus-fomod-option input { margin-top: .2rem; accent-color: var(--accent); flex: 0 0 auto; }
+.nexus-fomod-option span { min-width: 0; overflow-wrap: anywhere; }
+.nexus-fomod-option small { display: block; margin-top: .3rem; color: var(--tone-94a3b8, #94a3b8); }
+.nexus-fomod-option:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.nexus-fomod-option:has(input:disabled) { cursor: default; }
+
+.nexus-install-status { min-height: 1.5em; }
+
+.nexus-queue-list { display: grid; gap: .8rem; }
+.nexus-queue-list > article { padding: 1rem; border: 1px solid rgba(var(--surface-255-255-255,255,255,255),.15); border-radius: 10px; background: rgba(var(--surface-255-255-255,255,255,255),.04); }
+.nexus-queue-list small { display: block; margin-top: .3rem; color: var(--tone-94a3b8,#94a3b8); }
+.nexus-queue-choice, .nexus-queue-file { display: flex; align-items: flex-start; gap: .65rem; cursor: pointer; }
+.nexus-queue-list input { flex: 0 0 auto; margin-top: .25rem; accent-color: var(--accent); }
+.nexus-queue-choice:has(input:focus-visible), .nexus-queue-file:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+.nexus-queue-files { margin: .8rem 0 0; padding: .75rem; border: 1px solid rgba(var(--surface-255-255-255,255,255,255),.15); border-radius: 8px; }
+.nexus-queue-file { padding: .6rem 0; overflow-wrap: anywhere; }
+.nexus-queue-file + .nexus-queue-file { border-top: 1px solid rgba(var(--surface-255-255-255,255,255,255),.1); }
+.nexus-queue-file span { min-width: 0; }
+
+:root .nexus-queue-popup.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { padding: 76px 1.1rem 1rem; }
+.nexus-queue-popup .nexus-queue-list { gap: .65rem; align-items: start; }
+.nexus-queue-popup .nexus-queue-list > article { padding: .75rem; min-width: 0; }
+.nexus-queue-popup .nexus-queue-files { margin-top: .5rem; padding: .5rem .65rem; min-width: 0; }
+.nexus-queue-file-info { display: grid; gap: .15rem; flex: 1; }
+.nexus-queue-file-info strong { font-size: .85rem; }
+.nexus-queue-list .nexus-queue-file-info small { margin: 0; font-size: .8rem; }
+.nexus-queue-popup .nexus-queue-files { border: 0; padding: 0; }
+.nexus-queue-file { padding: .45rem .5rem; border-radius: 6px; }
+.nexus-queue-file.selected { background: rgba(var(--accent-rgb),.12); }
+.nexus-queue-selected-description { font-size: .8rem; line-height: 1.45; color: var(--tone-94a3b8,#94a3b8); margin: .4rem 0 0; padding: .4rem .5rem; max-height: 5rem; overflow: auto; overflow-wrap: anywhere; }
+.nexus-queue-choice strong { min-width: 0; flex: 1; }
+.nexus-queue-popup .nexus-queue-badge { flex-shrink: 0; margin: 0; font-size: .7rem; padding: .15rem .4rem; border-radius: 5px; background: rgba(var(--accent-rgb),.12); color: var(--accent); }
+.nexus-queue-external-heading { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
+.nexus-queue-external-heading strong { flex: 1; min-width: 0; }
+.nexus-queue-entry-heading { display: flex; align-items: center; gap: .45rem; }
+.nexus-queue-entry-heading .nexus-queue-choice { flex: 1; min-width: 0; align-items: center; }
+.nexus-queue-note { display: inline-flex; flex-shrink: 0; color: var(--accent); cursor: help; }
+.nexus-queue-note svg { width: 14px; height: 14px; }
+.nexus-queue-popup .nexus-popup-footer { padding: .75rem 1.1rem; }
+@media (min-width: 760px) { .nexus-queue-popup .nexus-queue-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.nexus-catalog-page-size { position: relative; }
+
+.nexus-library-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; color: var(--tone-94a3b8,#94a3b8); }
+.nexus-library-loading p { margin: 0; }
+.nexus-download-wait { display: flex; flex-direction: column; align-items: center; gap: .8rem; padding: 1rem; text-align: center; }
+.nexus-download-wait .nexus-hint { margin: 0; max-width: 34rem; }
+.nexus-loading-emblem { position: relative; display: grid; place-items: center; width: 104px; height: 104px; }
+.nexus-loading-emblem img { width: 68px; height: 68px; object-fit: contain; filter: hue-rotate(var(--brand-hue, 0deg)) drop-shadow(0 0 12px rgba(var(--accent-rgb),.35)); animation: nexus-logo-pulse 1.8s ease-in-out infinite; }
+.nexus-loading-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(var(--accent-rgb),.14); border-top-color: var(--accent); border-right-color: var(--accent); animation: nexus-logo-orbit 1.4s linear infinite; }
+@keyframes nexus-logo-pulse { 0%,100% { transform: scale(.94); opacity: .75; } 50% { transform: scale(1); opacity: 1; } }
+@keyframes nexus-logo-orbit { to { transform: rotate(360deg); } }
+.nexus-library-loading.reduced-motion img, .nexus-library-loading.reduced-motion .nexus-loading-ring { animation: none; }
+@media (prefers-reduced-motion: reduce) { .nexus-loading-emblem img, .nexus-loading-ring { animation: none; } }
+
+.nexus-file-choice-group + .nexus-file-choice-group { margin-top: .7rem; }
+.nexus-file-choice-group h4 { margin: .3rem 0; color: var(--tone-e2e8f0,#e2e8f0); font-size: .85rem; }
+.nexus-old-files-toggle { margin: .35rem 0 .65rem; font-size: .85rem; background: none; border: 0; box-shadow: none; padding: 0; color: var(--tone-e2e8f0, #e2e8f0); text-decoration: underline; text-underline-offset: 4px; }
+.nexus-old-files-toggle:hover { color: var(--accent-light); }
+.nexus-old-files-toggle:focus-visible { outline: 1px solid var(--accent-soft); outline-offset: 4px; border-radius: 2px; }
+.nexus-catalog-file-group > summary { cursor: pointer; width: fit-content; }
+.nexus-catalog-file-group .nexus-mod-row + .nexus-mod-row { margin-top: .6rem; }
+
+.nexus-deploy-options { margin: .7rem 0; border: 1px solid rgba(var(--accent-rgb),.25); border-radius: 9px; padding: .65rem .8rem; }
+.nexus-deploy-options > div, .nexus-deploy-options label { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.nexus-deploy-options > div { gap: 1rem; }
+.nexus-deploy-options input { accent-color: var(--accent); }
+.nexus-deploy-options label:has(input:disabled) { opacity: .55; }
+.nexus-deploy-options span { color: var(--accent); cursor: help; display: inline-flex; }
+.nexus-deploy-options svg { width: 15px; height: 15px; }
+
+.nexus-settings-heading { display: flex; align-items: center; gap: .5rem; }
+.nexus-settings-heading .menu-icon { color: var(--accent-soft); }
+.nexus-settings-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .8rem 1rem; margin-bottom: 1rem; }
+.nexus-settings-fields .installation-field { min-width: 0; }
+.nexus-settings-platform { align-self: start; }
+.nexus-settings-save { grid-column: 1 / -1; justify-self: start; }
+@media (max-width: 760px) { .nexus-settings-fields { grid-template-columns: minmax(0, 1fr); } }
+
+.nexus-downloads-popup .dialog-titlebar { display: flex; align-items: center; gap: .75rem; }
+.nexus-downloads-popup .dialog-titlebar h2 { flex: 1; min-width: 0; }
+.nexus-downloads-header-action { display: inline-flex; flex-shrink: 0; }
+.nexus-downloads-header-action .btn { font-size: .8rem; padding: .4rem .6rem; white-space: nowrap; }
+@media (max-width: 600px) { .nexus-downloads-header-action .btn span { display: none; } }
+
+/* Theme-aware primary actions across Nexus panels and their dialogs. */
+:is(.nexus-panel, .nexus-popup, .nexus-picker) .btn-primary {
+  border: 1px solid rgba(var(--accent-rgb), .65);
+  border-radius: 9px;
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), .32), rgba(var(--accent-rgb), .15));
+  color: var(--tone-edf0fd, #edf0fd);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 0 12px rgba(var(--accent-rgb), .1);
+  font-weight: 600;
+  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+:is(.nexus-panel, .nexus-popup, .nexus-picker) .btn-primary .menu-icon { color: var(--accent-light); }
+:is(.nexus-panel, .nexus-popup, .nexus-picker) .btn-primary:hover:not(:disabled) {
+  border-color: var(--accent-soft);
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), .43), rgba(var(--accent-rgb), .23));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 0 16px rgba(var(--accent-rgb), .22);
+  transform: translateY(-1px);
+}
+:is(.nexus-panel, .nexus-popup, .nexus-picker) .btn-primary:active:not(:disabled) { transform: translateY(0); }
+:is(.nexus-panel, .nexus-popup, .nexus-picker) .btn-primary:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 3px; }
+:is(.nexus-panel, .nexus-popup, .nexus-picker) .btn-primary:disabled { box-shadow: none; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  :is(.nexus-panel, .nexus-popup, .nexus-picker) .btn-primary { transition: none; }
+  :is(.nexus-panel, .nexus-popup, .nexus-picker) .btn-primary:hover:not(:disabled) { transform: none; }
+}
+.performance-mode :is(.nexus-panel, .nexus-popup, .nexus-picker) .btn-primary { transition: none; }
+.performance-mode :is(.nexus-panel, .nexus-popup, .nexus-picker) .btn-primary:hover:not(:disabled) { transform: none; }
+
+.nexus-mod-tools .nexus-import-action { margin-left: auto; }
+ .nexus-install-start { flex-direction: column; gap: .8rem; min-height: 190px; text-align: center; }
+.nexus-install-start > span { color: var(--tone-b9c4dc, #b9c4dc); font-size: .85rem; }
+.nexus-install-puzzle {
+  position: relative;
+  display: grid; place-items: center; width: 84px; height: 84px; flex-shrink: 0; padding: 0;
+  border: 0; border-radius: 8px; background: transparent;
+  color: var(--accent-light); box-shadow: none; outline: none;
+  transform-origin: 50% 45%;
+  animation: nexus-install-nudge 7s ease-in-out infinite;
+  cursor: pointer;
+}
+.nexus-install-puzzle:is(:hover, :focus-visible, :active) { background: transparent; border-color: transparent; box-shadow: none; transform: none; }
+.nexus-install-puzzle:hover:not(:disabled) { animation: nexus-install-hover-nudge 7s ease-in-out infinite; }
+.nexus-install-piece { display: grid; place-items: center; width: 100%; height: 100%; }
+.nexus-install-piece .menu-icon { width: 100%; height: 100%; overflow: visible; transform: scale(1.4); stroke: var(--accent); stroke-width: .5; fill: rgba(var(--accent-rgb), .2); filter: drop-shadow(0 0 7px rgba(var(--accent-rgb), .45)); animation: nexus-install-pulse 2.2s ease-in-out infinite; }
+/* Center in the open body of the piece, away from the left and bottom sockets. */
+.nexus-install-download { position: absolute; top: calc(50% - 5px); left: calc(50% + 5px); transform: translate(-50%, -50%); display: grid; place-items: center; }
+.nexus-install-download .menu-icon { width: 28px; height: 28px; }
+.nexus-install-puzzle:hover:not(:disabled) .nexus-install-piece .menu-icon, .nexus-install-puzzle:focus-visible .nexus-install-piece .menu-icon { animation-duration: 1.6s; stroke: var(--accent-light); }
+.nexus-install-puzzle:focus-visible .nexus-install-piece .menu-icon { stroke: var(--accent-light); stroke-width: .8; }
+.nexus-install-puzzle:active:not(:disabled) .nexus-install-piece .menu-icon { animation: none; filter: drop-shadow(0 0 9px rgba(var(--accent-rgb), .6)); }
+.nexus-install-puzzle:disabled { opacity: .45; cursor: default; animation: none; }
+.nexus-install-puzzle:disabled .nexus-install-piece .menu-icon { animation: none; filter: none; }
+@keyframes nexus-install-pulse {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(var(--accent-rgb), .4)); }
+  50% { filter: drop-shadow(0 0 12px rgba(var(--accent-rgb), .8)) drop-shadow(0 0 3px rgba(var(--accent-rgb), .65)); }
+}
+@keyframes nexus-install-nudge {
+  0%, 80%, 92%, 100% { transform: rotate(0); }
+  82%, 88% { transform: rotate(-2deg); }
+  85%, 90% { transform: rotate(2deg); }
+}
+@keyframes nexus-install-hover-nudge {
+  0%, 9%, 100% { transform: rotate(0); }
+  2%, 6% { transform: rotate(-2deg); }
+  4%, 8% { transform: rotate(2deg); }
+}
+@media (prefers-reduced-motion: reduce) { .nexus-install-puzzle, .nexus-install-puzzle .nexus-install-piece .menu-icon { animation: none !important; } }
+.performance-mode .nexus-install-puzzle, .performance-mode .nexus-install-puzzle .nexus-install-piece .menu-icon { animation: none !important; }
+.game-action-stack .nexus-sidebar-report { display: flex; align-items: center; justify-content: center; gap: .5rem; width: 100%; }
+.game-action-stack .nexus-sidebar-mods.active { border: 1px solid rgba(var(--accent-rgb), .6); background: rgba(var(--accent-rgb), .15); color: var(--accent-light); box-shadow: 0 0 10px rgba(var(--accent-rgb), .12); }
+
+.nexus-carousel-panels { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: stretch; gap: 18px; }
+.nexus-carousel-panels > .menu-glass-panel { min-width: 0; padding: .85rem; }
+.nexus-carousel-panels .nexus-mods-content { display: flex; flex-direction: column; gap: .65rem; }
+.nexus-carousel-panels .nexus-mods-content > .nexus-mod-list { flex: 1; min-height: 0; max-height: 280px; }
+.nexus-carousel-panels .nexus-mod-tools { margin-top: auto; gap: .35rem; }
+.nexus-carousel-panels .btn { font-size: .78rem; padding: .45rem .55rem; }
+.nexus-settings-content { display: flex; flex-direction: column; gap: .8rem; }
+.nexus-settings-content .nexus-settings-fields { gap: .65rem .8rem; margin: 0; }
+.nexus-settings-content .nexus-settings-path { grid-column: 1 / -1; }
+.nexus-settings-content .nexus-deploy-options { margin: 0; padding: .6rem; font-size: .8rem; }
+.nexus-settings-content .nexus-deploy-options > div { gap: .6rem; }
+.nexus-module-details { font-size: .8rem; }
+.nexus-module-details > summary { color: var(--tone-b9c4dc, #b9c4dc); cursor: pointer; }
+.nexus-module-details .nexus-info { gap: .5rem; margin: .75rem 0; }
+.nexus-catalog-popup .nexus-catalog > div > .nexus-panel-heading > h3 { display: none; }
+.nexus-catalog-association { justify-content: flex-start; gap: .75rem; }
+.nexus-catalog-association > .btn { flex-shrink: 0; }
+.nexus-catalog-association > .nexus-hint { flex: 1 1 240px; min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.nexus-carousel-panels .nexus-install-start { flex: 1; min-height: 190px; }
+@media (max-width: 1000px) { .nexus-carousel-panels { grid-template-columns: minmax(0, 1fr); } }
+
+.nexus-carousel-panels > .menu-glass-panel { height: 390px; box-sizing: border-box; }
+.nexus-settings-content { overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(var(--accent-rgb), .35) transparent; }
+.nexus-carousel-panels .nexus-mods-content > .nexus-mod-list { flex: 1; overflow-y: auto; }
+.nexus-settings-content .nexus-settings-platform .info-platform { font-size: .75rem; }
+.nexus-settings-content .nexus-settings-platform .game-info-label { min-height: 24px; }
+.nexus-settings-content .nexus-settings-fields .proton-trigger { font-size: .8rem; }
+@media (max-width: 1000px) { .nexus-carousel-panels > .menu-glass-panel { height: auto; min-height: 260px; max-height: 390px; } }
+.nexus-settings-content { gap: .5rem; }
+.nexus-settings-content .nexus-settings-fields { gap: .45rem .8rem; }
+.nexus-settings-content .btn { margin: 0; }
+.nexus-settings-content .nexus-deploy-options label { font-size: .75rem; gap: .3rem; }
+.nexus-settings-content .nexus-deploy-options input { margin: 0; }
+
+.nexus-titlebar-back { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 28px; height: 28px; padding: 0; border: 1px solid rgba(var(--accent-rgb), .25); border-radius: 6px; background: rgba(var(--accent-rgb), .06); color: var(--tone-b9c4dc, #b9c4dc); cursor: pointer; }
+.nexus-titlebar-back .menu-icon { width: 16px; height: 16px; }
+.nexus-titlebar-back:hover { color: var(--accent-light); border-color: var(--accent-soft); background: rgba(var(--accent-rgb), .14); }
+.nexus-titlebar-back:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 2px; }
+.nexus-popup [hidden] { display: none !important; }
+.nexus-inline-view .nexus-popup-footer { margin: 1rem -1.1rem -1rem; }
+
+.nexus-mods-content .nexus-mod-highlighted { outline: none; border-color: var(--accent-soft); background: rgba(var(--accent-rgb), .14); box-shadow: inset 0 0 15px rgba(var(--accent-rgb), .08); animation: nexus-mod-reveal 1s ease-in-out 3; }
+@keyframes nexus-mod-reveal {
+  0%, 100% { border-color: rgba(var(--accent-rgb), .25); background: rgba(var(--accent-rgb), .04); box-shadow: inset 0 0 4px rgba(var(--accent-rgb), .03); }
+  50% { border-color: var(--accent-soft); background: rgba(var(--accent-rgb), .2); box-shadow: inset 0 0 18px rgba(var(--accent-rgb), .15); }
+}
+@media (prefers-reduced-motion: reduce) { .nexus-mods-content .nexus-mod-highlighted { animation: none; } }
+.performance-mode .nexus-mods-content .nexus-mod-highlighted { animation: none; }
+.nexus-settings-title { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-height: 26px; }
+.nexus-settings-saved { display: inline-flex; align-items: center; gap: .3rem; color: #34d399; font-size: .68rem; text-align: right; }
+.nexus-saved-circle { display: inline-flex; border: 1px solid currentColor; border-radius: 50%; padding: 2px; flex-shrink: 0; }
+.nexus-saved-circle .menu-icon { width: 11px; height: 11px; }
+.nexus-deploy-selector .installation-type-info .menu-icon, .nexus-deploy-menu .installation-type-info .menu-icon { width: 16px; height: 16px; }
+.nexus-deploy-menu { overflow-y: auto; box-sizing: border-box; padding: .3rem; }
+.nexus-deploy-menu-row { display: flex; align-items: center; gap: .4rem; }
+.nexus-deploy-menu-row > .custom-select-option { flex: 1; min-width: 0; }
+.nexus-deploy-menu-row > .hover-tooltip-anchor { flex-shrink: 0; padding-right: .35rem; }
+.nexus-settings-content .nexus-deploy-selector .proton-trigger { font-size: .8rem; }
+:root .nexus-settings-content .nexus-settings-title > .nexus-settings-saved { color: #34d399 !important; font-size: .68rem !important; }
+
+.nexus-settings-content .nexus-settings-platform { grid-column: 1 / -1; }
+.nexus-settings-content .nexus-compact-select, .nexus-catalog-page-size .nexus-compact-select {
+  min-height: 34px; padding: 7px 10px; border-radius: 9px; border: 1px solid rgba(var(--accent-rgb), .45);
+  background: rgba(var(--surface-41-41-54, 41,41,54), .85); color: var(--tone-d6dff4, #d6dff4); font-size: .8rem; font-weight: 500;
+}
+.nexus-settings-content .nexus-compact-select.open, .nexus-catalog-page-size .nexus-compact-select.open { border-color: var(--accent-soft); background: rgba(var(--accent-rgb), .12); }
+.nexus-catalog-page-size .nexus-compact-select { width: auto; gap: .5rem; }
+.nexus-catalog-page-size .nexus-compact-select > .menu-icon { width: 14px; height: 14px; }
+.nexus-compact-select .select-arrow { display: flex; align-items: center; }
+.nexus-compact-select-menu { padding: 3px; border-radius: 9px; border-color: rgba(var(--accent-rgb), .5); background: rgba(var(--surface-15-18-32, 15,18,32), .97); }
+.nexus-compact-select-menu .custom-select-option { margin: 0; border: 0; border-radius: 6px; padding: 7px 10px; background: transparent; text-align: left; align-items: flex-start; font-size: .8rem; min-height: 30px; color: var(--tone-d6dff4, #d6dff4); }
+.nexus-compact-select-menu .custom-select-option.selected { background: rgba(var(--accent-rgb), .2); color: var(--accent-light); }
+.nexus-compact-select-menu .custom-select-option:hover:not(:disabled) { background: rgba(var(--accent-rgb), .12); }
+.nexus-compact-select-menu .custom-select-option:disabled { opacity: .45; }
+
+.nexus-sidebar-report { justify-content: center; }
+.nexus-report-summary { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; font-size: .85rem; margin-bottom: .5rem; }
+.nexus-report-preview { max-height: 40vh; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .78rem; }
+.nexus-report-popup .modal-footer { flex-wrap: wrap; }
+
+.nexus-report-popup .modal-scroll-body { padding: .8rem 1rem; }
+.nexus-report-popup .nexus-hint { margin-top: 0; }
+
+/* Keep the neon frame outside the scrolling settings content. */
+.nexus-settings-panel { display: flex; flex-direction: column; }
+.nexus-settings-panel > .nexus-settings-content { flex: 1; min-height: 0; min-width: 0; }
+
+.library-mode-buttons > .nexus-downloads-toolbar { margin: 0; align-self: center; }
+
+.nexus-remove-popup { max-width: 450px; }
+.nexus-remove-name { display: block; overflow-wrap: anywhere; }
+.nexus-remove-popup .nexus-hint { margin-bottom: 0; }
+.nexus-remove-popup .nexus-popup-footer { display: flex; justify-content: flex-end; gap: .6rem; }
+
+/* Compact installation review: one requirements block, details on demand. */
+:root .nexus-install-review-popup.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { padding: 76px 1.1rem .9rem; }
+.nexus-install-mod-name { margin: 0 0 .6rem; font-size: 1rem; line-height: 1.35; overflow-wrap: anywhere; }
+.nexus-install-review-popup .nexus-install-status { min-height: 0; margin: .25rem 0; }
+.nexus-install-review-popup .nexus-hint { font-size: .82rem; line-height: 1.4; margin: .45rem 0; }
+.nexus-install-review-popup .nexus-requirements { margin: .6rem 0; padding: .65rem; }
+.nexus-install-review-popup .nexus-requirements h4 { font-size: .9rem; margin-bottom: .45rem; }
+.nexus-install-review-popup details { font-size: .8rem; margin: .45rem 0; }
+.nexus-install-review-popup summary { cursor: pointer; color: var(--tone-94a3b8, #94a3b8); }
+.nexus-requirement-list article > div.nexus-requirement-actions { flex: 0 0 auto; min-width: 0; gap: .4rem; }
+.nexus-requirement-list .btn { margin: 0; font-size: .8rem; padding: .4rem .55rem; }
+.nexus-requirement-list .nexus-status { margin: .35rem 0 0; padding: .15rem .4rem; font-size: .75rem; }
+.nexus-requirement-info { display: inline-flex; align-items: center; background: transparent; border: 0; color: var(--accent-light); padding: .2rem; margin-left: .3rem; cursor: help; }
+.nexus-requirement-info .menu-icon { width: 14px; height: 14px; }
+.nexus-install-order { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .45rem; padding: 0; margin: 0 0 .8rem; list-style: none; }
+.nexus-install-order li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: .2rem .4rem; padding: .5rem; border: 1px solid rgba(var(--accent-rgb), .15); border-radius: 8px; font-size: .78rem; }
+.nexus-install-order li.current { background: rgba(var(--accent-rgb), .1); border-color: var(--accent-soft); }
+.nexus-install-order li.complete { opacity: .65; }
+.nexus-install-order li > span { grid-row: span 2; color: var(--accent-light); }
+.nexus-install-order strong { overflow-wrap: anywhere; }
+.nexus-install-order small { color: var(--tone-94a3b8, #94a3b8); }
+.nexus-install-order .menu-icon { width: 15px; height: 15px; }
+
+.nexus-install-summary { display: flex; align-items: center; justify-content: space-between; gap: .5rem; flex-wrap: wrap; font-size: .8rem; color: var(--tone-94a3b8, #94a3b8); margin: .4rem 0; }
+.nexus-install-review-popup .nexus-requirement-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.nexus-install-review-popup .nexus-requirement-list article { padding: .55rem; gap: .45rem; }
+.nexus-install-review-popup .nexus-requirement-list article > div:first-child { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem .55rem; }
+.nexus-install-review-popup .nexus-requirement-list article > div:first-child > small { display: none; }
+.nexus-install-review-popup .nexus-requirement-list .nexus-status { margin: 0; }
+
+.nexus-translate-description { font-size: .82rem; padding: .45rem .65rem; }
+.nexus-translation-hint { display: block; color: var(--tone-94a3b8, #94a3b8); font-size: .7rem; margin-top: .4rem; }
+
+.nexus-mod-detail-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; margin: .85rem 0 1rem; }
+.nexus-mod-detail-actions > .btn { margin: 0; box-sizing: border-box; min-height: 36px; padding: .45rem .65rem; font-size: .82rem; border-radius: 9px; }
+.modal-content.nexus-popup.nexus-requirements-popup { width: min(720px, calc(100vw - 32px)) !important; }
+
+.nexus-old-files-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); gap: .65rem; }
+.nexus-old-files-grid .nexus-mod-row { position: relative; min-width: 0; align-items: flex-start; flex-direction: column; gap: .6rem; padding-right: 3.5rem; }
+.nexus-old-files-grid .nexus-mod-row + .nexus-mod-row { margin-top: 0; }
+.nexus-old-files-grid .nexus-mod-row > div:first-child { width: 100%; min-width: 0; overflow-wrap: anywhere; }
+.nexus-old-files-grid .hover-tooltip-anchor { position: absolute; top: .7rem; right: .7rem; }
+.nexus-popup .btn.nexus-download-icon { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: 36px; height: 36px; min-height: 36px; padding: 0; margin: 0; border-radius: 8px; }
+.nexus-download-icon .menu-icon { width: 18px; height: 18px; }
+
+.nexus-downloads .nexus-download-job { flex-direction: column; align-items: stretch; gap: .65rem; }
+.nexus-download-job-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; }
+.nexus-download-job-actions > .btn { box-sizing: border-box; height: 36px; min-height: 36px; margin: 0; padding: .45rem .65rem; font-size: .82rem; border-radius: 9px; }
+.nexus-download-job-actions .nexus-download-cancel { margin-left: auto; }
+.nexus-download-job-actions:empty { display: none; }
+.nexus-browser-login { margin-bottom: .75rem; }
+.nexus-browser-login > .btn { min-height: 34px; margin: 0; padding: .45rem .65rem; font-size: .82rem; border-radius: 9px; }
+.nexus-browser-login > .nexus-hint { margin: .45rem 0 0; font-size: .8rem; }
+
+.nexus-queue-optionals .nexus-queue-entry-heading > strong { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+.nexus-report-actions { display: flex; align-items: center; gap: .5rem; }
+.nexus-report-copy { width: 34px; height: 34px; padding: 0; justify-content: center; }

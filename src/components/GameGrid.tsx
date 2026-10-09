@@ -1,3 +1,4 @@
+import { NexusLibraryLoading } from "../modules/nexus/NexusLibraryLoading";
 import { useFavorites } from "../services/favorites";
 import { CoverGameActions, type CoverGameAction } from "./CoverGameActions";
 import { gameViewKey } from "../services/gameIdentity";
@@ -13,7 +14,7 @@ import { motion } from "framer-motion";
 import { usePerformanceMode } from "./EffectsContext";
 import { applyCustomCovers, readGameLibrary, saveGameLibrary } from "../services/gameLibraryCache";
 import { warmAmbientCover } from "../services/ambientCoverCache";
-import { GameModeSelector, type GamePanelMode } from "./GameModeSelector";
+import { GameEntryButton, GameModeSelector, type GamePanelMode } from "./GameModeSelector";
 import { HoverTooltip } from "./HoverTooltip";
 import { LauncherIcon } from "./LauncherIcon";
 import { openDirectoryPicker } from "../services/tauriService";
@@ -21,7 +22,7 @@ import { listPeliGamesEntries } from "../services/installedLibrary";
 
 export interface GameInfo {
   discovery_source?: string | null;
-  library_view?: "own" | "all";
+  library_view?: "own" | "all" | "nexus";
   advanced?: import("../services/advancedSettings").AdvancedSettings;
   name: string;
   path: string;
@@ -35,7 +36,14 @@ export interface GameInfo {
   proton?: string;
 }
 
+export interface ManagedGameLibrary {
+  games: GameInfo[]; busy: boolean; loaded: boolean; error?: string; title: string; empty: string; hint: string; addLabel: string;
+  onAdd: () => void; onRefresh: () => void;
+  downloadsAction: React.ReactNode; accountLabel: string; onAccount: () => void;
+  onCoverFallback?: (game: GameInfo) => Promise<void>;
+}
 interface Props {
+  managedLibrary?: ManagedGameLibrary;
   onCoverAction: (action: CoverGameAction, game: GameInfo) => void;
   coverActionsBlocked?: boolean;
   homeRevision: number;
@@ -49,7 +57,19 @@ interface Props {
   onModeChange: (mode: GamePanelMode) => void;
 }
 
-export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, homeRevision, onHome, onSelectGame, selectedGameKey, mode, libraryScope, detailsOpen, onModeChange, modeDisabled }) => {
+export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, homeRevision, onHome, onSelectGame, selectedGameKey, mode, libraryScope, detailsOpen, onModeChange, modeDisabled, managedLibrary }) => {
+  const [, setCoverRevision] = useState(0);
+  const managed = Boolean(managedLibrary);
+  useEffect(() => {
+    if (!managed) return;
+    const refresh = (event: Event) => {
+      const game = (event as CustomEvent<GameInfo>).detail;
+      if (game) setImageErrors(previous => { const next = new Set(previous); next.delete(game.path); return next; });
+      setCoverRevision(value => value + 1);
+    };
+    window.addEventListener("gameCoverChanged", refresh);
+    return () => window.removeEventListener("gameCoverChanged", refresh);
+  }, [managed]);
   const favorites = useFavorites();
   const [favoritesCollapsed, setFavoritesCollapsed] = useState(false);
   const performanceMode = usePerformanceMode();
@@ -74,15 +94,16 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     } catch (error) { if (request === ownRequest.current) setLibraryError(String(error)); }
   };
   useEffect(() => {
+    if (managedLibrary) return;
     void refreshOwnLibrary(true).finally(() => setOwnLoaded(true));
-    const refresh = () => { void refreshOwnLibrary(); };
+    const refresh = () => { void fetchGames(); };
     window.addEventListener("peligamesLibraryChanged", refresh);
     // Pelinstall can register an installation from another process.
     window.addEventListener("focus", refresh);
     return () => { ++ownRequest.current; window.removeEventListener("peligamesLibraryChanged", refresh); window.removeEventListener("focus", refresh); };
   }, []);
   useEffect(() => {
-    if (libraryLoaded) saveGameLibrary(games);
+    if (!managedLibrary && libraryLoaded) saveGameLibrary(games);
   }, [games, libraryLoaded]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchExpanded, setSearchExpanded] = useState(false);
@@ -119,6 +140,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const [fallbackAttempted, setFallbackAttempted] = useState<Set<string>>(new Set());
 
   const fetchGames = async (folders: string[] = customFolders) => {
+    if (managedLibrary) { managedLibrary.onRefresh(); return; }
     if (scanInProgress.current) {
       pendingScanFolders.current = folders;
       return;
@@ -159,6 +181,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   };
 
   useEffect(() => {
+    if (managedLibrary) return;
     if (libraryScope === "all" && !startupHandled.current) {
       startupHandled.current = true;
       if (cachedGames === null) void fetchGames();
@@ -317,6 +340,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
             if (!hasCustomCover(game.path) && !fallbackAttempted.has(game.path)) {
               setFallbackAttempted(prev => new Set(prev).add(game.path));
               try {
+                if (managedLibrary?.onCoverFallback) { await managedLibrary.onCoverFallback(game); return; }
                 const newCover = await invoke<string | null>("fetch_steamgriddb_cover_command", { name: game.name, apiKey: STEAMGRIDDB_API_KEY });
                 if (newCover && !hasCustomCover(game.path)) {
                   setGames(prev => prev.map(g => g.path === game.path ? { ...g, cover_url: newCover, automatic_cover_url: newCover } : g));
@@ -371,21 +395,22 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     </motion.div>
   );
 
-  const scopedGames = (libraryScope === "own" ? games.filter(game => game.launcher === "PeliGames") : games)
+  const scopedGames = managedLibrary ? applyCustomCovers(managedLibrary.games).map(game => ({ ...game, library_view: "nexus" as const })) : (libraryScope === "own" ? games.filter(game => game.launcher === "PeliGames") : games)
     .map(game => ({ ...game, library_view: libraryScope }));
   const filteredGames = scopedGames.filter(g => g.name.toLowerCase().includes(searchQuery.toLowerCase()));
   const favoriteGames = filteredGames.filter(game => favorites.has(gameViewKey(game)));
   const remainingGames = filteredGames.filter(game => !favorites.has(gameViewKey(game)));
   const steamGames = remainingGames.filter(g => g.launcher === "Steam");
   const otherGames = remainingGames.filter(g => g.launcher !== "Steam");
-  const showEmptyOwnLibrary = !loading && ownLoaded && libraryScope === "own" && !searchQuery && filteredGames.length === 0;
+  const scanning = managedLibrary ? managedLibrary.busy || !managedLibrary.loaded : loading || (libraryScope === "own" && !ownLoaded);
+  const showEmptyOwnLibrary = !scanning && ownLoaded && (libraryScope === "own" || mode === "mods") && !searchQuery && filteredGames.length === 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div className={`grid-header`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "1rem", paddingRight: "0.5rem" }}>
         
         {/* Right Controls */}
-        {libraryError && <TimedFeedback>{libraryError}</TimedFeedback>}
+        {(libraryError || managedLibrary?.error) && <TimedFeedback>{libraryError || managedLibrary?.error}</TimedFeedback>}
         <div className="library-toolbar-controls">
           
           {/* Search Bar */}
@@ -418,9 +443,10 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
             )}
           </div>
             </div>
-          <GameModeSelector modLibrary={libraryScope === "all"} onHome={onHome} mode={mode} open={detailsOpen} onChange={onModeChange} disabled={modeDisabled} />
+          {managedLibrary ? <div className="library-mode-buttons"><HoverTooltip text={managedLibrary.accountLabel}><button type="button" className="library-mode-button nexus-library-title" aria-label={managedLibrary.accountLabel} onClick={managedLibrary.onAccount}><img className="nexus-icon" src="/nexus-mods.svg" alt="" /><span className="nexus-library-wordmark" aria-hidden="true"><span>NEXUS</span><strong>MODS</strong></span></button></HoverTooltip>{managedLibrary.loaded && (!managedLibrary.busy || managedLibrary.games.length > 0) && <GameEntryButton addLabel={managedLibrary.addLabel} disabled={modeDisabled || managedLibrary.busy} onClick={managedLibrary.onAdd} />}{managedLibrary.downloadsAction}</div> : <GameModeSelector modLibrary={libraryScope === "all"} onHome={onHome} mode={mode} open={detailsOpen} onChange={onModeChange} disabled={modeDisabled} />}
           <div className="library-folder-actions" style={{ display: "flex", gap: "0.5rem" }}>
-            {libraryScope === "all" && <HoverTooltip text={t("gameGrid", "addFolder")}><button 
+            {!managedLibrary && libraryScope === "all" && <HoverTooltip text={t("gameGrid", "addFolder")}><button
+              className="library-mode-button"
               onClick={handleAddCustomFolder}
               style={{ background: "transparent", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)", color: "var(--tone-94a3b8, #94a3b8)", cursor: "pointer", padding: "0.4rem 0.6rem", borderRadius: "6px", display: "flex", alignItems: "center", gap: "0.4rem", transition: "all 0.2s" }}
               onMouseOver={(e) => { e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)"; e.currentTarget.style.color = "var(--tone-f8fafc, #f8fafc)"; }}
@@ -430,8 +456,9 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
               <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>{t("gameGrid", "folder")}</span>
             </button></HoverTooltip>}
             <HoverTooltip text={t("gameGrid", "scanLibrary")}><button 
+              className="library-mode-button"
               onClick={() => void fetchGames()}
-              disabled={loading}
+              disabled={loading || managedLibrary?.busy}
               style={{ background: "transparent", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)", color: loading ? "white" : "var(--tone-94a3b8, #94a3b8)", cursor: loading ? "not-allowed" : "pointer", padding: "0.4rem 0.6rem", borderRadius: "6px", display: "flex", alignItems: "center", gap: "0.4rem", transition: "all 0.2s", opacity: loading ? 0.7 : 1 }}
               onMouseOver={(e) => { if (!loading) { e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)"; e.currentTarget.style.color = "var(--tone-f8fafc, #f8fafc)"; } }}
               onMouseOut={(e) => { if (!loading) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--tone-94a3b8, #94a3b8)"; } }}
@@ -443,26 +470,33 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
             </button></HoverTooltip>
           </div>
 
+          {(managedLibrary || libraryScope === "all") && <HoverTooltip text={t("gameModes", "goHome")}><button type="button" className="library-mode-button library-home-button" disabled={modeDisabled || managedLibrary?.busy} onClick={onHome}><img src="/peligames.png" alt="" /><span>{t("gameModes", "home")}</span></button></HoverTooltip>}
           <div style={{ width: "1px", height: "20px", background: "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)" }}></div>
 
           <div className="library-view-toggle" role="group" aria-label={t("gameGrid", "viewMode")}>
-            <button type="button" className={viewMode === "grid" ? "active" : ""}
+            <HoverTooltip text={t("gameGrid", "gridView")}><button type="button" className={viewMode === "grid" ? "active" : ""}
               onClick={() => setViewMode("grid")} aria-pressed={viewMode === "grid"}
-              aria-label={t("gameGrid", "gridView")} title={t("gameGrid", "gridView")}>
+              aria-label={t("gameGrid", "gridView")}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            </button>
-            <button type="button" className={viewMode === "list" ? "active" : ""}
+            </button></HoverTooltip>
+            <HoverTooltip text={t("gameGrid", "listView")}><button type="button" className={viewMode === "list" ? "active" : ""}
               onClick={() => setViewMode("list")} aria-pressed={viewMode === "list"}
-              aria-label={t("gameGrid", "listView")} title={t("gameGrid", "listView")}>
+              aria-label={t("gameGrid", "listView")}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-            </button>
+            </button></HoverTooltip>
           </div>
 
         </div>
       </div>
 
-      <motion.div layoutScroll className={`game-grid-container game-library--${viewMode}`} style={{ flex: 1, minHeight: 0, overflowY: "auto", paddingRight: "0.5rem", marginTop: "1rem" }}>
-        {filteredGames.length === 0 && (showEmptyOwnLibrary ?
+      <motion.div layoutScroll className={`game-grid-container game-library--${viewMode}`} style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: "1rem" }}>
+        {scanning ? <div className="empty-library-state"><NexusLibraryLoading reducedMotion={performanceMode} /></div> : <>
+        {filteredGames.length === 0 && (managedLibrary ? <div className="empty-library-state">
+          {managedLibrary.busy || !managedLibrary.loaded ? <NexusLibraryLoading reducedMotion={performanceMode} />
+            : searchQuery ? <p role="status">{t("gameGrid", "noSearchResults")}</p>
+            : managedLibrary.error ? <button className="btn btn-secondary" onClick={managedLibrary.onRefresh}>{t("gameGrid", "scan")}</button>
+            : <div className="empty-library-action"><button type="button" className="empty-library-add" onClick={managedLibrary.onAdd} aria-label={managedLibrary.addLabel}><MenuIcon name="plus" /></button><div className="empty-library-message" role="status"><h3>{managedLibrary.empty}</h3><p>{managedLibrary.hint}</p></div></div>}
+        </div> : showEmptyOwnLibrary ?
           <div className="empty-library-state">
             <div className="empty-library-actions">
               <div className="empty-library-action">
@@ -574,6 +608,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
             </div>
           ));
         })()}
+        </>}
       </motion.div>
       {contextMenu && (
       <CoverContextMenuPanel onClose={() => setContextMenu(null)} x={contextMenu.x} y={contextMenu.y}>
