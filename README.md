@@ -1,4 +1,6 @@
-# PeliGames
+<p align="center">
+  <img src="public/images/readme-header.svg" alt="PL Games" width="900" />
+</p>
 
 Launcher de jogos Windows para Linux com Proton, biblioteca de jogos, Pelinstall, ferramentas Wine, integração Nexus Mods e gerenciador de mods DLSSNR-AMD.
 
