@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Use the timezone passed by the host; otherwise retain the system timezone.
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 cd "$root"
@@ -40,6 +41,12 @@ if [[ "$(uname -s)" == Linux && ( -z "$build_target" || "$build_target" == *linu
   bun "$root/node_modules/@tauri-apps/cli/tauri.js" "$@" --config "$layout_config"
 else
   bun "$root/node_modules/@tauri-apps/cli/tauri.js" "$@"
+fi
+# Tauri derives peli-games from the display name; normalize the DEB package ID.
+if [[ -d "$output/bundle/deb" ]]; then
+  while IFS= read -r -d '' package; do
+    bash "$root/scripts/deb-package-name.sh" "$package"
+  done < <(find "$output/bundle/deb" -maxdepth 1 -type f -newer "$marker" -name '*.deb' -print0)
 fi
 # Rewrite RPM's reserved main binary entry while keeping package ownership and dependencies.
 if [[ -d "$output/bundle/rpm" ]]; then

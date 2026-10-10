@@ -1,3 +1,4 @@
+import { NexusGameBackup } from "./NexusGameBackup";
 import { NexusDeployOptions } from "./NexusDeployOptions";
 import { nexusArchiveFormats } from "./archiveFormats";
 import { useEffect, useId, useRef, useState } from "react";
@@ -199,6 +200,7 @@ export function NexusPanels({ tab, onTabChange, highlightedModId, highlightReque
             </div>)}
             <NexusDeployOptions game={game} disabled={settingsLocked} onChange={method => onConfigureDeploy(game.id,method)} onSaved={showSaved} />
             {game.platform === "proton" && <ProtonSelector compactStyle label="Proton" value={proton} onChange={value => { setProton(value); void saveSettings({proton:value}); }} disabled={settingsLocked} />}
+            <NexusGameBackup gameId={game.id} disabled={settingsLocked} onError={onError} onSaved={showSaved} />
             <div className="game-info-item nexus-settings-platform">
               <span className="game-info-label"><MenuIcon name="platform" />{text.platform}:</span>
               <span className="info-value-pill info-platform">{game.platform === "proton" ? "Windows (Proton / Wine)" : text.native}</span>

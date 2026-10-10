@@ -66,6 +66,11 @@ export function NexusCatalogPanel({ game, onAssociate, onImport, onClose }: {
     finally { if (request === translationRequest.current) setTranslating(false); }
   };
   const [filter, setFilter] = useState("");
+  const [search, setSearch] = useState("");
+  useEffect(() => {
+    const timer = window.setTimeout(() => { setPage(1); setSearch(filter.trim()); }, 350);
+    return () => window.clearTimeout(timer);
+  }, [filter]);
   const [reference, setReference] = useState("");
   const [games, setGames] = useState<CatalogGame[]>([]);
   const [choosing, setChoosing] = useState(false);
@@ -79,7 +84,7 @@ export function NexusCatalogPanel({ game, onAssociate, onImport, onClose }: {
   useEffect(() => { grid.current?.scrollTo({ top: 0 }); }, [mods]);
   const associateRef = useRef(onAssociate);
   associateRef.current = onAssociate;
-  useEffect(() => { setPage(1); setTotal(0); setFilter(""); setReference(""); }, [domain, game?.id]);
+  useEffect(() => { setPage(1); setTotal(0); setFilter(""); setSearch(""); setReference(""); }, [domain, game?.id]);
   useEffect(() => {
     const request = ++generation.current;
     lock.current = false; setShowRequirements(false); setDownloadOpen(false); setDetails(null); setMods([]); setChoosing(false); setError(""); setMessage("");
@@ -99,14 +104,14 @@ export function NexusCatalogPanel({ game, onAssociate, onImport, onClose }: {
       return () => { generation.current++; };
     }
     lock.current = true; setBusy(true);
-    const result = feed === "all" || feed === "most_downloaded"
-      ? invoke<CatalogPage>("list_nexus_catalog_page", { gameDomain: domain, feed, offset: (page - 1) * pageSize, count: pageSize })
+    const result = Boolean(search) || feed === "all" || feed === "most_downloaded"
+      ? invoke<CatalogPage>("list_nexus_catalog_page", { gameDomain: domain, feed: search && feed !== "most_downloaded" ? "all" : feed, offset: (page - 1) * pageSize, count: pageSize, search })
       : invoke<Mod[]>("list_nexus_catalog_mods", { gameDomain: domain, feed }).then(mods => ({ mods, total_count: mods.length, next_offset: mods.length }));
     void result.then(page => { if (request === generation.current) { setMods(page.mods); setTotal(page.total_count);  } })
       .catch(e => { if (request === generation.current) setError(String(e)); })
       .finally(() => { if (request === generation.current) { lock.current = false; setBusy(false); } });
     return () => { generation.current++; };
-  }, [domain, game?.id, game?.game.name, feed, page, pageSize]);
+  }, [domain, game?.id, game?.game.name, feed, page, pageSize, search]);
   const run = async (work: () => Promise<void>) => {
     if (lock.current) return;
     const request = generation.current; lock.current = true; setBusy(true); setError(""); setMessage("");
@@ -136,10 +141,10 @@ export function NexusCatalogPanel({ game, onAssociate, onImport, onClose }: {
     if (!Number.isSafeInteger(id) || id <= 0) { setError(text.invalidModReference); return; }
     view(id);
   };
-  const pagedFeed = feed === "all" || feed === "most_downloaded";
+  const pagedFeed = Boolean(search) || feed === "all" || feed === "most_downloaded";
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const pageMods = pagedFeed ? mods : mods.slice((page - 1) * pageSize, page * pageSize);
-  const visibleMods = pageMods.filter(mod => mod.name.toLocaleLowerCase().includes(filter.toLocaleLowerCase()));
+  const visibleMods = pageMods;
   const back = () => { if (choosing) setChoosing(false); else setDetails(null); };
   const viewKey = choosing ? "association" : details ? `mod-${details.info.mod_id}` : "catalog";
   return <NexusPopup className={`nexus-catalog-popup ${viewKey === "catalog" ? "nexus-catalog-browser" : ""}`} title={choosing ? text.associateGame : details ? details.info.name : text.catalog} viewKey={viewKey} onBack={viewKey === "catalog" ? undefined : back} onClose={onClose}><section className="nexus-catalog" aria-busy={busy}>
@@ -151,7 +156,7 @@ export function NexusCatalogPanel({ game, onAssociate, onImport, onClose }: {
     {message && <p role="status" className="nexus-hint">{message}</p>}
     {domain && <>
       <div className="nexus-tabs">{(["all", "trending", "latest_added", "latest_updated", "most_downloaded"] as const).map(value => <button className={`btn btn-secondary ${feed === value ? "active" : ""}`} key={value} disabled={busy} aria-pressed={feed === value} onClick={() => { setPage(1); setFeed(value); }}>{text[value]}</button>)}<button className="btn btn-secondary" disabled={busy} onClick={() => open(`https://www.nexusmods.com/${domain}/mods/`)}><MenuIcon name="platform" />{text.fullCatalog}</button></div>
-      <><div className="nexus-fields nexus-catalog-searches"><label className="nexus-catalog-search"><MenuIcon name="search" /><input aria-label={text.filterCatalog} placeholder={text.filterCatalog} value={filter} onChange={e => setFilter(e.target.value)} /></label><form className="nexus-directory" onSubmit={e => { e.preventDefault(); lookup(); }}><input aria-label={text.modReference} placeholder={text.modReference} value={reference} onChange={e => setReference(e.target.value)} /><button className="btn btn-secondary" disabled={busy || !reference.trim()}>{text.viewMod}</button></form></div><div className="nexus-catalog-grid" ref={grid}>{visibleMods.map(mod => <article key={mod.mod_id} className="nexus-catalog-card" role="button" tabIndex={busy ? -1 : 0} aria-label={`${text.viewMod}: ${mod.name}`} aria-disabled={busy} onClick={() => { if (!busy) view(mod.mod_id); }} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); if (!busy && !event.repeat) view(mod.mod_id); } }}><ModThumbnail key={mod.mod_id} mod={mod} /><h4>{mod.name}</h4><small>{mod.author} · {mod.version}</small>{mod.downloads != null && <small>{mod.downloads.toLocaleString()} {text.downloadCount}</small>}<p>{plain(mod.summary)}</p></article>)}</div>{!busy && !mods.length && <p className="nexus-hint">{text.noCatalogMods}</p>}<div className="nexus-catalog-pagination"><NexusPageSizeSelector value={pageSize} disabled={busy} onChange={size => { setPageSize(size); setPage(1); }} /><div><button type="button" className="btn btn-secondary" disabled={busy || page <= 1} onClick={() => setPage(value => value - 1)}>{text.previousPage}</button><span aria-live="polite">{page} / {pageCount}</span><button type="button" className="btn btn-secondary" disabled={busy || page >= pageCount} onClick={() => setPage(value => value + 1)}>{text.nextPage}</button></div></div></></>}
+      <><div className="nexus-fields nexus-catalog-searches"><label className="nexus-catalog-search"><MenuIcon name="search" /><input aria-label={text.filterCatalog} placeholder={text.filterCatalog} value={filter} maxLength={200} onChange={e => setFilter(e.target.value)} /></label><form className="nexus-directory" onSubmit={e => { e.preventDefault(); lookup(); }}><input aria-label={text.modReference} placeholder={text.modReference} value={reference} onChange={e => setReference(e.target.value)} /><button className="btn btn-secondary" disabled={busy || !reference.trim()}>{text.viewMod}</button></form></div><div className="nexus-catalog-grid" ref={grid}>{visibleMods.map(mod => <article key={mod.mod_id} className="nexus-catalog-card" role="button" tabIndex={busy ? -1 : 0} aria-label={`${text.viewMod}: ${mod.name}`} aria-disabled={busy} onClick={() => { if (!busy) view(mod.mod_id); }} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); if (!busy && !event.repeat) view(mod.mod_id); } }}><ModThumbnail key={mod.mod_id} mod={mod} /><h4>{mod.name}</h4><small>{mod.author} · {mod.version}</small>{mod.downloads != null && <small>{mod.downloads.toLocaleString()} {text.downloadCount}</small>}<p>{plain(mod.summary)}</p></article>)}</div>{!busy && !mods.length && <p className="nexus-hint">{text.noCatalogMods}</p>}<div className="nexus-catalog-pagination"><NexusPageSizeSelector value={pageSize} disabled={busy} onChange={size => { setPageSize(size); setPage(1); }} /><div><button type="button" className="btn btn-secondary" disabled={busy || page <= 1} onClick={() => setPage(value => value - 1)}>{text.previousPage}</button><span aria-live="polite">{page} / {pageCount}</span><button type="button" className="btn btn-secondary" disabled={busy || page >= pageCount} onClick={() => setPage(value => value + 1)}>{text.nextPage}</button></div></div></></>}
     </div>
     {choosing && <NexusPopup embedded title={text.associateGame} onClose={() => setChoosing(false)}><p className="nexus-hint">{text.autoAssociationHint}</p><p className="nexus-hint">{text.directory}: {game?.game.directory || "—"}</p><div className="nexus-fields"><label>{text.findNexusGame}<input value={gameFilter} onChange={e => setGameFilter(e.target.value)} /></label><div className="nexus-game-options">{filterCatalogGames(games, gameFilter).slice(0, 40).map(g => <button key={g.domain_name} className="btn btn-secondary" disabled={busy} onClick={() => void run(async () => { if (game && await onAssociate(game.id, g.domain_name)) setChoosing(false); })}>{g.name}<small>{g.domain_name}</small></button>)}</div>{!filterCatalogGames(games, gameFilter).length && <p role="status" className="nexus-hint">{text.noMatchingGame}</p>}</div>{error && <p role="alert" className="nexus-error">{error}</p>}</NexusPopup>}
     {details && <NexusPopup embedded title={details.info.name} onClose={() => { setShowRequirements(false); setDownloadOpen(false); setDetails(null); }}>

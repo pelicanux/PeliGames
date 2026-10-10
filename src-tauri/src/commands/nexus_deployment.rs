@@ -206,7 +206,7 @@ fn load_deployment(game: &NexusGame) -> Result<Deployment, String> {
         Err(e) => Err(e.to_string()),
     }
 }
-fn config(module: &super::nexus_modules::Definition, path: &str) -> bool {
+pub(super) fn config(module: &super::nexus_modules::Definition, path: &str) -> bool {
     if module.config_files.iter().any(|file| file == path) { return true; }
     if module.domain == "repo" && path.starts_with("BepInEx/config/") && path.ends_with(".cfg") { return true; }
     module.domain == "palworld" && (path.ends_with("UE4SS-settings.ini")
@@ -216,7 +216,7 @@ fn config(module: &super::nexus_modules::Definition, path: &str) -> bool {
         || (path.starts_with("Pal/Content/Paks/LogicMods/")
             && path.ends_with(".modconfig.json")))
 }
-fn destination(game: &NexusGame, path: &str) -> Result<PathBuf, String> {
+pub(super) fn destination(game: &NexusGame, path: &str) -> Result<PathBuf, String> {
     let module = definition(game).ok_or("Módulo do jogo não identificado.")?;
     destination_in(&folder(game)?, &module, path, &game.compat_data)
 }

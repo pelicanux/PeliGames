@@ -94,20 +94,22 @@ pub struct CatalogPage {
     next_offset: u32,
 }
 #[tauri::command]
-pub async fn list_nexus_catalog_page(game_domain: String, feed: String, offset: u32, count: Option<u32>) -> Result<CatalogPage, String> {
+pub async fn list_nexus_catalog_page(game_domain: String, feed: String, offset: u32, count: Option<u32>, search: Option<String>) -> Result<CatalogPage, String> {
     domain(&game_domain)?;
     let count = count.unwrap_or(50);
     if ![20, 30, 40, 50].contains(&count) { return Err("Quantidade de mods inválida.".into()); }
     if !["most_downloaded", "all"].contains(&feed.as_str()) || offset > i32::MAX as u32 - 50 {
         return Err("Página Nexus inválida.".into());
     }
-    let key = format!("catalog/{game_domain}/{feed}/{offset}/{count}");
+    let search = search.unwrap_or_default().trim().to_owned();
+    if search.chars().count() > 200 { return Err("Busca Nexus muito longa.".into()); }
+    let key = serde_json::json!(["catalog", game_domain, feed, offset, count, search]).to_string();
     let mut cache = CACHE.lock().await;
     let entries = cache.get_or_insert_with(HashMap::new);
     let data = match entries.get(&key).filter(|(time, _)| time.elapsed() < Duration::from_secs(300)) {
         Some((_, data)) => data.clone(),
         None => {
-            let data = super::nexus_account::catalog_page(&game_domain, offset, count, feed == "most_downloaded").await?;
+            let data = super::nexus_account::catalog_page(&game_domain, offset, count, feed == "most_downloaded", &search).await?;
             entries.retain(|_, (time, _)| time.elapsed() < Duration::from_secs(300));
             if entries.len() >= 100 { entries.clear(); }
             entries.insert(key, (Instant::now(), data.clone()));
@@ -125,6 +127,8 @@ pub struct CatalogFile {
     pub(super) file_id: u64,
     pub(super) name: String,
     pub(super) file_name: String,
+    #[serde(default)]
+    is_primary: bool,
     #[serde(default, deserialize_with = "nullable_text")]
     version: String,
     #[serde(default)]
@@ -188,6 +192,7 @@ pub struct ModDetails {
     info: CatalogMod,
     pub(super) files: Vec<CatalogFile>,
     pub(super) requirements: Requirements,
+    requirements_file_id: Option<u64>,
 }
 async fn verified_mod_info(game_domain: &str, mod_id: u64) -> Result<CatalogMod, String> {
     domain(game_domain)?;
@@ -201,18 +206,20 @@ async fn verified_mod_info(game_domain: &str, mod_id: u64) -> Result<CatalogMod,
     Ok(info)
 }
 #[tauri::command]
-pub async fn get_nexus_catalog_mod(game_domain: String, mod_id: u64) -> Result<ModDetails, String> {
+pub async fn get_nexus_catalog_mod(game_domain: String, mod_id: u64, file_id: Option<u64>) -> Result<ModDetails, String> {
     let info = verified_mod_info(&game_domain, mod_id).await?;
     let data = query(format!("games/{game_domain}/mods/{mod_id}/files.json")).await?;
     let mut files: Vec<CatalogFile> =
         serde_json::from_value(data.get("files").cloned().unwrap_or(data))
             .map_err(|_| "Lista de arquivos Nexus inválida.")?;
     files.retain(|f| f.file_id > 0 && !matches!(f.category_id, Some(6 | 7)));
-    let requirements = requirements(&game_domain, mod_id).await;
+    let requirements_file_id = select_requirements_file(&files, file_id).ok();
+    let requirements = requirements_for_file(&game_domain, mod_id, file_id).await;
     Ok(ModDetails {
         info,
         files,
         requirements,
+        requirements_file_id,
     })
 }
 
@@ -233,8 +240,8 @@ pub struct Requirements {
     pub complete: bool,
     pub error: Option<String>,
 }
-pub(super) async fn requirements(game_domain: &str, mod_id: u64) -> Requirements {
-    match fetch_requirements(game_domain, mod_id).await {
+pub(super) async fn requirements_for_file(game_domain: &str, mod_id: u64, file_id: Option<u64>) -> Requirements {
+    match fetch_requirements(game_domain, mod_id, file_id).await {
         Ok(value) => value,
         Err(error) => Requirements {
             items: Vec::new(),
@@ -254,13 +261,13 @@ fn safe_url(value: &str) -> Option<String> {
     }
     Some(url.to_string())
 }
-async fn fetch_requirements(game_domain: &str, mod_id: u64) -> Result<Requirements, String> {
+async fn fetch_requirements(game_domain: &str, mod_id: u64, file_id: Option<u64>) -> Result<Requirements, String> {
     domain(game_domain)?;
     let metadata = query(format!("games/{game_domain}/mods/{mod_id}.json")).await?;
     let game_id = metadata["game_id"]
         .as_u64()
         .ok_or("Identificação Nexus indisponível.")?;
-    let key = format!("requirements/{game_domain}/{mod_id}");
+    let key = format!("requirements-v2/{game_domain}/{mod_id}");
     let cached = CACHE
         .lock()
         .await
@@ -282,6 +289,33 @@ async fn fetch_requirements(game_domain: &str, mod_id: u64) -> Result<Requiremen
             value
         }
     };
+    match data["legacyModRequirementsEnabled"].as_bool() {
+        Some(true) => {},
+        Some(false) => {
+            let files = query(format!("games/{game_domain}/mods/{mod_id}/files.json")).await?;
+            let files: Vec<CatalogFile> = serde_json::from_value(files["files"].clone())
+                .map_err(|_| "Lista de arquivos Nexus inválida.")?;
+            let selected = select_requirements_file(&files, file_id)?;
+            let key = format!("file-requirements/{game_domain}/{mod_id}/{selected}");
+            let cached = CACHE.lock().await.as_ref().and_then(|c| c.get(&key))
+                .filter(|(time, _)| time.elapsed() < Duration::from_secs(300)).map(|(_, v)| v.clone());
+            let value = match cached {
+                Some(value) => value,
+                None => {
+                    let value = super::nexus_account::file_requirements(game_domain, selected).await?;
+                    let mut cache = CACHE.lock().await;
+                    let entries = cache.get_or_insert_with(HashMap::new);
+                    entries.retain(|_, (time, _)| time.elapsed() < Duration::from_secs(300));
+                    if entries.len() >= 100 { entries.clear(); }
+                    entries.insert(key, (Instant::now(), value.clone()));
+                    value
+                }
+            };
+            return parse_file_requirements(&value);
+        },
+        None => return Err("Formato dos requisitos Nexus não identificado.".into()),
+    }
+    let data = &data["modRequirements"];
     let nodes = data
         .pointer("/nexusRequirements/nodes")
         .and_then(|v| v.as_array())
@@ -295,7 +329,7 @@ async fn fetch_requirements(game_domain: &str, mod_id: u64) -> Result<Requiremen
         .ok_or("Lista de DLCs inválida.")?;
     // API gameId is a numeric Nexus ID, not necessarily a domain name.
     let other_games = if nodes.iter().any(|n| {
-        n["externalRequirement"] == false && n["gameId"].as_str() != Some(&game_id.to_string())
+        n["externalRequirement"] == false && numeric_id(&n["gameId"]) != Some(game_id)
     }) {
         query("games.json".into()).await.ok()
     } else {
@@ -314,10 +348,8 @@ async fn fetch_requirements(game_domain: &str, mod_id: u64) -> Result<Requiremen
         let url = if external {
             safe_url(node["url"].as_str().unwrap_or_default())
         } else {
-            let target_game = node["gameId"].as_str().and_then(|v| v.parse::<u64>().ok());
-            let target_mod = node["modId"]
-                .as_str()
-                .and_then(|v| v.parse::<u64>().ok())
+            let target_game = numeric_id(&node["gameId"]);
+            let target_mod = numeric_id(&node["modId"])
                 .filter(|v| *v > 0);
             let target_domain = if target_game == Some(game_id) {
                 Some(game_domain)
@@ -356,4 +388,117 @@ async fn fetch_requirements(game_domain: &str, mod_id: u64) -> Result<Requiremen
         complete: total == nodes.len() as u64,
         error: None,
     })
+}
+
+fn numeric_id(value: &serde_json::Value) -> Option<u64> {
+    value.as_u64().or_else(|| value.as_str()?.parse().ok()).filter(|id| *id > 0)
+}
+fn select_requirements_file(files: &[CatalogFile], requested: Option<u64>) -> Result<u64, String> {
+    if let Some(id) = requested {
+        return files.iter().find(|f| f.file_id == id).map(|f| f.file_id)
+            .ok_or_else(|| "Arquivo não pertence ao mod consultado.".into());
+    }
+    if let Some(file) = files.iter().find(|f| f.is_primary && !matches!(f.category_id, Some(6 | 7))) {
+        return Ok(file.file_id);
+    }
+    let mut main = files.iter().filter(|f| f.category_id == Some(1));
+    match (main.next(), main.next()) {
+        (Some(file), None) => Ok(file.file_id),
+        _ => Err("Os requisitos dependem do arquivo escolhido. Selecione um arquivo para consultá-los.".into()),
+    }
+}
+fn parse_file_requirements(data: &serde_json::Value) -> Result<Requirements, String> {
+    let definitions = data["dependency_definitions"].as_array().ok_or("Lista de requisitos por arquivo inválida.")?;
+    let dlcs = data["dlc_dependency_definitions"].as_array().ok_or("Lista de DLCs por arquivo inválida.")?;
+    let mut items = Vec::new();
+    let mut complete = true;
+    for definition in definitions {
+        let ranges = definition["ranges"].as_array().filter(|r| !r.is_empty()).ok_or("Intervalo de requisitos ausente.")?;
+        let mut alternatives = Vec::new();
+        for range in ranges {
+            let file = &range["target_mod_file"];
+            let target = &file["mod"];
+            let name = target["name"].as_str().filter(|s| !s.trim().is_empty()).ok_or("Nome de requisito ausente.")?;
+            let game = target["game"]["domain_name"].as_str().ok_or("Jogo do requisito ausente.")?;
+            domain(game)?;
+            // game_scoped_id is the website mod ID; id is a different, global ID.
+            let id = numeric_id(&target["game_scoped_id"]).ok_or("ID de requisito inválido.")?;
+            let min = range["min_version"]["version"].as_str().ok_or("Versão mínima ausente.")?;
+            let max = if range["max_version"].is_null() { None } else {
+                Some(range["max_version"]["version"].as_str().ok_or("Versão máxima inválida.")?)
+            };
+            let file_name = file["name"].as_str().ok_or("Arquivo do requisito ausente.")?;
+            alternatives.push(Requirement {
+                name: name.into(), kind: "nexus".into(), url: Some(format!("https://www.nexusmods.com/{game}/mods/{id}")),
+                notes: match max {
+                    Some(max) => format!("Arquivo: {file_name}. Versões permitidas: {min} até {max}."),
+                    None => format!("Arquivo: {file_name}. Versão mínima: {min}."),
+                },
+            });
+        }
+        if alternatives.len() == 1 { items.extend(alternatives); } else {
+            // Ranges in a definition are OR alternatives, not additional mandatory mods.
+            // Keep the choice visible without automatically queuing every alternative.
+            complete = false;
+            items.push(Requirement {
+                name: alternatives.iter().map(|r| r.name.as_str()).collect::<Vec<_>>().join(" / "),
+                notes: format!("Escolha uma alternativa na página do mod. {}", alternatives.iter().map(|r| format!("{}: {} {}", r.name, r.notes, r.url.as_deref().unwrap_or_default())).collect::<Vec<_>>().join("; ")),
+                kind: "external".into(), url: None,
+            });
+        }
+    }
+    for definition in dlcs {
+        let targets = definition["dlc_targets"].as_array().filter(|v| !v.is_empty()).ok_or("Requisito de DLC inválido.")?;
+        let names: Result<Vec<_>, _> = targets.iter().map(|t| t["name"].as_str().ok_or("Nome de DLC ausente.")).collect();
+        items.push(Requirement { name: names?.join(" / "), notes: if targets.len() > 1 { "Uma destas DLCs é necessária.".into() } else { String::new() }, kind: "dlc".into(), url: None });
+    }
+    Ok(Requirements { items, complete, error: if complete { None } else { Some("Este arquivo possui requisitos alternativos. Confira a escolha na página do mod.".into()) } })
+}
+
+#[cfg(test)]
+mod requirements_tests {
+    use super::*;
+    use serde_json::json;
+    #[test]
+    fn file_requirements_use_website_ids_and_version_bounds() {
+        let value: serde_json::Value = serde_json::from_str(include_str!("../../resources/nexus-games/file-requirements-test.json")).unwrap();
+        let result = parse_file_requirements(&value).unwrap();
+        assert!(result.complete);
+        assert_eq!(result.items.len(), 4);
+        let expected = [("Cyber Engine Tweaks", 107), ("redscript", 1511), ("Codeware", 7780), ("TweakXL", 4197)];
+        for (item, (name, id)) in result.items.iter().zip(expected) {
+            assert_eq!(item.name, name);
+            assert_eq!(item.url.as_deref(), Some(format!("https://www.nexusmods.com/cyberpunk2077/mods/{id}").as_str()));
+        }
+        assert!(result.items[2].notes.contains("1.20.3"));
+    }
+    #[test]
+    fn alternatives_are_not_queued_as_multiple_mandatory_mods() {
+        let mut value: serde_json::Value = serde_json::from_str(include_str!("../../resources/nexus-games/file-requirements-test.json")).unwrap();
+        let other = value["dependency_definitions"][1]["ranges"][0].clone();
+        value["dependency_definitions"][0]["ranges"].as_array_mut().unwrap().push(other);
+        let result = parse_file_requirements(&value).unwrap();
+        assert!(!result.complete);
+        assert_eq!(result.items[0].kind, "external");
+        assert!(result.items[0].url.is_none());
+        assert!(result.items[0].name.contains("redscript"));
+    }
+    #[test]
+    fn missing_response_is_not_no_requirements() {
+        assert!(parse_file_requirements(&json!({})).is_err());
+        let empty = parse_file_requirements(&json!({"dependency_definitions":[],"dlc_dependency_definitions":[]})).unwrap();
+        assert!(empty.complete && empty.items.is_empty());
+        assert_eq!(numeric_id(&json!(107)), numeric_id(&json!("107")));
+        assert_eq!(numeric_id(&json!(0)), None);
+    }
+    #[test]
+    fn selected_file_is_verified_and_multiple_main_files_need_selection() {
+        let files: Vec<CatalogFile> = serde_json::from_value(json!([
+            {"file_id":1,"name":"A","file_name":"a.zip","category_id":1},
+            {"file_id":2,"name":"B","file_name":"b.zip","category_id":1}
+        ])).unwrap();
+        assert!(select_requirements_file(&files, None).is_err());
+        assert_eq!(select_requirements_file(&files, Some(2)).unwrap(), 2);
+        assert!(select_requirements_file(&files, Some(3)).is_err());
+    }
 }

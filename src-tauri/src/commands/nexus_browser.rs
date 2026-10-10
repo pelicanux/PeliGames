@@ -117,6 +117,8 @@ fn build(app: &tauri::AppHandle, url: reqwest::Url, job: Option<String>) -> Resu
         &label,
         WebviewUrl::External(reqwest::Url::parse("about:blank").expect("valid blank page")),
     )
+    // Keep the initial blank page and navigation canvas dark before Nexus paints.
+    .background_color(tauri::webview::Color(32, 32, 32, 255))
     .data_directory(directory.clone())
     .devtools(false)
     .on_navigation(move |url| {

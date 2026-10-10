@@ -19,7 +19,7 @@ test -x "$work/payload/opt/PeliGames/peligames"
 test -x "$work/payload/opt/PeliGames/pelinstall"
 install -m 755 "$root/src-tauri/packaging/peligames" "$work/payload/usr/bin/peligames"
 install -m 755 "$root/src-tauri/packaging/pelinstall" "$work/payload/usr/bin/pelinstall"
-name=$(rpm -qp --qf '%{NAME}' "$package")
+name=peligames
 version=$(rpm -qp --qf '%{VERSION}' "$package")
 release=$(rpm -qp --qf '%{RELEASE}' "$package")
 arch=$(rpm -qp --qf '%{ARCH}' "$package")
@@ -40,6 +40,8 @@ License: $license
 Summary: $summary
 AutoReqProv: no
 Requires: /bin/sh
+Obsoletes: peli-games
+Provides: peli-games
 SPEC
 while IFS= read -r dependency; do
   case "$dependency" in rpmlib\(*|'') continue ;; esac

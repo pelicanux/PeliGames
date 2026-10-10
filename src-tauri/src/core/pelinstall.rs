@@ -118,7 +118,7 @@ pub fn register_appimage() -> Result<(), String> {
         ("PeliGames", "peligames-appimage.desktop", "%u", "MimeType=x-scheme-handler/nxm;\n"),
         ("Pelinstall", "pelinstall-appimage.desktop", "--install %f", "NoDisplay=true\nMimeType=application/x-ms-dos-executable;application/x-msdownload;application/x-msi;\n"),
     ] {
-        let text=format!("[Desktop Entry]\nVersion=1.0\nType=Application\nName={name}\nExec={} {arguments}\nIcon={}\nTerminal=false\nCategories=Game;\n{extra}",exec_arg(&binary.to_string_lossy())?,desktop_value(&icon.to_string_lossy()));
+        let text=format!("[Desktop Entry]\nVersion=1.0\nType=Application\nName={name}\nComment=Instalando jogos na base da humilhação\nExec={} {arguments}\nIcon={}\nTerminal=false\nCategories=Game;\n{extra}",exec_arg(&binary.to_string_lossy())?,desktop_value(&icon.to_string_lossy()));
         let temporary=applications.join(format!(".{}.desktop",uuid::Uuid::new_v4()));
         fs::write(&temporary,text).and_then(|_|fs::rename(&temporary,applications.join(filename))).map_err(|e|e.to_string())?;
     }

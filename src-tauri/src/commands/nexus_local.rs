@@ -7,7 +7,7 @@ use std::{
     sync::Mutex,
 };
 
-static STORAGE: Mutex<()> = Mutex::new(());
+pub(super) static STORAGE: Mutex<()> = Mutex::new(());
 #[derive(Clone, Serialize, Deserialize)]
 pub struct LocalMod {
     pub(super) id: String,
@@ -79,7 +79,7 @@ pub(super) fn root() -> Result<PathBuf, String> {
     fs::create_dir_all(&path).map_err(|e| e.to_string())?;
     Ok(path)
 }
-fn load() -> Result<Workspace, String> {
+pub(super) fn load() -> Result<Workspace, String> {
     let path = root()?.join("library.json");
     match fs::read(&path) {
         Ok(bytes) => serde_json::from_slice::<Workspace>(&bytes)
@@ -129,7 +129,7 @@ fn load() -> Result<Workspace, String> {
         Err(e) => Err(e.to_string()),
     }
 }
-fn save(data: &Workspace) -> Result<(), String> {
+pub(super) fn save(data: &Workspace) -> Result<(), String> {
     let directory = root()?;
     let temporary = directory.join(format!("library-{}.tmp", uuid::Uuid::new_v4()));
     let bytes = serde_json::to_vec_pretty(data).map_err(|e| e.to_string())?;
@@ -138,12 +138,18 @@ fn save(data: &Workspace) -> Result<(), String> {
         let _ = fs::remove_file(&temporary);
         return Err(error.to_string());
     }
+    super::mod_backup::schedule(data);
     Ok(())
 }
-#[tauri::command]
-pub fn load_nexus_workspace() -> Result<Workspace, String> {
-    let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
+pub(super) fn workspace() -> Result<Workspace,String> {
+    let _lock = STORAGE.lock().map_err(|e|e.to_string())?;
     load()
+}
+#[tauri::command]
+pub async fn load_nexus_workspace() -> Result<Workspace, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        workspace()
+    }).await.map_err(|e|e.to_string())?
 }
 /// Refresh discovery separately from the lightweight workspace/status polling.
 #[tauri::command]
@@ -176,6 +182,7 @@ pub async fn scan_nexus_library(app: tauri::AppHandle) -> Result<Workspace, Stri
             // Deduplicate installations, preserving IDs, profiles, manually selected settings and mods.
             if data.games.iter().any(|existing| existing.game["directory"].as_str()
                 .is_some_and(|root| fs::canonicalize(root).ok().as_ref() == Some(&directory))) { continue; }
+            if super::mod_backup::recover(&directory, &mut data)? { continue; }
             game["directory"] = directory.to_string_lossy().to_string().into();
             game["library_view"] = "nexus".into();
             let mut compat_data = game["prefix"].as_str()
@@ -255,7 +262,10 @@ pub async fn inspect_nexus_game(source: String) -> Result<DiscoveryReport, Strin
     }).await.map_err(|_| "Falha ao identificar a pasta do jogo.".to_string())?
 }
 #[tauri::command]
-pub fn add_nexus_game(mut game: serde_json::Value, platform: String) -> Result<Workspace, String> {
+pub async fn add_nexus_game(game: serde_json::Value, platform: String) -> Result<Workspace, String> {
+    tauri::async_runtime::spawn_blocking(move || add_nexus_game_inner(game,platform)).await.map_err(|e|e.to_string())?
+}
+fn add_nexus_game_inner(mut game: serde_json::Value, platform: String) -> Result<Workspace, String> {
     let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
     if !["native", "proton"].contains(&platform.as_str()) {
         return Err("Plataforma inválida.".into());
@@ -297,6 +307,7 @@ pub fn add_nexus_game(mut game: serde_json::Value, platform: String) -> Result<W
     }) {
         return Err("Este jogo já está na biblioteca Nexus.".into());
     }
+    if super::mod_backup::recover(&directory, &mut data)? { save(&data)?; return Ok(data); }
     let mut compat_data = String::new();
     let mut proton = String::new();
     if platform == "proton" {
@@ -393,7 +404,7 @@ async fn identify_local_archive(domain: &str, archive: &str) -> Result<Option<Ne
     let hash = tauri::async_runtime::spawn_blocking(move || archive_md5(Path::new(&archive))).await.map_err(|e| e.to_string())??;
     let result = super::nexus_account::metadata(&format!("games/{domain}/mods/md5_search/{hash}.json")).await?;
     let Some((mod_id, file_id, name, version)) = unique_archive_match(&result, &domain)? else { return Ok(None); };
-    let requirements = super::nexus_catalog::requirements(&domain, mod_id).await;
+    let requirements = super::nexus_catalog::requirements_for_file(&domain, mod_id, Some(file_id)).await;
     Ok(Some(NexusSource { domain, mod_id, file_id, name, version, requirements }))
 }
 

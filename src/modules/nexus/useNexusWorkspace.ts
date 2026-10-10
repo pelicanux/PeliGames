@@ -5,6 +5,7 @@ import type { GameInfo } from "../../components/GameGrid";
 import { fetchGameCoverByName, hasCustomCover } from "../../services/customCovers";
 import { applyCustomCovers } from "../../services/gameLibraryCache";
 import { hasNexusCatalog, matchingCatalogGame, type CatalogGame } from "./catalogGameMatch";
+import { setLibraryGameRemoved } from "../../services/libraryVisibility";
 import { useNexusText } from "./text";
 export interface LocalMod { id: string; name: string; version?: string; identification_note?: string; archive: string; size: number; installed: boolean; enabled: boolean; fomod_selection?: string[]; nexus_source?: { name?: string; version?: string; domain: string; mod_id: number; file_id: number; requirements: Requirements } }
 export type DeployMethod = "copy" | "symlink" | "hardlink" | "vfs";
@@ -41,6 +42,11 @@ export function useNexusWorkspace() {
           if (mounted.current) setError(String(e));
         }
       }
+      if (command === "add_nexus_game") {
+        const source = args?.game as GameInfo | undefined;
+        const entry = result.games.find(item => item.game.path === source?.path);
+        if (entry) setLibraryGameRemoved({ ...entry.game, library_view: "nexus" }, false);
+      }
       if (mounted.current) setWorkspace(result);
       return true;
     } catch (e) { if (mounted.current) setError(String(e)); return false; }
@@ -61,7 +67,7 @@ export function useNexusWorkspace() {
   const visibleGames = workspace.games.filter(entry => hasNexusCatalog(catalogGames, entry));
   const refreshCover = async (entry: NexusGame) => {
     const key = `${entry.id}:${entry.game.name}:${entry.game.cover_url || ""}`;
-    if (hasCustomCover(entry.game.path) || coverSearches.current.has(key)) return;
+    if (hasCustomCover({ ...entry.game, library_view: "nexus" }) || coverSearches.current.has(key)) return;
     coverSearches.current.add(key);
     try {
       const coverUrl = await fetchGameCoverByName(entry.game.name);
@@ -71,12 +77,12 @@ export function useNexusWorkspace() {
       if (!mounted.current) return;
       if (!lock.current && revision === mutationRevision.current) setWorkspace(result);
       const updated = result.games.find(game => game.id === entry.id);
-      if (updated) window.dispatchEvent(new CustomEvent("gameCoverChanged", { detail: applyCustomCovers([updated.game])[0] }));
+      if (updated) window.dispatchEvent(new CustomEvent("gameCoverChanged", { detail: applyCustomCovers([{ ...updated.game, library_view: "nexus" }])[0] }));
     } catch { /* A missing cover must not interrupt library/mod operations. */ }
   };
   useEffect(() => {
     if (!loaded || busy || settingsBusy || covering.current) return;
-    const pending = visibleGames.filter(entry => !entry.game.cover_url && !hasCustomCover(entry.game.path) && !coverSearches.current.has(`${entry.id}:${entry.game.name}:`));
+    const pending = visibleGames.filter(entry => !entry.game.cover_url && !hasCustomCover({ ...entry.game, library_view: "nexus" }) && !coverSearches.current.has(`${entry.id}:${entry.game.name}:`));
     if (!pending.length) return;
     covering.current = true;
     void (async () => {

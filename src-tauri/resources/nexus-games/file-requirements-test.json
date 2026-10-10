@@ -1,0 +1,153 @@
+{
+  "dependency_definitions": [
+    {
+      "id": "639831",
+      "ranges": [
+        {
+          "id": "724728",
+          "target_mod_file": {
+            "id": "497182",
+            "name": "CET 1.37.1 - Scripting fixes",
+            "mod": {
+              "id": "14315125997675",
+              "game_scoped_id": "107",
+              "name": "Cyber Engine Tweaks",
+              "game": {
+                "id": "3333",
+                "name": "Cyberpunk 2077",
+                "domain_name": "cyberpunk2077"
+              }
+            }
+          },
+          "min_version": {
+            "id": "14315126120737",
+            "file": {
+              "id": "497182",
+              "name": "CET 1.37.1 - Scripting fixes"
+            },
+            "position": "14.0",
+            "game_scoped_id": "123169",
+            "name": "CET 1.37.1 - Scripting fixes",
+            "version": "1.37.1",
+            "category": "main",
+            "uploaded_at": "2025-09-30T00:55:08Z",
+            "is_primary": true
+          },
+          "max_version": null
+        }
+      ]
+    },
+    {
+      "id": "639834",
+      "ranges": [
+        {
+          "id": "724731",
+          "target_mod_file": {
+            "id": "2176480",
+            "name": "redscript",
+            "mod": {
+              "id": "14315125999079",
+              "game_scoped_id": "1511",
+              "name": "redscript",
+              "game": {
+                "id": "3333",
+                "name": "Cyberpunk 2077",
+                "domain_name": "cyberpunk2077"
+              }
+            }
+          },
+          "min_version": {
+            "id": "14315126117989",
+            "file": {
+              "id": "2176480",
+              "name": "redscript"
+            },
+            "position": "23.0",
+            "game_scoped_id": "120421",
+            "name": "redscript",
+            "version": "0.5.31",
+            "category": "main",
+            "uploaded_at": "2025-09-05T23:11:28Z",
+            "is_primary": true
+          },
+          "max_version": null
+        }
+      ]
+    },
+    {
+      "id": "639837",
+      "ranges": [
+        {
+          "id": "724734",
+          "target_mod_file": {
+            "id": "2682862",
+            "name": "Codeware",
+            "mod": {
+              "id": "14315126005348",
+              "game_scoped_id": "7780",
+              "name": "Codeware",
+              "game": {
+                "id": "3333",
+                "name": "Cyberpunk 2077",
+                "domain_name": "cyberpunk2077"
+              }
+            }
+          },
+          "min_version": {
+            "id": "14315126141732",
+            "file": {
+              "id": "2682862",
+              "name": "Codeware"
+            },
+            "position": "64.0",
+            "game_scoped_id": "144164",
+            "name": "Codeware",
+            "version": "1.20.3",
+            "category": "old_version",
+            "uploaded_at": "2026-05-03T21:50:06Z",
+            "is_primary": false
+          },
+          "max_version": null
+        }
+      ]
+    },
+    {
+      "id": "639840",
+      "ranges": [
+        {
+          "id": "724737",
+          "target_mod_file": {
+            "id": "2583823",
+            "name": "TweakXL",
+            "mod": {
+              "id": "14315126001765",
+              "game_scoped_id": "4197",
+              "name": "TweakXL",
+              "game": {
+                "id": "3333",
+                "name": "Cyberpunk 2077",
+                "domain_name": "cyberpunk2077"
+              }
+            }
+          },
+          "min_version": {
+            "id": "14315126151660",
+            "file": {
+              "id": "2583823",
+              "name": "TweakXL"
+            },
+            "position": "61.0",
+            "game_scoped_id": "154092",
+            "name": "TweakXL",
+            "version": "1.11.4",
+            "category": "main",
+            "uploaded_at": "2026-07-30T19:32:01Z",
+            "is_primary": true
+          },
+          "max_version": null
+        }
+      ]
+    }
+  ],
+  "dlc_dependency_definitions": []
+}

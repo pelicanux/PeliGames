@@ -8,7 +8,7 @@ Launcher de jogos Windows para Linux com Proton, biblioteca de jogos, Pelinstall
   <img src="public/images/interface-preview.webp" alt="Interface do PeliGames com biblioteca de jogos organizada por origem" width="1200" />
 </p>
 
-**0.3.0 — versão experimental para testes muito iniciais.** A publicação serve somente para testes e poderá ser removida posteriormente.
+**0.3.1 — versão experimental para testes muito iniciais.** A publicação serve somente para testes e poderá ser removida posteriormente.
 
 ## Instalação
 
@@ -27,6 +27,8 @@ Conecte sua chave pessoal em **Conta Nexus** e escolha mods no **Catálogo**, ou
 Contas gratuitas confirmam o download na página do Nexus; Premium permite download direto. Acompanhe a fila em **Downloads Nexus** e, na lista de mods, confira os requisitos antes de **Instalar**, **Ativar** ou **Desativar**.
 
 O suporte depende do jogo e do formato do pacote. A chave fica no chaveiro do sistema; AppImage requer `secret-tool` e um chaveiro disponível. Use **Logs** ou **Reportar erro** para diagnosticar problemas.
+
+Em **Configurações → Ferramentas**, crie um backup ZIP dos jogos com mods Nexus instalados ou restaure um ZIP salvo em outro disco. A opção de recuperação por jogo mantém uma pasta oculta `.peligames` no disco dos jogos, permitindo recuperar os registros ao escanear novamente após trocar de distribuição. Use **Encontrar mods no SSD** para procurar cópias de recuperação em uma biblioteca inteira. A `.config` continua sendo o armazenamento principal.
 
 ## Créditos e licença
 

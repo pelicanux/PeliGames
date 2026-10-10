@@ -17,18 +17,19 @@ export function NexusDownloadQueue({ game, domain, modId, details, fileId, onClo
   onClose: () => void; onStarted: () => void; embedded?: boolean;
 }) {
   const text = useNexusText();
+  const [selectedFiles, setSelectedFiles] = useState<Record<number, number>>({});
   const [entries, setEntries] = useState<Entry[]>([]), [external, setExternal] = useState<External[]>([]);
   const [optionalFiles, setOptionalFiles] = useState<Record<number, number[]>>({});
   const [busy, setBusy] = useState(true), [error, setError] = useState("");
   const mounted = useRef(true), starting = useRef(false);
   useEffect(() => {
-    let active = true; mounted.current = true; setOptionalFiles({});
-    void collectQueue({ game, domain, modId, details, fileId, active: () => active,
-      fetchDetails: id => invoke<QueueDetails>("get_nexus_catalog_mod", { gameDomain: domain, modId: id }),
+    let active = true; mounted.current = true; setBusy(true);
+    void collectQueue({ game, domain, modId, details, fileId, selectedFiles, active: () => active,
+      fetchDetails: (id, selectedFile) => invoke<QueueDetails>("get_nexus_catalog_mod", { gameDomain: domain, modId: id, fileId: selectedFile }),
       limitWarning: text.queueLimit, incompleteWarning: text.requirementsUnknown,
     }).then(result => { if (active) { setEntries(result.entries); if (fileId && details.files.some(file => file.file_id === fileId && nexusFileCategory(file) === 3 && supportedNexusFile(file.file_name))) setOptionalFiles({ [modId]: [fileId] }); setExternal(result.external); setError(result.warnings.join("\n")); setBusy(false); } });
     return () => { active = false; mounted.current = false; };
-  }, [game.id, domain, modId, details, fileId]);
+  }, [game.id, domain, modId, details, fileId, selectedFiles]);
   const selected = entries.filter(e => e.checked && !e.installed);
   const optional = entries.flatMap(entry => (entry.details?.files || []).filter(file => nexusFileCategory(file) === 3 && supportedNexusFile(file.file_name) && optionalFiles[entry.id]?.includes(file.file_id)).map(file => ({ domain, mod_id: entry.id, file_id: file.file_id })));
   const downloadCount = selected.length + optional.length;
@@ -52,7 +53,7 @@ export function NexusDownloadQueue({ game, domain, modId, details, fileId, onClo
       <div className="nexus-queue-entry-heading"><label className="nexus-queue-choice" title={entry.parent ? `${text.queueRequiredBy}: ${entry.parent}` : undefined}><input type="checkbox" checked={entry.checked && !entry.installed} disabled={busy || entry.installed} onChange={e => setEntries(values => values.map(v => v.id === entry.id ? { ...v, checked: e.target.checked } : v))} /><strong>{plainNexusText(entry.name)}</strong><small className="nexus-queue-badge">{index === 0 ? text.queuePrimary : /\boptional\b|opcional/i.test(entry.notes) ? text.queueOptional : text.queueDependency}</small></label>{entry.notes && <span className="nexus-queue-note" title={plainNexusText(entry.notes)} aria-label={plainNexusText(entry.notes)}><MenuIcon name="info" /></span>}</div>
       {entry.installed && <small className="nexus-status">{text.queueAlreadyInstalled}</small>}
       {entry.error && <p className="nexus-error">{entry.error}</p>}
-      {!entry.installed && entry.checked && entry.details && <NexusFileChoices files={entry.details.files.filter(f => supportedNexusFile(f.file_name) && nexusFileCategory(f) !== 3)} name={`queue-file-${entry.id}`} modName={entry.name} selected={entry.file} disabled={busy} onSelect={file => setEntries(values => values.map(v => v.id === entry.id ? { ...v, file } : v))} />}
+      {!entry.installed && entry.checked && entry.details && <NexusFileChoices files={entry.details.files.filter(f => supportedNexusFile(f.file_name) && nexusFileCategory(f) !== 3)} name={`queue-file-${entry.id}`} modName={entry.name} selected={entry.file} disabled={busy} onSelect={file => setSelectedFiles(values => ({ ...values, [entry.id]: file }))} />}
     </article>{entry.details?.files.some(file => nexusFileCategory(file) === 3 && supportedNexusFile(file.file_name)) && <article className="nexus-queue-optionals">
       <div className="nexus-queue-entry-heading"><strong>{plainNexusText(entry.name)}</strong><small className="nexus-queue-badge">{text.queueOptionals}</small></div>
       <div className="nexus-queue-files" role="group" aria-label={`${text.optionalFiles}: ${entry.name}`}>{entry.details.files.filter(file => nexusFileCategory(file) === 3 && supportedNexusFile(file.file_name)).map(file => <label className={`nexus-queue-file ${optionalFiles[entry.id]?.includes(file.file_id) ? "selected" : ""}`} key={file.file_id}>

@@ -372,7 +372,9 @@
 .nexus-settings-content { overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(var(--accent-rgb), .35) transparent; }
 .nexus-carousel-panels .nexus-mods-content > .nexus-mod-list { flex: 1; overflow-y: auto; }
 .nexus-settings-content .nexus-settings-platform .info-platform { font-size: .75rem; }
-.nexus-settings-content .nexus-settings-platform .game-info-label { min-height: 24px; }
+.nexus-settings-content .nexus-settings-platform .game-info-label,
+.nexus-game-backup-control > label { min-height:20px; line-height:20px; font-size:.78rem; gap:7px; }
+.nexus-settings-content .nexus-settings-platform .game-info-label .menu-icon { width:16px; height:16px; flex:0 0 16px; }
 .nexus-settings-content .nexus-settings-fields .proton-trigger { font-size: .8rem; }
 @media (max-width: 1000px) { .nexus-carousel-panels > .menu-glass-panel { height: auto; min-height: 260px; max-height: 390px; } }
 .nexus-settings-content { gap: .5rem; }
@@ -407,7 +409,7 @@
 .nexus-settings-content .nexus-deploy-selector .proton-trigger { font-size: .8rem; }
 :root .nexus-settings-content .nexus-settings-title > .nexus-settings-saved { color: #34d399 !important; font-size: .68rem !important; }
 
-.nexus-settings-content .nexus-settings-platform { grid-column: 1 / -1; }
+.nexus-settings-content .nexus-settings-platform { grid-column: 2; }
 .nexus-settings-content .nexus-compact-select, .nexus-catalog-page-size .nexus-compact-select {
   min-height: 34px; padding: 7px 10px; border-radius: 9px; border: 1px solid rgba(var(--accent-rgb), .45);
   background: rgba(var(--surface-41-41-54, 41,41,54), .85); color: var(--tone-d6dff4, #d6dff4); font-size: .8rem; font-weight: 500;
@@ -499,3 +501,21 @@
 
 .nexus-report-actions { display: flex; align-items: center; gap: .5rem; }
 .nexus-report-copy { width: 34px; height: 34px; padding: 0; justify-content: center; }
+
+.nexus-game-backup-control { grid-column:1; min-width:0; }
+.nexus-game-backup-control > label { display:flex; align-items:center; gap:7px; }
+.nexus-game-backup-control > label .menu-icon { width:16px; height:16px; color:var(--accent-soft); }
+.nexus-game-backup-tooltip { display:flex; flex:1; min-width:0; }
+.nexus-game-backup-control .neural-startup-switch { font-size:.75rem; }
+.nexus-game-backup-control .neural-startup-switch.enabled { color:var(--accent-soft); border-color:rgba(var(--accent-rgb),.45); background:rgba(var(--accent-rgb),.06); }
+.nexus-game-backup-control .enabled .neural-switch-track { background:var(--accent-button); }
+.nexus-game-backup-control .enabled .neural-switch-track > span { background:var(--accent-foreground); }
+@media(max-width:760px) { .nexus-settings-content .nexus-settings-platform { grid-column:1; } }
+
+.nexus-game-backup-control .nexus-game-backup-box { box-sizing:border-box; justify-content:space-between; gap:4px; padding:5px 7px; cursor:default; }
+.nexus-game-backup-toggle { display:flex; align-items:center; justify-content:center; gap:7px; width:100%; min-height:35px; padding:0; border:0; background:transparent; color:inherit; font:inherit; cursor:pointer; }
+.nexus-game-backup-delete { display:flex; align-items:center; justify-content:center; width:27px; height:32px; padding:4px; border:0; border-radius:6px; background:transparent; color:var(--text-secondary); cursor:pointer; }
+.nexus-game-backup-delete .menu-icon { width:16px; height:16px; }
+.nexus-game-backup-delete:hover { color:var(--accent-soft); background:rgba(var(--accent-rgb),.1); }
+.nexus-game-backup-toggle:focus-visible, .nexus-game-backup-delete:focus-visible { outline:1px solid var(--accent-soft); outline-offset:2px; border-radius:5px; }
+.nexus-game-backup-toggle:disabled, .nexus-game-backup-delete:disabled { opacity:.45; cursor:default; }

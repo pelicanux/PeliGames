@@ -78,7 +78,9 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "list_nexus_catalog_page": {
       await sleep();
       const originals = catalog(domain);
-      const mods = Array.from({length:64},(_,i) => ({...originals[i % originals.length],mod_id:i + 1,name:i < 4 ? originals[i].name : `${originals[i % originals.length].name} — exemplo ${i + 1}`,downloads:120000 - i * 1500}));
+      let mods = Array.from({length:64},(_,i) => ({...originals[i % originals.length],mod_id:i + 1,name:i < 4 ? originals[i].name : `${originals[i % originals.length].name} — exemplo ${i + 1}`,downloads:120000 - i * 1500}));
+      const words = String(args.search || "").toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
+      if (words.length) mods = mods.filter(mod => words.every(word => mod.name.toLocaleLowerCase().includes(word)));
       const offset = Number(args.offset) || 0, count = Number(args.count) || 20;
       return {value:{mods:mods.slice(offset,offset+count),total_count:mods.length,next_offset:Math.min(mods.length,offset+count)}};
     }

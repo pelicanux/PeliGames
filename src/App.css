@@ -1597,10 +1597,10 @@ button.advanced-toggle.enabled { background: rgba(var(--accent-rgb), .4); border
 
 .cover-game-actions { display: flex; flex-direction: column; border-bottom: 1px solid rgba(var(--accent-rgb), .2); padding: 5px 0; }
 .cover-context-menu button { display: flex; align-items: center; gap: 9px; }
-.cover-game-actions button { padding: .5rem 1rem; background: transparent; border: 0; text-align: left; color: var(--tone-e2e8f0, #e2e8f0); cursor: pointer; font-size: .9rem; }
-.cover-game-actions button:hover:not(:disabled) { background: rgba(var(--accent-rgb), .12); }
-.cover-game-actions .cover-action-danger { color: var(--tone-ef4444, #ef4444); }
-.cover-game-actions button:disabled { opacity: .45; cursor: default; }
+.cover-context-menu > button, .cover-game-actions button { padding: .5rem 1rem; background: transparent; border: 0; text-align: left; color: var(--tone-e2e8f0, #e2e8f0); cursor: pointer; font-size: .9rem; }
+.cover-context-menu > button:hover:not(:disabled), .cover-game-actions button:hover:not(:disabled) { background: rgba(var(--accent-rgb), .12); }
+.cover-context-menu .cover-action-danger { color: var(--tone-ef4444, #ef4444); }
+.cover-context-menu button:disabled { opacity: .45; cursor: default; }
 .game-logs-dialog { width: min(850px, calc(100vw - 32px)); max-width: 850px; }
 .game-log-tabs { display: flex; gap: 8px; }
 .game-log-tabs button { border: 1px solid rgba(var(--accent-rgb), .3); background: var(--tone-101322, #101322); border-radius: 8px; padding: 7px 18px; color: inherit; cursor: pointer; }
@@ -1643,3 +1643,10 @@ button.advanced-toggle.enabled { background: rgba(var(--accent-rgb), .4); border
 }
 .library-home-button:is(:hover, :focus-visible):not(:disabled) > span { text-shadow: 0 0 7px rgba(var(--accent-rgb), .75), 0 0 18px rgba(var(--accent-rgb), .35); }
 .library-home-button:is(:hover, :focus-visible):not(:disabled) > img { filter: hue-rotate(var(--brand-hue, 0deg)) drop-shadow(0 0 5px rgba(var(--accent-rgb), .5)); }
+
+.discord-panel-overlay { z-index:1900; }
+.modal-content.discord-panel { width:min(410px, calc(100vw - 32px)); max-width:410px; max-height:calc(100dvh - 100px); padding:16px; }
+.discord-panel .dialog-titlebar h2 { display:flex; align-items:center; gap:8px; }
+.discord-panel .dialog-titlebar h2 .menu-icon { width:20px; height:20px; }
+.discord-panel iframe { display:block; width:100%; height:min(500px, calc(100dvh - 230px)); min-height:150px; border:0; border-radius:8px; background:#202225; }
+.discord-panel-footer { display:flex; justify-content:flex-end; padding:12px 16px 16px; }

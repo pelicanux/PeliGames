@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { DiscordPanel } from './DiscordPanel';
 import { BrandName } from './BrandName';
 import { useI18n } from '../i18n/I18nContext';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { isTauri } from '@tauri-apps/api/core';
-import { openUrl } from "@tauri-apps/plugin-opener";
+
 
 interface TitleBarProps {
   onShowCredits: () => void;
@@ -18,16 +19,11 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
   const { t } = useI18n();
   const appWindow = isTauri() ? getCurrentWindow() : null;
 
-  const handleLink = async (url: string) => {
-    try {
-      await openUrl(url);
-    } catch (err) {
-      console.error("Failed to open link:", err);
-      window.open(url, "_blank");
-    }
-  };
+  const [showDiscord, setShowDiscord] = useState(false);
 
   return (
+    <>
+    {showDiscord && <DiscordPanel onClose={() => setShowDiscord(false)} />}
     <div className="app-titlebar"
       data-tauri-drag-region="true"
       style={{
@@ -82,7 +78,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
           <button 
             data-tauri-drag-region="false"
             className="btn-titlebar"
-            onClick={() => handleLink("https://discord.gg/78XSB9bHst")}
+            onClick={() => setShowDiscord(value => !value)}
             title="Discord"
             style={{ background: 'transparent', border: 'none', color: 'var(--tone-94a3b8, #94a3b8)', cursor: 'pointer', padding: '0.3rem 0.5rem', display: 'flex', alignItems: 'center', borderRadius: '4px', marginRight: '0.5rem' }}
           >
@@ -117,5 +113,6 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
         </button>
       </div>
     </div>
+    </>
   );
 };

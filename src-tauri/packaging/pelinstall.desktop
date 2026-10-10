@@ -2,7 +2,7 @@
 Version=1.0
 Type=Application
 Name=Pelinstall
-Comment=Instalar ou adicionar executáveis Windows com PeliGames
+Comment=Instalando jogos na base da humilhação
 Exec=/opt/PeliGames/pelinstall %f
 Icon=peligames
 Terminal=false

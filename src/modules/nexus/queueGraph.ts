@@ -3,16 +3,17 @@ import { nexusTarget, safeLink } from "./nexusLinks";
 import { supportedNexusFile } from "./archiveFormats";
 import type { Requirements } from "./NexusRequirements";
 import type { NexusGame } from "./useNexusWorkspace";
-export interface QueueDetails { info: { name: string }; files: { file_id: number; name: string; file_name: string; description?: string; version: string; size: number; category_name?: string; category_id?: number }[]; requirements: Requirements }
+export interface QueueDetails { requirements_file_id?: number | null; info: { name: string }; files: { file_id: number; name: string; file_name: string; description?: string; version: string; size: number; category_name?: string; category_id?: number }[]; requirements: Requirements }
 export interface Entry { id: number; name: string; notes: string; parent: string; details?: QueueDetails; checked: boolean; file: number | null; installed: boolean; error?: string }
 export interface External { kind: Requirements["items"][number]["kind"]; name: string; notes: string; url: string | null; installed: boolean }
-export async function collectQueue({ game, domain, modId, details, fileId, active, fetchDetails, limitWarning, incompleteWarning }: {
-  game: NexusGame; domain: string; modId: number; details: QueueDetails; fileId?: number; active: () => boolean;
-  fetchDetails: (id: number) => Promise<QueueDetails>; limitWarning: string; incompleteWarning: string;
+export async function collectQueue({ game, domain, modId, details, fileId, selectedFiles, active, fetchDetails, limitWarning, incompleteWarning }: {
+  game: NexusGame; domain: string; modId: number; details: QueueDetails; fileId?: number; selectedFiles?: Record<number, number>; active: () => boolean;
+  fetchDetails: (id: number, fileId?: number) => Promise<QueueDetails>; limitWarning: string; incompleteWarning: string;
 }) {
   const entries: Entry[] = [], external: External[] = [], seen = new Map<number, Entry>(), warnings: string[] = [];
   const visit = async (id: number, name: string, notes: string, parent: string, known?: QueueDetails, selected?: number) => {
     if (!active()) return;
+    selected = selectedFiles?.[id] ?? selected;
     const existing = seen.get(id);
     if (existing) {
       if (parent && !existing.parent.split(" · ").includes(parent)) existing.parent = [existing.parent, parent].filter(Boolean).join(" · ");
@@ -26,7 +27,7 @@ export async function collectQueue({ game, domain, modId, details, fileId, activ
     seen.set(id, entry); entries.push(entry);
     if (installed && id !== modId) return;
     try {
-      const value = known || await fetchDetails(id);
+      const value = known && (!selected || known.requirements_file_id === selected) ? known : await fetchDetails(id, selected);
       if (!active()) return;
       entry.details = value; entry.name = value.info.name;
       // An optional archive alone does not satisfy the main mod download.
@@ -39,6 +40,7 @@ export async function collectQueue({ game, domain, modId, details, fileId, activ
       }
       const files = value.files.filter(f => supportedNexusFile(f.file_name) && nexusFileCategory(f) !== 3 && (!isObsoleteNexusFile(f) || f.file_id === selected));
       if (entry.file && !files.some(f => f.file_id === entry.file)) entry.file = null;
+      if (!entry.file && files.some(f => f.file_id === value.requirements_file_id)) entry.file = value.requirements_file_id!;
       if (!entry.file && files.length === 1) entry.file = files[0].file_id;
       if (!value.requirements.complete || value.requirements.error) warnings.push(`${entry.name}: ${incompleteWarning}`);
       for (const requirement of value.requirements.items) {

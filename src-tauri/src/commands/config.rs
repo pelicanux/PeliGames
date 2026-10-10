@@ -13,7 +13,8 @@ pub fn save_app_config(mut config: AppConfig) -> Result<(), String> {
         preserve_saved_preferences(&mut config, previous);
     }
     if let Some(key) = &mut config.steamgriddb_api_key { *key = key.trim().to_string(); }
-    save_config(&config)
+    save_config(&config)?;
+    Ok(())
 }
 
 #[tauri::command]

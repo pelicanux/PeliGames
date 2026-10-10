@@ -226,7 +226,7 @@ fn has_executable(dir: &Path, depth: u8) -> bool {
     false
 }
 
-fn find_best_executable_dir(dir: &Path, max_depth: u8) -> Option<PathBuf> {
+pub(super) fn find_best_executable_dir(dir: &Path, max_depth: u8) -> Option<PathBuf> {
     if max_depth == 0 {
         return None;
     }

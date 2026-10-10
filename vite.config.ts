@@ -10,8 +10,11 @@ const appVersion = JSON.parse(readFileSync(new URL("./src-tauri/tauri.conf.json"
 
 // https://vite.dev/config/
 
-const now = new Date();
-const buildSuffix = `${now.getDate().toString().padStart(2, '0')}${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+const buildTime = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+}).formatToParts(new Date());
+const timePart = (type: string) => buildTime.find(part => part.type === type)!.value;
+const buildSuffix = `${timePart('day')}${timePart('hour')}${timePart('minute')}`;
 
 export default defineConfig(() => ({
   plugins: [react()],

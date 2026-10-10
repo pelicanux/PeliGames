@@ -57,3 +57,5 @@ pub mod browser;
 pub mod nexus_browser;
 
 pub mod nexus_loader_logs;
+
+pub mod mod_backup;
