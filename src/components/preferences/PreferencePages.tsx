@@ -6,6 +6,7 @@ import { MenuIcon } from "../MenuIcon";
 import { useI18n } from "../../i18n/I18nContext";
 import { useAccentTheme } from "../../theme/ThemeProvider";
 import { ACCENT_THEMES } from "../../theme/accentTheme";
+import { ModBackupPreferences } from "./ModBackupPreferences";
 import { usePreferencesText } from "./labels";
 
 type ConfigProps = { config: AppConfig; disabled: boolean; save: (patch: Partial<AppConfig>) => void };
@@ -52,11 +53,12 @@ export function CoverPreferences({ config, disabled, save, focusRef, onError }: 
     <div className="steamgrid-settings-footer"><small>{t("steamgrid", "localOnly")}</small><button type="button" onClick={() => void openUrl("https://www.steamgriddb.com/profile/preferences/api").catch(error => onError(String(error)))}>{t("steamgrid", "getKey")} ↗</button></div><p>{t("steamgrid", "rescanHint")}</p>
   </section></>;
 }
-export function ToolsPreferences({ onError, onLogs }: { onError: (error: string) => void; onLogs: () => void }) {
+export function ToolsPreferences({ onError, onLogs, onBusy, onRestored }: { onError: (error: string) => void; onLogs: () => void; onBusy: (busy: boolean) => void; onRestored: () => Promise<void> }) {
   const text = usePreferencesText(), { t } = useI18n();
   const [folders, setFolders] = useState<string[]>(() => { try { const value = JSON.parse(localStorage.getItem("custom_folders") ?? "[]"); return Array.isArray(value) ? value.filter(item => typeof item === "string") : []; } catch { return []; } });
   const remove = (folder: string) => { const next = folders.filter(item => item !== folder); try { localStorage.setItem("custom_folders", JSON.stringify(next)); setFolders(next); window.dispatchEvent(new Event("refreshGames")); } catch (error) { onError(String(error)); } };
   return <><h2>{text.tools}</h2><section className="preference-section first"><h3>{text.openLogs}</h3><p>{text.logsHint}</p><button type="button" className="preference-outline" onClick={onLogs}><MenuIcon name="logs"/>{text.openLogs}</button></section>
+    <ModBackupPreferences onError={onError} onBusy={onBusy} onRestored={onRestored}/>
     <section className="preference-section"><h3>{t("settings", "manualDirs")}</h3><p>{t("settings", "manualDirsDesc")}</p>{folders.length ? <div className="preference-folders">{folders.map(folder => <div key={folder}><span>{folder}</span><button type="button" aria-label={`${t("settings", "removeDir")}: ${folder}`} onClick={() => remove(folder)}><MenuIcon name="trash"/></button></div>)}</div> : <p>{text.noFolders}</p>}</section>
   </>;
 }

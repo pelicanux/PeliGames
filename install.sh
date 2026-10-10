@@ -2,8 +2,8 @@
 
 # PeliGames - Portable Setup
 APP_NAME="PeliGames"
-BIN_NAME="PeliGames"
-ICON_NAME="peligames.png"
+BIN_NAME="peligames"
+ICON_NAME="peligames.svg"
 
 INSTALL_BIN_DIR="$HOME/.local/bin"
 INSTALL_ICON_DIR="$HOME/.local/share/icons"
@@ -12,15 +12,15 @@ INSTALL_DESKTOP_DIR="$HOME/.local/share/applications"
 # Resolving paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 BIN_PATH="$SCRIPT_DIR/Release/$BIN_NAME"
-ICON_PATH="$SCRIPT_DIR/src-tauri/icons/128x128.png"
+ICON_PATH="$SCRIPT_DIR/public/peligames.svg"
 
 # Check if binary is next to script (if distributed as a simple folder)
 if [ ! -f "$BIN_PATH" ]; then
     if [ -f "$SCRIPT_DIR/$BIN_NAME" ]; then
         BIN_PATH="$SCRIPT_DIR/$BIN_NAME"
     fi
-    if [ -f "$SCRIPT_DIR/icon.png" ]; then
-        ICON_PATH="$SCRIPT_DIR/icon.png"
+    if [ -f "$SCRIPT_DIR/peligames.svg" ]; then
+        ICON_PATH="$SCRIPT_DIR/peligames.svg"
     fi
 fi
 
@@ -94,12 +94,13 @@ fi
 cat > "$INSTALL_DESKTOP_DIR/$BIN_NAME.desktop" << EOF
 [Desktop Entry]
 Name=$APP_NAME
-Comment=Launcher de jogos Windows para Linux com Proton
-Exec=$INSTALL_BIN_DIR/$BIN_NAME
+Comment=Instalando jogos na base da humilhação
+Exec="$INSTALL_BIN_DIR/$BIN_NAME" %u
 Icon=$INSTALL_ICON_DIR/$ICON_NAME
 Terminal=false
 Type=Application
 Categories=Game;Utility;
+MimeType=x-scheme-handler/nxm;
 EOF
 
 chmod +x "$INSTALL_DESKTOP_DIR/$BIN_NAME.desktop"

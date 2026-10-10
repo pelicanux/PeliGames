@@ -1,5 +1,6 @@
 import { STEAMGRIDDB_API_KEY } from "./coverConfig";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { gameViewKey } from "./gameIdentity";
 import type { GameInfo } from "../components/GameGrid";
 import { openFilePicker } from "./tauriService";
 
@@ -10,7 +11,12 @@ export function readCustomCovers(): Record<string, string> {
   } catch { return {}; }
 }
 
-export function hasCustomCover(path: string) { return typeof readCustomCovers()[path] === "string"; }
+export function customCoverFor(game: GameInfo, covers = readCustomCovers()): string | undefined {
+  const key = gameViewKey(game);
+  // An empty scoped value resets a legacy shared cover in this library only.
+  return Object.prototype.hasOwnProperty.call(covers, key) ? covers[key] : covers[game.path];
+}
+export function hasCustomCover(game: GameInfo) { return Boolean(customCoverFor(game)); }
 
 export async function fetchGameCoverByName(name: string) {
   return invoke<string | null>("fetch_steamgriddb_cover_command", { name: name.trim(), apiKey: STEAMGRIDDB_API_KEY });
@@ -32,7 +38,7 @@ export async function changeLocalCover(game: GameInfo) {
     image.onerror = () => reject(new Error("Could not load the selected image"));
     image.src = url;
   });
-  localStorage.setItem("custom_covers", JSON.stringify({ ...readCustomCovers(), [game.path]: url }));
+  localStorage.setItem("custom_covers", JSON.stringify({ ...readCustomCovers(), [gameViewKey(game)]: url }));
   publish({ ...game, automatic_cover_url: game.automatic_cover_url !== undefined ? game.automatic_cover_url : game.cover_url ?? null, cover_url: url });
 }
 
@@ -43,7 +49,7 @@ export async function resetGameCover(game: GameInfo) {
       : await fetchGameCoverByName(game.name);
   }
   const covers = readCustomCovers();
-  delete covers[game.path];
+  covers[gameViewKey(game)] = "";
   localStorage.setItem("custom_covers", JSON.stringify(covers));
   publish({ ...game, automatic_cover_url: url ?? null, cover_url: url ?? undefined });
 }

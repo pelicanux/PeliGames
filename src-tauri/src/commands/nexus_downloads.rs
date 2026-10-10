@@ -111,7 +111,7 @@ pub fn receive(app: &tauri::AppHandle, value: &str) -> Result<(), String> {
 }
 fn receive_inner(app: &tauri::AppHandle, value: &str) -> Result<(), String> {
     let request = nxm::parse(value)?;
-    let workspace = super::nexus_local::load_nexus_workspace()?;
+    let workspace = super::nexus_local::workspace()?;
     let matches: Vec<_> = workspace
         .games
         .iter()
@@ -198,7 +198,7 @@ fn receive_inner(app: &tauri::AppHandle, value: &str) -> Result<(), String> {
     Ok(())
 }
 fn begin(app: tauri::AppHandle, id: String, game_id: String) -> Result<(), String> {
-    let workspace = super::nexus_local::load_nexus_workspace()?;
+    let workspace = super::nexus_local::workspace()?;
     let game = workspace
         .games
         .iter()
@@ -280,7 +280,7 @@ async fn transfer(
         return Err("Na conta gratuita, clique em Mod Manager Download no site para autorizar este arquivo.".into());
     }
     let requirements = responsive(
-        async { Ok(super::nexus_catalog::requirements(&request.domain, request.mod_id).await) },
+        async { Ok(super::nexus_catalog::requirements_for_file(&request.domain, request.mod_id, Some(request.file_id)).await) },
         cancel,
     )
     .await?;
@@ -500,7 +500,7 @@ async fn prepare_download(
     if mod_id == 0 || file_id == 0 {
         return Err("Arquivo Nexus inválido.".into());
     }
-    let workspace = super::nexus_local::load_nexus_workspace()?;
+    let workspace = super::nexus_local::workspace()?;
     let game = workspace
         .games
         .iter()
@@ -527,7 +527,7 @@ async fn prepare_download(
     let account = super::nexus_account::load_nexus_account()
         .await?
         .ok_or("Conecte sua conta Nexus.")?;
-    let details = super::nexus_catalog::get_nexus_catalog_mod(game_domain.clone(), mod_id).await?;
+    let details = super::nexus_catalog::get_nexus_catalog_mod(game_domain.clone(), mod_id, Some(file_id)).await?;
     let file = details
         .files
         .iter()
@@ -837,7 +837,7 @@ pub async fn register_nexus_handler() -> Result<(), String> {
         let temporary = directory.join(format!(".peligames-nxm-{}.desktop", uuid::Uuid::new_v4()));
         // xdg-utils 1.2.1 checks only the first word of Exec without unquoting it.
         // A fixed env executable keeps that check valid and preserves quoted paths.
-        let text = format!("[Desktop Entry]\nType=Application\nName=PeliGames — Nexus Mods\nExec=/usr/bin/env {} %u\nIcon=peligames\nTerminal=false\nNoDisplay=true\nMimeType=x-scheme-handler/nxm;\n", crate::core::pelinstall::exec_arg(&binary.to_string_lossy())?);
+        let text = format!("[Desktop Entry]\nType=Application\nName=PeliGames — Nexus Mods\nComment=Instalando jogos na base da humilhação\nExec=/usr/bin/env {} %u\nIcon=peligames\nTerminal=false\nNoDisplay=true\nMimeType=x-scheme-handler/nxm;\n", crate::core::pelinstall::exec_arg(&binary.to_string_lossy())?);
         fs::write(&temporary, text).and_then(|_| fs::rename(&temporary, &path)).map_err(|_| "Não foi possível registrar o aplicativo.")?;
         let mut command = std::process::Command::new("xdg-mime");
         let result = command.env_remove("LD_LIBRARY_PATH").env_remove("LD_PRELOAD").args(["default", "peligames-nxm.desktop", "x-scheme-handler/nxm"]).output().map_err(|_| "Instale xdg-utils para registrar os links Nexus.")?;

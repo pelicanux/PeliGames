@@ -2,7 +2,7 @@
 Version=1.0
 Type=Application
 Name={{name}}
-Comment={{comment}}
+Comment=Instalando jogos na base da humilhação
 Exec={{exec}} %u
 Icon={{icon}}
 Terminal=false

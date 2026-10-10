@@ -1,12 +1,13 @@
 import { NexusLibraryLoading } from "../modules/nexus/NexusLibraryLoading";
 import { useFavorites } from "../services/favorites";
-import { CoverGameActions, type CoverGameAction } from "./CoverGameActions";
+import type { CoverGameAction } from "./CoverGameActions";
+import { GameCoverMenu } from "./GameCoverMenu";
+import { useRemovedLibraryGames, restoreRemovedLibraryFolder } from "../services/libraryVisibility";
 import { gameViewKey } from "../services/gameIdentity";
 import { TimedFeedback } from "./TimedFeedback";
 import { MenuIcon } from "./MenuIcon";
-import { CoverContextMenuPanel, SteamGridCoverHint } from "./CoverContextMenu";
 import { STEAMGRIDDB_API_KEY } from "../services/coverConfig";
-import { changeLocalCover, resetGameCover, reportCoverError, hasCustomCover } from "../services/customCovers";
+import { hasCustomCover } from "../services/customCovers";
 import React, { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "../i18n/I18nContext";
@@ -71,6 +72,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     return () => window.removeEventListener("gameCoverChanged", refresh);
   }, [managed]);
   const favorites = useFavorites();
+  const removedGames = useRemovedLibraryGames();
   const [favoritesCollapsed, setFavoritesCollapsed] = useState(false);
   const performanceMode = usePerformanceMode();
   const [cachedGames] = useState(readGameLibrary);
@@ -172,8 +174,9 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
 
   const handleAddCustomFolder = async () => {
     const dir = await openDirectoryPicker(t("gameGrid", "selectFolder"));
-    if (dir && !customFolders.includes(dir)) {
-      const newFolders = [...customFolders, dir];
+    if (dir) {
+      const newFolders = customFolders.includes(dir) ? customFolders : [...customFolders, dir];
+      restoreRemovedLibraryFolder(dir);
       setCustomFolders(newFolders);
       localStorage.setItem("custom_folders", JSON.stringify(newFolders));
       await fetchGames(newFolders);
@@ -200,7 +203,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     };
     const handleCoverChange = (event: Event) => {
       const game = (event as CustomEvent<GameInfo>).detail;
-      setGames(previous => previous.map(item => item.path === game.path ? { ...item, cover_url: game.cover_url, automatic_cover_url: game.automatic_cover_url } : item));
+      setGames(previous => previous.map(item => gameViewKey({ ...item, library_view: libraryScope }) === gameViewKey(game) ? { ...item, cover_url: game.cover_url, automatic_cover_url: game.automatic_cover_url } : item));
       setImageErrors(previous => { const next = new Set(previous); next.delete(game.path); return next; });
       setFallbackAttempted(previous => { const next = new Set(previous); next.delete(game.path); return next; });
     };
@@ -337,12 +340,12 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
           style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block" }} 
           onError={async () => {
             setImageErrors(prev => new Set(prev).add(game.path));
-            if (!hasCustomCover(game.path) && !fallbackAttempted.has(game.path)) {
+            if (!hasCustomCover(game) && !fallbackAttempted.has(game.path)) {
               setFallbackAttempted(prev => new Set(prev).add(game.path));
               try {
                 if (managedLibrary?.onCoverFallback) { await managedLibrary.onCoverFallback(game); return; }
                 const newCover = await invoke<string | null>("fetch_steamgriddb_cover_command", { name: game.name, apiKey: STEAMGRIDDB_API_KEY });
-                if (newCover && !hasCustomCover(game.path)) {
+                if (newCover && !hasCustomCover(game)) {
                   setGames(prev => prev.map(g => g.path === game.path ? { ...g, cover_url: newCover, automatic_cover_url: newCover } : g));
                   setImageErrors(prev => {
                     const next = new Set(prev);
@@ -395,8 +398,9 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     </motion.div>
   );
 
-  const scopedGames = managedLibrary ? applyCustomCovers(managedLibrary.games).map(game => ({ ...game, library_view: "nexus" as const })) : (libraryScope === "own" ? games.filter(game => game.launcher === "PeliGames") : games)
-    .map(game => ({ ...game, library_view: libraryScope }));
+  const scopedGames = applyCustomCovers((managedLibrary ? managedLibrary.games : libraryScope === "own" ? games.filter(game => game.launcher === "PeliGames") : games)
+    .map(game => ({ ...game, library_view: managedLibrary ? "nexus" as const : libraryScope })))
+    .filter(game => !removedGames.has(gameViewKey(game)));
   const filteredGames = scopedGames.filter(g => g.name.toLowerCase().includes(searchQuery.toLowerCase()));
   const favoriteGames = filteredGames.filter(game => favorites.has(gameViewKey(game)));
   const remainingGames = filteredGames.filter(game => !favorites.has(gameViewKey(game)));
@@ -610,50 +614,10 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         })()}
         </>}
       </motion.div>
-      {contextMenu && (
-      <CoverContextMenuPanel onClose={() => setContextMenu(null)} x={contextMenu.x} y={contextMenu.y}>
-        <CoverGameActions game={contextMenu.game} blocked={coverActionsBlocked} onAction={(action, game) => { setContextMenu(null); onCoverAction(action, game); }} />
-        <SteamGridCoverHint />
-          <button
-            onClick={async () => {
-              const game = contextMenu.game;
-              setContextMenu(null);
-              try { await changeLocalCover(game); } catch (error) { reportCoverError(error); }
-            }}
-            style={{
-              background: "transparent", border: "none", color: "var(--tone-e2e8f0, #e2e8f0)", padding: "0.5rem 1rem",
-              textAlign: "left", cursor: "pointer", fontSize: "0.9rem"
-            }}
-            onMouseOver={(e) => e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)"}
-            onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
-          >
-            <MenuIcon name="edit" />{t("gameGrid", "changeCover")}
-          </button>
-          
-          <button onClick={async () => {
-            const game = contextMenu.game;
-            setContextMenu(null);
-            try { await resetGameCover(game); } catch (error) { reportCoverError(error); }
-          }} style={{ background: "transparent", border: "none", color: "var(--tone-e2e8f0, #e2e8f0)", padding: "0.5rem 1rem", textAlign: "left", cursor: "pointer", fontSize: "0.9rem" }}>
-            <MenuIcon name="repair" />{t("gameGrid", "resetCover")}
-          </button>
+      {contextMenu && <GameCoverMenu game={contextMenu.game} x={contextMenu.x} y={contextMenu.y}
+        blocked={coverActionsBlocked} onClose={() => setContextMenu(null)}
+        onAction={(action, game) => { if (action === "scan") void fetchGames(); else onCoverAction(action, game); }} />}
 
-          <button
-            onClick={() => {
-              fetchGames();
-              setContextMenu(null);
-            }}
-            style={{
-              background: "transparent", border: "none", color: "var(--tone-60a5fa, #60a5fa)", padding: "0.5rem 1rem",
-              textAlign: "left", cursor: "pointer", fontSize: "0.9rem", borderTop: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)"
-            }}
-            onMouseOver={(e) => e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)"}
-            onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
-          >
-            <MenuIcon name="search" />{t("gameGrid", "rescan")}
-          </button>
-        </CoverContextMenuPanel>
-      )}
     </div>
   );
 };

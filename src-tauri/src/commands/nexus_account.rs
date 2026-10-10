@@ -186,17 +186,14 @@ pub async fn disconnect_nexus_account() -> Result<(), String> {
 pub(super) async fn metadata(path: &str) -> Result<serde_json::Value, String> {
     request_metadata(&format!("https://api.nexusmods.com/v1/{path}"), None).await
 }
-pub(super) async fn catalog_page(domain: &str, offset: u32, count: u32, most_downloaded: bool) -> Result<serde_json::Value, String> {
+pub(super) async fn catalog_page(domain: &str, offset: u32, count: u32, most_downloaded: bool, search: &str) -> Result<serde_json::Value, String> {
     let sort = if most_downloaded {
         serde_json::json!([{ "downloads": { "direction": "DESC" } }])
     } else {
         // A deterministic default order makes pagination stable; no category filter.
         serde_json::json!([{ "createdAt": { "direction": "DESC" } }])
     };
-    let body = serde_json::json!({
-        "query": "query PeliGamesCatalog($domain: String!, $offset: Int!, $count: Int!, $sort: [ModsSort!]) { mods(filter: {gameDomainName: [{value: $domain, op: EQUALS}]}, sort: $sort, count: $count, offset: $offset) { totalCount nodes { mod_id: modId name summary picture_url: pictureUrl author version downloads } } }",
-        "variables": { "domain": domain, "offset": offset, "count": count, "sort": sort }
-    });
+    let body = catalog_request(domain, offset, count, sort, search);
     let data = request_metadata("https://api.nexusmods.com/v2/graphql", Some(body)).await?;
     if data.get("errors").is_some_and(|value| value.as_array().is_none_or(|errors| !errors.is_empty())) {
         return Err("Não foi possível consultar o catálogo completo Nexus.".into());
@@ -204,12 +201,38 @@ pub(super) async fn catalog_page(domain: &str, offset: u32, count: u32, most_dow
     data.pointer("/data/mods").filter(|value| value.is_object()).cloned()
         .ok_or_else(|| "Catálogo Nexus indisponível.".into())
 }
+fn catalog_request(domain: &str, offset: u32, count: u32, sort: serde_json::Value, search: &str) -> serde_json::Value {
+    let mut filter = serde_json::json!({"op":"AND", "gameDomainName":[{"value":domain,"op":"EQUALS"}]});
+    if !search.is_empty() {
+        filter["nameStemmed"] = serde_json::json!([{"value":search,"op":"MATCHES"}]);
+    }
+    serde_json::json!({
+        "query": "query PeliGamesCatalog($filter: ModsFilter!, $offset: Int!, $count: Int!, $sort: [ModsSort!]) { mods(filter: $filter, sort: $sort, count: $count, offset: $offset) { totalCount nodes { mod_id: modId name summary picture_url: pictureUrl author version downloads } } }",
+        "variables": {"filter":filter,"offset":offset,"count":count,"sort":sort}
+    })
+}
+#[cfg(test)]
+mod catalog_search_tests {
+    use super::*;
+    #[test]
+    fn search_preserves_game_scope_and_server_pagination() {
+        let body = catalog_request("cyberpunk2077", 40, 20, serde_json::json!([]), "Cyber Engine");
+        let vars = &body["variables"];
+        assert_eq!(vars["filter"]["op"], "AND");
+        assert_eq!(vars["filter"]["gameDomainName"][0]["value"], "cyberpunk2077");
+        assert_eq!(vars["filter"]["nameStemmed"][0]["value"], "Cyber Engine");
+        assert_eq!(vars["filter"]["nameStemmed"][0]["op"], "MATCHES");
+        assert_eq!(vars["offset"], 40); assert_eq!(vars["count"], 20);
+        let body = catalog_request("palworld", 0, 30, serde_json::json!([]), "");
+        assert!(body["variables"]["filter"].get("nameStemmed").is_none());
+    }
+}
 pub(super) async fn mod_requirements(
     game_id: u64,
     mod_id: u64,
 ) -> Result<serde_json::Value, String> {
     let body = serde_json::json!({
-        "query": "query modRequirements($modId: ID!, $gameId: ID!) { mod(modId: $modId, gameId: $gameId) { modRequirements { nexusRequirements(count: 100) { nodes { externalRequirement gameId id modId modName notes url } totalCount } dlcRequirements { gameExpansion { name } notes } } } }",
+        "query": "query modRequirements($modId: ID!, $gameId: ID!) { mod(modId: $modId, gameId: $gameId) { legacyModRequirementsEnabled modRequirements { nexusRequirements(count: 100) { nodes { externalRequirement gameId id modId modName notes url } totalCount } dlcRequirements { gameExpansion { name } notes } } } }",
         "variables": { "modId": mod_id.to_string(), "gameId": game_id.to_string() }
     });
     let data = request_metadata("https://api.nexusmods.com/v2/graphql", Some(body)).await?;
@@ -219,10 +242,20 @@ pub(super) async fn mod_requirements(
     {
         return Err("Não foi possível consultar os requisitos Nexus.".into());
     }
-    data.pointer("/data/mod/modRequirements")
+    data.pointer("/data/mod")
         .filter(|v| v.is_object())
         .cloned()
         .ok_or_else(|| "Requisitos Nexus indisponíveis.".into())
+}
+// Fixed official endpoints only; never send the account key to metadata URLs.
+pub(super) async fn file_requirements(game_domain: &str, file_id: u64) -> Result<serde_json::Value, String> {
+    super::nexus_catalog::domain(game_domain)?;
+    if file_id == 0 { return Err("Arquivo Nexus inválido.".into()); }
+    let version = request_metadata(&format!("https://api.nexusmods.com/v3/games/{game_domain}/mod-file-versions/{file_id}"), None).await?;
+    let id = version.pointer("/data/id").and_then(|v| v.as_str())
+        .filter(|v| !v.is_empty() && v.bytes().all(|b| b.is_ascii_digit()))
+        .ok_or("Identificação da versão Nexus indisponível.")?;
+    request_metadata(&format!("https://api.nexusmods.com/v3/mod-file-versions/{id}/dependencies"), None).await
 }
 async fn request_metadata(
     url: &str,
@@ -246,6 +279,7 @@ async fn request_metadata(
         client.get(url)
     };
     let mut response = request
+        .header(reqwest::header::USER_AGENT, concat!("PeliGames/", env!("CARGO_PKG_VERSION")))
         .header("apikey", header)
         .header("Application-Name", "PeliGames")
         .header("Application-Version", env!("CARGO_PKG_VERSION"))

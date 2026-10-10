@@ -11,6 +11,13 @@ import { FloatingScrollbars } from "./components/FloatingScrollbars";
 // Cover handlers still receive the event and open the application's own menu.
 document.addEventListener("contextmenu", (event) => event.preventDefault(), { capture: true });
 
+// A dropped browser URL must never replace the local launcher document.
+// Cancel only the webview's default action; application drop handlers and
+// Tauri's native file-drop events still receive their events normally.
+for (const type of ["dragover", "drop"] as const) {
+  window.addEventListener(type, event => event.preventDefault(), { capture: true, passive: false });
+}
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <ErrorBoundary>

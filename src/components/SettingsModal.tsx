@@ -86,7 +86,7 @@ export function SettingsModal({ onClose, initialSection = "general", onConfigUpd
         {page === "mods" && <ModPreferences {...configProps} onUpdate={() => setPage("backendUpdate")} onWizard={() => { if (!preferences.isPending()) { onOpenWizard(); onClose(); } }} onClear={() => setCacheDialog("confirm")}/>}
         {page === "protons" && <ProtonPreferences {...configProps} family={family} onFamily={preferred_proton_family => preferences.save({ preferred_proton_family })} onUpdate={() => setPage("protonUpdate")} focusRef={steamRef}/>}
         {page === "covers" && preferences.ready && <CoverPreferences {...configProps} disabled={!preferences.ready} focusRef={coverRef} onError={setActionError}/>}
-        {page === "tools" && <ToolsPreferences onError={setActionError} onLogs={() => setShowLauncherLogs(true)}/>}
+        {page === "tools" && <ToolsPreferences onRestored={async () => onConfigUpdated(await invoke<AppConfig | null>("load_app_config"))} onBusy={setDownloadBusy} onError={setActionError} onLogs={() => setShowLauncherLogs(true)}/>}
         {page === "backendUpdate" && <BackendUpdaterModal gpuArch={preferences.config.backend === "AMDNR" ? "rdna4" : "rdna3"} isEmbedded onBusyChange={setDownloadBusy} onClose={() => setPage("mods")}/>}
         {page === "protonUpdate" && <ProtonManagerModal initialFamily={family} isEmbedded hideNavigation onBusyChange={setDownloadBusy} onClose={() => setPage("protons")} onInstalled={() => window.dispatchEvent(new Event("protonRunnersChanged"))}/>}
         {(preferences.error || actionError) && <div className="preferences-error" role="alert"><p>{preferences.error || actionError}</p>{preferences.error && <button type="button" disabled={busy} onClick={preferences.retry}>{text.retry}</button>}</div>}

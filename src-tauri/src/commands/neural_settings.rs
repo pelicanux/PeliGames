@@ -167,7 +167,8 @@ pub async fn get_neural_startup(game_dir: String) -> Result<bool, String> {
 pub async fn set_neural_startup(app: tauri::AppHandle, game_dir: String, enabled: bool) -> Result<(), String> {
     let result = tauri::async_runtime::spawn_blocking(move || {
         set_enabled(Path::new(&game_dir), enabled)?;
-        crate::core::config_manager::save_neural_preference(game_dir, enabled)
+        crate::core::config_manager::save_neural_preference(game_dir.clone(), enabled)?;
+        Ok::<(),String>(())
     }).await.map_err(|e| e.to_string())?;
     crate::core::logger::log_result(&app, "Preferência de inicialização do Neural Rendering", &result);
     result

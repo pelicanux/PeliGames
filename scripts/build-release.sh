@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Use the timezone passed by the host; otherwise retain the system timezone.
 root=$(cd "$(dirname "$0")/.." && pwd)
 cd "$root"
 build_target=$(mktemp -d /tmp/peligames-release-XXXXXX)
