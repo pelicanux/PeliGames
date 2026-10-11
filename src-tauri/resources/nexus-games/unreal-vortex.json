@@ -1,0 +1,3211 @@
+[
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "abioticfactor",
+    "name": "Abiotic Factor",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "AbioticFactor"
+    },
+    "executable": "AbioticFactor/Binaries/Win64/AbioticFactor-Win64-Shipping.exe",
+    "required": [
+      "AbioticFactor.exe",
+      "AbioticFactor/Binaries/Win64/AbioticFactor-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-abioticfactor/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "AbioticFactor.exe",
+    "steam_id": "427410",
+    "vortex_mod_types": {
+      "abioticfactor-ue5-sortable-modtype": "AbioticFactor/Content/Paks/~mods",
+      "abioticfactor-scripts": "AbioticFactor/Binaries/Win64/ue4ss/Mods",
+      "abioticfactor-ue4ssdll": "AbioticFactor/Binaries/Win64/ue4ss/Mods",
+      "abioticfactor-binaries": "AbioticFactor/Binaries/Win64",
+      "abioticfactor-ue4ss": "AbioticFactor/Binaries/Win64",
+      "abioticfactor-sigbypass": "AbioticFactor/Binaries/Win64",
+      "abioticfactor-logicmods": "AbioticFactor/Content/Paks/LogicMods",
+      "abioticfactor-pakalt": "AbioticFactor/Content/Paks",
+      "abioticfactor-contentfolder": "AbioticFactor"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "atomicheart",
+    "name": "Atomic Heart",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "AtomicHeart"
+    },
+    "executable": "AtomicHeart/Binaries/Win64/AtomicHeart-Win64-Shipping.exe",
+    "required": [
+      "AtomicHeart.exe",
+      "AtomicHeart/Binaries/Win64/AtomicHeart-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-atomicheart/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "AtomicHeart.exe",
+    "steam_id": "668580",
+    "vortex_mod_types": {
+      "atomicheart-uesortablepak": "AtomicHeart/Content/Paks/~mods",
+      "atomicheart-scripts": "AtomicHeart/Binaries/Win64/ue4ss/Mods",
+      "atomicheart-ue4ssdll": "AtomicHeart/Binaries/Win64/ue4ss/Mods",
+      "atomicheart-binaries": "AtomicHeart/Binaries/Win64",
+      "atomicheart-ue4ss": "AtomicHeart/Binaries/Win64",
+      "atomicheart-sigbypass": "AtomicHeart/Binaries/Win64",
+      "atomicheart-modkitmod": "AtomicHeart/Mods",
+      "atomicheart-logicmods": "AtomicHeart/Content/Paks",
+      "atomicheart-pakalt": "AtomicHeart/Content/Paks",
+      "atomicheart-rootsubfolders": "AtomicHeart"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "avowed",
+    "name": "Avowed",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Alabama"
+    },
+    "executable": "Alabama/Binaries/Win64/Alabama-Win64-Shipping.exe",
+    "required": [
+      "Avowed.exe",
+      "Alabama/Binaries/Win64/Alabama-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-avowed/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Avowed.exe",
+    "steam_id": "2457220",
+    "vortex_mod_types": {
+      "avowed-ue5-sortable-modtype": "Alabama/Content/Paks/~mods",
+      "ue5-sortable-modtype": "Alabama/Content/Paks/~mods",
+      "avowed-scripts": "Alabama/Binaries/Win64/ue4ss/Mods",
+      "avowed-ue4ssdll": "Alabama/Binaries/Win64/ue4ss/Mods",
+      "avowed-binaries": "Alabama/Binaries/Win64",
+      "avowed-ue4ss": "Alabama/Binaries/Win64",
+      "avowed-sigbypass": "Alabama/Binaries/Win64",
+      "avowed-logicmods": "Alabama/Content/Paks",
+      "avowed-pakalt": "Alabama/Content/Paks",
+      "avowed-ue5": "Alabama/Content/Paks/~mods"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "beastofreincarnation",
+    "name": "Beast of Reincarnation",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "BeastOfReincarnation"
+    },
+    "executable": "BeastOfReincarnation/Binaries/Win64/BeastOfReincarnation-Win64-Shipping.exe",
+    "required": [
+      "BeastOfReincarnation.exe",
+      "BeastOfReincarnation/Binaries/Win64/BeastOfReincarnation-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-beastofreincarnation/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "BeastOfReincarnation.exe",
+    "steam_id": "2001760",
+    "vortex_mod_types": {
+      "beastofreincarnation-uesortablepak": "BeastOfReincarnation/Content/Paks/~mods",
+      "beastofreincarnation-scripts": "BeastOfReincarnation/Binaries/Win64/ue4ss/Mods",
+      "beastofreincarnation-ue4ssdll": "BeastOfReincarnation/Binaries/Win64/ue4ss/Mods",
+      "beastofreincarnation-binaries": "BeastOfReincarnation/Binaries/Win64",
+      "beastofreincarnation-ue4ss": "BeastOfReincarnation/Binaries/Win64",
+      "beastofreincarnation-sigbypass": "BeastOfReincarnation/Binaries/Win64",
+      "beastofreincarnation-logicmods": "BeastOfReincarnation/Content/Paks",
+      "beastofreincarnation-pakalt": "BeastOfReincarnation/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "bellwright",
+    "name": "Bellwright",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Bellwright"
+    },
+    "executable": "Bellwright/Binaries/Win64/Bellwright-Win64-Shipping.exe",
+    "required": [
+      "BellwrightGame.exe",
+      "Bellwright/Binaries/Win64/Bellwright-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-bellwright/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "BellwrightGame.exe",
+    "steam_id": "1812450",
+    "vortex_mod_types": {
+      "bellwright-ue5-sortable-modtype": "Bellwright/Content/Paks/~mods",
+      "ue5-sortable-modtype": "Bellwright/Content/Paks/~mods",
+      "bellwright-scripts": "Bellwright/Binaries/Win64/ue4ss/Mods",
+      "bellwright-ue4ssdll": "Bellwright/Binaries/Win64/ue4ss/Mods",
+      "bellwright-binaries": "Bellwright/Binaries/Win64",
+      "bellwright-ue4ss": "Bellwright/Binaries/Win64",
+      "bellwright-sigbypass": "Bellwright/Binaries/Win64",
+      "bellwright-logicmods": "Bellwright/Content/Paks/LogicMods",
+      "bellwright-pakalt": "Bellwright/Content/Paks",
+      "bellwright-ue5modkitpak": "Bellwright/Content/Mods",
+      "bellwright-ue5": "Bellwright/Content/Paks/~mods"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "blackmythwukong",
+    "name": "Black Myth: Wukong",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "b1"
+    },
+    "executable": "b1/Binaries/Win64/b1-Win64-Shipping.exe",
+    "required": [
+      "b1.exe",
+      "b1/Binaries/Win64/b1-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-blackmythwukong/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "b1.exe",
+    "steam_id": "2358720",
+    "vortex_mod_types": {
+      "blackmythwukong-ue5-sortable-modtype": "b1/Content/Paks/~mods",
+      "ue5-sortable-modtype": "b1/Content/Paks/~mods",
+      "blackmythwukong-scripts": "b1/Binaries/Win64/ue4ss/Mods",
+      "blackmythwukong-ue4ssdll": "b1/Binaries/Win64/ue4ss/Mods",
+      "blackmythwukong-binaries": "b1/Binaries/Win64",
+      "blackmythwukong-ue4ss": "b1/Binaries/Win64",
+      "blackmythwukong-sigbypass": "b1/Binaries/Win64",
+      "blackmythwukong-logicmods": "b1/Content/Paks/LogicMods",
+      "blackmythwukong-pakalt": "b1/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "borderlands4",
+    "name": "Borderlands 4",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "OakGame"
+    },
+    "executable": "OakGame/Binaries/Win64/Borderlands4.exe",
+    "required": [
+      "Borderlands4.exe",
+      "OakGame/Binaries/Win64/Borderlands4.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-borderlands4/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Borderlands4.exe",
+    "steam_id": "1285190",
+    "vortex_mod_types": {
+      "borderlands4-uesortablepak": "OakGame/Content/Paks/~mods",
+      "borderlands4-scripts": "OakGame/Binaries/Win64/ue4ss/Mods",
+      "borderlands4-ue4ssdll": "OakGame/Binaries/Win64/ue4ss/Mods",
+      "borderlands4-binaries": "OakGame/Binaries/Win64",
+      "borderlands4-ue4ss": "OakGame/Binaries/Win64",
+      "borderlands4-sigbypass": "OakGame/Binaries/Win64",
+      "borderlands4-logicmods": "OakGame/Content/Paks/LogicMods",
+      "borderlands4-pysdkmod": "sdk_mods",
+      "borderlands4-pakalt": "OakGame/Content/Paks",
+      "borderlands4-contentfolder": "OakGame"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "clivebarkershellraiserrevival",
+    "name": "Clive Barker's Hellraiser: Revival",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Hellraiser"
+    },
+    "executable": "Hellraiser/Binaries/Win64/Hellraiser-Win64-Shipping.exe",
+    "required": [
+      "Hellraiser.exe",
+      "Hellraiser/Binaries/Win64/Hellraiser-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-clivebarkershellraiserrevival/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Hellraiser.exe",
+    "steam_id": "1551980",
+    "vortex_mod_types": {
+      "clivebarkershellraiserrevival-uesortablepak": "Hellraiser/Content/Paks/~mods",
+      "clivebarkershellraiserrevival-scripts": "Hellraiser/Binaries/Win64/ue4ss/Mods",
+      "clivebarkershellraiserrevival-ue4ssdll": "Hellraiser/Binaries/Win64/ue4ss/Mods",
+      "clivebarkershellraiserrevival-binaries": "Hellraiser/Binaries/Win64",
+      "clivebarkershellraiserrevival-ue4ss": "Hellraiser/Binaries/Win64",
+      "clivebarkershellraiserrevival-sigbypass": "Hellraiser/Binaries/Win64",
+      "clivebarkershellraiserrevival-logicmods": "Hellraiser/Content/Paks",
+      "clivebarkershellraiserrevival-pakalt": "Hellraiser/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "codevein2",
+    "name": "CODE VEIN II",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "CodeVein2"
+    },
+    "executable": "CodeVein2/Binaries/Win64/CodeVein2-Win64-Shipping.exe",
+    "required": [
+      "CodeVein2.exe",
+      "CodeVein2/Binaries/Win64/CodeVein2-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-codevein2/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "CodeVein2.exe",
+    "steam_id": "2362060",
+    "vortex_mod_types": {
+      "codevein2-uesortablepak": "CodeVein2/Content/Paks/~mods",
+      "codevein2-scripts": "CodeVein2/Binaries/Win64/ue4ss/Mods",
+      "codevein2-ue4ssdll": "CodeVein2/Binaries/Win64/ue4ss/Mods",
+      "codevein2-binaries": "CodeVein2/Binaries/Win64",
+      "codevein2-ue4ss": "CodeVein2/Binaries/Win64",
+      "codevein2-sigbypass": "CodeVein2/Binaries/Win64",
+      "codevein2-logicmods": "CodeVein2/Content/Paks",
+      "codevein2-pakalt": "CodeVein2/Content/Paks",
+      "codevein2-rhff": "CodeVein2/Binaries/Win64"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "cronosthenewdawn",
+    "name": "Cronos: The New Dawn",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Cronos"
+    },
+    "executable": "Cronos/Binaries/Win64/Cronos-Win64-Shipping.exe",
+    "required": [
+      "Cronos.exe",
+      "Cronos/Binaries/Win64/Cronos-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-cronosthenewdawn/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Cronos.exe",
+    "steam_id": "2101960",
+    "vortex_mod_types": {
+      "cronosthenewdawn-uesortablepak": "Cronos/Content/Paks/~mods",
+      "cronosthenewdawn-scripts": "Cronos/Binaries/Win64/ue4ss/Mods",
+      "cronosthenewdawn-ue4ssdll": "Cronos/Binaries/Win64/ue4ss/Mods",
+      "cronosthenewdawn-binaries": "Cronos/Binaries/Win64",
+      "cronosthenewdawn-ue4ss": "Cronos/Binaries/Win64",
+      "cronosthenewdawn-sigbypass": "Cronos/Binaries/Win64",
+      "cronosthenewdawn-logicmods": "Cronos/Content/Paks/LogicMods",
+      "cronosthenewdawn-pak": "Cronos/Content/Paks",
+      "cronosthenewdawn-contentfolder": "Cronos"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "deadasdisco",
+    "name": "Dead As Disco",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Pagoda"
+    },
+    "executable": "Pagoda/Binaries/Win64/Pagoda-Win64-Shipping.exe",
+    "required": [
+      "Pagoda.exe",
+      "Pagoda/Binaries/Win64/Pagoda-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-deadasdisco/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Pagoda.exe",
+    "steam_id": "3404260",
+    "vortex_mod_types": {
+      "deadasdisco-uesortablepak": "Pagoda/Content/Paks/~mods",
+      "deadasdisco-scripts": "Pagoda/Binaries/Win64/ue4ss/Mods",
+      "deadasdisco-ue4ssdll": "Pagoda/Binaries/Win64/ue4ss/Mods",
+      "deadasdisco-binaries": "Pagoda/Binaries/Win64",
+      "deadasdisco-ue4ss": "Pagoda/Binaries/Win64",
+      "deadasdisco-sigbypass": "Pagoda/Binaries/Win64",
+      "deadasdisco-logicmods": "Pagoda/Content/Paks",
+      "deadasdisco-pakalt": "Pagoda/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "dispatch",
+    "name": "Dispatch",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Dispatch"
+    },
+    "executable": "Dispatch/Binaries/Win64/Dispatch-Win64-Shipping.exe",
+    "required": [
+      "Dispatch.exe",
+      "Dispatch/Binaries/Win64/Dispatch-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dispatch/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Dispatch.exe",
+    "steam_id": "2592160",
+    "vortex_mod_types": {
+      "dispatch-uesortablepak": "Dispatch/Content/Paks/~mods",
+      "dispatch-scripts": "Dispatch/Binaries/Win64/ue4ss/Mods",
+      "dispatch-ue4ssdll": "Dispatch/Binaries/Win64/ue4ss/Mods",
+      "dispatch-binaries": "Dispatch/Binaries/Win64",
+      "dispatch-ue4ss": "Dispatch/Binaries/Win64",
+      "dispatch-sigbypass": "Dispatch/Binaries/Win64",
+      "dispatch-logicmods": "Dispatch/Content/Paks",
+      "dispatch-pakalt": "Dispatch/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "dragonballsparkingzero",
+    "name": "Dragon Ball: Sparking! Zero",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "SparkingZERO"
+    },
+    "executable": "SparkingZERO/Binaries/Win64/SparkingZERO-Win64-Shipping.exe",
+    "required": [
+      "SparkingZERO.exe",
+      "SparkingZERO/Binaries/Win64/SparkingZERO-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonballsparkingzero/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "SparkingZERO.exe",
+    "steam_id": "1790600",
+    "vortex_mod_types": {
+      "dragonballsparkingzero-ue5-sortable-modtype": "SparkingZERO/Content/Paks/~mods",
+      "ue5-sortable-modtype": "SparkingZERO/Content/Paks/~mods",
+      "dragonballsparkingzero-scripts": "SparkingZERO/Binaries/Win64/ue4ss/Mods",
+      "dragonballsparkingzero-ue4ssdll": "SparkingZERO/Binaries/Win64/ue4ss/Mods",
+      "dragonballsparkingzero-binaries": "SparkingZERO/Binaries/Win64",
+      "dragonballsparkingzero-ue4ss": "SparkingZERO/Binaries/Win64",
+      "dragonballsparkingzero-sigbypass": "SparkingZERO/Binaries/Win64",
+      "dragonballsparkingzero-logicmods": "SparkingZERO/Content/Paks/LogicMods",
+      "dragonballsparkingzero-pakalt": "SparkingZERO/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "dragonquest1and2hd2dremake",
+    "name": "DRAGON QUEST I & II HD-2D Remake",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Game"
+    },
+    "executable": "Game/Binaries/Win64/DQIandIIHD2DRemake.exe",
+    "required": [
+      "DQIandIIHD2DRemake.exe",
+      "Game/Binaries/Win64/DQIandIIHD2DRemake.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonquest1and2hd2dremake/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "DQIandIIHD2DRemake.exe",
+    "steam_id": "2893570",
+    "vortex_mod_types": {
+      "dragonquest1and2hd2dremake-uesortablepak": "Game/Content/Paks/~mods",
+      "dragonquest1and2hd2dremake-scripts": "Game/Binaries/Win64/ue4ss/Mods",
+      "dragonquest1and2hd2dremake-ue4ssdll": "Game/Binaries/Win64/ue4ss/Mods",
+      "dragonquest1and2hd2dremake-binaries": "Game/Binaries/Win64",
+      "dragonquest1and2hd2dremake-ue4ss": "Game/Binaries/Win64",
+      "dragonquest1and2hd2dremake-sigbypass": "Game/Binaries/Win64",
+      "dragonquest1and2hd2dremake-logicmods": "Game/Content/Paks/LogicMods",
+      "dragonquest1and2hd2dremake-pakalt": "Game/Content/Paks",
+      "dragonquest1and2hd2dremake-contentfolder": "Game"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "dragonquest7reimagined",
+    "name": "DRAGON QUEST VII Reimagined",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "DQ7R"
+    },
+    "executable": "DQ7R/Binaries/Win64/DQ7R-Win64-Shipping.exe",
+    "required": [
+      "DQ7R.exe",
+      "DQ7R/Binaries/Win64/DQ7R-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonquest7reimagined/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "DQ7R.exe",
+    "steam_id": "2499860",
+    "vortex_mod_types": {
+      "dragonquest7reimagined-uesortablepak": "DQ7R/Content/Paks/~mods",
+      "dragonquest7reimagined-scripts": "DQ7R/Binaries/Win64/ue4ss/Mods",
+      "dragonquest7reimagined-ue4ssdll": "DQ7R/Binaries/Win64/ue4ss/Mods",
+      "dragonquest7reimagined-binaries": "DQ7R/Binaries/Win64",
+      "dragonquest7reimagined-ue4ss": "DQ7R/Binaries/Win64",
+      "dragonquest7reimagined-sigbypass": "DQ7R/Binaries/Win64",
+      "dragonquest7reimagined-logicmods": "DQ7R/Content/Paks",
+      "dragonquest7reimagined-pakalt": "DQ7R/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "fantasylifeithegirlwhostealstime",
+    "name": "FANTASY LIFE i: The Girl Who Steals Time",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Game"
+    },
+    "executable": "Game/Binaries/Win64/NFL1-Win64-Shipping.exe",
+    "required": [
+      "NFL1.exe",
+      "Game/Binaries/Win64/NFL1-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-fantasylifeithegirlwhostealstime/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "NFL1.exe",
+    "steam_id": "2993780",
+    "vortex_mod_types": {
+      "fantasylifeithegirlwhostealstime-uesortablepak": "Game/Content/Paks/~mods",
+      "fantasylifeithegirlwhostealstime-scripts": "Game/Binaries/Win64/ue4ss/Mods",
+      "fantasylifeithegirlwhostealstime-ue4ssdll": "Game/Binaries/Win64/ue4ss/Mods",
+      "fantasylifeithegirlwhostealstime-binaries": "Game/Binaries/Win64",
+      "fantasylifeithegirlwhostealstime-ue4ss": "Game/Binaries/Win64",
+      "fantasylifeithegirlwhostealstime-sigbypass": "Game/Binaries/Win64",
+      "fantasylifeithegirlwhostealstime-modkitmod": "Game/Mods",
+      "fantasylifeithegirlwhostealstime-pakalt": "Game/Content/Paks",
+      "fantasylifeithegirlwhostealstime-rootsubfolders": "Game"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "farfarwest",
+    "name": "Far Far West",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "FarFarWest"
+    },
+    "executable": "FarFarWest/Binaries/Win64/FarFarWest-Win64-Shipping.exe",
+    "required": [
+      "FarFarWest.exe",
+      "FarFarWest/Binaries/Win64/FarFarWest-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-farfarwest/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "FarFarWest.exe",
+    "steam_id": "3124540",
+    "vortex_mod_types": {
+      "farfarwest-uesortablepak": "FarFarWest/Content/Paks/~mods",
+      "farfarwest-scripts": "FarFarWest/Binaries/Win64/ue4ss/Mods",
+      "farfarwest-ue4ssdll": "FarFarWest/Binaries/Win64/ue4ss/Mods",
+      "farfarwest-binaries": "FarFarWest/Binaries/Win64",
+      "farfarwest-ue4ss": "FarFarWest/Binaries/Win64",
+      "farfarwest-sigbypass": "FarFarWest/Binaries/Win64",
+      "farfarwest-logicmods": "FarFarWest/Content/Paks",
+      "farfarwest-pakalt": "FarFarWest/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "fatekeeper",
+    "name": "Fatekeeper",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "SLASHER"
+    },
+    "executable": "SLASHER/Binaries/Win64/SLASHER-Win64-Shipping.exe",
+    "required": [
+      "SLASHER.exe",
+      "SLASHER/Binaries/Win64/SLASHER-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-fatekeeper/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "SLASHER.exe",
+    "steam_id": "2186990",
+    "vortex_mod_types": {
+      "fatekeeper-uesortablepak": "SLASHER/Content/Paks/~mods",
+      "fatekeeper-scripts": "SLASHER/Binaries/Win64/ue4ss/Mods",
+      "fatekeeper-ue4ssdll": "SLASHER/Binaries/Win64/ue4ss/Mods",
+      "fatekeeper-binaries": "SLASHER/Binaries/Win64",
+      "fatekeeper-ue4ss": "SLASHER/Binaries/Win64",
+      "fatekeeper-sigbypass": "SLASHER/Binaries/Win64",
+      "fatekeeper-logicmods": "SLASHER/Content/Paks",
+      "fatekeeper-pakalt": "SLASHER/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "frostpunk2",
+    "name": "Frostpunk 2",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Frostpunk2"
+    },
+    "executable": "Frostpunk2/Binaries/Win64/Frostpunk2-Win64-Shipping.exe",
+    "required": [
+      "Frostpunk2.exe",
+      "Frostpunk2/Binaries/Win64/Frostpunk2-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-frostpunk2/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Frostpunk2.exe",
+    "steam_id": "1601580",
+    "vortex_mod_types": {
+      "ue5-sortable-modtype": "Frostpunk2/Content/Paks/~mods",
+      "frostpunk2-ue5-sortable-modtype": "Frostpunk2/Content/Paks/~mods",
+      "frostpunk2-scripts": "Frostpunk2/Binaries/Win64/ue4ss/Mods",
+      "frostpunk2-ue4ssdll": "Frostpunk2/Binaries/Win64/ue4ss/Mods",
+      "frostpunk2-binaries": "Frostpunk2/Binaries/Win64",
+      "frostpunk2-ue4ss": "Frostpunk2/Binaries/Win64",
+      "frostpunk2-sigbypass": "Frostpunk2/Binaries/Win64",
+      "frostpunk2-logicmods": "Frostpunk2/Content/Paks/LogicMods",
+      "frostpunk2-pakalt": "Frostpunk2/Content/Paks",
+      "frostpunk2-ue5": "Frostpunk2/Content/Paks/~mods"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "gearsofwareday",
+    "name": "Gears of War: E-Day",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "FairlightConcept"
+    },
+    "executable": "FairlightConcept/Binaries/Win64/GoWEDAY-Steam.exe",
+    "required": [
+      "FairlightConcept/Binaries/Win64/GoWEDAY-Steam.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-gearsofwareday/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "3010850",
+    "vortex_mod_types": {
+      "gearsofwareday-uesortablepak": "FairlightConcept/Content/Paks/~mods",
+      "gearsofwareday-scripts": "FairlightConcept/Binaries/Win64/ue4ss/Mods",
+      "gearsofwareday-ue4ssdll": "FairlightConcept/Binaries/Win64/ue4ss/Mods",
+      "gearsofwareday-binaries": "FairlightConcept/Binaries/Win64",
+      "gearsofwareday-ue4ss": "FairlightConcept/Binaries/Win64",
+      "gearsofwareday-sigbypass": "FairlightConcept/Binaries/Win64",
+      "gearsofwareday-logicmods": "FairlightConcept/Content/Paks",
+      "gearsofwareday-pakalt": "FairlightConcept/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "halloweenthegame",
+    "name": "Halloween: The Game",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Ravage"
+    },
+    "executable": "Ravage/Binaries/Win64/Halloween.exe",
+    "required": [
+      "Ravage/Binaries/Win64/Halloween.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-halloweenthegame/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "3219630",
+    "vortex_mod_types": {
+      "halloweenthegame-uesortablepak": "Ravage/Content/Paks/~mods",
+      "halloweenthegame-scripts": "Ravage/Binaries/Win64/ue4ss/Mods",
+      "halloweenthegame-ue4ssdll": "Ravage/Binaries/Win64/ue4ss/Mods",
+      "halloweenthegame-binaries": "Ravage/Binaries/Win64",
+      "halloweenthegame-ue4ss": "Ravage/Binaries/Win64",
+      "halloweenthegame-sigbypass": "Ravage/Binaries/Win64",
+      "halloweenthegame-logicmods": "Ravage/Content/Paks",
+      "halloweenthegame-pakalt": "Ravage/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "hellisus",
+    "name": "Hell is Us",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "HellIsUs"
+    },
+    "executable": "HellIsUs/Binaries/Win64/HellIsUs-Win64-Shipping.exe",
+    "required": [
+      "HellIsUs.exe",
+      "HellIsUs/Binaries/Win64/HellIsUs-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-hellisus/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "HellIsUs.exe",
+    "steam_id": "1620730",
+    "vortex_mod_types": {
+      "hellisus-uesortablepak": "HellIsUs/Content/Paks/~mods",
+      "hellisus-scripts": "HellIsUs/Binaries/Win64/ue4ss/Mods",
+      "hellisus-ue4ssdll": "HellIsUs/Binaries/Win64/ue4ss/Mods",
+      "hellisus-binaries": "HellIsUs/Binaries/Win64",
+      "hellisus-ue4ss": "HellIsUs/Binaries/Win64",
+      "hellisus-sigbypass": "HellIsUs/Binaries/Win64",
+      "hellisus-logicmods": "HellIsUs/Content/Paks/LogicMods",
+      "hellisus-pak": "HellIsUs/Content/Paks",
+      "hellisus-contentfolder": "HellIsUs"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "highonlife",
+    "name": "High On Life",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Oregon"
+    },
+    "executable": "Oregon/Binaries/Win64/Oregon-Win64-Shipping.exe",
+    "required": [
+      "Oregon.exe",
+      "Oregon/Binaries/Win64/Oregon-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-highonlife/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Oregon.exe",
+    "steam_id": "1583230",
+    "vortex_mod_types": {
+      "highonlife-uesortablepak": "Oregon/Content/Paks/~mods",
+      "highonlife-scripts": "Oregon/Binaries/Win64/ue4ss/Mods",
+      "highonlife-ue4ssdll": "Oregon/Binaries/Win64/ue4ss/Mods",
+      "highonlife-binaries": "Oregon/Binaries/Win64",
+      "highonlife-ue4ss": "Oregon/Binaries/Win64",
+      "highonlife-sigbypass": "Oregon/Binaries/Win64",
+      "highonlife-logicmods": "Oregon/Content/Paks",
+      "highonlife-pakalt": "Oregon/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "highonlife2",
+    "name": "High On Life 2",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "HighOnLife2"
+    },
+    "executable": "HighOnLife2/Binaries/Win64/HighOnLife2-Win64-Shipping.exe",
+    "required": [
+      "HighOnLife2.exe",
+      "HighOnLife2/Binaries/Win64/HighOnLife2-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-highonlife2/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "HighOnLife2.exe",
+    "steam_id": "2069250",
+    "vortex_mod_types": {
+      "highonlife2-uesortablepak": "HighOnLife2/Content/Paks/~mods",
+      "highonlife2-scripts": "HighOnLife2/Binaries/Win64/ue4ss/Mods",
+      "highonlife2-ue4ssdll": "HighOnLife2/Binaries/Win64/ue4ss/Mods",
+      "highonlife2-binaries": "HighOnLife2/Binaries/Win64",
+      "highonlife2-ue4ss": "HighOnLife2/Binaries/Win64",
+      "highonlife2-sigbypass": "HighOnLife2/Binaries/Win64",
+      "highonlife2-logicmods": "HighOnLife2/Content/Paks",
+      "highonlife2-pakalt": "HighOnLife2/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "humanitz",
+    "name": "HumanitZ",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Humanitz"
+    },
+    "executable": "Humanitz/Binaries/Win64/Humanitz-Win64-Shipping.exe",
+    "required": [
+      "Humanitz.exe",
+      "Humanitz/Binaries/Win64/Humanitz-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-humanitz/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Humanitz.exe",
+    "steam_id": "1766060",
+    "vortex_mod_types": {
+      "humanitz-uesortablepak": "Humanitz/Content/Paks/~mods",
+      "humanitz-scripts": "Humanitz/Binaries/Win64/ue4ss/Mods",
+      "humanitz-ue4ssdll": "Humanitz/Binaries/Win64/ue4ss/Mods",
+      "humanitz-binaries": "Humanitz/Binaries/Win64",
+      "humanitz-ue4ss": "Humanitz/Binaries/Win64",
+      "humanitz-sigbypass": "Humanitz/Binaries/Win64",
+      "humanitz-logicmods": "Humanitz/Content/Paks",
+      "humanitz-pakalt": "Humanitz/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "inzoi",
+    "name": "inZOI",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "BlueClient"
+    },
+    "executable": "BlueClient/Binaries/Win64/BlueClient-Win64-Shipping.exe",
+    "required": [
+      "inZOI.exe",
+      "BlueClient/Binaries/Win64/BlueClient-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-inzoi/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "inZOI.exe",
+    "steam_id": "2456740",
+    "vortex_mod_types": {
+      "inzoi-ue5-sortable-modtype": "BlueClient/Content/Paks/~mods",
+      "inzoi-scripts": "BlueClient/Binaries/Win64/ue4ss/Mods",
+      "inzoi-ue4ssdll": "BlueClient/Binaries/Win64/ue4ss/Mods",
+      "inzoi-binaries": "BlueClient/Binaries/Win64",
+      "inzoi-ue4ss": "BlueClient/Binaries/Win64",
+      "inzoi-sigbypass": "BlueClient/Binaries/Win64",
+      "ue5-sortable-modtype": "BlueClient/Content/Paks/~mods",
+      "inzoi-logicmods": "BlueClient/Content/Paks",
+      "inzoi-pakalt": "BlueClient/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "legobatmanlegacyofthedarkknight",
+    "name": "LEGO Batman: Legacy of the Dark Knight",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "LEGOBatmanLotDK"
+    },
+    "executable": "LEGOBatmanLotDK/Binaries/Win64/LEGOBatmanLotDK-Win64-Shipping.exe",
+    "required": [
+      "LEGOBatmanLotDK.exe",
+      "LEGOBatmanLotDK/Binaries/Win64/LEGOBatmanLotDK-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-legobatmanlegacyofthedarkknight/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "LEGOBatmanLotDK.exe",
+    "steam_id": "2215200",
+    "vortex_mod_types": {
+      "legobatmanlegacyofthedarkknight-uesortablepak": "LEGOBatmanLotDK/Content/Paks/~mods",
+      "legobatmanlegacyofthedarkknight-scripts": "LEGOBatmanLotDK/Binaries/Win64/ue4ss/Mods",
+      "legobatmanlegacyofthedarkknight-ue4ssdll": "LEGOBatmanLotDK/Binaries/Win64/ue4ss/Mods",
+      "legobatmanlegacyofthedarkknight-binaries": "LEGOBatmanLotDK/Binaries/Win64",
+      "legobatmanlegacyofthedarkknight-ue4ss": "LEGOBatmanLotDK/Binaries/Win64",
+      "legobatmanlegacyofthedarkknight-sigbypass": "LEGOBatmanLotDK/Binaries/Win64",
+      "legobatmanlegacyofthedarkknight-logicmods": "LEGOBatmanLotDK/Content/Paks",
+      "legobatmanlegacyofthedarkknight-pakalt": "LEGOBatmanLotDK/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "liesofp",
+    "name": "Lies of P",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "LiesofP"
+    },
+    "executable": "LiesofP/Binaries/Win64/LiesofP-Win64-Shipping.exe",
+    "required": [
+      "LOP.exe",
+      "LiesofP/Binaries/Win64/LiesofP-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-liesofp/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "LOP.exe",
+    "steam_id": "1627720",
+    "vortex_mod_types": {
+      "liesofp-uesortablepak": "LiesofP/Content/Paks/~mods",
+      "liesofp-scripts": "LiesofP/Binaries/Win64/ue4ss/Mods",
+      "liesofp-ue4ssdll": "LiesofP/Binaries/Win64/ue4ss/Mods",
+      "liesofp-binaries": "LiesofP/Binaries/Win64",
+      "liesofp-ue4ss": "LiesofP/Binaries/Win64",
+      "liesofp-sigbypass": "LiesofP/Binaries/Win64",
+      "liesofp-logicmods": "LiesofP/Content/Paks",
+      "liesofp-pakalt": "LiesofP/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "lordsofthefallen2023",
+    "name": "Lords of the Fallen (2023)",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "LOTF2"
+    },
+    "executable": "LOTF2/Binaries/Win64/LOTF2-Win64-Shipping.exe",
+    "required": [
+      "LOTF2.exe",
+      "LOTF2/Binaries/Win64/LOTF2-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-lordsofthefallen2023/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "LOTF2.exe",
+    "steam_id": "1501750",
+    "vortex_mod_types": {
+      "ue5-sortable-modtype": "LOTF2/Content/Paks/~mods",
+      "lordsofthefallen2023-ue5-sortable-modtype": "LOTF2/Content/Paks/~mods",
+      "lordsofthefallen2023-scripts": "LOTF2/Binaries/Win64/ue4ss/Mods",
+      "lordsofthefallen2023-ue4ssdll": "LOTF2/Binaries/Win64/ue4ss/Mods",
+      "lordsofthefallen2023-binaries": "LOTF2/Binaries/Win64",
+      "lordsofthefallen2023-ue4ss": "LOTF2/Binaries/Win64",
+      "lordsofthefallen2023-sigbypass": "LOTF2/Binaries/Win64",
+      "lordsofthefallen2023-logicmods": "LOTF2/Content/Paks/LogicMods",
+      "lordsofthefallen2023-pakalt": "LOTF2/Content/Paks",
+      "lordsofthefallen2023-contentfolder": "LOTF2"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "lostsoulaside",
+    "name": "Lost Soul Aside",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Projectlsa"
+    },
+    "executable": "Projectlsa/Binaries/Win64/Projectlsa-Win64Steam-Shipping.exe",
+    "required": [
+      "LostSoulAside.exe",
+      "Projectlsa/Binaries/Win64/Projectlsa-Win64Steam-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-lostsoulaside/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "LostSoulAside.exe",
+    "steam_id": "3378960",
+    "vortex_mod_types": {
+      "lostsoulaside-uesortablepak": "Projectlsa/Content/Paks/~mods",
+      "lostsoulaside-scripts": "Projectlsa/Binaries/Win64/ue4ss/Mods",
+      "lostsoulaside-ue4ssdll": "Projectlsa/Binaries/Win64/ue4ss/Mods",
+      "lostsoulaside-binaries": "Projectlsa/Binaries/Win64",
+      "lostsoulaside-ue4ss": "Projectlsa/Binaries/Win64",
+      "lostsoulaside-sigbypass": "Projectlsa/Binaries/Win64",
+      "lostsoulaside-logicmods": "Projectlsa/Content/Paks/LogicMods",
+      "lostsoulaside-pak": "Projectlsa/Content/Paks",
+      "lostsoulaside-contentfolder": "Projectlsa"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "mandragorawhispersofthewitchtree",
+    "name": "Mandragora: Whispers of the Witch Tree",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "man"
+    },
+    "executable": "man/Binaries/Win64/man-Win64-Shipping.exe",
+    "required": [
+      "man.exe",
+      "man/Binaries/Win64/man-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-mandragorawhispersofthewitchtree/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "man.exe",
+    "steam_id": "1721060",
+    "vortex_mod_types": {
+      "mandragorawhispersofthewitchtree-uesortablepak": "man/Content/Paks/~mods",
+      "mandragorawhispersofthewitchtree-scripts": "man/Binaries/Win64/ue4ss/Mods",
+      "mandragorawhispersofthewitchtree-ue4ssdll": "man/Binaries/Win64/ue4ss/Mods",
+      "mandragorawhispersofthewitchtree-binaries": "man/Binaries/Win64",
+      "mandragorawhispersofthewitchtree-ue4ss": "man/Binaries/Win64",
+      "mandragorawhispersofthewitchtree-sigbypass": "man/Binaries/Win64",
+      "mandragorawhispersofthewitchtree-logicmods": "man/Content/Paks/LogicMods",
+      "mandragorawhispersofthewitchtree-pak": "man/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "manorlords",
+    "name": "Manor Lords",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "ManorLords"
+    },
+    "executable": "ManorLords/Binaries/Win64/ManorLords-Win64-Shipping.exe",
+    "required": [
+      "ManorLords.exe",
+      "ManorLords/Binaries/Win64/ManorLords-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-manorlords/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "ManorLords.exe",
+    "steam_id": "1363080",
+    "vortex_mod_types": {
+      "manorlords-uesortablepak": "ManorLords/Content/Paks/~mods",
+      "manorlords-scripts": "ManorLords/Binaries/Win64/ue4ss/Mods",
+      "manorlords-ue4ssdll": "ManorLords/Binaries/Win64/ue4ss/Mods",
+      "manorlords-binaries": "ManorLords/Binaries/Win64",
+      "manorlords-ue4ss": "ManorLords/Binaries/Win64",
+      "manorlords-sigbypass": "ManorLords/Binaries/Win64",
+      "manorlords-logicmods": "ManorLords/Content/Paks",
+      "manorlords-pakalt": "ManorLords/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "mechwarrior5clans",
+    "name": "MechWarrior 5: Clans",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "MW5Clans"
+    },
+    "executable": "MW5Clans/Binaries/Win64/MechWarrior-Win64-Shipping.exe",
+    "required": [
+      "MechWarrior.exe",
+      "MW5Clans/Binaries/Win64/MechWarrior-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-mechwarrior5clans/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "MechWarrior.exe",
+    "steam_id": "2000890",
+    "vortex_mod_types": {
+      "mechwarrior5clans-ue5-sortable-modtype": "MW5Clans/Content/Paks/~mods",
+      "ue5-sortable-modtype": "MW5Clans/Content/Paks/~mods",
+      "mechwarrior5clans-scripts": "MW5Clans/Binaries/Win64/ue4ss/Mods",
+      "mechwarrior5clans-ue4ssdll": "MW5Clans/Binaries/Win64/ue4ss/Mods",
+      "mechwarrior5clans-binaries": "MW5Clans/Binaries/Win64",
+      "mechwarrior5clans-ue4ss": "MW5Clans/Binaries/Win64",
+      "mechwarrior5clans-sigbypass": "MW5Clans/Binaries/Win64",
+      "mechwarrior5clans-logicmods": "MW5Clans/Content/Paks/LogicMods",
+      "mechwarrior5clans-pakalt": "MW5Clans/Content/Paks",
+      "mechwarrior5clans-ue5": "MW5Clans/Content/Paks/~mods"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "metaleden",
+    "name": "METAL EDEN",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "MetalEden"
+    },
+    "executable": "MetalEden/Binaries/Win64/MetalEden-Win64-Shipping.exe",
+    "required": [
+      "MetalEden.exe",
+      "MetalEden/Binaries/Win64/MetalEden-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-metaleden/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "MetalEden.exe",
+    "steam_id": "990380",
+    "vortex_mod_types": {
+      "metaleden-sigbypass": "MetalEden/Binaries/Win64",
+      "metaleden-logicmods": "MetalEden/Content/Paks/LogicMods",
+      "metaleden-ue4ss": "MetalEden/Binaries/Win64",
+      "metaleden-scripts": "MetalEden/Binaries/Win64/ue4ss/Mods",
+      "metaleden-ue4ssdll": "MetalEden/Binaries/Win64/ue4ss/Mods",
+      "metaleden-pak": "MetalEden/Content/Paks",
+      "metaleden-contentfolder": "MetalEden",
+      "metaleden-binaries": "MetalEden/Binaries/Win64"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "metalgearsoliddeltasnakeeater",
+    "name": "Metal Gear Solid Delta: Snake Eater",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "MGSDelta"
+    },
+    "executable": "MGSDelta/Binaries/Win64/MGSDelta-Win64-Shipping.exe",
+    "required": [
+      "MGSDelta.exe",
+      "MGSDelta/Binaries/Win64/MGSDelta-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-metalgearsoliddeltasnakeeater/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "MGSDelta.exe",
+    "steam_id": "2417610",
+    "vortex_mod_types": {
+      "metalgearsoliddeltasnakeeater-uesortablepak": "MGSDelta/Content/Paks/~mods",
+      "metalgearsoliddeltasnakeeater-scripts": "MGSDelta/Binaries/Win64/ue4ss/Mods",
+      "metalgearsoliddeltasnakeeater-ue4ssdll": "MGSDelta/Binaries/Win64/ue4ss/Mods",
+      "metalgearsoliddeltasnakeeater-binaries": "MGSDelta/Binaries/Win64",
+      "metalgearsoliddeltasnakeeater-ue4ss": "MGSDelta/Binaries/Win64",
+      "metalgearsoliddeltasnakeeater-sigbypass": "MGSDelta/Binaries/Win64",
+      "metalgearsoliddeltasnakeeater-logicmods": "MGSDelta/Content/Paks/LogicMods",
+      "metalgearsoliddeltasnakeeater-pak": "MGSDelta/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "misery",
+    "name": "MISERY",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "MISERY"
+    },
+    "executable": "MISERY/Binaries/Win64/MISERY-Win64-Shipping.exe",
+    "required": [
+      "MISERY.exe",
+      "MISERY/Binaries/Win64/MISERY-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-misery/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "MISERY.exe",
+    "steam_id": "2119830",
+    "vortex_mod_types": {
+      "misery-uesortablepak": "MISERY/Content/Paks/~mods",
+      "misery-scripts": "MISERY/Binaries/Win64/ue4ss/Mods",
+      "misery-ue4ssdll": "MISERY/Binaries/Win64/ue4ss/Mods",
+      "misery-binaries": "MISERY/Binaries/Win64",
+      "misery-ue4ss": "MISERY/Binaries/Win64",
+      "misery-sigbypass": "MISERY/Binaries/Win64",
+      "misery-modkitmod": "MISERY/Mods",
+      "misery-logicmods": "MISERY/Content/Paks",
+      "misery-pakalt": "MISERY/Content/Paks",
+      "misery-rootsubfolders": "MISERY"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "mortalkombat",
+    "name": "Mortal Kombat 1",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "MK12"
+    },
+    "executable": "MK12/Binaries/Win64/MK12.exe",
+    "required": [
+      "MK12.exe",
+      "MK12/Binaries/Win64/MK12.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-mortalkombat/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "MK12.exe",
+    "steam_id": "1971870",
+    "vortex_mod_types": {
+      "ue5-sortable-modtype": "MK12/Content/Paks/~mods",
+      "mortalkombat-ue5-sortable-modtype": "MK12/Content/Paks/~mods",
+      "mortalkombat-scripts": "MK12/Binaries/Win64/ue4ss/Mods",
+      "mortalkombat-ue4ssdll": "MK12/Binaries/Win64/ue4ss/Mods",
+      "mortalkombat-binaries": "MK12/Binaries/Win64",
+      "mortalkombat-ue4ss": "MK12/Binaries/Win64",
+      "mortalkombat-sigbypass": "MK12/Binaries/Win64",
+      "mortalkombat-logicmods": "MK12/Content/Paks/LogicMods",
+      "mortalkombat-pakalt": "MK12/Content/Paks",
+      "mortalkombat-ue5": "MK12/Content/Paks/~mods"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "ninjagaiden2black",
+    "name": "NINJA GAIDEN 2 Black",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "NINJAGAIDEN2BLACK"
+    },
+    "executable": "NINJAGAIDEN2BLACK/Binaries/Win64/NINJAGAIDEN2BLACK-Win64-Shipping.exe",
+    "required": [
+      "NINJAGAIDEN2BLACK.exe",
+      "NINJAGAIDEN2BLACK/Binaries/Win64/NINJAGAIDEN2BLACK-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-ninjagaiden2black/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "NINJAGAIDEN2BLACK.exe",
+    "steam_id": "3287520",
+    "vortex_mod_types": {
+      "ue5-sortable-modtype": "NINJAGAIDEN2BLACK/Content/Paks/~mods",
+      "ninjagaiden2black-ue5-sortable-modtype": "NINJAGAIDEN2BLACK/Content/Paks/~mods",
+      "ninjagaiden2black-scripts": "NINJAGAIDEN2BLACK/Binaries/Win64/ue4ss/Mods",
+      "ninjagaiden2black-ue4ssdll": "NINJAGAIDEN2BLACK/Binaries/Win64/ue4ss/Mods",
+      "ninjagaiden2black-binaries": "NINJAGAIDEN2BLACK/Binaries/Win64",
+      "ninjagaiden2black-mlmod": "NINJAGAIDEN2BLACK/Binaries/Win64",
+      "ninjagaiden2black-modloader": "NINJAGAIDEN2BLACK/Binaries/Win64",
+      "ninjagaiden2black-ue4ss": "NINJAGAIDEN2BLACK/Binaries/Win64",
+      "ninjagaiden2black-sigbypass": "NINJAGAIDEN2BLACK/Binaries/Win64",
+      "ninjagaiden2black-logicmods": "NINJAGAIDEN2BLACK/Content/Paks/LogicMods",
+      "ninjagaiden2black-pakalt": "NINJAGAIDEN2BLACK/Content/Paks",
+      "ninjagaiden2black-ue5": "NINJAGAIDEN2BLACK/Content/Paks/~mods"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "nobodywantstodie",
+    "name": "Nobody Wants to Die",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "detnoir"
+    },
+    "executable": "detnoir/Binaries/Win64/detnoir-Win64-Shipping.exe",
+    "required": [
+      "detnoir.exe",
+      "detnoir/Binaries/Win64/detnoir-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-nobodywantstodie/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "detnoir.exe",
+    "steam_id": "1939970",
+    "vortex_mod_types": {
+      "ue5-sortable-modtype": "detnoir/Content/Paks/~mods",
+      "nobodywantstodie-ue5-sortable-modtype": "detnoir/Content/Paks/~mods",
+      "nobodywantstodie-scripts": "detnoir/Binaries/Win64/ue4ss/Mods",
+      "nobodywantstodie-ue4ssdll": "detnoir/Binaries/Win64/ue4ss/Mods",
+      "nobodywantstodie-binaries": "detnoir/Binaries/Win64",
+      "nobodywantstodie-ue4ss": "detnoir/Binaries/Win64",
+      "nobodywantstodie-sigbypass": "detnoir/Binaries/Win64",
+      "nobodywantstodie-logicmods": "detnoir/Content/Paks",
+      "nobodywantstodie-pakalt": "detnoir/Content/Paks",
+      "nobodywantstodie-ue5": "detnoir/Content/Paks/~mods"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "octopathtraveler0",
+    "name": "OCTOPATH TRAVELER 0",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Octopath_Traveler0"
+    },
+    "executable": "Octopath_Traveler0/Binaries/Win64/Octopath_Traveler0-Win64-Shipping.exe",
+    "required": [
+      "Octopath_Traveler0.exe",
+      "Octopath_Traveler0/Binaries/Win64/Octopath_Traveler0-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-octopathtraveler0/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Octopath_Traveler0.exe",
+    "steam_id": "3014320",
+    "vortex_mod_types": {
+      "octopathtraveler0-uesortablepak": "Octopath_Traveler0/Content/Paks/~mods",
+      "octopathtraveler0-scripts": "Octopath_Traveler0/Binaries/Win64/ue4ss/Mods",
+      "octopathtraveler0-ue4ssdll": "Octopath_Traveler0/Binaries/Win64/ue4ss/Mods",
+      "octopathtraveler0-binaries": "Octopath_Traveler0/Binaries/Win64",
+      "octopathtraveler0-ue4ss": "Octopath_Traveler0/Binaries/Win64",
+      "octopathtraveler0-sigbypass": "Octopath_Traveler0/Binaries/Win64",
+      "octopathtraveler0-logicmods": "Octopath_Traveler0/Content/Paks",
+      "octopathtraveler0-pakalt": "Octopath_Traveler0/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "ofashandsteel",
+    "name": "Of Ash and Steel",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "ofAshAndSteelGame"
+    },
+    "executable": "ofAshAndSteelGame/Binaries/Win64/ofAshAndSteelGame-Win64-Shipping.exe",
+    "required": [
+      "ofAshAndSteelGame.exe",
+      "ofAshAndSteelGame/Binaries/Win64/ofAshAndSteelGame-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-ofashandsteel/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "ofAshAndSteelGame.exe",
+    "steam_id": "2893820",
+    "vortex_mod_types": {
+      "ofashandsteel-uesortablepak": "ofAshAndSteelGame/Content/Paks/~mods",
+      "ofashandsteel-scripts": "ofAshAndSteelGame/Binaries/Win64/ue4ss/Mods",
+      "ofashandsteel-ue4ssdll": "ofAshAndSteelGame/Binaries/Win64/ue4ss/Mods",
+      "ofashandsteel-binaries": "ofAshAndSteelGame/Binaries/Win64",
+      "ofashandsteel-ue4ss": "ofAshAndSteelGame/Binaries/Win64",
+      "ofashandsteel-sigbypass": "ofAshAndSteelGame/Binaries/Win64",
+      "ofashandsteel-logicmods": "ofAshAndSteelGame/Content/Paks",
+      "ofashandsteel-pakalt": "ofAshAndSteelGame/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "painkiller",
+    "name": "Painkiller",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Painkiller"
+    },
+    "executable": "Painkiller/Binaries/Win64/Painkiller-Win64-Shipping.exe",
+    "required": [
+      "Painkiller.exe",
+      "Painkiller/Binaries/Win64/Painkiller-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-painkiller/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Painkiller.exe",
+    "steam_id": "2300120",
+    "vortex_mod_types": {
+      "painkiller-sigbypass": "Painkiller/Binaries/Win64",
+      "painkiller-logicmods": "Painkiller/Content/Paks/LogicMods",
+      "painkiller-ue4ss": "Painkiller/Binaries/Win64",
+      "painkiller-scripts": "Painkiller/Binaries/Win64/ue4ss/Mods",
+      "painkiller-ue4ssdll": "Painkiller/Binaries/Win64/ue4ss/Mods",
+      "painkiller-pakalt": "Painkiller/Content/Paks",
+      "painkiller-contentfolder": "Painkiller",
+      "painkiller-binaries": "Painkiller/Binaries/Win64"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "quarantinezonethelastcheck",
+    "name": "Quarantine Zone: The Last Check",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "QZSim"
+    },
+    "executable": "QZSim/Binaries/Win64/QZSim-Win64-Shipping.exe",
+    "required": [
+      "QZSim.exe",
+      "QZSim/Binaries/Win64/QZSim-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-quarantinezonethelastcheck/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "QZSim.exe",
+    "steam_id": "3419520",
+    "vortex_mod_types": {
+      "quarantinezonethelastcheck-uesortablepak": "QZSim/Content/Paks/~mods",
+      "quarantinezonethelastcheck-scripts": "QZSim/Binaries/Win64/ue4ss/Mods",
+      "quarantinezonethelastcheck-ue4ssdll": "QZSim/Binaries/Win64/ue4ss/Mods",
+      "quarantinezonethelastcheck-binaries": "QZSim/Binaries/Win64",
+      "quarantinezonethelastcheck-ue4ss": "QZSim/Binaries/Win64",
+      "quarantinezonethelastcheck-sigbypass": "QZSim/Binaries/Win64",
+      "quarantinezonethelastcheck-logicmods": "QZSim/Content/Paks",
+      "quarantinezonethelastcheck-pakalt": "QZSim/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "robocoproguecity",
+    "name": "RoboCop: Rogue City",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Game"
+    },
+    "executable": "Game/Binaries/Win64/Game-Win64-Shipping.exe",
+    "required": [
+      "RoboCop.exe",
+      "Game/Binaries/Win64/Game-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-robocoproguecity/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "RoboCop.exe",
+    "steam_id": "1681430",
+    "vortex_mod_types": {
+      "ue5-sortable-modtype": "Game/Content/Paks/~mods",
+      "robocoproguecity-logicmods": "Game/Content/Paks/LogicMods",
+      "robocoproguecity-pakalt": "Game/Content/Paks",
+      "robocoproguecity-contentfolder": "Game"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "runescapedragonwilds",
+    "name": "RuneScape: Dragonwilds",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "RSDragonwilds"
+    },
+    "executable": "RSDragonwilds/Binaries/Win64/RSDragonwilds-Win64-Shipping.exe",
+    "required": [
+      "RSDragonwilds.exe",
+      "RSDragonwilds/Binaries/Win64/RSDragonwilds-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-runescapedragonwilds/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "RSDragonwilds.exe",
+    "steam_id": "1374490",
+    "vortex_mod_types": {
+      "runescapedragonwilds-ue5-sortable-modtype": "RSDragonwilds/Content/Paks/~mods",
+      "ue5-sortable-modtype": "RSDragonwilds/Content/Paks/~mods",
+      "runescapedragonwilds-scripts": "RSDragonwilds/Binaries/Win64/ue4ss/Mods",
+      "runescapedragonwilds-ue4ssdll": "RSDragonwilds/Binaries/Win64/ue4ss/Mods",
+      "runescapedragonwilds-runeschemaloader": "RSDragonwilds/Binaries/Win64/ue4ss/Mods",
+      "runescapedragonwilds-runeschema": "RSDragonwilds/Binaries/Win64/ue4ss/Mods/RuneSchema/mods",
+      "runescapedragonwilds-binaries": "RSDragonwilds/Binaries/Win64",
+      "runescapedragonwilds-ue4ss": "RSDragonwilds/Binaries/Win64",
+      "runescapedragonwilds-sigbypass": "RSDragonwilds/Binaries/Win64",
+      "runescapedragonwilds-logicmods": "RSDragonwilds/Content/Paks/LogicMods",
+      "runescapedragonwilds-pak": "RSDragonwilds/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "rvthereyet",
+    "name": "RV There Yet?",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Ride"
+    },
+    "executable": "Ride/Binaries/Win64/Ride-Win64-Shipping.exe",
+    "required": [
+      "Ride.exe",
+      "Ride/Binaries/Win64/Ride-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-rvthereyet/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Ride.exe",
+    "steam_id": "3949040",
+    "vortex_mod_types": {
+      "rvthereyet-uesortablepak": "Ride/Content/Paks/~mods",
+      "rvthereyet-scripts": "Ride/Binaries/Win64/ue4ss/Mods",
+      "rvthereyet-ue4ssdll": "Ride/Binaries/Win64/ue4ss/Mods",
+      "rvthereyet-binaries": "Ride/Binaries/Win64",
+      "rvthereyet-ue4ss": "Ride/Binaries/Win64",
+      "rvthereyet-sigbypass": "Ride/Binaries/Win64",
+      "rvthereyet-logicmods": "Ride/Content/Paks",
+      "rvthereyet-pakalt": "Ride/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "senuassagahellblade2",
+    "name": "Senua's Saga: Hellblade 2",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Hellblade2"
+    },
+    "executable": "Hellblade2/Binaries/Win64/Hellblade2-Win64-Shipping.exe",
+    "required": [
+      "Hellblade2.exe",
+      "Hellblade2/Binaries/Win64/Hellblade2-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-senuassagahellblade2/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Hellblade2.exe",
+    "steam_id": "2461850",
+    "vortex_mod_types": {
+      "ue5-sortable-modtype": "Hellblade2/Content/Paks/~mods",
+      "senuassagahellblade2-ue5-sortable-modtype": "Hellblade2/Content/Paks/~mods",
+      "senuassagahellblade2-scripts": "Hellblade2/Binaries/Win64/ue4ss/Mods",
+      "senuassagahellblade2-ue4ssdll": "Hellblade2/Binaries/Win64/ue4ss/Mods",
+      "senuassagahellblade2-binaries": "Hellblade2/Binaries/Win64",
+      "senuassagahellblade2-ue4ss": "Hellblade2/Binaries/Win64",
+      "senuassagahellblade2-sigbypass": "Hellblade2/Binaries/Win64",
+      "senuassagahellblade2-logicmods": "Hellblade2/Content/Paks",
+      "senuassagahellblade2-pakalt": "Hellblade2/Content/Paks",
+      "senuassagahellblade2-ue5": "Hellblade2/Content/Paks/~mods"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "sifu",
+    "name": "Sifu",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Sifu"
+    },
+    "executable": "Sifu/Binaries/Win64/Sifu-Win64-Shipping.exe",
+    "required": [
+      "Sifu.exe",
+      "Sifu/Binaries/Win64/Sifu-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-sifu/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Sifu.exe",
+    "steam_id": "2138710",
+    "vortex_mod_types": {
+      "ue5-sortable-modtype": "Sifu/Content/Paks/~mods",
+      "sifu-ue5-sortable-modtype": "Sifu/Content/Paks/~mods",
+      "sifu-scripts": "Sifu/Binaries/Win64/ue4ss/Mods",
+      "sifu-ue4ssdll": "Sifu/Binaries/Win64/ue4ss/Mods",
+      "sifu-binaries": "Sifu/Binaries/Win64",
+      "sifu-ue4ss": "Sifu/Binaries/Win64",
+      "sifu-sigbypass": "Sifu/Binaries/Win64",
+      "sifu-logicmods": "Sifu/Content/Paks/LogicMods",
+      "sifu-pakalt": "Sifu/Content/Paks",
+      "sifu-pak": "Sifu/Content/Paks/~mods"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "silenthill2",
+    "name": "Silent Hill 2 (2024)",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "SHProto"
+    },
+    "executable": "SHProto/Binaries/Win64/SHProto-Win64-Shipping.exe",
+    "required": [
+      "SHProto.exe",
+      "SHProto/Binaries/Win64/SHProto-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-silenthill2/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "SHProto.exe",
+    "steam_id": "2124490",
+    "vortex_mod_types": {
+      "silenthill2-ue5-sortable-modtype": "SHProto/Content/Paks/~mods",
+      "ue5-sortable-modtype": "SHProto/Content/Paks/~mods",
+      "silenthill2-scripts": "SHProto/Binaries/Win64/ue4ss/Mods",
+      "silenthill2-ue4ssdll": "SHProto/Binaries/Win64/ue4ss/Mods",
+      "silenthill2-binaries": "SHProto/Binaries/Win64",
+      "silenthill2-ue4ss": "SHProto/Binaries/Win64",
+      "silenthill2-sigbypass": "SHProto/Binaries/Win64",
+      "silenthill2-logicmods": "SHProto/Content/Paks",
+      "silenthill2-pakalt": "SHProto/Content/Paks",
+      "silenthill2-ue5": "SHProto/Content/Paks/~mods"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "silenthillf",
+    "name": "Silent Hill f",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "SHf"
+    },
+    "executable": "SHf/Binaries/Win64/SHf-Win64-Shipping.exe",
+    "required": [
+      "SHf.exe",
+      "SHf/Binaries/Win64/SHf-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-silenthillf/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "SHf.exe",
+    "steam_id": "2947440",
+    "vortex_mod_types": {
+      "silenthillf-uesortablepak": "SHf/Content/Paks/~mods",
+      "silenthillf-scripts": "SHf/Binaries/Win64/ue4ss/Mods",
+      "silenthillf-ue4ssdll": "SHf/Binaries/Win64/ue4ss/Mods",
+      "silenthillf-binaries": "SHf/Binaries/Win64",
+      "silenthillf-ue4ss": "SHf/Binaries/Win64",
+      "silenthillf-sigbypass": "SHf/Binaries/Win64",
+      "silenthillf-logicmods": "SHf/Content/Paks/LogicMods",
+      "silenthillf-pak": "SHf/Content/Paks",
+      "silenthillf-contentfolder": "SHf"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "silenthilltownfall",
+    "name": "SILENT HILL: Townfall",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Townfall"
+    },
+    "executable": "Townfall/Binaries/Win64/Townfall-Win64-Shipping.exe",
+    "required": [
+      "Townfall.exe",
+      "Townfall/Binaries/Win64/Townfall-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-silenthilltownfall/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Townfall.exe",
+    "steam_id": "1636440",
+    "vortex_mod_types": {
+      "silenthilltownfall-uesortablepak": "Townfall/Content/Paks/~mods",
+      "silenthilltownfall-scripts": "Townfall/Binaries/Win64/ue4ss/Mods",
+      "silenthilltownfall-ue4ssdll": "Townfall/Binaries/Win64/ue4ss/Mods",
+      "silenthilltownfall-binaries": "Townfall/Binaries/Win64",
+      "silenthilltownfall-ue4ss": "Townfall/Binaries/Win64",
+      "silenthilltownfall-sigbypass": "Townfall/Binaries/Win64",
+      "silenthilltownfall-logicmods": "Townfall/Content/Paks",
+      "silenthilltownfall-pakalt": "Townfall/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "starrupture",
+    "name": "StarRupture",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "StarRupture"
+    },
+    "executable": "StarRupture/Binaries/Win64/StarRuptureGameSteam-Win64-Shipping.exe",
+    "required": [
+      "StarRuptureGameSteam.exe",
+      "StarRupture/Binaries/Win64/StarRuptureGameSteam-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-starrupture/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "StarRuptureGameSteam.exe",
+    "steam_id": "1631270",
+    "vortex_mod_types": {
+      "starrupture-uesortablepak": "StarRupture/Content/Paks/~mods",
+      "starrupture-scripts": "StarRupture/Binaries/Win64/ue4ss/Mods",
+      "starrupture-ue4ssdll": "StarRupture/Binaries/Win64/ue4ss/Mods",
+      "starrupture-binaries": "StarRupture/Binaries/Win64",
+      "starrupture-ue4ss": "StarRupture/Binaries/Win64",
+      "starrupture-sigbypass": "StarRupture/Binaries/Win64",
+      "starrupture-logicmods": "StarRupture/Content/Paks",
+      "starrupture-pakalt": "StarRupture/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "starwarsgalacticracer",
+    "name": "STAR WARS: Galactic Racer",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Griffin"
+    },
+    "executable": "Griffin/Binaries/Win64/SWGR-Win64-Shipping.exe",
+    "required": [
+      "SWGR.exe",
+      "Griffin/Binaries/Win64/SWGR-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-starwarsgalacticracer/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "SWGR.exe",
+    "steam_id": "4078430",
+    "vortex_mod_types": {
+      "starwarsgalacticracer-uesortablepak": "Griffin/Content/Paks/~mods",
+      "starwarsgalacticracer-scripts": "Griffin/Binaries/Win64/ue4ss/Mods",
+      "starwarsgalacticracer-ue4ssdll": "Griffin/Binaries/Win64/ue4ss/Mods",
+      "starwarsgalacticracer-binaries": "Griffin/Binaries/Win64",
+      "starwarsgalacticracer-ue4ss": "Griffin/Binaries/Win64",
+      "starwarsgalacticracer-sigbypass": "Griffin/Binaries/Win64",
+      "starwarsgalacticracer-logicmods": "Griffin/Content/Paks",
+      "starwarsgalacticracer-pakalt": "Griffin/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "starwarszerocompany",
+    "name": "STAR WARS Zero Company",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "SWZeroCompany"
+    },
+    "executable": "SWZeroCompany/Binaries/Win64/SWZeroCompany-Win64-Shipping.exe",
+    "required": [
+      "SWZeroCompany.exe",
+      "SWZeroCompany/Binaries/Win64/SWZeroCompany-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-starwarszerocompany/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "SWZeroCompany.exe",
+    "steam_id": "2075800",
+    "vortex_mod_types": {
+      "starwarszerocompany-uesortablepak": "SWZeroCompany/Content/Paks/~mods",
+      "starwarszerocompany-scripts": "SWZeroCompany/Binaries/Win64/ue4ss/Mods",
+      "starwarszerocompany-ue4ssdll": "SWZeroCompany/Binaries/Win64/ue4ss/Mods",
+      "starwarszerocompany-binaries": "SWZeroCompany/Binaries/Win64",
+      "starwarszerocompany-ue4ss": "SWZeroCompany/Binaries/Win64",
+      "starwarszerocompany-sigbypass": "SWZeroCompany/Binaries/Win64",
+      "starwarszerocompany-logicmods": "SWZeroCompany/Content/Paks",
+      "starwarszerocompany-pakalt": "SWZeroCompany/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "subnautica2",
+    "name": "Subnautica 2",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Subnautica2"
+    },
+    "executable": "Subnautica2/Binaries/Win64/Subnautica2-Win64-Shipping.exe",
+    "required": [
+      "Subnautica2.exe",
+      "Subnautica2/Binaries/Win64/Subnautica2-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-subnautica2/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Subnautica2.exe",
+    "steam_id": "1962700",
+    "vortex_mod_types": {
+      "subnautica2-uesortablepak": "Subnautica2/Content/Paks/~mods",
+      "subnautica2-scripts": "Subnautica2/Binaries/Win64/ue4ss/Mods",
+      "subnautica2-ue4ssdll": "Subnautica2/Binaries/Win64/ue4ss/Mods",
+      "subnautica2-binaries": "Subnautica2/Binaries/Win64",
+      "subnautica2-ue4ss": "Subnautica2/Binaries/Win64",
+      "subnautica2-sigbypass": "Subnautica2/Binaries/Win64",
+      "subnautica2-logicmods": "Subnautica2/Content/Paks",
+      "subnautica2-pakalt": "Subnautica2/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "surroundead",
+    "name": "SurrounDead",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "SurrounDead"
+    },
+    "executable": "SurrounDead/Binaries/Win64/SurrounDead-Win64-Shipping.exe",
+    "required": [
+      "SurrounDead.exe",
+      "SurrounDead/Binaries/Win64/SurrounDead-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-surroundead/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "SurrounDead.exe",
+    "steam_id": "1645820",
+    "vortex_mod_types": {
+      "surroundead-uesortablepak": "SurrounDead/Content/Paks/~mods",
+      "surroundead-scripts": "SurrounDead/Binaries/Win64/ue4ss/Mods",
+      "surroundead-ue4ssdll": "SurrounDead/Binaries/Win64/ue4ss/Mods",
+      "surroundead-binaries": "SurrounDead/Binaries/Win64",
+      "surroundead-ue4ss": "SurrounDead/Binaries/Win64",
+      "surroundead-sigbypass": "SurrounDead/Binaries/Win64",
+      "surroundead-logicmods": "SurrounDead/Content/Paks",
+      "surroundead-pakalt": "SurrounDead/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "systemshock2023",
+    "name": "System Shock (2023)",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "SystemShock"
+    },
+    "executable": "SystemShock/Binaries/Win64/SystemShock-Win64-Shipping.exe",
+    "required": [
+      "SystemShock.exe",
+      "SystemShock/Binaries/Win64/SystemShock-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-systemshock2023/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "SystemShock.exe",
+    "steam_id": "482400",
+    "vortex_mod_types": {
+      "systemshock2023-uesortablepak": "SystemShock/Content/Paks/~mods",
+      "systemshock2023-scripts": "SystemShock/Binaries/Win64/ue4ss/Mods",
+      "systemshock2023-ue4ssdll": "SystemShock/Binaries/Win64/ue4ss/Mods",
+      "systemshock2023-binaries": "SystemShock/Binaries/Win64",
+      "systemshock2023-ue4ss": "SystemShock/Binaries/Win64",
+      "systemshock2023-sigbypass": "SystemShock/Binaries/Win64",
+      "systemshock2023-logicmods": "SystemShock/Content/Paks",
+      "systemshock2023-pakalt": "SystemShock/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "tekken8",
+    "name": "TEKKEN 8",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Polaris"
+    },
+    "executable": "Polaris/Binaries/Win64/Polaris-Win64-Shipping.exe",
+    "required": [
+      "TEKKEN 8.exe",
+      "Polaris/Binaries/Win64/Polaris-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-tekken8/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "TEKKEN 8.exe",
+    "steam_id": "1778820",
+    "vortex_mod_types": {
+      "tekken8-uesortablepak": "Polaris/Content/Paks/~mods",
+      "tekken8-scripts": "Polaris/Binaries/Win64/ue4ss/Mods",
+      "tekken8-ue4ssdll": "Polaris/Binaries/Win64/ue4ss/Mods",
+      "tekken8-binaries": "Polaris/Binaries/Win64",
+      "tekken8-ue4ss": "Polaris/Binaries/Win64",
+      "tekken8-sigbypass": "Polaris/Binaries/Win64",
+      "tekken8-modkitmod": "Polaris/Mods",
+      "tekken8-logicmods": "Polaris/Content/Paks",
+      "tekken8-pakalt": "Polaris/Content/Paks",
+      "tekken8-rootsubfolders": "Polaris"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "thebloodofdawnwalker",
+    "name": "The Blood of Dawnwalker",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Dawnwalker"
+    },
+    "executable": "Dawnwalker/Binaries/Win64/Dawnwalker.exe",
+    "required": [
+      "Dawnwalker.exe",
+      "Dawnwalker/Binaries/Win64/Dawnwalker.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-thebloodofdawnwalker/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Dawnwalker.exe",
+    "steam_id": "3751260",
+    "vortex_mod_types": {
+      "thebloodofdawnwalker-uesortablepak": "Dawnwalker/Content/Paks/~mods",
+      "thebloodofdawnwalker-scripts": "Dawnwalker/Binaries/Win64/ue4ss/Mods",
+      "thebloodofdawnwalker-ue4ssdll": "Dawnwalker/Binaries/Win64/ue4ss/Mods",
+      "thebloodofdawnwalker-binaries": "Dawnwalker/Binaries/Win64",
+      "thebloodofdawnwalker-ue4ss": "Dawnwalker/Binaries/Win64",
+      "thebloodofdawnwalker-sigbypass": "Dawnwalker/Binaries/Win64",
+      "thebloodofdawnwalker-logicmods": "Dawnwalker/Content/Paks",
+      "thebloodofdawnwalker-pakalt": "Dawnwalker/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "thelastcaretaker",
+    "name": "The Last Caretaker",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Voyage"
+    },
+    "executable": "Voyage/Binaries/Win64/Voyage-Win64-Shipping.exe",
+    "required": [
+      "Voyage.exe",
+      "Voyage/Binaries/Win64/Voyage-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-thelastcaretaker/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Voyage.exe",
+    "steam_id": "1783560",
+    "vortex_mod_types": {
+      "thelastcaretaker-uesortablepak": "Voyage/Content/Paks/~mods",
+      "thelastcaretaker-scripts": "Voyage/Binaries/Win64/ue4ss/Mods",
+      "thelastcaretaker-ue4ssdll": "Voyage/Binaries/Win64/ue4ss/Mods",
+      "thelastcaretaker-binaries": "Voyage/Binaries/Win64",
+      "thelastcaretaker-ue4ss": "Voyage/Binaries/Win64",
+      "thelastcaretaker-sigbypass": "Voyage/Binaries/Win64",
+      "thelastcaretaker-logicmods": "Voyage/Content/Paks",
+      "thelastcaretaker-pakalt": "Voyage/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "thelordoftheringsreturntomoria",
+    "name": "The Lord of the Rings: Return to Moria",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Moria"
+    },
+    "executable": "Moria/Binaries/Win64/Moria-Win64-Shipping.exe",
+    "required": [
+      "Moria.exe",
+      "Moria/Binaries/Win64/Moria-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-thelordoftheringsreturntomoria/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Moria.exe",
+    "steam_id": "2933130",
+    "vortex_mod_types": {
+      "thelordoftheringsreturntomoria-uesortablepak": "Moria/Content/Paks/~mods",
+      "thelordoftheringsreturntomoria-scripts": "Moria/Binaries/Win64/ue4ss/Mods",
+      "thelordoftheringsreturntomoria-ue4ssdll": "Moria/Binaries/Win64/ue4ss/Mods",
+      "thelordoftheringsreturntomoria-binaries": "Moria/Binaries/Win64",
+      "thelordoftheringsreturntomoria-ue4ss": "Moria/Binaries/Win64",
+      "thelordoftheringsreturntomoria-sigbypass": "Moria/Binaries/Win64",
+      "thelordoftheringsreturntomoria-logicmods": "Moria/Content/Paks",
+      "thelordoftheringsreturntomoria-pakalt": "Moria/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "theouterworlds",
+    "name": "The Outer Worlds",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Indiana"
+    },
+    "executable": "Indiana/Binaries/Win64/Indiana-Win64-Shipping.exe",
+    "required": [
+      "gamelaunchhelper.exe",
+      "Indiana/Binaries/Win64/Indiana-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-theouterworlds/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "gamelaunchhelper.exe",
+    "steam_id": "578650",
+    "vortex_mod_types": {
+      "theouterworlds-uesortablepak": "Indiana/Content/Paks/~mods",
+      "theouterworlds-scripts": "Indiana/Binaries/Win64/ue4ss/Mods",
+      "theouterworlds-ue4ssdll": "Indiana/Binaries/Win64/ue4ss/Mods",
+      "theouterworlds-binaries": "Indiana/Binaries/Win64",
+      "theouterworlds-ue4ss": "Indiana/Binaries/Win64",
+      "theouterworlds-sigbypass": "Indiana/Binaries/Win64",
+      "theouterworlds-logicmods": "Indiana/Content/Paks",
+      "theouterworlds-pakalt": "Indiana/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "theouterworlds2",
+    "name": "The Outer Worlds 2",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Arkansas"
+    },
+    "executable": "Arkansas/Binaries/Win64/TheOuterWorlds2-Win64-Shipping.exe",
+    "required": [
+      "TheOuterWorlds2.exe",
+      "Arkansas/Binaries/Win64/TheOuterWorlds2-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-theouterworlds2/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "TheOuterWorlds2.exe",
+    "steam_id": "1449110",
+    "vortex_mod_types": {
+      "theouterworlds2-ue5-sortable-modtype": "Arkansas/Content/Paks/~mods",
+      "theouterworlds2-scripts": "Arkansas/Binaries/Win64/ue4ss/Mods",
+      "theouterworlds2-ue4ssdll": "Arkansas/Binaries/Win64/ue4ss/Mods",
+      "theouterworlds2-binaries": "Arkansas/Binaries/Win64",
+      "theouterworlds2-ue4ss": "Arkansas/Binaries/Win64",
+      "theouterworlds2-sigbypass": "Arkansas/Binaries/Win64",
+      "theouterworlds2-logicmods": "Arkansas/Content/Paks",
+      "theouterworlds2-pakalt": "Arkansas/Content/Paks",
+      "theouterworlds2-contentfolder": "Arkansas"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "thesinkingcity2",
+    "name": "The Sinking City 2",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "PlayGround"
+    },
+    "executable": "PlayGround/Binaries/Win64/TheSinkingCity2.exe",
+    "required": [
+      "PlayGround/Binaries/Win64/TheSinkingCity2.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-thesinkingcity2/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "2825860",
+    "vortex_mod_types": {
+      "thesinkingcity2-uesortablepak": "PlayGround/Content/Paks/~mods",
+      "thesinkingcity2-scripts": "PlayGround/Binaries/Win64/ue4ss/Mods",
+      "thesinkingcity2-ue4ssdll": "PlayGround/Binaries/Win64/ue4ss/Mods",
+      "thesinkingcity2-binaries": "PlayGround/Binaries/Win64",
+      "thesinkingcity2-ue4ss": "PlayGround/Binaries/Win64",
+      "thesinkingcity2-sigbypass": "PlayGround/Binaries/Win64",
+      "thesinkingcity2-logicmods": "PlayGround/Content/Paks",
+      "thesinkingcity2-pakalt": "PlayGround/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "titanquest2",
+    "name": "Titan Quest 2",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "TQ2"
+    },
+    "executable": "TQ2/Binaries/Win64/TQ2-Win64-Shipping.exe",
+    "required": [
+      "TQ2.exe",
+      "TQ2/Binaries/Win64/TQ2-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-titanquest2/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "TQ2.exe",
+    "steam_id": "1154030",
+    "vortex_mod_types": {
+      "titanquest2-uesortablepak": "TQ2/Content/Paks/~mods",
+      "titanquest2-scripts": "TQ2/Binaries/Win64/ue4ss/Mods",
+      "titanquest2-ue4ssdll": "TQ2/Binaries/Win64/ue4ss/Mods",
+      "titanquest2-binaries": "TQ2/Binaries/Win64",
+      "titanquest2-ue4ss": "TQ2/Binaries/Win64",
+      "titanquest2-sigbypass": "TQ2/Binaries/Win64",
+      "titanquest2-logicmods": "TQ2/Content/Paks/LogicMods",
+      "titanquest2-pak": "TQ2/Content/Paks",
+      "titanquest2-contentfolder": "TQ2"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "trepang2",
+    "name": "Trepang2",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "CPPFPS"
+    },
+    "executable": "CPPFPS/Binaries/Win64/CPPFPS-Win64-Shipping.exe",
+    "required": [
+      "CPPFPS.exe",
+      "CPPFPS/Binaries/Win64/CPPFPS-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-trepang2/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "CPPFPS.exe",
+    "steam_id": "1164940",
+    "vortex_mod_types": {
+      "trepang2-uesortablepak": "CPPFPS/Content/Paks/~mods",
+      "trepang2-scripts": "CPPFPS/Binaries/Win64/ue4ss/Mods",
+      "trepang2-ue4ssdll": "CPPFPS/Binaries/Win64/ue4ss/Mods",
+      "trepang2-binaries": "CPPFPS/Binaries/Win64",
+      "trepang2-ue4ss": "CPPFPS/Binaries/Win64",
+      "trepang2-sigbypass": "CPPFPS/Binaries/Win64",
+      "trepang2-logicmods": "CPPFPS/Content/Paks",
+      "trepang2-pakalt": "CPPFPS/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "vein",
+    "name": "VEIN",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Vein"
+    },
+    "executable": "Vein/Binaries/Win64/Vein-Win64-Test.exe",
+    "required": [
+      "Vein.exe",
+      "Vein/Binaries/Win64/Vein-Win64-Test.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-vein/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Vein.exe",
+    "steam_id": "1857950",
+    "vortex_mod_types": {
+      "vein-uesortablepak": "Vein/Content/Paks/~mods",
+      "vein-scripts": "Vein/Binaries/Win64/ue4ss/Mods",
+      "vein-ue4ssdll": "Vein/Binaries/Win64/ue4ss/Mods",
+      "vein-binaries": "Vein/Binaries/Win64",
+      "vein-ue4ss": "Vein/Binaries/Win64",
+      "vein-sigbypass": "Vein/Binaries/Win64",
+      "vein-logicmods": "Vein/Content/Paks",
+      "vein-pakalt": "Vein/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "voidtrain",
+    "name": "Voidtrain",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "VoidTrain"
+    },
+    "executable": "VoidTrain/Binaries/Win64/VoidTrain-Win64-Shipping.exe",
+    "required": [
+      "VoidTrain.exe",
+      "VoidTrain/Binaries/Win64/VoidTrain-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-voidtrain/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "VoidTrain.exe",
+    "steam_id": "1159690",
+    "vortex_mod_types": {
+      "voidtrain-uesortablepak": "VoidTrain/Content/Paks/~mods",
+      "voidtrain-scripts": "VoidTrain/Binaries/Win64/ue4ss/Mods",
+      "voidtrain-ue4ssdll": "VoidTrain/Binaries/Win64/ue4ss/Mods",
+      "voidtrain-binaries": "VoidTrain/Binaries/Win64",
+      "voidtrain-ue4ss": "VoidTrain/Binaries/Win64",
+      "voidtrain-sigbypass": "VoidTrain/Binaries/Win64",
+      "voidtrain-logicmods": "VoidTrain/Content/Paks",
+      "voidtrain-pakalt": "VoidTrain/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "vtmbloodlines2",
+    "name": "Vampire: The Masquerade - Bloodlines 2",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Bloodlines2"
+    },
+    "executable": "Bloodlines2/Binaries/Win64/Bloodlines2-Win64-Shipping.exe",
+    "required": [
+      "Bloodlines2.exe",
+      "Bloodlines2/Binaries/Win64/Bloodlines2-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-vtmbloodlines2/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Bloodlines2.exe",
+    "steam_id": "532790",
+    "vortex_mod_types": {
+      "vtmbloodlines2-uesortablepak": "Bloodlines2/Content/Paks/~mods",
+      "vtmbloodlines2-scripts": "Bloodlines2/Binaries/Win64/ue4ss/Mods",
+      "vtmbloodlines2-ue4ssdll": "Bloodlines2/Binaries/Win64/ue4ss/Mods",
+      "vtmbloodlines2-binaries": "Bloodlines2/Binaries/Win64",
+      "vtmbloodlines2-ue4ss": "Bloodlines2/Binaries/Win64",
+      "vtmbloodlines2-sigbypass": "Bloodlines2/Binaries/Win64",
+      "vtmbloodlines2-logicmods": "Bloodlines2/Content/Paks/LogicMods",
+      "vtmbloodlines2-pakalt": "Bloodlines2/Content/Paks",
+      "vtmbloodlines2-contentfolder": "Bloodlines2"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "whiskerwood",
+    "name": "Whiskerwood",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Whiskerwood"
+    },
+    "executable": "Whiskerwood/Binaries/Win64/Whiskerwood-Win64-Shipping.exe",
+    "required": [
+      "Whiskerwood.exe",
+      "Whiskerwood/Binaries/Win64/Whiskerwood-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-whiskerwood/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Whiskerwood.exe",
+    "steam_id": "2489330",
+    "vortex_mod_types": {
+      "whiskerwood-uesortablepak": "Whiskerwood/Content/Paks/~mods",
+      "whiskerwood-scripts": "Whiskerwood/Binaries/Win64/ue4ss/Mods",
+      "whiskerwood-ue4ssdll": "Whiskerwood/Binaries/Win64/ue4ss/Mods",
+      "whiskerwood-binaries": "Whiskerwood/Binaries/Win64",
+      "whiskerwood-ue4ss": "Whiskerwood/Binaries/Win64",
+      "whiskerwood-sigbypass": "Whiskerwood/Binaries/Win64",
+      "whiskerwood-logicmods": "Whiskerwood/Content/Paks/LogicMods",
+      "whiskerwood-pakalt": "Whiskerwood/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "witchfire",
+    "name": "Witchfire",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Witchfire"
+    },
+    "executable": "Witchfire/Binaries/Win64/Witchfire-Win64-Shipping.exe",
+    "required": [
+      "Witchfire.exe",
+      "Witchfire/Binaries/Win64/Witchfire-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-witchfire/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Witchfire.exe",
+    "steam_id": "3156770",
+    "vortex_mod_types": {
+      "witchfire-uesortablepak": "Witchfire/Content/Paks/~mods",
+      "witchfire-scripts": "Witchfire/Binaries/Win64/ue4ss/Mods",
+      "witchfire-ue4ssdll": "Witchfire/Binaries/Win64/ue4ss/Mods",
+      "witchfire-binaries": "Witchfire/Binaries/Win64",
+      "witchfire-ue4ss": "Witchfire/Binaries/Win64",
+      "witchfire-sigbypass": "Witchfire/Binaries/Win64",
+      "witchfire-logicmods": "Witchfire/Content/Paks",
+      "witchfire-pakalt": "Witchfire/Content/Paks"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "wuchangfallenfeathers",
+    "name": "WUCHANG: Fallen Feathers",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unreal",
+      "project": "Project_Plague"
+    },
+    "executable": "Project_Plague/Binaries/Win64/Project_Plague-Win64-Shipping.exe",
+    "required": [
+      "Project_Plague.exe",
+      "Project_Plague/Binaries/Win64/Project_Plague-Win64-Shipping.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-wuchangfallenfeathers/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "launch_executable": "Project_Plague.exe",
+    "steam_id": "2277560",
+    "vortex_mod_types": {
+      "wuchangfallenfeathers-ue5-sortable-modtype": "Project_Plague/Content/Paks/~mods",
+      "wuchangfallenfeathers-scripts": "Project_Plague/Binaries/Win64/ue4ss/Mods",
+      "wuchangfallenfeathers-ue4ssdll": "Project_Plague/Binaries/Win64/ue4ss/Mods",
+      "wuchangfallenfeathers-binaries": "Project_Plague/Binaries/Win64",
+      "wuchangfallenfeathers-ue4ss": "Project_Plague/Binaries/Win64",
+      "wuchangfallenfeathers-sigbypass": "Project_Plague/Binaries/Win64",
+      "wuchangfallenfeathers-logicmods": "Project_Plague/Content/Paks/LogicMods",
+      "wuchangfallenfeathers-pakalt": "Project_Plague/Content/Paks",
+      "wuchangfallenfeathers-contentfolder": "Project_Plague"
+    }
+  }
+]

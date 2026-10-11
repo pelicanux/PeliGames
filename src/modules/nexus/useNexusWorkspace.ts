@@ -7,9 +7,9 @@ import { applyCustomCovers } from "../../services/gameLibraryCache";
 import { hasNexusCatalog, matchingCatalogGame, type CatalogGame } from "./catalogGameMatch";
 import { setLibraryGameRemoved } from "../../services/libraryVisibility";
 import { useNexusText } from "./text";
-export interface LocalMod { id: string; name: string; version?: string; identification_note?: string; archive: string; size: number; installed: boolean; enabled: boolean; fomod_selection?: string[]; nexus_source?: { name?: string; version?: string; domain: string; mod_id: number; file_id: number; requirements: Requirements } }
+export interface LocalMod { id: string; name: string; version?: string; identification_note?: string; archive: string; size: number; installed: boolean; enabled: boolean; fomod_selection?: string[]; manual_root?: { source: string; destination: string } | null; nexus_source?: { name?: string; version?: string; domain: string; mod_id: number; file_id: number; requirements: Requirements } }
 export type DeployMethod = "copy" | "symlink" | "hardlink" | "vfs";
-export interface NexusGame { deploy_method?: DeployMethod; id: string; game: GameInfo; platform: "native" | "proton"; mods: LocalMod[]; profile?: string; running: boolean; adapter?: string; compat_data?: string; proton?: string; nexus_domain?: string; detected_mods?: { name: string; enabled: boolean; mod_id?: number }[] }
+export interface NexusGame { advanced?: import("../../services/advancedSettings").AdvancedSettings; launch_options?: string | null; deploy_method?: DeployMethod; id: string; game: GameInfo; platform: "native" | "proton"; mods: LocalMod[]; profile?: string; running: boolean; adapter?: string; compat_data?: string; proton?: string; nexus_domain?: string; detected_mods?: { name: string; enabled: boolean; mod_id?: number }[] }
 export interface NexusWorkspace { games: NexusGame[] }
 export function useNexusWorkspace() {
   const text = useNexusText();
@@ -111,6 +111,9 @@ export function useNexusWorkspace() {
     importArchive: (gameId: string, source: string) => run("import_nexus_archive", { gameId, source }),
     install: (gameId: string, modId: string, selection?: string[]) => run("install_nexus_mod", { gameId, modId, selection: selection ?? null }),
     toggle: (gameId: string, modId: string, enabled: boolean) => run("set_nexus_mod_enabled", { gameId, modId, enabled }),
+    move: (gameId: string, modId: string, up: boolean) => run("move_nexus_mod", { gameId, modId, up }),
+    configureAdvanced: (gameId: string, settings: import("../../services/advancedSettings").AdvancedSettings) => run("configure_nexus_advanced", {gameId,settings},true),
+    configureLaunch: (gameId: string, options: string | null) => run("configure_nexus_launch_options", { gameId, options }, true),
     configureDomain: (gameId: string, gameDomain: string) => run("configure_nexus_domain", { gameId, gameDomain }),
     configureDeploy: (gameId: string, method: DeployMethod) => run("configure_nexus_deploy", { gameId, method }, true),
     configureProton: (gameId: string, compatData: string, proton: string, directory: string) => run("configure_nexus_settings", { gameId, compatData, proton, directory }, true),

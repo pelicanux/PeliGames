@@ -7,6 +7,9 @@ pub(super) struct StoreGame {
     pub name: String,
     pub path: String,
     pub cover: Option<String>,
+    /// Heroic app name (key of `GamesConfig/<id>.json`) and its store.
+    pub id: String,
+    pub store: &'static str,
 }
 
 fn read_json(path: &Path) -> Option<Value> {
@@ -45,7 +48,7 @@ fn entries(value: &Value) -> Vec<(String, &Value)> {
     if let Some(items) = value.as_array() {
         return items
             .iter()
-            .map(|item| (item["app_name"].as_str().unwrap_or("").to_string(), item))
+            .map(|item| (item["app_name"].as_str().or_else(|| item["appName"].as_str()).unwrap_or("").to_string(), item))
             .collect();
     }
     for key in ["installed", "games", "library"] {
@@ -83,23 +86,27 @@ fn installed_game(item: &Value, metadata: Option<&Value>) -> Option<StoreGame> {
     if path.is_empty() || !Path::new(path).is_dir() {
         return None;
     }
+    // GOG `installed.json` has only the app ID; the title is in the library cache.
     let name = item["title"]
         .as_str()
-        .or_else(|| item["appName"].as_str())
         .or_else(|| metadata.and_then(|value| value["title"].as_str()))
-        .or_else(|| metadata.and_then(|value| value["app_title"].as_str()))?;
+        .or_else(|| metadata.and_then(|value| value["app_title"].as_str()))
+        .or_else(|| item["appName"].as_str())?;
     Some(StoreGame {
         name: name.to_string(),
         path: path.to_string(),
         cover: artwork(item).or_else(|| metadata.and_then(artwork)),
+        id: String::new(),
+        store: "",
     })
 }
 
 pub(super) fn scan(base: &Path) -> Vec<StoreGame> {
     let mut games: Vec<StoreGame> = Vec::new();
     // Store IDs are only matched within the same store, avoiding cross-store collisions.
-    for (installed_files, library_file) in [
+    for (store, installed_files, library_file) in [
         (
+            "legendary",
             &[
                 "legendaryConfig/legendary/installed.json",
                 "legendaryConfig/installed.json",
@@ -107,14 +114,17 @@ pub(super) fn scan(base: &Path) -> Vec<StoreGame> {
             "store_cache/legendary_library.json",
         ),
         (
+            "gog",
             &["gog_store/installed.json"][..],
             "store_cache/gog_library.json",
         ),
         (
+            "nile",
             &["nile_config/installed.json"][..],
             "store_cache/nile_library.json",
         ),
         (
+            "sideload",
             &[
                 "sideload_store/installed.json",
                 "sideloads.json",
@@ -147,9 +157,11 @@ pub(super) fn scan(base: &Path) -> Vec<StoreGame> {
                     } else {
                         None
                     };
-                    if let Some(game) =
+                    if let Some(mut game) =
                         installed_game(item, store_metadata.or(epic_metadata.as_ref()))
                     {
+                        game.id = id.clone();
+                        game.store = store;
                         records.push(game);
                     }
                 }
@@ -157,8 +169,10 @@ pub(super) fn scan(base: &Path) -> Vec<StoreGame> {
         }
         // Cached libraries can also carry installation paths for newer Heroic versions.
         if let Some(library) = &library {
-            for (_, item) in entries(library) {
-                if let Some(game) = installed_game(item, None) {
+            for (id, item) in entries(library) {
+                if let Some(mut game) = installed_game(item, None) {
+                    game.id = id;
+                    game.store = store;
                     records.push(game);
                 }
             }
@@ -167,6 +181,9 @@ pub(super) fn scan(base: &Path) -> Vec<StoreGame> {
             if let Some(existing) = games.iter_mut().find(|existing| existing.path == game.path) {
                 if existing.cover.is_none() {
                     existing.cover = game.cover;
+                }
+                if existing.id.is_empty() {
+                    existing.id = game.id;
                 }
             } else {
                 games.push(game);

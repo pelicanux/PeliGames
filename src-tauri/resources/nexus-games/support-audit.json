@@ -1,0 +1,2765 @@
+{
+  "schema": 1,
+  "reviewed_at": "2026-10-10",
+  "scope": "Revisão documental e estrutural dos 67 módulos existentes, com casos sintéticos de rotas. Não é certificação de funcionamento no jogo nem conclusão de todos os critérios de pesquisa.",
+  "public_extension_manifest": "https://api.nexusmods.com/v3/vortex/extensions",
+  "public_extension_manifest_sha256": "a4880af241db701d8164bd5687cf8a49354f099c9c65e58761f12ca71e67ff99",
+  "source_revisions": {
+    "Nexus-Mods/Vortex": "acb3d8621085df657c0ae07d5df5d425570964ab",
+    "ChemGuy1611/ChemBoy1-Vortex-Games": "39e9ef13787900a1741e5d29165920bd4f48f7b6",
+    "Nexus-Mods/game-palworld": "16850505152c67b0a4322a4c1ae4cdb5fd69d9e5",
+    "Nexus-Mods/game-oblivionremastered": "489f6b9683b4fa928ee412072430ae0ae2f1706a",
+    "Nexus-Mods/game-masseffectlegendaryedition": "84bbd3ea1695acd6c8013103c7cad82c88cbff3c",
+    "Nexus-Mods/game-hogwartslegacy": "10088b781d494f5190914f460291d979bb12a995",
+    "Nexus-Mods/game-cyberpunk2077": "0ddc3e8a9c593dd6cf144d67739d9a9986d95f3b",
+    "Nexus-Mods/game-valheim": "b5a9b7c6197d8db4f6fba2b8f78edc2c74480338",
+    "Nexus-Mods/game-starfield": "ebea0bf2aa1e41f96f0c3fba8e5a58855466f3b7"
+  },
+  "validation_limits": [
+    "Não foram baixados automaticamente mods autenticados nem executados jogos ou scripts de terceiros.",
+    "Os casos de rotas são sintéticos; não devem ser apresentados como pacotes reais testados.",
+    "O ciclo com arquivo real DekMCM foi validado anteriormente em diretórios temporários nos dois layouts UE4SS. Isso não valida o runtime de Palworld nem outros jogos."
+  ],
+  "modules": [
+    {
+      "domain": "cyberpunk2077",
+      "name": "Cyberpunk 2077",
+      "module_version": "1.1.3",
+      "nexus_game_id": 3333,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/game-cyberpunk2077/blob/0ddc3e8a9c593dd6cf144d67739d9a9986d95f3b/src/index.metadata.ts",
+        "https://github.com/Nexus-Mods/game-cyberpunk2077/blob/0ddc3e8a9c593dd6cf144d67739d9a9986d95f3b/src/index.ts",
+        "https://www.nexusmods.com/site/mods/196"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        {
+          "mod_id": 107,
+          "title": "Cyber Engine Tweaks",
+          "url": "https://www.nexusmods.com/cyberpunk2077/mods/107"
+        },
+        {
+          "mod_id": 2380,
+          "title": "RED4ext",
+          "url": "https://www.nexusmods.com/cyberpunk2077/mods/2380"
+        },
+        {
+          "mod_id": 1511,
+          "title": "redscript",
+          "url": "https://www.nexusmods.com/cyberpunk2077/mods/1511"
+        },
+        {
+          "mod_id": 4198,
+          "title": "ArchiveXL",
+          "url": "https://www.nexusmods.com/cyberpunk2077/mods/4198"
+        },
+        {
+          "mod_id": 4197,
+          "title": "TweakXL",
+          "url": "https://www.nexusmods.com/cyberpunk2077/mods/4197"
+        }
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "bin/x64/plugins/cyber_engine_tweaks/mods/Example/init.lua",
+          "target": "bin/x64/plugins/cyber_engine_tweaks/mods/Example/init.lua"
+        },
+        {
+          "source": "bin/x64/plugins/cyber_engine_tweaks/mods/Example/config.json",
+          "target": "bin/x64/plugins/cyber_engine_tweaks/mods/Example/config.json"
+        },
+        {
+          "source": "r6/scripts/Example/main.reds",
+          "target": "r6/scripts/Example/main.reds"
+        },
+        {
+          "source": "bin/x64/global.ini",
+          "target": "bin/x64/global.ini"
+        },
+        {
+          "source": "engine/config/base/scripts.ini",
+          "target": "engine/config/base/scripts.ini"
+        }
+      ],
+      "findings": [
+        "Corrigida a rota explícita do global.ini distribuído pelo CET; a reconstrução do perfil ao desativar outro mod não pode rejeitar esse acompanhante reconhecido.",
+        "Corrigida também a rota explícita de engine/config/base/scripts.ini, acompanhante obrigatório do compilador redscript identificado no ZIP local e na documentação do autor."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "real_package_tests": [
+        {
+          "package": "Cyber Engine Tweaks — ZIP local contendo bin/x64/global.ini, version.dll e cyber_engine_tweaks.asi",
+          "scope": "Diretório temporário com executável sintético; instalação, rollback, desativação de outro mod mantendo CET, desativação do CET e preservação de arquivo externo ao perfil.",
+          "result": "passed",
+          "game_runtime_verified": false
+        },
+        {
+          "package": "CET + redscript v0.5.31 — ZIPs locais",
+          "scope": "Cópias em diretório temporário: instalação dos dois frameworks, rollback, desativação do redscript mantendo CET, desativação do CET e preservação de arquivo externo.",
+          "result": "passed",
+          "game_runtime_verified": false
+        }
+      ]
+    },
+    {
+      "domain": "stardewvalley",
+      "name": "Stardew Valley",
+      "module_version": "1.1.0",
+      "nexus_game_id": 1303,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-stardewvalley/src/index.ts",
+        "https://www.nexusmods.com/site/mods/267"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        {
+          "mod_id": 2400,
+          "title": "SMAPI - Stardew Modding API",
+          "url": "https://www.nexusmods.com/stardewvalley/mods/2400"
+        }
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example/manifest.json",
+          "target": "Mods/Example/manifest.json"
+        },
+        {
+          "source": "Example/assets/config.json",
+          "target": "Mods/Example/assets/config.json"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "readyornot",
+      "name": "Ready or Not",
+      "module_version": "1.0.0",
+      "nexus_game_id": 4205,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://www.nexusmods.com/site/mods/342"
+      ],
+      "extension_code_compared": false,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "ReadyOrNot/Content/Paks/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "ReadyOrNot/Content/Paks/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "ReadyOrNot/Content/Paks/Example_P.ucas"
+        }
+      ],
+      "findings": [
+        "Módulo restrito a dados PAK/IoStore. UE4SS, scripts, áudio/configurações e ferramentas de merge adicionais da extensão não estão automaticamente suportados. Rejeitar conteúdo essencial sem rota em pacotes mistos."
+      ],
+      "pending_checks": [
+        "Comparação detalhada do código da extensão publicada; nesta revisão foram conferidos cadastro oficial e documentação disponíveis.",
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "hogwartslegacy",
+      "name": "Hogwarts Legacy",
+      "module_version": "1.1.0",
+      "nexus_game_id": 5113,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/game-hogwartslegacy/blob/10088b781d494f5190914f460291d979bb12a995/src/index.ts",
+        "https://www.nexusmods.com/site/mods/520"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Phoenix/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Phoenix/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Phoenix/Content/Paks/~mods/Example_P.ucas"
+        }
+      ],
+      "findings": [
+        "Família Unreal sem UE4SS: somente paks em ~mods, como antes; scripts e carregadores UE4SS continuam recusados."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "stellarblade",
+      "name": "Stellar Blade",
+      "module_version": "1.1.0",
+      "nexus_game_id": 7804,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-stellarblade/index.js",
+        "https://www.nexusmods.com/site/mods/1324"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "SB/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "SB/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "SB/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "SB/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "SB/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "SB/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "SB/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "SB/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Família Unreal: rotas do template UE4/5 do Vortex para paks (~mods), LogicMods, UE4SS e scripts Lua/DLL. Configurações em AppData, saves, filmes, substituição de paks originais e o fallback do Vortex que copia qualquer arquivo para Binaries não foram adotados: conteúdo sem rota continua recusado.",
+        "Um invólucro com o mesmo nome da pasta do loader (ex.: UE4SS/ue4ss/) é recusado como estrutura ambígua, sem aplicar arquivos."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "stalker2heartofchornobyl",
+      "name": "S.T.A.L.K.E.R. 2: Heart of Chornobyl",
+      "module_version": "1.1.0",
+      "nexus_game_id": 6944,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-stalker2heartofchornobyl/index.js",
+        "https://www.nexusmods.com/site/mods/958"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Stalker2/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Stalker2/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Stalker2/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Stalker2/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Stalker2/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Stalker2/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Stalker2/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Stalker2/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Família Unreal: rotas do template UE4/5 do Vortex para paks (~mods), LogicMods, UE4SS e scripts Lua/DLL. Configurações em AppData, saves, filmes, substituição de paks originais e o fallback do Vortex que copia qualquer arquivo para Binaries não foram adotados: conteúdo sem rota continua recusado.",
+        "Um invólucro com o mesmo nome da pasta do loader (ex.: UE4SS/ue4ss/) é recusado como estrutura ambígua, sem aplicar arquivos."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "finalfantasy7remake",
+      "name": "Final Fantasy VII Remake",
+      "module_version": "1.1.0",
+      "nexus_game_id": 4202,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://www.nexusmods.com/site/mods/325"
+      ],
+      "extension_code_compared": false,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "End/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "End/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "End/Content/Paks/~mods/Example_P.ucas"
+        }
+      ],
+      "findings": [
+        "Família Unreal sem UE4SS: somente paks em ~mods, como antes; scripts e carregadores UE4SS continuam recusados."
+      ],
+      "pending_checks": [
+        "Comparação detalhada do código da extensão publicada; nesta revisão foram conferidos cadastro oficial e documentação disponíveis.",
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "finalfantasy7rebirth",
+      "name": "Final Fantasy VII Rebirth",
+      "module_version": "1.1.0",
+      "nexus_game_id": 7237,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-finalfantasy7rebirth/index.js",
+        "https://www.nexusmods.com/site/mods/1150"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "End/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "End/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "End/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "End/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "End/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "End/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "End/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "End/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Família Unreal: rotas do template UE4/5 do Vortex para paks (~mods), LogicMods, UE4SS e scripts Lua/DLL. Configurações em AppData, saves, filmes, substituição de paks originais e o fallback do Vortex que copia qualquer arquivo para Binaries não foram adotados: conteúdo sem rota continua recusado.",
+        "Um invólucro com o mesmo nome da pasta do loader (ex.: UE4SS/ue4ss/) é recusado como estrutura ambígua, sem aplicar arquivos."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "codevein",
+      "name": "Code Vein",
+      "module_version": "1.1.0",
+      "nexus_game_id": 2981,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-codevein/src/index.ts"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "CodeVein/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "CodeVein/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "CodeVein/Content/Paks/~mods/Example_P.ucas"
+        }
+      ],
+      "findings": [
+        "Família Unreal sem UE4SS: somente paks em ~mods, como antes; scripts e carregadores UE4SS continuam recusados."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "clairobscurexpedition33",
+      "name": "Clair Obscur: Expedition 33",
+      "module_version": "1.1.0",
+      "nexus_game_id": 7635,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-clairobscurexpedition33/index.js",
+        "https://www.nexusmods.com/site/mods/1279"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Sandfall/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Sandfall/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Sandfall/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Sandfall/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Sandfall/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Sandfall/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Sandfall/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Sandfall/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Família Unreal: rotas do template UE4/5 do Vortex para paks (~mods), LogicMods, UE4SS e scripts Lua/DLL. Configurações em AppData, saves, filmes, substituição de paks originais e o fallback do Vortex que copia qualquer arquivo para Binaries não foram adotados: conteúdo sem rota continua recusado.",
+        "Um invólucro com o mesmo nome da pasta do loader (ex.: UE4SS/ue4ss/) é recusado como estrutura ambígua, sem aplicar arquivos."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "monsterhunterrise",
+      "name": "Monster Hunter Rise",
+      "module_version": "1.1.0",
+      "nexus_game_id": 4095,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-monsterhunterrise/index.js",
+        "https://www.nexusmods.com/site/mods/349"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "reframework/autorun/Example/main.lua",
+          "target": "reframework/autorun/Example/main.lua"
+        },
+        {
+          "source": "reframework/data/Example/settings.json",
+          "target": "reframework/data/Example/settings.json"
+        },
+        {
+          "source": "reframework/plugins/Example.dll",
+          "target": "reframework/plugins/Example.dll"
+        }
+      ],
+      "findings": [
+        "Somente REFramework: Lua e plugins com estrutura explícita. Suporte Vortex/Fluffy a natives e arquivos PAK não equivale a suporte pelo PeliGames.",
+        "Migrado para a família RE Engine: as regras REFramework vêm do perfil compartilhado, idênticas às anteriores."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "monsterhunterwilds",
+      "name": "Monster Hunter Wilds",
+      "module_version": "1.1.0",
+      "nexus_game_id": 6993,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-monsterhunterwilds/index.js",
+        "https://www.nexusmods.com/site/mods/1149"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "reframework/autorun/Example/main.lua",
+          "target": "reframework/autorun/Example/main.lua"
+        },
+        {
+          "source": "reframework/data/Example/settings.json",
+          "target": "reframework/data/Example/settings.json"
+        },
+        {
+          "source": "reframework/plugins/Example.dll",
+          "target": "reframework/plugins/Example.dll"
+        }
+      ],
+      "findings": [
+        "Somente REFramework: Lua e plugins com estrutura explícita. Suporte Vortex/Fluffy a natives e arquivos PAK não equivale a suporte pelo PeliGames.",
+        "Migrado para a família RE Engine: as regras REFramework vêm do perfil compartilhado, idênticas às anteriores."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "residentevil22019",
+      "name": "Resident Evil 2 (2019)",
+      "module_version": "1.1.0",
+      "nexus_game_id": 2702,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevil22019/index.js",
+        "https://www.nexusmods.com/site/mods/432"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "reframework/autorun/Example/main.lua",
+          "target": "reframework/autorun/Example/main.lua"
+        },
+        {
+          "source": "reframework/data/Example/settings.json",
+          "target": "reframework/data/Example/settings.json"
+        },
+        {
+          "source": "reframework/plugins/Example.dll",
+          "target": "reframework/plugins/Example.dll"
+        }
+      ],
+      "findings": [
+        "Somente REFramework: Lua e plugins com estrutura explícita. Suporte Vortex/Fluffy a natives e arquivos PAK não equivale a suporte pelo PeliGames.",
+        "Migrado para a família RE Engine: as regras REFramework vêm do perfil compartilhado, idênticas às anteriores."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "residentevil32020",
+      "name": "Resident Evil 3 (2020)",
+      "module_version": "1.1.0",
+      "nexus_game_id": 3191,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevil32020/index.js",
+        "https://www.nexusmods.com/site/mods/433"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "reframework/autorun/Example/main.lua",
+          "target": "reframework/autorun/Example/main.lua"
+        },
+        {
+          "source": "reframework/data/Example/settings.json",
+          "target": "reframework/data/Example/settings.json"
+        },
+        {
+          "source": "reframework/plugins/Example.dll",
+          "target": "reframework/plugins/Example.dll"
+        }
+      ],
+      "findings": [
+        "Somente REFramework: Lua e plugins com estrutura explícita. Suporte Vortex/Fluffy a natives e arquivos PAK não equivale a suporte pelo PeliGames.",
+        "Migrado para a família RE Engine: as regras REFramework vêm do perfil compartilhado, idênticas às anteriores."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "residentevil42023",
+      "name": "Resident Evil 4 (2023)",
+      "module_version": "1.1.0",
+      "nexus_game_id": 5195,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevil42023/index.js",
+        "https://www.nexusmods.com/site/mods/913"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "reframework/autorun/Example/main.lua",
+          "target": "reframework/autorun/Example/main.lua"
+        },
+        {
+          "source": "reframework/data/Example/settings.json",
+          "target": "reframework/data/Example/settings.json"
+        },
+        {
+          "source": "reframework/plugins/Example.dll",
+          "target": "reframework/plugins/Example.dll"
+        }
+      ],
+      "findings": [
+        "Somente REFramework: Lua e plugins com estrutura explícita. Suporte Vortex/Fluffy a natives e arquivos PAK não equivale a suporte pelo PeliGames.",
+        "Migrado para a família RE Engine: as regras REFramework vêm do perfil compartilhado, idênticas às anteriores."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "residentevilvillage",
+      "name": "Resident Evil Village",
+      "module_version": "1.1.0",
+      "nexus_game_id": 3669,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevilvillage/index.js",
+        "https://www.nexusmods.com/site/mods/237"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "reframework/autorun/Example/main.lua",
+          "target": "reframework/autorun/Example/main.lua"
+        },
+        {
+          "source": "reframework/data/Example/settings.json",
+          "target": "reframework/data/Example/settings.json"
+        },
+        {
+          "source": "reframework/plugins/Example.dll",
+          "target": "reframework/plugins/Example.dll"
+        }
+      ],
+      "findings": [
+        "Somente REFramework: Lua e plugins com estrutura explícita. Suporte Vortex/Fluffy a natives e arquivos PAK não equivale a suporte pelo PeliGames.",
+        "Migrado para a família RE Engine: as regras REFramework vêm do perfil compartilhado, idênticas às anteriores."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "devilmaycry5",
+      "name": "Devil May Cry 5",
+      "module_version": "1.1.0",
+      "nexus_game_id": 2751,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-devilmaycry5/index.js",
+        "https://www.nexusmods.com/site/mods/434"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "reframework/autorun/Example/main.lua",
+          "target": "reframework/autorun/Example/main.lua"
+        },
+        {
+          "source": "reframework/data/Example/settings.json",
+          "target": "reframework/data/Example/settings.json"
+        },
+        {
+          "source": "reframework/plugins/Example.dll",
+          "target": "reframework/plugins/Example.dll"
+        }
+      ],
+      "findings": [
+        "Somente REFramework: Lua e plugins com estrutura explícita. Suporte Vortex/Fluffy a natives e arquivos PAK não equivale a suporte pelo PeliGames.",
+        "Migrado para a família RE Engine: as regras REFramework vêm do perfil compartilhado, idênticas às anteriores."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "dragonsdogma2",
+      "name": "Dragon's Dogma 2",
+      "module_version": "1.1.0",
+      "nexus_game_id": 6234,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonsdogma2/index.js",
+        "https://www.nexusmods.com/site/mods/851"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "reframework/autorun/Example/main.lua",
+          "target": "reframework/autorun/Example/main.lua"
+        },
+        {
+          "source": "reframework/data/Example/settings.json",
+          "target": "reframework/data/Example/settings.json"
+        },
+        {
+          "source": "reframework/plugins/Example.dll",
+          "target": "reframework/plugins/Example.dll"
+        }
+      ],
+      "findings": [
+        "Somente REFramework: Lua e plugins com estrutura explícita. Suporte Vortex/Fluffy a natives e arquivos PAK não equivale a suporte pelo PeliGames.",
+        "Migrado para a família RE Engine: as regras REFramework vêm do perfil compartilhado, idênticas às anteriores."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "streetfighter6",
+      "name": "Street Fighter 6",
+      "module_version": "1.1.0",
+      "nexus_game_id": 5329,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-streetfighter6/index.js",
+        "https://www.nexusmods.com/site/mods/956"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "reframework/autorun/Example/main.lua",
+          "target": "reframework/autorun/Example/main.lua"
+        },
+        {
+          "source": "reframework/data/Example/settings.json",
+          "target": "reframework/data/Example/settings.json"
+        },
+        {
+          "source": "reframework/plugins/Example.dll",
+          "target": "reframework/plugins/Example.dll"
+        }
+      ],
+      "findings": [
+        "Somente REFramework: Lua e plugins com estrutura explícita. Suporte Vortex/Fluffy a natives e arquivos PAK não equivale a suporte pelo PeliGames.",
+        "Migrado para a família RE Engine: as regras REFramework vêm do perfil compartilhado, idênticas às anteriores."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "residentevilrequiem",
+      "name": "Resident Evil Requiem",
+      "module_version": "1.1.0",
+      "nexus_game_id": 8863,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevilrequiem/index.js",
+        "https://www.nexusmods.com/site/mods/1653"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "reframework/autorun/Example/main.lua",
+          "target": "reframework/autorun/Example/main.lua"
+        },
+        {
+          "source": "reframework/data/Example/settings.json",
+          "target": "reframework/data/Example/settings.json"
+        },
+        {
+          "source": "reframework/plugins/Example.dll",
+          "target": "reframework/plugins/Example.dll"
+        }
+      ],
+      "findings": [
+        "Somente REFramework: Lua e plugins com estrutura explícita. Suporte Vortex/Fluffy a natives e arquivos PAK não equivale a suporte pelo PeliGames.",
+        "Migrado para a família RE Engine: as regras REFramework vêm do perfil compartilhado, idênticas às anteriores."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "subnautica",
+      "name": "Subnautica",
+      "module_version": "1.1.0",
+      "nexus_game_id": 1155,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://www.nexusmods.com/site/mods/202"
+      ],
+      "extension_code_compared": false,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "BepInEx/plugins/Example/Example.dll",
+          "target": "BepInEx/plugins/Example/Example.dll"
+        },
+        {
+          "source": "BepInEx/plugins/Example/assets/data.json",
+          "target": "BepInEx/plugins/Example/assets/data.json"
+        },
+        {
+          "source": "BepInEx/config/Example.cfg",
+          "target": "BepInEx/config/Example.cfg"
+        }
+      ],
+      "findings": [
+        "Conferir versão e plataforma BepInEx e dependências dos plugins. QMod/SML antigos, conversões e todos os formatos da extensão não são certificados por esta revisão.",
+        "Reconhecimento conservador de pasta externa comum ao pacote completo; não achata variantes irmãs nem autoriza arquivos acompanhantes sem rota.",
+        "Recursos permitidos acompanham uma única DLL reconhecida na pasta exclusiva do mod; executáveis desconhecidos e associação ambígua continuam sem rota.",
+        "Migrado para a família Unity (BepInEx): a classificação das DLLs pela referência ao carregador e a recusa de mods MelonLoader e de dados do jogo vêm do perfil compartilhado; regras próprias do jogo preservadas."
+      ],
+      "pending_checks": [
+        "Comparação detalhada do código da extensão publicada; nesta revisão foram conferidos cadastro oficial e documentação disponíveis.",
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "subnauticabelowzero",
+      "name": "Subnautica: Below Zero",
+      "module_version": "1.1.0",
+      "nexus_game_id": 2706,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://www.nexusmods.com/site/mods/203"
+      ],
+      "extension_code_compared": false,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "BepInEx/plugins/Example/Example.dll",
+          "target": "BepInEx/plugins/Example/Example.dll"
+        },
+        {
+          "source": "BepInEx/plugins/Example/assets/data.json",
+          "target": "BepInEx/plugins/Example/assets/data.json"
+        },
+        {
+          "source": "BepInEx/config/Example.cfg",
+          "target": "BepInEx/config/Example.cfg"
+        }
+      ],
+      "findings": [
+        "Conferir versão e plataforma BepInEx e dependências dos plugins. QMod/SML antigos, conversões e todos os formatos da extensão não são certificados por esta revisão.",
+        "Reconhecimento conservador de pasta externa comum ao pacote completo; não achata variantes irmãs nem autoriza arquivos acompanhantes sem rota.",
+        "Recursos permitidos acompanham uma única DLL reconhecida na pasta exclusiva do mod; executáveis desconhecidos e associação ambígua continuam sem rota.",
+        "Migrado para a família Unity (BepInEx): a classificação das DLLs pela referência ao carregador e a recusa de mods MelonLoader e de dados do jogo vêm do perfil compartilhado; regras próprias do jogo preservadas."
+      ],
+      "pending_checks": [
+        "Comparação detalhada do código da extensão publicada; nesta revisão foram conferidos cadastro oficial e documentação disponíveis.",
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "tcgcardshopsimulator",
+      "name": "TCG Card Shop Simulator",
+      "module_version": "1.1.0",
+      "nexus_game_id": 6826,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://www.nexusmods.com/site/mods/1058"
+      ],
+      "extension_code_compared": false,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "BepInEx/plugins/Example/Example.dll",
+          "target": "BepInEx/plugins/Example/Example.dll"
+        },
+        {
+          "source": "BepInEx/plugins/Example/assets/data.json",
+          "target": "BepInEx/plugins/Example/assets/data.json"
+        },
+        {
+          "source": "BepInEx/config/Example.cfg",
+          "target": "BepInEx/config/Example.cfg"
+        }
+      ],
+      "findings": [
+        "Conferir versão e plataforma BepInEx e dependências dos plugins. QMod/SML antigos, conversões e todos os formatos da extensão não são certificados por esta revisão.",
+        "Reconhecimento conservador de pasta externa comum ao pacote completo; não achata variantes irmãs nem autoriza arquivos acompanhantes sem rota.",
+        "Recursos permitidos acompanham uma única DLL reconhecida na pasta exclusiva do mod; executáveis desconhecidos e associação ambígua continuam sem rota.",
+        "Migrado para a família Unity (BepInEx): a classificação das DLLs pela referência ao carregador e a recusa de mods MelonLoader e de dados do jogo vêm do perfil compartilhado; regras próprias do jogo preservadas."
+      ],
+      "pending_checks": [
+        "Comparação detalhada do código da extensão publicada; nesta revisão foram conferidos cadastro oficial e documentação disponíveis.",
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "supermarketsimulator",
+      "name": "Supermarket Simulator",
+      "module_version": "1.1.0",
+      "nexus_game_id": 6225,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://www.nexusmods.com/site/mods/942"
+      ],
+      "extension_code_compared": false,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "BepInEx/plugins/Example/Example.dll",
+          "target": "BepInEx/plugins/Example/Example.dll"
+        },
+        {
+          "source": "BepInEx/plugins/Example/assets/data.json",
+          "target": "BepInEx/plugins/Example/assets/data.json"
+        },
+        {
+          "source": "BepInEx/config/Example.cfg",
+          "target": "BepInEx/config/Example.cfg"
+        }
+      ],
+      "findings": [
+        "Conferir versão e plataforma BepInEx e dependências dos plugins. QMod/SML antigos, conversões e todos os formatos da extensão não são certificados por esta revisão.",
+        "Reconhecimento conservador de pasta externa comum ao pacote completo; não achata variantes irmãs nem autoriza arquivos acompanhantes sem rota.",
+        "Recursos permitidos acompanham uma única DLL reconhecida na pasta exclusiva do mod; executáveis desconhecidos e associação ambígua continuam sem rota.",
+        "Migrado para a família Unity (BepInEx): a classificação das DLLs pela referência ao carregador e a recusa de mods MelonLoader e de dados do jogo vêm do perfil compartilhado; regras próprias do jogo preservadas."
+      ],
+      "pending_checks": [
+        "Comparação detalhada do código da extensão publicada; nesta revisão foram conferidos cadastro oficial e documentação disponíveis.",
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "7daystodie",
+      "name": "7 Days To Die",
+      "module_version": "1.0.0",
+      "nexus_game_id": 1059,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-7daystodie/src/index.tsx"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example/ModInfo.xml",
+          "target": "Mods/Example/ModInfo.xml"
+        },
+        {
+          "source": "Example/assets/config.json",
+          "target": "Mods/Example/assets/config.json"
+        }
+      ],
+      "findings": [
+        "Vortex permite UserDataFolder e informa depreciação de Mods na instalação. O módulo atual cobre somente Mods local; destino UDF personalizado e lançamento sem EAC não foram implementados nesta revisão."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "kingdomcomedeliverance",
+      "name": "Kingdom Come: Deliverance",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2298,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-kingdomcome-deliverance/src/index.ts",
+        "https://www.nexusmods.com/site/mods/338"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example/mod.manifest",
+          "target": "Mods/Example/mod.manifest"
+        },
+        {
+          "source": "Example/assets/config.json",
+          "target": "Mods/Example/assets/config.json"
+        }
+      ],
+      "findings": [
+        "Rotas e estrutura conferidas; ordem, semântica do manifesto e compatibilidade de versões exigem validação adicional. Seleção no jogo/launcher original pode ser necessária."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "kingdomcomedeliverance2",
+      "name": "Kingdom Come: Deliverance II",
+      "module_version": "1.0.0",
+      "nexus_game_id": 7286,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-kingdomcomedeliverance2/index.js",
+        "https://www.nexusmods.com/site/mods/1146"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example/mod.manifest",
+          "target": "mods/Example/mod.manifest"
+        },
+        {
+          "source": "Example/assets/config.json",
+          "target": "mods/Example/assets/config.json"
+        }
+      ],
+      "findings": [
+        "Rotas e estrutura conferidas; ordem, semântica do manifesto e compatibilidade de versões exigem validação adicional. Seleção no jogo/launcher original pode ser necessária."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "mountandblade2bannerlord",
+      "name": "Mount & Blade II: Bannerlord",
+      "module_version": "1.0.0",
+      "nexus_game_id": 3174,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://www.nexusmods.com/site/mods/875"
+      ],
+      "extension_code_compared": false,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example/SubModule.xml",
+          "target": "Modules/Example/SubModule.xml"
+        },
+        {
+          "source": "Example/assets/config.json",
+          "target": "Modules/Example/assets/config.json"
+        }
+      ],
+      "findings": [
+        "Rotas e estrutura conferidas; ordem, semântica do manifesto e compatibilidade de versões exigem validação adicional. Seleção no jogo/launcher original pode ser necessária."
+      ],
+      "pending_checks": [
+        "Comparação detalhada do código da extensão publicada; nesta revisão foram conferidos cadastro oficial e documentação disponíveis.",
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "darkestdungeon",
+      "name": "Darkest Dungeon",
+      "module_version": "1.0.0",
+      "nexus_game_id": 804,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-darkestdungeon/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example/project.xml",
+          "target": "mods/Example/project.xml"
+        },
+        {
+          "source": "Example/assets/config.json",
+          "target": "mods/Example/assets/config.json"
+        }
+      ],
+      "findings": [
+        "Rotas e estrutura conferidas; ordem, semântica do manifesto e compatibilidade de versões exigem validação adicional. Seleção no jogo/launcher original pode ser necessária."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "bladeandsorcery",
+      "name": "Blade & Sorcery",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2673,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-bladeandsorcery/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example/manifest.json",
+          "target": "BladeAndSorcery_Data/StreamingAssets/Mods/Example/manifest.json"
+        },
+        {
+          "source": "Example/assets/config.json",
+          "target": "BladeAndSorcery_Data/StreamingAssets/Mods/Example/assets/config.json"
+        }
+      ],
+      "findings": [
+        "Rotas e estrutura conferidas; ordem, semântica do manifesto e compatibilidade de versões exigem validação adicional. Seleção no jogo/launcher original pode ser necessária."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "x4foundations",
+      "name": "X4: Foundations",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2659,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-x4foundations/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example/content.xml",
+          "target": "extensions/Example/content.xml"
+        },
+        {
+          "source": "Example/assets/config.json",
+          "target": "extensions/Example/assets/config.json"
+        }
+      ],
+      "findings": [
+        "Rotas e estrutura conferidas; ordem, semântica do manifesto e compatibilidade de versões exigem validação adicional. Seleção no jogo/launcher original pode ser necessária."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "monsterhunterworld",
+      "name": "Monster Hunter: World",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2531,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-monster-hunter-world/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        {
+          "mod_id": 1982,
+          "title": "Stracker's Loader",
+          "url": "https://www.nexusmods.com/monsterhunterworld/mods/1982"
+        }
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "nativePC/plugins/Example.dll",
+          "target": "nativePC/plugins/Example.dll"
+        },
+        {
+          "source": "nativePC/Example/config.json",
+          "target": "nativePC/Example/config.json"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "daggerfallunity",
+      "name": "Daggerfall Unity",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2927,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-daggerfallunity/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.dfmod",
+          "target": "DaggerfallUnity_Data/StreamingAssets/Mods/Example.dfmod"
+        }
+      ],
+      "findings": [
+        "Rotas e estrutura conferidas; ordem, semântica do manifesto e compatibilidade de versões exigem validação adicional. Seleção no jogo/launcher original pode ser necessária."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "witcher",
+      "name": "The Witcher",
+      "module_version": "1.0.0",
+      "nexus_game_id": 150,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-witcher/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Override/Example/sub/file.2da",
+          "target": "Data/Override/Example/sub/file.2da"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "witcher2",
+      "name": "The Witcher 2",
+      "module_version": "1.0.0",
+      "nexus_game_id": 153,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-witcher2/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "CookedPC/Example/sub/file.w2ent",
+          "target": "CookedPC/Example/sub/file.w2ent"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "kotor",
+      "name": "Knights of the Old Republic",
+      "module_version": "1.0.0",
+      "nexus_game_id": 234,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-sw-kotor/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "override/Example/model.mdl",
+          "target": "override/Example/model.mdl"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "skyrimspecialedition",
+      "name": "Skyrim Special Edition",
+      "module_version": "1.1.0",
+      "nexus_game_id": 1704,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-skyrimse/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        30379
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.esp",
+          "target": "Data/Example.esp"
+        },
+        {
+          "source": "textures/armor/skin.dds",
+          "target": "Data/textures/armor/skin.dds"
+        },
+        {
+          "source": "skse64_2_00_00/skse64_loader.exe",
+          "target": "skse64_loader.exe"
+        },
+        {
+          "source": "skse64_2_00_00/skse64_1_0_0.dll",
+          "target": "skse64_1_0_0.dll"
+        }
+      ],
+      "findings": [
+        "Corrigidas rotas copiadas entre jogos: somente pasta do script extender e formatos de arquivos próprios. Script extender, invalidação no INI, BAIN e LOOT opcional: ver docs/nexus-bethesda.md.",
+        "Script extender SKSE64: página Nexus 30379 verificada pela API pública (Skyrim Script Extender (SKSE64)); loader skse64_loader.exe e DLLs skse64_*.dll na raiz; início pelo loader quando presente."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "skyrimspecialedition",
+      "name": "Skyrim VR",
+      "module_version": "1.0.0",
+      "nexus_game_id": 1704,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-skyrimvr/src/index.js",
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/gamebryo-archive-invalidation/src/gameSupport.ts"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        30457,
+        106712
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.esp",
+          "target": "Data/Example.esp"
+        },
+        {
+          "source": "textures/armor/skin.dds",
+          "target": "Data/textures/armor/skin.dds"
+        },
+        {
+          "source": "sksevr_2_00_00/sksevr_loader.exe",
+          "target": "sksevr_loader.exe"
+        },
+        {
+          "source": "sksevr_2_00_00/sksevr_1_0_0.dll",
+          "target": "sksevr_1_0_0.dll"
+        }
+      ],
+      "findings": [
+        "Edição VR com página Nexus do Skyrim SE (nexusPageId do Vortex); identidade SkyrimVR.exe e Steam 611670; plugins em @local/Skyrim VR/plugins.txt com asterisco.",
+        "SKSEVR: página 30457 verificada pela API pública (Skyrim Script Extender for VR (SKSEVR)). ESL exige Skyrim VR ESL Support (106712; arquivo Data/SKSE/Plugins/skyrimvresl.dll confirmado na prévia pública de arquivos).",
+        "Invalidação de arquivos em SkyrimVR.ini, como o gamebryo-archive-invalidation do Vortex."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "enderalspecialedition",
+      "name": "Enderal Special Edition",
+      "module_version": "1.0.0",
+      "nexus_game_id": 3685,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Pickysaurus/vortex-game-enderal-se/blob/d0ee7a3d54f99def03bd0d54cea65332be86ae7d/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.esp",
+          "target": "Data/Example.esp"
+        },
+        {
+          "source": "textures/armor/skin.dds",
+          "target": "Data/textures/armor/skin.dds"
+        },
+        {
+          "source": "skse64_2_00_00/skse64_loader.exe",
+          "target": "skse64_loader.exe"
+        },
+        {
+          "source": "skse64_2_00_00/skse64_1_0_0.dll",
+          "target": "skse64_1_0_0.dll"
+        }
+      ],
+      "findings": [
+        "Extensão publicada no Nexus (site/mods/218, versão 0.2.9); código comparado no repositório público do autor, que pode estar atrás da versão publicada.",
+        "Identidade SkyrimSE.exe + Enderal Launcher.exe (Steam 976620); plugins em @local/Enderal Special Edition/plugins.txt com asterisco.",
+        "SKSE64 vem da página Skyrim SE (30379), apenas como link. Sem ajuste de INI: o Vortex não aplica invalidação ao Enderal SE."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "skyrim",
+      "name": "Skyrim",
+      "module_version": "1.1.0",
+      "nexus_game_id": 110,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-skyrim/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        100216
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.esp",
+          "target": "Data/Example.esp"
+        },
+        {
+          "source": "textures/armor/skin.dds",
+          "target": "Data/textures/armor/skin.dds"
+        },
+        {
+          "source": "skse_2_00_00/skse_loader.exe",
+          "target": "skse_loader.exe"
+        },
+        {
+          "source": "skse_2_00_00/skse_1_0_0.dll",
+          "target": "skse_1_0_0.dll"
+        }
+      ],
+      "findings": [
+        "Corrigidas rotas copiadas entre jogos: somente pasta do script extender e formatos de arquivos próprios. Script extender, invalidação no INI, BAIN e LOOT opcional: ver docs/nexus-bethesda.md.",
+        "Script extender SKSE: página Nexus 100216 verificada pela API pública (Skyrim Script Extender (SKSE)); loader skse_loader.exe e DLLs skse_*.dll na raiz; início pelo loader quando presente."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "enderal",
+      "name": "Enderal",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2736,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-enderal/src/index.js",
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/gamebryo-archive-invalidation/src/gameSupport.ts"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.esp",
+          "target": "Data/Example.esp"
+        },
+        {
+          "source": "textures/armor/skin.dds",
+          "target": "Data/textures/armor/skin.dds"
+        },
+        {
+          "source": "skse_2_00_00/skse_loader.exe",
+          "target": "skse_loader.exe"
+        },
+        {
+          "source": "skse_2_00_00/skse_1_0_0.dll",
+          "target": "skse_1_0_0.dll"
+        }
+      ],
+      "findings": [
+        "Identidade TESV.exe + Enderal Launcher.exe (Steam 933480); a identidade mais específica vence a do Skyrim. Plugins em @local/enderal/plugins.txt sem asterisco.",
+        "SKSE vem da página Skyrim (100216); por ser outro jogo Nexus, é só link e não confirma identidade de download.",
+        "Invalidação de arquivos em Enderal.ini (grafia do local-gamesettings do Vortex)."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "fallout4",
+      "name": "Fallout 4",
+      "module_version": "1.1.0",
+      "nexus_game_id": 1151,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-fallout4/src/index.js",
+        "https://www.nexusmods.com/site/mods/1349"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        42147
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.esp",
+          "target": "Data/Example.esp"
+        },
+        {
+          "source": "textures/armor/skin.dds",
+          "target": "Data/textures/armor/skin.dds"
+        },
+        {
+          "source": "f4se_2_00_00/f4se_loader.exe",
+          "target": "f4se_loader.exe"
+        },
+        {
+          "source": "f4se_2_00_00/f4se_1_0_0.dll",
+          "target": "f4se_1_0_0.dll"
+        }
+      ],
+      "findings": [
+        "Corrigidas rotas copiadas entre jogos: somente pasta do script extender e formatos de arquivos próprios. Script extender, invalidação no INI, BAIN e LOOT opcional: ver docs/nexus-bethesda.md.",
+        "Script extender F4SE: página Nexus 42147 verificada pela API pública (Fallout 4 Script Extender (F4SE)); loader f4se_loader.exe e DLLs f4se_*.dll na raiz; início pelo loader quando presente."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "fallout4",
+      "name": "Fallout 4 VR",
+      "module_version": "1.0.0",
+      "nexus_game_id": 1151,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-fallout4vr/src/index.js",
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/gamebryo-archive-invalidation/src/gameSupport.ts"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        42159,
+        91141
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.esp",
+          "target": "Data/Example.esp"
+        },
+        {
+          "source": "textures/armor/skin.dds",
+          "target": "Data/textures/armor/skin.dds"
+        },
+        {
+          "source": "f4sevr_2_00_00/f4sevr_loader.exe",
+          "target": "f4sevr_loader.exe"
+        },
+        {
+          "source": "f4sevr_2_00_00/f4sevr_1_0_0.dll",
+          "target": "f4sevr_1_0_0.dll"
+        }
+      ],
+      "findings": [
+        "Edição VR com página Nexus do Fallout 4; identidade Fallout4VR.exe e Steam 611660; plugins em @local/Fallout4VR/plugins.txt com asterisco.",
+        "F4SEVR: página 42159 verificada pela API pública (Fallout 4 Script Extender VR (F4SEVR)). ESL exige Daytripper 4 (91141; Data/F4SE/Plugins/Daytripper4.dll confirmado na prévia pública de arquivos).",
+        "Invalidação de arquivos em Fallout4Custom.ini, como o gamebryo-archive-invalidation do Vortex."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "newvegas",
+      "name": "Fallout New Vegas",
+      "module_version": "1.1.0",
+      "nexus_game_id": 130,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-falloutnv/src/index.ts"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        67883
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.esp",
+          "target": "Data/Example.esp"
+        },
+        {
+          "source": "textures/armor/skin.dds",
+          "target": "Data/textures/armor/skin.dds"
+        },
+        {
+          "source": "nvse_2_00_00/nvse_loader.exe",
+          "target": "nvse_loader.exe"
+        },
+        {
+          "source": "nvse_2_00_00/nvse_1_0_0.dll",
+          "target": "nvse_1_0_0.dll"
+        }
+      ],
+      "findings": [
+        "Corrigidas rotas copiadas entre jogos: somente pasta do script extender e formatos de arquivos próprios. Script extender, invalidação no INI, BAIN e LOOT opcional: ver docs/nexus-bethesda.md.",
+        "Script extender xNVSE: página Nexus 67883 verificada pela API pública (New Vegas Script Extender (NVSE xNVSE)); loader nvse_loader.exe e DLLs nvse_*.dll na raiz; início pelo loader quando presente."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "fallout3",
+      "name": "Fallout 3",
+      "module_version": "1.1.0",
+      "nexus_game_id": 120,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-fallout3/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        8606
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.esp",
+          "target": "Data/Example.esp"
+        },
+        {
+          "source": "textures/armor/skin.dds",
+          "target": "Data/textures/armor/skin.dds"
+        },
+        {
+          "source": "fose_2_00_00/fose_loader.exe",
+          "target": "fose_loader.exe"
+        },
+        {
+          "source": "fose_2_00_00/fose_1_0_0.dll",
+          "target": "fose_1_0_0.dll"
+        }
+      ],
+      "findings": [
+        "Corrigidas rotas copiadas entre jogos: somente pasta do script extender e formatos de arquivos próprios. Script extender, invalidação no INI, BAIN e LOOT opcional: ver docs/nexus-bethesda.md.",
+        "Script extender FOSE: página Nexus 8606 verificada pela API pública (Fallout Script Extender (FOSE)); loader fose_loader.exe e DLLs fose_*.dll na raiz; início pelo loader quando presente."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "oblivion",
+      "name": "Oblivion",
+      "module_version": "1.1.0",
+      "nexus_game_id": 101,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-oblivion/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        37952
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.esp",
+          "target": "Data/Example.esp"
+        },
+        {
+          "source": "textures/armor/skin.dds",
+          "target": "Data/textures/armor/skin.dds"
+        },
+        {
+          "source": "obse_2_00_00/obse_loader.exe",
+          "target": "obse_loader.exe"
+        },
+        {
+          "source": "obse_2_00_00/obse_1_0_0.dll",
+          "target": "obse_1_0_0.dll"
+        }
+      ],
+      "findings": [
+        "Corrigidas rotas copiadas entre jogos: somente pasta do script extender e formatos de arquivos próprios. Script extender, invalidação no INI, BAIN e LOOT opcional: ver docs/nexus-bethesda.md.",
+        "Script extender xOBSE: página Nexus 37952 verificada pela API pública (Oblivion Script Extender (OBSE xOBSE)); loader obse_loader.exe e DLLs obse_*.dll na raiz; início pelo loader quando presente."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "starfield",
+      "name": "Starfield",
+      "module_version": "1.1.0",
+      "nexus_game_id": 4187,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/game-starfield/blob/ebea0bf2aa1e41f96f0c3fba8e5a58855466f3b7/src/index.ts",
+        "https://www.nexusmods.com/site/mods/634"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        106
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.esp",
+          "target": "Data/Example.esp"
+        },
+        {
+          "source": "textures/armor/skin.dds",
+          "target": "Data/textures/armor/skin.dds"
+        },
+        {
+          "source": "sfse_2_00_00/sfse_loader.exe",
+          "target": "sfse_loader.exe"
+        },
+        {
+          "source": "sfse_2_00_00/sfse_1_0_0.dll",
+          "target": "sfse_1_0_0.dll"
+        }
+      ],
+      "findings": [
+        "Corrigidas rotas copiadas entre jogos: somente pasta do script extender e formatos de arquivos próprios. Script extender, invalidação no INI, BAIN e LOOT opcional: ver docs/nexus-bethesda.md.",
+        "Script extender SFSE: página Nexus 106 verificada pela API pública (Starfield Script Extender (SFSE)); loader sfse_loader.exe e DLLs sfse_*.dll na raiz; início pelo loader quando presente."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "morrowind",
+      "name": "Morrowind",
+      "module_version": "1.0.0",
+      "nexus_game_id": 100,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-morrowind/src/index.ts",
+        "https://www.nexusmods.com/site/mods/1295"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.esp",
+          "target": "Data Files/Example.esp"
+        },
+        {
+          "source": "Meshes/armor/mesh.nif",
+          "target": "Data Files/Meshes/armor/mesh.nif"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "crisiscoreff7reunion",
+      "name": "Crisis Core Final Fantasy VII Reunion",
+      "module_version": "1.1.0",
+      "nexus_game_id": 5001,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://www.nexusmods.com/site/mods/501"
+      ],
+      "extension_code_compared": false,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "CCFF7R/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "CCFF7R/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "CCFF7R/Content/Paks/~mods/Example_P.ucas"
+        }
+      ],
+      "findings": [
+        "Família Unreal sem UE4SS: somente paks em ~mods, como antes; scripts e carregadores UE4SS continuam recusados."
+      ],
+      "pending_checks": [
+        "Comparação detalhada do código da extensão publicada; nesta revisão foram conferidos cadastro oficial e documentação disponíveis.",
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "finalfantasy16",
+      "name": "Final Fantasy XVI",
+      "module_version": "1.0.0",
+      "nexus_game_id": 6815,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-finalfantasy16/index.js",
+        "https://www.nexusmods.com/site/mods/1041"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example/ModConfig.json",
+          "target": "Reloaded/Mods/Example/ModConfig.json"
+        },
+        {
+          "source": "Example/assets/config.json",
+          "target": "Reloaded/Mods/Example/assets/config.json"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "finalfantasytacticstheivalicechronicles",
+      "name": "Final Fantasy Tactics The Ivalice Chronicles",
+      "module_version": "1.0.0",
+      "nexus_game_id": 8229,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-finalfantasytacticstheivalicechronicles/index.js",
+        "https://www.nexusmods.com/site/mods/1515"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example/ModConfig.json",
+          "target": "Reloaded/Mods/Example/ModConfig.json"
+        },
+        {
+          "source": "Example/assets/config.json",
+          "target": "Reloaded/Mods/Example/assets/config.json"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "finalfantasy9",
+      "name": "Final Fantasy IX",
+      "module_version": "1.0.0",
+      "nexus_game_id": 1948,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://www.nexusmods.com/site/mods/406"
+      ],
+      "extension_code_compared": false,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example/ModDescription.xml",
+          "target": "PeliGamesMods/Example/ModDescription.xml"
+        },
+        {
+          "source": "Example/assets/config.json",
+          "target": "PeliGamesMods/Example/assets/config.json"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Comparação detalhada do código da extensão publicada; nesta revisão foram conferidos cadastro oficial e documentação disponíveis.",
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "baldursgate3",
+      "name": "Baldur’s Gate 3",
+      "module_version": "1.0.0",
+      "nexus_game_id": 3474,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-baldursgate3/src/index.tsx"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.pak",
+          "target": "@local/Larian Studios/Baldur's Gate 3/Mods/Example.pak"
+        },
+        {
+          "source": "Data/Public/Example/file.lsx",
+          "target": "Data/Public/Example/file.lsx"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "dragonage",
+      "name": "Dragon Age Origins",
+      "module_version": "1.0.0",
+      "nexus_game_id": 140,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-dragonage/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "override/Example/file.gda",
+          "target": "@documents/BioWare/Dragon Age/packages/core/override/Example/file.gda"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "witcher3",
+      "name": "The Witcher 3 Wild Hunt",
+      "module_version": "1.0.0",
+      "nexus_game_id": 952,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-witcher3/src/index.ts"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Mods/modExample/content/scripts/main.ws",
+          "target": "Mods/modExample/content/scripts/main.ws"
+        },
+        {
+          "source": "DLC/dlcExample/content/file.bundle",
+          "target": "DLC/dlcExample/content/file.bundle"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "reddeadredemption2",
+      "name": "Red Dead Redemption 2",
+      "module_version": "1.0.0",
+      "nexus_game_id": 3024,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-reddeadredemption2/index.js",
+        "https://www.nexusmods.com/site/mods/68"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example/install.xml",
+          "target": "lml/Example/install.xml"
+        },
+        {
+          "source": "Example/stream/model.ytd",
+          "target": "lml/Example/stream/model.ytd"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "eldenring",
+      "name": "Elden Ring",
+      "module_version": "1.0.0",
+      "nexus_game_id": 4333,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://www.nexusmods.com/site/mods/370"
+      ],
+      "extension_code_compared": false,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "parts/Example.partsbnd.dcx",
+          "target": "Game/mod/parts/Example.partsbnd.dcx"
+        },
+        {
+          "source": "regulation.bin",
+          "target": "Game/mod/regulation.bin"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Comparação detalhada do código da extensão publicada; nesta revisão foram conferidos cadastro oficial e documentação disponíveis.",
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "marvelrivals",
+      "name": "Marvel Rivals",
+      "module_version": "1.1.0",
+      "nexus_game_id": 7106,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-marvelrivals/index.js",
+        "https://www.nexusmods.com/site/mods/1132"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "MarvelGame/Marvel/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "MarvelGame/Marvel/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "MarvelGame/Marvel/Content/Paks/~mods/Example_P.ucas"
+        }
+      ],
+      "findings": [
+        "Família Unreal sem UE4SS: somente paks em ~mods, como antes; scripts e carregadores UE4SS continuam recusados."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "dragonage2",
+      "name": "Dragon Age 2",
+      "module_version": "1.0.0",
+      "nexus_game_id": 141,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-dragonage2/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "override/Example/file.gda",
+          "target": "@documents/BioWare/Dragon Age 2/packages/core/override/Example/file.gda"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "thesims4",
+      "name": "The Sims 4",
+      "module_version": "1.0.0",
+      "nexus_game_id": 641,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-sims4/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.ts4script",
+          "target": "@documents/Electronic Arts/The Sims 4/Mods/PeliGames/Example.ts4script"
+        },
+        {
+          "source": "Example.package",
+          "target": "@documents/Electronic Arts/The Sims 4/Mods/PeliGames/Example.package"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "mysummercar",
+      "name": "My Summer Car",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2600,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://www.nexusmods.com/site/mods/294"
+      ],
+      "extension_code_compared": false,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Mods/Example.dll",
+          "target": "@msc/Example.dll"
+        },
+        {
+          "source": "Assets/Example/config.json",
+          "target": "@msc/Assets/Example/config.json"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Comparação detalhada do código da extensão publicada; nesta revisão foram conferidos cadastro oficial e documentação disponíveis.",
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "helldivers2",
+      "name": "Helldivers 2",
+      "module_version": "1.0.0",
+      "nexus_game_id": 6119,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-helldivers2/index.js",
+        "https://www.nexusmods.com/site/mods/845"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "0123456789abcdef.patch_0",
+          "target": "data/0123456789abcdef.patch_0"
+        },
+        {
+          "source": "0123456789abcdef.patch_0.stream",
+          "target": "data/0123456789abcdef.patch_0.stream"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "oblivionremastered",
+      "name": "Oblivion Remastered",
+      "module_version": "1.0.0",
+      "nexus_game_id": 7587,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/game-oblivionremastered/blob/489f6b9683b4fa928ee412072430ae0ae2f1706a/src/index.ts",
+        "https://www.nexusmods.com/site/mods/1270"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        {
+          "mod_id": 32,
+          "title": "UE4SS for OblivionRemastered",
+          "url": "https://www.nexusmods.com/oblivionremastered/mods/32"
+        }
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example/Scripts/main.lua",
+          "target": "OblivionRemastered/Binaries/Win64/ue4ss/Mods/Example/Scripts/main.lua"
+        },
+        {
+          "source": "Example/enabled.txt",
+          "target": "OblivionRemastered/Binaries/Win64/ue4ss/Mods/Example/enabled.txt"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "dragonageinquisition",
+      "name": "Dragon Age: Inquisition",
+      "module_version": "1.0.0",
+      "nexus_game_id": 728,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonageinquisition/index.js",
+        "https://www.nexusmods.com/site/mods/876"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.fbmod",
+          "target": "FrostyModManager/Mods/dragonageinquisition/Example.fbmod"
+        },
+        {
+          "source": "Example.archive",
+          "target": "FrostyModManager/Mods/dragonageinquisition/Example.archive"
+        }
+      ],
+      "findings": [
+        "Suporte de preparação de pacotes; aplicação e inicialização precisam do gerenciador externo. Não equivale a instalação direta."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "masseffectlegendaryedition",
+      "name": "Mass Effect Legendary Edition",
+      "module_version": "1.0.0",
+      "nexus_game_id": 3712,
+      "vortex_status": "unconfirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/game-masseffectlegendaryedition/blob/84bbd3ea1695acd6c8013103c7cad82c88cbff3c/src/index.tsx",
+        "https://github.com/Nexus-Mods/Vortex/issues/15629"
+      ],
+      "extension_code_compared": false,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Game/ME1/BioGame/DLC/DLC_MOD_Example/CookedPCConsole/file.pcc",
+          "target": "Game/ME1/BioGame/DLC/DLC_MOD_Example/CookedPCConsole/file.pcc"
+        }
+      ],
+      "findings": [
+        "Suporte Vortex não confirmado: repositório com quatro commits, apenas detecção/cópia genérica e README indicando desenvolvimento incompleto. Ausente do manifesto público atual. Não atende ao critério de novos módulos. Integração PeliGames existente preservada, sem certificação de compatibilidade."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "starwarsbattlefront22017",
+      "name": "Star Wars: Battlefront II (2017)",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2229,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-starwarsbattlefront22017/index.js",
+        "https://www.nexusmods.com/site/mods/112"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Example.fbmod",
+          "target": "FrostyModManager/Mods/StarWarsBattlefrontII/Example.fbmod"
+        },
+        {
+          "source": "Example.fbpack",
+          "target": "FrostyModManager/Mods/StarWarsBattlefrontII/Example.fbpack"
+        }
+      ],
+      "findings": [
+        "Suporte de preparação de pacotes; aplicação e inicialização precisam do gerenciador externo. Não equivale a instalação direta."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "repo",
+      "name": "R.E.P.O.",
+      "module_version": "1.1.0",
+      "nexus_game_id": 7398,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://www.nexusmods.com/site/mods/1218"
+      ],
+      "extension_code_compared": false,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "BepInEx/plugins/Example/Example.dll",
+          "target": "BepInEx/plugins/Example/Example.dll"
+        },
+        {
+          "source": "BepInEx/plugins/Example/assets/data.json",
+          "target": "BepInEx/plugins/Example/assets/data.json"
+        },
+        {
+          "source": "BepInEx/config/Example.cfg",
+          "target": "BepInEx/config/Example.cfg"
+        }
+      ],
+      "findings": [
+        "Conferir versão e plataforma BepInEx e dependências dos plugins. QMod/SML antigos, conversões e todos os formatos da extensão não são certificados por esta revisão.",
+        "Reconhecimento conservador de pasta externa comum ao pacote completo; não achata variantes irmãs nem autoriza arquivos acompanhantes sem rota.",
+        "Recursos permitidos acompanham uma única DLL reconhecida na pasta exclusiva do mod; executáveis desconhecidos e associação ambígua continuam sem rota.",
+        "Migrado para a família Unity (BepInEx): a classificação das DLLs pela referência ao carregador e a recusa de mods MelonLoader e de dados do jogo vêm do perfil compartilhado; regras próprias do jogo preservadas."
+      ],
+      "pending_checks": [
+        "Comparação detalhada do código da extensão publicada; nesta revisão foram conferidos cadastro oficial e documentação disponíveis.",
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "valheim",
+      "name": "Valheim",
+      "module_version": "1.0.1",
+      "nexus_game_id": 3667,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/game-valheim/blob/b5a9b7c6197d8db4f6fba2b8f78edc2c74480338/src/index.ts",
+        "https://www.nexusmods.com/site/mods/210"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "BepInEx/plugins/Example/Example.dll",
+          "target": "BepInEx/plugins/Example/Example.dll"
+        },
+        {
+          "source": "BepInEx/config/Example.cfg",
+          "target": "BepInEx/config/Example.cfg"
+        }
+      ],
+      "findings": [
+        "Conferir versão e plataforma BepInEx e dependências dos plugins. QMod/SML antigos, conversões e todos os formatos da extensão não são certificados por esta revisão.",
+        "O perfil nativo usa um caminho de instalação próprio. A proteção de conteúdo não mapeado acrescentada ao deploy genérico não o cobre; é necessário distinguir acompanhantes essenciais de arquivos Windows presentes em pacotes multiplataforma antes de estender essa proteção.",
+        "Reconhecimento conservador de pasta externa comum ao pacote completo; não achata variantes irmãs nem autoriza arquivos acompanhantes sem rota.",
+        "Recursos permitidos acompanham uma única DLL reconhecida na pasta exclusiva do mod; executáveis desconhecidos e associação ambígua continuam sem rota."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas.",
+        "Validar completude de pacotes no perfil nativo, com amostras multiplataforma do BepInEx e configurações fora das rotas reconhecidas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "palworld",
+      "name": "Palworld",
+      "module_version": "1.2.0",
+      "nexus_game_id": 6063,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/game-palworld/blob/16850505152c67b0a4322a4c1ae4cdb5fd69d9e5/src/index.ts",
+        "https://www.nexusmods.com/site/mods/770"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Mods/Example/Scripts/main.lua",
+          "target": "Pal/Binaries/Win64/ue4ss/Mods/Example/Scripts/main.lua"
+        },
+        {
+          "source": "Mods/Example/enabled.txt",
+          "target": "Pal/Binaries/Win64/ue4ss/Mods/Example/enabled.txt"
+        },
+        {
+          "source": "LogicMods/Example_P.pak",
+          "target": "Pal/Content/Paks/LogicMods/Example_P.pak"
+        }
+      ],
+      "findings": [
+        "Família Unreal aplicada ao módulo existente: rotas próprias preservadas; UE4SS passa a ser requisito declarado (dwmapi.dll e UE4SS.dll) e o override dwmapi vem do perfil da família."
+      ],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "finalfantasy12",
+      "name": "Final Fantasy XII The Zodiac Age",
+      "module_version": "1.1.0",
+      "nexus_game_id": 2304,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://www.nexusmods.com/site/mods/59"
+      ],
+      "extension_code_compared": false,
+      "framework_ids_checked": [
+        {
+          "mod_id": 170,
+          "title": "FF12 External File Loader",
+          "url": "https://www.nexusmods.com/finalfantasy12/mods/170"
+        },
+        {
+          "mod_id": 171,
+          "title": "FF12 LUA Loader",
+          "url": "https://www.nexusmods.com/finalfantasy12/mods/171"
+        }
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "ff12data/gamedata/battle.bin",
+          "target": "mods/deploy/ff12data/gamedata/battle.bin"
+        },
+        {
+          "source": "x64/scripts/init/Example.lua",
+          "target": "x64/scripts/init/Example.lua"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Comparação detalhada do código da extensão publicada; nesta revisão foram conferidos cadastro oficial e documentação disponíveis.",
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "crimsondesert",
+      "name": "Crimson Desert",
+      "module_version": "1.0.0",
+      "nexus_game_id": 8969,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-crimsondesert/index.js",
+        "https://www.nexusmods.com/site/mods/1746"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "bin64/Example.asi",
+          "target": "bin64/Example.asi"
+        },
+        {
+          "source": "bin64/Example.ini",
+          "target": "bin64/Example.ini"
+        }
+      ],
+      "findings": [],
+      "pending_checks": [
+        "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false
+    }
+  ],
+  "operational_review": {
+    "reviewed_at": "2026-10-10",
+    "method": "Análise estática do núcleo e extensões públicas fixadas; conferência das 67 definições existentes e da matriz de rotas. Não representa execução real de todos os jogos.",
+    "implementation": "Novas instalações nos motores deployment e valheim_profile preservam installed_files. Reaplicação usa o mapeamento validado e mantém validação de limites, membros do arquivo, conflitos e dependências próprias do motor. Instalações antigas sem plano conservam o comportamento anterior até reinstalação explícita.",
+    "upstream_operations": [
+      "registerInstaller: prioridade e testSupported antes de install",
+      "processInstructions: construção do staging durante instalação",
+      "mod types: destino separado do reconhecimento do pacote",
+      "hooks e ferramentas externas: aplicação pode ocorrer fora do Vortex"
+    ],
+    "sources": [
+      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/src/renderer/src/extensions/mod_management/InstallManager.ts",
+      "https://github.com/Nexus-Mods/game-cyberpunk2077/blob/0ddc3e8a9c593dd6cf144d67739d9a9986d95f3b/src/installer.multitype.ts",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevil42023/index.js"
+    ],
+    "release_gates": [
+      "Amostras reais populares e recentes por família",
+      "Precedência e pacote misto sem perda de acompanhantes",
+      "Ativação e carregamento no jogo/prefixo correto",
+      "Desativação, remoção e rollback preservando arquivos externos"
+    ],
+    "coverage": {
+      "registered_modules": 67,
+      "vortex_confirmed": 66,
+      "extension_code_compared": 53,
+      "runtime_certification_all_games": false
+    },
+    "validation": {
+      "unit_tests_passed": 70,
+      "unit_tests_failed": 0,
+      "ignored_in_regular_run": 3,
+      "separate_real_archive_test": "CET e redscript: planejar, aplicar, desativar outro mod, remover CET e preservar arquivo externo; aprovado em diretório temporário, sem iniciar o jogo.",
+      "saved_plan_regression": "Mudança de rotas não invalida destino previamente aprovado; destinos externos/protegidos, origem ausente e destinos duplicados são rejeitados.",
+      "limitations": [
+        "14 módulos ainda sem comparação de código confirmada, incluindo MELE sem confirmação de suporte funcional.",
+        "Amostragem atual dos mods populares/recentes e execução real de todos os jogos permanecem pendentes.",
+        "Sem promessa de equivalência completa aos instaladores Vortex/Fluffy/Frosty ou de compatibilidade com todo mod."
+      ]
+    }
+  },
+  "package_recognition_review": {
+    "date": "2026-10-10",
+    "reference": "https://github.com/ChrisDKN/Amethyst-Mod-Manager/wiki/7.-Adding-a-custom-game.",
+    "implementation": "Código próprio: remoção conservadora de invólucro comum e associação de recursos a um único plugin reconhecido, com opções explícitas por módulo.",
+    "enabled_domains": [
+      "valheim",
+      "subnautica",
+      "subnauticabelowzero",
+      "tcgcardshopsimulator",
+      "supermarketsimulator",
+      "repo"
+    ],
+    "tests": {
+      "passed": 71,
+      "failed": 0,
+      "ignored": 3,
+      "scope": "Fixtures sintéticas nos seis módulos, variantes, acompanhantes, travessia e executável desconhecido. Não constitui teste de carregamento real."
+    },
+    "not_implemented": [
+      "Editor manual de estrutura",
+      "Integração LOOT",
+      "Invalidação de PAKs RE Engine",
+      "Novos assistentes de ferramentas externas"
+    ]
+  }
+}

@@ -49,7 +49,7 @@ export async function collectQueue({ game, domain, modId, details, fileId, selec
         else if (!external.some(l => l.url === url && l.name === requirement.name)) {
           const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
           const name = normalize(requirement.name);
-          const detected = Boolean(game.detected_mods?.some(m => normalize(m.name) === name || game.adapter === "palworld" && normalize(m.name) === "ue4ss" && ["ue4ss", "reue4ss"].includes(name)));
+          const detected = Boolean(game.detected_mods?.some(m => normalize(m.name) === name || normalize(m.name) === "ue4ss" && ["ue4ss", "reue4ss"].includes(name)));
           external.push({ kind: requirement.kind, name: requirement.name, notes: requirement.notes, url, installed: detected });
         }
       }

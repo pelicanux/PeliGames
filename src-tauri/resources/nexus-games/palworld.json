@@ -1,10 +1,14 @@
 {
   "schema": 1,
-  "version": "1.0.0",
+  "version": "1.2.0",
   "domain": "palworld",
   "name": "Palworld",
   "platform": "proton",
   "engine": "deployment",
+  "family": {
+    "kind": "unreal",
+    "project": "Pal"
+  },
   "executable": "Pal/Binaries/Win64/Palworld-Win64-Shipping.exe",
   "launch_executable": "Palworld.exe",
   "required": [
@@ -19,7 +23,8 @@
   "destinations": [
     "Pal/Content/Paks/~mods",
     "Pal/Content/Paks/LogicMods",
-    "Pal/Binaries/Win64/ue4ss"
+    "Pal/Binaries/Win64/ue4ss",
+    "Pal/Binaries/Win64/Mods"
   ],
   "allowed_files": [
     "Pal/Binaries/Win64/dwmapi.dll"
@@ -33,12 +38,14 @@
     {
       "kind": "prefix",
       "source": "ue4ss/",
-      "target": "Pal/Binaries/Win64/ue4ss/"
+      "target": "Pal/Binaries/Win64/ue4ss/",
+      "search": true
     },
     {
       "kind": "prefix",
       "source": "LogicMods/",
-      "target": "Pal/Content/Paks/LogicMods/"
+      "target": "Pal/Content/Paks/LogicMods/",
+      "search": true
     },
     {
       "kind": "extension",
@@ -49,22 +56,57 @@
     {
       "kind": "prefix",
       "source": "Pal/Content/Paks/~mods/",
-      "target": "Pal/Content/Paks/~mods/"
+      "target": "Pal/Content/Paks/~mods/",
+      "search": true
     },
     {
       "kind": "prefix",
       "source": "Pal/Content/Paks/LogicMods/",
-      "target": "Pal/Content/Paks/LogicMods/"
+      "target": "Pal/Content/Paks/LogicMods/",
+      "search": true
     },
     {
       "kind": "prefix",
       "source": "Pal/Binaries/Win64/ue4ss/",
-      "target": "Pal/Binaries/Win64/ue4ss/"
+      "target": "Pal/Binaries/Win64/ue4ss/",
+      "search": true
     },
     {
       "kind": "file",
       "source": "Pal/Binaries/Win64/dwmapi.dll",
-      "target": "Pal/Binaries/Win64/dwmapi.dll"
+      "target": "Pal/Binaries/Win64/dwmapi.dll",
+      "search": true
+    },
+    {
+      "kind": "prefix",
+      "source": "Pal/Binaries/Win64/Mods/",
+      "target": "Pal/Binaries/Win64/ue4ss/Mods/",
+      "search": true
+    },
+    {
+      "kind": "prefix",
+      "source": "Mods/",
+      "target": "Pal/Binaries/Win64/ue4ss/Mods/",
+      "search": true
+    },
+    {
+      "kind": "manifest",
+      "marker": "Scripts/main.lua",
+      "target": "Pal/Binaries/Win64/ue4ss/Mods/"
     }
+  ],
+  "notes": [
+    "Scripts UE4SS com estrutura explícita, Mods/ ou pasta identificada por Scripts/main.lua; pacotes mistos preservam Lua, ativação e LogicMods. O destino acompanha o loader instalado: Win64/Mods no layout plano ou Win64/ue4ss/Mods no layout aninhado. Dois loaders simultâneos exigem resolver a ambiguidade antes da instalação.",
+    "A lista mods.txt preserva entradas externas ao perfil. A estrutura reconhecida não garante compatibilidade com a versão do jogo ou do UE4SS."
+  ],
+  "sources": [
+    "https://www.nexusmods.com/palworld/mods/577",
+    "https://github.com/Nexus-Mods/game-palworld",
+    "https://docs.ue4ss.com/",
+    "https://github.com/Nexus-Mods/game-palworld/blob/16850505152c67b0a4322a4c1ae4cdb5fd69d9e5/src/index.ts",
+    "https://www.nexusmods.com/site/mods/770"
+  ],
+  "rejected_prefixes": [
+    "Pal/Binaries/WinGDK/"
   ]
 }

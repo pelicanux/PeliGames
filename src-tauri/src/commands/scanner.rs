@@ -37,7 +37,7 @@ struct SteamGridGrid {
 }
 
 /// Helper to read ACF files
-fn parse_acf_file(path: &Path) -> Option<(String, String, String)> {
+pub(super) fn parse_acf_file(path: &Path) -> Option<(String, String, String)> {
     let content = fs::read_to_string(path).ok()?;
     
     let mut appid = String::new();
@@ -80,6 +80,27 @@ fn parse_library_folders(path: &Path) -> Vec<PathBuf> {
         }
     }
     folders
+}
+
+/// Steam library roots (each containing `steamapps`), native and Flatpak.
+pub(super) fn steam_libraries(home: &Path) -> Vec<PathBuf> {
+    let steam_paths = vec![
+        home.join(".local/share/Steam"),
+        home.join(".steam/steam"),
+        home.join(".var/app/com.valvesoftware.Steam/.local/share/Steam"),
+        home.join(".var/app/com.valvesoftware.Steam/data/Steam"),
+    ];
+    let mut libraries = Vec::new();
+    for steam_path in steam_paths {
+        let vdf_path = steam_path.join("config/libraryfolders.vdf");
+        if vdf_path.exists() {
+            libraries.extend(parse_library_folders(&vdf_path));
+            libraries.push(steam_path.clone());
+        }
+    }
+    libraries.sort();
+    libraries.dedup();
+    libraries
 }
 
 fn scan_steam(home: &Path) -> Vec<GameInfo> {
@@ -148,9 +169,15 @@ fn scan_heroic(home: &Path) -> Vec<GameInfo> {
 }
 
 /// Store manifests already identify installation roots; do not apply DLSS executable heuristics.
-pub(super) fn nexus_store_games(home: &Path) -> Vec<GameInfo> {
-    let mut games = scan_steam(home);
-    games.extend(scan_heroic(home));
+pub(super) fn nexus_store_games(home: &Path) -> Vec<super::launcher_library::LauncherGame> {
+    let mut games: Vec<_> = scan_steam(home).into_iter().map(|game| super::launcher_library::LauncherGame {
+        name: game.name, path: game.path, app_id: game.app_id, cover_url: game.cover_url, launcher: game.launcher,
+        prefix: None, proton: None, store: None,
+    }).collect();
+    // Heroic, Lutris, Faugus and Bottles report their own prefix and Proton runner.
+    for game in super::launcher_library::all(home) {
+        if !games.iter().any(|known| known.path == game.path) { games.push(game); }
+    }
     games
 }
 

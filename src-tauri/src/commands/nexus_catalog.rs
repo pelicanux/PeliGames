@@ -46,12 +46,16 @@ pub struct CatalogGame {
 // A Nexus catalog entry alone does not prove Vortex game support. Keep an
 // independently verified snapshot for offline use; refresh community extensions
 // from the official public manifest without sending the user's API key.
-async fn vortex_support() -> (Vec<String>, Vec<u64>) {
+fn vortex_support_snapshot() -> (Vec<String>, Vec<u64>) {
     let snapshot: serde_json::Value = serde_json::from_slice(include_bytes!(
         "../../resources/nexus-games/vortex-support.json"
     )).expect("Invalid Vortex support snapshot");
     let domains = serde_json::from_value(snapshot["domains"].clone()).unwrap();
-    let mut ids: Vec<u64> = serde_json::from_value(snapshot["extension_game_ids"].clone()).unwrap();
+    let ids: Vec<u64> = serde_json::from_value(snapshot["extension_game_ids"].clone()).unwrap();
+    (domains, ids)
+}
+async fn vortex_support() -> (Vec<String>, Vec<u64>) {
+    let (domains, mut ids) = vortex_support_snapshot();
     if let Ok(client) = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
         .redirect(reqwest::redirect::Policy::none()).build() {
@@ -153,12 +157,12 @@ pub async fn list_nexus_catalog_games() -> Result<Vec<CatalogGame>, String> {
     let mut games: Vec<CatalogGame> = serde_json::from_value(value)
         .map_err(|_| "Lista de jogos Nexus inválida.")?;
     games.retain(|g| domain(&g.domain_name).is_ok());
-    if fresh {
-        let (domains, ids) = vortex_support().await;
-        for game in &mut games {
-            game.vortex_supported = domains.contains(&game.domain_name)
-                || (game.id > 0 && ids.contains(&game.id));
-        }
+    // Re-evaluate cached flags too: an old cache may contain an unsupported
+    // integration that was removed from the independently verified snapshot.
+    let (domains, ids) = if fresh { vortex_support().await } else { vortex_support_snapshot() };
+    for game in &mut games {
+        game.vortex_supported = domains.contains(&game.domain_name)
+            || (game.id > 0 && ids.contains(&game.id));
     }
     games.sort_by_key(|g| g.name.to_lowercase());
     if fresh {
@@ -459,6 +463,17 @@ fn parse_file_requirements(data: &serde_json::Value) -> Result<Requirements, Str
 mod requirements_tests {
     use super::*;
     use serde_json::json;
+    #[test]
+    fn vortex_snapshot_distinguishes_published_support_from_unfinished_integrations() {
+        let (domains, ids) = vortex_support_snapshot();
+        assert!(!domains.iter().any(|domain| domain == "masseffectlegendaryedition"));
+        assert!(!ids.contains(&3712));
+        let audit: serde_json::Value = serde_json::from_slice(include_bytes!("../../resources/nexus-games/support-audit.json")).unwrap();
+        for module in audit["modules"].as_array().unwrap().iter().filter(|m| m["vortex_status"] == "confirmed") {
+            let domain = module["domain"].as_str().unwrap();
+            assert!(domains.iter().any(|d| d == domain) || ids.contains(&module["nexus_game_id"].as_u64().unwrap()), "{domain}");
+        }
+    }
     #[test]
     fn file_requirements_use_website_ids_and_version_bounds() {
         let value: serde_json::Value = serde_json::from_str(include_str!("../../resources/nexus-games/file-requirements-test.json")).unwrap();

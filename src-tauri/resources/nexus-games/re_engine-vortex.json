@@ -1,0 +1,157 @@
+[
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "deadrisingdeluxeremaster",
+    "name": "Dead Rising Deluxe Remaster",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "re_engine"
+    },
+    "executable": "DRDR.exe",
+    "required": [
+      "DRDR.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-deadrisingdeluxeremaster/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template RE Engine do Vortex: scripts, plugins e dados REFramework e o carregador dinput8.dll. Pacotes natives/, pak_mods e mods Fluffy são recusados. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "2527390"
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "monsterhunterstories3twistedreflection",
+    "name": "Monster Hunter Stories 3: Twisted Reflection",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "re_engine"
+    },
+    "executable": "MONSTER_HUNTER_STORIES_3_TWISTED_REFLECTION.exe",
+    "required": [
+      "MONSTER_HUNTER_STORIES_3_TWISTED_REFLECTION.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-monsterhunterstories3twistedreflection/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template RE Engine do Vortex: scripts, plugins e dados REFramework e o carregador dinput8.dll. Pacotes natives/, pak_mods e mods Fluffy são recusados. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "2852190"
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "onimushawayofthesword",
+    "name": "Onimusha: Way of the Sword",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "re_engine"
+    },
+    "executable": "OnimushaWotS.exe",
+    "required": [
+      "OnimushaWotS.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-onimushawayofthesword/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template RE Engine do Vortex: scripts, plugins e dados REFramework e o carregador dinput8.dll. Pacotes natives/, pak_mods e mods Fluffy são recusados. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "2638890"
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "pragmata",
+    "name": "PRAGMATA",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "re_engine"
+    },
+    "executable": "PRAGMATA.exe",
+    "required": [
+      "PRAGMATA.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-pragmata/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template RE Engine do Vortex: scripts, plugins e dados REFramework e o carregador dinput8.dll. Pacotes natives/, pak_mods e mods Fluffy são recusados. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "3357650"
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "residentevil7",
+    "name": "Resident Evil 7",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "re_engine"
+    },
+    "executable": "re7.exe",
+    "required": [
+      "re7.exe"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevil7/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template RE Engine do Vortex: scripts, plugins e dados REFramework e o carregador dinput8.dll. Pacotes natives/, pak_mods e mods Fluffy são recusados. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "418370"
+  }
+]

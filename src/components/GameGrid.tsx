@@ -1,3 +1,5 @@
+import { createPortal } from "react-dom";
+import { GamePlatformBadge } from "./GamePlatformBadge";
 import { NexusLibraryLoading } from "../modules/nexus/NexusLibraryLoading";
 import { useFavorites } from "../services/favorites";
 import type { CoverGameAction } from "./CoverGameActions";
@@ -22,6 +24,7 @@ import { openDirectoryPicker } from "../services/tauriService";
 import { listPeliGamesEntries } from "../services/installedLibrary";
 
 export interface GameInfo {
+  nexus_platform?: "native" | "proton";
   discovery_source?: string | null;
   library_view?: "own" | "all" | "nexus";
   advanced?: import("../services/advancedSettings").AdvancedSettings;
@@ -80,7 +83,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const [libraryLoaded, setLibraryLoaded] = useState(cachedGames !== null);
   const startupHandled = useRef(false);
   const scanInProgress = useRef(false);
-  const pendingScanFolders = useRef<string[] | null>(null);
+  const pendingScanFolders = useRef<{ folders: string[]; background: boolean } | null>(null);
   const ownEntries = useRef<GameInfo[]>([]);
   const ownRequest = useRef(0);
   const [ownLoaded, setOwnLoaded] = useState(false);
@@ -100,9 +103,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     void refreshOwnLibrary(true).finally(() => setOwnLoaded(true));
     const refresh = () => { void fetchGames(); };
     window.addEventListener("peligamesLibraryChanged", refresh);
-    // Pelinstall can register an installation from another process.
-    window.addEventListener("focus", refresh);
-    return () => { ++ownRequest.current; window.removeEventListener("peligamesLibraryChanged", refresh); window.removeEventListener("focus", refresh); };
+    return () => { ++ownRequest.current; window.removeEventListener("peligamesLibraryChanged", refresh); };
   }, []);
   useEffect(() => {
     if (!managedLibrary && libraryLoaded) saveGameLibrary(games);
@@ -141,16 +142,20 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
 
   const [fallbackAttempted, setFallbackAttempted] = useState<Set<string>>(new Set());
 
-  const fetchGames = async (folders: string[] = customFolders) => {
+  const fetchGames = async (folders: string[] = customFolders, background = false) => {
     if (managedLibrary) { managedLibrary.onRefresh(); return; }
     if (scanInProgress.current) {
-      pendingScanFolders.current = folders;
+      // A focus refresh must not downgrade a pending explicit scan.
+      if (!pendingScanFolders.current || !background) pendingScanFolders.current = { folders, background };
       return;
     }
     scanInProgress.current = true;
-    setLoading(true);
-    setImageErrors(new Set());
-    setFallbackAttempted(new Set());
+    // Restoring the window refreshes data without unmounting the visible cards.
+    if (!background) {
+      setLoading(true);
+      setImageErrors(new Set());
+      setFallbackAttempted(new Set());
+    }
     try {
       if (libraryScope === "own") {
         await refreshOwnLibrary(true);
@@ -167,10 +172,17 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       scanInProgress.current = false;
       const pending = pendingScanFolders.current;
       pendingScanFolders.current = null;
-      if (pending) void fetchGames(pending);
+      if (pending) void fetchGames(pending.folders, pending.background);
       else setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (managed) return;
+    const refreshOnFocus = () => { void fetchGames(customFolders, true); };
+    window.addEventListener("focus", refreshOnFocus);
+    return () => window.removeEventListener("focus", refreshOnFocus);
+  }, [managed, customFolders, libraryScope]);
 
   const handleAddCustomFolder = async () => {
     const dir = await openDirectoryPicker(t("gameGrid", "selectFolder"));
@@ -299,6 +311,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
               {viewMode === "grid" && <span>{game.name}</span>}
             </div>
           )}
+          {managed && <GamePlatformBadge platform={game.nexus_platform} />}
           {viewMode === "list" && <><span className="selected-game-placeholder-name">{game.name}</span><span className="selected-game-list-note">{t("gameGrid", "selectedGame")}</span></>}
         </div>
       );
@@ -328,7 +341,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         pointerEvents: "none", opacity: 0, transition: "opacity 0.2s ease-out", zIndex: 10
       }} />
       {/* The same portrait owns the shared layout in both views; never the full list row. */}
-      <motion.div className="library-cover-thumbnail" layout={performanceMode ? false : "preserve-aspect"}
+      <motion.div className="library-cover-thumbnail" layout={performanceMode ? false : "preserve-aspect"} layoutDependency={viewMode}
         onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, game }); }}
         layoutId={performanceMode ? undefined : `cover-${gameViewKey(game)}`}>
       {!imageErrors.has(game.path) && game.cover_url ? (
@@ -374,6 +387,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         <img src="/peligames.svg" alt="Icon" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "48px", height: "48px", opacity: 0.5 }} />
       </div>
       
+      {managed && <GamePlatformBadge platform={game.nexus_platform} />}
       </motion.div>
       <div className="game-list-details"><span>{game.name}</span></div>
       <div className="game-launcher-badge" style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0.5rem", background: "linear-gradient(to top, rgba(0,0,0,0.9), transparent)" }}>
@@ -392,7 +406,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   // Project the whole cell (including its background) when the details panel resizes.
   // The inner div remains responsible for mouse tilt; it never competes with layout transforms.
   const renderCard = (game: GameInfo) => (
-    <motion.div key={gameViewKey(game)} className="library-card-cell" layout={performanceMode ? false : "position"}
+    <motion.div key={gameViewKey(game)} className="library-card-cell" data-cover-key={gameViewKey(game)} layout={performanceMode ? false : "position"} layoutDependency={layoutRevision}
       transition={{ layout: { duration: 0.3, ease: [0.4, 0, 0.2, 1] } }}>
       {renderCardContent(game)}
     </motion.div>
@@ -402,11 +416,14 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     .map(game => ({ ...game, library_view: managedLibrary ? "nexus" as const : libraryScope })))
     .filter(game => !removedGames.has(gameViewKey(game)));
   const filteredGames = scopedGames.filter(g => g.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  // Re-measure for actual library arrangement changes, not focus/polling renders.
+  const layoutRevision = JSON.stringify([viewMode, filteredGames.map(gameViewKey), [...favorites], favoritesCollapsed, collapsedCats]);
   const favoriteGames = filteredGames.filter(game => favorites.has(gameViewKey(game)));
   const remainingGames = filteredGames.filter(game => !favorites.has(gameViewKey(game)));
   const steamGames = remainingGames.filter(g => g.launcher === "Steam");
   const otherGames = remainingGames.filter(g => g.launcher !== "Steam");
-  const scanning = managedLibrary ? managedLibrary.busy || !managedLibrary.loaded : loading || (libraryScope === "own" && !ownLoaded);
+  // Mod operations share the busy flag, but must not unmount the loaded covers.
+  const scanning = managedLibrary ? !managedLibrary.loaded : loading || (libraryScope === "own" && !ownLoaded);
   const showEmptyOwnLibrary = !scanning && ownLoaded && (libraryScope === "own" || mode === "mods") && !searchQuery && filteredGames.length === 0;
 
   return (
@@ -496,7 +513,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       <motion.div layoutScroll className={`game-grid-container game-library--${viewMode}`} style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: "1rem" }}>
         {scanning ? <div className="empty-library-state"><NexusLibraryLoading reducedMotion={performanceMode} /></div> : <>
         {filteredGames.length === 0 && (managedLibrary ? <div className="empty-library-state">
-          {managedLibrary.busy || !managedLibrary.loaded ? <NexusLibraryLoading reducedMotion={performanceMode} />
+          {!managedLibrary.loaded ? <NexusLibraryLoading reducedMotion={performanceMode} />
             : searchQuery ? <p role="status">{t("gameGrid", "noSearchResults")}</p>
             : managedLibrary.error ? <button className="btn btn-secondary" onClick={managedLibrary.onRefresh}>{t("gameGrid", "scan")}</button>
             : <div className="empty-library-action"><button type="button" className="empty-library-add" onClick={managedLibrary.onAdd} aria-label={managedLibrary.addLabel}><MenuIcon name="plus" /></button><div className="empty-library-message" role="status"><h3>{managedLibrary.empty}</h3><p>{managedLibrary.hint}</p></div></div>}
@@ -614,9 +631,9 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         })()}
         </>}
       </motion.div>
-      {contextMenu && <GameCoverMenu game={contextMenu.game} x={contextMenu.x} y={contextMenu.y}
+      {contextMenu && createPortal(<GameCoverMenu game={contextMenu.game} x={contextMenu.x} y={contextMenu.y}
         blocked={coverActionsBlocked} onClose={() => setContextMenu(null)}
-        onAction={(action, game) => { if (action === "scan") void fetchGames(); else onCoverAction(action, game); }} />}
+        onAction={(action, game) => { if (action === "scan") void fetchGames(); else onCoverAction(action, game); }} />, document.body)}
 
     </div>
   );

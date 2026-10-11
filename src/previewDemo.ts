@@ -9,8 +9,9 @@ const specs = [
   ["Final Fantasy XII The Zodiac Age", "595520", "finalfantasy12"],
 ];
 export const demoGames: GameInfo[] = specs.map(([name, id], i) => ({ name, app_id: id, path: `/preview/game-${i}/game.exe`, directory: `/preview/game-${i}`, launcher: i > 1 ? "PeliGames" : "Steam", cover_url: `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_600x900.jpg` }));
-const workspace: { games: NexusGame[] } = { games: demoGames.map((game, i) => ({ id: `demo-${i}`, game, platform: "proton", adapter: specs[i][2], nexus_domain: specs[i][2], running: false, compat_data: `/preview/prefix-${i}`, proton: "/preview/GE-Proton", mods: [
+const workspace: { games: NexusGame[] } = { games: demoGames.map((game, i) => ({ id: `demo-${i}`, game, platform: specs[i][2] === "stardewvalley" ? "native" : "proton", adapter: specs[i][2], nexus_domain: specs[i][2], running: false, compat_data: i === 0 ? "" : `/preview/prefix-${i}`, proton: i === 0 ? "" : "/preview/GE-Proton", mods: [
   { id: "demo-installed", name: "Mod visual — exemplo ativo", version: "2.0.0", archive: "/preview/visual.zip", size: 2048000, installed: true, enabled: true },
+  { id: "demo-unstructured", name: "Mod sem estrutura — exemplo", version: "1.0.0", archive: "/preview/sem-estrutura.zip", size: 1024000, installed: false, enabled: false },
   { id: "demo-imported", name: "Mod de interface — exemplo importado", version: "1.2.0", archive: "/preview/interface.zip", size: 4096000, installed: false, enabled: false, nexus_source: { domain: specs[i][2], mod_id: 3, file_id: 30, requirements: { complete: true, items: i === 2 ? [{name:"TweakXL",kind:"nexus",notes:"",url:"https://www.nexusmods.com/cyberpunk2077/mods/4197"}] : [] } } },
   ...(i === 2 ? [
     {id:"demo-tweakxl",name:"TweakXL",archive:"/preview/TweakXL.zip",size:1045504,installed:false,enabled:false,nexus_source:{domain:"cyberpunk2077",mod_id:4197,file_id:41970,requirements:{complete:true,items:[{name:"RED4ext",notes:"",kind:"nexus" as const,url:"https://www.nexusmods.com/cyberpunk2077/mods/2380"}]}}},
@@ -91,6 +92,24 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
       if (game) { game.game.directory = String(args.directory); game.compat_data = String(args.compatData); game.proton = String(args.proton); }
       return {value:clone(workspace)};
     }
+    case "get_nexus_launch_options": {
+      const game = workspace.games.find(game => game.id === args.gameId);
+      const automatic = "";
+      const dll_overrides = game?.platform === "proton" ? "winhttp=n,b" : "";
+      return {value: {automatic, effective: game?.launch_options ?? automatic, customized: game?.launch_options != null, dll_overrides}};
+    }
+    case "configure_nexus_advanced": {
+      await sleep();
+      const game = workspace.games.find(game => game.id === args.gameId);
+      if(game) game.advanced = args.settings as NexusGame["advanced"];
+      return {value:clone(workspace)};
+    }
+    case "configure_nexus_launch_options": {
+      await sleep();
+      const game = workspace.games.find(game => game.id === args.gameId);
+      if (game) game.launch_options = args.options == null ? null : String(args.options);
+      return {value: clone(workspace)};
+    }
     case "configure_nexus_deploy": {
       await sleep();
       const game = workspace.games.find(game => game.id === args.gameId);
@@ -141,14 +160,52 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "plugin:clipboard-manager|write_text": await navigator.clipboard.writeText(String(args.text)); return { value: null };
     case "open_browser_url":
     case "plugin:opener|open_url": return { value: null };
+    case "load_nexus_collection": {
+      await sleep();
+      return { value: { domain: "stardewvalley", slug: "htknoa", revision: 1, name: "Coldguy's Stardew Valley Starter Set", mods: [
+        { mod_id: 3753, file_id: 44014, name: "Stardew Valley Expanded", file_name: "-Stardew Valley Expanded--3753-1-13-11-1629243294.zip", size: 237905916, version: "1.13.11", optional: false, present: false },
+        { mod_id: 2400, file_id: 70000, name: "SMAPI - Stardew Modding API", file_name: "SMAPI 3.18.6-2400-3-18-6-1700000000.zip", size: 8650000, version: "3.18.6", optional: false, present: true },
+        { mod_id: 1915, file_id: 50000, name: "Content Patcher", file_name: "Content Patcher-1915-1-30-4-1700000001.zip", size: 410000, version: "1.30.4", optional: false, present: false },
+        { mod_id: 2213, file_id: 38709, name: "Unlimited Players", file_name: "2021_02_27_UnlimitedPlayers-2213-2021-2-27-1614446233.zip", size: 5109, version: "2021.2.27", optional: true, present: false },
+        { mod_id: 1150, file_id: 40000, name: "Lookup Anything", file_name: "Lookup Anything-541-1-40-0-1700000002.zip", size: 1300000, version: "1.40.0", optional: true, present: false },
+      ] } };
+    }
+    case "install_nexus_collection": { await sleep(); return { value: { queued: 2 + (args.optional as unknown[]).length, present: 1, manifest_error: null } }; }
+    case "move_nexus_mod": {
+      await sleep();
+      const game = workspace.games.find(g => g.id === args.gameId);
+      if (game) { const i = game.mods.findIndex(m => m.id === args.modId), j = args.up ? i - 1 : i + 1; if (i >= 0 && j >= 0 && j < game.mods.length) [game.mods[i], game.mods[j]] = [game.mods[j], game.mods[i]]; }
+      return { value: clone(workspace) };
+    }
+    case "nexus_mod_overrides": {
+      const game = workspace.games.find(g => g.id === args.gameId), active = game?.mods.filter(m => m.installed && m.enabled) || [];
+      return { value: active.length > 1 ? [{ target: "Mods/Exemplo/textures/armadura.dds", winner: active[active.length - 1].id, overridden: [active[0].id] }] : [] };
+    }
+    case "nexus_package_layout": {
+      const mod = workspace.games.find(game => game.id === args.gameId)?.mods.find(mod => mod.id === args.modId) as { manual_root?: unknown } | undefined;
+      return { value: { folders: ["", "Autor - Pacote v1.0/", "Autor - Pacote v1.0/Opcional/", "Autor - Pacote v1.0/Principal/"], destinations: ["Data", "Mods"], current: mod?.manual_root ?? null } };
+    }
+    case "set_nexus_manual_root": {
+      await sleep();
+      const mod = workspace.games.find(game => game.id === args.gameId)?.mods.find(mod => mod.id === args.modId) as { manual_root?: unknown } | undefined;
+      if (mod) mod.manual_root = args.root ?? undefined;
+      return { value: clone(workspace) };
+    }
     case "plan_nexus_installation": {
       await sleep();
       const game = workspace.games.find(game => game.id === args.gameId), mod = game?.mods.find(mod => mod.id === args.modId);
+      if (mod?.id === "demo-unstructured") {
+        const root = (mod as { manual_root?: { source: string; destination: string } }).manual_root;
+        if (!root) return { value: { module: "Módulo de demonstração", files: [], missing: [], notes: [], issues: ["O pacote não contém arquivos reconhecidos pelo módulo do jogo."], selection: [] } };
+        const base = root.destination || "Data";
+        return { value: { manual_root: root, module: "Módulo de demonstração", files: [[`${root.source}plugin.esp`, `${base}/plugin.esp`], [`${root.source}textures/armadura.dds`, `${base}/textures/armadura.dds`]], missing: [], notes: ["Prévia visual: nenhum arquivo será aplicado ao jogo."], issues: [], selection: [] } };
+      }
       const missing = (mod?.nexus_source?.requirements.items || []).filter(item => {
         const modId = Number(item.url?.match(/mods\/(\d+)/)?.[1]);
         return !game?.mods.some(local => local.nexus_source?.mod_id === modId && local.installed && local.enabled);
       }).map(item => ({...item,mod_id:Number(item.url?.match(/mods\/(\d+)/)?.[1])}));
-      return { value: { module: "Módulo de demonstração", files: [["manifest.json", "Mods/Exemplo/manifest.json"]], missing, notes: ["Prévia visual: nenhum arquivo será aplicado ao jogo."], issues: [], selection: [] } };
+      const others = game?.mods.filter(m => m.id !== mod?.id && m.installed && m.enabled) || [];
+      return { value: { overrides: others.length ? [["Mods/Exemplo/textures/armadura.dds", others[0].name]] : [], module: "Módulo de demonstração", files: [["manifest.json", "Mods/Exemplo/manifest.json"]], missing, notes: ["Prévia visual: nenhum arquivo será aplicado ao jogo."], issues: [], selection: [] } };
     }
     case "install_nexus_mod":
     case "set_nexus_mod_enabled":

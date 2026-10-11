@@ -8,7 +8,7 @@ import { HoverTooltip } from "../../components/HoverTooltip";
 import { MenuIcon } from "../../components/MenuIcon";
 import { useNexusText } from "./text";
 import type { NexusGame } from "./useNexusWorkspace";
-export interface NexusDownload { id: string; domain: string; mod_id: number; file_id: number; game_id?: string; name: string; status: "preparing" | "queued" | "authorizing" | "waiting" | "downloading" | "importing" | "installing" | "installed" | "imported" | "cancelled" | "error"; received: number; total?: number; error?: string; auto_install?: boolean; mod_entry_id?: string; requirements?: Requirements }
+export interface NexusDownload { id: string; domain: string; mod_id: number; file_id: number; game_id?: string; name: string; status: "preparing" | "queued" | "authorizing" | "waiting" | "downloading" | "importing" | "installing" | "installed" | "imported" | "cancelled" | "error"; received: number; total?: number; error?: string; auto_install?: boolean; mod_entry_id?: string; requirements?: Requirements; collection?: string }
 export function NexusDownloadsPanel({ games, onViewMod, buttonClassName = "btn btn-secondary" }: { buttonClassName?: string; games: NexusGame[]; onViewMod: (gameId: string, modId: string) => void }) {
   const text = useNexusText();
   const [opened, setOpened] = useState(false);
@@ -55,7 +55,8 @@ export function NexusDownloadsPanel({ games, onViewMod, buttonClassName = "btn b
     {!preparing && activeJobs.some(job => job.status === "authorizing") && <div className="nexus-download-wait" role="status"><div className="nexus-loading-emblem"><span className="nexus-loading-ring" /><img src="/peligames.svg" alt="" /></div><strong>{text.browserConfirmation}</strong><p className="nexus-hint">{text.browserConfirmationHint}</p></div>}
     {!!jobs.length && <div className="nexus-mod-list" aria-live="polite">{jobs.slice().reverse().map(job => <article className="nexus-mod-row nexus-download-job" key={job.id}><div><strong>{job.name}</strong><small>{games.find(g => g.id === job.game_id)?.game.name || job.domain} · {text[job.status]}</small>
       {job.status === "downloading" && <><progress aria-label={text.downloading} {...(job.total ? { max: job.total, value: job.received } : {})} /><small>{(job.received / 1048576).toFixed(1)} MB{job.total ? ` / ${(job.total / 1048576).toFixed(1)} MB` : ""}</small></>}
-      {job.status === "authorizing" && <><p className="nexus-hint">{(job.auto_install ? text.dependencyAuthorize : text.queueAuthorize)}</p></>}
+      {job.collection && <p className="nexus-hint">{text.collection}: {job.collection}</p>}
+      {job.status === "authorizing" && <><p className="nexus-hint">{(job.auto_install ? text.dependencyAuthorize : text.queueAuthorize)}</p><p className="nexus-hint">{text.slowDownloadWatch}</p></>}
       {job.status === "authorizing" && import.meta.env.DEV && "__PELI_UI_PREVIEW__" in window && new URLSearchParams(location.search).has("demo") && <button type="button" className="btn btn-primary" onClick={() => void run("preview_confirm_nexus_download")}>Simular confirmação no navegador</button>}
       {job.status === "waiting" && <><p className="nexus-hint">{text.chooseDownloadGame}</p>{games.filter(g => (g.adapter || g.nexus_domain) === job.domain).map(g => <button type="button" key={g.id} className="btn btn-secondary" disabled={busy} onClick={() => void run("start_nexus_download", { downloadId: job.id, gameId: g.id })}>{g.game.name}</button>)}{!games.some(g => (g.adapter || g.nexus_domain) === job.domain) && <p className="nexus-hint">{text.addDownloadGame}</p>}</>}
 

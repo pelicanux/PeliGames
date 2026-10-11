@@ -118,7 +118,7 @@ impl Reader {
         format!("Não foi possível ler o pacote: {message}")
     }
 }
-fn normalize(source: &Path, destination: &Path) -> Result<(), String> {
+pub(super) fn normalize(source: &Path, destination: &Path) -> Result<(), String> {
     let path = CString::new(source.as_os_str().as_bytes()).map_err(|_| "Caminho inválido.")?;
     let handle = unsafe { archive_read_new() };
     if handle.is_null() {

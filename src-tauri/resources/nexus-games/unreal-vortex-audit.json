@@ -1,0 +1,4182 @@
+{
+  "schema": 1,
+  "generated_by": "tools/vortex-import --emit",
+  "family": "unreal",
+  "scope": "Módulos gerados por análise estática das extensões Vortex. Rotas verificadas por casos sintéticos; nenhum jogo foi executado.",
+  "sources": {
+    "chemboy1": "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6",
+    "vortex": "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games"
+  },
+  "modules": [
+    {
+      "domain": "abioticfactor",
+      "name": "Abiotic Factor",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-abioticfactor/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "AbioticFactor/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "AbioticFactor/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "AbioticFactor/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "AbioticFactor/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "AbioticFactor/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "AbioticFactor/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "AbioticFactor/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "AbioticFactor/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 6412
+    },
+    {
+      "domain": "atomicheart",
+      "name": "Atomic Heart",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-atomicheart/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "AtomicHeart/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "AtomicHeart/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "AtomicHeart/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "AtomicHeart/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "AtomicHeart/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "AtomicHeart/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "AtomicHeart/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "AtomicHeart/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 5158
+    },
+    {
+      "domain": "avowed",
+      "name": "Avowed",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-avowed/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Alabama/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Alabama/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Alabama/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Alabama/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Alabama/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Alabama/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Alabama/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Alabama/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 7325
+    },
+    {
+      "domain": "beastofreincarnation",
+      "name": "Beast of Reincarnation",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-beastofreincarnation/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "BeastOfReincarnation/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "BeastOfReincarnation/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "BeastOfReincarnation/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "BeastOfReincarnation/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "BeastOfReincarnation/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "BeastOfReincarnation/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "BeastOfReincarnation/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "BeastOfReincarnation/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 9755
+    },
+    {
+      "domain": "bellwright",
+      "name": "Bellwright",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-bellwright/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Bellwright/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Bellwright/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Bellwright/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Bellwright/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Bellwright/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Bellwright/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Bellwright/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Bellwright/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 6381
+    },
+    {
+      "domain": "blackmythwukong",
+      "name": "Black Myth: Wukong",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-blackmythwukong/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "b1/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "b1/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "b1/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "b1/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "b1/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "b1/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "b1/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "b1/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 6713
+    },
+    {
+      "domain": "borderlands4",
+      "name": "Borderlands 4",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-borderlands4/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "OakGame/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "OakGame/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "OakGame/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "OakGame/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "OakGame/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "OakGame/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "OakGame/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "OakGame/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8148
+    },
+    {
+      "domain": "clivebarkershellraiserrevival",
+      "name": "Clive Barker's Hellraiser: Revival",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-clivebarkershellraiserrevival/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Hellraiser/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Hellraiser/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Hellraiser/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Hellraiser/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Hellraiser/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Hellraiser/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Hellraiser/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Hellraiser/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 10245
+    },
+    {
+      "domain": "codevein2",
+      "name": "CODE VEIN II",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-codevein2/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "CodeVein2/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "CodeVein2/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "CodeVein2/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "CodeVein2/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "CodeVein2/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "CodeVein2/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "CodeVein2/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "CodeVein2/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8699
+    },
+    {
+      "domain": "cronosthenewdawn",
+      "name": "Cronos: The New Dawn",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-cronosthenewdawn/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Cronos/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Cronos/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Cronos/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Cronos/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Cronos/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Cronos/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Cronos/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Cronos/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8133
+    },
+    {
+      "domain": "deadasdisco",
+      "name": "Dead As Disco",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-deadasdisco/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Pagoda/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Pagoda/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Pagoda/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Pagoda/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Pagoda/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Pagoda/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Pagoda/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Pagoda/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 7897
+    },
+    {
+      "domain": "dispatch",
+      "name": "Dispatch",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dispatch/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Dispatch/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Dispatch/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Dispatch/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Dispatch/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Dispatch/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Dispatch/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Dispatch/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Dispatch/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8325
+    },
+    {
+      "domain": "dragonballsparkingzero",
+      "name": "Dragon Ball: Sparking! Zero",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonballsparkingzero/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "SparkingZERO/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "SparkingZERO/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "SparkingZERO/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "SparkingZERO/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "SparkingZERO/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "SparkingZERO/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "SparkingZERO/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "SparkingZERO/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 6892
+    },
+    {
+      "domain": "dragonquest1and2hd2dremake",
+      "name": "DRAGON QUEST I & II HD-2D Remake",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonquest1and2hd2dremake/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Game/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Game/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Game/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Game/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Game/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Game/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Game/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Game/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8349
+    },
+    {
+      "domain": "dragonquest7reimagined",
+      "name": "DRAGON QUEST VII Reimagined",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonquest7reimagined/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "DQ7R/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "DQ7R/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "DQ7R/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "DQ7R/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "DQ7R/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "DQ7R/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "DQ7R/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "DQ7R/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8698
+    },
+    {
+      "domain": "fantasylifeithegirlwhostealstime",
+      "name": "FANTASY LIFE i: The Girl Who Steals Time",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-fantasylifeithegirlwhostealstime/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Game/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Game/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Game/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Game/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Game/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Game/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Game/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Game/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 7755
+    },
+    {
+      "domain": "farfarwest",
+      "name": "Far Far West",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-farfarwest/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "FarFarWest/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "FarFarWest/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "FarFarWest/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "FarFarWest/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "FarFarWest/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "FarFarWest/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "FarFarWest/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "FarFarWest/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8879
+    },
+    {
+      "domain": "fatekeeper",
+      "name": "Fatekeeper",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-fatekeeper/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "SLASHER/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "SLASHER/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "SLASHER/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "SLASHER/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "SLASHER/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "SLASHER/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "SLASHER/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "SLASHER/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 9337
+    },
+    {
+      "domain": "frostpunk2",
+      "name": "Frostpunk 2",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-frostpunk2/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Frostpunk2/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Frostpunk2/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Frostpunk2/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Frostpunk2/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Frostpunk2/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Frostpunk2/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Frostpunk2/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Frostpunk2/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 6349
+    },
+    {
+      "domain": "gearsofwareday",
+      "name": "Gears of War: E-Day",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-gearsofwareday/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "FairlightConcept/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "FairlightConcept/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "FairlightConcept/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "FairlightConcept/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "FairlightConcept/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "FairlightConcept/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "FairlightConcept/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "FairlightConcept/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 9851
+    },
+    {
+      "domain": "halloweenthegame",
+      "name": "Halloween: The Game",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-halloweenthegame/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Ravage/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Ravage/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Ravage/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Ravage/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Ravage/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Ravage/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Ravage/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Ravage/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 10111
+    },
+    {
+      "domain": "hellisus",
+      "name": "Hell is Us",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-hellisus/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "HellIsUs/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "HellIsUs/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "HellIsUs/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "HellIsUs/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "HellIsUs/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "HellIsUs/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "HellIsUs/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "HellIsUs/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 7813
+    },
+    {
+      "domain": "highonlife",
+      "name": "High On Life",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-highonlife/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Oregon/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Oregon/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Oregon/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Oregon/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Oregon/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Oregon/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Oregon/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Oregon/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 5005
+    },
+    {
+      "domain": "highonlife2",
+      "name": "High On Life 2",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-highonlife2/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "HighOnLife2/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "HighOnLife2/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "HighOnLife2/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "HighOnLife2/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "HighOnLife2/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "HighOnLife2/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "HighOnLife2/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "HighOnLife2/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8807
+    },
+    {
+      "domain": "humanitz",
+      "name": "HumanitZ",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-humanitz/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Humanitz/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Humanitz/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Humanitz/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Humanitz/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Humanitz/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Humanitz/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Humanitz/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Humanitz/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 5743
+    },
+    {
+      "domain": "inzoi",
+      "name": "inZOI",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-inzoi/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "BlueClient/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "BlueClient/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "BlueClient/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "BlueClient/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "BlueClient/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "BlueClient/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "BlueClient/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "BlueClient/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 7480
+    },
+    {
+      "domain": "legobatmanlegacyofthedarkknight",
+      "name": "LEGO Batman: Legacy of the Dark Knight",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-legobatmanlegacyofthedarkknight/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "LEGOBatmanLotDK/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "LEGOBatmanLotDK/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "LEGOBatmanLotDK/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "LEGOBatmanLotDK/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "LEGOBatmanLotDK/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "LEGOBatmanLotDK/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "LEGOBatmanLotDK/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "LEGOBatmanLotDK/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 9287
+    },
+    {
+      "domain": "liesofp",
+      "name": "Lies of P",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-liesofp/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "LiesofP/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "LiesofP/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "LiesofP/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "LiesofP/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "LiesofP/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "LiesofP/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "LiesofP/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "LiesofP/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 5441
+    },
+    {
+      "domain": "lordsofthefallen2023",
+      "name": "Lords of the Fallen (2023)",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-lordsofthefallen2023/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "LOTF2/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "LOTF2/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "LOTF2/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "LOTF2/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "LOTF2/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "LOTF2/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "LOTF2/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "LOTF2/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 5803
+    },
+    {
+      "domain": "lostsoulaside",
+      "name": "Lost Soul Aside",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-lostsoulaside/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Projectlsa/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Projectlsa/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Projectlsa/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Projectlsa/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Projectlsa/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Projectlsa/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Projectlsa/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Projectlsa/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8108
+    },
+    {
+      "domain": "mandragorawhispersofthewitchtree",
+      "name": "Mandragora: Whispers of the Witch Tree",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-mandragorawhispersofthewitchtree/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "man/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "man/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "man/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "man/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "man/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "man/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "man/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "man/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 7623
+    },
+    {
+      "domain": "manorlords",
+      "name": "Manor Lords",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-manorlords/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "ManorLords/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "ManorLords/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "ManorLords/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "ManorLords/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "ManorLords/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "ManorLords/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "ManorLords/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "ManorLords/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 6352
+    },
+    {
+      "domain": "mechwarrior5clans",
+      "name": "MechWarrior 5: Clans",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-mechwarrior5clans/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "MW5Clans/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "MW5Clans/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "MW5Clans/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "MW5Clans/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "MW5Clans/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "MW5Clans/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "MW5Clans/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "MW5Clans/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 6935
+    },
+    {
+      "domain": "metaleden",
+      "name": "METAL EDEN",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-metaleden/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "MetalEden/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "MetalEden/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "MetalEden/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "MetalEden/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "MetalEden/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "MetalEden/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "MetalEden/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "MetalEden/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8131
+    },
+    {
+      "domain": "metalgearsoliddeltasnakeeater",
+      "name": "Metal Gear Solid Delta: Snake Eater",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-metalgearsoliddeltasnakeeater/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "MGSDelta/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "MGSDelta/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "MGSDelta/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "MGSDelta/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "MGSDelta/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "MGSDelta/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "MGSDelta/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "MGSDelta/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8091
+    },
+    {
+      "domain": "misery",
+      "name": "MISERY",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-misery/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "MISERY/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "MISERY/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "MISERY/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "MISERY/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "MISERY/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "MISERY/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "MISERY/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "MISERY/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8383
+    },
+    {
+      "domain": "mortalkombat",
+      "name": "Mortal Kombat 1",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-mortalkombat/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "MK12/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "MK12/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "MK12/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "MK12/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "MK12/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "MK12/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "MK12/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "MK12/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 5735
+    },
+    {
+      "domain": "ninjagaiden2black",
+      "name": "NINJA GAIDEN 2 Black",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-ninjagaiden2black/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "NINJAGAIDEN2BLACK/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "NINJAGAIDEN2BLACK/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "NINJAGAIDEN2BLACK/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "NINJAGAIDEN2BLACK/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "NINJAGAIDEN2BLACK/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "NINJAGAIDEN2BLACK/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "NINJAGAIDEN2BLACK/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "NINJAGAIDEN2BLACK/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 7247
+    },
+    {
+      "domain": "nobodywantstodie",
+      "name": "Nobody Wants to Die",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-nobodywantstodie/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "detnoir/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "detnoir/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "detnoir/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "detnoir/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "detnoir/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "detnoir/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "detnoir/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "detnoir/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 6617
+    },
+    {
+      "domain": "octopathtraveler0",
+      "name": "OCTOPATH TRAVELER 0",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-octopathtraveler0/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Octopath_Traveler0/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Octopath_Traveler0/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Octopath_Traveler0/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Octopath_Traveler0/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Octopath_Traveler0/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Octopath_Traveler0/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Octopath_Traveler0/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Octopath_Traveler0/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8425
+    },
+    {
+      "domain": "ofashandsteel",
+      "name": "Of Ash and Steel",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-ofashandsteel/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "ofAshAndSteelGame/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "ofAshAndSteelGame/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "ofAshAndSteelGame/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "ofAshAndSteelGame/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "ofAshAndSteelGame/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "ofAshAndSteelGame/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "ofAshAndSteelGame/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "ofAshAndSteelGame/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8358
+    },
+    {
+      "domain": "painkiller",
+      "name": "Painkiller",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-painkiller/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Painkiller/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Painkiller/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Painkiller/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Painkiller/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Painkiller/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Painkiller/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Painkiller/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Painkiller/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8288
+    },
+    {
+      "domain": "quarantinezonethelastcheck",
+      "name": "Quarantine Zone: The Last Check",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-quarantinezonethelastcheck/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "QZSim/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "QZSim/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "QZSim/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "QZSim/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "QZSim/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "QZSim/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "QZSim/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "QZSim/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8662
+    },
+    {
+      "domain": "robocoproguecity",
+      "name": "RoboCop: Rogue City",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-robocoproguecity/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Game/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Game/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Game/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Game/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Game/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Game/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Game/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Game/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 5797
+    },
+    {
+      "domain": "runescapedragonwilds",
+      "name": "RuneScape: Dragonwilds",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-runescapedragonwilds/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "RSDragonwilds/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "RSDragonwilds/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "RSDragonwilds/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "RSDragonwilds/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "RSDragonwilds/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "RSDragonwilds/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "RSDragonwilds/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "RSDragonwilds/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 7597
+    },
+    {
+      "domain": "rvthereyet",
+      "name": "RV There Yet?",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-rvthereyet/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Ride/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Ride/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Ride/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Ride/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Ride/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Ride/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Ride/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Ride/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8319
+    },
+    {
+      "domain": "senuassagahellblade2",
+      "name": "Senua's Saga: Hellblade 2",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-senuassagahellblade2/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Hellblade2/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Hellblade2/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Hellblade2/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Hellblade2/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Hellblade2/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Hellblade2/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Hellblade2/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Hellblade2/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 6438
+    },
+    {
+      "domain": "sifu",
+      "name": "Sifu",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-sifu/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Sifu/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Sifu/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Sifu/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Sifu/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Sifu/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Sifu/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Sifu/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Sifu/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 4309
+    },
+    {
+      "domain": "silenthill2",
+      "name": "Silent Hill 2 (2024)",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-silenthill2/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "SHProto/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "SHProto/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "SHProto/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "SHProto/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "SHProto/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "SHProto/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "SHProto/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "SHProto/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 6880
+    },
+    {
+      "domain": "silenthillf",
+      "name": "Silent Hill f",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-silenthillf/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "SHf/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "SHf/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "SHf/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "SHf/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "SHf/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "SHf/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "SHf/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "SHf/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8203
+    },
+    {
+      "domain": "silenthilltownfall",
+      "name": "SILENT HILL: Townfall",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-silenthilltownfall/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Townfall/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Townfall/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Townfall/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Townfall/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Townfall/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Townfall/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Townfall/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Townfall/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 10286
+    },
+    {
+      "domain": "starrupture",
+      "name": "StarRupture",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-starrupture/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "StarRupture/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "StarRupture/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "StarRupture/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "StarRupture/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "StarRupture/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "StarRupture/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "StarRupture/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "StarRupture/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8632
+    },
+    {
+      "domain": "starwarsgalacticracer",
+      "name": "STAR WARS: Galactic Racer",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-starwarsgalacticracer/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Griffin/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Griffin/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Griffin/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Griffin/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Griffin/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Griffin/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Griffin/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Griffin/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 10217
+    },
+    {
+      "domain": "starwarszerocompany",
+      "name": "STAR WARS Zero Company",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-starwarszerocompany/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "SWZeroCompany/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "SWZeroCompany/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "SWZeroCompany/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "SWZeroCompany/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "SWZeroCompany/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "SWZeroCompany/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "SWZeroCompany/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "SWZeroCompany/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 9987
+    },
+    {
+      "domain": "subnautica2",
+      "name": "Subnautica 2",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-subnautica2/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Subnautica2/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Subnautica2/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Subnautica2/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Subnautica2/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Subnautica2/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Subnautica2/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Subnautica2/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Subnautica2/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 9198
+    },
+    {
+      "domain": "surroundead",
+      "name": "SurrounDead",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-surroundead/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "SurrounDead/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "SurrounDead/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "SurrounDead/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "SurrounDead/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "SurrounDead/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "SurrounDead/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "SurrounDead/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "SurrounDead/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 7020
+    },
+    {
+      "domain": "systemshock2023",
+      "name": "System Shock (2023)",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-systemshock2023/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "SystemShock/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "SystemShock/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "SystemShock/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "SystemShock/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "SystemShock/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "SystemShock/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "SystemShock/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "SystemShock/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 5415
+    },
+    {
+      "domain": "tekken8",
+      "name": "TEKKEN 8",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-tekken8/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Polaris/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Polaris/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Polaris/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Polaris/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Polaris/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Polaris/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Polaris/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Polaris/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 5622
+    },
+    {
+      "domain": "thebloodofdawnwalker",
+      "name": "The Blood of Dawnwalker",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-thebloodofdawnwalker/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Dawnwalker/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Dawnwalker/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Dawnwalker/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Dawnwalker/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Dawnwalker/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Dawnwalker/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Dawnwalker/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Dawnwalker/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 9719
+    },
+    {
+      "domain": "thelastcaretaker",
+      "name": "The Last Caretaker",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-thelastcaretaker/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Voyage/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Voyage/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Voyage/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Voyage/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Voyage/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Voyage/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Voyage/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Voyage/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8289
+    },
+    {
+      "domain": "thelordoftheringsreturntomoria",
+      "name": "The Lord of the Rings: Return to Moria",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-thelordoftheringsreturntomoria/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Moria/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Moria/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Moria/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Moria/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Moria/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Moria/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Moria/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Moria/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 5829
+    },
+    {
+      "domain": "theouterworlds",
+      "name": "The Outer Worlds",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-theouterworlds/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Indiana/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Indiana/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Indiana/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Indiana/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Indiana/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Indiana/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Indiana/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Indiana/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 3037
+    },
+    {
+      "domain": "theouterworlds2",
+      "name": "The Outer Worlds 2",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-theouterworlds2/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Arkansas/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Arkansas/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Arkansas/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Arkansas/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Arkansas/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Arkansas/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Arkansas/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Arkansas/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8322
+    },
+    {
+      "domain": "thesinkingcity2",
+      "name": "The Sinking City 2",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-thesinkingcity2/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "PlayGround/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "PlayGround/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "PlayGround/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "PlayGround/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "PlayGround/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "PlayGround/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "PlayGround/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "PlayGround/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 9377
+    },
+    {
+      "domain": "titanquest2",
+      "name": "Titan Quest 2",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-titanquest2/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "TQ2/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "TQ2/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "TQ2/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "TQ2/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "TQ2/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "TQ2/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "TQ2/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "TQ2/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8008
+    },
+    {
+      "domain": "trepang2",
+      "name": "Trepang2",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-trepang2/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "CPPFPS/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "CPPFPS/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "CPPFPS/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "CPPFPS/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "CPPFPS/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "CPPFPS/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "CPPFPS/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "CPPFPS/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 4589
+    },
+    {
+      "domain": "vein",
+      "name": "VEIN",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-vein/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Vein/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Vein/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Vein/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Vein/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Vein/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Vein/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Vein/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Vein/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8175
+    },
+    {
+      "domain": "voidtrain",
+      "name": "Voidtrain",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-voidtrain/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "VoidTrain/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "VoidTrain/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "VoidTrain/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "VoidTrain/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "VoidTrain/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "VoidTrain/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "VoidTrain/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "VoidTrain/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 4073
+    },
+    {
+      "domain": "vtmbloodlines2",
+      "name": "Vampire: The Masquerade - Bloodlines 2",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-vtmbloodlines2/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Bloodlines2/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Bloodlines2/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Bloodlines2/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Bloodlines2/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Bloodlines2/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Bloodlines2/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Bloodlines2/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Bloodlines2/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8298
+    },
+    {
+      "domain": "whiskerwood",
+      "name": "Whiskerwood",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-whiskerwood/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Whiskerwood/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Whiskerwood/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Whiskerwood/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Whiskerwood/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Whiskerwood/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Whiskerwood/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Whiskerwood/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Whiskerwood/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8402
+    },
+    {
+      "domain": "witchfire",
+      "name": "Witchfire",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-witchfire/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Witchfire/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Witchfire/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Witchfire/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Witchfire/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Witchfire/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Witchfire/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Witchfire/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Witchfire/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 5754
+    },
+    {
+      "domain": "wuchangfallenfeathers",
+      "name": "WUCHANG: Fallen Feathers",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-wuchangfallenfeathers/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Project_Plague/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Project_Plague/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Project_Plague/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Project_Plague/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Project_Plague/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Project_Plague/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Project_Plague/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Project_Plague/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 7976
+    }
+  ],
+  "skipped": [
+    {
+      "domain": "",
+      "reason": "sem ID"
+    },
+    {
+      "domain": "borderlands3",
+      "reason": "pasta ~mods do projeto não resolvida"
+    },
+    {
+      "domain": "crisoltheaterofidols",
+      "reason": "pasta ~mods do projeto não resolvida"
+    },
+    {
+      "domain": "dynastywarriors3completeeditionremastered",
+      "reason": "pasta ~mods do projeto não resolvida"
+    },
+    {
+      "domain": "keeper",
+      "reason": "executável Shipping fora do projeto: "
+    },
+    {
+      "domain": "myheroacademiaallsjustice",
+      "reason": "pasta ~mods do projeto não resolvida"
+    },
+    {
+      "domain": "norse",
+      "reason": "pasta ~mods do projeto não resolvida"
+    },
+    {
+      "domain": "reanimal",
+      "reason": "pasta ~mods do projeto não resolvida"
+    },
+    {
+      "domain": "romeoisadeadman",
+      "reason": "pasta ~mods do projeto não resolvida"
+    },
+    {
+      "domain": "routine",
+      "reason": "pasta ~mods do projeto não resolvida"
+    },
+    {
+      "domain": "stateofdecay2",
+      "reason": "pasta ~mods do projeto não resolvida"
+    },
+    {
+      "domain": "styxbladesofgreed",
+      "reason": "pasta ~mods do projeto não resolvida"
+    },
+    {
+      "domain": "untildawn",
+      "reason": "projeto divergente: Bates / Windows/Bates"
+    },
+    {
+      "domain": "windrose-server",
+      "reason": "domínio fora do padrão: windrose-server"
+    },
+    {
+      "domain": "daemonxmachinatitanicscion",
+      "reason": "identidade ambígua com runefactoryguardiansofazuma: mesmos executáveis exigidos"
+    },
+    {
+      "domain": "runefactoryguardiansofazuma",
+      "reason": "identidade ambígua com daemonxmachinatitanicscion: mesmos executáveis exigidos"
+    }
+  ]
+}

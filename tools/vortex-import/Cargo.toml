@@ -1,0 +1,17 @@
+[package]
+name = "peligames-vortex-import"
+version = "0.0.1"
+edition = "2021"
+publish = false
+description = "Extrai fatos declarativos das extensões de jogos do Vortex (sem executá-las) e compara com os módulos Nexus do PeliGames."
+
+[dependencies]
+oxc_allocator = "0.153.0"
+oxc_ast = "0.153.0"
+oxc_ast_visit = "0.153.0"
+oxc_parser = "0.153.0"
+oxc_span = "0.153.0"
+oxc_syntax = "0.153.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+walkdir = "2.5"

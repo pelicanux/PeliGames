@@ -183,6 +183,19 @@ pub async fn disconnect_nexus_account() -> Result<(), String> {
 }
 
 // Internal only: callers select fixed metadata endpoints and return typed summaries.
+/// GraphQL v2 request with the user's key; GraphQL errors are refused.
+pub(super) async fn graphql(body: serde_json::Value) -> Result<serde_json::Value, String> {
+    let data = request_metadata("https://api.nexusmods.com/v2/graphql", Some(body)).await?;
+    if data.get("errors").is_some_and(|value| value.as_array().is_none_or(|errors| !errors.is_empty())) {
+        return Err("O Nexus recusou a consulta da coleção.".into());
+    }
+    Ok(data)
+}
+/// Authenticated GET on an api.nexusmods.com URL.
+pub(super) async fn api(url: &str) -> Result<serde_json::Value, String> {
+    if !url.starts_with("https://api.nexusmods.com/") { return Err("Endereço Nexus inválido.".into()); }
+    request_metadata(url, None).await
+}
 pub(super) async fn metadata(path: &str) -> Result<serde_json::Value, String> {
     request_metadata(&format!("https://api.nexusmods.com/v1/{path}"), None).await
 }
