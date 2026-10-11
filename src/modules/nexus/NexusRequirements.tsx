@@ -54,7 +54,8 @@ export function NexusRequirements({ requirements, onOpen, disabled = false, game
       const detected = game?.detected_mods?.find(mod => {
         if (target && mod.mod_id === target.id && gameDomain === target.domain) return true;
         const name = normalize(mod.name);
-        if (game.adapter === "palworld" && name === "ue4ss") return ["ue4ss", "reue4ss"].includes(requiredName);
+        // "UE4SS" is reported only by the Unreal family scan, for any game of that family.
+        if (name === "ue4ss") return ["ue4ss", "reue4ss"].includes(requiredName);
         if (target?.domain === "palworld" && target.id === 577) return ["modconfigmenu", "dekmodconfigmenu", "dekmcm"].includes(name);
         return name === requiredName;
       });

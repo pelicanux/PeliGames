@@ -383,6 +383,9 @@ pub(super) fn resolve(
                 "Este pacote utiliza um instalador FOMOD por script ainda não suportado.".into(),
             );
         }
+        if let Some(bain) = super::nexus_bain::resolve(&entries, module, mod_id, choices)? {
+            return Ok(bain);
+        }
         return Ok(Resolution {
             installer: None,
             selection: Vec::new(),
@@ -642,13 +645,14 @@ pub(super) fn resolve(
 }
 
 /// Redeploy the confirmed instructions without re-evaluating conditions against a changed installation.
-pub(super) fn validate_files(
+// Recheck destination boundaries and archive members without rerunning installer selection.
+pub(super) fn validate_installation_files(
     archive: &mut zip::ZipArchive<fs::File>,
     module: &Definition,
     files: &[(String, String)],
 ) -> Result<(), String> {
     if files.is_empty() || files.len() > 10000 {
-        return Err("Plano FOMOD inválido.".into());
+        return Err("Plano de instalação inválido.".into());
     }
     let sources = (0..archive.len())
         .filter_map(|index| match archive.by_index(index) {
@@ -663,8 +667,37 @@ pub(super) fn validate_files(
             || !module.allowed(target)
             || !destinations.insert(target.to_ascii_lowercase())
         {
-            return Err(format!("Plano FOMOD inválido: {source} → {target}"));
+            return Err(format!("Plano de instalação inválido: {source} → {target}"));
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod installation_plan_tests {
+    use super::*;
+    use std::io::Write;
+
+    #[test]
+    fn approved_mapping_survives_route_changes_but_not_unsafe_destinations() {
+        let path = std::env::temp_dir().join(format!("peligames-plan-{}.zip", uuid::Uuid::new_v4()));
+        let mut writer = zip::ZipWriter::new(fs::File::create(&path).unwrap());
+        writer.start_file("wrapper/example.archive", zip::write::FileOptions::default()).unwrap();
+        writer.write_all(b"fixture").unwrap();
+        writer.finish().unwrap();
+        let mut archive = zip::ZipArchive::new(fs::File::open(&path).unwrap()).unwrap();
+        let mut module = super::super::nexus_modules::registry().definitions.into_iter()
+            .find(|module| module.domain == "cyberpunk2077").unwrap();
+        module.routes.clear();
+        let source = "wrapper/example.archive".to_string();
+        let target = "archive/pc/mod/example.archive".to_string();
+        assert!(validate_installation_files(&mut archive, &module, &[(source.clone(), target.clone())]).is_ok());
+        for invalid in ["../outside.archive", "/tmp/outside.archive", "bin/x64/Cyberpunk2077.exe", "unapproved/config.ini"] {
+            assert!(validate_installation_files(&mut archive, &module, &[(source.clone(), invalid.into())]).is_err());
+        }
+        assert!(validate_installation_files(&mut archive, &module, &[("missing.archive".into(), target.clone())]).is_err());
+        assert!(validate_installation_files(&mut archive, &module, &[(source.clone(), target.clone()), (source, target)]).is_err());
+        drop(archive);
+        fs::remove_file(path).unwrap();
+    }
 }

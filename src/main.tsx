@@ -1,11 +1,20 @@
 import React from "react";
+import { LogMonitorPage } from "./components/LogMonitorPage";
 import ReactDOM from "react-dom/client";
-import { StartupRouter } from "./modules/startup/StartupRouter";
+import "./App.css";
+import "./theme/appearance.css";
+import "./theme/glassSurfaces.css";
+import "./modules/nexus/nexus.css";
+const StartupRouter = React.lazy(() => import("./modules/startup/StartupRouter").then(module => ({ default: module.StartupRouter })));
 import { TextContextMenu } from "./components/TextContextMenu";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { I18nProvider } from "./i18n/I18nContext";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { FloatingScrollbars } from "./components/FloatingScrollbars";
+
+if (["game", "nexus"].includes(new URLSearchParams(window.location.search).get("logWindow") || "")) {
+  document.documentElement.classList.add("log-monitor-window");
+}
 
 // Suppress the webview menu, including dialogs rendered outside the root.
 // Cover handlers still receive the event and open the application's own menu.
@@ -23,7 +32,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <ErrorBoundary>
       <I18nProvider>
         <ThemeProvider>
-        <StartupRouter />
+        {["game", "nexus"].includes(new URLSearchParams(window.location.search).get("logWindow") || "") ? <LogMonitorPage /> : <React.Suspense fallback={<p role="status">Carregando…</p>}><StartupRouter /></React.Suspense>}
         <TextContextMenu />
         <FloatingScrollbars />
         </ThemeProvider>

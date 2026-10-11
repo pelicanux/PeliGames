@@ -3,7 +3,7 @@ use super::nexus_local::NexusGame;
 use std::{
     collections::HashSet,
     fs,
-    io::{Read, Seek, SeekFrom},
+    io::{Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     process::{Command, Stdio},
 };
@@ -129,8 +129,8 @@ pub(super) fn build(game: &NexusGame) -> Result<String, String> {
         for item in game.mods.iter().filter(|m| m.enabled) {
             uuid::Uuid::parse_str(&item.id).map_err(|_| "Mod inválido.")?;
             let mut zip = super::nexus_archive::open(game,item)?;
-            let selected = if let Some(files) = &item.fomod_files {
-                super::nexus_fomod::validate_files(&mut zip,&definition,files)?;
+            let selected = if let Some(files) = item.installed_files.as_ref().or(item.fomod_files.as_ref()) {
+                super::nexus_fomod::validate_installation_files(&mut zip,&definition,files)?;
                 Some(files.clone())
             } else {
                 let resolved = super::nexus_fomod::resolve(&mut zip,&definition,Path::new(game.game["directory"].as_str().unwrap()),&item.id,item.fomod_selection.as_deref())?;
@@ -140,6 +140,9 @@ pub(super) fn build(game: &NexusGame) -> Result<String, String> {
             if zip.len() > 10000 {
                 return Err("Arquivo com entradas demais.".into());
             }
+            let entries = (0..zip.len()).map(|index| zip.by_index(index)
+                .map(|entry| entry.name().replace('\\', "/")).map_err(|error| error.to_string()))
+                .collect::<Result<Vec<_>, _>>()?;
             let mut recognized = false;
             for index in 0..zip.len() {
                 let entry = zip.by_index(index).map_err(|e| e.to_string())?;
@@ -157,7 +160,7 @@ pub(super) fn build(game: &NexusGame) -> Result<String, String> {
                     continue;
                 }
                 drop(entry);
-                let outputs = if let Some(selected) = &selected {selected.iter().filter(|(source,_)|source == &name).map(|(_,target)|target.clone()).collect::<Vec<_>>()} else {definition.route(&name,&item.id)?.into_iter().collect()};
+                let outputs = if let Some(selected) = &selected {selected.iter().filter(|(source,_)|source == &name).map(|(_,target)|target.clone()).collect::<Vec<_>>()} else {definition.route_package(&name,&item.id,&entries)?.into_iter().collect()};
                 for output in outputs {
                 let entry = zip.by_index(index).map_err(|e|e.to_string())?;
                 if output.ends_with(".dll") || output.ends_with(".so") {
@@ -225,6 +228,10 @@ pub(super) fn discard(game: &NexusGame, revision: &str) {
     }
 }
 pub(super) fn launch(game: &NexusGame) -> Result<(), String> {
+    super::steam_readiness::check(
+        Path::new(game.game["directory"].as_str().unwrap_or("")),
+        game.game["app_id"].as_str(),
+    )?;
     if super::nexus_deployment::supports(game) {
         return super::nexus_deployment::launch(game);
     }
@@ -269,8 +276,6 @@ pub(super) fn launch(game: &NexusGame) -> Result<(), String> {
     let mut command = Command::new(runtime.join("start_game_bepinex.sh"));
     command
         .arg(&exe)
-        .arg("-logFile")
-        .arg("-")
         .current_dir(exe.parent().ok_or("Pasta inválida.")?)
         .env("SteamAppId", "892970")
         .env("SteamGameId", "892970")
@@ -278,21 +283,60 @@ pub(super) fn launch(game: &NexusGame) -> Result<(), String> {
         .env_remove("LD_PRELOAD")
         .env_remove("APPIMAGE")
         .env_remove("APPDIR");
+    super::nexus_launch_options::apply(game, &mut command, exe.parent().ok_or("Pasta inválida.")?)?;
     spawn(game, command)
 }
-pub(super) fn spawn(game: &NexusGame, mut command: Command) -> Result<(), String> {
-    let dir = directory(game)?;
-    let logs = dir.join("logs");
-    fs::create_dir_all(&logs).map_err(|e| e.to_string())?;
+/// Files of the launch sessions shown by the log window (not the event history).
+const SESSION_FILES: [&str; 5] = ["current.log", "previous.log", "tool.log", "session-started.txt", "session-started-ms.txt"];
+/// Starts the launcher with empty logs: the next launch begins a new session.
+pub(super) fn clear_session_logs(game: &NexusGame) -> Result<(), String> {
+    clear_session_files(&directory(game)?.join("logs"))
+}
+fn clear_session_files(logs: &Path) -> Result<(), String> {
+    for name in SESSION_FILES {
+        let file = logs.join(name);
+        // Only regular files; a link is never followed or removed here.
+        if fs::symlink_metadata(&file).is_ok_and(|meta| meta.is_file()) {
+            fs::remove_file(&file).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
+}
+fn rotate_execution(logs: &Path) -> Result<(), String> {
     let current = logs.join("current.log");
     let previous = logs.join("previous.log");
     if current.exists() {
-        if previous.exists() {
-            fs::remove_file(&previous).map_err(|e| e.to_string())?;
-        }
-        fs::rename(&current, &previous).map_err(|e| e.to_string())?;
+        if previous.exists() { fs::remove_file(&previous).map_err(|e| e.to_string())?; }
+        fs::rename(current, previous).map_err(|e| e.to_string())?;
     }
-    let log = fs::File::create(&current).map_err(|e| e.to_string())?;
+    Ok(())
+}
+pub(super) fn spawn(game: &NexusGame, command: Command) -> Result<(), String> {
+    spawn_with_session(game, command, true)
+}
+pub(super) fn spawn_tool(game: &NexusGame, command: Command) -> Result<(), String> {
+    spawn_with_session(game, command, false)
+}
+fn spawn_with_session(game: &NexusGame, command: Command, new_session: bool) -> Result<(), String> {
+    let mut command = super::nexus_launch_options::advanced_command(game,command)?;
+    let dir = directory(game)?;
+    let logs = dir.join("logs");
+    fs::create_dir_all(&logs).map_err(|e| e.to_string())?;
+    let current = logs.join(if new_session { "current.log" } else { "tool.log" });
+    if new_session { rotate_execution(&logs)?; }
+    if new_session { super::nexus_loader_logs::reset(game)?; }
+    let mut log = fs::File::create(&current).map_err(|e| e.to_string())?;
+    // Wine exposes DLL load provenance and exception frames without the full Proton trace.
+    if game.platform != "native" {
+        command.env("WINEDEBUG", "-all,err+all,warn+seh,trace+loaddll");
+    }
+    let context = super::nexus_reports::launch_context(game, &command);
+    log.write_all(context.as_bytes()).map_err(|e|e.to_string())?;
+    if new_session {
+        let started = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|e| e.to_string())?;
+        fs::write(logs.join("session-started.txt"), started.as_secs().to_string()).map_err(|e|e.to_string())?;
+        fs::write(logs.join("session-started-ms.txt"), started.as_millis().to_string()).map_err(|e|e.to_string())?;
+    }
     let err_log = log.try_clone().map_err(|e| e.to_string())?;
     command
         .env_remove("LD_LIBRARY_PATH")
@@ -314,10 +358,13 @@ pub(super) fn spawn(game: &NexusGame, mut command: Command) -> Result<(), String
             });
         }
     }
-    let mut child = command
-        .spawn()
-        .map_err(|e| format!("Não foi possível iniciar o jogo: {e}"))?;
+    let mut child = command.spawn().map_err(|e| {
+        let detail = format!("Não foi possível iniciar o jogo: {e}");
+        super::nexus_reports::event(game,"ERROR","criar processo",&detail);
+        detail
+    })?;
     let pid = child.id();
+    super::nexus_reports::event(game,"INFO","processo iniciado",&format!("PID={pid}; contexto e DLLs em {}", current.display()));
     if let Err(e) = fs::write(dir.join("session.pid"), pid.to_string()) {
         let _ = child.kill();
         let _ = child.wait();
@@ -350,12 +397,10 @@ pub(super) fn logs(game: &NexusGame, previous: bool) -> Result<String, String> {
     } else {
         "current.log"
     });
-    let mut content = read_log_file(&file)?;
-    if !previous && game.adapter == "palworld" {
-        content.push_str("\n--- UE4SS ---\n");
-        content.push_str(&read_log_file(&super::nexus_deployment::log_path(game)?)?);
+    if !file.exists() {
+        return Ok(if previous { "Nenhuma execução anterior desde que o launcher foi aberto.".into() } else { super::nexus_loader_logs::NO_SESSION.into() });
     }
-    Ok(content)
+    read_log_file(&file)
 }
 pub(super) fn read_log_file(file: &Path) -> Result<String, String> {
     let mut input = match fs::File::open(file) {
@@ -366,21 +411,69 @@ pub(super) fn read_log_file(file: &Path) -> Result<String, String> {
         Err(e) => return Err(e.to_string()),
     };
     let len = input.metadata().map_err(|e| e.to_string())?.len();
-    input
-        .seek(SeekFrom::Start(len.saturating_sub(256 * 1024)))
-        .map_err(|e| e.to_string())?;
     let mut bytes = Vec::new();
-    input
-        .take(256 * 1024)
-        .read_to_end(&mut bytes)
-        .map_err(|e| e.to_string())?;
-    Ok(String::from_utf8_lossy(&bytes)
-        .lines()
-        .rev()
-        .take(1500)
-        .collect::<Vec<_>>()
-        .into_iter()
-        .rev()
-        .collect::<Vec<_>>()
-        .join("\n"))
+    // Keep startup failures as well as the latest output; a noisy session must not
+    // hide the exception that prevented a loader from starting.
+    if len > 256 * 1024 {
+        (&mut input).take(64 * 1024).read_to_end(&mut bytes).map_err(|e| e.to_string())?;
+        bytes.extend_from_slice(b"\n[... trecho intermediario omitido ...]\n");
+        input.seek(SeekFrom::Start(len.saturating_sub(192 * 1024))).map_err(|e|e.to_string())?;
+        input.take(192 * 1024).read_to_end(&mut bytes).map_err(|e|e.to_string())?;
+    } else {
+        input.take(256 * 1024).read_to_end(&mut bytes).map_err(|e|e.to_string())?;
+    }
+    let text = String::from_utf8_lossy(&bytes);
+    let lines: Vec<_> = text.lines().collect();
+    if lines.len() <= 1500 {return Ok(text.into_owned());}
+    Ok(format!("{}\n[... linhas intermediárias omitidas ...]\n{}",
+        lines[..300].join("\n"),lines[lines.len()-1200..].join("\n")))
+}
+#[cfg(test)]
+mod diagnostic_tests {
+    use super::*;
+    #[test]
+    fn launcher_start_clears_launch_logs_but_keeps_events_and_links() {
+        let root = std::env::temp_dir().join(format!("peligames-session-logs-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&root).unwrap();
+        for name in SESSION_FILES { fs::write(root.join(name), "old").unwrap(); }
+        fs::write(root.join("events.log"), "history").unwrap();
+        clear_session_files(&root).unwrap();
+        assert!(SESSION_FILES.iter().all(|name| !root.join(name).exists()));
+        assert!(root.join("events.log").exists());
+        #[cfg(unix)] {
+            let outside = root.with_extension("outside");
+            fs::write(&outside, "keep").unwrap();
+            std::os::unix::fs::symlink(&outside, root.join("current.log")).unwrap();
+            clear_session_files(&root).unwrap();
+            assert!(root.join("current.log").is_symlink() && outside.exists());
+            fs::remove_file(outside).unwrap();
+        }
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn each_launch_retains_only_one_previous_execution() {
+        let root = std::env::temp_dir().join(format!("log-rotation-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&root).unwrap();
+        rotate_execution(&root).unwrap();
+        fs::write(root.join("current.log"), "first execution").unwrap();
+        rotate_execution(&root).unwrap();
+        assert_eq!(fs::read_to_string(root.join("previous.log")).unwrap(), "first execution");
+        fs::write(root.join("current.log"), "second execution").unwrap();
+        rotate_execution(&root).unwrap();
+        assert_eq!(fs::read_to_string(root.join("previous.log")).unwrap(), "second execution");
+        assert!(!root.join("current.log").exists());
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn large_log_retains_startup_error_and_latest_output() {
+        let file=std::env::temp_dir().join(format!("peligames-log-{}.txt",uuid::Uuid::new_v4()));
+        let mut data=String::from("STARTUP_EXCEPTION important loader failure\n");
+        for _ in 0..10_000 {data.push_str("repeated runtime output that must not hide startup failures\n");}
+        data.push_str("LATEST_OUTPUT\n");
+        fs::write(&file,data).unwrap();
+        let text=read_log_file(&file).unwrap();
+        fs::remove_file(file).unwrap();
+        assert!(text.contains("STARTUP_EXCEPTION"));assert!(text.contains("LATEST_OUTPUT"));
+        assert!(text.len()<256*1024+1024);assert!(text.contains("omitid"));
+    }
 }

@@ -89,7 +89,7 @@ impl From<SavedSettings> for AdvancedSettings {
         if saved.schema_version == 2 {
             settings.options = saved.options;
             settings.wrappers = saved.wrappers;
-            settings.dll_overrides = saved.dll_overrides.unwrap_or_else(|| "dxgi=n,b".into());
+            settings.dll_overrides = if settings.options.get("dll_overrides") == Some(&true) { saved.dll_overrides.unwrap_or_default() } else { String::new() };
             settings.launch_backend = saved.launch_backend.unwrap_or_else(|| "system".into());
             if saved.gamescope.model_version == 2 {
                 settings.gamescope = saved.gamescope;
@@ -112,7 +112,7 @@ impl Default for AdvancedSettings {
                 ..Default::default()
             },
             options: catalog().into_iter().map(|s| (s.id, s.enabled)).collect(),
-            dll_overrides: "dxgi=n,b".into(),
+            dll_overrides: String::new(),
             wrappers: Vec::new(),
             launch_backend: "system".into(),
         }

@@ -18,6 +18,7 @@ const buildSuffix = `${timePart('day')}${timePart('hour')}${timePart('minute')}`
 
 export default defineConfig(() => ({
   plugins: [react()],
+  build: { rollupOptions: { input: { main: "index.html", logs: "logs.html" } } },
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
     __BUILD_SUFFIX__: JSON.stringify(buildSuffix),

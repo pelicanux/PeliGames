@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "domain": "valheim",
   "name": "Valheim",
   "platform": "native",
@@ -61,5 +61,11 @@
       "root_only": true,
       "target": "BepInEx/plugins/{mod_id}/"
     }
-  ]
+  ],
+  "sources": [
+    "https://github.com/Nexus-Mods/game-valheim/blob/b5a9b7c6197d8db4f6fba2b8f78edc2c74480338/src/index.ts",
+    "https://www.nexusmods.com/site/mods/210"
+  ],
+  "unwrap_common_root": true,
+  "bundle_plugin_resources": true
 }

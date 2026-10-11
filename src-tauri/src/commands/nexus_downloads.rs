@@ -25,12 +25,23 @@ pub struct Download {
     pub requirements: Option<super::nexus_catalog::Requirements>,
     pub auto_install: bool,
     pub mod_entry_id: Option<String>,
+    /// Name of the collection this file belongs to, for the queue display.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub collection: Option<String>,
+}
+/// Curator data carried by a file queued from a Nexus Collection.
+#[derive(Clone)]
+pub(super) struct CollectionLink {
+    pub curated: super::nexus_collections::Curated,
+    /// `(mod_id, file_id)` in collection order, to keep the curator's priority.
+    pub order: Arc<Vec<(u64, u64)>>,
 }
 struct Job {
     info: Download,
     request: Option<nxm::Request>,
     cancel: Arc<AtomicBool>,
     batch: Option<String>,
+    collection: Option<CollectionLink>,
 }
 #[derive(Default)]
 pub struct Downloads(Mutex<Vec<Job>>);
@@ -98,10 +109,12 @@ pub fn receive(app: &tauri::AppHandle, value: &str) -> Result<(), String> {
                         requirements: None,
                         auto_install: false,
                         mod_entry_id: None,
+                        collection: None,
                     },
                     request: None,
                     cancel: Arc::new(AtomicBool::new(false)),
                     batch: None,
+                    collection: None,
                 });
             }
         }
@@ -110,6 +123,11 @@ pub fn receive(app: &tauri::AppHandle, value: &str) -> Result<(), String> {
     result
 }
 fn receive_inner(app: &tauri::AppHandle, value: &str) -> Result<(), String> {
+    // Collection links open the collection window; the user confirms what to install.
+    if value.starts_with("nxm://") && super::nexus_collections::parse_reference(value).is_ok() {
+        let _ = app.emit("nexus-collection-request", value.to_string());
+        return Ok(());
+    }
     let request = nxm::parse(value)?;
     let workspace = super::nexus_local::workspace()?;
     let matches: Vec<_> = workspace
@@ -185,10 +203,12 @@ fn receive_inner(app: &tauri::AppHandle, value: &str) -> Result<(), String> {
             requirements: None,
             auto_install: false,
             mod_entry_id: None,
+            collection: None,
         },
         request: Some(request),
         cancel: Arc::new(AtomicBool::new(false)),
         batch: None,
+        collection: None,
     });
     drop(jobs);
     let _ = app.emit("nexus-download-request", &domain);
@@ -436,46 +456,15 @@ async fn transfer(
         job.info.received = received;
         job.info.status = "importing".into();
     }
-    let workspace = super::nexus_local::import_archive(
-        game_id.into(),
-        path.to_string_lossy().into(),
-        Some(super::nexus_local::NexusSource {
-            name: mod_info["name"].as_str().unwrap_or_default().into(),
-            version: file["version"].as_str().unwrap_or_default().into(),
-            domain: request.domain.clone(),
-            mod_id: request.mod_id,
-            file_id: request.file_id,
-            requirements,
-        }),
-    )
-    .await?;
-    let mod_id = workspace
-        .games
-        .iter()
-        .find(|g| g.id == game_id)
-        .and_then(|g| g.mods.last())
-        .ok_or("Mod importado não encontrado.")?
-        .id
-        .clone();
-    let mut auto_install = false;
-    update(app, id, |info| {
-        info.mod_entry_id = Some(mod_id.clone());
-        auto_install = info.auto_install;
-    });
-    if auto_install {
-        let plan =
-            super::nexus_local::plan_nexus_installation(game_id.into(), mod_id.clone(), None)
-                .await?;
-        if plan.fomod.is_some() {
-            // Interactive installers stay imported until the user confirms the choices in Mods.
-            update(app, id, |info| info.auto_install = false);
-            return Ok(());
-        }
-        update(app, id, |info| info.status = "installing".into());
-        super::nexus_local::install_nexus_mod(game_id.into(), mod_id, None)
-            .await
-            .map_err(|e| format!("Arquivo importado, mas a instalação falhou: {e}"))?;
-    }
+    let source = super::nexus_local::NexusSource {
+        name: mod_info["name"].as_str().unwrap_or_default().into(),
+        version: file["version"].as_str().unwrap_or_default().into(),
+        domain: request.domain.clone(),
+        mod_id: request.mod_id,
+        file_id: request.file_id,
+        requirements,
+    };
+    finish_import(app, id, game_id, &path, source).await?;
     Ok(())
 }
 #[tauri::command]
@@ -585,6 +574,7 @@ async fn prepare_download(
                 requirements: Some(details.requirements),
                 auto_install: batch.is_none(),
                 mod_entry_id: None,
+                collection: None,
             },
             request: if account.is_premium {
                 Some(nxm::parse(&format!(
@@ -595,9 +585,11 @@ async fn prepare_download(
             },
             cancel: Arc::new(AtomicBool::new(false)),
             batch: batch.clone(),
+            collection: None,
         });
     }
     let _ = app.emit("nexus-download-updated", ());
+    if batch.is_none() && !account.is_premium { super::nexus_download_watch::ensure(&app); }
     if batch.is_some() {
         Ok(None)
     } else if account.is_premium {
@@ -608,6 +600,179 @@ async fn prepare_download(
         if let Err(error) = &result { update(&app, &id, |info| { info.status = "error".into(); info.error = Some(error.clone()); }); }
         result.map(|_| None)
     }
+}
+/// Imports a complete archive for a queued job and installs it when requested.
+async fn finish_import(app: &tauri::AppHandle, id: &str, game_id: &str, path: &std::path::Path, source: super::nexus_local::NexusSource) -> Result<(), String> {
+    let workspace = super::nexus_local::import_archive(
+        game_id.into(),
+        path.to_string_lossy().into(),
+        Some(source),
+    )
+    .await?;
+    let mod_id = workspace
+        .games
+        .iter()
+        .find(|g| g.id == game_id)
+        .and_then(|g| g.mods.last())
+        .ok_or("Mod importado não encontrado.")?
+        .id
+        .clone();
+    let mut auto_install = false;
+    update(app, id, |info| {
+        info.mod_entry_id = Some(mod_id.clone());
+        auto_install = info.auto_install;
+    });
+    let link = app.state::<Downloads>().0.lock().ok().and_then(|jobs| jobs.iter().find(|job| job.info.id == id).and_then(|job| job.collection.clone()));
+    if let (true, Some(link)) = (auto_install, link) {
+        return install_curated(app, id, game_id, &mod_id, &link).await;
+    }
+    if auto_install {
+        let plan =
+            super::nexus_local::plan_nexus_installation(game_id.into(), mod_id.clone(), None)
+                .await?;
+        if plan.fomod.is_some() {
+            // Interactive installers stay imported until the user confirms the choices in Mods.
+            update(app, id, |info| info.auto_install = false);
+            return Ok(());
+        }
+        update(app, id, |info| info.status = "installing".into());
+        super::nexus_local::install_nexus_mod(game_id.into(), mod_id, None)
+            .await
+            .map_err(|e| format!("Arquivo importado, mas a instalação falhou: {e}"))?;
+    }
+    Ok(())
+}
+
+/// Installs a collection file with the curator's data: Vortex mod type as a
+/// fallback destination and FOMOD choices matched by name. Anything that
+/// cannot be reproduced exactly stays imported for the user to finish.
+async fn install_curated(app: &tauri::AppHandle, id: &str, game_id: &str, mod_id: &str, link: &CollectionLink) -> Result<(), String> {
+    let keep_imported = |note: &str| {
+        let note = note.to_string();
+        update(app, id, |info| { info.auto_install = false; info.error = Some(note); });
+    };
+    let mut plan = super::nexus_local::plan_nexus_installation(game_id.into(), mod_id.into(), None).await;
+    let unrecognized = plan.as_ref().map_or(true, |p| p.fomod.is_none() && (!p.issues.is_empty() || p.files.is_empty()));
+    if let (true, Some(kind)) = (unrecognized, link.curated.mod_type.clone()) {
+        let (game, item) = (game_id.to_string(), mod_id.to_string());
+        let applied = super::nexus_collections::blocking(move || {
+            let module = super::nexus_deployment::definition(&super::nexus_local::diagnostic_game(&game)?);
+            let Some(destination) = module.and_then(|module| module.vortex_destination(&kind)) else { return Ok(false) };
+            super::nexus_local::set_manual_root_unchecked(&game, &item, Some(super::nexus_local::ManualRoot { source: String::new(), destination }))?;
+            Ok(true)
+        }).await?;
+        if applied { plan = super::nexus_local::plan_nexus_installation(game_id.into(), mod_id.into(), None).await; }
+    }
+    let plan = match plan {
+        Ok(plan) => plan,
+        Err(error) => { keep_imported(&format!("Importado; instalação pendente: {error}")); return Ok(()); }
+    };
+    let selection = match &plan.fomod {
+        None => None,
+        Some(installer) => match link.curated.choices.as_ref().and_then(|choices| super::nexus_collections::fomod_selection(installer, choices)) {
+            Some(selection) => Some(selection),
+            None => { keep_imported("Importado; confirme as opções FOMOD na janela de instalação (as escolhas da coleção não correspondem ao instalador)."); return Ok(()); }
+        },
+    };
+    if selection.is_some() {
+        let replanned = super::nexus_local::plan_nexus_installation(game_id.into(), mod_id.into(), selection.clone()).await?;
+        if !replanned.issues.is_empty() { keep_imported(&replanned.issues.join("\n")); return Ok(()); }
+    } else if !plan.issues.is_empty() || !plan.missing.is_empty() {
+        keep_imported(&format!("Importado; instalação pendente: {}", plan.issues.iter().cloned().chain(plan.missing.iter().map(|m| format!("requisito ausente: {}", m.name))).collect::<Vec<_>>().join("; ")));
+        return Ok(());
+    }
+    update(app, id, |info| info.status = "installing".into());
+    super::nexus_local::install_nexus_mod(game_id.into(), mod_id.into(), selection)
+        .await
+        .map_err(|e| format!("Arquivo importado, mas a instalação falhou: {e}"))?;
+    let (game, order) = (game_id.to_string(), link.order.clone());
+    super::nexus_collections::blocking(move || super::nexus_local::order_collection(&game, &order)).await?;
+    Ok(())
+}
+
+/// Queues the files of a collection as one batch (browser authorization one at
+/// a time for free accounts; direct downloads for premium).
+pub(super) async fn queue_collection(app: &tauri::AppHandle, game_id: &str, domain: &str, collection: &str, items: Vec<(super::nexus_collections::CollectionMod, CollectionLink)>) -> Result<usize, String> {
+    let account = super::nexus_account::load_nexus_account().await?.ok_or("Conecte sua conta Nexus.")?;
+    let batch = uuid::Uuid::new_v4().to_string();
+    let mut queued = 0;
+    {
+        let state = app.state::<Downloads>();
+        let mut jobs = state.0.lock().map_err(|_| "Fila Nexus indisponível.")?;
+        prune_jobs(&mut jobs);
+        if jobs.len() + items.len() > 5000 { return Err("Fila Nexus cheia.".into()); }
+        for (item, link) in items {
+            let active = jobs.iter().any(|j| j.info.domain == domain && j.info.mod_id == item.mod_id && j.info.file_id == item.file_id
+                && ["preparing", "queued", "authorizing", "waiting", "downloading", "importing", "installing"].contains(&j.info.status.as_str()));
+            if active || (!item.file_name.is_empty() && !super::nexus_archive::supported_filename(&item.file_name)) { continue; }
+            jobs.push(Job {
+                info: Download {
+                    id: uuid::Uuid::new_v4().to_string(),
+                    domain: domain.into(), mod_id: item.mod_id, file_id: item.file_id,
+                    game_id: Some(game_id.into()),
+                    name: if item.file_name.is_empty() { item.name.clone() } else { item.file_name.clone() },
+                    status: "queued".into(), received: 0, total: item.size, error: None, requirements: None,
+                    auto_install: true, mod_entry_id: None, collection: Some(collection.into()),
+                },
+                request: if account.is_premium { Some(nxm::parse(&format!("nxm://{domain}/mods/{}/files/{}", item.mod_id, item.file_id))?) } else { None },
+                cancel: Arc::new(AtomicBool::new(false)),
+                batch: Some(batch.clone()),
+                collection: Some(link),
+            });
+            queued += 1;
+        }
+    }
+    advance_batch(app);
+    let _ = app.emit("nexus-download-updated", ());
+    Ok(queued)
+}
+
+/// Jobs waiting for the user to authorize the file on the site.
+pub(super) fn authorizing_jobs(app: &tauri::AppHandle) -> Vec<Download> {
+    app.state::<Downloads>().0.lock().map(|jobs| jobs.iter()
+        .filter(|job| job.info.status == "authorizing" && !job.cancel.load(Ordering::Relaxed))
+        .map(|job| job.info.clone()).collect()).unwrap_or_default()
+}
+
+pub(super) fn fail(app: &tauri::AppHandle, id: &str, error: String) {
+    update(app, id, |info| { info.status = "error".into(); info.error = Some(error); });
+    let _ = app.emit("nexus-download-updated", ());
+}
+
+/// A file the user saved with the site's "Slow download" (free accounts).
+/// The user's file is copied, never moved, and must match the job by MD5.
+pub(super) async fn import_browser_download(app: &tauri::AppHandle, id: &str, path: &std::path::Path) -> Result<(), String> {
+    let info = {
+        let state = app.state::<Downloads>();
+        let mut jobs = state.0.lock().map_err(|_| "Fila Nexus indisponível.")?;
+        let job = jobs.iter_mut().find(|j| j.info.id == id).ok_or("Download não encontrado.")?;
+        // Claim the job so a later nxm:// link for it is not processed twice.
+        if job.info.status != "authorizing" || job.cancel.load(Ordering::Relaxed) { return Ok(()); }
+        job.info.status = "importing".into();
+        job.info.clone()
+    };
+    let _ = app.emit("nexus-download-updated", ());
+    let game_id = info.game_id.clone().ok_or("Jogo do download ausente.")?;
+    { let (game, name) = (game_id.clone(), path.file_name().and_then(|n| n.to_str()).unwrap_or("arquivo").to_string());
+      super::nexus_collections::blocking(move || { super::nexus_reports::event(&super::nexus_local::diagnostic_game(&game)?, "INFO", "download do navegador", &name); Ok(()) }).await?; }
+    super::nexus_download_watch::confirm_md5(path, &info.domain, info.mod_id, info.file_id).await?;
+    let mod_info = super::nexus_account::metadata(&format!("games/{}/mods/{}.json", info.domain, info.mod_id)).await?;
+    let file = super::nexus_account::metadata(&format!("games/{}/mods/{}/files/{}.json", info.domain, info.mod_id, info.file_id)).await?;
+    let requirements = super::nexus_catalog::requirements_for_file(&info.domain, info.mod_id, Some(info.file_id)).await;
+    super::nexus_browser::dismiss(app, Some(id));
+    advance_after_capture(app);
+    let source = super::nexus_local::NexusSource {
+        name: mod_info["name"].as_str().unwrap_or_default().into(),
+        version: file["version"].as_str().unwrap_or_default().into(),
+        domain: info.domain.clone(), mod_id: info.mod_id, file_id: info.file_id, requirements,
+    };
+    let result = finish_import(app, id, &game_id, path, source).await;
+    update(app, id, |job| match &result {
+        Ok(()) => job.status = if job.auto_install { "installed" } else { "imported" }.into(),
+        Err(error) => { job.status = "error".into(); job.error = Some(error.clone()); }
+    });
+    let _ = app.emit("nexus-download-updated", ());
+    result
 }
 #[derive(Deserialize)]
 pub struct QueueFile {
@@ -719,6 +884,7 @@ fn advance_batch(app: &tauri::AppHandle) {
         let job = &mut jobs[index];
         let premium = job.request.is_some();
         job.info.status = if premium { "waiting" } else { "authorizing" }.into();
+        if !premium { super::nexus_download_watch::ensure(app); }
         (
             job.info.id.clone(),
             job.info.game_id.clone().unwrap_or_default(),
@@ -796,6 +962,7 @@ pub async fn retry_nexus_download(app: tauri::AppHandle, window: tauri::Webview,
             return Err("Este download não está aguardando autorização.".into());
         }
         job.info.status = "authorizing".into(); job.info.error = None;
+        super::nexus_download_watch::ensure(&app);
         format!("https://www.nexusmods.com/{}/mods/{}?tab=files&file_id={}&nmm=1", job.info.domain, job.info.mod_id, job.info.file_id)
     };
     let result = if external {
@@ -855,7 +1022,7 @@ mod browser_tests {
     fn download(status: &str) -> Download {
         Download { id: "test".into(), domain: "cyberpunk2077".into(), mod_id: 4197, file_id: 1,
             game_id: Some("game".into()), name: "TweakXL".into(), status: status.into(), received: 0,
-            total: None, error: None, requirements: None, auto_install: false, mod_entry_id: None }
+            total: None, error: None, requirements: None, auto_install: false, mod_entry_id: None, collection: None }
     }
     #[test]
     fn closing_before_capture_makes_authorization_retryable() {

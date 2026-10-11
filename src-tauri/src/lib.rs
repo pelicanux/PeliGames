@@ -111,6 +111,8 @@ fn run_mode(installer: bool) {
                 &format!("PeliGames v{} iniciado", env!("CARGO_PKG_VERSION")),
             );
             commands::app_updates::cleanup_obsolete_updates(&app_handle);
+            // Launch logs start empty on every launcher start (disk work off the UI thread).
+            std::thread::spawn(commands::nexus_local::reset_session_logs_at_startup);
             Ok(())
         })
         .invoke_handler({
@@ -149,12 +151,23 @@ fn run_mode(installer: bool) {
             commands::nexus_local::add_nexus_game,
             commands::nexus_local::inspect_nexus_game,
             commands::nexus_local::plan_nexus_installation,
+            commands::nexus_local::nexus_package_layout,
+            commands::nexus_local::set_nexus_manual_root,
+            commands::nexus_loot::nexus_loot_status,
+            commands::nexus_loot::update_nexus_loot_masterlist,
+            commands::nexus_local::move_nexus_mod,
+            commands::nexus_local::nexus_mod_overrides,
+            commands::nexus_collections::load_nexus_collection,
+            commands::nexus_collections::install_nexus_collection,
             commands::nexus_modules::list_nexus_modules,
             commands::nexus_local::set_nexus_game_cover,
             commands::nexus_local::import_nexus_archive,
             commands::nexus_local::remove_nexus_archive,
             commands::nexus_local::install_nexus_mod,
             commands::nexus_local::set_nexus_mod_enabled,
+            commands::nexus_launch_options::get_nexus_launch_options,
+            commands::nexus_launch_options::configure_nexus_advanced,
+            commands::nexus_launch_options::configure_nexus_launch_options,
             commands::nexus_local::launch_nexus_game,
             commands::nexus_local::open_nexus_game_tool,
             commands::nexus_local::stop_nexus_game,
@@ -227,6 +240,7 @@ fn run_mode(installer: bool) {
             commands::analyzer::analyze_game,
             commands::config::load_app_config,
             commands::config::get_launcher_log,
+            commands::log_windows::open_game_log_window,
             commands::config::save_app_config,
             commands::config::migrate_neural_preferences,
             commands::config::load_neural_preferences,

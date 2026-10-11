@@ -10,6 +10,7 @@ O código próprio do PeliGames usa [GNU GPL 3.0](../LICENSE) (`GPL-3.0-only`). 
 | React, React DOM, Scheduler, Motion e APIs Tauri | [Avisos das dependências da interface](Frontend-Dependencies.txt) |
 | Bibliotecas Rust, inclusive dependências transitivas e de compilação | [Avisos completos](Rust-Dependencies.txt) e [inventário por versão](dependency-inventory.json) |
 | Jersey 10 — The Soft Type Project Authors | [SIL OFL 1.1 original](../public/fonts/jersey-10/OFL.txt) |
+| SVG Linux / Tux — Simple Icons contributors | [CC0-1.0 original](upstream/Simple-Icons/LICENSE.md); [SVG e origem](../public/icons/linux.svg) |
 | SVG Nexus Mods copiado do Vortex | [GPL-3.0 do repositório de origem](upstream/Vortex-Nexus-Icon/LICENSE.md); [arquivo-fonte e origem](../public/nexus-mods.svg) |
 | Bibliotecas nativas presentes no AppImage 0.3.0 | [Copyrights e avisos originais dos pacotes](AppImage-Native-Notices.txt) |
 | Extração de ícones de executáveis — ico e png | [Avisos preservados](Executable-Icon-LICENSES.txt) |

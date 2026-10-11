@@ -48,6 +48,7 @@ dist-ssr
 /Release/
 /PELIGAMES.md
 /PL Games.md
+/documentação_peligames.md
 /PLGames.md
 /PeliGames.md
 /Pelicano.md
@@ -55,8 +56,16 @@ dist-ssr
 /icon_peligames_test.png
 
 # Local preview, tests and development captures
-/tools/
-/docs/
+/tools/*
+/docs/*
+# Exceções versionadas: importador Vortex e documentação das famílias de módulos.
+!/tools/vortex-import/
+!/docs/nexus-unreal-family.md
+!/docs/nexus-unity-family.md
+!/docs/nexus-collections.md
+!/docs/nexus-re-engine-family.md
+!/docs/nexus-bethesda.md
+!/docs/nexus-launchers.md
 /preview.html
 /src/preview.ts
 /scripts/preview-*.ts
@@ -65,6 +74,10 @@ dist-ssr
 /vite.preview.config.ts
 /.local-test-sources/
 /scripts/publish-release.sh
+/scripts/build-binaries.sh
+/scripts/build-container.sh
+/scripts/register-pelinstall.sh
+/scripts/nexus-text-check.html
 /public/tauri.svg
 /public/vite.svg
 /.env.example

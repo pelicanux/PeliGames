@@ -19,7 +19,7 @@ export const defaultGamescope: GamescopeSettings = { model_version: 2, enable_up
 export function normalizeAdvanced(value?: AdvancedSettings): AdvancedSettings {
   // Version 1 accidentally enabled screenshot selections by default. Reset once.
   const saved = value?.schema_version === 2 ? value : undefined;
-  return { schema_version: 2, wrappers: saved?.wrappers ?? [], options: Object.fromEntries(catalog.map(option => [option.id, saved?.options[option.id] ?? false])), dll_overrides: saved?.dll_overrides ?? "dxgi=n,b", launch_backend: saved?.launch_backend ?? "system", gamescope: { ...defaultGamescope, ...(saved?.gamescope?.model_version === 2 ? saved.gamescope : {}) } };
+  return { schema_version: 2, wrappers: saved?.wrappers ?? [], options: Object.fromEntries(catalog.map(option => [option.id, saved?.options[option.id] ?? false])), dll_overrides: saved?.options.dll_overrides ? saved.dll_overrides ?? "" : "", launch_backend: saved?.launch_backend ?? "system", gamescope: { ...defaultGamescope, ...(saved?.gamescope?.model_version === 2 ? saved.gamescope : {}) } };
 }
 export function toggleAdvanced(settings: AdvancedSettings, id: string): AdvancedSettings {
   return { ...settings, options: { ...settings.options, [id]: !settings.options[id] } };
@@ -27,6 +27,7 @@ export function toggleAdvanced(settings: AdvancedSettings, id: string): Advanced
 export function advancedError(settings: AdvancedSettings): string | undefined {
   for (const [id, dependency, message] of rules.dependencies) if (settings.options[id] && !settings.options[dependency]) return message;
   for (const [a, b, message] of rules.conflicts) if (settings.options[a] && settings.options[b]) return message;
+  if (settings.dll_overrides.length > 2048) return "Use até 2048 caracteres nas prioridades de DLLs.";
   if (settings.options.dll_overrides && !/^[\w.*-]+(?:,[\w.*-]+)*=(?:n|b|d|n,b|b,n)?(?:;[\w.*-]+(?:,[\w.*-]+)*=(?:n|b|d|n,b|b,n)?)*$/.test(settings.dll_overrides)) return "Use DLLs no formato dxgi=n,b;dinput8=n,b.";
   if ((settings.wrappers?.length ?? 0) > 16) return "Use até 16 wrappers.";
   for (const wrapper of settings.wrappers ?? []) {

@@ -21,7 +21,7 @@ export const translations = {
       cancel: "Cancelar download", cancelling: "Cancelando...", keepOpen: "Aguarde a conclusão ou cancele o download antes de fechar.",
       location: "Pasta dos runners: ",
     },
-    installedSettings: { title: "Configurações", proton: "Versão do Proton", runTitle: "Executar programas nesse prefixo", runProgram: "Executar", choosePrefix: "Escolher prefixo", advancedButton: "Config Avançada", advancedTitle: "Configurações avançadas", backToInfo: "Voltar às informações", runHint: "Escolha um executável para rodar no mesmo prefixo, usando o Proton salvo.", saving: "Aguarde…", saved: "Configurações salvas." },
+    installedSettings: { title: "Configurações", proton: "Versão do Proton", runTitle: "Executar programas nesse prefixo", runProgram: "Executar", choosePrefix: "Escolher prefixo", advancedButton: "Config Avançada", advancedTitle: "Configurações avançadas", backToInfo: "Voltar às informações", backToSettings: "Voltar às configurações", runHint: "Escolha um executável para rodar no mesmo prefixo, usando o Proton salvo.", saving: "Aguarde…", saved: "Configurações salvas." },
     gameExecution: { start: "Iniciar", starting: "Iniciando…", cancel: "Parar", running: "Em execução", stopping: "Encerrando…" },
     gameModes: {
       mods: "Gerenciador de mod",
@@ -450,7 +450,7 @@ export const translations = {
       cancel: "Cancel download", cancelling: "Cancelling...", keepOpen: "Wait for completion or cancel the download before closing.",
       location: "Runner directory: ",
     },
-    installedSettings: { title: "Settings", proton: "Proton version", runTitle: "Run programs in this prefix", runProgram: "Run", choosePrefix: "Choose game / program prefix", advancedButton: "Advanced Settings", advancedTitle: "Advanced settings", backToInfo: "Back to information", runHint: "Choose an executable to run in the same prefix using the saved Proton.", saving: "Please wait…", saved: "Settings saved." },
+    installedSettings: { title: "Settings", proton: "Proton version", runTitle: "Run programs in this prefix", runProgram: "Run", choosePrefix: "Choose game / program prefix", advancedButton: "Advanced Settings", advancedTitle: "Advanced settings", backToInfo: "Back to information", backToSettings: "Back to settings", runHint: "Choose an executable to run in the same prefix using the saved Proton.", saving: "Please wait…", saved: "Settings saved." },
     gameExecution: { start: "Start", starting: "Starting…", cancel: "Stop", running: "Running", stopping: "Stopping…" },
     gameModes: {
       mods: "Mod manager",

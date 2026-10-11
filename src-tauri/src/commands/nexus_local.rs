@@ -26,8 +26,24 @@ pub struct LocalMod {
     pub(super) fomod_selection: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(super) fomod_files: Option<Vec<(String,String)>>,
+    // Keep the approved installation separate from later deployment toggles.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(super) installed_files: Option<Vec<(String,String)>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(super) nexus_source: Option<NexusSource>,
+    /// User-chosen package root for archives without a recognized structure.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(super) manual_root: Option<ManualRoot>,
+}
+/// MO2-style "set data directory": `source` is a folder inside the archive
+/// (empty = archive root) and `destination` one of the module's destinations
+/// (empty = apply the module's own routes from that folder).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ManualRoot {
+    #[serde(default)]
+    pub source: String,
+    #[serde(default)]
+    pub destination: String,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub(super) struct NexusSource {
@@ -42,6 +58,10 @@ pub(super) struct NexusSource {
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct NexusGame {
+    #[serde(default)]
+    pub(super) launch_options: Option<String>,
+    #[serde(default)]
+    pub(super) advanced: crate::core::advanced_settings::AdvancedSettings,
     pub(super) id: String,
     pub(super) game: serde_json::Value,
     pub(super) platform: String,
@@ -107,11 +127,9 @@ pub(super) fn load() -> Result<Workspace, String> {
                     if !game.adapter.is_empty() {
                         game.nexus_domain = game.adapter.clone();
                     }
-                    if game.adapter == "palworld" {
-                        if let Some(root) = game.game["directory"].as_str() {
-                            game.detected_mods = super::nexus_scan::palworld(Path::new(root))
-                                .into_iter().map(|(name, enabled)| DetectedMod { name, enabled, mod_id: None }).collect();
-                        }
+                    if let (Some(layout), Some(root)) = (super::nexus_deployment::definition(game).and_then(|module| module.ue4ss()), game.game["directory"].as_str()) {
+                        game.detected_mods = super::nexus_scan::unreal(Path::new(root), &layout)
+                            .into_iter().map(|(name, enabled)| DetectedMod { name, enabled, mod_id: None }).collect();
                     }
                     if let Some(module) = game.game["directory"].as_str().and_then(|root| super::nexus_discovery::at(Path::new(root))) {
                         let root = Path::new(game.game["directory"].as_str().unwrap());
@@ -173,33 +191,43 @@ pub async fn scan_nexus_library(app: tauri::AppHandle) -> Result<Workspace, Stri
             };
         }
     }
+    let steam_home = app.path().home_dir().map_err(|error| error.to_string())?;
     tauri::async_runtime::spawn_blocking(move || {
+        // Library files are read here, never on the async command thread.
+        let libraries = super::scanner::steam_libraries(&steam_home);
         let _lock = STORAGE.lock().map_err(|error| error.to_string())?;
         let mut data = load()?;
+        for id in prune_unsupported(&mut data.games) {
+            if let Some(game) = data.games.iter().find(|game| game.id == id) {
+                super::nexus_reports::event(game, "WARN", "escanear biblioteca", "jogo sem suporte Vortex mantido: há mods instalados ou o jogo está em execução");
+            }
+        }
         for mut game in candidates {
             let source = game["directory"].as_str().or(game["path"].as_str()).unwrap_or("");
             let Ok((directory, definition)) = super::nexus_discovery::resolve(Path::new(source)) else { continue };
+            // Only games with a module and confirmed Vortex support are added automatically.
+            if !definition.as_ref().is_some_and(|found| found.vortex_supported) { continue; }
             // Deduplicate installations, preserving IDs, profiles, manually selected settings and mods.
             if data.games.iter().any(|existing| existing.game["directory"].as_str()
                 .is_some_and(|root| fs::canonicalize(root).ok().as_ref() == Some(&directory))) { continue; }
             if super::mod_backup::recover(&directory, &mut data)? { continue; }
             game["directory"] = directory.to_string_lossy().to_string().into();
             game["library_view"] = "nexus".into();
+            // Lutris names come from the config file slug; the module knows the real title.
+            if game["launcher"] == "Lutris" { if let Some(found) = &definition { game["name"] = found.name.clone().into(); } }
             let mut compat_data = game["prefix"].as_str()
                 .and_then(|prefix| super::nexus_prefix::resolve(Path::new(prefix)).ok())
                 .map(|(prefix, _)| prefix.to_string_lossy().into_owned()).unwrap_or_default();
             if compat_data.is_empty() && game["launcher"] == "Steam" {
-                if let (Some(steamapps), Some(id)) = (directory.parent().and_then(Path::parent), game["app_id"].as_str()) {
-                    if id.bytes().all(|byte| byte.is_ascii_digit()) {
-                        let prefix = steamapps.join("compatdata").join(id);
-                        if let Ok((prefix, _)) = super::nexus_prefix::resolve(&prefix) { compat_data = prefix.to_string_lossy().into_owned(); }
-                    }
+                let id = game["app_id"].as_str().map(str::to_string).or_else(|| super::nexus_discovery::steam_app_id(&directory)).unwrap_or_default();
+                if let Some(prefix) = super::nexus_discovery::steam_prefix(&directory, &id, &libraries) {
+                    if let Ok((prefix, _)) = super::nexus_prefix::resolve(&prefix) { compat_data = prefix.to_string_lossy().into_owned(); }
                 }
             }
             let platform = definition.as_ref().map(|item| item.platform.as_str()).unwrap_or("proton").to_string();
             let proton = game["proton"].as_str().unwrap_or("").to_string();
             let mut entry = NexusGame {
-                id: uuid::Uuid::new_v4().to_string(), game, platform, deploy_method: Default::default(), mods: Vec::new(), profile: None,
+                id: uuid::Uuid::new_v4().to_string(), launch_options: None, advanced: Default::default(), game, platform, deploy_method: Default::default(), mods: Vec::new(), profile: None,
                 running: false, compat_data, proton, adapter: String::new(),
                 nexus_domain: definition.map(|item| item.domain.to_string()).unwrap_or_default(), detected_mods: Vec::new(),
             };
@@ -212,23 +240,50 @@ pub async fn scan_nexus_library(app: tauri::AppHandle) -> Result<Workspace, Stri
     }).await.map_err(|error| error.to_string())?
 }
 
+/// Launchers whose games enter the library through the automatic scan.
+const AUTOMATIC_LAUNCHERS: [&str; 6] = ["Steam", "Heroic", "Lutris", "Faugus", "Bottles", "PeliGames"];
+
+/// A rescan drops automatically detected games without a module and confirmed
+/// Vortex support (or whose folder is gone). Games added by hand stay. A game
+/// with installed mods stays too: removing it would orphan files in the game.
+/// Returns the IDs of unsupported games kept for that reason.
+fn prune_unsupported(games: &mut Vec<NexusGame>) -> Vec<String> {
+    let mut kept = Vec::new();
+    games.retain(|game| {
+        if !game.game["launcher"].as_str().is_some_and(|launcher| AUTOMATIC_LAUNCHERS.contains(&launcher)) { return true; }
+        let supported = game.game["directory"].as_str()
+            .and_then(|root| super::nexus_discovery::at(Path::new(root)))
+            .is_some_and(|module| module.vortex_supported);
+        if supported { return true; }
+        if game.mods.iter().any(|item| item.installed) || super::nexus_profile::idle(game).is_err() {
+            kept.push(game.id.clone());
+            return true;
+        }
+        false
+    });
+    kept
+}
+
 #[tauri::command]
-pub fn set_nexus_game_cover(game_id: String, name: String, cover_url: String, previous_cover: Option<String>) -> Result<Workspace, String> {
-    let url = reqwest::Url::parse(&cover_url).map_err(|_| "Capa inválida.")?;
-    if url.scheme() != "https" || url.host_str().is_none() || !url.username().is_empty() || url.password().is_some() {
-        return Err("Capa inválida.".into());
-    }
-    let _lock = STORAGE.lock().map_err(|error| error.to_string())?;
-    let mut data = load()?;
-    let game = data.games.iter_mut().find(|game| game.id == game_id).ok_or("Jogo não encontrado.")?;
-    // A late search must not replace a renamed game's artwork or a newer result.
-    if game.game["name"].as_str() != Some(name.as_str()) || game.game["cover_url"].as_str().filter(|value| !value.is_empty()) != previous_cover.as_deref().filter(|value| !value.is_empty()) {
-        return Ok(data);
-    }
-    game.game["cover_url"] = cover_url.clone().into();
-    game.game["automatic_cover_url"] = cover_url.into();
-    save(&data)?;
-    Ok(data)
+pub async fn set_nexus_game_cover(game_id: String, name: String, cover_url: String, previous_cover: Option<String>) -> Result<Workspace, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let url = reqwest::Url::parse(&cover_url).map_err(|_| "Capa inválida.")?;
+        if url.scheme() != "https" || url.host_str().is_none() || !url.username().is_empty() || url.password().is_some() {
+            return Err("Capa inválida.".into());
+        }
+        let _lock = STORAGE.lock().map_err(|error| error.to_string())?;
+        let mut data = load()?;
+        let game = data.games.iter_mut().find(|game| game.id == game_id).ok_or("Jogo não encontrado.")?;
+        // A late search must not replace a renamed game's artwork or a newer result.
+        if game.game["name"].as_str() != Some(name.as_str()) || game.game["cover_url"].as_str().filter(|value| !value.is_empty()) != previous_cover.as_deref().filter(|value| !value.is_empty()) {
+            return Ok(data);
+        }
+        game.game["cover_url"] = cover_url.clone().into();
+        game.game["automatic_cover_url"] = cover_url.into();
+        save(&data)?;
+        Ok(data)
+
+    }).await.map_err(|error| error.to_string())?
 }
 #[derive(Serialize)]
 pub struct DiscoveryReport {
@@ -324,6 +379,7 @@ fn add_nexus_game_inner(mut game: serde_json::Value, platform: String) -> Result
         }
     }
     let mut entry = NexusGame {
+        launch_options: None, advanced: Default::default(),
         id: uuid::Uuid::new_v4().to_string(),
         game,
         platform,
@@ -375,12 +431,14 @@ fn add_nexus_game_inner(mut game: serde_json::Value, platform: String) -> Result
 #[tauri::command]
 pub async fn import_nexus_archive(game_id: String, source: String) -> Result<Workspace, String> {
     let before = diagnostic_game(&game_id)?;
-    let imported = import_archive(game_id.clone(), source, None).await?;
+    let imported = import_archive(game_id.clone(), source.clone(), None).await?;
     let item = imported.games.iter().find(|g| g.id == game_id)
         .and_then(|g| g.mods.last())
         .ok_or("Arquivo importado não encontrado.")?.clone();
     // Identify the managed copy, never the user's file after it has been copied.
-    let identity = identify_local_archive(&before.nexus_domain, &item.archive).await;
+    // The original name is kept only for the Nexus filename convention.
+    let original_name = Path::new(&source).file_name().and_then(|name| name.to_str()).unwrap_or_default().to_string();
+    let identity = identify_local_archive(&before.nexus_domain, &item.archive, &original_name).await;
     let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
     let mut data = load()?;
     if let Some(mod_item) = data.games.iter_mut().find(|g| g.id == game_id && g.nexus_domain == before.nexus_domain)
@@ -398,8 +456,19 @@ pub async fn import_nexus_archive(game_id: String, source: String) -> Result<Wor
     Ok(data)
 }
 
-async fn identify_local_archive(domain: &str, archive: &str) -> Result<Option<NexusSource>, String> {
+async fn identify_local_archive(domain: &str, archive: &str, original_name: &str) -> Result<Option<NexusSource>, String> {
     let domain = super::nexus_catalog::domain(domain)?.to_string();
+    // 1. Nexus filename convention, confirmed by an exact file name (and size) in that mod's file list.
+    let size = { let path = archive.to_string(); tauri::async_runtime::spawn_blocking(move || fs::metadata(path).map(|m| m.len()).ok()).await.ok().flatten() };
+    for mod_id in filename_mod_ids(original_name) {
+        let Ok(files) = super::nexus_account::metadata(&format!("games/{domain}/mods/{mod_id}/files.json")).await else { continue };
+        let Some((file_id, version)) = filename_match(&files, original_name, size) else { continue };
+        let Ok(info) = super::nexus_account::metadata(&format!("games/{domain}/mods/{mod_id}.json")).await else { continue };
+        let Some(name) = mod_title(&info, &domain, mod_id) else { continue };
+        let requirements = super::nexus_catalog::requirements_for_file(&domain, mod_id, Some(file_id)).await;
+        return Ok(Some(NexusSource { domain, mod_id, file_id, name, version, requirements }));
+    }
+    // 2. Content hash, independent of the file name.
     let archive = archive.to_string();
     let hash = tauri::async_runtime::spawn_blocking(move || archive_md5(Path::new(&archive))).await.map_err(|e| e.to_string())??;
     let result = super::nexus_account::metadata(&format!("games/{domain}/mods/md5_search/{hash}.json")).await?;
@@ -408,7 +477,7 @@ async fn identify_local_archive(domain: &str, archive: &str) -> Result<Option<Ne
     Ok(Some(NexusSource { domain, mod_id, file_id, name, version, requirements }))
 }
 
-fn archive_md5(path: &Path) -> Result<String, String> {
+pub(super) fn archive_md5(path: &Path) -> Result<String, String> {
     use md5::{Digest, Md5};
     use std::io::Read;
     let mut file = fs::File::open(path).map_err(|e| e.to_string())?;
@@ -423,6 +492,60 @@ fn archive_md5(path: &Path) -> Result<String, String> {
         hash.update(&buffer[..size]);
     }
     Ok(format!("{:x}", hash.finalize()))
+}
+
+/// Mod IDs suggested by a Nexus download name: `<title>-<mod_id>-<version...>-<timestamp>.ext`.
+/// A version in the title (`Mod v1-2-0-17561-1-2-0`) makes later numbers the
+/// likelier ID. These are only candidates: `filename_match` must confirm them.
+fn filename_mod_ids(file_name: &str) -> Vec<u64> {
+    let lower = file_name.to_ascii_lowercase();
+    let stem = [".tar.gz", ".zip", ".7z", ".rar"].iter().find_map(|ext| lower.ends_with(ext).then(|| &file_name[..file_name.len() - ext.len()])).unwrap_or(file_name);
+    let segments: Vec<&str> = stem.split('-').collect();
+    let digits = segments.iter().rev().take_while(|s| !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit())).count();
+    if digits == 0 || digits == segments.len() { return Vec::new(); }
+    let title = segments[..segments.len() - digits].join("-");
+    let parts = &segments[segments.len() - digits..];
+    let version_in_title = {
+        let t = title.trim_end();
+        let digits_end = t.trim_end_matches(|c: char| c.is_ascii_digit());
+        digits_end.len() < t.len() && (digits_end.ends_with(" v") || digits_end.ends_with("_v") || digits_end.eq_ignore_ascii_case("v") || digits_end.ends_with(" V"))
+    };
+    let later: Vec<usize> = (1..parts.len().saturating_sub(1)).filter(|i| parts[*i].len() >= 3).rev().take(4).collect();
+    if version_in_title && later.is_empty() { return Vec::new(); }
+    let starts: Vec<usize> = if version_in_title { later.into_iter().chain([0]).collect() } else { [0].into_iter().chain(later).collect() };
+    let mut ids = Vec::new();
+    for index in starts {
+        if let Ok(id) = parts[index].parse::<u64>() {
+            if id > 0 && parts[index].len() <= 9 && !ids.contains(&id) { ids.push(id); }
+        }
+    }
+    ids
+}
+
+/// The single file of a mod whose download name equals the archive name (and
+/// size, when the API reports it). Ambiguous or missing matches are refused.
+fn filename_match(files: &serde_json::Value, file_name: &str, size: Option<u64>) -> Option<(u64, String)> {
+    let matches: Vec<_> = files["files"].as_array()?.iter()
+        .filter(|f| f["file_name"].as_str().is_some_and(|n| n.eq_ignore_ascii_case(file_name)))
+        .filter(|f| match (f["size_in_bytes"].as_u64(), size) { (Some(expected), Some(actual)) => expected == actual, _ => true })
+        .collect();
+    let [file] = matches.as_slice() else { return None };
+    let file_id = file["file_id"].as_u64().filter(|id| *id > 0)?;
+    Some((file_id, file["version"].as_str().unwrap_or_default().to_string()))
+}
+
+fn mod_title(info: &serde_json::Value, domain: &str, mod_id: u64) -> Option<String> {
+    if info["mod_id"].as_u64() != Some(mod_id) || info["domain_name"].as_str().is_some_and(|d| d != domain) || info["available"].as_bool() == Some(false) { return None; }
+    info["name"].as_str().map(str::trim).filter(|n| !n.is_empty()).map(str::to_string)
+}
+
+/// Whether an MD5 search lists the exact `(mod_id, file_id)` of this game.
+pub(super) fn md5_lists_file(value: &serde_json::Value, domain: &str, mod_id: u64, file_id: u64) -> bool {
+    value.as_array().is_some_and(|results| results.iter().any(|result| {
+        result["mod"]["domain_name"].as_str() == Some(domain)
+            && result["mod"]["mod_id"].as_u64() == Some(mod_id)
+            && result["file_details"]["file_id"].as_u64() == Some(file_id)
+    }))
 }
 
 // A hash can refer to more than one Nexus upload. Never pick an arbitrary ID.
@@ -510,6 +633,41 @@ mod identity_tests {
         assert_eq!(archive_md5(&first).unwrap(), "900150983cd24fb0d6963f7d28e17f72");
         assert_eq!(archive_md5(&first).unwrap(), archive_md5(&renamed).unwrap());
         fs::remove_file(first).unwrap(); fs::remove_file(renamed).unwrap();
+    }
+    #[test]
+    fn filename_convention_suggests_mod_ids_only_as_candidates() {
+        assert_eq!(filename_mod_ids("A StoryWealth - Caves Of The Commonwealth-60927-1-1-1-1758182764.7z"), vec![60927]);
+        assert_eq!(filename_mod_ids("UIExtensions v1-2-0-17561-1-2-0.zip"), vec![17561, 2]);
+        // Um timestamp isolado (sufixo de versão não numérico) não vira ID.
+        assert!(filename_mod_ids("SkyUI_5_2_SE-12604-5-2SE-1700000000.zip").is_empty());
+        assert!(filename_mod_ids("readme.zip").is_empty());
+        assert!(filename_mod_ids("12345-1-0.zip").is_empty(), "sem título");
+        assert_eq!(filename_mod_ids("Better Menu-577-1-0-3-1712345678.ZIP"), vec![577]);
+    }
+    #[test]
+    fn md5_confirmation_requires_the_exact_file_of_the_game() {
+        let result = serde_json::json!([lookup(577, 10, "palworld"), lookup(600, 11, "palworld")]);
+        assert!(md5_lists_file(&result, "palworld", 577, 10));
+        assert!(!md5_lists_file(&result, "palworld", 577, 11));
+        assert!(!md5_lists_file(&result, "skyrim", 577, 10));
+        assert!(!md5_lists_file(&serde_json::json!({"error": "not found"}), "palworld", 577, 10));
+    }
+    #[test]
+    fn filename_match_requires_one_exact_name_and_size() {
+        let files = serde_json::json!({ "files": [
+            { "file_id": 10, "file_name": "Mod-577-1-0-1700000000.zip", "version": "1.0", "size_in_bytes": 1234 },
+            { "file_id": 11, "file_name": "Mod-577-1-1-1700000001.zip", "version": "1.1", "size_in_bytes": 999 },
+        ]});
+        assert_eq!(filename_match(&files, "mod-577-1-0-1700000000.zip", Some(1234)), Some((10, "1.0".into())));
+        assert_eq!(filename_match(&files, "Mod-577-1-0-1700000000.zip", Some(1)), None, "tamanho diferente");
+        assert_eq!(filename_match(&files, "Mod-577-1-0-1700000000 (1).zip", Some(1234)), None, "nome diferente");
+        let duplicated = serde_json::json!({ "files": [
+            { "file_id": 10, "file_name": "Mod.zip" }, { "file_id": 12, "file_name": "Mod.zip" } ]});
+        assert_eq!(filename_match(&duplicated, "Mod.zip", None), None, "ambíguo");
+        assert_eq!(mod_title(&serde_json::json!({"mod_id":577,"domain_name":"palworld","name":"Better Menu","available":true}), "palworld", 577).as_deref(), Some("Better Menu"));
+        assert!(mod_title(&serde_json::json!({"mod_id":578,"domain_name":"palworld","name":"Other"}), "palworld", 577).is_none());
+        assert!(mod_title(&serde_json::json!({"mod_id":577,"domain_name":"skyrim","name":"Other"}), "palworld", 577).is_none());
+        assert!(mod_title(&serde_json::json!({"mod_id":577,"domain_name":"palworld","name":"Hidden","available":false}), "palworld", 577).is_none());
     }
     fn lookup(mod_id: u64, file_id: u64, domain: &str) -> serde_json::Value {
         serde_json::json!({"mod":{"mod_id":mod_id,"domain_name":domain,"name":"TweakXL","version":"newest"},"file_details":{"file_id":file_id,"version":"1.11.4"}})
@@ -616,6 +774,8 @@ async fn import_archive_inner(
             nexus_source,
             fomod_selection: None,
             fomod_files: None,
+            installed_files: None,
+            manual_root: None,
         });
         if let Err(error) = save(&data) {
             let _ = fs::remove_file(&destination);
@@ -672,11 +832,12 @@ fn change_mod_inner(
         if plan.fomod.is_some() && game.mods[index].fomod_selection.is_none() {return Err("Confirme as opções FOMOD na janela de instalação antes de continuar.".into());}
         if !plan.issues.is_empty() { return Err(plan.issues.join("\n")); }
         if !plan.missing.is_empty() { return Err("Instale as dependências indicadas antes deste mod.".into()); }
+        game.mods[index].installed_files = Some(plan.files.clone());
         game.mods[index].fomod_files = plan.fomod.is_some().then_some(plan.files);
         game.mods[index].fomod_selection = Some(plan.selection);
     }
     let old_profile = game.profile.clone();
-    let rebuild = game.mods[index].installed || operation != "remove";
+    let rebuild = game.mods[index].installed || !matches!(operation, "remove" | "move_up" | "move_down");
     match operation {
         "remove" => {
             game.mods.remove(index);
@@ -690,6 +851,12 @@ fn change_mod_inner(
                 return Err("Instale o mod antes de ativá-lo.".into());
             }
             game.mods[index].enabled = enabled;
+        }
+        // Lower in the list = higher priority when two mods supply the same file.
+        "move_up" | "move_down" => {
+            let other = if operation == "move_up" { index.checked_sub(1) } else { Some(index + 1).filter(|i| *i < game.mods.len()) };
+            let Some(other) = other else { return Err("O mod já está no limite da lista.".into()); };
+            game.mods.swap(index, other);
         }
         _ => return Err("Operação inválida.".into()),
     }
@@ -755,6 +922,22 @@ pub async fn set_nexus_mod_enabled(
         .await
         .map_err(|e| e.to_string())?
 }
+/// Moves a mod one position in the priority order and redeploys when needed.
+#[tauri::command]
+pub async fn move_nexus_mod(game_id: String, mod_id: String, up: bool) -> Result<Workspace, String> {
+    tauri::async_runtime::spawn_blocking(move || change_mod(game_id, mod_id, if up { "move_up" } else { "move_down" }, false, None))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+/// Files that several enabled mods supply, with the mod deployed for each.
+#[tauri::command]
+pub async fn nexus_mod_overrides(game_id: String) -> Result<Vec<super::nexus_deployment::Override>, String> {
+    tauri::async_runtime::spawn_blocking(move || super::nexus_deployment::overrides(&diagnostic_game(&game_id)?))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
 #[tauri::command]
 pub async fn remove_nexus_archive(game_id: String, mod_id: String) -> Result<Workspace, String> {
     tauri::async_runtime::spawn_blocking(move || change_mod(game_id, mod_id, "remove", false, None))
@@ -762,7 +945,11 @@ pub async fn remove_nexus_archive(game_id: String, mod_id: String) -> Result<Wor
         .map_err(|e| e.to_string())?
 }
 #[tauri::command]
-pub fn launch_nexus_game(game_id: String) -> Result<Workspace, String> {
+pub async fn launch_nexus_game(game_id: String) -> Result<Workspace, String> {
+    tauri::async_runtime::spawn_blocking(move || launch_game_blocking(game_id))
+        .await.map_err(|error| error.to_string())?
+}
+fn launch_game_blocking(game_id: String) -> Result<Workspace, String> {
     let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
     let data = load()?;
     let game = data
@@ -780,116 +967,215 @@ pub fn launch_nexus_game(game_id: String) -> Result<Workspace, String> {
     Ok(data)
 }
 #[tauri::command]
-pub fn stop_nexus_game(game_id: String) -> Result<Workspace, String> {
-    let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
-    let data = load()?;
-    let game = data
-        .games
-        .iter()
-        .find(|g| g.id == game_id)
-        .ok_or("Jogo não encontrado.")?;
-    super::nexus_profile::stop(game)?;
-    Ok(data)
+pub async fn stop_nexus_game(game_id: String) -> Result<Workspace, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
+        let data = load()?;
+        let game = data
+            .games
+            .iter()
+            .find(|g| g.id == game_id)
+            .ok_or("Jogo não encontrado.")?;
+        super::nexus_profile::stop(game)?;
+        Ok(data)
+
+    }).await.map_err(|error| error.to_string())?
 }
-#[tauri::command]
-pub fn read_nexus_mod_logs(game_id: String) -> Result<String, String> {
-    let _lock = STORAGE.lock().map_err(|e|e.to_string())?;
-    let data = load()?;
-    let game = data.games.iter().find(|game|game.id == game_id).ok_or("Jogo não encontrado.")?;
-    super::nexus_loader_logs::read(game)
+// library.json is replaced atomically by save(). Log monitors can read its last
+// committed snapshot without waiting for deployment or rescanning every game.
+/// Clears the launch logs of every Nexus game that is not running, so each
+/// launcher start begins with empty logs. Runs off the window thread.
+pub fn reset_session_logs_at_startup() {
+    let games = match workspace() { Ok(data) => data.games, Err(_) => return };
+    for game in games {
+        if super::nexus_profile::idle(&game).is_err() { continue; }
+        if let Err(error) = super::nexus_profile::clear_session_logs(&game) {
+            super::nexus_reports::event(&game, "WARN", "limpar logs ao abrir", &error);
+        }
+    }
+}
+fn log_game(game_id: &str) -> Result<NexusGame, String> {
+    uuid::Uuid::parse_str(game_id).map_err(|_| "Identificador de jogo inválido.")?;
+    let bytes = fs::read(root()?.join("library.json")).map_err(|e| e.to_string())?;
+    let mut game = serde_json::from_slice::<Workspace>(&bytes).map_err(|e| e.to_string())?
+        .games.into_iter().find(|game| game.id == game_id).ok_or("Jogo não encontrado.")?;
+    game.adapter = game.nexus_domain.clone();
+    Ok(game)
 }
 
 #[tauri::command]
-pub fn read_nexus_logs(game_id: String, previous: bool) -> Result<String, String> {
-    let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
-    let data = load()?;
-    let game = data
-        .games
-        .iter()
-        .find(|g| g.id == game_id)
-        .ok_or("Jogo não encontrado.")?;
-    super::nexus_profile::logs(game, previous)
+pub async fn read_nexus_mod_logs(game_id: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let game = log_game(&game_id)?;
+        super::nexus_loader_logs::read(&game).map(|mut text| { text.push_str(&super::nexus_crash_logs::read(&game)); text })
+    }).await.map_err(|e|e.to_string())?
+}
+
+#[tauri::command]
+pub async fn read_nexus_logs(game_id: String, previous: bool) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let game = log_game(&game_id)?;
+        super::nexus_profile::logs(&game, previous)
+    }).await.map_err(|e|e.to_string())?
 }
 
 /// Update only this Nexus library entry; the main launcher keeps its own settings.
 #[tauri::command]
-pub fn configure_nexus_settings(
+pub async fn configure_nexus_settings(
     game_id: String,
     directory: String,
     compat_data: String,
     proton: String,
 ) -> Result<Workspace, String> {
-    let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
-    let mut data = load()?;
-    let game = data.games.iter_mut().find(|g| g.id == game_id).ok_or("Jogo não encontrado.")?;
-    super::nexus_deployment::idle(game)?;
-    let requested = fs::canonicalize(directory.trim()).map_err(|e| format!("Pasta do jogo inválida: {e}"))?;
-    if !requested.is_dir() { return Err("Selecione uma pasta do jogo válida.".into()); }
-    let current = game.game["directory"].as_str().and_then(|p| fs::canonicalize(p).ok());
-    let changed = current.as_ref() != Some(&requested);
-    if changed && (game.profile.is_some() || game.mods.iter().any(|m| m.installed)) {
-        return Err("Remova os mods instalados antes de alterar a pasta do jogo.".into());
-    }
-    let destination = if changed && !game.adapter.is_empty() {
-        let (root, definition) = super::nexus_discovery::resolve(&requested)?;
-        if Some(game.adapter.as_str()) != definition.as_ref().map(|value| value.domain.as_str()) {
-            return Err("A pasta selecionada pertence a outro jogo.".into());
+    tauri::async_runtime::spawn_blocking(move || {
+        let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
+        let mut data = load()?;
+        let game = data.games.iter_mut().find(|g| g.id == game_id).ok_or("Jogo não encontrado.")?;
+        super::nexus_deployment::idle(game)?;
+        let requested = fs::canonicalize(directory.trim()).map_err(|e| format!("Pasta do jogo inválida: {e}"))?;
+        if !requested.is_dir() { return Err("Selecione uma pasta do jogo válida.".into()); }
+        let current = game.game["directory"].as_str().and_then(|p| fs::canonicalize(p).ok());
+        let changed = current.as_ref() != Some(&requested);
+        if changed && (game.profile.is_some() || game.mods.iter().any(|m| m.installed)) {
+            return Err("Remova os mods instalados antes de alterar a pasta do jogo.".into());
         }
-        root
-    } else { requested };
-    if game.platform == "proton" {
-        let (prefix, runner) = super::nexus_deployment::validate_runner(&compat_data, &proton)?;
-        game.compat_data = prefix.to_string_lossy().into();
-        game.proton = runner.to_string_lossy().into();
-        game.game["prefix"] = game.compat_data.clone().into();
-    }
-    game.game["directory"] = destination.to_string_lossy().to_string().into();
-    save(&data)?;
-    Ok(data)
+        let destination = if changed && !game.adapter.is_empty() {
+            let (root, definition) = super::nexus_discovery::resolve(&requested)?;
+            if Some(game.adapter.as_str()) != definition.as_ref().map(|value| value.domain.as_str()) {
+                return Err("A pasta selecionada pertence a outro jogo.".into());
+            }
+            root
+        } else { requested };
+        if game.platform == "proton" {
+            let (prefix, runner) = super::nexus_deployment::validate_runner(&compat_data, &proton)?;
+            game.compat_data = prefix.to_string_lossy().into();
+            game.proton = runner.to_string_lossy().into();
+            game.game["prefix"] = game.compat_data.clone().into();
+        }
+        game.game["directory"] = destination.to_string_lossy().to_string().into();
+        save(&data)?;
+        Ok(data)
+
+    }).await.map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
-pub fn configure_nexus_proton(
+pub async fn configure_nexus_proton(
     game_id: String,
     compat_data: String,
     proton: String,
 ) -> Result<Workspace, String> {
-    let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
-    let mut data = load()?;
-    let game = data
-        .games
-        .iter_mut()
-        .find(|g| g.id == game_id)
-        .ok_or("Jogo não encontrado.")?;
-    if !super::nexus_deployment::supports(game) {
-        return Err("Este jogo não possui um módulo de implantação de arquivos.".into());
-    }
-    super::nexus_deployment::idle(game)?;
-    let (prefix, runner) = super::nexus_deployment::validate_runner(&compat_data, &proton)?;
-    game.compat_data = prefix.to_string_lossy().into();
-    game.proton = runner.to_string_lossy().into();
-    save(&data)?;
-    Ok(data)
+    tauri::async_runtime::spawn_blocking(move || {
+        let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
+        let mut data = load()?;
+        let game = data
+            .games
+            .iter_mut()
+            .find(|g| g.id == game_id)
+            .ok_or("Jogo não encontrado.")?;
+        if !super::nexus_deployment::supports(game) {
+            return Err("Este jogo não possui um módulo de implantação de arquivos.".into());
+        }
+        super::nexus_deployment::idle(game)?;
+        let (prefix, runner) = super::nexus_deployment::validate_runner(&compat_data, &proton)?;
+        game.compat_data = prefix.to_string_lossy().into();
+        game.proton = runner.to_string_lossy().into();
+        save(&data)?;
+        Ok(data)
+
+    }).await.map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
-pub fn configure_nexus_domain(game_id: String, game_domain: String) -> Result<Workspace, String> {
-    super::nexus_catalog::domain(&game_domain)?;
-    let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
+pub async fn configure_nexus_domain(game_id: String, game_domain: String) -> Result<Workspace, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        super::nexus_catalog::domain(&game_domain)?;
+        let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
+        let mut data = load()?;
+        let game = data
+            .games
+            .iter_mut()
+            .find(|g| g.id == game_id)
+            .ok_or("Jogo não encontrado.")?;
+        if !game.adapter.is_empty() && game_domain != game.adapter {
+            return Err(
+                "Este jogo já foi identificado. Use a página Nexus correspondente ao jogo.".into(),
+            );
+        }
+        game.nexus_domain = game_domain;
+        save(&data)?;
+        Ok(data)
+
+    }).await.map_err(|error| error.to_string())?
+}
+
+#[derive(Serialize)]
+pub struct PackageLayout {
+    folders: Vec<String>,
+    destinations: Vec<String>,
+    current: Option<ManualRoot>,
+}
+
+/// Folders inside the archive and destinations allowed by the game's module.
+#[tauri::command]
+pub async fn nexus_package_layout(game_id: String, mod_id: String) -> Result<PackageLayout, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let _lock = STORAGE.lock().map_err(|error| error.to_string())?;
+        let data = load()?;
+        let game = data.games.iter().find(|game| game.id == game_id).ok_or("Jogo não encontrado.")?;
+        let item = game.mods.iter().find(|item| item.id == mod_id).ok_or("Mod não encontrado.")?;
+        let module = super::nexus_deployment::definition(game).ok_or("Módulo do jogo não identificado.")?;
+        let mut archive = super::nexus_archive::open(game, item)?;
+        let entries = (0..archive.len()).map(|i| archive.by_index(i).map(|e| e.name().replace('\\', "/")).map_err(|e| e.to_string())).collect::<Result<Vec<_>, _>>()?;
+        Ok(PackageLayout { folders: super::nexus_deployment::package_folders(&entries), destinations: module.destinations.clone(), current: item.manual_root.clone() })
+    }).await.map_err(|error| error.to_string())?
+}
+
+/// Stores a manual root without validating it (the caller re-plans).
+pub(super) fn set_manual_root_unchecked(game_id: &str, mod_id: &str, root: Option<ManualRoot>) -> Result<(), String> {
+    let _lock = STORAGE.lock().map_err(|error| error.to_string())?;
     let mut data = load()?;
-    let game = data
-        .games
-        .iter_mut()
-        .find(|g| g.id == game_id)
-        .ok_or("Jogo não encontrado.")?;
-    if !game.adapter.is_empty() && game_domain != game.adapter {
-        return Err(
-            "Este jogo já foi identificado. Use a página Nexus correspondente ao jogo.".into(),
-        );
-    }
-    game.nexus_domain = game_domain;
-    save(&data)?;
-    Ok(data)
+    let game = data.games.iter_mut().find(|game| game.id == game_id).ok_or("Jogo não encontrado.")?;
+    let item = game.mods.iter_mut().find(|item| item.id == mod_id).ok_or("Mod não encontrado.")?;
+    if item.installed { return Err("Mod já instalado.".into()); }
+    item.manual_root = root;
+    save(&data)
+}
+
+/// Keeps the mods of a collection in the curator's order (other mods keep their places).
+pub(super) fn order_collection(game_id: &str, order: &[(u64, u64)]) -> Result<(), String> {
+    let _lock = STORAGE.lock().map_err(|error| error.to_string())?;
+    let mut data = load()?;
+    let game = data.games.iter_mut().find(|game| game.id == game_id).ok_or("Jogo não encontrado.")?;
+    let rank = |item: &LocalMod| item.nexus_source.as_ref().filter(|s| s.domain == game.nexus_domain)
+        .and_then(|s| order.iter().position(|key| *key == (s.mod_id, s.file_id)));
+    let slots: Vec<usize> = (0..game.mods.len()).filter(|i| rank(&game.mods[*i]).is_some()).collect();
+    let mut members: Vec<LocalMod> = slots.iter().map(|i| game.mods[*i].clone()).collect();
+    members.sort_by_key(|item| rank(item));
+    for (slot, item) in slots.into_iter().zip(members) { game.mods[slot] = item; }
+    save(&data)
+}
+
+/// Saves (or clears) the manual root after checking it produces a valid plan.
+#[tauri::command]
+pub async fn set_nexus_manual_root(game_id: String, mod_id: String, root: Option<ManualRoot>) -> Result<Workspace, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let _lock = STORAGE.lock().map_err(|error| error.to_string())?;
+        let mut data = load()?;
+        let game = data.games.iter_mut().find(|game| game.id == game_id).ok_or("Jogo não encontrado.")?;
+        let item = game.mods.iter_mut().find(|item| item.id == mod_id).ok_or("Mod não encontrado.")?;
+        if item.installed { return Err("Remova a instalação do mod antes de alterar a pasta raiz.".into()); }
+        item.manual_root = root;
+        if game.mods.iter().find(|item| item.id == mod_id).is_some_and(|item| item.manual_root.is_some()) {
+            if let Err(error) = super::nexus_deployment::plan(game, &mod_id) {
+                super::nexus_reports::event(game, "WARN", &format!("pasta raiz manual mod={mod_id}"), &error);
+                return Err(error);
+            }
+        }
+        super::nexus_reports::event(game, "INFO", &format!("pasta raiz manual mod={mod_id}"), "definida");
+        save(&data)?;
+        Ok(data)
+    }).await.map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
@@ -910,17 +1196,24 @@ pub async fn plan_nexus_installation(game_id: String, mod_id: String, selection:
 }
 
 #[tauri::command]
-pub fn open_nexus_game_tool(game_id:String,name:String)->Result<(),String>{
-    let _lock=STORAGE.lock().map_err(|e|e.to_string())?;
-    let data=load()?;
-    let game=data.games.iter().find(|game|game.id==game_id).ok_or("Jogo não encontrado.")?;
-    super::nexus_deployment::launch_tool(game,&name)
+pub async fn open_nexus_game_tool(game_id:String,name:String)->Result<(),String>{
+    tauri::async_runtime::spawn_blocking(move || {
+        let _lock=STORAGE.lock().map_err(|e|e.to_string())?;
+        let data=load()?;
+        let game=data.games.iter().find(|game|game.id==game_id).ok_or("Jogo não encontrado.")?;
+        super::nexus_deployment::launch_tool(game,&name)
+
+    }).await.map_err(|error| error.to_string())?
 }
 
 #[derive(Serialize)]
 pub struct DeployOption { method: super::nexus_deploy_methods::Method, available: bool, reason: String }
 #[tauri::command]
-pub fn nexus_deploy_options(game_id: String) -> Result<Vec<DeployOption>, String> {
+pub async fn nexus_deploy_options(game_id: String) -> Result<Vec<DeployOption>, String> {
+    tauri::async_runtime::spawn_blocking(move || deploy_options(&game_id)).await.map_err(|e|e.to_string())?
+}
+// Filesystem discovery and STORAGE contention must never block the window event loop.
+fn deploy_options(game_id: &str) -> Result<Vec<DeployOption>, String> {
     let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
     let data = load()?;
     let game = data.games.iter().find(|g| g.id == game_id).ok_or("Jogo não encontrado.")?;
@@ -943,7 +1236,7 @@ pub fn nexus_deploy_options(game_id: String) -> Result<Vec<DeployOption>, String
 #[tauri::command]
 pub async fn configure_nexus_deploy(game_id: String, method: super::nexus_deploy_methods::Method) -> Result<Workspace,String> {
     tauri::async_runtime::spawn_blocking(move || {
-        let option = nexus_deploy_options(game_id.clone())?.into_iter().find(|option|option.method == method).ok_or("Método inválido.")?;
+        let option = deploy_options(&game_id)?.into_iter().find(|option|option.method == method).ok_or("Método inválido.")?;
         if !option.available {return Err(option.reason);}
         let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
         let mut data = load()?;
@@ -965,4 +1258,66 @@ pub async fn configure_nexus_deploy(game_id: String, method: super::nexus_deploy
         if let Some(old) = old {super::nexus_profile::discard(&updated,&old);}
         Ok(data)
     }).await.map_err(|e|e.to_string())?
+}
+
+pub(super) fn save_launch_options(game_id: &str, options: Option<String>) -> Result<Workspace, String> {
+    let _lock = STORAGE.lock().map_err(|error| error.to_string())?;
+    let mut data = load()?;
+    let game = data.games.iter_mut().find(|game| game.id == game_id).ok_or("Jogo não encontrado.")?;
+    super::nexus_profile::idle(game)?;
+    game.launch_options = options;
+    save(&data)?;
+    Ok(data)
+}
+
+#[cfg(test)]
+mod prune_tests {
+    use super::*;
+    fn game(launcher: &str, directory: &Path, installed: bool) -> NexusGame {
+        serde_json::from_value(serde_json::json!({
+            "id": uuid::Uuid::new_v4().to_string(), "platform": "proton",
+            "game": {"name": launcher, "launcher": launcher, "directory": directory},
+            "mods": if installed { serde_json::json!([{"id": "m", "name": "m", "archive": "/x.zip", "size": 1, "installed": true}]) } else { serde_json::json!([]) },
+        })).unwrap()
+    }
+    #[test]
+    fn rescan_drops_unsupported_automatic_games_but_keeps_manual_and_installed_ones() {
+        let base = std::env::temp_dir().join(format!("peligames-prune-{}", uuid::Uuid::new_v4()));
+        let (unsupported, supported, mele) = (base.join("Other"), base.join("Valheim"), base.join("MELE"));
+        fs::create_dir_all(&unsupported).unwrap();
+        fs::create_dir_all(supported.join("valheim_Data")).unwrap();
+        fs::write(supported.join("valheim.x86_64"), b"\x7fELFfixture").unwrap();
+        fs::write(supported.join("valheim_Data/globalgamemanagers"), b"fixture").unwrap();
+        let mut games = vec![
+            game("Steam", &unsupported, false), game("Heroic", &unsupported, false), game("Lutris", &unsupported, false),
+            game("Faugus", &unsupported, false), game("Bottles", &unsupported, false), game("PeliGames", &unsupported, false),
+            game("Steam", &base.join("gone"), false),
+            game("Manual", &unsupported, false), game("Steam", &supported, false), game("Heroic", &mele, true),
+        ];
+        let kept = prune_unsupported(&mut games);
+        assert_eq!(kept.len(), 1);
+        let left: Vec<&str> = games.iter().map(|g| g.game["launcher"].as_str().unwrap()).collect();
+        assert_eq!(left, ["Manual", "Steam", "Heroic"]);
+        assert_eq!(games[1].game["directory"].as_str(), supported.to_str());
+        fs::remove_dir_all(base).unwrap();
+    }
+}
+
+pub(super) fn save_advanced(game_id: &str, settings: crate::core::advanced_settings::AdvancedSettings) -> Result<Workspace,String> {
+    let _lock = STORAGE.lock().map_err(|e|e.to_string())?;
+    let mut data = load()?;
+    let game = data.games.iter_mut().find(|g|g.id==game_id).ok_or("Jogo não encontrado.")?;
+    super::nexus_profile::idle(game)?;
+    // DLL priorities now belong to the dedicated editor. Clearing them must also
+    // remove overrides saved by the previous launch-options editor.
+    if settings.options.get("dll_overrides") != Some(&true) {
+        if let Some(value) = game.launch_options.as_deref() {
+            if let Some(cleaned) = super::nexus_launch_options::without_saved_dll_overrides(value)? {
+                game.launch_options = if cleaned.is_empty() { None } else { Some(cleaned) };
+            }
+        }
+    }
+    game.advanced = settings;
+    save(&data)?;
+    Ok(data)
 }

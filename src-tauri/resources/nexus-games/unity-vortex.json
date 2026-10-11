@@ -1,0 +1,1065 @@
+[
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "aska",
+    "name": "ASKA",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "Aska_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "Aska.exe",
+    "required": [
+      "Aska.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-aska/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em Aska_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "1898300",
+    "vortex_mod_types": {
+      "aska-customloaderplugin": "XXX",
+      "aska-assets": "Aska_Data",
+      "aska-bepinexmod": "BepInEx",
+      "aska-bepinex-plugins": "BepInEx/plugins",
+      "aska-bepinex-patchers": "BepInEx/patchers",
+      "aska-bepinex-config": "BepInEx/config",
+      "aska-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "ballxpit",
+    "name": "BALL x PIT",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "Balls_Data",
+      "loaders": [
+        "bepinex",
+        "melonloader"
+      ]
+    },
+    "executable": "Balls.exe",
+    "required": [
+      "Balls.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-ballxpit/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx/MelonLoader): loader, plugins e mods conforme a DLL referenciada. Substituições em Balls_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "2062430",
+    "vortex_mod_types": {
+      "ballxpit-customloaderplugin": "XXX",
+      "ballxpit-assets": "Balls_Data",
+      "ballxpit-bepinexmod": "BepInEx",
+      "ballxpit-bepinex-plugins": "BepInEx/plugins",
+      "ballxpit-bepinex-patchers": "BepInEx/patchers",
+      "ballxpit-bepinex-config": "BepInEx/config",
+      "ballxpit-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "blueprince",
+    "name": "Blue Prince",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "BLUE PRINCE_Data",
+      "loaders": [
+        "bepinex",
+        "melonloader"
+      ]
+    },
+    "executable": "BLUE PRINCE.exe",
+    "required": [
+      "BLUE PRINCE.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-blueprince/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx/MelonLoader): loader, plugins e mods conforme a DLL referenciada. Substituições em BLUE PRINCE_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "1569580",
+    "vortex_mod_types": {
+      "blueprince-customloaderplugin": "XXX",
+      "blueprince-assets": "BLUE PRINCE_Data",
+      "blueprince-bepinexmod": "BepInEx",
+      "blueprince-bepinex-plugins": "BepInEx/plugins",
+      "blueprince-bepinex-patchers": "BepInEx/patchers",
+      "blueprince-bepinex-config": "BepInEx/config",
+      "blueprince-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "burglingnomes",
+    "name": "Burglin' Gnomes",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "Gnomium_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "Gnomium.exe",
+    "required": [
+      "Gnomium.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-burglingnomes/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em Gnomium_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "3844970",
+    "vortex_mod_types": {
+      "burglingnomes-customloaderplugin": "XXX",
+      "burglingnomes-assets": "Gnomium_Data",
+      "burglingnomes-bepinexmod": "BepInEx",
+      "burglingnomes-bepinex-plugins": "BepInEx/plugins",
+      "burglingnomes-bepinex-patchers": "BepInEx/patchers",
+      "burglingnomes-bepinex-config": "BepInEx/config",
+      "burglingnomes-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "cairn",
+    "name": "Cairn",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "Cairn_Data",
+      "loaders": [
+        "bepinex",
+        "melonloader"
+      ]
+    },
+    "executable": "Cairn.exe",
+    "required": [
+      "Cairn.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-cairn/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx/MelonLoader): loader, plugins e mods conforme a DLL referenciada. Substituições em Cairn_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "1588550",
+    "vortex_mod_types": {
+      "cairn-customloaderplugin": "XXX",
+      "cairn-assets": "Cairn_Data",
+      "cairn-bepinexmod": "BepInEx",
+      "cairn-bepinex-plugins": "BepInEx/plugins",
+      "cairn-bepinex-patchers": "BepInEx/patchers",
+      "cairn-bepinex-config": "BepInEx/config",
+      "cairn-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "cloverpit",
+    "name": "CloverPit",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "CloverPit_Data",
+      "loaders": [
+        "bepinex",
+        "melonloader"
+      ]
+    },
+    "executable": "CloverPit.exe",
+    "required": [
+      "CloverPit.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-cloverpit/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx/MelonLoader): loader, plugins e mods conforme a DLL referenciada. Substituições em CloverPit_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "3314790",
+    "vortex_mod_types": {
+      "cloverpit-customloaderplugin": "XXX",
+      "cloverpit-assets": "CloverPit_Data",
+      "cloverpit-bepinexmod": "BepInEx",
+      "cloverpit-bepinex-plugins": "BepInEx/plugins",
+      "cloverpit-bepinex-patchers": "BepInEx/patchers",
+      "cloverpit-bepinex-config": "BepInEx/config",
+      "cloverpit-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "diplomacyisnotanoption",
+    "name": "Diplomacy is Not an Option",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "Diplomacy is Not an Option_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "Diplomacy is Not an Option.exe",
+    "required": [
+      "Diplomacy is Not an Option.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-diplomacyisnotanoption/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em Diplomacy is Not an Option_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "1272320",
+    "vortex_mod_types": {
+      "diplomacyisnotanoption-customloaderplugin": "XXX",
+      "diplomacyisnotanoption-assets": "Diplomacy is Not an Option_Data",
+      "diplomacyisnotanoption-bepinexmod": "BepInEx",
+      "diplomacyisnotanoption-bepinex-plugins": "BepInEx/plugins",
+      "diplomacyisnotanoption-bepinex-patchers": "BepInEx/patchers",
+      "diplomacyisnotanoption-bepinex-config": "BepInEx/config",
+      "diplomacyisnotanoption-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "discoelysium",
+    "name": "Disco Elysium",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "disco_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "disco.exe",
+    "required": [
+      "disco.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-discoelysium/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em disco_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "632470",
+    "vortex_mod_types": {
+      "discoelysium-customloaderplugin": "XXX",
+      "discoelysium-assets": "disco_Data",
+      "discoelysium-bepinexmod": "BepInEx",
+      "discoelysium-bepinex-plugins": "BepInEx/plugins",
+      "discoelysium-bepinex-patchers": "BepInEx/patchers",
+      "discoelysium-bepinex-config": "BepInEx/config",
+      "discoelysium-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "escapefromduckov",
+    "name": "Escape from Duckov",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "Duckov_Data",
+      "loaders": [
+        "bepinex",
+        "melonloader"
+      ]
+    },
+    "executable": "Duckov.exe",
+    "required": [
+      "Duckov.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-escapefromduckov/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx/MelonLoader): loader, plugins e mods conforme a DLL referenciada. Substituições em Duckov_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "3167020",
+    "vortex_mod_types": {
+      "escapefromduckov-customloaderplugin": "XXX",
+      "escapefromduckov-assets": "Duckov_Data",
+      "escapefromduckov-bepinexmod": "BepInEx",
+      "escapefromduckov-bepinex-plugins": "BepInEx/plugins",
+      "escapefromduckov-bepinex-patchers": "BepInEx/patchers",
+      "escapefromduckov-bepinex-config": "BepInEx/config",
+      "escapefromduckov-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "footballmanager26",
+    "name": "Football Manager 26",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "fm_Data",
+      "loaders": [
+        "bepinex",
+        "melonloader"
+      ]
+    },
+    "executable": "fm.exe",
+    "required": [
+      "fm.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-footballmanager26/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx/MelonLoader): loader, plugins e mods conforme a DLL referenciada. Substituições em fm_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "3551340",
+    "vortex_mod_types": {
+      "footballmanager26-customloaderplugin": "XXX",
+      "footballmanager26-assets": "fm_Data",
+      "footballmanager26-bepinexmod": "BepInEx",
+      "footballmanager26-bepinex-plugins": "BepInEx/plugins",
+      "footballmanager26-bepinex-patchers": "BepInEx/patchers",
+      "footballmanager26-bepinex-config": "BepInEx/config",
+      "footballmanager26-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "grimshire",
+    "name": "Grimshire",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "Grimshire_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "Grimshire.exe",
+    "required": [
+      "Grimshire.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-grimshire/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em Grimshire_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "2238470",
+    "vortex_mod_types": {
+      "grimshire-customloaderplugin": "XXX",
+      "grimshire-assets": "Grimshire_Data",
+      "grimshire-bepinexmod": "BepInEx",
+      "grimshire-bepinex-plugins": "BepInEx/plugins",
+      "grimshire-bepinex-patchers": "BepInEx/patchers",
+      "grimshire-bepinex-config": "BepInEx/config",
+      "grimshire-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "hollowknight",
+    "name": "Hollow Knight",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "hollow_knight_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "hollow_knight.exe",
+    "required": [
+      "hollow_knight.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-hollowknight/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em hollow_knight_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "367520",
+    "vortex_mod_types": {
+      "hollowknight-customloaderplugin": "XXX",
+      "hollowknight-assets": "hollow_knight_Data",
+      "hollowknight-bepinexmod": "BepInEx",
+      "hollowknight-bepinex-plugins": "BepInEx/plugins",
+      "hollowknight-bepinex-patchers": "BepInEx/patchers",
+      "hollowknight-bepinex-config": "BepInEx/config",
+      "hollowknight-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "hollowknightsilksong",
+    "name": "Hollow Knight: Silksong",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "Hollow Knight Silksong_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "Hollow Knight Silksong.exe",
+    "required": [
+      "Hollow Knight Silksong.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-hollowknightsilksong/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em Hollow Knight Silksong_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "1030300",
+    "vortex_mod_types": {
+      "hollowknightsilksong-customloaderplugin": "XXX",
+      "hollowknightsilksong-assets": "Hollow Knight Silksong_Data",
+      "hollowknightsilksong-skin": "Hollow Knight Silksong_Data/Mods/Customizer",
+      "hollowknightsilksong-bepinexmod": "BepInEx",
+      "hollowknightsilksong-bepinex-plugins": "BepInEx/plugins",
+      "hollowknightsilksong-bepinex-patchers": "BepInEx/patchers",
+      "hollowknightsilksong-bepinex-config": "BepInEx/config",
+      "hollowknightsilksong-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "howtofish",
+    "name": "How to Fish",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "How to Fish_Data",
+      "loaders": [
+        "bepinex",
+        "melonloader"
+      ]
+    },
+    "executable": "How to Fish.exe",
+    "required": [
+      "How to Fish.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-howtofish/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx/MelonLoader): loader, plugins e mods conforme a DLL referenciada. Substituições em How to Fish_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "4001890",
+    "vortex_mod_types": {
+      "howtofish-customloaderplugin": "XXX",
+      "howtofish-assets": "How to Fish_Data",
+      "howtofish-bepinexmod": "BepInEx",
+      "howtofish-bepinex-plugins": "BepInEx/plugins",
+      "howtofish-bepinex-patchers": "BepInEx/patchers",
+      "howtofish-bepinex-config": "BepInEx/config",
+      "howtofish-melonloader-mods": "Mods",
+      "howtofish-melonloader-plugins": "Plugins",
+      "howtofish-melonloader-config": "UserData",
+      "howtofish-melonloader-userlibs": "UserLibs",
+      "howtofish-bepcfgman": "BepInEx",
+      "howtofish-melonprefman": "Mods"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "megabonk",
+    "name": "Megabonk",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "Megabonk_Data",
+      "loaders": [
+        "bepinex",
+        "melonloader"
+      ]
+    },
+    "executable": "Megabonk.exe",
+    "required": [
+      "Megabonk.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-megabonk/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx/MelonLoader): loader, plugins e mods conforme a DLL referenciada. Substituições em Megabonk_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "3405340",
+    "vortex_mod_types": {
+      "megabonk-customloaderplugin": "XXX",
+      "megabonk-assets": "Megabonk_Data",
+      "megabonk-bepinexmod": "BepInEx",
+      "megabonk-bepinex-plugins": "BepInEx/plugins",
+      "megabonk-bepinex-patchers": "BepInEx/patchers",
+      "megabonk-bepinex-config": "BepInEx/config",
+      "megabonk-melonloader-mods": "Mods",
+      "megabonk-melonloader-plugins": "Plugins",
+      "megabonk-melonloader-config": "UserData",
+      "megabonk-melonloader-userlibs": "UserLibs",
+      "megabonk-bepcfgman": "BepInEx",
+      "megabonk-melonprefman": "Mods"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "mirthwood",
+    "name": "Mirthwood",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "Mirthwood_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "Mirthwood.exe",
+    "required": [
+      "Mirthwood.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-mirthwood/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em Mirthwood_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "2272900",
+    "vortex_mod_types": {
+      "mirthwood-customloaderplugin": "XXX",
+      "mirthwood-assets": "Mirthwood_Data",
+      "mirthwood-bepinexmod": "BepInEx",
+      "mirthwood-bepinex-plugins": "BepInEx/plugins",
+      "mirthwood-bepinex-patchers": "BepInEx/patchers",
+      "mirthwood-bepinex-config": "BepInEx/config",
+      "mirthwood-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "mousepiforhire",
+    "name": "MOUSE: P.I. For Hire",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "MOUSE_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "MOUSE.exe",
+    "required": [
+      "MOUSE.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-mousepiforhire/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em MOUSE_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "2416450",
+    "vortex_mod_types": {
+      "mousepiforhire-customloaderplugin": "XXX",
+      "mousepiforhire-assets": "MOUSE_Data",
+      "mousepiforhire-bepinexmod": "BepInEx",
+      "mousepiforhire-bepinex-plugins": "BepInEx/plugins",
+      "mousepiforhire-bepinex-patchers": "BepInEx/patchers",
+      "mousepiforhire-bepinex-config": "BepInEx/config",
+      "mousepiforhire-melonloader-mods": "Mods",
+      "mousepiforhire-melonloader-plugins": "Plugins",
+      "mousepiforhire-melonloader-config": "UserData",
+      "mousepiforhire-melonloader-userlibs": "UserLibs",
+      "mousepiforhire-bepcfgman": "BepInEx",
+      "mousepiforhire-melonprefman": "Mods"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "pcbuildingsimulator",
+    "name": "PC Building Simulator",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "PCBS_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "PCBS.exe",
+    "required": [
+      "PCBS.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-pcbuildingsimulator/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em PCBS_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "621060",
+    "vortex_mod_types": {
+      "pcbuildingsimulator-customloaderplugin": "XXX",
+      "pcbuildingsimulator-assets": "PCBS_Data",
+      "pcbuildingsimulator-bepinexmod": "BepInEx",
+      "pcbuildingsimulator-bepinex-plugins": "BepInEx/plugins",
+      "pcbuildingsimulator-bepinex-patchers": "BepInEx/patchers",
+      "pcbuildingsimulator-bepinex-config": "BepInEx/config",
+      "pcbuildingsimulator-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "pcbuildingsimulator2",
+    "name": "PC Building Simulator 2",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "PCBS2_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "PCBS2.exe",
+    "required": [
+      "PCBS2.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-pcbuildingsimulator2/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em PCBS2_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "vortex_mod_types": {
+      "pcbuildingsimulator2-customloaderplugin": "XXX",
+      "pcbuildingsimulator2-assets": "PCBS2_Data",
+      "pcbuildingsimulator2-bepinexmod": "BepInEx",
+      "pcbuildingsimulator2-bepinex-plugins": "BepInEx/plugins",
+      "pcbuildingsimulator2-bepinex-patchers": "BepInEx/patchers",
+      "pcbuildingsimulator2-bepinex-config": "BepInEx/config",
+      "pcbuildingsimulator2-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "peak",
+    "name": "PEAK",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "PEAK_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "PEAK.exe",
+    "required": [
+      "PEAK.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-peak/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em PEAK_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "3527290",
+    "vortex_mod_types": {
+      "peak-customloaderplugin": "XXX",
+      "peak-assets": "PEAK_Data",
+      "peak-bepinexmod": "BepInEx",
+      "peak-bepinex-plugins": "BepInEx/plugins",
+      "peak-bepinex-patchers": "BepInEx/patchers",
+      "peak-bepinex-config": "BepInEx/config",
+      "peak-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "prodeus",
+    "name": "Prodeus",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "Prodeus_Data",
+      "loaders": [
+        "melonloader"
+      ]
+    },
+    "executable": "Prodeus.exe",
+    "required": [
+      "Prodeus.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-prodeus/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (MelonLoader): loader, plugins e mods conforme a DLL referenciada. Substituições em Prodeus_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "964800",
+    "vortex_mod_types": {
+      "prodeus-customloaderplugin": "XXX",
+      "prodeus-assets": "Prodeus_Data",
+      "prodeus-bepinexmod": "BepInEx",
+      "prodeus-bepinex-plugins": "BepInEx/plugins",
+      "prodeus-bepinex-patchers": "BepInEx/patchers",
+      "prodeus-bepinex-config": "BepInEx/config",
+      "prodeus-melonloader-mods": "Mods",
+      "prodeus-melonloader-plugins": "Plugins",
+      "prodeus-melonloader-config": "UserData",
+      "prodeus-melonloader-userlibs": "UserLibs",
+      "prodeus-bepcfgman": "BepInEx",
+      "prodeus-melonprefman": "Mods"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "starsandisland",
+    "name": "Starsand Island",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "StarsandIsland_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "StarsandIsland.exe",
+    "required": [
+      "StarsandIsland.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-starsandisland/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em StarsandIsland_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "2966320",
+    "vortex_mod_types": {
+      "starsandisland-customloaderplugin": "XXX",
+      "starsandisland-assets": "StarsandIsland_Data",
+      "starsandisland-bepinexmod": "BepInEx",
+      "starsandisland-bepinex-plugins": "BepInEx/plugins",
+      "starsandisland-bepinex-patchers": "BepInEx/patchers",
+      "starsandisland-bepinex-config": "BepInEx/config",
+      "starsandisland-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
+    "domain": "storyofseasonsgrandbazaar",
+    "name": "STORY OF SEASONS: Grand Bazaar",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "SOSGrandBazaar_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "SOSGrandBazaar.exe",
+    "required": [
+      "SOSGrandBazaar.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-storyofseasonsgrandbazaar/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em SOSGrandBazaar_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "steam_id": "2508780",
+    "vortex_mod_types": {
+      "storyofseasonsgrandbazaar-customloaderplugin": "XXX",
+      "storyofseasonsgrandbazaar-assets": "SOSGrandBazaar_Data",
+      "storyofseasonsgrandbazaar-bepinexmod": "BepInEx",
+      "storyofseasonsgrandbazaar-bepinex-plugins": "BepInEx/plugins",
+      "storyofseasonsgrandbazaar-bepinex-patchers": "BepInEx/patchers",
+      "storyofseasonsgrandbazaar-bepinex-config": "BepInEx/config",
+      "storyofseasonsgrandbazaar-bepcfgman": "BepInEx"
+    }
+  }
+]

@@ -178,8 +178,10 @@ pub(super) fn generated_config(module: &Definition, path: &str) -> bool {
         .activation
         .as_ref()
         .is_some_and(|rule| rule.path == path)
+        || module.ue4ss().is_some_and(|layout| layout.mod_folders().iter().any(|folder| path == format!("{folder}/mods.txt")))
         || module.domain == "thesims4"
             && path == "@documents/Electronic Arts/The Sims 4/Options.ini"
+        || module.ini_settings.iter().any(|setting| setting.file == path)
 }
 pub(super) fn prepare(
     game: &NexusGame,
@@ -187,6 +189,14 @@ pub(super) fn prepare(
     runtime: &Path,
     old: &BTreeMap<String, String>,
 ) -> Result<(), String> {
+    if let Some(layout) = module.ue4ss() {
+        let root = Path::new(game.game["directory"].as_str().ok_or("Pasta ausente.")?);
+        let folders = layout.mod_folders();
+        // Validate live paths before reading; no writes to the game occur during preparation.
+        for folder in &folders { super::nexus_deployment::destination(game, &format!("{folder}/mods.txt"))?; }
+        let visible = super::nexus_deploy_methods::view(game)?.unwrap_or_else(|| root.to_path_buf());
+        prepare_ue4ss(&visible, runtime, old, &folders)?;
+    }
     if module.domain == "oblivionremastered" {
         let files = walkdir::WalkDir::new(runtime)
             .into_iter()
@@ -205,7 +215,105 @@ pub(super) fn prepare(
             }
         }
     }
-    prepare_main(game, module, runtime, old)
+    prepare_main(game, module, runtime, old)?;
+    prepare_ini(game, module, runtime, old)
+}
+/// Applies the module's INI values to a copy of the live file. Once managed, the
+/// file stays in every later profile (unchanged when no mod remains), otherwise
+/// deployment would remove the player's INI with the last mod.
+fn prepare_ini(
+    game: &NexusGame,
+    module: &Definition,
+    runtime: &Path,
+    old: &BTreeMap<String, String>,
+) -> Result<(), String> {
+    if module.ini_settings.is_empty() {
+        return Ok(());
+    }
+    let root = Path::new(game.game["directory"].as_str().ok_or("Pasta ausente.")?);
+    let files: BTreeSet<&str> = module.ini_settings.iter().map(|s| s.file.as_str()).collect();
+    let mut mods = false;
+    for entry in walkdir::WalkDir::new(runtime) {
+        let entry = entry.map_err(|e| e.to_string())?;
+        if !entry.file_type().is_file() { continue; }
+        let path = entry.path().strip_prefix(runtime).unwrap().to_string_lossy().into_owned();
+        if !files.contains(path.as_str()) && module.activation.as_ref().is_none_or(|rule| rule.path != path) {
+            mods = true;
+            break;
+        }
+    }
+    for file in files {
+        if !mods && !old.contains_key(file) { continue; }
+        let (base, relative) = super::nexus_targets::root(root, &game.compat_data, file)?;
+        let live = base.join(relative);
+        if !mods && fs::symlink_metadata(&live).is_err() { continue; }
+        let text = read(&live)?;
+        let settings: Vec<_> = module.ini_settings.iter().filter(|s| s.file == file).collect();
+        let output = if !mods {
+            text
+        } else {
+            if text.trim().is_empty() && !settings.iter().any(|s| s.create) {
+                let name = file.rsplit('/').next().unwrap_or(file);
+                return Err(format!("Inicie {} uma vez no prefixo selecionado para criar {name} antes de instalar mods.", module.name));
+            }
+            let mut text = text;
+            let sections: BTreeSet<String> = settings.iter().map(|s| s.section.to_ascii_lowercase()).collect();
+            for section in sections {
+                let chosen: Vec<_> = settings.iter().filter(|s| s.section.eq_ignore_ascii_case(&section)).collect();
+                let lines: Vec<String> = chosen.iter().map(|s| format!("{}={}", s.key, s.value)).collect();
+                text = ini(&text, &chosen[0].section, &lines, |line| {
+                    line.split_once('=').is_some_and(|(key, _)| chosen.iter().any(|s| key.trim().eq_ignore_ascii_case(&s.key)))
+                });
+            }
+            text
+        };
+        let target = runtime.join(file);
+        fs::create_dir_all(target.parent().ok_or("Pasta de ativação ausente.")?).map_err(|e| e.to_string())?;
+        fs::write(target, output).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+fn ue4ss_script_names(paths: impl Iterator<Item = String>, folder: &str) -> Result<BTreeMap<String, String>, String> {
+    let mut names = BTreeMap::new();
+    let prefix = format!("{}/", folder.to_ascii_lowercase());
+    for path in paths {
+        let lower = path.to_ascii_lowercase();
+        let Some(tail) = lower.strip_prefix(&prefix) else { continue; };
+        let Some((name, entry)) = tail.split_once('/') else { continue; };
+        if !matches!(entry, "scripts/main.lua" | "dlls/main.dll") { continue; }
+        let original = &path[prefix.len()..prefix.len() + name.len()];
+        if original.trim().is_empty() || original.contains([':', ';', '\n', '\r']) { return Err("Nome de script UE4SS inválido para mods.txt.".into()); }
+        names.insert(name.to_string(), original.to_string());
+    }
+    Ok(names)
+}
+fn prepare_ue4ss(root: &Path, runtime: &Path, old: &BTreeMap<String, String>, folders: &[String]) -> Result<(), String> {
+    let paths = walkdir::WalkDir::new(runtime).into_iter().map(|entry| {
+        let entry = entry.map_err(|e| e.to_string())?;
+        Ok(entry.file_type().is_file().then(|| entry.path().strip_prefix(runtime).unwrap().to_string_lossy().into_owned()))
+    }).collect::<Result<Vec<_>, String>>()?.into_iter().flatten().collect::<Vec<_>>();
+    for folder in folders {
+        let previous = ue4ss_script_names(old.keys().cloned(), folder)?;
+        let next = ue4ss_script_names(paths.iter().cloned(), folder)?;
+        let config = format!("{folder}/mods.txt");
+        // Once managed, keep this shared list in the next profile even when the
+        // last owned script is removed; otherwise deployment would delete manual entries.
+        if previous.is_empty() && next.is_empty() && !old.contains_key(&config) { continue; }
+        let live = root.join(&config);
+        let original = read(&live)?;
+        // A loader's supplied defaults can seed a new config, but never overwrite a live list.
+        let original = if original.is_empty() { read(&runtime.join(&config))? } else { original };
+        let mut lines: Vec<String> = original.lines().filter(|line| {
+            let name = line.split(';').next().unwrap_or_default().split_once(':').map(|(name, _)| name.trim().to_ascii_lowercase());
+            !name.is_some_and(|name| previous.contains_key(&name) || next.contains_key(&name))
+        }).map(str::to_string).collect();
+        for (key, name) in &previous { if !next.contains_key(key) { lines.push(format!("{name} : 0")); } }
+        for name in next.values() { lines.push(format!("{name} : 1")); }
+        let target = runtime.join(config);
+        fs::create_dir_all(target.parent().ok_or("Pasta de ativação ausente.")?).map_err(|e| e.to_string())?;
+        fs::write(target, lines.join("\r\n") + "\r\n").map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }
 fn prepare_main(
     game: &NexusGame,
@@ -281,6 +389,9 @@ fn prepare_main(
                     name
                 });
             }
+            // Opt-in LOOT order (masterlist downloaded); the plugins.txt folder is the game's local path.
+            let local = config.parent().ok_or("Destino de ativação inválido.")?;
+            let lines = super::nexus_loot::sort(game, module, runtime, &rule.data, local, lines);
             lines.join("\r\n") + "\r\n"
         }
         ActivationKind::Sims4 => {
@@ -770,4 +881,142 @@ fn reloaded(
         fs::write(runtime.join("Reloaded/portable.txt"), []).map_err(|e| e.to_string())?;
     }
     serde_json::to_string_pretty(&config).map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod palworld_tests {
+    use super::*;
+    pub(super) const PALWORLD_MOD_FOLDERS: [&str; 2] = ["Pal/Binaries/Win64/ue4ss/Mods", "Pal/Binaries/Win64/Mods"];
+    pub(super) fn prepare_palworld(root: &Path, runtime: &Path, old: &BTreeMap<String, String>) -> Result<(), String> {
+        prepare_ue4ss(root, runtime, old, &PALWORLD_MOD_FOLDERS.map(String::from))
+    }
+    #[test]
+    fn activation_merge_enables_and_disables_owned_scripts_preserving_manual_entries() {
+        for folder in PALWORLD_MOD_FOLDERS {
+            let root = std::env::temp_dir().join(format!("palworld-activation-{}", uuid::Uuid::new_v4()));
+            let runtime = root.join("stage");
+            let config = format!("{folder}/mods.txt");
+            fs::create_dir_all(root.join(folder)).unwrap();
+            fs::write(root.join(&config), "; user list\r\nManual : 1\r\nOther : 0\r\nMenu : 0 ; old state\r\n").unwrap();
+            let script = format!("{folder}/Menu/Scripts/main.lua");
+            fs::create_dir_all(runtime.join(&script).parent().unwrap()).unwrap();
+            fs::write(runtime.join(&script), "-- fixture").unwrap();
+            prepare_palworld(&root, &runtime, &BTreeMap::new()).unwrap();
+            let enabled = fs::read_to_string(runtime.join(&config)).unwrap();
+            assert!(enabled.contains("Manual : 1") && enabled.contains("Other : 0"));
+            assert!(enabled.contains("; user list") && enabled.contains("Menu : 1"));
+            assert!(!enabled.contains("Menu : 0"));
+            // Preparation only touches the stage, not the real game config.
+            assert!(fs::read_to_string(root.join(&config)).unwrap().contains("Menu : 0"));
+            fs::write(root.join(&config), enabled).unwrap();
+            fs::remove_file(runtime.join(&script)).unwrap();
+            prepare_palworld(&root, &runtime, &BTreeMap::from([(script, "previous".into())])).unwrap();
+            let disabled = fs::read_to_string(runtime.join(&config)).unwrap();
+            assert!(disabled.contains("Menu : 0") && !disabled.contains("Menu : 1"));
+            assert!(disabled.contains("Manual : 1") && disabled.contains("Other : 0"));
+            fs::write(root.join(&config), &disabled).unwrap();
+            fs::remove_file(runtime.join(&config)).unwrap();
+            prepare_palworld(&root, &runtime, &BTreeMap::from([(config.clone(), "shared config".into())])).unwrap();
+            assert_eq!(fs::read_to_string(runtime.join(config)).unwrap(), disabled);
+            fs::remove_dir_all(root).unwrap();
+        }
+    }
+}
+
+#[cfg(test)]
+mod palworld_archive_test {
+    use super::*;
+    use super::palworld_tests::*;
+    #[test]
+    #[ignore = "Read-only validation of an actual user-provided mod archive"]
+    fn actual_mixed_archive_routes_all_files_for_both_loader_layouts() {
+        let path = std::env::var("PELIGAMES_TEST_MOD_ARCHIVE").expect("Provide PELIGAMES_TEST_MOD_ARCHIVE");
+        let mut zip = zip::ZipArchive::new(fs::File::open(path).unwrap()).unwrap();
+        let entries: Vec<String> = (0..zip.len()).map(|i| zip.by_index(i).unwrap().name().replace('\\', "/")).collect();
+        let module = super::super::nexus_modules::registry().definitions.into_iter().find(|m|m.domain == "palworld").unwrap();
+        let id = "00000000-0000-4000-8000-000000000001";
+        for flat in [false, true] {
+            let root = std::env::temp_dir().join(format!("palworld-archive-{}", uuid::Uuid::new_v4()));
+            let runtime = root.join("stage");
+            let loader = if flat { "Pal/Binaries/Win64/UE4SS.dll" } else { "Pal/Binaries/Win64/ue4ss/UE4SS.dll" };
+            fs::create_dir_all(root.join(loader).parent().unwrap()).unwrap();
+            fs::write(root.join(loader), "fixture").unwrap();
+            let mut targets = Vec::new();
+            for index in 0..zip.len() {
+                let mut entry = zip.by_index(index).unwrap();
+                if entry.is_dir() { continue; }
+                let source = entry.name().replace('\\', "/");
+                let canonical = module.route_package(&source, id, &entries).unwrap().expect("Every file in this mixed package must be recognized");
+                let target = super::super::nexus_scan::ue4ss_mod_target(&root, &module.ue4ss().unwrap(), canonical).unwrap();
+                let output = runtime.join(&target);
+                fs::create_dir_all(output.parent().unwrap()).unwrap();
+                std::io::copy(&mut entry, &mut fs::File::create(output).unwrap()).unwrap();
+                targets.push(target);
+            }
+            assert_eq!(targets.len(), 3);
+            assert!(targets.iter().any(|p|p.ends_with("Scripts/main.lua")));
+            assert!(targets.iter().any(|p|p.ends_with("enabled.txt")));
+            assert!(targets.iter().any(|p|p == "Pal/Content/Paks/LogicMods/DekModConfigMenu_P.pak"));
+            prepare_palworld(&root, &runtime, &BTreeMap::new()).unwrap();
+            let folder = if flat { PALWORLD_MOD_FOLDERS[1] } else { PALWORLD_MOD_FOLDERS[0] };
+            assert!(fs::read_to_string(runtime.join(folder).join("mods.txt")).unwrap().contains("DekModConfigMenu : 1"));
+            fs::remove_dir_all(root).unwrap();
+        }
+    }
+}
+
+#[cfg(test)]
+mod ini_settings_tests {
+    use super::*;
+    fn module(domain: &str) -> Definition {
+        super::super::nexus_modules::registry().definitions.into_iter().find(|m| m.domain == domain).unwrap()
+    }
+    #[test]
+    fn archive_invalidation_follows_mods_and_keeps_the_managed_ini() {
+        let base = std::env::temp_dir().join(format!("bethesda-ini-{}", uuid::Uuid::new_v4()));
+        let documents = base.join("prefix/pfx/drive_c/users/steamuser/Documents/My Games");
+        fs::create_dir_all(&documents).unwrap();
+        fs::write(base.join("prefix/pfx/system.reg"), "").unwrap();
+        fs::create_dir_all(base.join("game")).unwrap();
+        let game: NexusGame = serde_json::from_value(serde_json::json!({
+            "id": "test", "platform": "proton", "mods": [],
+            "game": {"directory": base.join("game")}, "compat_data": base.join("prefix"),
+        })).unwrap();
+        let runtime = base.join("stage");
+        fs::create_dir_all(runtime.join("Data/textures")).unwrap();
+        fs::write(runtime.join("Data/textures/loose.dds"), "fixture").unwrap();
+
+        // Game-written INI absent: the player must start the game once.
+        let skyrim = module("skyrimspecialedition");
+        assert!(prepare_ini(&game, &skyrim, &runtime, &BTreeMap::new()).unwrap_err().contains("Skyrim.ini"));
+
+        let file = "@documents/My Games/Skyrim Special Edition/Skyrim.ini";
+        let live = documents.join("Skyrim Special Edition/Skyrim.ini");
+        fs::create_dir_all(live.parent().unwrap()).unwrap();
+        fs::write(&live, "[General]\r\nsLanguage=ENGLISH\r\n[Archive]\r\nbInvalidateOlderFiles=0\r\nSResourceArchiveList=Skyrim - Misc.bsa\r\n").unwrap();
+        prepare_ini(&game, &skyrim, &runtime, &BTreeMap::new()).unwrap();
+        let staged = fs::read_to_string(runtime.join(file)).unwrap();
+        assert!(staged.contains("sLanguage=ENGLISH") && staged.contains("SResourceArchiveList=Skyrim - Misc.bsa"));
+        assert!(staged.contains("bInvalidateOlderFiles=1") && staged.contains("sResourceDataDirsFinal=\r\n"));
+        assert!(!staged.contains("bInvalidateOlderFiles=0"));
+        assert!(generated_config(&skyrim, file) && super::super::nexus_deployment::config(&skyrim, file) && skyrim.allowed(file));
+
+        // No mod left: an unmanaged INI is untouched, a managed one is kept as is.
+        fs::remove_dir_all(&runtime).unwrap();
+        fs::create_dir_all(&runtime).unwrap();
+        prepare_ini(&game, &skyrim, &runtime, &BTreeMap::new()).unwrap();
+        assert!(!runtime.join(file).exists());
+        fs::write(&live, &staged).unwrap();
+        prepare_ini(&game, &skyrim, &runtime, &BTreeMap::from([(file.to_string(), "previous".into())])).unwrap();
+        assert_eq!(fs::read_to_string(runtime.join(file)).unwrap(), staged);
+
+        // `StarfieldCustom.ini` is created like the Vortex Starfield extension does.
+        fs::remove_dir_all(&runtime).unwrap();
+        fs::create_dir_all(runtime.join("Data")).unwrap();
+        fs::write(runtime.join("Data/loose.nif"), "fixture").unwrap();
+        prepare_ini(&game, &module("starfield"), &runtime, &BTreeMap::new()).unwrap();
+        let custom = fs::read_to_string(runtime.join("@documents/My Games/Starfield/StarfieldCustom.ini")).unwrap();
+        assert_eq!(custom, "[Archive]\r\nbInvalidateOlderFiles=1\r\nsResourceDataDirsFinal=\r\n");
+        fs::remove_dir_all(base).unwrap();
+    }
 }

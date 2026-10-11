@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-type Flight = { source: DOMRect; portrait: HTMLElement };
+type Flight = { source: DOMRect; portrait: HTMLElement; target?: HTMLElement; returning?: boolean; onComplete?: () => void };
 
 // Escape panel stacking contexts and scroll clipping, following the destination
 // while the details slide into place.
@@ -19,10 +19,21 @@ export function useCoverFlight(disabled: boolean) {
     portrait.style.willChange = "auto";
     setFlight({ source: bounds, portrait });
   };
+  const returnTo = (target: HTMLElement | undefined, onComplete: () => void) => {
+    const source = destinationRef.current;
+    if (disabled || !source?.isConnected || !target?.isConnected || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
+    // A rapid collapse starts at the currently visible floating portrait.
+    const bounds = (flight ? layerRef.current : source)?.getBoundingClientRect();
+    if (!bounds?.width || !bounds.height) return false;
+    const portrait = source.cloneNode(true) as HTMLElement;
+    Object.assign(portrait.style, { transform: "none", willChange: "auto", width: "100%", height: "100%", margin: "0", border: "0", boxShadow: "none", visibility: "visible" });
+    setFlight({ source: bounds, portrait, target, returning: true, onComplete });
+    return true;
+  };
   useLayoutEffect(() => {
     const layer = layerRef.current;
     if (!flight || !layer) return;
-    if (disabled) { setFlight(null); return; }
+    if (disabled) { setFlight(null); flight.onComplete?.(); return; }
     layer.replaceChildren(flight.portrait);
     const { source } = flight;
     layer.style.width = `${source.width}px`;
@@ -32,8 +43,8 @@ export function useCoverFlight(disabled: boolean) {
     let frame = 0;
     const started = performance.now();
     const tick = (now: number) => {
-      const destination = destinationRef.current;
-      if (!destination?.isConnected) { setFlight(null); return; }
+      const destination = flight.target ?? destinationRef.current;
+      if (!destination?.isConnected) { setFlight(null); flight.onComplete?.(); return; }
       const target = destination.getBoundingClientRect();
       const progress = Math.min((now - started) / 520, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
@@ -46,13 +57,13 @@ export function useCoverFlight(disabled: boolean) {
       layer.style.width = pixels(mix(source.width, target.width));
       layer.style.height = pixels(mix(source.height, target.height));
       if (progress < 1) frame = requestAnimationFrame(tick);
-      else setFlight(null);
+      else { setFlight(null); flight.onComplete?.(); }
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [flight, disabled]);
   return {
-    start, destinationRef, flying: flight !== null,
+    start, returnTo, destinationRef, flying: flight !== null, returning: Boolean(flight?.returning),
     overlay: flight ? createPortal(<div ref={layerRef} className="cover-flight-layer" aria-hidden="true" />, document.body) : null,
   };
 }
