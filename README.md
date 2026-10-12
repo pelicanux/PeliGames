@@ -8,8 +8,6 @@ Launcher de jogos Windows para Linux com Proton, biblioteca de jogos, Pelinstall
   <img src="public/images/interface-preview.webp" alt="Interface do PeliGames com biblioteca de jogos organizada por origem" width="1200" />
 </p>
 
-**0.3.1 — versão experimental para testes muito iniciais.** A publicação serve somente para testes e poderá ser removida posteriormente.
-
 ## Instalação
 
 Baixe AppImage, RPM ou DEB em [Releases](https://github.com/pelicanux/PeliGames/releases).
