@@ -1,5 +1,6 @@
 import { useAccentTheme } from "../theme/ThemeProvider";
 import { createPortal } from "react-dom";
+import { CoverFreeze } from "./CoverFreeze";
 import { CoverWalkingPenguin } from "./CoverWalkingPenguin";
 import { CoverHoldParticles } from "./CoverHoldParticles";
 import { CoverWaterFill } from "./CoverWaterFill";
@@ -366,8 +367,8 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     // A lightweight DOM copy keeps the frame, badges and image together; no
     // screenshot encoding or game data processing runs during the gesture.
     const preview = !stopping ? event.currentTarget.cloneNode(true) as HTMLElement : null;
-    preview?.classList.remove("is-holding-launch", "is-shattering-launch", "is-holding-particles", "is-holding-shrink");
-    preview?.querySelectorAll(".library-cover-shatter, .library-hold-launch").forEach(node => node.remove());
+    preview?.classList.remove("is-holding-launch", "is-shattering-launch", "is-holding-particles", "is-holding-shrink", "is-holding-freeze");
+    preview?.querySelectorAll(".library-cover-shatter, .library-hold-launch, .cover-freeze").forEach(node => node.remove());
     const timer = window.setTimeout(() => {
       if (hold.current?.key !== key || launchBlocked.current) { cancelHold(); return; }
       suppressHoldClick.current = key;
@@ -384,7 +385,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       setBrokenCards(previous => new Set(previous).add(key));
       const generation = ++launchGeneration.current;
       setLaunchCommitted(false);
-      setTeleport({ game, source, preview, effect: launchEffect === "shrink" ? "shrink" : launchEffect === "penguin" ? "penguin" : launchEffect === "particles" ? "particles" : launchEffect === "aquarium" ? "aquarium" : launchEffect === "smooth" ? "smooth" : "shatter" });
+      setTeleport({ game, source, preview, effect: launchEffect === "freeze" ? "freeze" : launchEffect === "shrink" ? "shrink" : launchEffect === "penguin" ? "penguin" : launchEffect === "particles" ? "particles" : launchEffect === "aquarium" ? "aquarium" : launchEffect === "smooth" ? "smooth" : "shatter" });
       // Give the enlarged cover a cancellation window before launching, including
       // Steam games whose external startup cannot be reliably cancelled afterwards.
       const ready = new Promise<boolean>(resolve => {
@@ -427,7 +428,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       return (
         <div 
           key={gameViewKey(game)}
-          className={`game-card-placeholder ${viewMode === "list" ? "game-card-placeholder--list" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shatter" ? "is-holding-launch" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "particles" ? "is-holding-particles" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shrink" ? "is-holding-shrink" : ""}`}
+          className={`game-card-placeholder ${viewMode === "list" ? "game-card-placeholder--list" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shatter" ? "is-holding-launch" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "particles" ? "is-holding-particles" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shrink" ? "is-holding-shrink" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "freeze" ? "is-holding-freeze" : ""}`}
           onPointerDown={event => { if (isRunning(game)) startHold(event, game); }}
           onPointerMove={event => { const active = hold.current; if (active && Math.hypot(event.clientX - active.x, event.clientY - active.y) > 10) cancelHold(); }}
           onPointerLeave={cancelHold}
@@ -442,6 +443,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
           }}
         >
           {holdingKey === gameViewKey(game) && launchEffect === "smooth" && <div className="library-hold-progress" aria-hidden="true"><span /></div>}
+          {holdingKey === gameViewKey(game) && launchEffect === "freeze" && <CoverFreeze reducedMotion={performanceMode} />}
           {holdingKey === gameViewKey(game) && launchEffect === "aquarium" && <CoverWaterFill reducedMotion={performanceMode} />}
           {holdingKey === gameViewKey(game) && launchEffect === "particles" && <CoverHoldParticles reducedMotion={performanceMode} />}
           {holdingKey === gameViewKey(game) && launchEffect === "penguin" && <CoverWalkingPenguin reducedMotion={performanceMode} />}
@@ -463,7 +465,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
 
     return (
       <div
-        className={`library-game-card ${viewMode === "list" ? "library-game-card--list" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shatter" ? "is-holding-launch" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "particles" ? "is-holding-particles" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shrink" ? "is-holding-shrink" : ""}`}
+        className={`library-game-card ${viewMode === "list" ? "library-game-card--list" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shatter" ? "is-holding-launch" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "particles" ? "is-holding-particles" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shrink" ? "is-holding-shrink" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "freeze" ? "is-holding-freeze" : ""}`}
         key={`${gameViewKey(game)}-${viewMode}-${performanceMode ? "performance" : "elegant"}`} 
         onPointerDown={event => startHold(event, game)}
         onPointerMove={event => {
@@ -494,6 +496,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         }}
       >
       {holdingKey === gameViewKey(game) && launchEffect === "smooth" && <div className="library-hold-progress" aria-hidden="true"><span /></div>}
+          {holdingKey === gameViewKey(game) && launchEffect === "freeze" && <CoverFreeze reducedMotion={performanceMode} />}
           {holdingKey === gameViewKey(game) && launchEffect === "aquarium" && <CoverWaterFill reducedMotion={performanceMode} />}
           {holdingKey === gameViewKey(game) && launchEffect === "particles" && <CoverHoldParticles reducedMotion={performanceMode} />}
           {holdingKey === gameViewKey(game) && launchEffect === "penguin" && <CoverWalkingPenguin reducedMotion={performanceMode} />}

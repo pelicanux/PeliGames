@@ -3,7 +3,7 @@ import { useSurfaceNeonLighting } from "../hooks/useSurfaceNeonLighting";
 import { DEFAULT_GLASS_EFFECTS, GLASS_STORAGE_KEY, readGlassEffects, type GlassEffects } from "./glassPreferences";
 import { ACCENT_STORAGE_KEY, APPEARANCE_STORAGE_KEY, DEFAULT_ACCENT, accentVariables, isAccentTheme, type AccentThemeId, type Appearance } from "./accentTheme";
 
-export type LaunchEffect = "shatter" | "smooth" | "aquarium" | "particles" | "penguin" | "shrink" | "disabled";
+export type LaunchEffect = "shatter" | "smooth" | "aquarium" | "particles" | "penguin" | "shrink" | "freeze" | "disabled";
 export const DEFAULT_LAUNCH_EFFECT: LaunchEffect = "smooth";
 const launchEffectKey = "peligames_launch_effect";
 const ThemeContext = createContext<{
@@ -18,7 +18,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try {
       const saved = localStorage.getItem(launchEffectKey);
       if (saved === "none") return "disabled";
-      return saved === "shatter" || saved === "smooth" || saved === "aquarium" || saved === "particles" || saved === "penguin" || saved === "shrink" || saved === "disabled" ? saved : DEFAULT_LAUNCH_EFFECT;
+      return saved === "shatter" || saved === "smooth" || saved === "aquarium" || saved === "particles" || saved === "penguin" || saved === "shrink" || saved === "freeze" || saved === "disabled" ? saved : DEFAULT_LAUNCH_EFFECT;
     } catch { return DEFAULT_LAUNCH_EFFECT; }
   });
   const chooseLaunchEffect = (effect: LaunchEffect) => {
