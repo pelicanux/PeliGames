@@ -1,4 +1,5 @@
-import { useState, type RefObject } from "react";
+import { useEffect, useState, type RefObject } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { AppConfig } from "../SetupWizard";
 import { MenuIcon } from "../MenuIcon";
@@ -9,6 +10,7 @@ import { ProtonDistributionCards } from "./ProtonDistributionCards";
 import { LaunchEffectIcon } from "./LaunchEffectIcon";
 import { ModBackupPreferences } from "./ModBackupPreferences";
 import { usePreferencesText } from "./labels";
+import { notifyError } from "../../services/notifications";
 
 type ConfigProps = { config: AppConfig; disabled: boolean; save: (patch: Partial<AppConfig>) => void };
 export function ThemePreferences({ onApplied }: { onApplied: () => void }) {
@@ -84,11 +86,30 @@ export function CoverPreferences({ config, disabled, save, focusRef, onError }: 
     <div className="steamgrid-settings-footer"><small>{t("steamgrid", "localOnly")}</small><button type="button" onClick={() => void openUrl("https://www.steamgriddb.com/profile/preferences/api").catch(error => onError(String(error)))}>{t("steamgrid", "getKey")} ↗</button></div><p>{t("steamgrid", "rescanHint")}</p>
   </section></>;
 }
+/** The install offered on the welcome screen, for whoever skipped it. Only for an AppImage not installed yet. */
+function AppImageInstallPreferences({ onError }: { onError: (error: string) => void }) {
+  const { t } = useI18n();
+  const [target, setTarget] = useState(""), [installing, setInstalling] = useState(false);
+  useEffect(() => {
+    if ("__PELI_UI_PREVIEW__" in window) return;
+    void invoke<{ appimage: boolean; installed: boolean; target: string }>("appimage_install_status").then(status => setTarget(status.appimage && !status.installed ? status.target : "")).catch(() => setTarget(""));
+  }, []);
+  if (!target) return null;
+  // The installed copy opens and this one closes.
+  const install = async () => {
+    setInstalling(true);
+    try { await invoke("install_peligames_appimage"); }
+    catch (error) { onError(String(error)); notifyError(t("welcome", "installTitle"), error); setInstalling(false); }
+  };
+  return <section data-preference-id="appimage-install" className="preference-section"><h3>{t("welcome", "installTitle")}</h3><p>{t("welcome", "installHint")}</p><p><code>{target}</code></p>
+    <button type="button" className="preference-outline" disabled={installing} onClick={() => void install()}><MenuIcon name="download"/>{installing ? t("welcome", "installing") : t("welcome", "installButton")}</button></section>;
+}
 export function ToolsPreferences({ onError, onLogs, onBusy, onRestored }: { onError: (error: string) => void; onLogs: () => void; onBusy: (busy: boolean) => void; onRestored: () => Promise<void> }) {
   const text = usePreferencesText(), { t } = useI18n();
   const [folders, setFolders] = useState<string[]>(() => { try { const value = JSON.parse(localStorage.getItem("custom_folders") ?? "[]"); return Array.isArray(value) ? value.filter(item => typeof item === "string") : []; } catch { return []; } });
   const remove = (folder: string) => { const next = folders.filter(item => item !== folder); try { localStorage.setItem("custom_folders", JSON.stringify(next)); setFolders(next); window.dispatchEvent(new Event("refreshGames")); } catch (error) { onError(String(error)); } };
   return <><h2>{text.tools}</h2><section data-preference-id="launcher-logs" className="preference-section first"><h3>{text.openLogs}</h3><p>{text.logsHint}</p><button type="button" className="preference-outline" onClick={onLogs}><MenuIcon name="logs"/>{text.openLogs}</button></section>
+    <AppImageInstallPreferences onError={onError}/>
     <ModBackupPreferences onError={onError} onBusy={onBusy} onRestored={onRestored}/>
     <section data-preference-id="manual-folders" className="preference-section"><h3>{t("settings", "manualDirs")}</h3><p>{t("settings", "manualDirsDesc")}</p>{folders.length ? <div className="preference-folders">{folders.map(folder => <div key={folder}><span>{folder}</span><button type="button" aria-label={`${t("settings", "removeDir")}: ${folder}`} onClick={() => remove(folder)}><MenuIcon name="trash"/></button></div>)}</div> : <p>{text.noFolders}</p>}</section>
   </>;

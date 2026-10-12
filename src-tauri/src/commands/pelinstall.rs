@@ -45,11 +45,13 @@ pub async fn remove_peligames_shortcuts(path: String) -> Result<usize, String> {
 pub fn appimage_install_status() -> Result<crate::core::pelinstall::AppImageStatus, String> {
     crate::core::pelinstall::appimage_status()
 }
-/// Installs the running AppImage in the user's executables folder, opens the
-/// installed copy and closes this one (as an update does).
+/// Installs the running AppImage extracted in `~/.local/share/PeliGames`,
+/// opens the installed copy and closes this one (as an update does).
 #[tauri::command]
 pub async fn install_peligames_appimage(app: tauri::AppHandle) -> Result<(), String> {
     let target = tauri::async_runtime::spawn_blocking(crate::core::pelinstall::install_appimage).await.map_err(|e| e.to_string())??;
+    // Nexus links registered from the AppImage file now open the installed copy.
+    if let Err(error) = super::nexus_downloads::refresh_nexus_handler(&target) { crate::core::logger::log_launcher(&app, "WARN", &format!("Links Nexus: {error}")); }
     std::process::Command::new(&target).env("PELIGAMES_RESTART_PARENT_PID", std::process::id().to_string())
         .env_remove("APPIMAGE").env_remove("APPDIR").env_remove("LD_LIBRARY_PATH").env_remove("LD_PRELOAD")
         .spawn().map_err(|e| format!("PeliGames instalado em {}, mas não foi possível abri-lo: {e}", target.display()))?;

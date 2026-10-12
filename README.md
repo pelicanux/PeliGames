@@ -23,8 +23,21 @@ Launcher de jogos Windows para Linux com Proton, biblioteca de jogos, Pelinstall
 Baixe AppImage, RPM ou DEB em [Releases](https://github.com/pelicanux/PeliGames/releases).
 
 - RPM e DEB instalam os binários `peligames` e `pelinstall` em `/opt/PeliGames`, com comandos em `/usr/bin` e atalhos nos diretórios de aplicativos do sistema. Pelo terminal, use `peligames` ou `pelinstall /caminho/programa.exe`.
-- AppImage reúne os dois módulos. Dê permissão de execução e abra o arquivo. Na primeira abertura, a tela de boas-vindas oferece **Instalar e abrir**: o AppImage vai para `~/.local/bin/PeliGames.AppImage`, ganha o comando `peligames` e os atalhos do PeliGames e do Pelinstall no menu de aplicativos (Jogos), e as atualizações passam a ser aplicadas ali.
-- Para abrir um executável Windows no instalador: `./PeliGames.AppImage --install /caminho/programa.exe`.
+- AppImage reúne os dois módulos. Dê permissão de execução e abra o arquivo. Ele funciona direto, mas também pode ser instalado no seu usuário, como fazem o Gear Lever e o AppManager.
+- Para abrir um executável Windows no instalador: `./PeliGames.AppImage --install /caminho/programa.exe` (depois de instalado, `peligames --install /caminho/programa.exe`).
+
+### Instalar o AppImage
+
+Na primeira abertura, a tela de boas-vindas oferece **Instalar e abrir**. O mesmo botão fica em **Configurações → Ferramentas** para quem pulou essa etapa. A instalação não pede root nem FUSE:
+
+- o conteúdo do AppImage é extraído em `~/.local/share/PeliGames/app` e roda direto de lá, o que abre mais rápido que o arquivo compactado;
+- `~/.local/share/PeliGames/peligames` é o comando usado pelos atalhos, e `~/.local/bin/peligames` aponta para ele no terminal (um arquivo `peligames` seu nesse lugar nunca é substituído);
+- o PeliGames e o Pelinstall aparecem no menu de aplicativos, na categoria Jogos; os atalhos de jogos e os links do Nexus passam a abrir a cópia instalada;
+- o arquivo `.AppImage` baixado é removido depois da extração.
+
+As atualizações baixam o AppImage novo, extraem ao lado e trocam a pasta `app`. A versão anterior fica em `app.previous` até a nova abrir e volta sozinha se a nova não iniciar.
+
+Para desinstalar, apague `~/.local/share/PeliGames`, o link `~/.local/bin/peligames` e os atalhos `peligames-*.desktop` e `pelinstall-appimage.desktop` em `~/.local/share/applications`. Os dados do launcher ficam à parte, em `~/.config/PeliGames`.
 
 Proton, UMU e Winetricks são baixados conforme necessário. Configurações, ferramentas, mods e dados da interface ficam em `~/.config/PeliGames`; para começar do zero, basta apagar essa pasta. O backend e os arquivos do mod ficam em `~/.config/PeliGames/Mod/DLSSNR`. O setup do mod, as teclas por jogo e os diretórios personalizados ficam em `~/.config/PeliGames/Mod/DLSSNR/config.json`; as preferências de inicialização do Neural Rendering ficam em `neural-startup.json` nessa mesma pasta. As preferências de capas e Proton permanecem em `~/.config/PeliGames/config.json`. Prefixos e jogos permanecem nos diretórios escolhidos pelo usuário. Capas do SteamGridDB exigem uma chave pessoal opcional, configurada em Preferências.
 
