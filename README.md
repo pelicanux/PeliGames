@@ -8,6 +8,14 @@ Launcher de jogos Windows para Linux com Proton, biblioteca de jogos, Pelinstall
   <img src="public/images/interface-preview.webp" alt="Interface do PeliGames com biblioteca de jogos organizada por origem" width="1200" />
 </p>
 
+## Como funciona
+
+1. **Biblioteca:** o PeliGames reúne num só lugar os jogos da Steam, do Heroic, do Lutris, do Bottles e do Faugus, além dos que você instala por ele.
+2. **Instalar jogos e programas do Windows:** escolha o instalador (`.exe` ou `.msi`), o nome, a pasta e a versão do Proton. O PeliGames prepara o prefixo, roda o instalador e encontra sozinho o executável do jogo. Se houver dúvida entre executáveis, ele pergunta.
+3. **Launchers (EA app, Battle.net, Ubisoft Connect, Epic):** os jogos que você instala por dentro do launcher aparecem em **Programas**, para abrir direto. Ao adicionar um deles à biblioteca, ele ganha um perfil próprio, com prefixo, Proton e mods separados, sem duplicar os arquivos do launcher.
+4. **Mods do Nexus Mods:** em **Mods → Nexus Mods**, adicione o jogo, escolha os mods no catálogo (ou importe um arquivo) e clique em **Instalar**. O PeliGames confere os requisitos, aplica o instalador FOMOD quando existe e implanta os arquivos de acordo com as regras do jogo, as mesmas usadas pelo Vortex. Ativar, desativar e remover mods não altera os arquivos originais do jogo. Veja os [jogos suportados](docs/supported-games.md).
+5. **Problemas:** **Reportar erro** gera um relatório do jogo e pode enviá-lo direto ao fórum de suporte do Discord do PeliGames. Os erros do launcher também aparecem no sininho de notificações.
+
 ## Instalação
 
 Baixe AppImage, RPM ou DEB em [Releases](https://github.com/pelicanux/PeliGames/releases).
@@ -23,6 +31,8 @@ Proton, UMU e Winetricks são baixados conforme necessário. Configurações, fe
 Conecte sua chave pessoal em **Conta Nexus** e escolha mods no **Catálogo**, ou importe arquivos ZIP, 7z e RAR pelo botão **Mod Local**. Para receber downloads do site, habilite **Usar PeliGames nos links Nexus** e escolha **Mod Manager Download**.
 
 Contas gratuitas confirmam o download na página do Nexus; Premium permite download direto. Acompanhe a fila em **Downloads Nexus** e, na lista de mods, confira os requisitos antes de **Instalar**, **Ativar** ou **Desativar**.
+
+Integração independente, sem afiliação ao Nexus Mods. Reporte erros ao PeliGames, não ao Nexus Mods.
 
 O suporte depende do jogo e do formato do pacote. A chave fica no chaveiro do sistema; AppImage requer `secret-tool` e um chaveiro disponível. Use **Logs** ou **Reportar erro** para diagnosticar problemas.
 
