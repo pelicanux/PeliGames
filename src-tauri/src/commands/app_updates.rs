@@ -54,7 +54,7 @@ fn compatible(name: &str) -> bool {
 #[path = "update_policy.rs"]
 mod update_policy;
 fn preferred_format() -> &'static str {
-    if std::env::var_os("APPIMAGE").is_some() { return ".appimage"; }
+    if std::env::var_os("APPIMAGE").is_some() || crate::core::pelinstall::running_installed() { return ".appimage"; }
     match tauri::utils::platform::bundle_type() {
         Some(tauri::utils::config::BundleType::AppImage) => return ".appimage",
         Some(tauri::utils::config::BundleType::Deb) => return ".deb",
@@ -76,7 +76,7 @@ pub async fn check_launcher_update(app: tauri::AppHandle) -> Result<UpdateInfo, 
 }
 async fn check_launcher_update_inner() -> Result<UpdateInfo, String> {
     let current = env!("CARGO_PKG_VERSION").to_string();
-    let mut info = UpdateInfo { current: current.clone(), latest: None, available: false, notes: String::new(), packages: vec![], preferred: None, appimage: std::env::var_os("APPIMAGE").is_some(), format: preferred_format().into() };
+    let mut info = UpdateInfo { current: current.clone(), latest: None, available: false, notes: String::new(), packages: vec![], preferred: None, appimage: std::env::var_os("APPIMAGE").is_some() || crate::core::pelinstall::running_installed(), format: preferred_format().into() };
     if let Some(release) = latest().await? {
         info.available = is_newer(&release.tag_name, &current)?;
         info.latest = Some(release.tag_name);
@@ -181,7 +181,18 @@ fn apply_downloaded_update(app: tauri::AppHandle, update: DownloadedUpdate) -> R
     if format!("{:x}", hash.finalize()) != update.sha256 { return Err("checksum".into()); }
     drop(file);
     #[cfg(unix)] {
-        if lower_path.ends_with(".appimage") {
+        if lower_path.ends_with(".appimage") && crate::core::pelinstall::running_installed() {
+            // Installed (extracted) AppImage: extract the new one beside it and swap the folders.
+            let command = crate::core::pelinstall::update_installed(&downloaded).map_err(|error| { crate::core::logger::log_launcher(&app, "ERROR", &error); "apply".to_string() })?;
+            if std::process::Command::new(&command).env("PELIGAMES_RESTART_PARENT_PID", std::process::id().to_string()).env_remove("APPIMAGE").env_remove("APPDIR").env_remove("LD_LIBRARY_PATH").env_remove("LD_PRELOAD").spawn().is_err() {
+                let _ = crate::core::pelinstall::restore_previous();
+                return Err("apply".into());
+            }
+            cleanup_installed_update(&app);
+            crate::core::logger::log_launcher(&app, "INFO", "Atualização aplicada; reiniciando launcher");
+            app.exit(0);
+            return Ok(());
+        } else if lower_path.ends_with(".appimage") {
             let current = PathBuf::from(std::env::var_os("APPIMAGE").ok_or("manualInstall")?);
             use std::os::unix::fs::PermissionsExt;
             let staged = current.with_file_name(format!(".peligames-update-{}.AppImage", uuid::Uuid::new_v4()));

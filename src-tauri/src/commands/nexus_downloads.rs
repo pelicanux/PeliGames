@@ -994,18 +994,28 @@ pub fn cancel_nexus_download(
     Ok(())
 }
 
+fn write_nexus_handler(binary: &std::path::Path) -> Result<std::path::PathBuf, String> {
+    let directory = dirs::data_dir().ok_or("Pasta de aplicativos indisponível.")?.join("applications");
+    fs::create_dir_all(&directory).map_err(|_| "Não foi possível criar a pasta de aplicativos.")?;
+    let path = directory.join("peligames-nxm.desktop");
+    let temporary = directory.join(format!(".peligames-nxm-{}.desktop", uuid::Uuid::new_v4()));
+    // xdg-utils 1.2.1 checks only the first word of Exec without unquoting it.
+    // A fixed env executable keeps that check valid and preserves quoted paths.
+    let text = format!("[Desktop Entry]\nType=Application\nName=PeliGames — Nexus Mods\nComment=Instalando jogos na base da humilhação\nExec=/usr/bin/env {} %u\nIcon=peligames\nTerminal=false\nNoDisplay=true\nMimeType=x-scheme-handler/nxm;\n", crate::core::pelinstall::exec_arg(&binary.to_string_lossy())?);
+    fs::write(&temporary, text).and_then(|_| fs::rename(&temporary, &path)).map_err(|_| "Não foi possível registrar o aplicativo.")?;
+    Ok(directory)
+}
+/// Points an already registered Nexus link handler at `binary` (after the AppImage is installed).
+pub fn refresh_nexus_handler(binary: &std::path::Path) -> Result<(), String> {
+    let registered = dirs::data_dir().map(|data| data.join("applications/peligames-nxm.desktop")).is_some_and(|path| path.is_file());
+    if registered { write_nexus_handler(binary)?; }
+    Ok(())
+}
 #[tauri::command]
 pub async fn register_nexus_handler() -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(|| {
         let binary = crate::core::pelinstall::launcher_binary()?;
-        let directory = dirs::data_dir().ok_or("Pasta de aplicativos indisponível.")?.join("applications");
-        fs::create_dir_all(&directory).map_err(|_| "Não foi possível criar a pasta de aplicativos.")?;
-        let path = directory.join("peligames-nxm.desktop");
-        let temporary = directory.join(format!(".peligames-nxm-{}.desktop", uuid::Uuid::new_v4()));
-        // xdg-utils 1.2.1 checks only the first word of Exec without unquoting it.
-        // A fixed env executable keeps that check valid and preserves quoted paths.
-        let text = format!("[Desktop Entry]\nType=Application\nName=PeliGames — Nexus Mods\nComment=Instalando jogos na base da humilhação\nExec=/usr/bin/env {} %u\nIcon=peligames\nTerminal=false\nNoDisplay=true\nMimeType=x-scheme-handler/nxm;\n", crate::core::pelinstall::exec_arg(&binary.to_string_lossy())?);
-        fs::write(&temporary, text).and_then(|_| fs::rename(&temporary, &path)).map_err(|_| "Não foi possível registrar o aplicativo.")?;
+        let directory = write_nexus_handler(&binary)?;
         let mut command = std::process::Command::new("xdg-mime");
         let result = command.env_remove("LD_LIBRARY_PATH").env_remove("LD_PRELOAD").args(["default", "peligames-nxm.desktop", "x-scheme-handler/nxm"]).output().map_err(|_| "Instale xdg-utils para registrar os links Nexus.")?;
         if !result.status.success() { return Err("Não foi possível configurar o aplicativo padrão para links Nexus.".into()); }

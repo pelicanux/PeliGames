@@ -23,8 +23,21 @@ Windows game launcher for Linux with Proton, a game library, Pelinstall, Wine to
 Download the AppImage, RPM or DEB from [Releases](https://github.com/pelicanux/PeliGames/releases).
 
 - RPM and DEB install the `peligames` and `pelinstall` binaries in `/opt/PeliGames`, with commands in `/usr/bin` and shortcuts in the system application folders. From a terminal, use `peligames` or `pelinstall /path/to/program.exe`.
-- The AppImage contains both modules. Make it executable and open it. On the first start, the welcome screen offers **Install and open**: the AppImage moves to `~/.local/bin/PeliGames.AppImage`, gets the `peligames` command and PeliGames and Pelinstall entries in the applications menu (Games), and updates are applied there.
-- To open a Windows executable in the installer: `./PeliGames.AppImage --install /path/to/program.exe`.
+- The AppImage contains both modules. Make it executable and open it. It runs as is, but it can also be installed for your user, as Gear Lever and AppManager do.
+- To open a Windows executable in the installer: `./PeliGames.AppImage --install /path/to/program.exe` (once installed, `peligames --install /path/to/program.exe`).
+
+### Installing the AppImage
+
+On the first start, the welcome screen offers **Install and open**. The same button is under **Settings → Tools** for anyone who skipped it. No root or FUSE is needed:
+
+- the AppImage's contents are extracted to `~/.local/share/PeliGames/app` and run from there, which starts faster than the compressed file;
+- `~/.local/share/PeliGames/peligames` is the command shortcuts use, and `~/.local/bin/peligames` links to it for the terminal (a `peligames` file of your own there is never replaced);
+- PeliGames and Pelinstall show up in the applications menu, under Games; game shortcuts and Nexus links now open the installed copy;
+- the downloaded `.AppImage` file is removed after extraction.
+
+Updates download the new AppImage, extract it alongside and swap the `app` folder. The previous version stays in `app.previous` until the new one opens, and comes back on its own if the new one fails to start.
+
+To uninstall, delete `~/.local/share/PeliGames`, the `~/.local/bin/peligames` link and the `peligames-*.desktop` and `pelinstall-appimage.desktop` shortcuts in `~/.local/share/applications`. The launcher's data is kept apart, in `~/.config/PeliGames`.
 
 Proton, UMU and Winetricks are downloaded when needed. Settings, tools, mods and interface data live in `~/.config/PeliGames`; delete that folder to start from scratch. Prefixes and games stay in the folders the user chose. SteamGridDB covers need an optional personal key, set in Preferences.
 
