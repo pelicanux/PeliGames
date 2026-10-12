@@ -9,8 +9,8 @@
   --glass-shadow: rgba(0, 0, 0, .25);
 }
 :root[data-appearance="light"] {
-  --glass-base-start: 236, 241, 248;
-  --glass-base-end: 222, 231, 243;
+  --glass-base-start: 220, 228, 238;
+  --glass-base-end: 198, 211, 228;
   --glass-opacity-start: .84;
   --glass-opacity-end: .78;
   --glass-neutral-border: 115, 134, 159;
@@ -62,8 +62,8 @@
   --glass-corner-fill: .09;
 }
 :root[data-appearance="light"] .menu-glass-panel {
-  --glass-base-start: 236, 241, 248;
-  --glass-base-end: 222, 231, 243;
+  --glass-base-start: 220, 228, 238;
+  --glass-base-end: 198, 211, 228;
   --glass-opacity-start: .56;
   --glass-opacity-end: .44;
 }
@@ -219,3 +219,37 @@
   background: transparent;
   box-shadow: none !important;
 }
+
+/* Static crystal facets stay near the illuminated corners, behind the content. */
+:root[data-appearance] :is(.menu-glass-panel, .modal-content, .dialog-popover, .cover-context-menu)::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  border-radius:inherit;
+  pointer-events:none;
+  background:url('/images/button-facets.svg') 0 0 / 288px 144px repeat;
+  -webkit-mask-image:radial-gradient(ellipse 170px 145px at 0 0,#000,transparent 85%),radial-gradient(ellipse 170px 145px at 100% 100%,#000,transparent 85%);
+  mask-image:radial-gradient(ellipse 170px 145px at 0 0,#000,transparent 85%),radial-gradient(ellipse 170px 145px at 100% 100%,#000,transparent 85%);
+  opacity:.85;
+}
+:root[data-appearance="light"] :is(.menu-glass-panel, .modal-content, .dialog-popover, .cover-context-menu)::after { opacity:.25; }
+:root .performance-mode :is(.menu-glass-panel, .modal-content, .dialog-popover, .cover-context-menu)::after { content:none; }
+:root[data-appearance="dark"] .app-wrapper {
+  background:rgba(var(--surface-15-10-28,15,10,28),.6);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+}
+:root[data-appearance="dark"] .app-wrapper::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius:inherit;
+  background:url('/images/button-facets.svg') 0 0 / 480px 240px repeat;
+  opacity:.15;
+  -webkit-mask-image:linear-gradient(125deg,#000,transparent 40%,transparent 65%,#000);
+  mask-image:linear-gradient(125deg,#000,transparent 40%,transparent 65%,#000);
+}
+:root[data-appearance="dark"] .app-wrapper.performance-mode { background:#080f1a; }
+:root .app-wrapper.performance-mode::before { content:none; }

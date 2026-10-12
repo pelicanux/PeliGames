@@ -3,10 +3,11 @@ import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { useI18n } from "../i18n/I18nContext";
 import type { GameInfo } from "./GameGrid";
+import { CoverFreeze } from "./CoverFreeze";
 import { CoverTuxPeek } from "./CoverTuxPeek";
 import { CoverParticleTransport } from "./CoverParticleTransport";
 
-export interface CoverTeleport { game: GameInfo; source: DOMRect; preview: HTMLElement; effect: "shatter" | "smooth" | "aquarium" | "particles" | "penguin" | "shrink"; }
+export interface CoverTeleport { game: GameInfo; source: DOMRect; preview: HTMLElement; effect: "shatter" | "smooth" | "aquarium" | "particles" | "penguin" | "shrink" | "freeze"; }
 // Shared irregular vertices keep 24 triangular fragments fitted without gaps.
 const points = Array.from({ length: 5 }, (_, row) => Array.from({ length: 4 }, (_, column) => ({
   x: column * 100 / 3 + (column > 0 && column < 3 ? ((row * 11 + column * 17) % 9) - 4 : 0),
@@ -71,7 +72,12 @@ export function CoverLaunchTeleport({ value, reducedMotion, onCancel, cancelling
       <motion.path d={waterPath} className="cover-waterfall-glint" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: [0, 1, 1], opacity: [0, .8, 0] }} transition={{ duration: 1.05, times: [0, .45, 1] }} />
       <motion.ellipse cx={waterEnd.x} cy={waterEnd.y} rx={width * .65} ry={18} className="cover-waterfall-ripple" initial={{ opacity: 0, scale: .2 }} animate={{ opacity: [0, .85, 0], scale: [.2, 1, 1.2] }} transition={{ duration: 1.05, times: [0, .6, 1] }} />
     </svg>}
-    {value.effect === "shrink" ? <motion.div className="cover-launch-remounted is-assembled" style={target}
+    {value.effect === "freeze" ? <motion.div className="cover-launch-remounted cover-launch-remounted--shatter is-assembled cover-launch-frozen"
+      initial={reducedMotion ? target : { left:value.source.left, top:value.source.top, width:value.source.width, height:value.source.height }}
+      animate={target} transition={{duration:reducedMotion ? 0 : 1.05,ease:[.22,1,.36,1]}}
+      onAnimationComplete={() => setAssembled(true)} aria-hidden="true">
+        <div className="cover-launch-frozen-image" ref={destination}/><CoverFreeze phase="melt" reducedMotion={reducedMotion}/>
+      </motion.div> : value.effect === "shrink" ? <motion.div className="cover-launch-remounted is-assembled" style={target}
       initial={{ scale: reducedMotion ? 1 : 0 }} animate={{ scale: 1 }}
       transition={{ duration: reducedMotion ? 0 : .5, ease: [.22, 1, .36, 1] }}
       onAnimationComplete={() => setAssembled(true)} ref={destination} aria-hidden="true" />

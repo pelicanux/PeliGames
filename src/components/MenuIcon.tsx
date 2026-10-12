@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 
-type IconName = "arrowUpDown" | "chainLinked" | "chainBroken" | "sliders" | "floppy" | "copy" | "discord" | "eye" | "language" | "image" | "tools" | "gamepad" | "gamepadSearch" | "heart" | "wine" | "search" | "info" | "home" | "plus" | "plusCircle" | "back" | "play" | "trash" | "folderSearch" | "edit" | "check" | "folder" | "calendar" | "platform" | "chip" | "graphics" | "puzzle" | "logs" | "document" | "settings" | "cube" | "keyboard" | "download" | "repair" | "bolt" | "neural" | "chevronUp" | "chevronDown";
+type IconName = "stop" | "arrowUpDown" | "chainLinked" | "chainBroken" | "sliders" | "floppy" | "copy" | "discord" | "eye" | "language" | "image" | "tools" | "gamepad" | "gamepadSearch" | "heart" | "wine" | "search" | "info" | "home" | "plus" | "plusCircle" | "back" | "play" | "trash" | "folderSearch" | "edit" | "check" | "folder" | "calendar" | "platform" | "chip" | "graphics" | "puzzle" | "logs" | "document" | "settings" | "cube" | "keyboard" | "download" | "repair" | "bolt" | "neural" | "chevronUp" | "chevronDown";
 const drawings: Record<IconName, ReactNode> = {
+  stop: <rect x="5" y="5" width="14" height="14" rx="1.5" fill="currentColor" stroke="none" />,
   arrowUpDown: <path d="M7 20V4M3 8l4-4 4 4M17 4v16m-4-4 4 4 4-4" />,
   chainLinked: <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></>,
   chainBroken: <><path d="m8 12-3.5 3.5a3.54 3.54 0 0 0 5 5L13 17M16 12l3.5-3.5a3.54 3.54 0 0 0-5-5L11 7"/><path d="M8 7V4M5 10H2M16 17v3m3-6h3"/></>,
@@ -48,5 +49,5 @@ const drawings: Record<IconName, ReactNode> = {
 };
 
 export function MenuIcon({ name }: { name: IconName }) {
-  return <svg className="menu-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={name === "repair" ? 2 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{drawings[name]}</svg>;
+  return <svg className="menu-icon" data-icon={name} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={name === "repair" ? 2 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{drawings[name]}</svg>;
 }

@@ -1,30 +1,30 @@
 /* Light neutral palette; fallback values in components preserve the dark theme. */
 :root[data-appearance="light"] {
   color-scheme: light;
-  --tone-0c0207: #e0e6ef;
-  --tone-0c1120: #e0e6ef;
+  --tone-0c0207: #cdd7e5;
+  --tone-0c1120: #cdd7e5;
   --tone-10b981: #047857;
-  --tone-111111: #e0e6ef;
-  --tone-12121b: #e0e6ef;
-  --tone-151422: #e0e6ef;
-  --tone-160b12: #e0e6ef;
+  --tone-111111: #cdd7e5;
+  --tone-12121b: #cdd7e5;
+  --tone-151422: #cdd7e5;
+  --tone-160b12: #cdd7e5;
   --tone-169bff: #0070bd;
-  --tone-170a12: #e0e6ef;
-  --tone-171722: #e0e6ef;
-  --tone-180d1d: #e0e6ef;
-  --tone-1e1b4b: #e0e6ef;
-  --tone-1e1e2f: #e0e6ef;
-  --tone-1e293b: #e0e6ef;
-  --tone-202330: #e0e6ef;
-  --tone-221a29: #e0e6ef;
-  --tone-23232e: #e0e6ef;
-  --tone-250c10: #e0e6ef;
-  --tone-262631: #e0e6ef;
-  --tone-292936: #e0e6ef;
-  --tone-343442: #e0e6ef;
+  --tone-170a12: #cdd7e5;
+  --tone-171722: #cdd7e5;
+  --tone-180d1d: #cdd7e5;
+  --tone-1e1b4b: #cdd7e5;
+  --tone-1e1e2f: #cdd7e5;
+  --tone-1e293b: #cdd7e5;
+  --tone-202330: #cdd7e5;
+  --tone-221a29: #cdd7e5;
+  --tone-23232e: #cdd7e5;
+  --tone-250c10: #cdd7e5;
+  --tone-262631: #cdd7e5;
+  --tone-292936: #cdd7e5;
+  --tone-343442: #cdd7e5;
   --tone-34d399: #047857;
-  --tone-40131c: #e0e6ef;
-  --tone-451111: #e0e6ef;
+  --tone-40131c: #cdd7e5;
+  --tone-451111: #cdd7e5;
   --tone-47b9fc: #0369a1;
   --tone-60a5fa: #2563eb;
   --tone-64748b: #44546b;
@@ -73,32 +73,32 @@
   --tone-ffe1cf: #1e293b;
   --tone-ffe2c0: #1e293b;
   --tone-ffffff: #1e293b;
-  --surface-0-80-75: 226, 233, 243;
-  --surface-10-5-10: 226, 233, 243;
-  --surface-12-17-32: 226, 233, 243;
-  --surface-13-18-30: 226, 233, 243;
-  --surface-15-10-28: 226, 233, 243;
-  --surface-15-15-26: 226, 233, 243;
-  --surface-15-18-32: 226, 233, 243;
-  --surface-15-20-32: 226, 233, 243;
-  --surface-16-24-39: 226, 233, 243;
-  --surface-19-13-27: 226, 233, 243;
-  --surface-20-20-20: 226, 233, 243;
-  --surface-20-20-25: 226, 233, 243;
-  --surface-23-13-27: 226, 233, 243;
-  --surface-25-15-45: 226, 233, 243;
+  --surface-0-80-75: 208, 217, 230;
+  --surface-10-5-10: 208, 217, 230;
+  --surface-12-17-32: 208, 217, 230;
+  --surface-13-18-30: 208, 217, 230;
+  --surface-15-10-28: 208, 217, 230;
+  --surface-15-15-26: 208, 217, 230;
+  --surface-15-18-32: 208, 217, 230;
+  --surface-15-20-32: 208, 217, 230;
+  --surface-16-24-39: 208, 217, 230;
+  --surface-19-13-27: 208, 217, 230;
+  --surface-20-20-20: 208, 217, 230;
+  --surface-20-20-25: 208, 217, 230;
+  --surface-23-13-27: 208, 217, 230;
+  --surface-25-15-45: 208, 217, 230;
   --surface-255-255-255: 35, 50, 75;
-  --surface-26-24-38: 226, 233, 243;
-  --surface-26-26-26: 226, 233, 243;
-  --surface-35-20-65: 226, 233, 243;
-  --surface-35-32-45: 226, 233, 243;
-  --surface-64-52-76: 226, 233, 243;
-  --surface-7-10-20: 226, 233, 243;
+  --surface-26-24-38: 208, 217, 230;
+  --surface-26-26-26: 208, 217, 230;
+  --surface-35-20-65: 208, 217, 230;
+  --surface-35-32-45: 208, 217, 230;
+  --surface-64-52-76: 208, 217, 230;
+  --surface-7-10-20: 208, 217, 230;
 }
-:root[data-appearance="light"] body { background-color: #dce3ec; color: #1e293b; }
-:root[data-appearance="light"] body::before { opacity: .55; filter: hue-rotate(var(--background-hue)) brightness(1.65) saturate(1.15); }
-:root[data-appearance="light"] .app-wrapper { background: rgba(226,233,243,.6); }
-:root[data-appearance="light"] .app-titlebar { background: rgba(226,233,243,.64) !important; }
+:root[data-appearance="light"] body { background-color: #c4d0e0; color: #1e293b; }
+:root[data-appearance="light"] body::before { opacity: .55; filter: hue-rotate(var(--background-hue)) brightness(1.25) saturate(1.15); }
+:root[data-appearance="light"] .app-wrapper { background: rgba(208,217,230,.6); }
+:root[data-appearance="light"] .app-titlebar { background: rgba(208,217,230,.64) !important; }
 :root[data-appearance="light"] .modal-content,
 :root[data-appearance="light"] .dialog-popover,
 :root[data-appearance="light"] .cover-context-menu,
@@ -107,12 +107,12 @@
 :root[data-appearance="light"] .effects-menu,
 :root[data-appearance="light"] .custom-select-menu,
 :root[data-appearance="light"] .text-context-menu {
-  background: linear-gradient(125deg, rgba(236,241,248,.84), rgba(222,231,243,.78)) !important;
+  background: linear-gradient(125deg, rgba(220,228,238,.84), rgba(198,211,228,.78)) !important;
   color: #334155;
 }
 :root[data-appearance="light"] .menu-glass-panel {
   background: radial-gradient(ellipse at 100% 100%, rgba(var(--accent-rgb),.08), transparent 44%),
-    linear-gradient(125deg, rgba(236,241,248,.68), rgba(222,231,243,.56));
+    linear-gradient(125deg, rgba(220,228,238,.68), rgba(198,211,228,.56));
 }
 :root[data-appearance="light"] input,
 :root[data-appearance="light"] textarea,
@@ -120,23 +120,23 @@
 :root[data-appearance="light"] .game-directory-value,
 :root[data-appearance="light"] .installation-path-box,
 :root[data-appearance="light"] .custom-select-trigger {
-  background: rgba(236,241,248,.72) !important; color: #334155 !important;
+  background: rgba(220,228,238,.72) !important; color: #334155 !important;
   border-color: #b8c5d7;
 }
 :root[data-appearance="light"] input::placeholder { color: #44546b; opacity: 1; }
-:root[data-appearance="light"] pre { background: rgba(225,233,243,.62); color: #334155; }
-:root[data-appearance="light"] body.performance-mode { background-color: #dce3ec; }
+:root[data-appearance="light"] pre { background: rgba(204,216,230,.62); color: #334155; }
+:root[data-appearance="light"] body.performance-mode { background-color: #c4d0e0; }
 :root[data-appearance="light"] .performance-mode .menu-glass-panel,
 :root[data-appearance="light"] .performance-mode .modal-content,
-:root[data-appearance="light"] .performance-mode .dialog-popover { background: #e0e6ef !important; }
+:root[data-appearance="light"] .performance-mode .dialog-popover { background: #cdd7e5 !important; }
 :root[data-appearance="light"] .ui-hover-tooltip,
 :root[data-appearance="light"] .installation-name-hint { box-shadow: 0 8px 24px rgba(35,50,75,.15); }
 :root[data-appearance="light"] .library-view-toggle { background: rgba(35,50,75,.05); }
-:root[data-appearance="light"] .library-game-card { background: rgba(226,233,243,.42) !important; }
+:root[data-appearance="light"] .library-game-card { background: rgba(208,217,230,.42) !important; }
 :root[data-appearance="light"] .game-library--grid .game-launcher-badge > div { color: #d1d5db !important; }
 :root[data-appearance="light"] .info-game-logs { color: #994500; }
 :root[data-appearance="light"] .installation-cover-placeholder {
-  background: linear-gradient(135deg, rgba(var(--accent-rgb),.18), rgba(226,233,243,.6));
+  background: linear-gradient(135deg, rgba(var(--accent-rgb),.18), rgba(208,217,230,.6));
 }
 :root[data-appearance="light"] :is(
   .menu-glass-panel, .modal-content, .dialog-popover, .cover-context-menu,
@@ -152,7 +152,7 @@
     0 10px 28px rgba(35,50,75,.2) !important;
 }
 :root[data-appearance="light"] :is(.model-source-tooltip, .launcher-update-tooltip) {
-  background: linear-gradient(125deg, rgba(236,241,248,.84), rgba(222,231,243,.78)) !important;
+  background: linear-gradient(125deg, rgba(220,228,238,.84), rgba(198,211,228,.78)) !important;
 }
 :root[data-appearance="light"] .performance-mode :is(
   .menu-glass-panel, .modal-content, .dialog-popover, .cover-context-menu,

@@ -21,6 +21,7 @@ export function ThemePreferences({ onApplied }: { onApplied: () => void }) {
     { id: "shrink", name: text.shrinkEffect, hint: text.shrinkHint },
     { id: "shatter", name: text.shatterEffect, hint: text.shatterHint },
     { id: "particles", name: text.particlesEffect, hint: text.particlesHint },
+    { id: "freeze", name: text.freezeEffect, hint: text.freezeHint },
     { id: "aquarium", name: text.aquariumEffect, hint: text.aquariumHint },
     { id: "penguin", name: text.penguinEffect, hint: text.penguinHint },
   ] as const;

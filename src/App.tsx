@@ -32,6 +32,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import "./App.css";
 import "./theme/appearance.css";
 import "./theme/glassSurfaces.css";
+import "./theme/crystalActions.css";
 import { MenuIcon } from "./components/MenuIcon";
 import type { GamePanelMode } from "./components/GameModeSelector";
 import { GamePanelCarousel } from "./components/GamePanelCarousel";
@@ -1052,9 +1053,9 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
 
                 
                 <div className="game-action-stack">
-                  {gamePanelMode === "nexus" && nexusGame && <button type="button" className="btn btn-play game-play-button" disabled={nexus.busy} onClick={() => void (nexusGame.running ? nexus.stop(nexusGame.id) : nexus.start(nexusGame.id))}><MenuIcon name={nexusGame.running ? "platform" : "play"} />{nexus.launching === nexusGame.id ? nexusText.launching : nexusGame.running ? nexusText.stop : nexusText.start}</button>}
-                  {gamePanelMode === "nexus" && nexusGame?.mods.some(mod => mod.installed) && <button type="button" className="btn btn-primary nexus-sidebar-install" disabled={nexus.busy} onClick={() => setNexusTab("catalog")}><MenuIcon name="puzzle" />{nexusText.installMods}</button>}
-                  {gamePanelMode === "nexus" && nexusGame && <button type="button" className="btn btn-secondary nexus-sidebar-report" onClick={() => setNexusReportTarget(nexusGame.id)}><MenuIcon name="info" />{nexusText.reportError}</button>}
+                  {gamePanelMode === "nexus" && nexusGame && <button type="button" className={`btn btn-play game-play-button nexus-sidebar-launch${nexusGame.running ? " nexus-sidebar-stop" : ""}`} disabled={nexus.busy} onClick={() => void (nexusGame.running ? nexus.stop(nexusGame.id) : nexus.start(nexusGame.id))}><MenuIcon name={nexusGame.running ? "stop" : "play"} /><span className="nexus-sidebar-action-label">{nexus.launching === nexusGame.id ? nexusText.launching : nexusGame.running ? nexusText.stop : nexusText.start}</span></button>}
+                  {gamePanelMode === "nexus" && nexusGame?.mods.some(mod => mod.installed) && <button type="button" className="btn btn-primary nexus-sidebar-install" disabled={nexus.busy} onClick={() => setNexusTab("catalog")}><MenuIcon name="puzzle" /><span className="nexus-sidebar-action-label">{nexusText.installMods}</span></button>}
+                  {gamePanelMode === "nexus" && nexusGame && <button type="button" className="btn btn-secondary nexus-sidebar-report" onClick={() => setNexusReportTarget(nexusGame.id)}><MenuIcon name="info" /><span className="nexus-sidebar-action-label">{nexusText.reportError}</span></button>}
                   {gamePanelMode !== "nexus" && selectedGame.launcher === "PeliGames" && <GameLaunchButton path={selectedGame.path} execution={gameExecution} disabled={gameInstaller.busy} />}
                   {selectedGame.launcher === "PeliGames" && gamePanelMode === "installed" && <button type="button" className="btn btn-secondary game-uninstall-button"
                     disabled={gameInstaller.busy || libraryMutationBusy || gameExecution.active || Boolean(gameExecution.pendingPath)}
