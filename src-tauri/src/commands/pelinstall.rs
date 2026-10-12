@@ -42,6 +42,22 @@ pub async fn remove_peligames_shortcuts(path: String) -> Result<usize, String> {
 }
 
 #[tauri::command]
+pub fn appimage_install_status() -> Result<crate::core::pelinstall::AppImageStatus, String> {
+    crate::core::pelinstall::appimage_status()
+}
+/// Installs the running AppImage in the user's executables folder, opens the
+/// installed copy and closes this one (as an update does).
+#[tauri::command]
+pub async fn install_peligames_appimage(app: tauri::AppHandle) -> Result<(), String> {
+    let target = tauri::async_runtime::spawn_blocking(crate::core::pelinstall::install_appimage).await.map_err(|e| e.to_string())??;
+    std::process::Command::new(&target).env("PELIGAMES_RESTART_PARENT_PID", std::process::id().to_string())
+        .env_remove("APPIMAGE").env_remove("APPDIR").env_remove("LD_LIBRARY_PATH").env_remove("LD_PRELOAD")
+        .spawn().map_err(|e| format!("PeliGames instalado em {}, mas não foi possível abri-lo: {e}", target.display()))?;
+    crate::core::logger::log_launcher(&app, "INFO", &format!("AppImage instalado em {}; reiniciando", target.display()));
+    app.exit(0);
+    Ok(())
+}
+#[tauri::command]
 pub async fn get_pelinstall_icon(path: String) -> Result<Option<Vec<u8>>, String> {
     tauri::async_runtime::spawn_blocking(move || crate::core::executable_icon::extract_png(std::path::Path::new(&path)).ok()).await.map_err(|e| e.to_string())
 }

@@ -2,7 +2,7 @@ export type Language = "pt" | "en";
 
 export const translations = {
   pt: {
-    welcome: { title: "Seja bem-vindo", start: "Começar", back: "Retornar" },
+    welcome: { title: "Seja bem-vindo ao PeliGames", start: "Começar", back: "Retornar", subtitle: "Seus jogos do Windows no Linux, num só lugar.", library: "Biblioteca única: Steam, Heroic, Lutris, Bottles, Faugus e os jogos que você instalar.", install: "Instale jogos e programas do Windows com o Proton, sem configurar nada à mão.", mods: "Mods do Nexus Mods e DLSSNR com poucos cliques.", launchers: "EA app, Battle.net, Ubisoft e Epic, com um perfil para cada jogo.", installTitle: "Instalar o PeliGames neste computador", installHint: "O AppImage vai para a pasta de programas do usuário, aparece no menu de aplicativos (Jogos) junto com o Pelinstall e continua recebendo atualizações.", installButton: "Instalar e abrir", installing: "Instalando…", later: "Agora não" },
     theme: {
       appearance: "Tema da interface", dark: "Escuro", light: "Claro",
       title: "Cor de destaque",
@@ -444,7 +444,7 @@ export const translations = {
     }
   },
   en: {
-    welcome: { title: "Welcome", start: "Get started", back: "Back" },
+    welcome: { title: "Welcome to PeliGames", start: "Get started", back: "Back", subtitle: "Your Windows games on Linux, in one place.", library: "One library: Steam, Heroic, Lutris, Bottles, Faugus and the games you install.", install: "Install Windows games and programs with Proton, no manual setup.", mods: "Nexus Mods and DLSSNR mods in a few clicks.", launchers: "EA app, Battle.net, Ubisoft and Epic, with a profile for each game.", installTitle: "Install PeliGames on this computer", installHint: "The AppImage moves to the user's programs folder, shows up in the applications menu (Games) with Pelinstall and keeps receiving updates.", installButton: "Install and open", installing: "Installing…", later: "Not now" },
     theme: {
       appearance: "Interface theme", dark: "Dark", light: "Light",
       title: "Accent color",
