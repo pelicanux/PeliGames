@@ -1492,7 +1492,11 @@ button.primary.proton-download-button.is-downloading:disabled { background: line
 .mod-manager-prompt { margin: 0 0 1rem; color: var(--tone-e2e8f0, #e2e8f0); }
 .mod-manager-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .mod-manager-option { display: flex; align-items: center; gap: .7rem; min-height: 104px; }
-.mod-manager-option > span { padding: 0; background: none; color: var(--tone-e9edf9, #e9edf9); font-size: 1.2rem; font-weight: 700; }
+.mod-manager-option > .mod-manager-option-heading { display:flex; align-items:center; gap:.7rem; min-width:0; padding:0; border:none; border-radius:0; background:none; box-shadow:none; }
+.mod-manager-option-heading > .nexus-icon { display:block; width:24px; height:24px; flex:0 0 24px; object-fit:contain; }
+.mod-manager-option-heading > span { padding: 0; background: none; color: var(--tone-e9edf9, #e9edf9); font-size: 1.2rem; font-weight: 700; }
+.mod-manager-option.has-disclaimer { flex-direction: column; align-items: flex-start; justify-content: center; gap: .55rem; }
+.mod-manager-disclaimer { color: var(--tone-94a3b8, #94a3b8); font-size: .72rem; line-height: 1.35; text-align: left; font-weight: 400; }
 .mod-manager-option .menu-icon { color: var(--accent); flex-shrink: 0; }
 .mod-manager-option:hover, .mod-manager-option:focus-visible { border-color: var(--accent) !important; box-shadow: 0 0 15px rgba(var(--accent-rgb), .2); }
 @media (max-width: 600px) { .mod-manager-options { grid-template-columns: 1fr; } }
