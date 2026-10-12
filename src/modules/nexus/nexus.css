@@ -601,6 +601,9 @@
 .nexus-deploy-progress span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nexus-deploy-progress small { font-variant-numeric: tabular-nums; opacity: .85; }
 .nexus-deploy-progress progress { grid-column: 1 / -1; width: 100%; height: .3rem; accent-color: var(--accent); }
+.nexus-mod-progress-slot { display:inline-flex; justify-content:flex-end; align-items:center; flex:0 0 12ch; width:12ch; min-height:1em; font-size:.68rem; margin-left:.35rem; }
+.nexus-deploy-counter { display:inline-block; white-space:nowrap; font-size:.68rem; font-weight:500; font-variant-numeric:tabular-nums; line-height:1.3; color:var(--accent-light); text-shadow:0 0 6px rgba(var(--accent-rgb),.45); }
+.nexus-panel-heading h3 > .nexus-deploy-counter { margin-left:.5rem; }
 
 /* Keep installation feedback inside the already allocated footer. */
 .nexus-install-review-popup .nexus-popup-footer { align-items: center; flex-wrap: nowrap; min-height: 72px; box-sizing: border-box; }

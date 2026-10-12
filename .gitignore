@@ -60,6 +60,8 @@ dist-ssr
 /docs/*
 # Exceções versionadas: importador Vortex e documentação das famílias de módulos.
 !/tools/vortex-import/
+!/tools/report-relay/
+/tools/report-relay/.wrangler/
 !/docs/nexus-unreal-family.md
 !/docs/nexus-unity-family.md
 !/docs/nexus-collections.md
@@ -85,3 +87,6 @@ dist-ssr
 
 # Local mod archives used for manual validation
 /teste_mods_nexus/
+
+# Local interface restore snapshots
+/.local-backups/

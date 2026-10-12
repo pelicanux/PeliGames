@@ -109,6 +109,7 @@ fn run_inner(request: InstallationRequest, repair: Option<(super::installed_libr
     }
     let _guard = InstallationGuard;
     if cancel.load(Ordering::Acquire) { return Err("Operação cancelada.".into()); }
+    let mut baseline = Vec::new();
     let mut result = if let Some((entry,prefix)) = &repair {
         let proton = validate_proton(&request.proton)?;
         validate_executable(&request.executable)?;
@@ -123,7 +124,11 @@ fn run_inner(request: InstallationRequest, repair: Option<(super::installed_libr
             if !Path::new(&prefix).join("drive_c").is_dir() || !Path::new(&prefix).join("system.reg").is_file() { return Err(format!("O Proton não concluiu a preparação do prefixo. Log: {log}")); }
             InstallationResult { prefix, log, registered_count: 0, library_error: None }
         }
-    } else { run_with_umu_cancellable(request.clone(), &find_umu()?, &cancel)? };
+    } else {
+        let umu = find_umu()?;
+        baseline = prefix_baseline(&request, &umu, &cancel)?;
+        run_with_umu_cancellable(request.clone(), &umu, &cancel)?
+    };
     {
         let mut slot = INSTALLATION.lock().map_err(|e| e.to_string())?;
         if let Some(session) = slot.as_mut() { session.accepting_cancel = false; }
@@ -163,6 +168,11 @@ fn run_inner(request: InstallationRequest, repair: Option<(super::installed_libr
         cover_url: request.cover_url,
         entries: vec![],
         overrides: vec![],
+        baseline,
+        known_shortcuts: None,
+        launcher_games: vec![],
+        install_shortcuts: None,
+        profile_kind: Default::default(),
     };
     match super::installed_library::register(record) {
         Ok(count) => result.registered_count = count,
@@ -171,19 +181,22 @@ fn run_inner(request: InstallationRequest, repair: Option<(super::installed_libr
     Ok(result)
 }
 pub(crate) fn prepare_launch(path: String) -> Result<PreparedRun, String> {
-    prepare_launch_program(path, None)
+    prepare_launch_program(path, None, Vec::new())
 }
 pub(crate) fn prepare_launch_program(
     path: String,
     executable: Option<String>,
+    extra_arguments: Vec<String>,
 ) -> Result<PreparedRun, String> {
     let entry = super::installed_library::list(false)?
         .into_iter()
         .find(|entry| entry.path == path)
         .ok_or("Executável não registrado na biblioteca PeliGames.")?;
+    // A game's profile prefix (overlay) is mounted before anything runs in it.
+    if let Some(profile) = &entry.profile { super::game_profiles::ensure_ready(profile)?; }
     // This launches the registered executable without replacing the installation manifest.
     let registered_program = executable.is_none();
-    let arguments = if registered_program { entry.launch_arguments.clone() } else { Vec::new() };
+    let arguments = if registered_program { entry.launch_arguments.clone() } else { extra_arguments };
     let mut prepared = prepare_run_in_prefix(
         InstallationRequest {
             name: entry.name,
@@ -204,6 +217,9 @@ pub(crate) fn prepare_launch_program(
         if let Some(options) = &entry.advanced.launch_options {
             crate::commands::nexus_launch_options::apply_custom(&mut prepared.command, options)?;
         } else { prepared.command.args(arguments); }
+    } else {
+        // Another program of the prefix (a shortcut's arguments, e.g. Battle.net `--exec`).
+        prepared.command.args(arguments);
     }
     Ok(prepared)
 }
@@ -225,6 +241,23 @@ pub(crate) struct PreparedRun {
     pub prefix: PathBuf,
     pub log: PathBuf,
     pub executable: PathBuf,
+}
+/// Executables in the prefix before the installer runs. A new prefix is first
+/// created silently (`wineboot -u`), so what Proton itself adds (its Steam stub,
+/// runtimes) never looks like the installed game.
+fn prefix_baseline(request: &InstallationRequest, umu: &Path, cancel: &AtomicBool) -> Result<Vec<String>, String> {
+    let ready = |prefix: &Path| prefix.join("system.reg").is_file() && prefix.join("drive_c").is_dir();
+    if !ready(&absolute(&request.directory)?.join("prefix")) {
+        let prepared = prepare_run_mode(request.clone(), umu, None, None, true)?;
+        let log = prepared.log.to_string_lossy().into_owned();
+        let status = super::game_execution::wait_for_prefix_update(prepared, cancel)?;
+        if status.state == "cancelled" || cancel.load(Ordering::Acquire) { return Err(format!("Instalação cancelada. Log: {log}")); }
+        if status.state == "failed" { return Err(status.error.unwrap_or_else(|| format!("Falha ao preparar o prefixo. Log: {log}"))); }
+    }
+    let prefix = absolute(&request.directory)?.canonicalize().map_err(|e| e.to_string())?.join("prefix");
+    // Without a ready prefix the comparison is skipped; the installer still runs.
+    if !ready(&prefix) { return Ok(Vec::new()); }
+    super::installed_library::prefix_executables(&prefix)
 }
 fn run_with_umu_cancellable(request: InstallationRequest, umu: &Path, cancel: &AtomicBool) -> Result<InstallationResult, String> {
     wait_for_installation(prepare_run(request, umu)?, cancel)

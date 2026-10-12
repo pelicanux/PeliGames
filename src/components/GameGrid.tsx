@@ -1,4 +1,9 @@
+import { useAccentTheme } from "../theme/ThemeProvider";
 import { createPortal } from "react-dom";
+import { CoverWalkingPenguin } from "./CoverWalkingPenguin";
+import { CoverHoldParticles } from "./CoverHoldParticles";
+import { CoverWaterFill } from "./CoverWaterFill";
+import { CoverLaunchTeleport, coverCrackPaths, type CoverTeleport } from "./CoverLaunchTeleport";
 import { GamePlatformBadge } from "./GamePlatformBadge";
 import { NexusLibraryLoading } from "../modules/nexus/NexusLibraryLoading";
 import { useFavorites } from "../services/favorites";
@@ -13,7 +18,7 @@ import { hasCustomCover } from "../services/customCovers";
 import React, { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "../i18n/I18nContext";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { usePerformanceMode } from "./EffectsContext";
 import { applyCustomCovers, readGameLibrary, saveGameLibrary } from "../services/gameLibraryCache";
 import { warmAmbientCover } from "../services/ambientCoverCache";
@@ -25,9 +30,12 @@ import { listPeliGamesEntries } from "../services/installedLibrary";
 
 export interface GameInfo {
   nexus_platform?: "native" | "proton";
+  nexus_running?: boolean;
   /** ID of the Nexus library entry (several entries may share a folder). */
   nexus_id?: string;
   discovery_source?: string | null;
+  /** The clear favourite among an installation's executables. */
+  recommended?: boolean;
   launch_arguments?: string[];
   library_view?: "own" | "all" | "nexus";
   advanced?: import("../services/advancedSettings").AdvancedSettings;
@@ -53,12 +61,14 @@ export interface ManagedGameLibrary {
 }
 interface Props {
   managedLibrary?: ManagedGameLibrary;
-  onCoverAction: (action: CoverGameAction, game: GameInfo) => void;
+  onCoverAction: (action: CoverGameAction, game: GameInfo) => void | Promise<unknown>;
   coverActionsBlocked?: boolean;
+  coverHoldBlocked?: boolean;
   homeRevision: number;
   onHome: () => void;
   onSelectGame: (game: GameInfo, portrait?: HTMLElement) => void;
   selectedGameKey?: string;
+  runningGamePath?: string;
   mode: GamePanelMode;
   detailsOpen: boolean;
   libraryScope: "own" | "all";
@@ -66,7 +76,8 @@ interface Props {
   onModeChange: (mode: GamePanelMode) => void;
 }
 
-export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, homeRevision, onHome, onSelectGame, selectedGameKey, mode, libraryScope, detailsOpen, onModeChange, modeDisabled, managedLibrary }) => {
+export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, coverHoldBlocked, homeRevision, onHome, onSelectGame, selectedGameKey, runningGamePath, mode, libraryScope, detailsOpen, onModeChange, modeDisabled, managedLibrary }) => {
+  const { launchEffect } = useAccentTheme();
   const [, setCoverRevision] = useState(0);
   const managed = Boolean(managedLibrary);
   useEffect(() => {
@@ -295,12 +306,132 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     }
   };
 
+  const [holdingKey, setHoldingKey] = useState<string | null>(null);
+  const [brokenCards, setBrokenCards] = useState(() => new Set<string>());
+  const [teleport, setTeleport] = useState<CoverTeleport | null>(null);
+  const [launchCommitted, setLaunchCommitted] = useState(false);
+  const cancelPendingLaunch = useRef<(() => void) | null>(null);
+  const launchGeneration = useRef(0);
+  useEffect(() => () => { ++launchGeneration.current; cancelPendingLaunch.current?.(); }, []);
+  const hold = useRef<{ key: string; pointer: number; x: number; y: number; timer: number; feedbackTimer?: number; target: HTMLDivElement } | null>(null);
+  const suppressHoldClick = useRef<string | null>(null);
+  const launchBlocked = useRef(coverHoldBlocked ?? coverActionsBlocked);
+  launchBlocked.current = coverHoldBlocked ?? coverActionsBlocked;
+  const runningSnapshot = useRef({ path: runningGamePath, games: managedLibrary?.games });
+  runningSnapshot.current = { path: runningGamePath, games: managedLibrary?.games };
+  const isRunning = (game: GameInfo) => game.path === runningSnapshot.current.path || Boolean(runningSnapshot.current.games?.find(entry => entry.path === game.path && entry.launcher === game.launcher)?.nexus_running);
+  const launchFromHold = useRef(onCoverAction);
+  launchFromHold.current = onCoverAction;
+  const cancelHold = () => {
+    const active = hold.current;
+    hold.current = null;
+    if (active) {
+      window.clearTimeout(active.timer);
+      window.clearTimeout(active.feedbackTimer);
+      if (active.target.hasPointerCapture(active.pointer)) active.target.releasePointerCapture(active.pointer);
+    }
+    setHoldingKey(null);
+  };
+  useEffect(() => {
+    const cancel = () => cancelHold();
+    const visibility = () => { if (document.hidden) cancel(); };
+    window.addEventListener("pointerup", cancel);
+    window.addEventListener("pointercancel", cancel);
+    window.addEventListener("blur", cancel);
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      cancelHold();
+      window.removeEventListener("pointerup", cancel);
+      window.removeEventListener("pointercancel", cancel);
+      window.removeEventListener("blur", cancel);
+      document.removeEventListener("visibilitychange", visibility);
+    };
+  }, []);
+  useEffect(() => { cancelHold(); }, [coverHoldBlocked, coverActionsBlocked, libraryScope, viewMode, mode, launchEffect]);
+  useEffect(() => {
+    cancelPendingLaunch.current?.();
+    ++launchGeneration.current;
+    setTeleport(null);
+    setBrokenCards(new Set());
+  }, [homeRevision, libraryScope, mode]);
+  const startHold = (event: React.PointerEvent<HTMLDivElement>, game: GameInfo) => {
+    cancelHold();
+    suppressHoldClick.current = null;
+    if (launchEffect === "disabled" || event.button !== 0 || !event.isPrimary || launchBlocked.current
+      || !(managed || game.launcher === "Steam" || game.launcher === "PeliGames")) return;
+    const key = gameViewKey(game);
+    const stopping = isRunning(game);
+    if (!stopping && coverActionsBlocked) return;
+    const source = (event.currentTarget.closest(".library-card-cell") ?? event.currentTarget).getBoundingClientRect();
+    // A lightweight DOM copy keeps the frame, badges and image together; no
+    // screenshot encoding or game data processing runs during the gesture.
+    const preview = !stopping ? event.currentTarget.cloneNode(true) as HTMLElement : null;
+    preview?.classList.remove("is-holding-launch", "is-shattering-launch", "is-holding-particles", "is-holding-shrink");
+    preview?.querySelectorAll(".library-cover-shatter, .library-hold-launch").forEach(node => node.remove());
+    const timer = window.setTimeout(() => {
+      if (hold.current?.key !== key || launchBlocked.current) { cancelHold(); return; }
+      suppressHoldClick.current = key;
+      cancelHold();
+      if (stopping !== isRunning(game)) return;
+      if (stopping) {
+        void Promise.resolve().then(() => launchFromHold.current("stop", game)).catch(error => console.error("Cover stop failed", error));
+        return;
+      }
+      if (!preview) {
+        void Promise.resolve().then(() => launchFromHold.current("start", game)).catch(error => console.error("Cover launch failed", error));
+        return;
+      }
+      setBrokenCards(previous => new Set(previous).add(key));
+      const generation = ++launchGeneration.current;
+      setLaunchCommitted(false);
+      setTeleport({ game, source, preview, effect: launchEffect === "shrink" ? "shrink" : launchEffect === "penguin" ? "penguin" : launchEffect === "particles" ? "particles" : launchEffect === "aquarium" ? "aquarium" : launchEffect === "smooth" ? "smooth" : "shatter" });
+      // Give the enlarged cover a cancellation window before launching, including
+      // Steam games whose external startup cannot be reliably cancelled afterwards.
+      const ready = new Promise<boolean>(resolve => {
+        const timer = window.setTimeout(() => {
+          cancelPendingLaunch.current = null;
+          resolve(true);
+        }, (launchEffect === "smooth" || launchEffect === "penguin" || launchEffect === "shrink") ? 3500 : 4050);
+        cancelPendingLaunch.current = () => {
+          window.clearTimeout(timer);
+          cancelPendingLaunch.current = null;
+          resolve(false);
+        };
+      });
+      void ready.then(async proceed => {
+        if (!proceed || generation !== launchGeneration.current) return;
+        setLaunchCommitted(true);
+        await launchFromHold.current("start", game);
+      }).catch(error => console.error("Cover launch failed", error)).finally(() => {
+        if (generation !== launchGeneration.current) return;
+        setTeleport(null);
+        setBrokenCards(previous => { const next = new Set(previous); next.delete(key); return next; });
+      });
+    }, 1200);
+    hold.current = { key, pointer: event.pointerId, x: event.clientX, y: event.clientY, timer, target: event.currentTarget };
+    if (launchEffect === "shrink") {
+      hold.current.feedbackTimer = window.setTimeout(() => {
+        const active = hold.current;
+        if (!active || active.key !== key) return;
+        // Shrinking must not make a stationary pointer leave the shrinking hit area.
+        active.target.setPointerCapture(active.pointer);
+        setHoldingKey(key);
+      }, 150);
+    } else setHoldingKey(key);
+  };
+
+  const runningBadge = (game: GameInfo) => (game.nexus_running || game.path === runningGamePath) && <span className="library-running-badge" role="status"><i aria-hidden="true" />{t("gameExecution", "running")}</span>;
   const renderCardContent = (game: GameInfo) => {
+    if (brokenCards.has(gameViewKey(game))) return null;
     if (gameViewKey(game) === selectedGameKey) {
       return (
         <div 
           key={gameViewKey(game)}
-          className={`game-card-placeholder ${viewMode === "list" ? "game-card-placeholder--list" : ""}`}
+          className={`game-card-placeholder ${viewMode === "list" ? "game-card-placeholder--list" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shatter" ? "is-holding-launch" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "particles" ? "is-holding-particles" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shrink" ? "is-holding-shrink" : ""}`}
+          onPointerDown={event => { if (isRunning(game)) startHold(event, game); }}
+          onPointerMove={event => { const active = hold.current; if (active && Math.hypot(event.clientX - active.x, event.clientY - active.y) > 10) cancelHold(); }}
+          onPointerLeave={cancelHold}
+          onDragStart={event => event.preventDefault()}
           style={{
             background: "rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)",
             border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.12)",
@@ -310,6 +441,10 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
             opacity: 0.5
           }}
         >
+          {holdingKey === gameViewKey(game) && launchEffect === "smooth" && <div className="library-hold-progress" aria-hidden="true"><span /></div>}
+          {holdingKey === gameViewKey(game) && launchEffect === "aquarium" && <CoverWaterFill reducedMotion={performanceMode} />}
+          {holdingKey === gameViewKey(game) && launchEffect === "particles" && <CoverHoldParticles reducedMotion={performanceMode} />}
+          {holdingKey === gameViewKey(game) && launchEffect === "penguin" && <CoverWalkingPenguin reducedMotion={performanceMode} />}
           {game.cover_url && !imageErrors.has(game.path) ? (
             <img className="selected-cover-copy" src={game.cover_url} alt="" aria-hidden="true"
               onError={() => setImageErrors(prev => new Set(prev).add(game.path))} />
@@ -319,6 +454,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
               {viewMode === "grid" && <span>{game.name}</span>}
             </div>
           )}
+          {runningBadge(game)}
           {managed && <GamePlatformBadge platform={game.nexus_platform} />}
           {viewMode === "list" && <><span className="selected-game-placeholder-name">{game.name}</span><span className="selected-game-list-note">{t("gameGrid", "selectedGame")}</span></>}
         </div>
@@ -327,9 +463,22 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
 
     return (
       <div
-        className={`library-game-card ${viewMode === "list" ? "library-game-card--list" : ""}`}
+        className={`library-game-card ${viewMode === "list" ? "library-game-card--list" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shatter" ? "is-holding-launch" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "particles" ? "is-holding-particles" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shrink" ? "is-holding-shrink" : ""}`}
         key={`${gameViewKey(game)}-${viewMode}-${performanceMode ? "performance" : "elegant"}`} 
-        onClick={event => onSelectGame(game, event.currentTarget.querySelector<HTMLElement>(".library-cover-thumbnail") ?? undefined)}
+        onPointerDown={event => startHold(event, game)}
+        onPointerMove={event => {
+          const active = hold.current;
+          if (active && active.pointer === event.pointerId && Math.hypot(event.clientX - active.x, event.clientY - active.y) > 10) {
+            suppressHoldClick.current = active.key;
+            cancelHold();
+          }
+        }}
+        onPointerLeave={cancelHold}
+        onDragStart={event => { event.preventDefault(); }}
+        onClick={event => {
+          if (suppressHoldClick.current === gameViewKey(game)) { suppressHoldClick.current = null; event.preventDefault(); return; }
+          onSelectGame(game, event.currentTarget.querySelector<HTMLElement>(".library-cover-thumbnail") ?? undefined);
+        }}
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
@@ -344,6 +493,13 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
           transformStyle: "flat"
         }}
       >
+      {holdingKey === gameViewKey(game) && launchEffect === "smooth" && <div className="library-hold-progress" aria-hidden="true"><span /></div>}
+          {holdingKey === gameViewKey(game) && launchEffect === "aquarium" && <CoverWaterFill reducedMotion={performanceMode} />}
+          {holdingKey === gameViewKey(game) && launchEffect === "particles" && <CoverHoldParticles reducedMotion={performanceMode} />}
+          {holdingKey === gameViewKey(game) && launchEffect === "penguin" && <CoverWalkingPenguin reducedMotion={performanceMode} />}
+      {holdingKey === gameViewKey(game) && launchEffect === "shatter" && !isRunning(game) && <div className="library-hold-launch" aria-hidden="true"><svg className="library-hold-cracks" viewBox="0 0 100 100" preserveAspectRatio="none">{coverCrackPaths.map((path, index) => <g key={path}><path className="cover-crack-shadow" d={path} pathLength={1} style={{ animationDelay: `${index / coverCrackPaths.length * .52}s` }} /><path d={path} pathLength={1} style={{ animationDelay: `${index / coverCrackPaths.length * .52}s` }} /></g>)}</svg></div>}
+
+      {runningBadge(game)}
       <div className="glare" style={{
         position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
         pointerEvents: "none", opacity: 0, transition: "opacity 0.2s ease-out", zIndex: 10
@@ -414,7 +570,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   // Project the whole cell (including its background) when the details panel resizes.
   // The inner div remains responsible for mouse tilt; it never competes with layout transforms.
   const renderCard = (game: GameInfo) => (
-    <motion.div key={gameViewKey(game)} className="library-card-cell" data-cover-key={gameViewKey(game)} layout={performanceMode ? false : "position"} layoutDependency={layoutRevision}
+    <motion.div key={gameViewKey(game)} className={`library-card-cell ${brokenCards.has(gameViewKey(game)) ? "library-card-cell--shattered" : ""}`} aria-hidden={brokenCards.has(gameViewKey(game)) || undefined} data-cover-key={gameViewKey(game)} layout={performanceMode ? false : "position"} layoutDependency={layoutRevision}
       transition={{ layout: { duration: 0.3, ease: [0.4, 0, 0.2, 1] } }}>
       {renderCardContent(game)}
     </motion.div>
@@ -471,6 +627,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <AnimatePresence>{teleport && <CoverLaunchTeleport value={teleport} reducedMotion={performanceMode} cancellingDisabled={launchCommitted} onCancel={() => cancelPendingLaunch.current?.()} />}</AnimatePresence>
       <div className={`grid-header`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "1rem", paddingRight: "0.5rem" }}>
         
         {/* Right Controls */}

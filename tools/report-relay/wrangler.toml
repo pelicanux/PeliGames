@@ -1,0 +1,28 @@
+name = "peligames-report"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+# Endereço público peligames-report.<conta>.workers.dev; sem URLs de prévia por versão.
+workers_dev = true
+preview_urls = false
+
+# Até 3 relatórios por minuto por IP.
+[[ratelimits]]
+name = "LIMITER"
+namespace_id = "1001"
+simple = { limit = 3, period = 60 }
+
+[vars]
+# Servidor do Discord, para devolver o link da postagem criada.
+GUILD_ID = "1088170837921779812"
+# Tag do fórum aplicada às postagens (opcional): ID da tag, ex. "Bug".
+# FORUM_TAG_ID = ""
+
+# Índice jogo → postagem do fórum: um Durable Object por jogo (gravação e leitura
+# imediatas, relatórios do mesmo jogo em fila).
+[[durable_objects.bindings]]
+name = "GAME_THREADS"
+class_name = "GameThreads"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["GameThreads"]

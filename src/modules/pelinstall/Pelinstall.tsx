@@ -229,7 +229,7 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
       }
       const found = (await listPeliGamesEntries()).filter(entry => entry.prefix === installation.prefix);
       const registered = mode === "repair" ? found.filter(entry => entry.path === targetPath) : found;
-      setEntries(registered); setChosen(registered.length === 1 ? registered[0].path : registered.find(entry => entry.discovery_source)?.path || "");
+      setEntries(registered); setChosen(registered.length === 1 ? registered[0].path : (registered.find(entry => entry.recommended) || registered.find(entry => entry.discovery_source))?.path || "");
       if (installation.library_error) setError(installation.library_error);
       else if (!registered.length) setError("Nenhum executável foi encontrado. Abra o PeliGames para verificar a instalação e adicionar o executável.");
       setStep(4);

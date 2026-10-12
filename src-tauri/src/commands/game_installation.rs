@@ -72,6 +72,49 @@ pub async fn start_peligames_game(
     .await
     .map_err(|e| e.to_string())?
 }
+/// Runs a program in the entry's prefix: inside the running prefix when its game
+/// is open (returns no session), otherwise as the library's session.
+fn run_program(path: String, executable: String, arguments: Vec<String>) -> Result<Option<crate::core::game_execution::ExecutionStatus>, String> {
+    let prefix = crate::core::installed_library::list(false)?.into_iter().find(|entry| entry.path == path).map(|entry| entry.prefix)
+        .ok_or("Executável não registrado na biblioteca PeliGames.")?;
+    if crate::core::game_execution::running_prefix().is_some_and(|running| running == prefix) {
+        crate::core::game_execution::run_in_prefix(path, executable, arguments).map(|_| None)
+    } else {
+        crate::core::game_execution::start_program_with(path, Some(executable), arguments).map(Some)
+    }
+}
+#[tauri::command]
+pub async fn run_peligames_program(path: String, executable: String) -> Result<Option<crate::core::game_execution::ExecutionStatus>, String> {
+    tauri::async_runtime::spawn_blocking(move || run_program(path, executable, Vec::new())).await.map_err(|e| e.to_string())?
+}
+/// Games launchers installed in the entry's prefix (Programs panel).
+#[tauri::command]
+pub async fn list_peligames_launcher_shortcuts(path: String) -> Result<Vec<crate::core::installed_library::LauncherShortcut>, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::core::installed_library::launcher_shortcuts(&path)).await.map_err(|e| e.to_string())?
+}
+#[tauri::command]
+pub async fn add_peligames_shortcut_to_library(path: String, id: String) -> Result<crate::core::installed_library::InstalledEntry, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::core::installed_library::add_shortcut_to_library(&path, &id)).await.map_err(|e| e.to_string())?
+}
+#[tauri::command]
+pub async fn remove_peligames_shortcut_from_library(path: String, id: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || crate::core::installed_library::remove_shortcut_from_library(&path, &id)).await.map_err(|e| e.to_string())?
+}
+#[tauri::command]
+pub async fn peligames_profile_options(path: String) -> Result<crate::core::installed_library::ProfileOptions, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::core::installed_library::profile_options(&path)).await.map_err(|e| e.to_string())?
+}
+#[tauri::command]
+pub async fn set_peligames_profile_kind(path: String, kind: crate::core::game_profiles::ProfileKind) -> Result<crate::core::installed_library::ProfileOptions, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::core::installed_library::set_profile_kind(&path, kind)).await.map_err(|e| e.to_string())?
+}
+#[tauri::command]
+pub async fn start_peligames_shortcut(path: String, id: String) -> Result<Option<crate::core::game_execution::ExecutionStatus>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let (executable, arguments) = crate::core::installed_library::shortcut_launch(&path, &id)?;
+        run_program(path, executable, arguments)
+    }).await.map_err(|e| e.to_string())?
+}
 #[tauri::command]
 pub fn get_peligames_execution(
 ) -> Result<Option<crate::core::game_execution::ExecutionStatus>, String> {
@@ -103,6 +146,33 @@ pub async fn update_peligames_settings(
     })
     .await
     .map_err(|e| e.to_string())?
+}
+
+/// The executable chosen after an installation that found several.
+#[tauri::command]
+pub async fn list_peligames_executable_choices(path: String) -> Result<Vec<crate::core::installed_library::InstalledEntry>, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::core::installed_library::executable_choices(&path)).await.map_err(|e| e.to_string())?
+}
+
+/// Games a launcher of the library installed since it last closed.
+#[tauri::command]
+pub async fn new_peligames_launcher_games(path: String) -> Result<Vec<crate::core::installed_library::LauncherGame>, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::core::installed_library::new_launcher_games(&path)).await.map_err(|e| e.to_string())?
+}
+#[tauri::command]
+pub async fn add_peligames_launcher_games(path: String, added: Vec<crate::core::installed_library::LauncherGame>, declined: Vec<String>) -> Result<Vec<crate::core::installed_library::InstalledEntry>, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::core::installed_library::add_launcher_games(&path, added, declined)).await.map_err(|e| e.to_string())?
+}
+#[tauri::command]
+pub async fn choose_peligames_entry(path: String) -> Result<crate::core::installed_library::InstalledEntry, String> {
+    if BUSY.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() { return Err("Aguarde a operação em andamento.".into()); }
+    tauri::async_runtime::spawn_blocking(move || {
+        let _guard = BusyGuard;
+        if crate::core::game_execution::active() { return Err("Encerre a execução antes de alterar o executável.".into()); }
+        crate::core::installed_library::choose(&path)
+    })
+        .await
+        .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]

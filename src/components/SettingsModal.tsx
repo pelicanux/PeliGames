@@ -91,6 +91,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
     { id: "blur-windows", page: "interface", title: text.windowsEffect, keywords: text.blurSearch },
     { id: "blur-backdrop", page: "interface", title: text.backdropEffect, keywords: text.blurSearch },
     { id: "reset-glass", page: "interface", title: text.resetGlass, keywords: "" },
+    { id: "launch-effect", page: "interface", title: text.launchEffect, keywords: `${text.shatterEffect} ${text.smoothEffect} ${text.aquariumEffect} ${text.aquariumHint} ${text.particlesEffect} ${text.particlesHint} ${text.penguinEffect} ${text.penguinHint} ${text.shrinkEffect} ${text.shrinkHint} ${text.noLaunchEffect} ${text.launchEffectHint}` },
     { id: "backend-project", page: "mods", title: text.project, keywords: `${text.rdna4} ${text.rdna3} DLSSNR AMD OptiScaler` },
     { id: "backend-update", page: "mods", title: text.backendUpdate, keywords: text.backendHint },
     { id: "setup", page: "mods", title: t("settings", "reset"), keywords: text.modTools },
