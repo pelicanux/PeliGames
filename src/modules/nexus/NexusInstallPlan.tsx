@@ -11,25 +11,27 @@ export interface Plan {
   notes: string[]; module: string; files: [string, string][]; resolved_files?: [string, string][];
   missing: { name: string; url: string; mod_id: number; kind: "nexus" | "external" }[];
   fomod?: { name: string; steps: { name: string; groups: FomodGroup[] }[] };
-  selection: string[]; issues: string[]; activation_file?: string | null; overrides?: [string, string][]; manual_root?: { source: string; destination: string } | null;
+  selection: string[]; issues: string[]; originals?: string[]; replace_originals?: boolean; activation_file?: string | null; overrides?: [string, string][]; manual_root?: { source: string; destination: string } | null;
 }
-export function NexusInstallPlan({ game, modId, onReady, onSelection, onInstallLocal, requirements }: {
-  game: NexusGame; modId: string; onReady: (ready: boolean) => void; onSelection: (selection: string[]) => void; onInstallLocal?: (mod: LocalMod) => void; requirements?: Requirements;
+export function NexusInstallPlan({ game, modId, onReady, onSelection, onInstallLocal, requirements, onLoadingChange }: {
+  game: NexusGame; modId: string; onReady: (ready: boolean) => void; onSelection: (selection: string[]) => void; onInstallLocal?: (mod: LocalMod) => void; requirements?: Requirements; onLoadingChange?: (loading: boolean) => void;
 }) {
   const text = useNexusText();
   const [plan, setPlan] = useState<Plan | null>(null), [error, setError] = useState("");
   const [choices, setChoices] = useState<string[] | undefined>(), [loading, setLoading] = useState(true);
   // Re-plans after the manual root changes; the root itself is stored by the backend.
   const [revision, setRevision] = useState(0);
+  const [replacing, setReplacing] = useState(false);
   const signature = JSON.stringify([game.mods.map(mod => [mod.id, mod.installed, mod.enabled]), game.detected_mods]);
   useEffect(() => {
     let active = true;
-    onReady(false); setError(""); setLoading(true);
+    onReady(false); setError(""); setLoading(true); onLoadingChange?.(true);
     void invoke<Plan>("plan_nexus_installation", { gameId: game.id, modId, selection: choices ?? null }).then(value => {
-      if (active) { setPlan(value); onSelection(value.selection); onReady(!value.missing.length && !value.issues.length); }
-    }).catch(error => { if (active) setError(String(error)); }).finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [game.id, modId, signature, choices, revision, onReady, onSelection]);
+      // A replacer needs the player's approval, like the Vortex "Install as Replacer" dialog.
+      if (active) { setPlan(value); onSelection(value.selection); onReady(!value.missing.length && !value.issues.length && (!value.originals?.length || Boolean(value.replace_originals))); }
+    }).catch(error => { if (active) setError(String(error)); }).finally(() => { if (active) { setLoading(false); onLoadingChange?.(false); } });
+    return () => { active = false; onLoadingChange?.(false); };
+  }, [game.id, modId, signature, choices, revision, onReady, onSelection, onLoadingChange]);
   const mod = game.mods.find(item => item.id === modId);
   // BAIN packages reuse the FOMOD selection flow (backend installer named "BAIN").
   const bain = Boolean(plan?.fomod?.name.startsWith("BAIN"));
@@ -44,7 +46,7 @@ export function NexusInstallPlan({ game, modId, onReady, onSelection, onInstallL
   };
   return <>
     {error && <p role="alert" className="nexus-error">{error}</p>}
-    {loading && <p role="status" className="nexus-hint nexus-install-status">{text.loading}</p>}
+    {loading && !onLoadingChange && <p role="status" className="nexus-hint nexus-install-status">{text.loading}</p>}
     {!loading && !plan && error && !mod?.installed && <NexusManualRoot game={game} modId={modId} onChanged={() => setRevision(value => value + 1)} />}
     {plan && <>
       {plan.fomod && <section className="nexus-fomod" aria-label={bain ? text.bainOptions : text.fomodOptions}>
@@ -63,6 +65,12 @@ export function NexusInstallPlan({ game, modId, onReady, onSelection, onInstallL
             </label>; })}
           </fieldset>)}
         </section>)}
+      </section>}
+      {Boolean(plan.originals?.length) && !mod?.installed && <section className="nexus-requirements-warning nexus-replacer" aria-label={text.replacerTitle}>
+        <h4>{text.replacerTitle}</h4>
+        <p className="nexus-hint">{text.replacerHint}</p>
+        <details><summary>{text.replacerFiles}: {plan.originals!.length}</summary><div className="nexus-mod-list">{plan.originals!.map(target => <div className="nexus-file-description" key={target}>{target}</div>)}</div></details>
+        <label className={`nexus-fomod-option ${plan.replace_originals ? "selected" : ""}`}><input type="checkbox" checked={Boolean(plan.replace_originals)} disabled={replacing} onChange={event => { const enabled = event.target.checked; setReplacing(true); onReady(false); void invoke("set_nexus_mod_replace_originals", { gameId: game.id, modId, enabled }).then(() => setRevision(value => value + 1)).catch(e => setError(String(e))).finally(() => setReplacing(false)); }} /><span><strong>{text.replacerInstall}</strong><p className="nexus-file-description">{text.replacerBackup}</p></span></label>
       </section>}
       {plan.issues.map(issue => <p role="alert" className="nexus-error" key={issue}>{issue}</p>)}
       {!loading && !mod?.installed && (unrecognized || plan.manual_root) && <NexusManualRoot game={game} modId={modId} onChanged={() => setRevision(value => value + 1)} />}

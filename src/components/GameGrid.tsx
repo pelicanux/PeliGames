@@ -25,7 +25,10 @@ import { listPeliGamesEntries } from "../services/installedLibrary";
 
 export interface GameInfo {
   nexus_platform?: "native" | "proton";
+  /** ID of the Nexus library entry (several entries may share a folder). */
+  nexus_id?: string;
   discovery_source?: string | null;
+  launch_arguments?: string[];
   library_view?: "own" | "all" | "nexus";
   advanced?: import("../services/advancedSettings").AdvancedSettings;
   name: string;
@@ -42,6 +45,8 @@ export interface GameInfo {
 
 export interface ManagedGameLibrary {
   games: GameInfo[]; busy: boolean; loaded: boolean; error?: string; title: string; empty: string; hint: string; addLabel: string;
+  /** A library scan is running (also after the first load). */
+  scanning?: boolean;
   onAdd: () => void; onRefresh: () => void;
   downloadsAction: React.ReactNode; accountLabel: string; onAccount: () => void;
   onCoverFallback?: (game: GameInfo) => Promise<void>;
@@ -78,7 +83,13 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const removedGames = useRemovedLibraryGames();
   const [favoritesCollapsed, setFavoritesCollapsed] = useState(false);
   const performanceMode = usePerformanceMode();
-  const [cachedGames] = useState(readGameLibrary);
+  const [cachedGames] = useState(() => readGameLibrary());
+  const [initialSnapshots] = useState(() => ({
+    all: cachedGames,
+    own: readGameLibrary("own") ?? cachedGames?.filter(game => game.launcher === "PeliGames") ?? null,
+    nexus: readGameLibrary("nexus"),
+  }));
+  const librarySnapshots = useRef(initialSnapshots);
   const [games, setGames] = useState<GameInfo[]>(cachedGames ?? []);
   const [libraryLoaded, setLibraryLoaded] = useState(cachedGames !== null);
   const startupHandled = useRef(false);
@@ -105,9 +116,6 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     window.addEventListener("peligamesLibraryChanged", refresh);
     return () => { ++ownRequest.current; window.removeEventListener("peligamesLibraryChanged", refresh); };
   }, []);
-  useEffect(() => {
-    if (!managedLibrary && libraryLoaded) saveGameLibrary(games);
-  }, [games, libraryLoaded]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
@@ -412,8 +420,27 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     </motion.div>
   );
 
-  const scopedGames = applyCustomCovers((managedLibrary ? managedLibrary.games : libraryScope === "own" ? games.filter(game => game.launcher === "PeliGames") : games)
-    .map(game => ({ ...game, library_view: managedLibrary ? "nexus" as const : libraryScope })))
+  const cacheScope = managedLibrary ? "nexus" : libraryScope;
+  // null means no successful scan yet; an empty saved library is still valid.
+  const hasLibraryCache = librarySnapshots.current[cacheScope] !== null;
+  const refreshingLibrary = managedLibrary
+    ? !managedLibrary.loaded || Boolean(managedLibrary.scanning)
+    : loading || !libraryLoaded || !ownLoaded;
+  const liveGames = managedLibrary ? managedLibrary.games
+    : libraryScope === "own" ? games.filter(game => game.launcher === "PeliGames") : games;
+  // A pending scan must not replace the last complete library with an empty or
+  // partially discovered result. New entries can still appear during the scan.
+  const previousGames = librarySnapshots.current[cacheScope] ?? [];
+  const displayedGames = refreshingLibrary
+    ? [...new Map([...previousGames, ...liveGames].map(game => [gameViewKey({ ...game, library_view: cacheScope }), game])).values()]
+    : liveGames;
+  useEffect(() => {
+    if (refreshingLibrary || libraryError || managedLibrary?.error) return;
+    librarySnapshots.current[cacheScope] = liveGames;
+    saveGameLibrary(liveGames, cacheScope);
+  }, [cacheScope, refreshingLibrary, games, managedLibrary?.games, managedLibrary?.error, libraryError]);
+  const scopedGames = applyCustomCovers(displayedGames
+    .map(game => ({ ...game, library_view: cacheScope })))
     .filter(game => !removedGames.has(gameViewKey(game)));
   const filteredGames = scopedGames.filter(g => g.name.toLowerCase().includes(searchQuery.toLowerCase()));
   // Re-measure for actual library arrangement changes, not focus/polling renders.
@@ -423,7 +450,23 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const steamGames = remainingGames.filter(g => g.launcher === "Steam");
   const otherGames = remainingGames.filter(g => g.launcher !== "Steam");
   // Mod operations share the busy flag, but must not unmount the loaded covers.
-  const scanning = managedLibrary ? !managedLibrary.loaded : loading || (libraryScope === "own" && !ownLoaded);
+  const scanning = managedLibrary
+    ? !managedLibrary.loaded || (!hasLibraryCache && Boolean(managedLibrary.scanning))
+    : loading || (!hasLibraryCache && !ownLoaded) || (libraryScope === "own" && !ownLoaded);
+  // A first scan stays visible until complete. Only a previously cached library
+  // can replace the pelican after three seconds while scanning continues.
+  const [scanGraceOver, setScanGraceOver] = useState(false);
+  useEffect(() => {
+    if (!scanning || !hasLibraryCache) { setScanGraceOver(false); return; }
+    const timer = window.setTimeout(() => setScanGraceOver(true), 3000);
+    return () => window.clearTimeout(timer);
+  }, [scanning, hasLibraryCache, cacheScope]);
+  const shownLibraries = useRef(new Set<string>());
+  const showScanScreen = scanning && (!hasLibraryCache || (!scanGraceOver && !shownLibraries.current.has(cacheScope)));
+  useEffect(() => {
+    if (!showScanScreen) shownLibraries.current.add(cacheScope);
+  }, [showScanScreen, cacheScope]);
+  const scanSpinning = scanning || Boolean(managedLibrary?.scanning);
   const showEmptyOwnLibrary = !scanning && ownLoaded && (libraryScope === "own" || mode === "mods") && !searchQuery && filteredGames.length === 0;
 
   return (
@@ -479,15 +522,15 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
             <HoverTooltip text={t("gameGrid", "scanLibrary")}><button 
               className="library-mode-button"
               onClick={() => void fetchGames()}
-              disabled={loading || managedLibrary?.busy}
+              disabled={scanSpinning || managedLibrary?.busy}
               style={{ background: "transparent", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)", color: loading ? "white" : "var(--tone-94a3b8, #94a3b8)", cursor: loading ? "not-allowed" : "pointer", padding: "0.4rem 0.6rem", borderRadius: "6px", display: "flex", alignItems: "center", gap: "0.4rem", transition: "all 0.2s", opacity: loading ? 0.7 : 1 }}
               onMouseOver={(e) => { if (!loading) { e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)"; e.currentTarget.style.color = "var(--tone-f8fafc, #f8fafc)"; } }}
               onMouseOut={(e) => { if (!loading) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--tone-94a3b8, #94a3b8)"; } }}
             >
-              <motion.div animate={{ rotate: loading && !performanceMode ? 360 : 0 }} transition={{ repeat: loading && !performanceMode ? Infinity : 0, duration: 1, ease: "linear" }} style={{ display: "flex" }}>
+              <motion.div animate={{ rotate: scanSpinning && !performanceMode ? 360 : 0 }} transition={{ repeat: scanSpinning && !performanceMode ? Infinity : 0, duration: 1, ease: "linear" }} style={{ display: "flex" }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
               </motion.div>
-              <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>{loading ? "..." : t("gameGrid", "scan")}</span>
+              <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>{t("gameGrid", "scan")}</span>
             </button></HoverTooltip>
           </div>
 
@@ -511,10 +554,9 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       </div>
 
       <motion.div layoutScroll className={`game-grid-container game-library--${viewMode}`} style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: "1rem" }}>
-        {scanning ? <div className="empty-library-state"><NexusLibraryLoading reducedMotion={performanceMode} /></div> : <>
-        {filteredGames.length === 0 && (managedLibrary ? <div className="empty-library-state">
-          {!managedLibrary.loaded ? <NexusLibraryLoading reducedMotion={performanceMode} />
-            : searchQuery ? <p role="status">{t("gameGrid", "noSearchResults")}</p>
+        {showScanScreen ? <div className="empty-library-state"><NexusLibraryLoading reducedMotion={performanceMode} /></div> : <>
+        {filteredGames.length === 0 && !scanSpinning && (managedLibrary ? <div className="empty-library-state">
+          {searchQuery ? <p role="status">{t("gameGrid", "noSearchResults")}</p>
             : managedLibrary.error ? <button className="btn btn-secondary" onClick={managedLibrary.onRefresh}>{t("gameGrid", "scan")}</button>
             : <div className="empty-library-action"><button type="button" className="empty-library-add" onClick={managedLibrary.onAdd} aria-label={managedLibrary.addLabel}><MenuIcon name="plus" /></button><div className="empty-library-message" role="status"><h3>{managedLibrary.empty}</h3><p>{managedLibrary.hint}</p></div></div>}
         </div> : showEmptyOwnLibrary ?
@@ -542,8 +584,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
               </div>
             </div>
           </div> : <div role="status" style={{ textAlign: "center", padding: "2rem", color: "var(--tone-94a3b8, #94a3b8)" }}>
-            {loading || (libraryScope === "own" && !ownLoaded) ? <><p>{t("app", "scanningGames")}</p><div className="loading-spinner" style={{ margin: "1rem auto" }} /></>
-              : <p>{searchQuery ? t("gameGrid", "noSearchResults") : libraryScope === "own" ? t("gameGrid", "noOwnGames") : t("app", "noGamesFound")}</p>}
+            <p>{searchQuery ? t("gameGrid", "noSearchResults") : libraryScope === "own" ? t("gameGrid", "noOwnGames") : t("app", "noGamesFound")}</p>
           </div>)}
         {favoriteGames.length > 0 && <section className="favorites-category" style={{ marginBottom: "1.5rem" }} aria-label={t("gameGrid", "favorites")}>
           <div className="launcher-category-header favorites-category-header" style={{ marginBottom: favoritesCollapsed ? 0 : "1rem" }}>

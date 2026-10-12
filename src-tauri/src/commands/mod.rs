@@ -23,6 +23,7 @@ pub mod installation_paths;
 pub mod game_installation;
 pub mod pelinstall;
 
+mod nexus_dependency_order;
 pub mod nexus_local;
 pub mod nexus_reports;
 
@@ -37,7 +38,14 @@ mod nexus_activation;
 mod nexus_bg3;
 mod nexus_fomod;
 mod nexus_bain;
+pub mod nexus_progress;
 pub mod nexus_loot;
+pub mod nexus_load_order;
+pub mod nexus_gamebryo;
+pub mod nexus_plugins;
+pub mod nexus_user_profiles;
+pub mod nexus_saves;
+pub mod nexus_archive_order;
 mod nexus_scan;
 mod nexus_unity;
 mod nexus_discovery;

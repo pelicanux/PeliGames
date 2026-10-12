@@ -55,6 +55,7 @@ import { AppUpdateModal } from "./components/AppUpdateModal";
 import { BackendUpdaterModal } from "./components/BackendUpdaterModal";
 import { LoadingModal } from "./components/LoadingModal";
 import { CreditsModal } from "./components/CreditsModal";
+import { NotificationCenter } from "./components/NotificationCenter";
 import { TitleBar } from "./components/TitleBar";
 import { SetupWizard, AppConfig } from "./components/SetupWizard";
 import { SettingsModal } from "./components/SettingsModal";
@@ -177,7 +178,9 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [showWelcome, setShowWelcome] = useState(() => !initialGamePath && localStorage.getItem("peligames_welcome_completed") !== "1");
-  const [settingsSection, setSettingsSection] = useState<"general" | "covers" | "protons">("general");
+  const [settingsSection, setSettingsSection] = useState<"general" | "covers" | "protons" | "backendUpdate">("general");
+  const [preferencesBusy, setPreferencesBusy] = useState(false);
+  const [notificationBackendArch, setNotificationBackendArch] = useState<"rdna3" | "rdna4">("rdna4");
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
   const [appConfigLoaded, setAppConfigLoaded] = useState(false);
@@ -801,6 +804,12 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
           onHome={returnToLauncherHome} homeDisabled={gameInstaller.busy || libraryMutationBusy}
           onShowCredits={() => setShowCreditsModal(true)} 
           disabled={hasOpenDialog}
+          notificationIndicator={<NotificationCenter nexusError={nexus.error} navigationBusy={preferencesBusy || Boolean(launcherDownloadProgress)} launcherUpdate={launcherUpdateInfo} onNavigate={target => {
+            setShowSettings(false);
+            if (target === "launcher") setShowAppUpdate(true);
+            else if (target === "ge-proton" || target === "cachyos-proton") { setSettingsSection("protons"); setShowSettingsModal(true); }
+            else { setNotificationBackendArch(target); setSettingsSection("backendUpdate"); setShowSettingsModal(true); }
+          }}/>}
           updateIndicator={<LauncherUpdateIndicator status={launcherUpdateStatus} disabled={hasOpenDialog} downloadProgress={launcherDownloadProgress}
             onCheck={checkUpdatesManually}
             onOpen={() => { setShowSettings(false); setShowAppUpdate(true); }} />}
@@ -904,7 +913,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
             onAnimationStart={detailsSize.startResize}
             onAnimationComplete={detailsSize.finishResize}
             transition={{ duration: performanceMode ? 0 : 0.42, ease: [0.4, 0, 0.2, 1] }}>
-          <motion.div ref={detailsSize.contentRef} style={{ paddingBottom: 32 }} initial={performanceMode || !playGameEntrance ? false : { y: 180, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: performanceMode ? 0 : 180, opacity: 0 }} transition={{ duration: performanceMode ? 0 : 0.42, ease: [0.4, 0, 0.2, 1] }}>
+          <motion.div ref={detailsSize.contentRef} style={{ paddingBottom: 32 }} initial={performanceMode || !playGameEntrance ? false : { y: 180 }} animate={{ y: 0 }} exit={{ y: performanceMode ? 0 : 180 }} transition={{ duration: performanceMode ? 0 : 0.42, ease: [0.4, 0, 0.2, 1] }}>
           <div className="selected-game-menu">
             
             {/* Left: Cover & Info */}
@@ -980,8 +989,8 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
                 <h3 className="selected-game-title">{selectedGame.name}</h3>
                 
                 <div className="game-action-stack">
-                  {gamePanelMode === "nexus" && nexusGame && <button type="button" className="btn btn-play game-play-button" disabled={nexus.busy} onClick={() => void (nexusGame.running ? nexus.stop(nexusGame.id) : nexus.start(nexusGame.id))}><MenuIcon name={nexusGame.running ? "platform" : "play"} />{nexusGame.running ? nexusText.stop : nexusText.start}</button>}
-                  {gamePanelMode === "nexus" && nexusGame && <button type="button" className="btn btn-primary nexus-sidebar-install" disabled={nexus.busy} onClick={() => setNexusTab("catalog")}><MenuIcon name="puzzle" />{nexusText.installMods}</button>}
+                  {gamePanelMode === "nexus" && nexusGame && <button type="button" className="btn btn-play game-play-button" disabled={nexus.busy} onClick={() => void (nexusGame.running ? nexus.stop(nexusGame.id) : nexus.start(nexusGame.id))}><MenuIcon name={nexusGame.running ? "platform" : "play"} />{nexus.launching === nexusGame.id ? nexusText.launching : nexusGame.running ? nexusText.stop : nexusText.start}</button>}
+                  {gamePanelMode === "nexus" && nexusGame?.mods.some(mod => mod.installed) && <button type="button" className="btn btn-primary nexus-sidebar-install" disabled={nexus.busy} onClick={() => setNexusTab("catalog")}><MenuIcon name="puzzle" />{nexusText.installMods}</button>}
                   {gamePanelMode === "nexus" && nexusGame && <button type="button" className="btn btn-secondary nexus-sidebar-report" onClick={() => setNexusReportTarget(nexusGame.id)}><MenuIcon name="info" />{nexusText.reportError}</button>}
                   {gamePanelMode !== "nexus" && selectedGame.launcher === "PeliGames" && <GameLaunchButton path={selectedGame.path} execution={gameExecution} disabled={gameInstaller.busy} />}
                   {selectedGame.launcher === "PeliGames" && gamePanelMode === "installed" && <button type="button" className="btn btn-secondary game-uninstall-button"
@@ -1072,7 +1081,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
             }
 
             {/* Right Panel: Game Info & Selectors */}
-            <GamePanelCarousel mode={gamePanelMode} reducedMotion={performanceMode} nexus={<NexusPanels highlightRequestId={nexusModToView?.requestId} highlightedModId={nexusModToView?.gameId === nexusGame?.id ? nexusModToView?.modId : undefined} tab={nexusTab} onTabChange={setNexusTab} game={nexusGame} busy={nexus.busy} settingsBusy={nexus.settingsBusy} error={nexus.error} reducedMotion={performanceMode} onImport={nexus.importArchive} onRemove={nexus.removeArchive} onInstall={nexus.install} onToggle={nexus.toggle} onMove={nexus.move} onLogs={setNexusLogTarget} onConfigure={nexus.configureProton} onConfigureDeploy={nexus.configureDeploy} onConfigureLaunch={nexus.configureLaunch} onConfigureAdvanced={nexus.configureAdvanced} onAssociate={nexus.configureDomain} onError={nexus.setError} />} installed={<InstalledGamePanels key={selectedGame?.path} game={selectedGame} disabled={gameInstaller.busy || libraryMutationBusy || gameExecution.active || Boolean(gameExecution.pendingPath)}
+            <GamePanelCarousel mode={gamePanelMode} reducedMotion={performanceMode} nexus={<NexusPanels highlightRequestId={nexusModToView?.requestId} highlightedModId={nexusModToView?.gameId === nexusGame?.id ? nexusModToView?.modId : undefined} tab={nexusTab} onTabChange={setNexusTab} game={nexusGame} busy={nexus.busy} settingsBusy={nexus.settingsBusy} progress={nexusGame ? nexus.progress[nexusGame.id] : undefined} error={nexus.error} reducedMotion={performanceMode} onImport={nexus.importArchive} onRemove={nexus.removeArchive} onInstall={nexus.install} onToggle={nexus.toggle} onMove={nexus.move} onSwitchProfile={nexus.switchProfile} onDownloadLoader={nexus.downloadLoader} onLogs={setNexusLogTarget} onConfigure={nexus.configureProton} onConfigureDeploy={nexus.configureDeploy} onConfigureLaunch={nexus.configureLaunch} onConfigureAdvanced={nexus.configureAdvanced} onAssociate={nexus.configureDomain} onError={nexus.setError} />} installed={<InstalledGamePanels key={selectedGame?.path} game={selectedGame} disabled={gameInstaller.busy || libraryMutationBusy || gameExecution.active || Boolean(gameExecution.pendingPath)}
               onSaved={game => { setSelectedGame(previous => previous && gameViewKey({ ...previous, library_view: gamePanelMode === "nexus" ? "nexus" : libraryScope }) === gameViewKey(game) ? game : previous); }} onRunProgram={gameExecution.start} />}
               installation={<InstallGamePanels mode={gamePanelMode === "add" ? "add" : "install"} draft={installationDraft} directory={installationLocation.directory} directorySelected={installationLocation.selected} onDefaultDirectory={installationLocation.selectDefault} directoryError={installationLocation.error} busy={gameInstaller.busy || libraryMutationBusy || (addingNexusGame && nexus.busy)} nexusAddition={addingNexusGame ? { platform: nexusAdditionPlatform, onPlatformChange: setNexusAdditionPlatform, prefix: nexusAdditionPrefix, onPrefixChange: setNexusAdditionPrefix } : undefined} onDirectoryChange={installationLocation.setDirectory}
                 executable={installationExecutable} onExecutableChange={setInstallationExecutable} proton={installationProton} onProtonChange={setInstallationProton} />}>
@@ -1232,7 +1241,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
 
         {/* Bottom Section: Always visible Game Grid */}
         <div className="game-library-section" style={{ flex: 1, minHeight: "300px", display: "flex", flexDirection: "column" }}>
-          <GameGrid key={(gamePanelMode === "nexus" || addingNexusGame) ? "nexus" : "launcher"} managedLibrary={(gamePanelMode === "nexus" || addingNexusGame) ? { games: nexus.visibleGames.map(item => ({ ...item.game, nexus_platform: item.platform })), busy: nexus.busy, loaded: nexus.loaded, error: nexus.error, title: nexusText.title, downloadsAction: <NexusDownloadsPanel games={nexus.workspace.games} buttonClassName="library-mode-button" onViewMod={(gameId, modId) => requestDraftExit(() => { const entry = nexus.workspace.games.find(item => item.id === gameId); if (!entry) return; setNexusModToView({gameId,modId,requestId: ++modViewRequest.current}); setNexusTab("mods"); setShowWelcome(false); setGamePanelMode("nexus"); setLibraryScope("all"); setModManagerOpen(true); setIsCollapsingGame(false); setSelectedGame(entry.game); setGameDir(entry.game.directory || entry.game.path); })} />, accountLabel: nexusText.account, onAccount: () => setNexusAccountOpen(true), empty: nexusText.empty, hint: nexusText.emptyHint, addLabel: nexusText.add, onAdd: openNexusAddition, onRefresh: () => { void nexus.refresh(); }, onCoverFallback: nexus.recoverCover } : undefined} onCoverAction={coverAction} coverActionsBlocked={gameInstaller.busy || libraryMutationBusy || nexus.busy || gameExecution.active || Boolean(gameExecution.pendingPath)} onHome={returnToLauncherHome} homeRevision={homeRevision} onSelectGame={handleSelectGame} selectedGameKey={selectedGame ? gameViewKey(selectedGame) : undefined} mode={gamePanelMode} libraryScope={libraryScope} detailsOpen={detailsOpen} modeDisabled={gameInstaller.busy || libraryMutationBusy || nexus.busy} onModeChange={changeGamePanelMode} />
+          <GameGrid key={(gamePanelMode === "nexus" || addingNexusGame) ? "nexus" : "launcher"} managedLibrary={(gamePanelMode === "nexus" || addingNexusGame) ? { games: nexus.visibleGames.map(item => ({ ...item.game, nexus_platform: item.platform, nexus_id: item.id })), busy: nexus.busy, loaded: nexus.loaded, scanning: nexus.scanning, error: nexus.error, title: nexusText.title, downloadsAction: <NexusDownloadsPanel games={nexus.workspace.games} buttonClassName="library-mode-button" onViewMod={(gameId, modId) => requestDraftExit(() => { const entry = nexus.workspace.games.find(item => item.id === gameId); if (!entry) return; setNexusModToView({gameId,modId,requestId: ++modViewRequest.current}); setNexusTab("mods"); setShowWelcome(false); setGamePanelMode("nexus"); setLibraryScope("all"); setModManagerOpen(true); setIsCollapsingGame(false); setSelectedGame({ ...entry.game, nexus_platform: entry.platform, nexus_id: entry.id }); setGameDir(entry.game.directory || entry.game.path); })} />, accountLabel: nexusText.account, onAccount: () => setNexusAccountOpen(true), empty: nexusText.empty, hint: nexusText.emptyHint, addLabel: nexusText.add, onAdd: openNexusAddition, onRefresh: () => { void nexus.refresh(); }, onCoverFallback: nexus.recoverCover } : undefined} onCoverAction={coverAction} coverActionsBlocked={gameInstaller.busy || libraryMutationBusy || nexus.busy || gameExecution.active || Boolean(gameExecution.pendingPath)} onHome={returnToLauncherHome} homeRevision={homeRevision} onSelectGame={handleSelectGame} selectedGameKey={selectedGame ? gameViewKey(selectedGame) : undefined} mode={gamePanelMode} libraryScope={libraryScope} detailsOpen={detailsOpen} modeDisabled={gameInstaller.busy || libraryMutationBusy || nexus.busy} onModeChange={changeGamePanelMode} />
         </div>
       </div>
 
@@ -1338,7 +1347,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     {nexusLogTarget && <NexusLogsModal gameId={nexusLogTarget} onClose={() => setNexusLogTarget(null)} />}
 
     {showSettingsModal && (
-      <SettingsModal initialSection={settingsSection}
+      <SettingsModal onBusyChange={setPreferencesBusy} initialSection={settingsSection} initialBackendArch={settingsSection === "backendUpdate" ? notificationBackendArch : undefined}
         onClose={() => setShowSettingsModal(false)}
         onConfigUpdated={(config) => {
           setAppConfig(config);
@@ -1370,12 +1379,24 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       blocked={gameInstaller.busy || libraryMutationBusy || nexus.busy || gameExecution.active || Boolean(gameExecution.pendingPath)} onAction={coverAction} />}
     {removeLibraryTarget && <NexusPopup title="Remover da biblioteca" onClose={() => setRemoveLibraryTarget(null)} footer={<>
       <button className="btn btn-secondary" onClick={() => setRemoveLibraryTarget(null)}>Cancelar</button>
-      <button className="btn btn-primary" onClick={() => {
-        setLibraryGameRemoved(removeLibraryTarget, true);
-        if (selectedGame?.path === removeLibraryTarget.path) collapseGameDetailsNow();
+      <button className="btn btn-primary" disabled={nexus.busy} onClick={() => {
+        const target = removeLibraryTarget;
+        // The Nexus library entry is deleted for real; other libraries only hide the card.
+        if (target.library_view === "nexus" && target.nexus_id) {
+          void nexus.removeGame(target.nexus_id).then(removed => {
+            if (!removed) return;
+            if (selectedGame?.nexus_id === target.nexus_id) collapseGameDetailsNow();
+            setRemoveLibraryTarget(null);
+          });
+          return;
+        }
+        setLibraryGameRemoved(target, true);
+        if (selectedGame?.path === target.path) collapseGameDetailsNow();
         setRemoveLibraryTarget(null);
       }}><MenuIcon name="trash" />Remover</button>
-    </>}><p>Remover {removeLibraryTarget.name} desta biblioteca? O jogo e os mods no disco serão preservados, assim como as entradas nas outras bibliotecas.</p></NexusPopup>}
+    </>}>{removeLibraryTarget.library_view === "nexus"
+      ? <><p>Remover {removeLibraryTarget.name} da biblioteca Nexus? O jogo e os pacotes de mods no disco serão preservados. Um jogo com mods instalados precisa ter os mods removidos antes.</p>{nexus.error && <p role="alert" className="nexus-error">{nexus.error}</p>}</>
+      : <p>Remover {removeLibraryTarget.name} desta biblioteca? O jogo e os mods no disco serão preservados, assim como as entradas nas outras bibliotecas.</p>}</NexusPopup>}
     <NexusBrowserPopup />
     </EffectsContext.Provider>
   );

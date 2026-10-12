@@ -402,7 +402,7 @@ pub async fn scan_installed_games(app: AppHandle, api_key: String, custom_folder
         if let Some(url) = game.cover_url.as_ref().filter(|url| url.starts_with("file://")) {
             let source = reqwest::Url::parse(url).ok().and_then(|url| url.to_file_path().ok());
             game.cover_url = match source {
-                Some(source) => super::covers::cache_heroic_cover(&app, source).await.ok()
+                Some(source) => super::covers::cache_heroic_cover(source).await.ok()
                     .and_then(|path| reqwest::Url::from_file_path(path).ok()).map(|url| url.to_string()),
                 None => None,
             };
@@ -455,8 +455,8 @@ struct ReleaseDateCache {
     dates: std::collections::HashMap<String, String>,
 }
 
-fn load_date_cache(app: &tauri::AppHandle) -> ReleaseDateCache {
-    let cache_dir = app.path().app_local_data_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+fn load_date_cache() -> ReleaseDateCache {
+    let cache_dir = crate::core::paths::app_root().unwrap_or_else(|_| std::path::PathBuf::from("."));
     let cache_file = cache_dir.join("release_date_cache.json");
     if let Ok(data) = std::fs::read_to_string(cache_file) {
         if let Ok(cache) = serde_json::from_str(&data) {
@@ -466,8 +466,8 @@ fn load_date_cache(app: &tauri::AppHandle) -> ReleaseDateCache {
     ReleaseDateCache::default()
 }
 
-fn save_date_cache(app: &tauri::AppHandle, cache: &ReleaseDateCache) {
-    let cache_dir = app.path().app_local_data_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+fn save_date_cache(cache: &ReleaseDateCache) {
+    let cache_dir = crate::core::paths::app_root().unwrap_or_else(|_| std::path::PathBuf::from("."));
     std::fs::create_dir_all(&cache_dir).ok();
     let cache_file = cache_dir.join("release_date_cache.json");
     if let Ok(data) = serde_json::to_string(cache) {
@@ -475,19 +475,19 @@ fn save_date_cache(app: &tauri::AppHandle, cache: &ReleaseDateCache) {
     }
 }
 
-fn cache_release_date(app: &tauri::AppHandle, app_id: &str, date: &str, generation: u64) {
+fn cache_release_date(app_id: &str, date: &str, generation: u64) {
     let current_generation = crate::core::game_info_cache::lock_generation();
     if *current_generation != generation { return; }
-    let mut cache = load_date_cache(app);
+    let mut cache = load_date_cache();
     cache.dates.insert(app_id.to_string(), date.to_string());
-    save_date_cache(app, &cache);
+    save_date_cache(&cache);
 }
 
 #[tauri::command]
-pub async fn fetch_steam_release_date(app: tauri::AppHandle, app_id: String) -> Result<String, String> {
+pub async fn fetch_steam_release_date(app_id: String) -> Result<String, String> {
     let (cache, generation) = {
         let generation = crate::core::game_info_cache::lock_generation();
-        (load_date_cache(&app), *generation)
+        (load_date_cache(), *generation)
     };
     if let Some(cached_date) = cache.dates.get(&app_id) {
         return Ok(cached_date.clone());
@@ -503,7 +503,7 @@ pub async fn fetch_steam_release_date(app: tauri::AppHandle, app_id: String) -> 
             if let Some(data) = &app_data.data {
                 if let Some(release_date) = &data.release_date {
                     let date = release_date.date.clone();
-                    cache_release_date(&app, &app_id, &date, generation);
+                    cache_release_date(&app_id, &date, generation);
                     return Ok(date);
                 }
             }
@@ -512,7 +512,7 @@ pub async fn fetch_steam_release_date(app: tauri::AppHandle, app_id: String) -> 
     
     // Se chegou aqui, não tem data. Grava como "Desconhecido" para não ficar pedindo de novo.
     let unknown = "Desconhecido".to_string();
-    cache_release_date(&app, &app_id, &unknown, generation);
+    cache_release_date(&app_id, &unknown, generation);
     Ok(unknown)
 }
 

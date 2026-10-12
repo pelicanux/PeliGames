@@ -43,7 +43,7 @@ pub async fn install_mod(
     }
     Ok(output)
     }.await;
-    super::analyzer::invalidate_game(&app, &game_dir);
+    super::analyzer::invalidate_game(&game_dir);
     crate::core::logger::log_result(&app, "Instalação/remoção do mod", &result);
     result
 }

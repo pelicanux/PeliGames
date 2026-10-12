@@ -170,7 +170,7 @@ export function InstallGamePanels({ mode, draft, directory, directoryError, dire
           {nexusAddition.platform === "proton" && <>
             <InstallationPath value={nexusAddition.prefix} onChange={nexusAddition.onPrefixChange}
               selected={Boolean(nexusAddition.prefix)} label={`${t("gameModes", "installationLocation")} (${nexusText.prefix})`} hint={nexusText.prefixAdditionHint} existingGame />
-            <ProtonSelector value={proton} onChange={onProtonChange} label={t("gameModes", "runWithProton")} />
+            <ProtonSelector disabled={busy} value={proton} onChange={onProtonChange} label={t("gameModes", "runWithProton")} />
           </>}
           <InstallationPath value={executable} onChange={onExecutableChange} executable nativeExecutable={nexusAddition.platform === "native"} existingGame />
         </div>
@@ -183,7 +183,7 @@ export function InstallGamePanels({ mode, draft, directory, directoryError, dire
         <InstallationName draft={draft} />
         <InstallationPath value={directory} onChange={onDirectoryChange} selected={directorySelected} onDefault={onDefaultDirectory} />
         {directoryError && <TimedFeedback>{t("gameModes", "defaultDirectoryError")}</TimedFeedback>}
-        <ProtonSelector value={proton} onChange={onProtonChange} label={t("gameModes", mode === "add" ? "runWithProton" : "installWithProton")} />
+        <ProtonSelector disabled={busy} value={proton} onChange={onProtonChange} label={t("gameModes", mode === "add" ? "runWithProton" : "installWithProton")} />
         <InstallationPath value={executable} onChange={onExecutableChange} executable />
       </>}
       </fieldset>

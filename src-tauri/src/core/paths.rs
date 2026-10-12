@@ -119,6 +119,56 @@ pub fn initialize() -> Result<(), String> {
         .clone()
 }
 
+/// Everything the launcher writes lives below `~/.config/PeliGames`, so deleting
+/// that one folder resets it. Older versions kept the webview data, covers and
+/// small caches in `~/.local/share/com.pelicano.peligames` and update downloads
+/// in `~/.cache/PeliGames`; move them in before any webview opens. Failures keep
+/// the old files where they are and never stop the launcher.
+pub fn migrate_scattered_data() -> Vec<String> {
+    let Ok(root) = app_root() else { return Vec::new(); };
+    migrate_scattered_data_at(&root, dirs::data_local_dir().as_deref(), dirs::cache_dir().as_deref())
+}
+fn migrate_scattered_data_at(root: &Path, local: Option<&Path>, cache: Option<&Path>) -> Vec<String> {
+    let mut errors = Vec::new();
+    if let Some(old) = local.map(|base| base.join(APP_IDENTIFIER)) {
+        if fs::symlink_metadata(&old).is_ok_and(|meta| meta.is_dir() && !meta.file_type().is_symlink()) {
+            match fs::read_dir(&old) {
+                Ok(entries) => for entry in entries.flatten() {
+                    let name = entry.file_name();
+                    let target = match name.to_string_lossy().as_ref() {
+                        // Leftovers no current code reads.
+                        "analysis_cache.json" | "runtime_api_observations_v1" => {
+                            let removed = if entry.file_type().is_ok_and(|kind| kind.is_dir()) { fs::remove_dir_all(entry.path()) } else { fs::remove_file(entry.path()) };
+                            if let Err(error) = removed { errors.push(format!("{}: {error}", entry.path().display())); }
+                            continue;
+                        }
+                        "covers" | "nexus-browser" | "analyzer_cache.json" | "release_date_cache.json" => root.join(&name),
+                        // Webview storage: localStorage, cookies, IndexedDB and its HTTP cache.
+                        _ => root.join("webview").join(&name),
+                    };
+                    if let Err(error) = merge(&entry.path(), &target) { errors.push(error); }
+                },
+                Err(error) => errors.push(error.to_string()),
+            }
+            let _ = fs::remove_dir(&old);
+        }
+    }
+    if let Some(cache) = cache {
+        // Downloaded update packages are disposable; the empty webview cache folder too.
+        let old = cache.join(APP_DIRECTORY);
+        if fs::symlink_metadata(old.join("updates")).is_ok_and(|meta| meta.is_dir() && !meta.file_type().is_symlink()) {
+            if let Err(error) = fs::remove_dir_all(old.join("updates")) { errors.push(error.to_string()); }
+        }
+        let _ = fs::remove_dir(&old);
+        let _ = fs::remove_dir(cache.join(APP_IDENTIFIER));
+    }
+    errors
+}
+/// Covers folder of older versions, kept for rewriting saved cover addresses.
+pub fn legacy_covers() -> Option<PathBuf> {
+    dirs::data_local_dir().map(|base| base.join(APP_IDENTIFIER).join("covers"))
+}
+
 pub fn app_root() -> Result<PathBuf, String> {
     initialize()?;
     Ok(dirs::config_dir()
@@ -145,4 +195,40 @@ pub fn migrated_runner_path(value: &str) -> String {
         }
     }
     value.into()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn scattered_data_moves_into_the_launcher_folder() {
+        let base = std::env::temp_dir().join(format!("peligames-paths-{}", uuid::Uuid::new_v4()));
+        let (root, local, cache) = (base.join("config/PeliGames"), base.join("local"), base.join("cache"));
+        let old = local.join(APP_IDENTIFIER);
+        for folder in ["covers", "nexus-browser", "localstorage", "WebKitCache", "runtime_api_observations_v1"] { fs::create_dir_all(old.join(folder)).unwrap(); }
+        fs::write(old.join("covers/a.png"), b"cover").unwrap();
+        fs::write(old.join("localstorage/file.sqlite"), b"storage").unwrap();
+        fs::write(old.join("analyzer_cache.json"), b"{}").unwrap();
+        fs::write(old.join("analysis_cache.json"), b"{}").unwrap();
+        fs::create_dir_all(cache.join("PeliGames/updates")).unwrap();
+        fs::write(cache.join("PeliGames/updates/old.AppImage"), b"x").unwrap();
+        fs::create_dir_all(cache.join(APP_IDENTIFIER)).unwrap();
+        fs::create_dir_all(&root).unwrap();
+        // A newer file already in place wins over the old copy.
+        fs::create_dir_all(root.join("webview/localstorage")).unwrap();
+        fs::write(root.join("webview/localstorage/file.sqlite"), b"new").unwrap();
+        assert!(migrate_scattered_data_at(&root, Some(&local), Some(&cache)).is_empty());
+        assert_eq!(fs::read(root.join("covers/a.png")).unwrap(), b"cover");
+        assert!(root.join("nexus-browser").is_dir() && root.join("analyzer_cache.json").is_file() && root.join("webview/WebKitCache").is_dir());
+        assert_eq!(fs::read(root.join("webview/localstorage/file.sqlite")).unwrap(), b"new");
+        assert!(!root.join("analysis_cache.json").exists() && !root.join("webview/runtime_api_observations_v1").exists());
+        assert!(!cache.join("PeliGames").exists() && !cache.join(APP_IDENTIFIER).exists());
+        // The conflicting old file stays for manual recovery; everything else left.
+        assert_eq!(fs::read(old.join("localstorage/file.sqlite")).unwrap(), b"storage");
+        assert!(!old.join("covers").exists());
+        // Running again with nothing left is harmless.
+        fs::remove_dir_all(&old).unwrap();
+        assert!(migrate_scattered_data_at(&root, Some(&local), Some(&cache)).is_empty());
+        fs::remove_dir_all(base).unwrap();
+    }
 }

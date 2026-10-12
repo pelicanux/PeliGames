@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.2.0",
+  "version": "1.2.1",
   "domain": "palworld",
   "name": "Palworld",
   "platform": "proton",
@@ -97,7 +97,8 @@
   ],
   "notes": [
     "Scripts UE4SS com estrutura explícita, Mods/ ou pasta identificada por Scripts/main.lua; pacotes mistos preservam Lua, ativação e LogicMods. O destino acompanha o loader instalado: Win64/Mods no layout plano ou Win64/ue4ss/Mods no layout aninhado. Dois loaders simultâneos exigem resolver a ambiguidade antes da instalação.",
-    "A lista mods.txt preserva entradas externas ao perfil. A estrutura reconhecida não garante compatibilidade com a versão do jogo ou do UE4SS."
+    "A lista mods.txt preserva entradas externas ao perfil. A estrutura reconhecida não garante compatibilidade com a versão do jogo ou do UE4SS.",
+    "Como a extensão oficial do Vortex: sem o UE4SS, as verificações oferecem baixar o UE4SS-Palworld.zip mais recente de Okaetsu/RE-UE4SS (sem a build _zDev). O UnrealPakTool que a extensão também baixa não foi reproduzido."
   ],
   "sources": [
     "https://www.nexusmods.com/palworld/mods/577",
@@ -108,5 +109,15 @@
   ],
   "rejected_prefixes": [
     "Pal/Binaries/WinGDK/"
+  ],
+  "downloads": [
+    {
+      "name": "UE4SS",
+      "repository": "Okaetsu/RE-UE4SS",
+      "prefix": "UE4SS-Palworld",
+      "exclude": [
+        "_zDev"
+      ]
+    }
   ]
 }

@@ -1,0 +1,31 @@
+.notification-bell { position: relative; width: 32px; height: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 5px; background: transparent; color: var(--tone-94a3b8, #94a3b8); cursor: pointer; }
+.notification-bell:hover, .notification-bell[aria-expanded="true"] { color: var(--accent); background: rgba(var(--accent-rgb), .1); }
+.notification-panel-viewport { position: fixed; z-index: 6000; inset: 50px 0 0; overflow: hidden; pointer-events: none; }
+.notification-panel.menu-glass-panel { position: relative; min-height: 0; height: auto; margin: 8px 12px 0 auto; pointer-events: auto; width: min(370px, calc(100vw - 24px)); max-height: calc(100vh - 80px); display: flex; flex-direction: column; border: 1px solid rgba(var(--accent-rgb), .4); border-radius: 14px; padding: 0; overflow: hidden; color: var(--tone-e2e8f0, #e2e8f0); box-shadow: 0 12px 32px #0004; transform: translateY(calc(-100% - 8px)); opacity: 0; visibility: hidden; transition: transform .24s ease, opacity .2s ease, visibility .24s; }
+.notification-panel.menu-glass-panel.is-open { transform: translateY(0); opacity: 1; visibility: visible; }
+.notification-panel header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.notification-panel h2 { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 1rem; }
+.notification-list { overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
+.notification-list > p { margin: 8px 0; color: var(--tone-94a3b8, #94a3b8); font-size: .85rem; }
+.notification-entry { width: 100%; display: flex; gap: 10px; align-items: flex-start; text-align: left; margin-bottom: 9px; padding: 12px; border-radius: 9px; border: 1px solid rgba(var(--accent-rgb), .2); background: rgba(var(--accent-rgb), .06); color: inherit; cursor: pointer; transition: background .15s; }
+.notification-entry:hover { background: rgba(var(--accent-rgb), .16); }
+.notification-entry > svg { flex-shrink: 0; color: var(--accent); }
+.notification-entry strong, .notification-toast strong { font-size: .85rem; font-weight: 600; display: block; }
+.notification-entry small, .notification-toast small { display: block; margin-top: 6px; color: var(--tone-94a3b8, #94a3b8); font-size: .75rem; overflow-wrap: anywhere; }
+.notification-entry .notification-link { color: var(--accent); }
+.notification-panel footer { display: flex; justify-content: flex-end; border-top: 1px solid rgba(var(--accent-rgb), .15); padding-top: 12px; margin-top: 8px; }
+.notification-panel footer button { display: inline-flex; align-items: center; gap: 7px; font-size: .78rem; }
+.notification-toast-region { position: fixed; z-index: 6100; top: 58px; right: 12px; width: max-content; max-width: min(370px, calc(100vw - 24px)); pointer-events: none; }
+.notification-toast.menu-glass-panel { min-height: 0; height: auto; padding: 12px 14px; pointer-events: auto; width: 100%; display: flex; align-items: center; text-align: left; gap: 12px; color: var(--tone-e2e8f0, #e2e8f0); border: 1px solid rgba(var(--accent-rgb), .5); border-radius: 12px; box-shadow: 0 8px 24px #0004; cursor: pointer; animation: notification-toast-slide 6s both; }
+.notification-toast > svg { color: var(--accent); flex-shrink: 0; }
+@keyframes notification-toast-slide { 0% { opacity: 0; transform: translateX(calc(100% + 20px)); } 9%, 91% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(calc(100% + 20px)); } }
+@media (prefers-reduced-motion: reduce) { .notification-panel.menu-glass-panel { transition: opacity .1s; transform: none; } .notification-toast.menu-glass-panel { animation-name: notification-toast-fade; } }
+@keyframes notification-toast-fade { 0%,100% { opacity: 0; } 9%,91% { opacity: 1; } }
+.notification-panel footer .btn-primary { background: rgba(var(--accent-rgb), .14); color: var(--accent); border: 1px solid rgba(var(--accent-rgb), .45); }
+.notification-panel footer .btn-primary:hover:not(:disabled) { background: rgba(var(--accent-rgb), .24); }
+.notification-entry:disabled { opacity: .55; cursor: default; }
+.performance-mode .notification-panel.menu-glass-panel { transition-duration: .12s; }
+
+.notification-panel-content { flex: 0 0 auto; display: flex; flex-direction: column; padding: 16px; box-sizing: border-box; max-height: calc(100vh - 82px); }
+
+.notification-panel header, .notification-panel footer { flex-shrink: 0; }

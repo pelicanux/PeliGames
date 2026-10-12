@@ -7,7 +7,7 @@ import { HoverTooltip } from "./HoverTooltip";
 
 export interface InstalledProton { name: string; path: string; }
 
-export function ProtonSelector({ value, onChange, label, disabled = false, compactStyle = false }: { value: string; onChange: (value: string) => void; label?: string; disabled?: boolean; compactStyle?: boolean }) {
+export function ProtonSelector({ value, onChange, label, disabled = false, compactStyle = false, onManage }: { value: string; onChange: (value: string) => void; label?: string; disabled?: boolean; compactStyle?: boolean; onManage?: () => void }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [installed, setInstalled] = useState<InstalledProton[]>([]);
@@ -30,6 +30,12 @@ export function ProtonSelector({ value, onChange, label, disabled = false, compa
     return () => { active = false; window.removeEventListener("protonRunnersChanged", scan); };
   }, []);
   useEffect(() => { if (disabled) setOpen(false); }, [disabled]);
+  const manage = () => {
+    setOpen(false);
+    if (onManage) onManage();
+    else window.dispatchEvent(new Event("openProtonPreferences"));
+  };
+  const noRunners = status === "ready" && installed.length === 0;
   const options = installed;
   const selected = options.find(option => option.path === value);
   return <div className="installation-field">
@@ -66,9 +72,13 @@ export function ProtonSelector({ value, onChange, label, disabled = false, compa
           <span>{option.name}</span>
         </button>)}
         {(status !== "ready" || !installed.length) && <p className="proton-scan-status">{t("gameModes", status === "loading" ? "scanningProtons" : status === "error" ? "protonScanError" : installed.length ? "installedProtons" : "noInstalledProtons")}</p>}
-        <p className="proton-scan-status">Versões instaladas da Steam. <button type="button" className="proton-preferences-link" onClick={() => { setOpen(false); window.dispatchEvent(new Event("openProtonPreferences")); }}>Clique aqui</button></p>
+        <p className="proton-scan-status"><button type="button" className="proton-preferences-link" onClick={manage}>{t("runners", "manage")}</button></p>
         </div>
       </div>, document.body)}
     </div>
+    {(noRunners || status === "error") && <p className="proton-selector-empty" role="status">
+      <span>{t("gameModes", noRunners ? "noInstalledProtons" : "protonScanError")}</span>{" "}
+      <button type="button" className="proton-preferences-link" disabled={disabled} onClick={manage}>{t("gameModes", "openProtonManager")}</button>
+    </p>}
   </div>;
 }

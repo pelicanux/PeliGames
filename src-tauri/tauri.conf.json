@@ -11,6 +11,13 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "appDirectoriesOverride": {
+      "config": "$CONFIG/PeliGames",
+      "data": "$CONFIG/PeliGames",
+      "localData": "$CONFIG/PeliGames/webview",
+      "cache": "$CONFIG/PeliGames/cache",
+      "log": "$CONFIG/PeliGames/logs"
+    },
     "windows": [
       {
         "title": "PeliGames",
@@ -28,7 +35,7 @@
       "assetProtocol": {
         "enable": true,
         "scope": [
-          "$APPLOCALDATA/covers/**"
+          "$APPCONFIG/covers/**"
         ]
       }
     }

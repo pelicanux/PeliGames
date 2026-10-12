@@ -1,7 +1,6 @@
 use std::{fs::{self, File, OpenOptions}, io, path::{Path, PathBuf}};
 
 // Keep active downloads outside identifier directories moved by legacy migration.
-pub fn cache_root(base: &Path) -> PathBuf { base.join("PeliGames") }
 
 pub fn io_error(operation: &str, path: &Path, error: io::Error) -> String {
     format!("download|{operation}: {}: {error}", path.display())

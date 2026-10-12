@@ -21,6 +21,7 @@ fn catalog() -> Vec<OptionSpec> {
 #[serde(from = "SavedSettings")]
 pub struct AdvancedSettings {
     pub schema_version: u32,
+    pub launch_options: Option<String>,
     pub gamescope: GamescopeSettings,
     pub options: BTreeMap<String, bool>,
     pub dll_overrides: String,
@@ -77,6 +78,7 @@ impl GamescopeSettings {
 #[serde(default)]
 struct SavedSettings {
     schema_version: u32,
+    launch_options: Option<String>,
     options: BTreeMap<String, bool>,
     dll_overrides: Option<String>,
     wrappers: Vec<LaunchWrapper>,
@@ -87,6 +89,7 @@ impl From<SavedSettings> for AdvancedSettings {
     fn from(saved: SavedSettings) -> Self {
         let mut settings = Self::default();
         if saved.schema_version == 2 {
+            settings.launch_options = saved.launch_options;
             settings.options = saved.options;
             settings.wrappers = saved.wrappers;
             settings.dll_overrides = if settings.options.get("dll_overrides") == Some(&true) { saved.dll_overrides.unwrap_or_default() } else { String::new() };
@@ -107,6 +110,7 @@ impl Default for AdvancedSettings {
     fn default() -> Self {
         Self {
             schema_version: 2,
+            launch_options: None,
             gamescope: GamescopeSettings {
                 model_version: 2,
                 ..Default::default()
@@ -120,6 +124,7 @@ impl Default for AdvancedSettings {
 }
 impl AdvancedSettings {
     pub fn validate(&self) -> Result<(), String> {
+        if let Some(value) = &self.launch_options { crate::commands::nexus_launch_options::validate_custom(value)?; }
         if self.wrappers.len() > 16 { return Err("Use até 16 wrappers.".into()); }
         for wrapper in &self.wrappers {
             if wrapper.program.trim().is_empty() || wrapper.program.len() > 4096 || wrapper.program.chars().any(|c| c.is_control()) { return Err("Informe o executável do wrapper.".into()); }

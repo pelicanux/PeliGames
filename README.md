@@ -18,7 +18,7 @@ Baixe AppImage, RPM ou DEB em [Releases](https://github.com/pelicanux/PeliGames/
 - AppImage reúne os dois módulos. Dê permissão de execução e abra o arquivo. A primeira abertura registra o launcher e “Abrir com Pelinstall” para o usuário. Mantenha o AppImage no mesmo local para preservar os atalhos.
 - Para abrir um executável Windows no instalador: `./PeliGames.AppImage --install /caminho/programa.exe`.
 
-Proton, UMU e Winetricks são baixados conforme necessário. Configurações e ferramentas ficam em `~/.config/PeliGames`. O backend e os arquivos do mod ficam em `~/.config/PeliGames/Mod/DLSSNR`. O setup do mod, as teclas por jogo e os diretórios personalizados ficam em `~/.config/PeliGames/Mod/DLSSNR/config.json`; as preferências de inicialização do Neural Rendering ficam em `neural-startup.json` nessa mesma pasta. As preferências de capas e Proton permanecem em `~/.config/PeliGames/config.json`. Prefixos e jogos permanecem nos diretórios escolhidos pelo usuário. Capas do SteamGridDB exigem uma chave pessoal opcional, configurada em Preferências.
+Proton, UMU e Winetricks são baixados conforme necessário. Configurações, ferramentas, mods e dados da interface ficam em `~/.config/PeliGames`; para começar do zero, basta apagar essa pasta. O backend e os arquivos do mod ficam em `~/.config/PeliGames/Mod/DLSSNR`. O setup do mod, as teclas por jogo e os diretórios personalizados ficam em `~/.config/PeliGames/Mod/DLSSNR/config.json`; as preferências de inicialização do Neural Rendering ficam em `neural-startup.json` nessa mesma pasta. As preferências de capas e Proton permanecem em `~/.config/PeliGames/config.json`. Prefixos e jogos permanecem nos diretórios escolhidos pelo usuário. Capas do SteamGridDB exigem uma chave pessoal opcional, configurada em Preferências.
 
 ## Mods locais do Nexus
 
@@ -29,6 +29,20 @@ Contas gratuitas confirmam o download na página do Nexus; Premium permite downl
 O suporte depende do jogo e do formato do pacote. A chave fica no chaveiro do sistema; AppImage requer `secret-tool` e um chaveiro disponível. Use **Logs** ou **Reportar erro** para diagnosticar problemas.
 
 Em **Configurações → Ferramentas**, crie um backup ZIP dos jogos com mods Nexus instalados ou restaure um ZIP salvo em outro disco. A opção de recuperação por jogo mantém uma pasta oculta `.peligames` no disco dos jogos, permitindo recuperar os registros ao escanear novamente após trocar de distribuição. Use **Encontrar mods no SSD** para procurar cópias de recuperação em uma biblioteca inteira. A `.config` continua sendo o armazenamento principal.
+
+## Jogos suportados
+
+O PeliGames instala mods do Nexus Mods em **202 jogos**, com módulos baseados nas extensões do Vortex: Fallout, Skyrim, Starfield, Cyberpunk 2077, Baldur's Gate 3, Stardew Valley, Elden Ring, a família Resident Evil e Monster Hunter, além de dezenas de jogos Unreal e Unity.
+
+| Concluído | Jogos |
+|---|---|
+| 100% — verificado em jogo real | 5 |
+| 90% — paridade com a extensão Vortex | 67 |
+| 80% — recursos da extensão ainda pendentes | 29 |
+| 70% — gerado do template da família | 100 |
+| 60% — sem suporte Vortex confirmado | 1 |
+
+**[Ver a lista completa de jogos suportados →](docs/supported-games.md)**
 
 ## Créditos e licença
 

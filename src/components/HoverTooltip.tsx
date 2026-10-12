@@ -14,8 +14,13 @@ export function HoverTooltip({ text, children, anchorClassName = "", tooltipClas
   const id = useId();
   const anchor = useRef<HTMLSpanElement>(null);
   const tooltip = useRef<HTMLDivElement>(null);
+  const suppressRestoredFocus = useRef(false);
   const [hovered, setHovered] = useState(false);
   const [position, setPosition] = useState<{ left: number; top: number; zIndex: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!text.trim()) { setHovered(false); setPosition(null); }
+  }, [text]);
 
   useLayoutEffect(() => {
     if (!hovered) return;
@@ -52,8 +57,20 @@ export function HoverTooltip({ text, children, anchorClassName = "", tooltipClas
   }, [hovered, text]);
 
   const close = () => { setHovered(false); setPosition(null); };
+  const activate = () => { suppressRestoredFocus.current = true; close(); };
   return <span ref={anchor} className={`hover-tooltip-anchor ${anchorClassName}`}
-    onMouseEnter={() => text.trim() && setHovered(true)} onMouseLeave={close} onFocus={() => showOnFocus && text.trim() && setHovered(true)} onBlur={close} onPointerDown={close}>
+    onMouseEnter={() => { suppressRestoredFocus.current = false; if (text.trim()) setHovered(true); }}
+    onMouseLeave={close}
+    onFocus={event => {
+      // Closing a dialog restores focus to its trigger; that must not reopen its hint.
+      const previous = event.relatedTarget;
+      if (previous instanceof Element && !previous.closest('[role="dialog"], [aria-modal="true"]')) {
+        suppressRestoredFocus.current = false;
+      }
+      if (!suppressRestoredFocus.current && showOnFocus && text.trim()) setHovered(true);
+    }}
+    onBlur={close} onPointerDown={activate} onClickCapture={activate}
+    onKeyDownCapture={event => { if (event.key === "Enter" || event.key === " ") activate(); }}>
     {cloneElement(children, { "aria-describedby": hovered ? id : undefined })}
     {hovered && text.trim() && createPortal(<div ref={tooltip} id={id} role="tooltip" className={`ui-hover-tooltip ${tooltipClassName}`}
       style={{ zIndex: position?.zIndex, left: position?.left ?? 0, top: position?.top ?? 0, visibility: position ? "visible" : "hidden" }}>

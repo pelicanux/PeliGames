@@ -12,7 +12,7 @@ const BRANCH: &str = "v0.29";
 
 /// LOOT game type and masterlist repository, as in LOOT's own game settings
 /// (VR editions use the flat games' lists; Enderal SE uses `enderal`).
-fn kind(module: &Definition) -> Option<(GameType, &'static str)> {
+pub(super) fn kind(module: &Definition) -> Option<(GameType, &'static str)> {
     if !module.activation.as_ref().is_some_and(|rule| rule.kind == super::nexus_modules::ActivationKind::Bethesda) { return None; }
     Some(match module.name.as_str() {
         "Skyrim Special Edition" => (GameType::SkyrimSE, "skyrimse"),
@@ -30,7 +30,7 @@ fn kind(module: &Definition) -> Option<(GameType, &'static str)> {
     })
 }
 
-fn folder(repository: &str) -> Result<PathBuf, String> {
+pub(super) fn folder(repository: &str) -> Result<PathBuf, String> {
     Ok(crate::core::paths::app_root().map_err(|e| e.to_string())?.join("Mod/Nexus/loot").join(repository))
 }
 
@@ -114,12 +114,16 @@ pub(super) fn sort(game: &NexusGame, module: &Definition, runtime: &Path, data: 
     }
 }
 
-fn sorted(game: &NexusGame, game_type: GameType, cache: &Path, runtime: &Path, data: &str, local: &Path, lines: &[String]) -> Result<Vec<String>, String> {
+pub(super) fn sorted(game: &NexusGame, game_type: GameType, cache: &Path, runtime: &Path, data: &str, local: &Path, lines: &[String]) -> Result<Vec<String>, String> {
     let root = Path::new(game.game["directory"].as_str().ok_or("Pasta ausente.")?);
     let mut handle = libloot::Game::with_local_path(game_type, root, local).map_err(|e| e.to_string())?;
     handle.set_additional_data_paths(vec![runtime.join(data)]).map_err(|e| e.to_string())?;
     handle.database().write().map_err(|e| e.to_string())?
         .load_masterlist_with_prelude(&cache.join("masterlist.yaml"), &cache.join("prelude.yaml")).map_err(|e| e.to_string())?;
+    // Rules and groups added on the plugins page (userlist).
+    if let Some(userlist) = super::nexus_plugins::userlist(game).ok().filter(|path| path.is_file()) {
+        handle.database().write().map_err(|e| e.to_string())?.load_userlist(&userlist).map_err(|e| format!("userlist inválida: {e}"))?;
+    }
     let names: Vec<String> = lines.iter().filter_map(|line| name(line)).collect();
     // Every listed plugin and the game's own masters are loaded; staged copies win.
     let locate = |plugin: &str| super::nexus_discovery::locate(&runtime.join(data), plugin).or_else(|| super::nexus_discovery::locate(&root.join(data), plugin));
@@ -164,6 +168,25 @@ mod tests {
         fs::write(path, bytes).unwrap();
     }
     #[test]
+    fn fomod_plugin_conditions_follow_the_load_order() {
+        let base = std::env::temp_dir().join(format!("peligames-plugin-state-{}", uuid::Uuid::new_v4()));
+        let (root, prefix) = (base.join("game"), base.join("prefix"));
+        fs::create_dir_all(prefix.join("pfx/drive_c/users/steamuser/AppData/Local/Skyrim Special Edition")).unwrap();
+        fs::write(prefix.join("pfx/system.reg"), "").unwrap();
+        fs::write(root.join("SkyrimSE.exe").parent().map(|p| { fs::create_dir_all(p).unwrap(); p.join("SkyrimSE.exe") }).unwrap(), b"MZ").unwrap();
+        for name in ["Skyrim.esm", "Active.esp", "Disabled.esp"] { plugin(&root.join("Data").join(name), if name == "Skyrim.esm" { &[] } else { &["Skyrim.esm"] }); }
+        fs::write(prefix.join("pfx/drive_c/users/steamuser/AppData/Local/Skyrim Special Edition/plugins.txt"), "*Active.esp\r\nDisabled.esp\r\n").unwrap();
+        let game: NexusGame = serde_json::from_value(serde_json::json!({"id": uuid::Uuid::new_v4().to_string(), "platform": "proton", "mods": [],
+            "game": {"directory": root}, "compat_data": prefix})).unwrap();
+        let module = super::super::nexus_modules::registry().definitions.into_iter().find(|m| m.name == "Skyrim Special Edition").unwrap();
+        let oracle = PluginOracle::new(&game, &module);
+        assert_eq!(oracle.state("Active.esp").unwrap(), PluginState::Active);
+        assert_eq!(oracle.state("disabled.ESP").unwrap(), PluginState::Inactive);
+        assert_eq!(oracle.state("Missing.esp").unwrap(), PluginState::Missing);
+        assert_eq!(oracle.state("Skyrim.esm").unwrap(), PluginState::Active, "mestre do jogo ativo implicitamente");
+        fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
     fn masterlist_rules_reorder_listed_plugins_and_keep_their_flags() {
         let base = std::env::temp_dir().join(format!("peligames-loot-{}", uuid::Uuid::new_v4()));
         let (root, local, runtime, cache) = (base.join("game"), base.join("local"), base.join("stage"), base.join("cache"));
@@ -198,5 +221,53 @@ mod tests {
             game.database().write().unwrap().load_masterlist_with_prelude(&cache.join(repository).join("masterlist.yaml"), &cache.join("prelude.yaml"))
                 .unwrap_or_else(|e| panic!("{repository}: {e}"));
         }
+    }
+}
+
+/// Plugin state asked by FOMOD conditions (`fileDependency` on a plugin), as in Vortex.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum PluginState { Active, Inactive, Missing }
+struct PluginSets { active: std::collections::BTreeSet<String>, data: Vec<PathBuf> }
+/// Reads the load order lazily, only when a FOMOD asks about a plugin.
+pub(super) struct PluginOracle<'a> {
+    game: &'a NexusGame,
+    module: &'a Definition,
+    cache: std::cell::OnceCell<Result<PluginSets, String>>,
+}
+impl<'a> PluginOracle<'a> {
+    pub(super) fn new(game: &'a NexusGame, module: &'a Definition) -> Self {
+        Self { game, module, cache: std::cell::OnceCell::new() }
+    }
+    fn load(&self) -> Result<PluginSets, String> {
+        let (game_type, _) = kind(self.module).ok_or("Este jogo não tem lista de plugins para consultar.")?;
+        let rule = self.module.activation.as_ref().ok_or("Ativação de plugins ausente.")?;
+        let root = Path::new(self.game.game["directory"].as_str().ok_or("Pasta ausente.")?);
+        let (base, relative) = super::nexus_targets::root(root, &self.game.compat_data, &rule.path)?;
+        let list = base.join(&relative);
+        let local = list.parent().ok_or("Lista de plugins inválida.")?;
+        let mut data = vec![root.join(&rule.data)];
+        // Enabled mods of the current profile count even before (or without) deployment.
+        if let Ok(profile) = super::nexus_profile::profile(self.game) { data.insert(0, profile.join(&rule.data)); }
+        let mut handle = libloot::Game::with_local_path(game_type, root, local).map_err(|e| e.to_string())?;
+        handle.set_additional_data_paths(data.iter().filter(|dir| dir.is_dir() && !dir.starts_with(root.join(&rule.data))).cloned().collect()).map_err(|e| e.to_string())?;
+        handle.load_current_load_order_state().map_err(|e| format!("Não foi possível ler a ordem de plugins: {e}"))?;
+        // libloot knows the implicitly active plugins (Skyrim.esm, DLC). The list itself
+        // is read from the real file: on Linux libloot only finds the `Plugins.txt` spelling.
+        let mut active: std::collections::BTreeSet<String> = handle.load_order().into_iter().filter(|name| handle.is_plugin_active(name)).map(str::to_ascii_lowercase).collect();
+        let text = fs::read(&list).map(|bytes| String::from_utf8_lossy(&bytes).into_owned()).unwrap_or_default();
+        for line in text.lines().map(str::trim).filter(|line| !line.is_empty() && !line.starts_with('#')) {
+            match (rule.starred, line.strip_prefix('*')) {
+                (true, Some(name)) => { active.insert(name.trim().to_ascii_lowercase()); }
+                (false, _) => { active.insert(line.trim_start_matches('*').to_ascii_lowercase()); }
+                _ => {}
+            }
+        }
+        Ok(PluginSets { active, data })
+    }
+    pub(super) fn state(&self, plugin: &str) -> Result<PluginState, String> {
+        let sets = self.cache.get_or_init(|| self.load()).as_ref().map_err(Clone::clone)?;
+        if sets.active.contains(&plugin.to_ascii_lowercase()) { return Ok(PluginState::Active); }
+        let present = sets.data.iter().any(|dir| super::nexus_discovery::locate(dir, plugin).is_some_and(|path| path.is_file()));
+        Ok(if present { PluginState::Inactive } else { PluginState::Missing })
     }
 }

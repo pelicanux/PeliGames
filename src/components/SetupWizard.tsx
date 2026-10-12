@@ -44,7 +44,7 @@ interface BackendVersionStatus {
 }
 
 export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel, onBack }) => {
-  const { t, language, setLanguage } = useI18n();
+  const { t, language } = useI18n();
   const [gpuArch, setGpuArch] = useState<"rdna4" | "rdna3">("rdna4");
   const [gpus, setGpus] = useState<DetectedGpu[]>([]);
   const [detectingGpu, setDetectingGpu] = useState(true);
@@ -70,7 +70,6 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
   const [binPath, setBinPath] = useState("");
   const [hasCachedBin, setHasCachedBin] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showLangDropdown, setShowLangDropdown] = useState(false);
   const [emergencyStage, setEmergencyStage] = useState(0);
 
   // Download state
@@ -244,80 +243,60 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
   };
 
   return (
-    <div style={{ position: "fixed", top: "50px", left: 0, right: 0, height: "calc(100vh - 50px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-      <div className="dialog-backdrop" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }} />
-      
-      <ModalSurface hideClose className="modal-content dialog-glass setup-wizard" style={{ padding: "2.5rem", width: "90%", maxWidth: "800px", zIndex: 1, maxHeight: "90vh", overflowY: "auto", position: "relative" }}>
-        
-        {/* Top Right Controls */}
-        <div style={{ position: "absolute", top: "2rem", right: "2.5rem", zIndex: 50, display: "flex", gap: "0.8rem", alignItems: "center" }}>
+    <div className="modal-overlay setup-wizard-overlay">
+      <ModalSurface className="modal-content dialog-glass setup-wizard" role="dialog" aria-modal="true" aria-labelledby="setup-wizard-title"
+        hideClose={!allowCancel || !onCancel} onDismiss={onCancel} closeDisabled={isDownloading || loading || extractingDll}
+        header={<><h2 id="setup-wizard-title">{onBack ? <button type="button" className="wizard-titlebar-back" aria-label={t("welcome", "back")} disabled={isDownloading || loading || extractingDll} onClick={onBack}><MenuIcon name="back" /></button> : <MenuIcon name="sliders" />}{t("setupWizard", "title")}</h2></>}
+        headerActions={        <div className="setup-wizard-header-actions">
           <button className="wizard-emergency-trigger" disabled={isDownloading || loading || extractingDll}
-            aria-expanded={emergencyStage > 0} onClick={() => { setShowLangDropdown(false); setEmergencyStage(value => value ? 0 : 1); }}>
+            aria-expanded={emergencyStage > 0} onClick={() => setEmergencyStage(value => value ? 0 : 1)}>
             <span aria-hidden="true">⚠</span> {language === "en" ? "Emergency" : "Emergência"}
           </button>
-          
-          {/* Language Selector */}
-          <div style={{ position: "relative" }}>
-            <button
-              className="btn btn-secondary"
-              onClick={(e) => { e.stopPropagation(); setShowLangDropdown(!showLangDropdown); }}
-              style={{ 
-                background: "rgba(0,0,0,0.3)", color: "var(--accent)", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)", 
-                borderRadius: "4px", padding: "0.4rem 0.6rem", fontWeight: 600, cursor: "pointer",
-                display: "flex", alignItems: "center", gap: "0.4rem"
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-              {language === "pt" ? "BR" : "EN"}
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
-            </button>
-          {showLangDropdown && (
-            <div style={{ 
-              position: "absolute", top: "100%", right: 0, marginTop: "4px", 
-              background: "var(--tone-1e1e2f, #1e1e2f)", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)", 
-              borderRadius: "6px", overflow: "hidden", zIndex: 100,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.5)"
-            }}>
-              <div 
-                onClick={() => { setLanguage("pt"); setShowLangDropdown(false); }}
-                style={{ padding: "0.5rem 1.5rem", cursor: "pointer", background: language === "pt" ? "rgba(var(--accent-rgb), 0.2)" : "transparent", color: language === "pt" ? "var(--accent)" : "var(--tone-e2e8f0, #e2e8f0)" }}
-              >Português (BR)</div>
-              <div 
-                onClick={() => { setLanguage("en"); setShowLangDropdown(false); }}
-                style={{ padding: "0.5rem 1.5rem", cursor: "pointer", background: language === "en" ? "rgba(var(--accent-rgb), 0.2)" : "transparent", color: language === "en" ? "var(--accent)" : "var(--tone-e2e8f0, #e2e8f0)" }}
-              >English (EN)</div>
+
+        </div>}
+        footer={        <footer className="setup-wizard-footer">
+          <button
+            onClick={handleSave}
+            disabled={!gpuCompatible || loading || extractingDll || !downloadComplete}
+            className="btn"
+            style={{
+              width: "100%", padding: "1rem", borderRadius: "8px", fontSize: "1.1rem",
+              fontFamily: "'Rajdhani', sans-serif",
+              background: "linear-gradient(to right, var(--accent-button), var(--accent-deep))", color: "var(--accent-foreground)", fontWeight: "bold",
+              border: "none", cursor: (loading || extractingDll || !downloadComplete) ? "not-allowed" : "pointer",
+              boxShadow: "0 4px 15px rgba(var(--accent-rgb), 0.3)",
+              opacity: downloadComplete ? 1 : 0.5,
+              display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem",
+              position: "relative",
+              overflow: "hidden"
+            }}
+          >
+            {(loading || extractingDll) && (
+              <div style={{
+                position: "absolute", left: 0, top: 0, bottom: 0,
+                background: "rgba(var(--surface-255-255-255, 255, 255, 255), 0.2)",
+                zIndex: 0,
+                animation: "fillUpFake 15s cubic-bezier(0.1, 0.7, 0.1, 1) forwards"
+              }} />
+            )}
+            <div style={{ zIndex: 1, display: "flex", alignItems: "center", gap: "0.5rem", pointerEvents: "none" }}>
+              {(loading || extractingDll) && (
+                <svg className="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="2" x2="12" y2="6"></line>
+                  <line x1="12" y1="18" x2="12" y2="22"></line>
+                  <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                  <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                  <line x1="2" y1="12" x2="6" y2="12"></line>
+                  <line x1="18" y1="12" x2="22" y2="12"></line>
+                  <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                  <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+                </svg>
+              )}
+              {extractingDll ? t("setupWizard", "extracting") : loading ? t("setupWizard", "saving") : t("setupWizard", "continue")}
             </div>
-          )}
-          </div>
-          
-          {/* Close Button (Only if allowCancel is true) */}
-          {allowCancel && onCancel && (
-            <button
-              aria-label="Fechar configuração inicial"
-              className="wizard-close-button"
-              disabled={isDownloading || loading || extractingDll}
-              onClick={onCancel}
-              style={{
-                background: "rgba(var(--accent-rgb), 0.2)", border: "1px solid rgba(var(--accent-rgb), 0.5)", color: "var(--tone-f87171, #f87171)", 
-                borderRadius: "50%", width: "36px", height: "36px", display: "flex", 
-                alignItems: "center", justifyContent: "center", cursor: "pointer",
-                transition: "all 0.2s"
-              }}
-              onMouseOver={(e) => { e.currentTarget.style.background = "rgba(var(--accent-rgb), 0.4)"; e.currentTarget.style.color = "var(--accent-light)"; }}
-              onMouseOut={(e) => { e.currentTarget.style.background = "rgba(var(--accent-rgb), 0.2)"; e.currentTarget.style.color = "var(--tone-f87171, #f87171)"; }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          )}
-        </div>
-
-        {onBack && <button type="button" className="btn btn-secondary wizard-back-button" disabled={isDownloading || loading || extractingDll}
-          onClick={onBack}><MenuIcon name="back" />{t("welcome", "back")}</button>}
-
-        <h2 style={{ margin: "0 0 0.5rem 0", color: "var(--tone-ffffff, #ffffff)", fontFamily: "'Rajdhani', sans-serif", fontSize: "2.5rem", paddingRight: "280px" }}>
-          {t("setupWizard", "title")}
-        </h2>
-        <p style={{ color: "var(--tone-94a3b8, #94a3b8)", marginBottom: "2rem" }}>
+          </button>
+        </footer>}>
+        <p className="setup-wizard-subtitle">
           {t("setupWizard", "subtitle")}
         </p>
         
@@ -462,48 +441,6 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
           hasCachedBin={hasCachedBin}
         />
 
-        <div style={{ marginTop: "2rem" }}>
-          <button 
-            onClick={handleSave}
-            disabled={loading || extractingDll || !downloadComplete}
-            className="btn" 
-            style={{ 
-              width: "100%", padding: "1rem", borderRadius: "8px", fontSize: "1.1rem", 
-              fontFamily: "'Rajdhani', sans-serif",
-              background: "linear-gradient(to right, var(--accent-button), var(--accent-deep))", color: "var(--accent-foreground)", fontWeight: "bold",
-              border: "none", cursor: (loading || extractingDll || !downloadComplete) ? "not-allowed" : "pointer",
-              boxShadow: "0 4px 15px rgba(var(--accent-rgb), 0.3)",
-              opacity: downloadComplete ? 1 : 0.5,
-              display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem",
-              position: "relative",
-              overflow: "hidden"
-            }}
-          >
-            {(loading || extractingDll) && (
-              <div style={{
-                position: "absolute", left: 0, top: 0, bottom: 0, 
-                background: "rgba(var(--surface-255-255-255, 255, 255, 255), 0.2)", 
-                zIndex: 0,
-                animation: "fillUpFake 15s cubic-bezier(0.1, 0.7, 0.1, 1) forwards"
-              }} />
-            )}
-            <div style={{ zIndex: 1, display: "flex", alignItems: "center", gap: "0.5rem", pointerEvents: "none" }}>
-              {(loading || extractingDll) && (
-                <svg className="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="2" x2="12" y2="6"></line>
-                  <line x1="12" y1="18" x2="12" y2="22"></line>
-                  <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
-                  <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
-                  <line x1="2" y1="12" x2="6" y2="12"></line>
-                  <line x1="18" y1="12" x2="22" y2="12"></line>
-                  <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
-                  <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
-                </svg>
-              )}
-              {extractingDll ? t("setupWizard", "extracting") : loading ? t("setupWizard", "saving") : t("setupWizard", "continue")}
-            </div>
-          </button>
-        </div>
         </fieldset>
       </ModalSurface>
     </div>

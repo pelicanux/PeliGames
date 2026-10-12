@@ -3,6 +3,8 @@ import { readCustomCovers, customCoverFor } from "./customCovers";
 import type { GameInfo } from "../components/GameGrid";
 
 const CACHE_KEY = "game_library_cache_v1";
+export type LibraryCacheScope = "all" | "own" | "nexus";
+const cacheKey = (scope: LibraryCacheScope) => scope === "all" ? CACHE_KEY : `${CACHE_KEY}_${scope}`;
 
 export function applyCustomCovers(games: GameInfo[]): GameInfo[] {
   const covers = readCustomCovers();
@@ -19,9 +21,9 @@ export function applyCustomCovers(games: GameInfo[]): GameInfo[] {
   });
 }
 
-export function readGameLibrary(): GameInfo[] | null {
+export function readGameLibrary(scope: LibraryCacheScope = "all"): GameInfo[] | null {
   try {
-    const saved = localStorage.getItem(CACHE_KEY);
+    const saved = localStorage.getItem(cacheKey(scope));
     if (saved === null) return null;
     const cache = JSON.parse(saved);
     if (cache.version !== 1 || !Array.isArray(cache.games) || !cache.games.every((game: GameInfo) =>
@@ -33,7 +35,7 @@ export function readGameLibrary(): GameInfo[] | null {
   } catch { return null; }
 }
 
-export function saveGameLibrary(games: GameInfo[]) {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ version: 1, games })); }
+export function saveGameLibrary(games: GameInfo[], scope: LibraryCacheScope = "all") {
+  try { localStorage.setItem(cacheKey(scope), JSON.stringify({ version: 1, games })); }
   catch (error) { console.error("Failed to save game library", error); }
 }

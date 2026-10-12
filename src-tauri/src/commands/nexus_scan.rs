@@ -9,18 +9,48 @@ pub(super) fn ue4ss_installed(root: &Path, layout: &Ue4ssLayout) -> bool {
         && (binaries.join("ue4ss/UE4SS.dll").is_file() || binaries.join("UE4SS.dll").is_file())
 }
 
+/// UE4SS layout that will be active: nested (`<bin>/ue4ss/Mods`, current
+/// releases) or flat (`<bin>/Mods`, 3.0.x).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Ue4ssKind { Nested, Flat }
+/// The loader in the files being deployed wins (e.g. a UE4SS package in the
+/// profile); otherwise a loader installed by hand in the game, ignoring files a
+/// previous deployment owns (they are about to be replaced). None: no loader yet.
+pub(super) fn ue4ss_kind(root: &Path, layout: &Ue4ssLayout, deployed: &[&str], owned: &dyn Fn(&str) -> bool) -> Result<Option<Ue4ssKind>, String> {
+    let nested = format!("{}/ue4ss/UE4SS.dll", layout.binaries);
+    let flat = format!("{}/UE4SS.dll", layout.binaries);
+    let both = || Err::<Option<Ue4ssKind>, String>("Dois layouts UE4SS encontrados. Mantenha somente o loader desejado antes de instalar scripts; nenhum arquivo foi aplicado.".into());
+    let has = |path: &str| deployed.iter().any(|target| target.eq_ignore_ascii_case(path));
+    match (has(&nested), has(&flat)) {
+        (true, true) => return both(),
+        (true, false) => return Ok(Some(Ue4ssKind::Nested)),
+        (false, true) => return Ok(Some(Ue4ssKind::Flat)),
+        _ => {}
+    }
+    let manual = |path: &str| root.join(path).is_file() && !owned(path);
+    match (manual(&nested), manual(&flat)) {
+        (true, true) => both(),
+        (true, false) => Ok(Some(Ue4ssKind::Nested)),
+        (false, true) => Ok(Some(Ue4ssKind::Flat)),
+        _ => Ok(None),
+    }
+}
+/// Script folder of the active layout, for targets written in either layout.
+/// Without a loader the canonical nested path is kept.
+pub(super) fn ue4ss_layout_target(layout: &Ue4ssLayout, kind: Option<Ue4ssKind>, target: String) -> String {
+    let nested = format!("{}/ue4ss/Mods/", layout.binaries);
+    let flat = format!("{}/Mods/", layout.binaries);
+    let tail = target.strip_prefix(&nested).or_else(|| target.strip_prefix(&flat)).map(str::to_string);
+    match (tail, kind) {
+        (Some(tail), Some(Ue4ssKind::Flat)) => format!("{flat}{tail}"),
+        (Some(tail), _) => format!("{nested}{tail}"),
+        (None, _) => target,
+    }
+}
 // Package routes use one canonical path; deployment selects the existing loader's layout.
 pub(super) fn ue4ss_mod_target(root: &Path, layout: &Ue4ssLayout, target: String) -> Result<String, String> {
-    let prefix = format!("{}/ue4ss/Mods/", layout.binaries);
-    let Some(tail) = target.strip_prefix(&prefix) else { return Ok(target); };
-    let binaries = root.join(&layout.binaries);
-    let flat = binaries.join("UE4SS.dll").is_file();
-    let nested = binaries.join("ue4ss/UE4SS.dll").is_file();
-    match (flat, nested) {
-        (true, true) => Err("Dois layouts UE4SS encontrados. Mantenha somente o loader desejado antes de instalar scripts; nenhum arquivo foi aplicado.".into()),
-        (true, false) => Ok(format!("{}/Mods/{tail}", layout.binaries)),
-        _ => Ok(target),
-    }
+    let kind = ue4ss_kind(root, layout, &[], &|_| false)?;
+    Ok(if target.starts_with(&format!("{}/ue4ss/Mods/", layout.binaries)) { ue4ss_layout_target(layout, kind, target) } else { target })
 }
 
 pub(super) fn unreal(root: &Path, layout: &Ue4ssLayout) -> Vec<(String, bool)> {
@@ -90,6 +120,28 @@ mod tests {
         let path = root.join(relative);
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         fs::write(path, value).unwrap();
+    }
+    #[test]
+    fn replacing_the_loader_moves_installed_scripts_to_its_layout() {
+        let root = std::env::temp_dir().join(format!("palworld-switch-{}", uuid::Uuid::new_v4()));
+        let none = |_: &str| false;
+        let old_target = "Pal/Binaries/Win64/Mods/PalInsight/Scripts/main.lua".to_string();
+        // Pal Insight was installed for the old flat UE4SS; the new nested package is in the profile.
+        let deployed = ["Pal/Binaries/Win64/ue4ss/UE4SS.dll", "Pal/Binaries/Win64/dwmapi.dll", old_target.as_str()];
+        let kind = ue4ss_kind(&root, &pal(), &deployed, &none).unwrap();
+        assert_eq!(kind, Some(Ue4ssKind::Nested));
+        assert_eq!(ue4ss_layout_target(&pal(), kind, old_target.clone()), "Pal/Binaries/Win64/ue4ss/Mods/PalInsight/Scripts/main.lua");
+        // A loader installed by hand still decides when no package provides one...
+        put(&root, "Pal/Binaries/Win64/UE4SS.dll", "fixture");
+        let kind = ue4ss_kind(&root, &pal(), &[], &none).unwrap();
+        assert_eq!(ue4ss_layout_target(&pal(), kind, "Pal/Binaries/Win64/ue4ss/Mods/X/Scripts/main.lua".into()), "Pal/Binaries/Win64/Mods/X/Scripts/main.lua");
+        // ...but a loader file owned by the previous deployment is about to be replaced.
+        assert_eq!(ue4ss_kind(&root, &pal(), &[], &|path: &str| path.ends_with("UE4SS.dll")).unwrap(), None);
+        // The profile's loader wins over a different manual one.
+        assert_eq!(ue4ss_kind(&root, &pal(), &deployed, &none).unwrap(), Some(Ue4ssKind::Nested));
+        // Non-script targets are untouched.
+        assert_eq!(ue4ss_layout_target(&pal(), Some(Ue4ssKind::Flat), "Pal/Content/Paks/LogicMods/X.pak".into()), "Pal/Content/Paks/LogicMods/X.pak");
+        fs::remove_dir_all(root).unwrap();
     }
     #[test]
     fn palworld_scripts_follow_the_existing_loader_and_reject_ambiguity() {

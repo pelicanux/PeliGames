@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
 
-type IconName = "sliders" | "floppy" | "copy" | "discord" | "eye" | "language" | "image" | "tools" | "gamepad" | "gamepadSearch" | "heart" | "wine" | "search" | "info" | "home" | "plus" | "plusCircle" | "back" | "play" | "trash" | "folderSearch" | "edit" | "check" | "folder" | "calendar" | "platform" | "chip" | "graphics" | "puzzle" | "logs" | "document" | "settings" | "cube" | "keyboard" | "download" | "repair" | "bolt" | "neural" | "chevronUp" | "chevronDown";
+type IconName = "arrowUpDown" | "chainLinked" | "chainBroken" | "sliders" | "floppy" | "copy" | "discord" | "eye" | "language" | "image" | "tools" | "gamepad" | "gamepadSearch" | "heart" | "wine" | "search" | "info" | "home" | "plus" | "plusCircle" | "back" | "play" | "trash" | "folderSearch" | "edit" | "check" | "folder" | "calendar" | "platform" | "chip" | "graphics" | "puzzle" | "logs" | "document" | "settings" | "cube" | "keyboard" | "download" | "repair" | "bolt" | "neural" | "chevronUp" | "chevronDown";
 const drawings: Record<IconName, ReactNode> = {
+  arrowUpDown: <path d="M7 20V4M3 8l4-4 4 4M17 4v16m-4-4 4 4 4-4" />,
+  chainLinked: <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></>,
+  chainBroken: <><path d="m8 12-3.5 3.5a3.54 3.54 0 0 0 5 5L13 17M16 12l3.5-3.5a3.54 3.54 0 0 0-5-5L11 7"/><path d="M8 7V4M5 10H2M16 17v3m3-6h3"/></>,
   sliders: <><path d="M5 3v4m0 6v8M12 3v10m0 6v2M19 3v2m0 6v10"/><rect x="2" y="7" width="6" height="6" rx="1.5"/><rect x="9" y="13" width="6" height="6" rx="1.5"/><rect x="16" y="5" width="6" height="6" rx="1.5"/></>,
   floppy: <><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12l4 4v12a2 2 0 0 1-2 2Z"/><path d="M7 3v6h10V3M7 21v-8h10v8M14 5v2"/></>,
   copy: <><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></>,

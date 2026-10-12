@@ -4,6 +4,25 @@ import { gameViewKey } from "./gameIdentity";
 import type { GameInfo } from "../components/GameGrid";
 import { openFilePicker } from "./tauriService";
 
+/** Rewrites cover addresses saved before the launcher data moved to
+ * `~/.config/PeliGames` (covers used to live in `~/.local/share`). */
+export async function migrateCoverPaths() {
+  let directories: [string | null, string];
+  try { directories = await invoke<[string | null, string]>("cover_directories"); } catch { return; }
+  const [legacy, current] = directories;
+  if (!legacy || legacy === current) return;
+  const pairs = [[legacy, current], [encodeURIComponent(legacy), encodeURIComponent(current)]];
+  try {
+    for (let index = 0; index < localStorage.length; index++) {
+      const key = localStorage.key(index);
+      if (!key || !(key === "custom_covers" || key.startsWith("game_library_cache_v1"))) continue;
+      const value = localStorage.getItem(key) ?? "";
+      const updated = pairs.reduce((text, [from, to]) => text.split(from).join(to), value);
+      if (updated !== value) localStorage.setItem(key, updated);
+    }
+  } catch { /* storage unavailable: covers fall back to the automatic artwork */ }
+}
+
 export function readCustomCovers(): Record<string, string> {
   try {
     const saved = JSON.parse(localStorage.getItem("custom_covers") || "{}");

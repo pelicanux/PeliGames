@@ -113,6 +113,12 @@ pub fn re_engine_module(f: &GameFacts, evidence: &str, nexus: Option<&NexusIndex
     if let Some(id) = &steam {
         module["steam_id"] = json!(id);
     }
+    // REFramework: the game's Nexus page, or the nightly GitHub build (`useRefNightly`).
+    if f.constants.get("useRefNightly").is_some_and(|v| v == "true") {
+        module["downloads"] = json!([{ "name": "REFramework", "repository": "praydog/REFramework-nightly", "prefix": "REFramework", "present": ["dinput8.dll"] }]);
+    } else if let Some((id, domain)) = nexus_page(f, "REF_PAGE_NO", "REF_DOMAIN") {
+        module["downloads"] = json!([{ "name": "REFramework", "source": "nexus", "mod_id": id, "domain": domain, "prefix": "REFramework", "present": ["dinput8.dll"] }]);
+    }
     let cases = vec![
         json!({ "source": "dinput8.dll", "target": "dinput8.dll" }),
         json!({ "source": "Mod/reframework/autorun/example.lua", "target": "reframework/autorun/example.lua" }),
@@ -123,6 +129,13 @@ pub fn re_engine_module(f: &GameFacts, evidence: &str, nexus: Option<&NexusIndex
         "Identificação (executável, Steam ID) extraída da extensão; rotas REFramework do perfil RE Engine compartilhado. Mods Fluffy, natives e presets da extensão não são aplicados.",
         nexus_game_id);
     Ok((module, audit))
+}
+
+/// Nexus page of a template requirement: page number and its game (`site` or the module's own).
+fn nexus_page(f: &GameFacts, page: &str, domain: &str) -> Option<(u64, Option<String>)> {
+    let id = f.constants.get(page)?.parse::<u64>().ok().filter(|id| *id > 0)?;
+    let site = f.constants.get(domain).is_some_and(|d| d == "site");
+    Some((id, site.then(|| "site".to_string())))
 }
 
 /// Somente o template híbrido BepInEx/MelonLoader; UMM e loaders próprios ficam fora.
@@ -243,6 +256,42 @@ pub fn unity_module(f: &GameFacts, evidence: &str, nexus: Option<&NexusIndex>) -
             loaders.iter().map(|l| if *l == "bepinex" { "BepInEx" } else { "MelonLoader" }).collect::<Vec<_>>().join("/")
         )],
     });
+    // Loader downloads of the template (GitHub release, BepInEx Bleeding Edge
+    // build for IL2CPP, or the game's Nexus page when the extension names one).
+    let arch = constant("ARCH").unwrap_or_else(|| "x64".into());
+    let il2cpp = constant("BEPINEX_BUILD").as_deref() == Some("il2cpp");
+    let page = |key: &str, allow: &str| constant(key).and_then(|v| v.parse::<u64>().ok()).filter(|id| *id > 0 && constant(allow).as_deref() != Some("false"));
+    let recommended = constant("recommendedLoader");
+    let mut downloads = Vec::new();
+    if loaders.contains(&"bepinex") {
+        let mut download = if let Some(id) = page("BEPINEX_PAGE_NO", "allowBepinexNexus") {
+            json!({ "name": "BepInEx", "source": "nexus", "mod_id": id, "prefix": "BepInEx" })
+        } else if il2cpp {
+            let build = constant("BEP_BE_VER").ok_or("build Bleeding Edge do BepInEx não resolvida")?;
+            let commit = constant("BEP_BE_COMMIT").ok_or("commit Bleeding Edge do BepInEx não resolvido")?;
+            let artifact = format!("BepInEx-Unity.IL2CPP-win-{arch}");
+            json!({ "name": "BepInEx", "source": "bepinex_be", "prefix": format!("{artifact}-"),
+                "fallback": format!("https://builds.bepinex.dev/projects/bepinex_be/{build}/{artifact}-6.0.0-be.{build}%2B{commit}.zip") })
+        } else {
+            json!({ "name": "BepInEx", "repository": "BepInEx/BepInEx", "prefix": format!("BepInEx_win_{arch}_") })
+        };
+        download["present"] = json!(["winhttp.dll", if il2cpp { "BepInEx/core/BepInEx.Core.dll" } else { "BepInEx/core/BepInEx.dll" }]);
+        download["group"] = json!("loader");
+        download["recommended"] = json!(loaders.len() == 1 || recommended.as_deref() == Some("bep"));
+        downloads.push(download);
+    }
+    if loaders.contains(&"melonloader") {
+        let mut download = if let Some(id) = page("MELON_PAGE_NO", "allowMelonNexus") {
+            json!({ "name": "MelonLoader", "source": "nexus", "mod_id": id, "prefix": "MelonLoader" })
+        } else {
+            json!({ "name": "MelonLoader", "repository": "LavaGang/MelonLoader", "prefix": format!("MelonLoader.{arch}.") })
+        };
+        download["present"] = json!(["version.dll", "MelonLoader"]);
+        download["group"] = json!("loader");
+        download["recommended"] = json!(loaders.len() == 1 || recommended.as_deref() == Some("mel"));
+        downloads.push(download);
+    }
+    if !downloads.is_empty() { module["downloads"] = Value::Array(downloads); }
     if let Some(id) = &steam {
         module["steam_id"] = json!(id);
     }
@@ -363,6 +412,26 @@ pub fn unreal_module(f: &GameFacts, evidence: &str, nexus: Option<&NexusIndex>) 
     if let Some(id) = steam {
         module["steam_id"] = json!(id);
     }
+    // The extension's UE4SS download: its curated Nexus page when it names one,
+    // otherwise the GitHub release; offered by the game checks.
+    let automatic = f.constants.get("autoDownloadUe4ss").is_some_and(|v| v == "true");
+    let mut downloads = Vec::new();
+    if ue4ss {
+        if let Some((id, domain)) = nexus_page(f, "UE4SS_PAGE_NO", "UE4SS_DOMAIN") {
+            downloads.push(json!({ "name": "UE4SS", "source": "nexus", "mod_id": id, "domain": domain, "prefix": "UE4SS", "automatic": automatic }));
+        } else if let Some(download) = f.downloads.iter().find(|d| d.name == "UE4SS") {
+            downloads.push(json!({ "name": download.name, "repository": download.repository, "tag": download.tag, "prefix": download.prefix, "automatic": download.automatic }));
+        }
+    }
+    // Universal Sig Bypasser for games with .sig files (`SIGBYPASS_REQUIRED`).
+    if f.constants.get("SIGBYPASS_REQUIRED").is_some_and(|v| v == "true") {
+        if let Some((id, domain)) = nexus_page(f, "SIGBYPASS_PAGE_NO", "SIGBYPASS_DOMAIN") {
+            family["sig_bypass"] = json!(true);
+            module["family"] = family.clone();
+            downloads.push(json!({ "name": "Sig Bypass", "source": "nexus", "mod_id": id, "domain": domain, "prefix": "dsound", "present": [format!("{project}/Binaries/{binaries}/dsound.dll")] }));
+        }
+    }
+    if !downloads.is_empty() { module["downloads"] = Value::Array(downloads); }
     let types = vortex_mod_types(f);
     if !types.is_empty() {
         module["vortex_mod_types"] = Value::Object(types);
@@ -512,6 +581,7 @@ mod tests {
                 .map(|(k, v)| (k.to_string(), v.to_string()))
                 .collect(),
             features: Features::default(),
+            downloads: Vec::new(),
             unresolved: Default::default(),
             parse_errors: vec![],
             classification: Classification { level: Level::Yellow, reasons: vec![], game_data_complete: true },

@@ -4,7 +4,7 @@ import { MenuIcon } from "./MenuIcon";
 import { useI18n } from "../i18n/I18nContext";
 import { checkRunner, installRunner, cancelRunner, type ProtonFamily, type RunnerRelease, type RunnerProgress } from "../services/protonService";
 const families: ProtonFamily[] = ["ge-proton", "cachyos-proton"];
-const names = { "ge-proton": "GE-Proton", "cachyos-proton": "Proton CachyOS" };
+const names = { "ge-proton": "Proton-GE Latest", "cachyos-proton": "Proton-CachyOS Latest" };
 export function ProtonManagerModal({ initialFamily, onClose, onInstalled, isEmbedded = false, hideNavigation = false, onBack, onBusyChange }: { initialFamily: ProtonFamily; onClose: () => void; onInstalled: (path: string) => void; isEmbedded?: boolean; hideNavigation?: boolean; onBack?: () => void; onBusyChange?: (busy: boolean) => void }) {
   const { t } = useI18n();
   const [family, setFamily] = useState(initialFamily);

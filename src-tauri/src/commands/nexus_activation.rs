@@ -34,7 +34,7 @@ fn read(path: &Path) -> Result<String, String> {
         Err(e) => Err(e.to_string()),
     }
 }
-fn ini(original: &str, section: &str, lines: &[String], remove: impl Fn(&str) -> bool) -> String {
+pub(super) fn ini(original: &str, section: &str, lines: &[String], remove: impl Fn(&str) -> bool) -> String {
     let mut result = Vec::new();
     let mut inside = false;
     let mut found = false;
@@ -94,14 +94,24 @@ fn masters(path: &Path, legacy: bool) -> Result<Vec<String>, String> {
         .map_err(|_| "Plugin truncado.")?;
     let mut offset = 0;
     let mut result = Vec::new();
+    // `XXXX` carries the real size of the next subrecord when it exceeds 16 bits
+    // (large `ONAM` lists, e.g. the Yukichigai Unofficial Patch); that one then says 0.
+    let mut large: Option<usize> = None;
     while offset < records.len() {
         if offset + 6 > records.len() {
             return Err("Subregistro de plugin truncado.".into());
         }
-        let count =
+        let declared =
             u16::from_le_bytes(records[offset + 4..offset + 6].try_into().unwrap()) as usize;
+        let count = large.take().unwrap_or(declared);
         if offset + 6 + count > records.len() {
             return Err("Subregistro de plugin inválido.".into());
+        }
+        if &records[offset..offset + 4] == b"XXXX" {
+            if count != 4 { return Err("Subregistro de plugin inválido.".into()); }
+            large = Some(u32::from_le_bytes(records[offset + 6..offset + 10].try_into().unwrap()) as usize);
+            offset += 10;
+            continue;
         }
         if &records[offset..offset + 4] == b"MAST" {
             let name = String::from_utf8(records[offset + 6..offset + 6 + count].to_vec())
@@ -182,6 +192,22 @@ pub(super) fn generated_config(module: &Definition, path: &str) -> bool {
         || module.domain == "thesims4"
             && path == "@documents/Electronic Arts/The Sims 4/Options.ini"
         || module.ini_settings.iter().any(|setting| setting.file == path)
+        || redirection(module).is_some_and(|redirection| redirection.ini == path)
+}
+fn redirection(module: &Definition) -> Option<&super::nexus_modules::Redirection> {
+    module.archives.as_ref().and_then(|archives| archives.redirection.as_ref())
+}
+/// Value of `key` in `[section]` of an INI text.
+fn ini_value<'a>(text: &'a str, section: &str, key: &str) -> Option<&'a str> {
+    let mut inside = false;
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with('[') && trimmed.ends_with(']') { inside = trimmed[1..trimmed.len() - 1].eq_ignore_ascii_case(section); continue; }
+        if let Some((name, value)) = trimmed.split_once('=').filter(|_| inside) {
+            if name.trim().eq_ignore_ascii_case(key) { return Some(value.trim()); }
+        }
+    }
+    None
 }
 pub(super) fn prepare(
     game: &NexusGame,
@@ -195,7 +221,18 @@ pub(super) fn prepare(
         // Validate live paths before reading; no writes to the game occur during preparation.
         for folder in &folders { super::nexus_deployment::destination(game, &format!("{folder}/mods.txt"))?; }
         let visible = super::nexus_deploy_methods::view(game)?.unwrap_or_else(|| root.to_path_buf());
-        prepare_ue4ss(&visible, runtime, old, &folders)?;
+        // The list of the layout that is not active (after replacing the loader) is
+        // no longer kept once no script of the profile uses that folder.
+        let staged: Vec<String> = walkdir::WalkDir::new(runtime).into_iter().filter_map(Result::ok)
+            .filter(|e| e.file_type().is_file()).map(|e| e.path().strip_prefix(runtime).unwrap().to_string_lossy().into_owned()).collect();
+        let staged: Vec<&str> = staged.iter().map(String::as_str).collect();
+        let kind = super::nexus_scan::ue4ss_kind(&visible, &layout, &staged, &|path| old.contains_key(path))?;
+        let inactive = match kind {
+            Some(super::nexus_scan::Ue4ssKind::Nested) => Some(folders[1].clone()),
+            Some(super::nexus_scan::Ue4ssKind::Flat) => Some(folders[0].clone()),
+            None => None,
+        };
+        prepare_ue4ss_with(&visible, runtime, old, &folders, inactive.as_deref())?;
     }
     if module.domain == "oblivionremastered" {
         let files = walkdir::WalkDir::new(runtime)
@@ -215,8 +252,25 @@ pub(super) fn prepare(
             }
         }
     }
+    seed_files(game, module)?;
+    super::nexus_plugins::prepare(game, module, runtime)?;
+    super::nexus_gamebryo::prepare(game, module, runtime)?;
     prepare_main(game, module, runtime, old)?;
     prepare_ini(game, module, runtime, old)
+}
+/// Files the game needs before mods work, created once when absent; the player
+/// owns them afterwards, so they are neither tracked nor removed.
+fn seed_files(game: &NexusGame, module: &Definition) -> Result<(), String> {
+    if module.seed_files.is_empty() { return Ok(()); }
+    let root = Path::new(game.game["directory"].as_str().ok_or("Pasta ausente.")?);
+    for seed in &module.seed_files {
+        let (base, relative) = super::nexus_targets::root(root, &game.compat_data, &seed.path)?;
+        let live = base.join(relative);
+        if fs::symlink_metadata(&live).is_ok() { continue; }
+        fs::create_dir_all(live.parent().ok_or("Pasta inválida.")?).map_err(|e| e.to_string())?;
+        fs::write(&live, &seed.content).map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }
 /// Applies the module's INI values to a copy of the live file. Once managed, the
 /// file stays in every later profile (unchanged when no mod remains), otherwise
@@ -227,11 +281,13 @@ fn prepare_ini(
     runtime: &Path,
     old: &BTreeMap<String, String>,
 ) -> Result<(), String> {
-    if module.ini_settings.is_empty() {
+    let redirect = redirection(module);
+    if module.ini_settings.is_empty() && redirect.is_none() {
         return Ok(());
     }
     let root = Path::new(game.game["directory"].as_str().ok_or("Pasta ausente.")?);
-    let files: BTreeSet<&str> = module.ini_settings.iter().map(|s| s.file.as_str()).collect();
+    let files: BTreeSet<&str> = module.ini_settings.iter().map(|s| s.file.as_str()).chain(redirect.map(|r| r.ini.as_str())).collect();
+    let redirected = super::nexus_gamebryo::redirection_enabled(game);
     let mut mods = false;
     for entry in walkdir::WalkDir::new(runtime) {
         let entry = entry.map_err(|e| e.to_string())?;
@@ -248,7 +304,26 @@ fn prepare_ini(
         let live = base.join(relative);
         if !mods && fs::symlink_metadata(&live).is_err() { continue; }
         let text = read(&live)?;
-        let settings: Vec<_> = module.ini_settings.iter().filter(|s| s.file == file).collect();
+        let mut settings: Vec<super::nexus_modules::IniSetting> = module.ini_settings.iter().filter(|s| s.file == file).cloned().collect();
+        // BSA redirection: the archive list starts with the redirection archive
+        // (with the Vortex tweak's keys), or loses it once switched off.
+        if let Some(redirection) = redirect.filter(|r| r.ini == file) {
+            let current = ini_value(&text, "Archive", &redirection.key);
+            let listed = current.is_some_and(|list| list.split(',').any(|item| item.trim().eq_ignore_ascii_case(super::nexus_gamebryo::REDIRECTION_FILE)));
+            if redirected || listed {
+                let setting = |key: &str, value: String| super::nexus_modules::IniSetting { file: file.to_string(), section: "Archive".into(), key: key.into(), value, create: false };
+                settings.push(setting(&redirection.key, super::nexus_gamebryo::archive_list(current, &redirection.defaults, redirected)));
+                if redirected { for key in ["bInvalidateOlderFiles", "bUseArchives"] { if !settings.iter().any(|s| s.key.eq_ignore_ascii_case(key)) { settings.push(setting(key, "1".into())); } } }
+            }
+            if !redirected && listed && !mods {
+                let lines = vec![format!("{}={}", redirection.key, super::nexus_gamebryo::archive_list(current, &redirection.defaults, false))];
+                let output = ini(&text, "Archive", &lines, |line| line.split_once('=').is_some_and(|(key, _)| key.trim().eq_ignore_ascii_case(&redirection.key)));
+                let target = runtime.join(file);
+                fs::create_dir_all(target.parent().ok_or("Pasta de ativação ausente.")?).map_err(|e| e.to_string())?;
+                fs::write(target, output).map_err(|e| e.to_string())?;
+                continue;
+            }
+        }
         let output = if !mods {
             text
         } else {
@@ -288,6 +363,9 @@ fn ue4ss_script_names(paths: impl Iterator<Item = String>, folder: &str) -> Resu
     Ok(names)
 }
 fn prepare_ue4ss(root: &Path, runtime: &Path, old: &BTreeMap<String, String>, folders: &[String]) -> Result<(), String> {
+    prepare_ue4ss_with(root, runtime, old, folders, None)
+}
+fn prepare_ue4ss_with(root: &Path, runtime: &Path, old: &BTreeMap<String, String>, folders: &[String], inactive: Option<&str>) -> Result<(), String> {
     let paths = walkdir::WalkDir::new(runtime).into_iter().map(|entry| {
         let entry = entry.map_err(|e| e.to_string())?;
         Ok(entry.file_type().is_file().then(|| entry.path().strip_prefix(runtime).unwrap().to_string_lossy().into_owned()))
@@ -296,6 +374,7 @@ fn prepare_ue4ss(root: &Path, runtime: &Path, old: &BTreeMap<String, String>, fo
         let previous = ue4ss_script_names(old.keys().cloned(), folder)?;
         let next = ue4ss_script_names(paths.iter().cloned(), folder)?;
         let config = format!("{folder}/mods.txt");
+        if inactive == Some(folder.as_str()) && next.is_empty() { continue; }
         // Once managed, keep this shared list in the next profile even when the
         // last owned script is removed; otherwise deployment would delete manual entries.
         if previous.is_empty() && next.is_empty() && !old.contains_key(&config) { continue; }
@@ -360,6 +439,14 @@ fn prepare_main(
     {
         return Ok(());
     }
+    if rule.kind == ActivationKind::ArchiveList
+        && !paths.iter().chain(old.keys()).any(|p| p.starts_with(&format!("{}/", rule.data)) && p.to_ascii_lowercase().ends_with(".ba2"))
+    {
+        return Ok(());
+    }
+    if rule.kind == ActivationKind::FolderList && !paths.iter().chain(old.keys()).any(|p| p.starts_with(&format!("{}/", rule.data))) {
+        return Ok(());
+    }
     if rule.kind == ActivationKind::BaldursGate3
         && !paths.iter().chain(old.keys()).any(|p| {
             p.starts_with(&format!("{}/", rule.data)) && p.to_ascii_lowercase().ends_with(".pak")
@@ -391,7 +478,10 @@ fn prepare_main(
             }
             // Opt-in LOOT order (masterlist downloaded); the plugins.txt folder is the game's local path.
             let local = config.parent().ok_or("Destino de ativação inválido.")?;
-            let lines = super::nexus_loot::sort(game, module, runtime, &rule.data, local, lines);
+            // Plugins page: LOOT while autosort is on, otherwise the manual order; disabled plugins stay off.
+            let store = super::nexus_plugins::Store::load(game).unwrap_or_default();
+            let lines = if store.autosort { super::nexus_loot::sort(game, module, runtime, &rule.data, local, lines) } else { lines };
+            let lines = super::nexus_plugins::arrange(&store, module, rule.starred, lines);
             lines.join("\r\n") + "\r\n"
         }
         ActivationKind::Sims4 => {
@@ -669,20 +759,32 @@ fn prepare_main(
             super::nexus_bg3::activation(game, runtime, &rule.data, &original, old)?
         }
         ActivationKind::Reloaded => reloaded(game, module, runtime, &rule.data, &original, old)?,
+        ActivationKind::ArchiveList => super::nexus_archive_order::activation(game, &rule.data, &paths, &original, old),
+        ActivationKind::FolderList => folder_list(root, &rule.data, &paths, &original),
     };
     let output = runtime.join(&rule.path);
     fs::create_dir_all(output.parent().ok_or("Destino inválido.")?).map_err(|e| e.to_string())?;
     fs::write(output, content).map_err(|e| e.to_string())
 }
 
-/// These engines order plugins by modification time. Only managed files receive
-/// timestamps; external plugins are left untouched and deployment rollback is armed.
+/// List of mod folders the game reads (Halo MCC `ModManifest.txt`): the mods
+/// folder is listed, as a Windows path, while it holds mods; the player's other
+/// entries stay.
+fn folder_list(root: &Path, data: &str, paths: &[String], original: &str) -> String {
+    let folder = fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf()).join(data);
+    let line = format!("Z:{}", folder.to_string_lossy().replace('/', "\\"));
+    let mut lines: Vec<String> = original.lines().map(str::trim_end).filter(|l| !l.is_empty() && !l.eq_ignore_ascii_case(&line)).map(String::from).collect();
+    if paths.iter().any(|p| p.starts_with(&format!("{data}/"))) { lines.push(line); }
+    if lines.is_empty() { String::new() } else { lines.join("\r\n") + "\r\n" }
+}
+/// These engines order plugins by modification time: every listed plugin gets
+/// a date in list order. Deployment rollback stays armed meanwhile.
 pub(super) fn timestamps(
     game: &NexusGame,
     module: &Definition,
     runtime: &Path,
 ) -> Result<(), String> {
-    if !["oblivion", "fallout3", "newvegas", "morrowind"].contains(&module.domain.as_str()) {
+    if !(super::nexus_plugins::by_time(module) || module.domain == "morrowind") {
         return Ok(());
     }
     let Some(rule) = &module.activation else {
@@ -704,36 +806,12 @@ pub(super) fn timestamps(
         })
         .collect::<Vec<_>>();
     let root = Path::new(game.game["directory"].as_str().ok_or("Pasta ausente.")?);
-    let managed: BTreeSet<_> = names
-        .iter()
-        .filter(|name| runtime.join(&rule.data).join(name).is_file())
-        .cloned()
-        .collect();
-    let mut base = std::time::SystemTime::now();
-    for name in names.iter().filter(|name| !managed.contains(*name)) {
-        if !super::nexus_modules::relative(name) || name.contains('/') {
-            return Err("Nome de plugin externo inseguro; configuração preservada.".into());
-        }
-        if let Ok(time) = fs::metadata(root.join(&rule.data).join(name)).and_then(|m| m.modified())
-        {
-            base = base.max(time);
-        }
+    if names.iter().any(|name| !super::nexus_modules::relative(name) || name.contains('/')) {
+        return Err("Nome de plugin externo inseguro; configuração preservada.".into());
     }
-    for (i, name) in names
-        .iter()
-        .filter(|name| managed.contains(*name))
-        .enumerate()
-    {
-        let time = base
-            .checked_add(std::time::Duration::from_secs(60 * (i as u64 + 1)))
-            .ok_or("Data de plugin inválida.")?;
-        fs::OpenOptions::new()
-            .write(true)
-            .open(root.join(&rule.data).join(name))
-            .and_then(|file| file.set_modified(time))
-            .map_err(|e| e.to_string())?;
-    }
-    Ok(())
+    // The whole list, external plugins too, follows its order (LOOT or the plugins page),
+    // as libloadorder does for these games.
+    super::nexus_plugins::order_by_time(&root.join(&rule.data), &names)
 }
 
 fn reloaded(
@@ -891,6 +969,27 @@ mod palworld_tests {
         prepare_ue4ss(root, runtime, old, &PALWORLD_MOD_FOLDERS.map(String::from))
     }
     #[test]
+    fn list_of_the_replaced_layout_is_dropped_when_unused() {
+        let root = std::env::temp_dir().join(format!("palworld-orphan-{}", uuid::Uuid::new_v4()));
+        let runtime = root.join("stage");
+        let [nested, flat] = PALWORLD_MOD_FOLDERS;
+        fs::create_dir_all(root.join(flat)).unwrap();
+        fs::write(root.join(flat).join("mods.txt"), "OldMod : 1\r\n").unwrap();
+        let script = format!("{nested}/PalInsight/Scripts/main.lua");
+        fs::create_dir_all(runtime.join(&script).parent().unwrap()).unwrap();
+        fs::write(runtime.join(&script), "-- fixture").unwrap();
+        let old = BTreeMap::from([(format!("{flat}/mods.txt"), "managed".to_string())]);
+        let folders = PALWORLD_MOD_FOLDERS.map(String::from);
+        // Flat layout inactive: its managed list leaves the profile (deployment removes it).
+        prepare_ue4ss_with(&root, &runtime, &old, &folders, Some(flat)).unwrap();
+        assert!(!runtime.join(flat).join("mods.txt").exists());
+        assert!(fs::read_to_string(runtime.join(nested).join("mods.txt")).unwrap().contains("PalInsight : 1"));
+        // Without a layout change the managed list is still kept (manual entries survive).
+        prepare_ue4ss_with(&root, &runtime, &old, &folders, None).unwrap();
+        assert!(fs::read_to_string(runtime.join(flat).join("mods.txt")).unwrap().contains("OldMod : 1"));
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
     fn activation_merge_enables_and_disables_owned_scripts_preserving_manual_entries() {
         for folder in PALWORLD_MOD_FOLDERS {
             let root = std::env::temp_dir().join(format!("palworld-activation-{}", uuid::Uuid::new_v4()));
@@ -970,6 +1069,62 @@ mod ini_settings_tests {
     use super::*;
     fn module(domain: &str) -> Definition {
         super::super::nexus_modules::registry().definitions.into_iter().find(|m| m.domain == domain).unwrap()
+    }
+    #[test]
+    fn masters_are_read_past_large_subrecords() {
+        // TES4 header as in the Yukichigai Unofficial Patch: MAST, then XXXX with the
+        // size of an ONAM larger than 65535 bytes (declared 0), then another MAST.
+        let mut body = Vec::new();
+        let sub = |body: &mut Vec<u8>, tag: &[u8], data: &[u8], declared: u16| { body.extend_from_slice(tag); body.extend_from_slice(&declared.to_le_bytes()); body.extend_from_slice(data); };
+        sub(&mut body, b"HEDR", &[0; 12], 12);
+        sub(&mut body, b"MAST", b"FalloutNV.esm\0", 14);
+        sub(&mut body, b"DATA", &[0; 8], 8);
+        sub(&mut body, b"XXXX", &70000u32.to_le_bytes(), 4);
+        sub(&mut body, b"ONAM", &vec![7; 70000], 0);
+        sub(&mut body, b"MAST", b"DeadMoney.esm\0", 14);
+        let mut bytes = b"TES4".to_vec();
+        bytes.extend_from_slice(&(body.len() as u32).to_le_bytes());
+        bytes.extend_from_slice(&[0; 16]);
+        bytes.extend_from_slice(&body);
+        let path = std::env::temp_dir().join(format!("peligames-large-{}.esm", uuid::Uuid::new_v4()));
+        fs::write(&path, bytes).unwrap();
+        let found = masters(&path, false);
+        fs::remove_file(&path).unwrap();
+        assert_eq!(found.unwrap(), ["FalloutNV.esm", "DeadMoney.esm"]);
+    }
+    #[test]
+    fn folder_list_keeps_the_players_entries() {
+        let root = std::env::temp_dir().join(format!("folder-list-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&root).unwrap();
+        let line = format!("Z:{}", fs::canonicalize(&root).unwrap().join("PeliGames-Mods").to_string_lossy().replace('/', "\\"));
+        let deployed = vec!["PeliGames-Mods/Cool/ModInfo.json".to_string()];
+        let text = folder_list(&root, "PeliGames-Mods", &deployed, "C:\\Other\r\n");
+        assert_eq!(text, format!("C:\\Other\r\n{line}\r\n"));
+        // Applying again keeps one entry; without mods only the player's line stays.
+        assert_eq!(folder_list(&root, "PeliGames-Mods", &deployed, &text), text);
+        assert_eq!(folder_list(&root, "PeliGames-Mods", &[], &text), "C:\\Other\r\n");
+        assert_eq!(folder_list(&root, "PeliGames-Mods", &[], &format!("{line}\r\n")), "");
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn seed_files_are_created_once_and_left_to_the_player() {
+        let base = std::env::temp_dir().join(format!("seed-files-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(base.join("prefix/pfx/drive_c/users/steamuser/Documents")).unwrap();
+        fs::write(base.join("prefix/pfx/system.reg"), "").unwrap();
+        fs::create_dir_all(base.join("game")).unwrap();
+        let game: NexusGame = serde_json::from_value(serde_json::json!({
+            "id": "test", "platform": "proton", "mods": [],
+            "game": {"directory": base.join("game")}, "compat_data": base.join("prefix"),
+        })).unwrap();
+        let sims = module("thesims3");
+        seed_files(&game, &sims).unwrap();
+        let cfg = base.join("prefix/pfx/drive_c/users/steamuser/Documents/Electronic Arts/The Sims 3/Mods/Resource.cfg");
+        assert!(fs::read_to_string(&cfg).unwrap().contains("PackedFile Packages/*.package"));
+        // The player's own file is never replaced.
+        fs::write(&cfg, "Priority 1\n").unwrap();
+        seed_files(&game, &sims).unwrap();
+        assert_eq!(fs::read_to_string(&cfg).unwrap(), "Priority 1\n");
+        fs::remove_dir_all(base).unwrap();
     }
     #[test]
     fn archive_invalidation_follows_mods_and_keeps_the_managed_ini() {

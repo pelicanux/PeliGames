@@ -7,8 +7,8 @@ use tauri::Emitter;
 mod update_storage;
 
 fn update_cache_root() -> Result<PathBuf, String> {
-    dirs::cache_dir().map(|base| update_storage::cache_root(&base))
-        .ok_or_else(|| "download|Cache directory unavailable".to_string())
+    // Kept with the rest of the launcher data, so one folder holds everything.
+    crate::core::paths::app_root().map_err(|error| format!("download|{error}"))
 }
 
 const API: &str = "https://api.github.com/repos/pelicanux/PeliGames/releases/latest";

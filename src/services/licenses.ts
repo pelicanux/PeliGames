@@ -20,3 +20,8 @@ export const creditLicenses = [
   { id: 'nexusIcon', name: 'Nexus Mods · SVG', label: 'Vortex · GPL-3.0', text: nexusIconLicense, url: 'https://github.com/Nexus-Mods/Vortex/blob/master/LICENSE.md' },
   { id: 'native', name: 'AppImage · Linux', label: 'Avisos dos componentes nativos', text: nativeNotices, url: 'https://github.com/pelicanux/PeliGames/blob/main/licenses/AppImage-Native-Notices.txt' },
 ] as const;
+
+// One document keeps the notices accessible without listing technical components in About.
+export const bundledLicenseNotices = creditLicenses
+  .map(item => `${item.name || item.label}\n${item.label}\n\n${item.text}`)
+  .join("\n\n────────────────────────────────────────\n\n");
