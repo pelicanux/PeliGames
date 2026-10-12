@@ -55,6 +55,24 @@ pub fn start(path: String) -> Result<ExecutionStatus, String> {
     start_program(path, None)
 }
 pub fn start_program(path: String, executable: Option<String>) -> Result<ExecutionStatus, String> {
+    start_program_with(path, executable, Vec::new())
+}
+/// Prefix of the library entry whose session is running, if any.
+pub fn running_prefix() -> Option<String> {
+    let state = status().ok().flatten().filter(|state| state.active())?;
+    super::installed_library::list(false).ok()?.into_iter().find(|entry| entry.path == state.path).map(|entry| entry.prefix)
+}
+/// Opens another program inside a prefix that is already running (Cheat Engine
+/// beside the game): Proton joins the running Wine instead of waiting for it to
+/// end, and the game's session is left as it is.
+pub fn run_in_prefix(path: String, executable: String, arguments: Vec<String>) -> Result<(), String> {
+    let mut prepared = super::game_installation::prepare_launch_program(path, Some(executable), arguments)?;
+    prepared.command.env("PROTON_VERB", "runinprefix");
+    let mut child = prepared.command.spawn().map_err(|e| format!("Não foi possível abrir o programa: {e}"))?;
+    std::thread::spawn(move || { let _ = child.wait(); });
+    Ok(())
+}
+pub fn start_program_with(path: String, executable: Option<String>, arguments: Vec<String>) -> Result<ExecutionStatus, String> {
     if super::wine_tools::busy() { return Err("Uma ferramenta Wine está em execução.".into()); }
     let mut slot = SESSION.lock().map_err(|e| e.to_string())?;
     if slot
@@ -72,7 +90,7 @@ pub fn start_program(path: String, executable: Option<String>) -> Result<Executi
         return Err("Um jogo ou programa já está em execução.".into());
     }
     let may_reuse = executable.is_none();
-    let prepared = super::game_installation::prepare_launch_program(path.clone(), executable)?;
+    let prepared = super::game_installation::prepare_launch_program(path.clone(), executable, arguments)?;
     let session = match start_prepared_registered(path.clone(), prepared, true, Some(registry.clone())) {
         Ok(session) => session,
         Err(error) => {

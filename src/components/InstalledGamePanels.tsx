@@ -4,6 +4,7 @@ import { runWineTool } from "../services/wineTools";
 import { InstalledLaunchOptions } from "./InstalledLaunchOptions";
 import { normalizeAdvanced } from "../services/advancedSettings";
 import { AdvancedGameSettings } from "./AdvancedGameSettings";
+import { LauncherProgramsPanel } from "./LauncherProgramsPanel";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePerformanceMode } from "./EffectsContext";
 import { useEffect, useLayoutEffect, useState, useId, useRef } from "react";
@@ -15,17 +16,22 @@ import { GameInfoPanel } from "./GameInfoPanel";
 import { HoverTooltip } from "./HoverTooltip";
 import { MenuIcon } from "./MenuIcon";
 import { useI18n } from "../i18n/I18nContext";
+import { notifyError } from "../services/notifications";
 
 /** Settings for registered PeliGames entries are independent of the mod manager. */
-export function InstalledGamePanels({ game, disabled, onSaved, onRunProgram }: {
+export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved, onRunProgram, onStartShortcut }: {
   game: GameInfo | null; disabled?: boolean; onSaved: (game: GameInfo) => void;
+  /** Programs of the prefix stay available while its game runs. */
+  programsDisabled?: boolean;
   onRunProgram: (path: string, executable: string) => Promise<void>;
+  onStartShortcut: (path: string, id: string) => Promise<void>;
 }) {
   const { t } = useI18n();
   const reducedMotion = usePerformanceMode();
   const [winetricks, setWinetricks] = useState(false);
   const [toolStatus, setToolStatus] = useState("");
-  const [advanced, setAdvanced] = useState(false);
+  const [panel, setPanel] = useState<"information" | "advanced" | "programs">("information");
+  const advanced = panel === "advanced";
   // App mounts a fresh panel for each selected game. Its first frame must already
   // contain that game's fields, so height measurement never sees an empty form.
   const [prefix, setPrefix] = useState(game?.prefix || "");
@@ -33,14 +39,15 @@ export function InstalledGamePanels({ game, disabled, onSaved, onRunProgram }: {
   const [proton, setProton] = useState(game?.proton || "");
   const [executable, setExecutable] = useState(game?.executable || game?.path || "");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setShownError] = useState("");
+  const setError = (message: string) => { setShownError(message); if (message) notifyError(game?.name || t("installedSettings", "title"), message); };
   const [saved, setSaved] = useState<false | "settings" | "advanced">(false);
   const id = useId();
   const saving = useRef(false);
   const currentGame = useRef(game);
   currentGame.current = game;
   // Saving one field must not discard unconfirmed edits in another field.
-  useEffect(() => { setAdvanced(false); }, [game?.path]);
+  useEffect(() => { setPanel("information"); }, [game?.path]);
   useLayoutEffect(() => { setPrefix(game?.prefix || ""); }, [game?.path, game?.prefix]);
   useLayoutEffect(() => { setName(game?.name || ""); }, [game?.path, game?.name]);
   useLayoutEffect(() => { setProton(game?.proton || ""); }, [game?.path, game?.proton]);
@@ -81,18 +88,25 @@ export function InstalledGamePanels({ game, disabled, onSaved, onRunProgram }: {
       return false;
     } finally { saving.current = false; setBusy(false); }
   };
-  const choose = async (run = false) => {
+  const choose = async () => {
     if (blocked || saving.current || !game) return;
     saving.current = true;
     setBusy(true); setError(""); setSaved(false);
     try {
       const file = await openFilePicker(t("gameModes", "executable"), ["exe", "msi"], executable);
-      if (file) {
-        if (run) await onRunProgram(game.path, file);
-        else await persist({ executable: file });
-      }
+      if (file) await persist({ executable: file });
     } catch (error) { setError(String(error)); }
     finally { saving.current = false; setBusy(false); }
+  };
+  const programsBlocked = Boolean(programsDisabled || !game);
+  // Runs any program in this prefix, also beside the running game (Cheat Engine…).
+  const runProgram = async () => {
+    if (programsBlocked || !game) return;
+    setError("");
+    try {
+      const file = await openFilePicker(t("gameModes", "executable"), ["exe", "msi"], executable);
+      if (file) await onRunProgram(game.path, file);
+    } catch (error) { setError(String(error)); }
   };
   const choosePrefix = async () => {
     if (blocked || saving.current) return;
@@ -121,14 +135,20 @@ export function InstalledGamePanels({ game, disabled, onSaved, onRunProgram }: {
             {nameChanged && Boolean(name.trim()) && <button type="submit" className="installation-name-confirm" disabled={blocked}><MenuIcon name="check" />{t("gameModes", "confirmName")}</button>}
           </form>
           <ProtonSelector value={proton} onChange={value => { if (value !== currentGame.current?.proton) { setProton(value); void save({ proton: value }); } }} label={t("installedSettings", "proton")} disabled={blocked} />
-          <div className="installation-field">
-            <span className="installation-field-label">{t("installedSettings", "runTitle")}</span>
-            <HoverTooltip text={t("installedSettings", "runHint")}>
-              <button type="button" className="installation-name-confirm installed-run-program" onClick={() => void choose(true)}><MenuIcon name="play" />{t("installedSettings", "runProgram")}</button>
-            </HoverTooltip>
-          </div>
+      </fieldset>
+      <div className="installation-field installed-run-field">
+        <span className="installation-field-label">{t("installedSettings", "runTitle")}</span>
+        <div className="installed-run-buttons">
+          <HoverTooltip text={t("installedSettings", "runHint")}>
+            <button type="button" className="installation-name-confirm installed-run-program" disabled={programsBlocked} onClick={() => void runProgram()}><MenuIcon name="play" />{t("installedSettings", "runProgram")}</button>
+          </HoverTooltip>
+          <button type="button" className="installation-name-confirm installed-run-program" disabled={programsBlocked} aria-expanded={panel === "programs"}
+            onClick={() => setPanel(value => value === "programs" ? "information" : "programs")}><MenuIcon name={panel === "programs" ? "back" : "gamepad"} />{t("installedSettings", panel === "programs" ? "backToInfo" : "programsButton")}</button>
+        </div>
+      </div>
+      <fieldset className="installation-fields" disabled={blocked}>
           <button type="button" className="installation-name-confirm installed-run-program" aria-expanded={advanced}
-            onClick={() => setAdvanced(value => !value)}><MenuIcon name={advanced ? "back" : "settings"} />{t("installedSettings", advanced ? "backToInfo" : "advancedButton")}</button>
+            onClick={() => setPanel(value => value === "advanced" ? "information" : "advanced")}><MenuIcon name={advanced ? "back" : "settings"} />{t("installedSettings", advanced ? "backToInfo" : "advancedButton")}</button>
           <div className="installed-wine-tools"><button type="button" className="installation-name-confirm" onClick={() => setWinetricks(true)}><MenuIcon name="cube" />Winetricks</button><button type="button" className="installation-name-confirm" onClick={() => void openWinecfg()}><MenuIcon name="wine" />WineCFG</button></div>
         </fieldset>
       {toolStatus && <TimedFeedback>{toolStatus}</TimedFeedback>}
@@ -137,11 +157,11 @@ export function InstalledGamePanels({ game, disabled, onSaved, onRunProgram }: {
     </div>
     <div className="installed-info-carousel">
       <AnimatePresence mode="wait" initial={false}>
-        <motion.div key={advanced ? "advanced" : "information"} className="installed-info-slide"
+        <motion.div key={panel} className="installed-info-slide"
           initial={{ x: reducedMotion ? 0 : "100%" }}
           animate={{ x: 0 }} exit={{ x: reducedMotion ? 0 : "-100%" }}
           transition={{ duration: reducedMotion ? 0 : .29, ease: [0.4, 0, 0.2, 1] }}>
-          {advanced ? <AdvancedGameSettings launchOptions={game && <InstalledLaunchOptions game={game} disabled={blocked} errorMessage={error} onSave={options => save({ advanced: { ...normalizeAdvanced(currentGame.current?.advanced), launch_options: options } })} />} value={game?.advanced} disabled={blocked} reducedMotion={reducedMotion} saved={saved === "advanced"} onChange={value => void save({ advanced: value })} /> : <GameInfoPanel release={t("gameInfo", "unknown")} platform="Windows (Proton / Wine)"
+          {panel === "programs" && game ? <LauncherProgramsPanel path={game.path} disabled={programsBlocked} onStart={id => onStartShortcut(game.path, id)} /> : advanced ? <AdvancedGameSettings launchOptions={game && <InstalledLaunchOptions game={game} disabled={blocked} errorMessage={error} onSave={options => save({ advanced: { ...normalizeAdvanced(currentGame.current?.advanced), launch_options: options } })} />} value={game?.advanced} disabled={blocked} reducedMotion={reducedMotion} saved={saved === "advanced"} onChange={value => void save({ advanced: value })} /> : <GameInfoPanel release={t("gameInfo", "unknown")} platform="Windows (Proton / Wine)"
             directoryRow={<fieldset className="installed-info-paths" disabled={blocked}>
               <form className="installation-field" onSubmit={event => { event.preventDefault(); if (prefixChanged && prefix.trim()) void save({ prefix: prefix.trim() }); }}>
                 <label htmlFor={`${id}-prefix`}>{t("gameInfo", "prefixDirectory")}</label>

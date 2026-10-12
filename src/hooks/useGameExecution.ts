@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { startGame, cancelGame, executionStatus, isExecutionActive, type ExecutionStatus } from "../services/gameExecution";
+import { startGame, cancelGame, executionStatus, isExecutionActive, runProgram as runInPrefix, startShortcut as openShortcut, type ExecutionStatus } from "../services/gameExecution";
 export function useGameExecution() {
   const [session, setSession] = useState<ExecutionStatus | null>(null);
   const [pendingPath, setPendingPath] = useState("");
@@ -34,6 +34,17 @@ export function useGameExecution() {
     catch (error) { setError(String(error)); }
     finally { locked.current = false; setPendingPath(""); }
   };
+  // Programs of the prefix may also open while its game runs (they join the
+  // running prefix and leave the game's session as it is).
+  const launch = async (path: string, request: () => Promise<ExecutionStatus | null>) => {
+    if (locked.current) return;
+    locked.current = true; ++revision.current; setPendingPath(path); setError("");
+    try { const started = await request(); if (started) setSession(started); }
+    catch (error) { setError(String(error)); throw error; }
+    finally { locked.current = false; setPendingPath(""); }
+  };
+  const runProgram = (path: string, executable: string) => launch(path, () => runInPrefix(path, executable));
+  const startShortcut = (path: string, id: string) => launch(path, () => openShortcut(path, id));
   const cancel = async () => {
     if (locked.current || !session || !isExecutionActive(session)) return;
     locked.current = true; ++revision.current; setError("");
@@ -41,5 +52,5 @@ export function useGameExecution() {
     catch (error) { setError(String(error)); }
     finally { locked.current = false; }
   };
-  return { session, pendingPath, error, start, cancel, active: isExecutionActive(session) };
+  return { session, pendingPath, error, start, runProgram, startShortcut, cancel, active: isExecutionActive(session) };
 }

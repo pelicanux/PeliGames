@@ -6,13 +6,22 @@ import { useI18n } from "../../i18n/I18nContext";
 import { useAccentTheme } from "../../theme/ThemeProvider";
 import { ACCENT_THEMES } from "../../theme/accentTheme";
 import { ProtonDistributionCards } from "./ProtonDistributionCards";
+import { LaunchEffectIcon } from "./LaunchEffectIcon";
 import { ModBackupPreferences } from "./ModBackupPreferences";
 import { usePreferencesText } from "./labels";
 
 type ConfigProps = { config: AppConfig; disabled: boolean; save: (patch: Partial<AppConfig>) => void };
 export function ThemePreferences({ onApplied }: { onApplied: () => void }) {
   const text = usePreferencesText(), { t } = useI18n();
-  const { accent, appearance, setAccent, setAppearance, glassEffects, setGlassEffects, resetGlassEffects } = useAccentTheme();
+  const { accent, appearance, setAccent, setAppearance, glassEffects, setGlassEffects, resetGlassEffects, launchEffect, setLaunchEffect } = useAccentTheme();
+  const launchEffects = [
+    { id: "smooth", name: text.smoothEffect, hint: text.smoothHint },
+    { id: "shrink", name: text.shrinkEffect, hint: text.shrinkHint },
+    { id: "shatter", name: text.shatterEffect, hint: text.shatterHint },
+    { id: "particles", name: text.particlesEffect, hint: text.particlesHint },
+    { id: "aquarium", name: text.aquariumEffect, hint: text.aquariumHint },
+    { id: "penguin", name: text.penguinEffect, hint: text.penguinHint },
+  ] as const;
   return <>
     <h2>{text.themes}</h2><p>{text.themesHint}</p>
     <div data-preference-id="themes" className="preference-theme-options">
@@ -32,6 +41,20 @@ export function ThemePreferences({ onApplied }: { onApplied: () => void }) {
         <small><span>{text.transparent}</span><span>{text.opaque}</span></small>
       </div>)}
       <button type="button" data-preference-id="reset-glass" className="preference-outline" onClick={() => { resetGlassEffects(); onApplied(); }}><MenuIcon name="repair"/>{text.resetGlass}</button>
+    </section>
+    <section data-preference-id="launch-effect" className="preference-section">
+      <h3>{text.launchEffect}</h3><p>{text.launchEffectHint}</p>
+      <div role="group" aria-label={text.launchEffect}>
+        <div className="preference-launch-effects">
+          {launchEffects.map(effect => <button type="button" key={effect.id} className={`preference-choice preference-launch-effect ${launchEffect === effect.id ? "selected" : ""}`} aria-pressed={launchEffect === effect.id} onClick={() => { setLaunchEffect(effect.id); onApplied(); }}>
+            <span className="preference-launch-effect-heading"><span className="preference-launch-effect-icon"><LaunchEffectIcon effect={effect.id} /></span><strong>{effect.name}</strong><i className="preference-radio" aria-hidden="true" /></span>
+            <small>{effect.hint}</small>
+          </button>)}
+        </div>
+        <button type="button" className={`preference-choice preference-launch-disable ${launchEffect === "disabled" ? "selected" : ""}`} aria-pressed={launchEffect === "disabled"} onClick={() => { setLaunchEffect("disabled"); onApplied(); }}>
+          <span><strong>{text.noLaunchEffect}</strong><small>{text.noLaunchEffectHint}</small></span><i className="preference-radio" aria-hidden="true" />
+        </button>
+      </div>
     </section>
     <div className="preference-preview"><small>{text.preview}</small><div><MenuIcon name="gamepad"/><strong>{text.library}</strong><span className="preference-preview-bars"><i/><i/></span><span className="preference-preview-play"><MenuIcon name="play"/>{text.play}</span></div></div>
   </>;

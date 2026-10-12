@@ -215,6 +215,39 @@ pub fn export_nexus_report(game_id: String, build_label: String, description: St
     let path=dir.join("relatorio-nexus.txt");fs::rename(&temp,&path).map_err(|e|e.to_string())?;
     Ok(Report {path:path.to_string_lossy().into(),bytes:content.len(),content,truncated})
 }
+/// Report forum bridge (tools/report-relay): a public address, not a secret. Set
+/// it here or with PELIGAMES_REPORT_RELAY at build time.
+const DEFAULT_REPORT_RELAY: Option<&str> = Some("https://peligames-report.nairomarttins97.workers.dev");
+/// Discord accepts webhook attachments of up to 10 MB.
+const SEND_LIMIT: usize = 9_000_000;
+fn report_relay() -> Option<&'static str> {
+    option_env!("PELIGAMES_REPORT_RELAY").or(DEFAULT_REPORT_RELAY).filter(|url| url.starts_with("https://"))
+}
+#[tauri::command]
+pub fn nexus_report_relay_configured() -> bool { report_relay().is_some() }
+#[derive(serde::Deserialize)]
+struct RelayReply { #[serde(default)] url: Option<String>, #[serde(default)] error: Option<String> }
+/// Publishes the report as a new post of the Discord report forum, through the
+/// bridge that keeps the webhook. Returns the post address when known.
+#[tauri::command]
+pub async fn send_nexus_report(game_id: String, build_label: String, title: String, description: String, discord: String) -> Result<Option<String>, String> {
+    let relay = report_relay().ok_or("O envio direto não está configurado nesta versão. Use o canal do Discord.")?;
+    let label = build_label.clone();
+    let report = tauri::async_runtime::spawn_blocking(move || export_nexus_report(game_id, label, description.clone()).map(|report| (report, description)))
+        .await.map_err(|e| e.to_string())??;
+    let (report, description) = report;
+    let mut content = report.content;
+    limited(&mut content, SEND_LIMIT);
+    let client = reqwest::Client::builder().user_agent("PeliGames").timeout(std::time::Duration::from_secs(90)).build().map_err(|e| e.to_string())?;
+    let response = client.post(format!("{}/report", relay.trim_end_matches('/')))
+        .json(&serde_json::json!({"title": title.chars().take(100).collect::<String>(), "description": description.chars().take(1500).collect::<String>(),
+            "discord": discord.chars().take(40).collect::<String>(), "version": build_label.chars().take(64).collect::<String>(), "report": content}))
+        .send().await.map_err(|_| "Não foi possível falar com o servidor de relatórios. Verifique a conexão.".to_string())?;
+    let status = response.status();
+    let reply: RelayReply = response.json().await.unwrap_or(RelayReply { url: None, error: None });
+    if !status.is_success() { return Err(reply.error.unwrap_or_else(|| format!("O envio falhou ({status})."))); }
+    Ok(reply.url.filter(|url| url.starts_with("https://discord.com/")))
+}
 #[cfg(test)]
 mod tests {
     use super::*;

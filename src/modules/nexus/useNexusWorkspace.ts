@@ -35,7 +35,7 @@ export function useNexusWorkspace() {
   const covering = useRef(false);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   useEffect(() => {
-    const stop = listen<DeployProgress & { game_id: string }>("nexus-deploy-progress", ({ payload }) => {
+    const receive = (payload: DeployProgress & { game_id: string }) => {
       if (!mounted.current) return;
       setProgress(current => {
         const next = { ...current };
@@ -43,8 +43,11 @@ export function useNexusWorkspace() {
         else delete next[payload.game_id];
         return next;
       });
-    });
-    return () => { void stop.then(unlisten => unlisten()); };
+    };
+    const stop = listen<DeployProgress & { game_id: string }>("nexus-deploy-progress", ({ payload }) => receive(payload));
+    const previewProgress = (event: Event) => receive((event as CustomEvent<DeployProgress & { game_id: string }>).detail);
+    if (import.meta.env.DEV && "__PELI_UI_PREVIEW__" in window) window.addEventListener("previewNexusDeployProgress", previewProgress);
+    return () => { window.removeEventListener("previewNexusDeployProgress", previewProgress); void stop.then(unlisten => unlisten()); };
   }, []);
   const run = async (command: string, args?: Record<string, unknown>, silent = false) => {
     // Never ignore a click silently: tell the user another action is still running.

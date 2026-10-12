@@ -7,7 +7,10 @@ import { type CoverGameAction } from "./components/CoverGameActions";
 import { GameLogsModal } from "./components/GameLogsModal";
 import { gameViewKey } from "./services/gameIdentity";
 import { GameEntryModal } from "./components/GameEntryModal";
-import { addPeliGamesEntry, uninstallPeliGamesEntry, listPeliGamesEntries } from "./services/installedLibrary";
+import { addPeliGamesEntry, uninstallPeliGamesEntry, listPeliGamesEntries, choosePeliGamesEntry, listPeliGamesExecutableChoices, newLauncherGames, addLauncherGames, type LauncherGame } from "./services/installedLibrary";
+import { LauncherGamesModal } from "./components/LauncherGamesModal";
+import { notifyError } from "./services/notifications";
+import { ExecutableChoiceModal } from "./components/ExecutableChoiceModal";
 import { useGameExecution } from "./hooks/useGameExecution";
 import { GameLaunchButton } from "./components/GameLaunchButton";
 import { InstalledGamePanels } from "./components/InstalledGamePanels";
@@ -127,6 +130,10 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   const [bitness, setBitness] = useState<"32" | "64">("64");
   const [gpuArch, setGpuArch] = useState<"rdna4" | "rdna3">("rdna4");
   const { t, language, setLanguage } = useI18n();
+  const [executableChoice, setExecutableChoice] = useState<{ entries: GameInfo[]; prefix: string; changing?: boolean } | null>(null);
+  const [executableChoiceError, setExecutableChoiceError] = useState("");
+  const [launcherGames, setLauncherGames] = useState<{ path: string; games: LauncherGame[] } | null>(null);
+  const [launcherGamesError, setLauncherGamesError] = useState("");
   const localizeAnalysisValue = (value: string) => {
     if (value === "Linux Nativo" || value === "Native Linux") return t("gameInfo", "nativeLinux");
     if (["Não detectada", "Não detectado", "Not detected"].includes(value)) return t("gameInfo", "notDetected");
@@ -394,6 +401,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   };
 
   const [selectedGame, setSelectedGame] = useState<GameInfo | null>(null);
+
   const nexus = useNexusWorkspace();
   const nexusText = useNexusText();
   const [addingNexusGame, setAddingNexusGame] = useState(false);
@@ -410,6 +418,16 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   const [nexusAccountOpen, setNexusAccountOpen] = useState(false);
   const [nexusTab, setNexusTab] = useState<"mods" | "catalog">("mods");
   const [gamePanelMode, setGamePanelMode] = useState<GamePanelMode>(emptyPreview?.startsWith("nexus") ? "nexus" : emptyPreview === "dlss" ? "mods" : "install");
+  const [executableAlternatives, setExecutableAlternatives] = useState<GameInfo[]>([]);
+  useEffect(() => {
+    let active = true;
+    setExecutableAlternatives([]);
+    if (selectedGame?.launcher === "PeliGames" && gamePanelMode === "installed") {
+      void listPeliGamesExecutableChoices(selectedGame.path).then(entries => { if (active) setExecutableAlternatives(entries); }).catch(console.error);
+    }
+    return () => { active = false; };
+  }, [selectedGame?.path, gamePanelMode]);
+
   const [homeRevision, setHomeRevision] = useState(0);
   const [libraryScope, setLibraryScope] = useState<"own" | "all">(emptyPreview && emptyPreview !== "launcher" ? "all" : "own");
   useEffect(() => { if (emptyPreview?.startsWith("nexus")) void nexus.refresh(); }, []);
@@ -425,6 +443,24 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   const [installationProton, setInstallationProton] = useState("");
   const gameInstaller = useGameInstaller();
   const gameExecution = useGameExecution();
+  // Launcher errors also go to the notification center.
+  useEffect(() => { if (gameExecution.error) notifyError(language === "en" ? "Game execution" : "Execução do jogo", gameExecution.error); }, [gameExecution.error]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (libraryMutationError) notifyError(language === "en" ? "Library" : "Biblioteca", libraryMutationError); }, [libraryMutationError]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (executableChoiceError) notifyError(language === "en" ? "Game executable" : "Executável do jogo", executableChoiceError); }, [executableChoiceError]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (launcherGamesError) notifyError(language === "en" ? "Launcher games" : "Jogos do launcher", launcherGamesError); }, [launcherGamesError]); // eslint-disable-line react-hooks/exhaustive-deps
+  // When a library program closes, games its launcher installed in the prefix are offered.
+  const lastExecution = useRef<{ id: string; path: string; active: boolean } | null>(null);
+  useEffect(() => {
+    const session = gameExecution.session;
+    if (!session) return;
+    const previous = lastExecution.current;
+    lastExecution.current = { id: session.id, path: session.path, active: gameExecution.active };
+    if (previous?.id === session.id && previous.active && !gameExecution.active) {
+      void newLauncherGames(session.path).then(games => {
+        if (games.length) { setLauncherGamesError(""); setLauncherGames({ path: session.path, games }); }
+      }).catch(console.error);
+    }
+  }, [gameExecution.session?.id, gameExecution.session?.state]); // eslint-disable-line react-hooks/exhaustive-deps
   const installationReady = Boolean(!gameExecution.active && !gameExecution.pendingPath && installationDraft.name && !installationDraft.editing && installationLocation.selected && installationLocation.directory.trim() && installationExecutable.trim() && (addingNexusGame || installationProton));
   const [isCollapsingGame, setIsCollapsingGame] = useState(false);
   const detailsOpen = !isCollapsingGame && ((gamePanelMode === "install" || gamePanelMode === "add") ? installationOpen : gamePanelMode === "installed" ? Boolean(selectedGame) : gamePanelMode === "nexus" ? modManagerOpen && Boolean(selectedGame) : modManagerOpen);
@@ -639,15 +675,29 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     if (action === "remove") { if (!gameInstaller.busy && !libraryMutationBusy && !nexus.busy && canRemoveFromLibrary(game)) setRemoveLibraryTarget(game); return; }
     if (action === "details") { handleSelectGame(game, undefined, true); return; }
     if (action === "logs") { if (game.library_view === "nexus") { const entry = nexus.workspace.games.find(item => item.game.path === game.path && item.game.launcher === game.launcher); if (entry) setNexusLogTarget(entry.id); } else if (game.library_view === "all") void invoke("collect_and_open_logs", { gameName: game.name, gameDir: game.directory || game.path }).catch(reportCoverError); else setGameLogsTarget(game); return; }
+    if (action === "stop") {
+      if (gameInstaller.busy || libraryMutationBusy || nexus.busy || gameExecution.pendingPath) return;
+      if (game.library_view === "nexus") {
+        const entry = nexus.workspace.games.find(item => item.game.path === game.path && item.game.launcher === game.launcher);
+        if (entry?.running) return nexus.stop(entry.id);
+      } else if (gameExecution.session?.path === game.path && gameExecution.session.state === "running") return gameExecution.cancel();
+      return;
+    }
     if (gameInstaller.busy || libraryMutationBusy || gameExecution.active || gameExecution.pendingPath) return;
     if (action === "start") {
       if (game.library_view === "nexus") {
         const entry = nexus.workspace.games.find(item => item.game.path === game.path && item.game.launcher === game.launcher);
-        if (entry) void (entry.running ? nexus.stop(entry.id) : nexus.start(entry.id));
-      } else if (game.launcher === "PeliGames") void gameExecution.start(game.path);
-      else if (game.launcher === "Steam") void invoke("launch_game", {path: game.path, appId: game.app_id, launcher: game.launcher}).catch(reportCoverError);
+        if (entry) return entry.running ? nexus.stop(entry.id) : nexus.start(entry.id);
+      } else if (game.launcher === "PeliGames") return gameExecution.start(game.path);
+      else if (game.launcher === "Steam") return invoke("launch_game", {path: game.path, appId: game.app_id, launcher: game.launcher}).catch(reportCoverError);
     } else if (game.launcher === "PeliGames") setUninstallTarget({path: game.path, name: game.name, prefix: game.prefix || ""});
     else if (game.launcher === "Steam") void invoke("request_steam_uninstall", { appId: game.app_id }).catch(reportCoverError);
+  };
+
+  const changeSelectedExecutable = () => {
+    if (!selectedGame || executableAlternatives.length < 2 || libraryMutationBusy || gameInstaller.busy || gameExecution.active || gameExecution.pendingPath) return;
+    setExecutableChoiceError("");
+    setExecutableChoice({ entries: executableAlternatives, prefix: selectedGame.prefix || "", changing: true });
   };
 
   // Successful registration is not a user request to abandon the draft. In
@@ -696,8 +746,17 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       const result = await gameInstaller.start(request);
       if (result?.registered_count) {
         const entries = await listPeliGamesEntries().catch(() => []);
-        const game = entries.find(entry => entry.prefix === result.prefix);
-        if (game) showCompletedGameEntry(game);
+        const found = entries.filter(entry => entry.prefix === result.prefix);
+        const favourite = found.filter(entry => entry.recommended);
+        if (found.length > 1 && favourite.length === 1) {
+          // One clear favourite (installer shortcut, engine layout, name): no question.
+          const game = await choosePeliGamesEntry(favourite[0].path).catch(() => favourite[0]);
+          showCompletedGameEntry(game);
+          window.dispatchEvent(new Event("peligamesLibraryChanged"));
+        }
+        // Several possible executables: the player confirms the game's one.
+        else if (found.length > 1) { setExecutableChoiceError(""); setExecutableChoice({ entries: found, prefix: result.prefix }); }
+        else if (found[0]) showCompletedGameEntry(found[0]);
       }
     }
   };
@@ -987,6 +1046,10 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
               {/* Left Panel: Title & Stacked Buttons */}
               <div className="game-action-column">
                 <h3 className="selected-game-title">{selectedGame.name}</h3>
+                {gamePanelMode === "installed" && selectedGame.launcher === "PeliGames" && executableAlternatives.length > 1 && <button type="button" className="game-change-executable-link"
+                  disabled={gameInstaller.busy || libraryMutationBusy || gameExecution.active || Boolean(gameExecution.pendingPath)}
+                  onClick={() => void changeSelectedExecutable()}>{t("gameInfo", "changeExecutable")}</button>}
+
                 
                 <div className="game-action-stack">
                   {gamePanelMode === "nexus" && nexusGame && <button type="button" className="btn btn-play game-play-button" disabled={nexus.busy} onClick={() => void (nexusGame.running ? nexus.stop(nexusGame.id) : nexus.start(nexusGame.id))}><MenuIcon name={nexusGame.running ? "platform" : "play"} />{nexus.launching === nexusGame.id ? nexusText.launching : nexusGame.running ? nexusText.stop : nexusText.start}</button>}
@@ -1082,7 +1145,8 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
 
             {/* Right Panel: Game Info & Selectors */}
             <GamePanelCarousel mode={gamePanelMode} reducedMotion={performanceMode} nexus={<NexusPanels highlightRequestId={nexusModToView?.requestId} highlightedModId={nexusModToView?.gameId === nexusGame?.id ? nexusModToView?.modId : undefined} tab={nexusTab} onTabChange={setNexusTab} game={nexusGame} busy={nexus.busy} settingsBusy={nexus.settingsBusy} progress={nexusGame ? nexus.progress[nexusGame.id] : undefined} error={nexus.error} reducedMotion={performanceMode} onImport={nexus.importArchive} onRemove={nexus.removeArchive} onInstall={nexus.install} onToggle={nexus.toggle} onMove={nexus.move} onSwitchProfile={nexus.switchProfile} onDownloadLoader={nexus.downloadLoader} onLogs={setNexusLogTarget} onConfigure={nexus.configureProton} onConfigureDeploy={nexus.configureDeploy} onConfigureLaunch={nexus.configureLaunch} onConfigureAdvanced={nexus.configureAdvanced} onAssociate={nexus.configureDomain} onError={nexus.setError} />} installed={<InstalledGamePanels key={selectedGame?.path} game={selectedGame} disabled={gameInstaller.busy || libraryMutationBusy || gameExecution.active || Boolean(gameExecution.pendingPath)}
-              onSaved={game => { setSelectedGame(previous => previous && gameViewKey({ ...previous, library_view: gamePanelMode === "nexus" ? "nexus" : libraryScope }) === gameViewKey(game) ? game : previous); }} onRunProgram={gameExecution.start} />}
+              onSaved={game => { setSelectedGame(previous => previous && gameViewKey({ ...previous, library_view: gamePanelMode === "nexus" ? "nexus" : libraryScope }) === gameViewKey(game) ? game : previous); }} programsDisabled={gameInstaller.busy || libraryMutationBusy || Boolean(gameExecution.pendingPath)}
+              onRunProgram={gameExecution.runProgram} onStartShortcut={gameExecution.startShortcut} />}
               installation={<InstallGamePanels mode={gamePanelMode === "add" ? "add" : "install"} draft={installationDraft} directory={installationLocation.directory} directorySelected={installationLocation.selected} onDefaultDirectory={installationLocation.selectDefault} directoryError={installationLocation.error} busy={gameInstaller.busy || libraryMutationBusy || (addingNexusGame && nexus.busy)} nexusAddition={addingNexusGame ? { platform: nexusAdditionPlatform, onPlatformChange: setNexusAdditionPlatform, prefix: nexusAdditionPrefix, onPrefixChange: setNexusAdditionPrefix } : undefined} onDirectoryChange={installationLocation.setDirectory}
                 executable={installationExecutable} onExecutableChange={setInstallationExecutable} proton={installationProton} onProtonChange={setInstallationProton} />}>
               <>
@@ -1241,7 +1305,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
 
         {/* Bottom Section: Always visible Game Grid */}
         <div className="game-library-section" style={{ flex: 1, minHeight: "300px", display: "flex", flexDirection: "column" }}>
-          <GameGrid key={(gamePanelMode === "nexus" || addingNexusGame) ? "nexus" : "launcher"} managedLibrary={(gamePanelMode === "nexus" || addingNexusGame) ? { games: nexus.visibleGames.map(item => ({ ...item.game, nexus_platform: item.platform, nexus_id: item.id })), busy: nexus.busy, loaded: nexus.loaded, scanning: nexus.scanning, error: nexus.error, title: nexusText.title, downloadsAction: <NexusDownloadsPanel games={nexus.workspace.games} buttonClassName="library-mode-button" onViewMod={(gameId, modId) => requestDraftExit(() => { const entry = nexus.workspace.games.find(item => item.id === gameId); if (!entry) return; setNexusModToView({gameId,modId,requestId: ++modViewRequest.current}); setNexusTab("mods"); setShowWelcome(false); setGamePanelMode("nexus"); setLibraryScope("all"); setModManagerOpen(true); setIsCollapsingGame(false); setSelectedGame({ ...entry.game, nexus_platform: entry.platform, nexus_id: entry.id }); setGameDir(entry.game.directory || entry.game.path); })} />, accountLabel: nexusText.account, onAccount: () => setNexusAccountOpen(true), empty: nexusText.empty, hint: nexusText.emptyHint, addLabel: nexusText.add, onAdd: openNexusAddition, onRefresh: () => { void nexus.refresh(); }, onCoverFallback: nexus.recoverCover } : undefined} onCoverAction={coverAction} coverActionsBlocked={gameInstaller.busy || libraryMutationBusy || nexus.busy || gameExecution.active || Boolean(gameExecution.pendingPath)} onHome={returnToLauncherHome} homeRevision={homeRevision} onSelectGame={handleSelectGame} selectedGameKey={selectedGame ? gameViewKey(selectedGame) : undefined} mode={gamePanelMode} libraryScope={libraryScope} detailsOpen={detailsOpen} modeDisabled={gameInstaller.busy || libraryMutationBusy || nexus.busy} onModeChange={changeGamePanelMode} />
+          <GameGrid key={(gamePanelMode === "nexus" || addingNexusGame) ? "nexus" : "launcher"} managedLibrary={(gamePanelMode === "nexus" || addingNexusGame) ? { games: nexus.visibleGames.map(item => ({ ...item.game, nexus_platform: item.platform, nexus_id: item.id, nexus_running: item.running })), busy: nexus.busy, loaded: nexus.loaded, scanning: nexus.scanning, error: nexus.error, title: nexusText.title, downloadsAction: <NexusDownloadsPanel games={nexus.workspace.games} buttonClassName="library-mode-button" onViewMod={(gameId, modId) => requestDraftExit(() => { const entry = nexus.workspace.games.find(item => item.id === gameId); if (!entry) return; setNexusModToView({gameId,modId,requestId: ++modViewRequest.current}); setNexusTab("mods"); setShowWelcome(false); setGamePanelMode("nexus"); setLibraryScope("all"); setModManagerOpen(true); setIsCollapsingGame(false); setSelectedGame({ ...entry.game, nexus_platform: entry.platform, nexus_id: entry.id }); setGameDir(entry.game.directory || entry.game.path); })} />, accountLabel: nexusText.account, onAccount: () => setNexusAccountOpen(true), empty: nexusText.empty, hint: nexusText.emptyHint, addLabel: nexusText.add, onAdd: openNexusAddition, onRefresh: () => { void nexus.refresh(); }, onCoverFallback: nexus.recoverCover } : undefined} onCoverAction={coverAction} coverHoldBlocked={gameInstaller.busy || libraryMutationBusy || nexus.busy || Boolean(gameExecution.pendingPath)} coverActionsBlocked={gameInstaller.busy || libraryMutationBusy || nexus.busy || gameExecution.active || Boolean(gameExecution.pendingPath)} onHome={returnToLauncherHome} homeRevision={homeRevision} onSelectGame={handleSelectGame} runningGamePath={gameExecution.session?.state === "running" ? gameExecution.session.path : undefined} selectedGameKey={selectedGame ? gameViewKey(selectedGame) : undefined} mode={gamePanelMode} libraryScope={libraryScope} detailsOpen={detailsOpen} modeDisabled={gameInstaller.busy || libraryMutationBusy || nexus.busy} onModeChange={changeGamePanelMode} />
         </div>
       </div>
 
@@ -1306,6 +1370,34 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
         collapseGameDetailsNow();
         action?.();
       }} />}
+    {executableChoice && <ExecutableChoiceModal entries={executableChoice.entries} prefix={executableChoice.prefix} changing={executableChoice.changing} currentPath={selectedGame?.path} busy={libraryMutationBusy} error={executableChoiceError}
+      onKeepAll={() => { const first = executableChoice.entries[0]; setExecutableChoice(null); if (first && !executableChoice.changing) showCompletedGameEntry(first); }}
+      onConfirm={path => void (async () => {
+        if (libraryMutationLock.current) return;
+        libraryMutationLock.current = true; setLibraryMutationBusy(true); setExecutableChoiceError("");
+        try {
+          const game = await choosePeliGamesEntry(path);
+          setExecutableChoice(null);
+          if (executableChoice.changing) {
+            setSelectedGame(previous => previous ? { ...game, library_view: previous.library_view } : previous);
+            setGameDir(game.directory || game.path);
+          } else showCompletedGameEntry(game);
+          window.dispatchEvent(new Event("peligamesLibraryChanged"));
+        } catch (error) { setExecutableChoiceError(String(error)); }
+        finally { libraryMutationLock.current = false; setLibraryMutationBusy(false); }
+      })()} />}
+    {launcherGames && <LauncherGamesModal games={launcherGames.games} busy={libraryMutationBusy} error={launcherGamesError}
+      onLater={() => { if (!libraryMutationBusy) setLauncherGames(null); }}
+      onAdd={(added, declined) => void (async () => {
+        if (libraryMutationLock.current) return;
+        libraryMutationLock.current = true; setLibraryMutationBusy(true); setLauncherGamesError("");
+        try {
+          await addLauncherGames(launcherGames.path, added, declined);
+          setLauncherGames(null);
+          window.dispatchEvent(new Event("peligamesLibraryChanged"));
+        } catch (error) { setLauncherGamesError(String(error)); }
+        finally { libraryMutationLock.current = false; setLibraryMutationBusy(false); }
+      })()} />}
     {uninstallTarget && <ConfirmModal title={t("gameModes", "uninstallTitle")}
       message={`${t("gameModes", "uninstallPrefixWarning")}\n${uninstallTarget.name}\n${uninstallTarget.prefix}${libraryMutationError ? `\n${libraryMutationError}` : ""}`}
       isDanger busy={libraryMutationBusy} confirmText={t("gameInfo", "uninstall")} cancelText={t("confirm", "cancel")}

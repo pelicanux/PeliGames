@@ -3,13 +3,28 @@ import { useSurfaceNeonLighting } from "../hooks/useSurfaceNeonLighting";
 import { DEFAULT_GLASS_EFFECTS, GLASS_STORAGE_KEY, readGlassEffects, type GlassEffects } from "./glassPreferences";
 import { ACCENT_STORAGE_KEY, APPEARANCE_STORAGE_KEY, DEFAULT_ACCENT, accentVariables, isAccentTheme, type AccentThemeId, type Appearance } from "./accentTheme";
 
+export type LaunchEffect = "shatter" | "smooth" | "aquarium" | "particles" | "penguin" | "shrink" | "disabled";
+export const DEFAULT_LAUNCH_EFFECT: LaunchEffect = "smooth";
+const launchEffectKey = "peligames_launch_effect";
 const ThemeContext = createContext<{
+  launchEffect: LaunchEffect; setLaunchEffect: (effect: LaunchEffect) => void;
   accent: AccentThemeId; setAccent: (id: AccentThemeId) => void;
   appearance: Appearance; setAppearance: (appearance: Appearance) => void;
   glassEffects: GlassEffects; setGlassEffects: (effects: GlassEffects) => void; resetGlassEffects: () => void;
 } | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [launchEffect, setLaunchEffect] = useState<LaunchEffect>(() => {
+    try {
+      const saved = localStorage.getItem(launchEffectKey);
+      if (saved === "none") return "disabled";
+      return saved === "shatter" || saved === "smooth" || saved === "aquarium" || saved === "particles" || saved === "penguin" || saved === "shrink" || saved === "disabled" ? saved : DEFAULT_LAUNCH_EFFECT;
+    } catch { return DEFAULT_LAUNCH_EFFECT; }
+  });
+  const chooseLaunchEffect = (effect: LaunchEffect) => {
+    setLaunchEffect(effect);
+    try { localStorage.setItem(launchEffectKey, effect); } catch { /* Keep the choice in memory. */ }
+  };
   const [glassEffects, setGlassEffects] = useState(() => {
     try { return readGlassEffects(localStorage.getItem(GLASS_STORAGE_KEY)); }
     catch { return { ...DEFAULT_GLASS_EFFECTS }; }
@@ -58,7 +73,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setGlassEffects(next);
     try { localStorage.setItem(GLASS_STORAGE_KEY, JSON.stringify(next)); } catch { /* Keep the active visual adjustment. */ }
   };
-  return <ThemeContext.Provider value={{ accent, setAccent: chooseAccent, appearance, setAppearance: chooseAppearance, glassEffects, setGlassEffects: chooseGlassEffects, resetGlassEffects: () => chooseGlassEffects(DEFAULT_GLASS_EFFECTS) }}>{children}</ThemeContext.Provider>;
+  return <ThemeContext.Provider value={{ launchEffect, setLaunchEffect: chooseLaunchEffect, accent, setAccent: chooseAccent, appearance, setAppearance: chooseAppearance, glassEffects, setGlassEffects: chooseGlassEffects, resetGlassEffects: () => chooseGlassEffects(DEFAULT_GLASS_EFFECTS) }}>{children}</ThemeContext.Provider>;
 }
 
 export function useAccentTheme() {

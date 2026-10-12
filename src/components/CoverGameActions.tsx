@@ -3,7 +3,7 @@ import { gameViewKey } from "../services/gameIdentity";
 import { useI18n } from "../i18n/I18nContext";
 import type { GameInfo } from "./GameGrid";
 import { MenuIcon } from "./MenuIcon";
-export type CoverGameAction = "favorite" | "start" | "uninstall" | "details" | "logs" | "scan" | "remove";
+export type CoverGameAction = "favorite" | "start" | "stop" | "uninstall" | "details" | "logs" | "scan" | "remove";
 export function CoverGameActions({ game, onAction, blocked }: { game: GameInfo; onAction: (action: CoverGameAction, game: GameInfo) => void; blocked?: boolean }) {
   const { t } = useI18n();
   const favorites = useFavorites();

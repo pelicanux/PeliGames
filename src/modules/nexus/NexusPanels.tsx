@@ -22,7 +22,7 @@ import { HoverTooltip } from "../../components/HoverTooltip";
 import { MenuIcon } from "../../components/MenuIcon";
 import { openDirectoryPicker, openFilePicker } from "../../services/tauriService";
 import { NexusInstallSequence } from "./NexusInstallSequence";
-import { NexusDeployProgress } from "./NexusDeployProgress";
+import { NexusDeployCounter } from "./NexusDeployProgress";
 import { NexusModuleStatus } from "./NexusModuleStatus";
 import { NexusCatalogPanel } from "./NexusCatalogPanel";
 import { NexusCollectionDialog } from "./NexusCollectionDialog";
@@ -58,6 +58,13 @@ export function NexusPanels({ tab, onTabChange, highlightedModId, highlightReque
   const [removeSelection, setRemoveSelection] = useState<string[] | null>(null);
   const [selectionWorking, setSelectionWorking] = useState(false);
   const selectionLock = useRef(false);
+  const [togglingMod, setTogglingMod] = useState<{ gameId: string; modId: string } | null>(null);
+  const toggleMod = async (gameId: string, modId: string, enabled: boolean) => {
+    setTogglingMod({ gameId, modId });
+    try { return await onToggle(gameId, modId, enabled); }
+    finally { setTogglingMod(current => current?.gameId === gameId && current.modId === modId ? null : current); }
+  };
+
   useEffect(() => { setSelectedMods([]); setRemoveSelection(null); }, [game?.id, Boolean(expandedPanel)]);
   useEffect(() => {
     setSelectedMods(current => current.filter(id => game?.mods.some(mod => mod.id === id)));
@@ -275,7 +282,7 @@ export function NexusPanels({ tab, onTabChange, highlightedModId, highlightReque
       // Await each deployment; never race modifications of the same game profile.
       for (const id of targets) {
         if (activeGame.current !== gameId) { completed = false; break; }
-        const ok = action === "remove" ? await onRemove(gameId, id) : await onToggle(gameId, id, action === "enable");
+        const ok = action === "remove" ? await onRemove(gameId, id) : await toggleMod(gameId, id, action === "enable");
         if (!ok) { completed = false; break; }
         if (action === "remove") {
           setSelectedMods(current => current.filter(value => value !== id));
@@ -293,11 +300,11 @@ export function NexusPanels({ tab, onTabChange, highlightedModId, highlightReque
     catch (e) { onError(String(e)); } finally { setChoosing(false); }
   };
   const renderMods = (active: boolean, large: boolean) => (
-      <><div className="nexus-panel-heading"><h3><img className="nexus-icon" src="/nexus-mods.svg" alt="" />{text.title}{activeProfile && <small className="nexus-active-profile" title={text.profile}>· {activeProfile.name}</small>}</h3>{Boolean(game?.mods.length) && (needsModSearch || searchOpen) && <HoverTooltip text={text.searchInstalledMods} anchorClassName="nexus-mod-search-trigger"><button type="button" className="nexus-mod-search-icon" aria-label={text.searchInstalledMods} aria-expanded={searchOpen} aria-controls={`${searchId}-${large ? "large" : "small"}`} onClick={() => { setSearchOpen(value => !value); setModQuery(""); }}><MenuIcon name="search" /></button></HoverTooltip>}<div className="nexus-panel-heading-actions"><button type="button" className="btn btn-primary" disabled={!game || busy || choosing} onClick={() => void importArchive()}><MenuIcon name="plusCircle" />{choosing ? text.loading : text.localMod}</button>{large && game && <button type="button" className="btn btn-primary" disabled={locked || settingsBusy} onClick={() => setProfilesOpen(true)}><MenuIcon name="sliders" />{text.profile}{activeProfile ? `: ${activeProfile.name}` : ""}</button>}</div></div>
+      <><div className="nexus-panel-heading"><h3><img className="nexus-icon" src="/nexus-mods.svg" alt="" />{text.title}{!installReview && !togglingMod && <NexusDeployCounter progress={progress} />}{activeProfile && <small className="nexus-active-profile" title={text.profile}>· {activeProfile.name}</small>}</h3>{Boolean(game?.mods.length) && (needsModSearch || searchOpen) && <HoverTooltip text={text.searchInstalledMods} anchorClassName="nexus-mod-search-trigger"><button type="button" className="nexus-mod-search-icon" aria-label={text.searchInstalledMods} aria-expanded={searchOpen} aria-controls={`${searchId}-${large ? "large" : "small"}`} onClick={() => { setSearchOpen(value => !value); setModQuery(""); }}><MenuIcon name="search" /></button></HoverTooltip>}<div className="nexus-panel-heading-actions"><button type="button" className="btn btn-primary" disabled={!game || busy || choosing} onClick={() => void importArchive()}><MenuIcon name="plusCircle" />{choosing ? text.loading : text.localMod}</button>{large && game && <button type="button" className="btn btn-primary" disabled={locked || settingsBusy} onClick={() => setProfilesOpen(true)}><MenuIcon name="sliders" />{text.profile}{activeProfile ? `: ${activeProfile.name}` : ""}</button>}</div></div>
 
         {["dragonageinquisition", "starwarsbattlefront22017"].includes(game?.adapter || "") && <p className="nexus-hint">{text.managerRequired}</p>}
         {searchOpen && <label className="nexus-mod-search-field"><MenuIcon name="search" /><input ref={active ? searchInput : undefined} id={`${searchId}-${large ? "large" : "small"}`} type="search" aria-label={text.searchInstalledMods} placeholder={text.searchInstalledMods} value={modQuery} onChange={event => setModQuery(event.target.value)} onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); setModQuery(""); setSearchOpen(false); } }} /></label>}
-        {!installReview && <NexusDeployProgress progress={progress} />}
+
         {!game?.mods.length ? <div className="nexus-empty-mods nexus-install-start"><button type="button" className="nexus-install-puzzle" aria-label={text.installFromCatalog} disabled={!game || busy} onClick={() => setTab("catalog")}><span className="nexus-install-piece"><MenuIcon name="puzzle" /></span><span className="nexus-install-download"><MenuIcon name="download" /></span></button><span>{text.installFromCatalog}</span></div> : <motion.div layoutScroll ref={large ? expandedModList : modList} className="nexus-mod-list" data-scrollbar-outside="true">{visibleMods.map(mod => {
           const identity = display(mod), expanded = !mod.installed || expandedModId === mod.id;
           const state = mod.installed ? mod.enabled ? "active" : "inactive" : "pending";
@@ -305,6 +312,7 @@ export function NexusPanels({ tab, onTabChange, highlightedModId, highlightReque
             {large && <input className="nexus-mod-select" type="checkbox" aria-label={`${text.selectMod}: ${identity.name}`} checked={selectedMods.includes(mod.id)} disabled={locked || settingsBusy} onChange={event => { const checked = event.target.checked; setSelectedMods(current => checked ? [...current, mod.id] : current.filter(id => id !== mod.id)); }} />}
             <button type="button" className="nexus-mod-summary" aria-expanded={expanded} aria-controls={`mod-actions-${large ? "large" : "small"}-${mod.id}`} onClick={() => { if (mod.installed) setExpandedModId(current => current === mod.id ? null : mod.id); }}>
               <span className="nexus-installed-mod-info"><span className="nexus-mod-title"><span className="nexus-mod-position">{game.mods.findIndex(item => item.id === mod.id) + 1}.</span><strong>{identity.name}</strong>{expanded && identity.version && <span className="nexus-mod-version">v{identity.version}</span>}</span>{expanded && <small>{mod.archive.split(".").pop()?.toUpperCase()} · {mod.installed ? mod.enabled ? ["dragonageinquisition", "starwarsbattlefront22017"].includes(game?.adapter || "") ? text.preparedForManager : text.enabled : text.disabled : text.imported} · {(mod.size / 1024 / 1024).toFixed(1)} MB</small>}</span>
+              <span className="nexus-mod-progress-slot"><NexusDeployCounter progress={!installReview && togglingMod?.gameId === game.id && togglingMod.modId === mod.id ? progress : undefined} /></span>
               {mod.installed && <span className={`nexus-mod-chevron ${expanded ? "expanded" : ""}`} aria-hidden="true">⌄</span>}
             </button>
             {expanded && mod.identification_note && <small className="nexus-local-identification-note" role="status">{mod.identification_note}</small>}
@@ -314,7 +322,7 @@ export function NexusPanels({ tab, onTabChange, highlightedModId, highlightReque
               return (wins || loses) ? <small className="nexus-local-identification-note" role="status">{[wins ? `${text.overridesOthers}: ${wins}` : "", loses ? `${text.overriddenBy}: ${loses}` : ""].filter(Boolean).join(" · ")}</small> : null;
             })()}
             {expanded && <div id={`mod-actions-${large ? "large" : "small"}-${mod.id}`} className="nexus-installed-mod-actions">
-              <button type="button" className="btn btn-secondary" disabled={locked || (mod.installed && !supported)} onClick={() => { if (mod.installed) void onToggle(game.id, mod.id, !mod.enabled); else setInstallReview(mod.id); }}><MenuIcon name={mod.installed ? mod.enabled ? "chainBroken" : "chainLinked" : "download"} />{mod.installed ? mod.enabled ? text.disable : text.enable : text.install}</button>
+              <button type="button" className="btn btn-secondary" disabled={locked || (mod.installed && !supported)} onClick={() => { if (mod.installed) void toggleMod(game.id, mod.id, !mod.enabled); else setInstallReview(mod.id); }}><MenuIcon name={mod.installed ? mod.enabled ? "chainBroken" : "chainLinked" : "download"} />{mod.installed ? mod.enabled ? text.disable : text.enable : text.install}</button>
               <button type="button" className="btn btn-secondary nexus-requirements-link" onClick={() => setRequirementsMod(mod.id)}>{text.requirements}{mod.nexus_source?.requirements.items.length ? ` (${mod.nexus_source.requirements.items.length})` : ""}</button>
               <div className="nexus-mod-order-actions">
               {onMove && <><button type="button" className="btn btn-secondary" aria-label={`${text.moveUp}: ${identity.name}`} title={text.moveUp} disabled={locked || game.mods[0]?.id === mod.id} onClick={() => void onMove(game.id, mod.id, true)}><MenuIcon name="chevronUp" /></button>

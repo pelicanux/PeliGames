@@ -1,7 +1,9 @@
+import { demoLauncher, demoLauncherInvoke } from "./previewLauncherDemo";
 import { orderWorkspaceMods } from "./modules/nexus/dependencyOrder";
 // Visual fixtures only: no Nexus account, downloads or game files are accessed.
 import type { GameInfo } from "./components/GameGrid";
 import type { NexusGame } from "./modules/nexus/useNexusWorkspace";
+import type { ProfileSummary } from "./modules/nexus/NexusProfiles";
 import type { NexusDownload } from "./modules/nexus/NexusDownloadsPanel";
 const specs = [
   ["Stardew Valley", "413150", "stardewvalley"],
@@ -13,6 +15,20 @@ const specs = [
   ["Fallout: New Vegas", "22380", "newvegas"],
 ];
 export const demoGames: GameInfo[] = specs.map(([name, id], i) => ({ name, app_id: id, path: `/preview/game-${i}/game.exe`, directory: `/preview/game-${i}`, launcher: i > 1 && !["203160", "22380"].includes(id) ? "PeliGames" : "Steam", cover_url: `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_600x900.jpg` }));
+// Three candidates for one example installation; other demo games have only one.
+const demoExecutableCandidates = [
+  { ...demoGames[2], executable: demoGames[2].path, recommended: true, discovery_source: "Atalho do Windows" },
+  { ...demoGames[2], path: "/preview/game-2/launcher.exe", executable: "/preview/game-2/launcher.exe" },
+  { ...demoGames[2], path: "/preview/game-2/game_dx12.exe", executable: "/preview/game-2/game_dx12.exe" },
+];
+export function demoExecutableChoices(path: string): GameInfo[] {
+  return demoExecutableCandidates.some(entry => entry.path === path) ? demoExecutableCandidates : [];
+}
+export function demoChooseExecutable(path: string): GameInfo | undefined {
+  const chosen = demoExecutableCandidates.find(entry => entry.path === path);
+  if (chosen) demoGames[2] = { ...chosen };
+  return chosen;
+}
 const workspace: { games: NexusGame[] } = { games: demoGames.map((game, i) => ({ id: `demo-${i}`, game, platform: specs[i][2] === "stardewvalley" ? "native" : "proton", adapter: specs[i][2] === "tombraider" ? "" : specs[i][2], nexus_domain: specs[i][2], running: false, compat_data: i === 0 ? "" : `/preview/prefix-${i}`, proton: i === 0 ? "" : "/preview/proton/Proton-GE Latest", mods: specs[i][2] === "tombraider" ? [] : [
   { id: "demo-installed", name: "Mod visual — exemplo ativo", version: "2.0.0", archive: "/preview/visual.zip", size: 2048000, installed: true, enabled: true },
   { id: "demo-unstructured", name: "Mod sem estrutura — exemplo", version: "1.0.0", archive: "/preview/sem-estrutura.zip", size: 1024000, installed: false, enabled: false },
@@ -22,6 +38,15 @@ const workspace: { games: NexusGame[] } = { games: demoGames.map((game, i) => ({
     {id:"demo-red4ext",name:"RED4ext",archive:"/preview/RED4ext.zip",size:575488,installed:false,enabled:false,nexus_source:{domain:"cyberpunk2077",mod_id:2380,file_id:23800,requirements:{complete:true,items:[]}}},
   ] : []),
 ] })) };
+demoGames.push(demoLauncher);
+const demoProfiles = new Map<string, ProfileSummary[]>();
+function profilesFor(gameId: string) {
+  if (!demoProfiles.has(gameId)) demoProfiles.set(gameId, [
+    { id: "demo-default", name: "Padrão", active: true, enabled: 1, own_saves: false, own_settings: false, saves_supported: true },
+    ...(new URLSearchParams(location.search).get("profiles") === "1" ? [{ id: "demo-extra", name: "Perfil de teste", active: false, enabled: 3, own_saves: true, own_settings: false, saves_supported: true }] : []),
+  ]);
+  return demoProfiles.get(gameId)!;
+}
 let tombRaiderAssociated = false;
 let jobs: NexusDownload[] = [];
 const demoLoadOrder = {
@@ -76,13 +101,35 @@ function confirm() {
   }, 2000);
 }
 export async function demoInvoke(command: string, args: Record<string, unknown>): Promise<{ value: unknown } | undefined> {
+  const launcherResult = demoLauncherInvoke(command, args, demoGames);
+  if (launcherResult) return launcherResult;
   workspace.games = orderWorkspaceMods(workspace).games;
   const domain = String(args.gameDomain || "stardewvalley");
   switch (command) {
-    case "nexus_user_profiles": return { value: [
-      { id: "demo-default", name: "Padrão", active: true, enabled: 1, own_saves: false, own_settings: false, saves_supported: true },
-      ...(new URLSearchParams(location.search).get("profiles") === "1" ? [{ id: "demo-extra", name: "Perfil de teste", active: false, enabled: 3, own_saves: true, own_settings: false, saves_supported: true }] : []),
-    ] };
+    case "nexus_user_profiles": return { value: clone(profilesFor(String(args.gameId))) };
+    case "create_nexus_user_profile": {
+      const profiles = profilesFor(String(args.gameId));
+      profiles.push({ id: crypto.randomUUID(), name: String(args.name), active: false, enabled: args.copy ? profiles.find(profile => profile.active)?.enabled || 0 : 0, own_saves: false, own_settings: false, saves_supported: true });
+      return { value: clone(profiles) };
+    }
+    case "rename_nexus_user_profile":
+    case "set_nexus_profile_options": {
+      const profiles = profilesFor(String(args.gameId)), profile = profiles.find(profile => profile.id === args.id);
+      if (profile && command === "rename_nexus_user_profile") profile.name = String(args.name);
+      if (profile && command === "set_nexus_profile_options") { profile.own_saves = Boolean(args.ownSaves); profile.own_settings = Boolean(args.ownSettings); }
+      return { value: clone(profiles) };
+    }
+    case "delete_nexus_user_profile": {
+      const profiles = profilesFor(String(args.gameId)).filter(profile => profile.active || profile.id !== args.id);
+      demoProfiles.set(String(args.gameId), profiles);
+      return { value: clone(profiles) };
+    }
+    case "switch_nexus_user_profile": {
+      for (const profile of profilesFor(String(args.gameId))) profile.active = profile.id === args.id;
+      const game = workspace.games.find(game => game.id === args.gameId);
+      if (game) game.profile = String(args.id);
+      return { value: clone(workspace) };
+    }
     case "prepare_default_installation_directory": return {value: `/preview/games${typeof args.folder === "string" && args.folder ? `/${args.folder}` : ""}`};
     case "read_nexus_mod_logs": return {value:`Demonstração — registros simulados\n--- red4ext/logs/red4ext.log | modified_unix=${Math.floor(Date.now()/1000)} ---\n[RED4ext] Plugin TweakXL loaded\n[TweakXL] Loading tweaks: example.yaml`};
     case "read_nexus_logs": return {value: args.previous ? "Demonstração — execução anterior\nJogo encerrado." : "Demonstração — execução atual\nIniciando o jogo com mods."};
@@ -190,6 +237,8 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "plugin:dialog|message": return { value: "Yes" };
     case "load_nexus_account": return { value: { user_id: 0, name: "Demonstração visual", is_premium: false, is_supporter: false } };
     case "register_nexus_handler": return { value: null };
+    case "nexus_report_relay_configured": return { value: true };
+    case "send_nexus_report": throw new Error("Prévia visual: nenhum relatório é enviado ao Discord.");
     case "export_nexus_report": {
       const game = workspace.games.find(g => g.id === args.gameId) || workspace.games[0];
       const content = `PELIGAMES — RELATÓRIO NEXUS (DEMONSTRAÇÃO)\nJogo: ${game.game.name}\nLauncher: ${args.buildLabel}\nSistema: Linux — demonstração\nProton: ${game.proton}\n\nMODS\n${game.mods.map(m => `${m.name} | ativo=${m.enabled}`).join("\n")}\n\n[INFO] Instalação concluída.\n[INFO] Nenhum arquivo real foi gerado nesta prévia.`;
@@ -276,7 +325,12 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "install_nexus_mod":
     case "set_nexus_mod_enabled":
     case "remove_nexus_archive": {
-      await sleep();
+      if (command === "set_nexus_mod_enabled") {
+        for (let done = 0; done <= 200; done += 20) {
+          window.dispatchEvent(new CustomEvent("previewNexusDeployProgress", { detail: { game_id: args.gameId, phase: "copy", detail: "Demonstração", done, total: 200 } }));
+          await sleep(150);
+        }
+      } else await sleep();
       const game = workspace.games.find(g => g.id === args.gameId);
       const mod = game?.mods.find(m => m.id === args.modId);
       if (command === "remove_nexus_archive" && game) game.mods = game.mods.filter(m => m.id !== args.modId);

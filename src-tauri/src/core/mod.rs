@@ -9,6 +9,7 @@ pub mod game_info_cache;
 pub mod proton_manager;
 pub mod game_installation;
 pub mod installed_library;
+pub mod game_profiles;
 pub mod installation_layout;
 
 pub mod game_execution;
