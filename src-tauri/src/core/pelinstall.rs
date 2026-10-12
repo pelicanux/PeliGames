@@ -25,6 +25,8 @@ pub fn parse_args(args: &[String], installer: bool) -> Result<StartupInfo, Strin
     match args {
         [] => (),
         [flag] if flag == "--launcher" => info.module = "launcher".into(),
+        // Menu entry: Pelinstall without a file asks for one.
+        [flag] if flag == "--install" => info.module = "pelinstall".into(),
         [flag, file] if flag == "--install" => { info.module = "pelinstall".into(); info.executable = Some(file.clone()); },
         [flag, entry] if flag == "--launch-game" => { info.module = "background".into(); info.entry = Some(entry.clone()); },
         [flag, entry] if flag == "--show-game" => { info.module = "launcher".into(); info.entry = Some(entry.clone()); },
@@ -109,6 +111,10 @@ fn launcher_command() -> Result<Command, String> {
 pub fn register_appimage() -> Result<(), String> {
     let binary = launcher_binary()?;
     if !binary.extension().is_some_and(|ext|ext=="AppImage") { return Ok(()); }
+    register_appimage_at(&binary)
+}
+/// Menu entries (Games category) for PeliGames and Pelinstall pointing at `binary`.
+fn register_appimage_at(binary: &Path) -> Result<(), String> {
     let data = dirs::data_dir().ok_or("Pasta de aplicativos indisponível.")?;
     let applications = data.join("applications"); let icons = data.join("peligames");
     fs::create_dir_all(&applications).and_then(|_|fs::create_dir_all(&icons)).map_err(|e|e.to_string())?;
@@ -116,11 +122,61 @@ pub fn register_appimage() -> Result<(), String> {
     fs::write(&icon, include_bytes!("../../../public/peligames.svg")).map_err(|e|e.to_string())?;
     for (name, filename, arguments, extra) in [
         ("PeliGames", "peligames-appimage.desktop", "%u", "MimeType=x-scheme-handler/nxm;\n"),
-        ("Pelinstall", "pelinstall-appimage.desktop", "--install %f", "NoDisplay=true\nMimeType=application/x-ms-dos-executable;application/x-msdownload;application/x-msi;\n"),
+        ("Pelinstall", "pelinstall-appimage.desktop", "--install %f", "MimeType=application/x-ms-dos-executable;application/x-msdownload;application/x-msi;\n"),
     ] {
         let text=format!("[Desktop Entry]\nVersion=1.0\nType=Application\nName={name}\nComment=Instalando jogos na base da humilhação\nExec={} {arguments}\nIcon={}\nTerminal=false\nCategories=Game;\n{extra}",exec_arg(&binary.to_string_lossy())?,desktop_value(&icon.to_string_lossy()));
         let temporary=applications.join(format!(".{}.desktop",uuid::Uuid::new_v4()));
         fs::write(&temporary,text).and_then(|_|fs::rename(&temporary,applications.join(filename))).map_err(|e|e.to_string())?;
+    }
+    Ok(())
+}
+/// Where the AppImage is installed: the user's executables folder (XDG,
+/// `~/.local/bin`), out of sight in the home folder and kept when the
+/// launcher's data in `~/.config/PeliGames` is reset.
+pub fn appimage_target() -> Result<PathBuf, String> {
+    let folder = dirs::executable_dir().or_else(|| dirs::home_dir().map(|home| home.join(".local/bin"))).ok_or("Pasta pessoal indisponível.")?;
+    Ok(folder.join("PeliGames.AppImage"))
+}
+#[derive(Serialize)]
+pub struct AppImageStatus { pub appimage: bool, pub installed: bool, pub target: String }
+/// Whether this launcher runs from an AppImage, and whether it is the installed one.
+pub fn appimage_status() -> Result<AppImageStatus, String> {
+    let target = appimage_target()?;
+    let current = std::env::var_os("APPIMAGE").map(PathBuf::from);
+    let installed = current.as_ref().is_some_and(|path| path.canonicalize().ok() == target.canonicalize().ok() && target.is_file());
+    Ok(AppImageStatus { appimage: current.is_some(), installed, target: target.to_string_lossy().into_owned() })
+}
+/// Moves the running AppImage to `~/.local/bin/PeliGames.AppImage`, adds the
+/// `peligames` command and the menu entries, and returns the installed path.
+/// Updates replace the running AppImage, so they follow the new place.
+pub fn install_appimage() -> Result<PathBuf, String> {
+    let source = PathBuf::from(std::env::var_os("APPIMAGE").ok_or("O PeliGames não está rodando como AppImage.")?);
+    let target = appimage_target()?;
+    install_appimage_at(&source, &target)?;
+    register_appimage_at(&target)?;
+    Ok(target)
+}
+fn install_appimage_at(source: &Path, target: &Path) -> Result<(), String> {
+    use std::os::unix::fs::PermissionsExt;
+    let folder = target.parent().ok_or("Destino inválido.")?;
+    fs::create_dir_all(folder).map_err(|e| e.to_string())?;
+    if source.canonicalize().ok() != target.canonicalize().ok() {
+        // Copy beside the target and rename it into place, then remove the original
+        // (a running AppImage keeps working: its image stays mounted).
+        let staged = folder.join(format!(".peligames-install-{}.AppImage", uuid::Uuid::new_v4()));
+        let result = fs::copy(source, &staged).map_err(|e| format!("Não foi possível copiar o AppImage: {e}"))
+            .and_then(|_| fs::set_permissions(&staged, fs::Permissions::from_mode(0o755)).map_err(|e| e.to_string()))
+            .and_then(|_| fs::rename(&staged, target).map_err(|e| e.to_string()));
+        if let Err(error) = result { let _ = fs::remove_file(&staged); return Err(error); }
+        let _ = fs::remove_file(source);
+    }
+    fs::set_permissions(target, fs::Permissions::from_mode(0o755)).map_err(|e| e.to_string())?;
+    // Terminal command, never replacing a file of the user's own.
+    let command = folder.join("peligames");
+    match fs::symlink_metadata(&command) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => { let _ = std::os::unix::fs::symlink("PeliGames.AppImage", &command); }
+        Ok(meta) if meta.file_type().is_symlink() => { let _ = fs::remove_file(&command); let _ = std::os::unix::fs::symlink("PeliGames.AppImage", &command); }
+        _ => (),
     }
     Ok(())
 }
@@ -418,5 +474,34 @@ pub fn monitor_background(entry: &str) -> Result<(), LaunchReport> {
             return Ok(());
         }
         std::thread::sleep(Duration::from_millis(100));
+    }
+}
+
+#[cfg(test)]
+mod appimage_install_tests {
+    use super::*;
+    #[test]
+    fn appimage_moves_into_the_executables_folder_with_a_command() {
+        let base = std::env::temp_dir().join(format!("peligames-appimage-{}", uuid::Uuid::new_v4()));
+        let source = base.join("Downloads/PeliGames_0.3.2_amd64.AppImage");
+        fs::create_dir_all(source.parent().unwrap()).unwrap();
+        fs::write(&source, b"appimage").unwrap();
+        let target = base.join(".local/bin/PeliGames.AppImage");
+        install_appimage_at(&source, &target).unwrap();
+        assert_eq!(fs::read(&target).unwrap(), b"appimage");
+        assert!(!source.exists(), "movido, não duplicado");
+        use std::os::unix::fs::PermissionsExt;
+        assert_eq!(fs::metadata(&target).unwrap().permissions().mode() & 0o777, 0o755);
+        assert_eq!(fs::read_link(base.join(".local/bin/peligames")).unwrap(), Path::new("PeliGames.AppImage"));
+        // Installing again from the installed copy changes nothing; a user's own `peligames` file is kept.
+        fs::remove_file(base.join(".local/bin/peligames")).unwrap();
+        fs::write(base.join(".local/bin/peligames"), b"#!/bin/sh").unwrap();
+        install_appimage_at(&target, &target).unwrap();
+        assert_eq!(fs::read(base.join(".local/bin/peligames")).unwrap(), b"#!/bin/sh");
+        fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
+    fn pelinstall_opens_without_a_file_from_the_menu() {
+        assert_eq!(parse_args(&["--install".into()], false).unwrap().module, "pelinstall");
     }
 }

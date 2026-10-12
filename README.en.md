@@ -23,7 +23,7 @@ Windows game launcher for Linux with Proton, a game library, Pelinstall, Wine to
 Download the AppImage, RPM or DEB from [Releases](https://github.com/pelicanux/PeliGames/releases).
 
 - RPM and DEB install the `peligames` and `pelinstall` binaries in `/opt/PeliGames`, with commands in `/usr/bin` and shortcuts in the system application folders. From a terminal, use `peligames` or `pelinstall /path/to/program.exe`.
-- The AppImage contains both modules. Make it executable and open it. The first start registers the launcher and "Open with Pelinstall" for the user. Keep the AppImage in the same place so the shortcuts keep working.
+- The AppImage contains both modules. Make it executable and open it. On the first start, the welcome screen offers **Install and open**: the AppImage moves to `~/.local/bin/PeliGames.AppImage`, gets the `peligames` command and PeliGames and Pelinstall entries in the applications menu (Games), and updates are applied there.
 - To open a Windows executable in the installer: `./PeliGames.AppImage --install /path/to/program.exe`.
 
 Proton, UMU and Winetricks are downloaded when needed. Settings, tools, mods and interface data live in `~/.config/PeliGames`; delete that folder to start from scratch. Prefixes and games stay in the folders the user chose. SteamGridDB covers need an optional personal key, set in Preferences.

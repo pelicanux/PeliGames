@@ -227,6 +227,8 @@ fn run_mode(installer: bool) {
             commands::pelinstall::validate_pelinstall_file,
             commands::pelinstall::create_peligames_shortcut,
             commands::pelinstall::find_peligames_shortcuts,
+            commands::pelinstall::appimage_install_status,
+            commands::pelinstall::install_peligames_appimage,
             commands::pelinstall::get_pelinstall_icon,
             commands::pelinstall::set_peligames_cover,
             commands::pelinstall::remove_peligames_shortcuts,

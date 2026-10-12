@@ -1502,9 +1502,20 @@ button.primary.proton-download-button.is-downloading:disabled { background: line
 @media (max-width: 600px) { .mod-manager-options { grid-template-columns: 1fr; } }
 
 
-.welcome-modal { max-width: 420px; text-align: center; }
-.welcome-modal h2 { margin: 0 0 1.5rem; color: var(--tone-e9edf9, #e9edf9); }
-.welcome-modal .primary { width: 100%; min-height: 44px; }
+.welcome-modal { max-width: 460px; text-align: center; }
+.welcome-modal h2 { margin: 0 0 .4rem; color: var(--tone-e9edf9, #e9edf9); }
+.welcome-modal .primary { width: 100%; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .5rem; }
+.welcome-logo { width: 72px; height: 72px; margin: .25rem auto .75rem; display: block; filter: drop-shadow(0 0 14px rgba(var(--accent-rgb), .35)); }
+.welcome-subtitle { margin: 0 0 1.1rem; color: var(--tone-94a3b8, #94a3b8); }
+.welcome-features { list-style: none; margin: 0 0 1.25rem; padding: 0; display: grid; gap: .55rem; text-align: left; }
+.welcome-features li { display: flex; align-items: flex-start; gap: .6rem; color: var(--tone-e2e8f0, #e2e8f0); font-size: .9rem; line-height: 1.4; }
+.welcome-features .menu-icon { flex-shrink: 0; width: 18px; height: 18px; margin-top: .1rem; color: var(--accent); }
+.welcome-install { margin: 0 0 1.1rem; padding: .8rem .9rem; border-radius: 10px; text-align: left; border: 1px solid rgba(var(--accent-rgb), .3); background: rgba(var(--accent-rgb), .08); }
+.welcome-install strong { color: var(--tone-e9edf9, #e9edf9); }
+.welcome-install p { margin: .35rem 0 .45rem; font-size: .85rem; line-height: 1.4; color: var(--tone-cbd5e1, #cbd5e1); }
+.welcome-install code { font-size: .78rem; overflow-wrap: anywhere; color: var(--tone-94a3b8, #94a3b8); }
+.welcome-actions { display: grid; grid-template-columns: 1fr 1.4fr; gap: .6rem; }
+.welcome-actions > button { min-height: 44px; }
 .wizard-titlebar-back { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; width:28px; height:28px; padding:0; border:1px solid rgba(var(--accent-rgb),.3); border-radius:7px; background:transparent; color:var(--accent-light); cursor:pointer; }
 .wizard-titlebar-back:hover:not(:disabled) { background:rgba(var(--accent-rgb),.12); border-color:var(--accent); }
 .wizard-titlebar-back:disabled { opacity:.5; cursor:default; }
