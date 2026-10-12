@@ -92,11 +92,7 @@ fn build(app: &tauri::AppHandle, url: reqwest::Url, job: Option<String>) -> Resu
     }
     // Close an earlier window without marking its request as cancelled.
     dismiss(app, None);
-    let directory = app
-        .path()
-        .app_local_data_dir()
-        .map_err(|e| e.to_string())?
-        .join("nexus-browser");
+    let directory = crate::core::paths::app_root()?.join("nexus-browser");
     std::fs::create_dir_all(&directory)
         .map_err(|_| "Não foi possível criar a sessão Nexus.".to_string())?;
     #[cfg(unix)]

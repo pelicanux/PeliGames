@@ -9,6 +9,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ModalSurface } from "../../components/ModalSurface";
 import { BrandName } from "../../components/BrandName";
 import { MenuIcon } from "../../components/MenuIcon";
+import { ProtonPreferencesDialog } from "../../components/ProtonPreferencesDialog";
 import { ProtonSelector } from "../../components/ProtonSelector";
 import { HoverTooltip } from "../../components/HoverTooltip";
 import { ConfirmModal } from "../../components/ConfirmModal";
@@ -43,6 +44,8 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
   const target = matches.find(match => match.entry.path === targetPath) ?? matches[0];
   const [name, setName] = useState(completionPreview ? "7-Zip" : "");
   const [proton, setProton] = useState("");
+  const [protonPreferencesOpen, setProtonPreferencesOpen] = useState(false);
+  const [protonPreferencesBusy, setProtonPreferencesBusy] = useState(false);
   const [desktop, setDesktop] = useState(completionPreview);
   const [existingShortcuts, setExistingShortcuts] = useState<string[]>([]);
   const [shortcutChecking, setShortcutChecking] = useState(false);
@@ -68,7 +71,7 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
   const validFile = Boolean(file && (mode !== "add" || file.toLowerCase().endsWith(".exe")));
   const stateRef = useRef({ busy, dirty: false, installing: false });
   const closing = useRef(false);
-  stateRef.current = { busy, dirty: !result && Boolean(directorySelected || proton || name.trim()), installing: busy && step === 3 };
+  stateRef.current = { busy: busy || protonPreferencesBusy, dirty: !result && Boolean(directorySelected || proton || name.trim()), installing: busy && step === 3 };
   const close = async () => {
     if (preview) return;
     closing.current = true;
@@ -94,11 +97,6 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
       if (stateRef.current.busy || stateRef.current.dirty) { event.preventDefault(); requestClose(); }
     }).then(unlisten => { if (disposed) unlisten(); else remove = unlisten; }).catch(error => setError(String(error)));
     return () => { disposed = true; remove?.(); };
-  }, []);
-  useEffect(() => {
-    const openPreferences = () => { void invoke("open_peligames_launcher").catch(error => setError(String(error))); };
-    window.addEventListener("openProtonPreferences", openPreferences);
-    return () => window.removeEventListener("openProtonPreferences", openPreferences);
   }, []);
   useEffect(() => {
     if (!startup.executable || startup.error || (preview && startup.executable === "/preview/instalador.exe")) { setChecking(false); return; }
@@ -318,7 +316,7 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
         {!validFile && <button className="installation-name-confirm" onClick={() => void chooseFile()}><MenuIcon name="folderSearch" />{mode === "repair" ? tr("Selecionar instalador") : tr("Selecionar executável")}</button>}
         {!directorySelected ? <div className="pelinstall-two-buttons"><button onClick={() => void location.selectDefault().catch(error => setError(String(error)))}>{tr("Padrão")}</button><button onClick={() => void chooseDirectory()}>{tr("Escolher")}</button></div> : <HoverTooltip text={directory} anchorClassName="installation-path-tooltip-anchor" tooltipClassName="installation-path-tooltip"><div className="game-directory-value installation-path-box"><input aria-label={tr("Local de instalação")} className="installation-path-input" value={directory} onChange={event => { if (mode === "repair") setRepairPrefix(event.target.value); else location.setDirectory(event.target.value); }} /><button className="installation-path-picker" aria-label={tr("Alterar local de instalação")} onClick={() => void chooseDirectory()}><MenuIcon name="folderSearch" /></button></div></HoverTooltip>}
       </section>}
-      {step === 1 && <section><h3>{mode === "add" ? tr("Executar com Proton") : mode === "repair" ? tr("Reparar com Proton") : tr("Instalar com Proton")}</h3><ProtonSelector value={proton} onChange={setProton} label={tr("Versão do Proton")} disabled={busy} /></section>}
+      {step === 1 && <section><h3>{mode === "add" ? tr("Executar com Proton") : mode === "repair" ? tr("Reparar com Proton") : tr("Instalar com Proton")}</h3><ProtonSelector value={proton} onChange={setProton} label={tr("Versão do Proton")} disabled={busy} onManage={() => setProtonPreferencesOpen(true)} /></section>}
       {step === 2 && <section><h3>{tr("Nome")}</h3><div className="game-directory-value installation-path-box"><input aria-label={tr("Nome")} className="installation-path-input" placeholder={tr("Digite o nome")} value={name} onChange={event => setName(event.target.value)} disabled={busy} /></div>{mode === "repair" && <><label className="installation-field-label">{tr("Executável")}</label><EntrySelector label={tr("Executável para reparar")} value={file} onChange={setFile} disabled={busy} options={Array.from(new Map([...(target ? [target.entry] : []), ...repairExecutables].map(entry => [entry.executable || "", { value: entry.executable || "", label: entry.executable?.split(/[\\/]/).pop() || entry.name }])).values()).filter(option => option.value)} /></>}<label className="pelinstall-desktop"><input type="checkbox" checked={mode === "repair" && existingShortcuts.length > 0 ? removeExistingShortcuts : desktop} onChange={event => { if (mode === "repair" && existingShortcuts.length > 0) { setRemoveExistingShortcuts(event.target.checked); if (event.target.checked) setUpdateExistingShortcuts(false); } else setDesktop(event.target.checked); }} disabled={busy || (mode === "repair" && (shortcutChecking || shortcutCheckFailed))} />{mode === "repair" && shortcutChecking ? tr("Verificando atalhos…") : mode === "repair" && shortcutCheckFailed ? tr("Não foi possível verificar os atalhos") : mode === "repair" && existingShortcuts.length > 0 ? tr("Remover atalho da área de trabalho") : tr("Criar atalho na área de trabalho")}</label>{mode === "repair" && existingShortcuts.length > 0 && <button className={`pelinstall-update-shortcut ${updateExistingShortcuts ? "active" : ""}`} aria-pressed={updateExistingShortcuts} disabled={busy || shortcutChecking || shortcutCheckFailed} onClick={() => { setUpdateExistingShortcuts(!updateExistingShortcuts); setRemoveExistingShortcuts(false); }}><MenuIcon name="repair" />{updateExistingShortcuts ? tr("Atualizar atalho ao reparar ✓") : tr("Atualizar atalho")}</button>}</section>}
       {step === 3 && <section role="status"><h3>{mode === "repair" ? tr("Reparação em andamento") : tr("Instalação em andamento")}</h3><p>{cancelPending ? tr("Encerrando os processos…") : mode === "repair" ? tr("Aguardando a atualização do prefixo…") : tr("Aguardando o instalador Windows finalizar…")}</p><p className="pelinstall-note">{mode === "repair" ? tr("A conclusão será liberada quando o Proton terminar de preparar o prefixo.") : tr("O Pelinstall permanece aberto enquanto o Proton prepara o prefixo e o instalador está em execução.")}</p></section>}
       {removed && step === 5 && <section><h3>{tr("Prefixo desinstalado")}</h3><p>{tr("Os registros que utilizavam esse prefixo foram removidos da biblioteca.")}</p></section>}
@@ -353,5 +351,6 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
     {uninstallConfirmation && target && <ConfirmModal title={tr("Desinstalar?")} message={`${tr("Todo o prefixo será apagado permanentemente, incluindo jogos, programas, configurações e saves. Todos os jogos que usam esse prefixo serão removidos da biblioteca. Os atalhos também serão removidos da área de trabalho e das pastas de aplicativos. Outros arquivos fora do prefixo serão preservados. Deseja continuar?")}\n${target.entry.name}\n${target.entry.prefix}`} confirmText={tr("Desinstalar")} onConfirm={() => void uninstall()} onCancel={() => setUninstallConfirmation(false)} />}
     {cancelConfirmation && <ConfirmModal title={mode === "repair" ? tr("Cancelar reparação?") : tr("Cancelar instalação?")} message={mode === "repair" ? tr("Deseja encerrar a atualização do prefixo? Os arquivos e logs serão preservados, mas a preparação pode ficar incompleta. As alterações do registro não serão salvas.") : tr("Deseja encerrar o instalador e os processos deste prefixo? A instalação pode ficar incompleta. O prefixo e os logs serão preservados e nenhum jogo será registrado por esta tentativa.")} confirmText={tr("Encerrar instalação")} onConfirm={() => void cancelInstallation()} onCancel={() => { closeAfterCancel.current = false; setCancelConfirmation(false); }} />}
     {exitConfirmation && <ConfirmModal title={tr("Configuração incompleta")} message={tr("Deseja sair e descartar a configuração iniciada?")} onConfirm={() => { stateRef.current.dirty = false; setExitConfirmation(false); void close(); }} onCancel={() => setExitConfirmation(false)} />}
+    {protonPreferencesOpen && <ProtonPreferencesDialog onClose={() => setProtonPreferencesOpen(false)} onBusyChange={setProtonPreferencesBusy} />}
   </main>;
 }

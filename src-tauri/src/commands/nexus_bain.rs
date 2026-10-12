@@ -36,7 +36,7 @@ pub(super) fn resolve(entries: &[String], module: &Definition, mod_id: &str, cho
     let mut issues = Vec::new();
     if selection.is_empty() { issues.push("Selecione ao menos um pacote BAIN.".to_string()); }
     for entry in entries.iter().filter(|entry| !entry.ends_with('/') && !entry.contains('/')) {
-        super::nexus_deployment::unmapped_file(entry)?;
+        super::nexus_deployment::unmapped(module, entry)?;
     }
     let mut output: BTreeMap<String, (String, String)> = BTreeMap::new();
     for name in &selection {
@@ -50,7 +50,7 @@ pub(super) fn resolve(entries: &[String], module: &Definition, mod_id: &str, cho
             let target = if module.allowed(&data) { Some(data) } else { module.route_package(rest, mod_id, &relative)? };
             match target {
                 Some(target) => { output.insert(target.to_ascii_lowercase(), ((*source).clone(), target)); }
-                None => super::nexus_deployment::unmapped_file(source)?,
+                None => super::nexus_deployment::unmapped(module, source)?,
             }
         }
     }

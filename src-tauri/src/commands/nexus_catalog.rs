@@ -189,11 +189,16 @@ pub async fn list_nexus_catalog_mods(
             .map_err(|_| "Lista de mods Nexus inválida.")?;
     // Nexus includes unavailable records without display metadata in some feeds.
     mods.retain(|item| item.mod_id > 0 && !item.name.is_empty());
+    // These feeds lack the flag: keep only mods confirmed installable by a mod manager.
+    let support = super::nexus_account::vortex_support(&game_domain, &mods.iter().map(|item| item.mod_id).collect::<Vec<_>>()).await?;
+    mods.retain(|item| support.get(&item.mod_id) == Some(&true));
     Ok(mods)
 }
 #[derive(Serialize)]
 pub struct ModDetails {
     info: CatalogMod,
+    /// The mod offers the mod manager (Vortex) download; otherwise nothing is installable.
+    supports_vortex: bool,
     pub(super) files: Vec<CatalogFile>,
     pub(super) requirements: Requirements,
     requirements_file_id: Option<u64>,
@@ -217,10 +222,14 @@ pub async fn get_nexus_catalog_mod(game_domain: String, mod_id: u64, file_id: Op
         serde_json::from_value(data.get("files").cloned().unwrap_or(data))
             .map_err(|_| "Lista de arquivos Nexus inválida.")?;
     files.retain(|f| f.file_id > 0 && !matches!(f.category_id, Some(6 | 7)));
+    // A mod without the mod manager (Vortex) download offers nothing to install.
+    let supports_vortex = super::nexus_account::supports_vortex(&game_domain, mod_id).await?;
+    if !supports_vortex { files.clear(); }
     let requirements_file_id = select_requirements_file(&files, file_id).ok();
     let requirements = requirements_for_file(&game_domain, mod_id, file_id).await;
     Ok(ModDetails {
         info,
+        supports_vortex,
         files,
         requirements,
         requirements_file_id,
@@ -244,9 +253,47 @@ pub struct Requirements {
     pub complete: bool,
     pub error: Option<String>,
 }
+/// Requirements the author only wrote in the description (no official entry):
+/// known loaders of this game whose names appear in the text. Vortex reads only
+/// the official list; these are shown as cited, for the user to confirm.
+fn cited_requirements(description: &str, frameworks: &[(String, u64, Option<String>)]) -> Vec<Requirement> {
+    let text: String = description.chars().map(|c| if c.is_alphanumeric() { c.to_ascii_lowercase() } else { ' ' }).collect();
+    let words = format!(" {} ", text.split_whitespace().collect::<Vec<_>>().join(" "));
+    let mut found: Vec<Requirement> = Vec::new();
+    for (name, mod_id, url) in frameworks {
+        let needle: String = name.chars().map(|c| if c.is_alphanumeric() { c.to_ascii_lowercase() } else { ' ' }).collect();
+        let needle = format!(" {} ", needle.split_whitespace().collect::<Vec<_>>().join(" "));
+        if needle.trim().is_empty() || !words.contains(&needle) || found.iter().any(|item| item.name.eq_ignore_ascii_case(name)) { continue; }
+        found.push(Requirement {
+            name: name.clone(),
+            notes: "Citado na descrição da página; o autor não o declarou nos requisitos do Nexus. Confira antes de instalar.".into(),
+            kind: if *mod_id > 0 { "nexus" } else { "external" }.into(),
+            url: url.clone(),
+        });
+    }
+    found
+}
+async fn described_requirements(game_domain: &str, mod_id: u64) -> Vec<Requirement> {
+    let Ok(metadata) = query(format!("games/{game_domain}/mods/{mod_id}.json")).await else { return Vec::new() };
+    let description = metadata["description"].as_str().unwrap_or_default();
+    let mut frameworks = Vec::new();
+    for module in super::nexus_modules::registry().definitions.into_iter().filter(|m| m.domain == game_domain) {
+        for framework in module.frameworks {
+            // A mod never requires itself.
+            if framework.mod_id == mod_id && framework.mod_id > 0 { continue; }
+            let url = framework.url.clone().or_else(|| (framework.mod_id > 0).then(|| format!("https://www.nexusmods.com/{game_domain}/mods/{}", framework.mod_id)));
+            frameworks.push((framework.name.clone(), framework.mod_id, url.clone()));
+            if let Some(official) = framework.nexus_name.filter(|n| !n.eq_ignore_ascii_case(&framework.name)) { frameworks.push((official, framework.mod_id, url)); }
+        }
+    }
+    cited_requirements(description, &frameworks)
+}
 pub(super) async fn requirements_for_file(game_domain: &str, mod_id: u64, file_id: Option<u64>) -> Requirements {
     match fetch_requirements(game_domain, mod_id, file_id).await {
-        Ok(value) => value,
+        Ok(mut value) => {
+            if value.items.is_empty() && value.complete { value.items = described_requirements(game_domain, mod_id).await; }
+            value
+        }
         Err(error) => Requirements {
             items: Vec::new(),
             complete: false,
@@ -255,7 +302,8 @@ pub(super) async fn requirements_for_file(game_domain: &str, mod_id: u64, file_i
     }
 }
 fn safe_url(value: &str) -> Option<String> {
-    let url = reqwest::Url::parse(value).ok()?;
+    // Off-site links come HTML-escaped from the mod page (`&amp;t=1s`).
+    let url = reqwest::Url::parse(&value.replace("&amp;", "&")).ok()?;
     if !matches!(url.scheme(), "https" | "http")
         || url.host_str().is_none()
         || !url.username().is_empty()
@@ -264,6 +312,18 @@ fn safe_url(value: &str) -> Option<String> {
         return None;
     }
     Some(url.to_string())
+}
+/// Off-site "requirements" that are the author's guides, not downloads: Nexus
+/// articles, video sites, or a name saying tutorial or guide.
+fn guide(name: &str, url: Option<&str>) -> bool {
+    let name = name.to_lowercase();
+    let named = ["tutorial", "guide", "guia", "artigo", "article", "walkthrough", "passo a passo"].iter().any(|word| name.contains(word));
+    let linked = url.and_then(|url| reqwest::Url::parse(url).ok()).is_some_and(|url| {
+        let host = url.host_str().unwrap_or("").trim_start_matches("www.").trim_start_matches("m.").to_string();
+        ["youtube.com", "youtu.be", "vimeo.com", "twitch.tv"].contains(&host.as_str())
+            || host == "nexusmods.com" && ["/articles/", "/videos/", "/images/"].iter().any(|part| url.path().contains(part))
+    });
+    named || linked
 }
 async fn fetch_requirements(game_domain: &str, mod_id: u64, file_id: Option<u64>) -> Result<Requirements, String> {
     domain(game_domain)?;
@@ -339,7 +399,7 @@ async fn fetch_requirements(game_domain: &str, mod_id: u64, file_id: Option<u64>
     } else {
         None
     };
-    let mut items = Vec::new();
+    let (mut items, mut guides) = (Vec::new(), Vec::new());
     for node in nodes {
         let external = node["externalRequirement"]
             .as_bool()
@@ -369,6 +429,11 @@ async fn fetch_requirements(game_domain: &str, mod_id: u64, file_id: Option<u64>
                 .zip(target_mod)
                 .map(|(d, id)| format!("https://www.nexusmods.com/{d}/mods/{id}"))
         };
+        // Guides are listed after the requirements and never offered as a download.
+        if external && guide(&name, url.as_deref()) {
+            guides.push(Requirement { name, notes, kind: "guide".into(), url });
+            continue;
+        }
         items.push(Requirement {
             name,
             notes,
@@ -387,6 +452,7 @@ async fn fetch_requirements(game_domain: &str, mod_id: u64, file_id: Option<u64>
             url: None,
         });
     }
+    items.extend(guides);
     Ok(Requirements {
         items,
         complete: total == nodes.len() as u64,
@@ -515,5 +581,31 @@ mod requirements_tests {
         assert!(select_requirements_file(&files, None).is_err());
         assert_eq!(select_requirements_file(&files, Some(2)).unwrap(), 2);
         assert!(select_requirements_file(&files, Some(3)).is_err());
+    }
+}
+
+#[cfg(test)]
+mod cited_requirement_tests {
+    use super::*;
+    #[test]
+    fn author_guides_are_told_apart_from_offsite_downloads() {
+        // Fallout New Vegas 96075 lists an article and a video as requirements.
+        assert!(guide("ARTIGO TUTORIAL DE INSTALÇÃO", Some("https://www.nexusmods.com/newvegas/articles/56951")));
+        assert!(guide("VIDEO TUTORIAL DE INSTALAÇÃO", safe_url("https://www.youtube.com/watch?v=nhyyJQhkpn4&amp;t=1s").as_deref()));
+        assert_eq!(safe_url("https://www.youtube.com/watch?v=x&amp;t=1s").as_deref(), Some("https://www.youtube.com/watch?v=x&t=1s"));
+        assert!(guide("Setup", Some("https://youtu.be/abc")));
+        assert!(!guide("Microsoft Visual C++ Redistributable", Some("https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist")));
+        assert!(!guide("Script Extender", Some("https://www.nexusmods.com/newvegas/mods/67883")));
+    }
+    #[test]
+    fn requirements_written_only_in_the_description_are_cited() {
+        // Holy Hand Grenade (cyberpunk2077/mods/35079): requirements only in the text.
+        let text = "Requirements (tested on game version 2.31)\nCyber Engine Tweaks\nRED4ext\nredscript\nArchiveXL\nTweakXL\nCodeware\nAudioware - optional, for the \"Hallelujah\"";
+        let known: Vec<(String, u64, Option<String>)> = ["Cyber Engine Tweaks", "RED4ext", "Redscript", "ArchiveXL", "TweakXL", "Codeware", "Audioware", "RED4ext Loader"]
+            .iter().enumerate().map(|(i, name)| (name.to_string(), i as u64 + 1, None)).collect();
+        let names: Vec<String> = cited_requirements(text, &known).into_iter().map(|item| item.name).collect();
+        assert_eq!(names, ["Cyber Engine Tweaks", "RED4ext", "Redscript", "ArchiveXL", "TweakXL", "Codeware", "Audioware"]);
+        // Whole words only: "ArchiveXL" does not match inside another word.
+        assert!(cited_requirements("Uses NotArchiveXLPlus", &known).is_empty());
     }
 }

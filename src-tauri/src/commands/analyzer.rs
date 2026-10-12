@@ -4,7 +4,6 @@ use std::{
     io::{Read, Seek, SeekFrom},
     path::{Path, PathBuf},
 };
-use tauri::{AppHandle, Manager};
 use reqwest::Client;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -23,8 +22,8 @@ struct AnalysisCache {
     entries: std::collections::HashMap<String, GameAnalysisResult>,
 }
 
-fn load_cache(app: &AppHandle) -> AnalysisCache {
-    let cache_dir = app.path().app_local_data_dir().unwrap_or_else(|_| PathBuf::from("."));
+fn load_cache() -> AnalysisCache {
+    let cache_dir = crate::core::paths::app_root().unwrap_or_else(|_| PathBuf::from("."));
     let cache_file = cache_dir.join("analyzer_cache.json");
     if let Ok(data) = fs::read_to_string(cache_file) {
         if let Ok(cache) = serde_json::from_str(&data) {
@@ -34,8 +33,8 @@ fn load_cache(app: &AppHandle) -> AnalysisCache {
     AnalysisCache::default()
 }
 
-fn save_cache(app: &AppHandle, cache: &AnalysisCache) {
-    let cache_dir = app.path().app_local_data_dir().unwrap_or_else(|_| PathBuf::from("."));
+fn save_cache(cache: &AnalysisCache) {
+    let cache_dir = crate::core::paths::app_root().unwrap_or_else(|_| PathBuf::from("."));
     fs::create_dir_all(&cache_dir).ok();
     let cache_file = cache_dir.join("analyzer_cache.json");
     if let Ok(data) = serde_json::to_string(cache) {
@@ -45,12 +44,12 @@ fn save_cache(app: &AppHandle, cache: &AnalysisCache) {
 
 // A mod operation changes libraries on disk. Prevent an older in-flight query
 // from restoring a stale result, while retaining the other games' cache entries.
-pub(crate) fn invalidate_game(app: &AppHandle, path: &str) {
+pub(crate) fn invalidate_game(path: &str) {
     let mut generation = crate::core::game_info_cache::lock_generation();
     *generation = generation.wrapping_add(1);
-    let mut cache = load_cache(app);
+    let mut cache = load_cache();
     cache.entries.remove(path);
-    save_cache(app, &cache);
+    save_cache(&cache);
 }
 
 pub fn scan_directory_for_exe(dir: &Path) -> Option<PathBuf> {
@@ -200,14 +199,13 @@ async fn fetch_steam_graphics_api(app_id: Option<String>, name: String) -> Strin
 }
 
 #[tauri::command]
-pub async fn analyze_game(app: AppHandle, path: String, name: Option<String>, app_id: Option<String>) -> Result<GameAnalysisResult, String> {
+pub async fn analyze_game(path: String, name: Option<String>, app_id: Option<String>) -> Result<GameAnalysisResult, String> {
     let generation = *crate::core::game_info_cache::lock_generation();
-    let worker_app = app.clone();
     let worker_path = path.clone();
     let (mut result, cached, has_executable) = tauri::async_runtime::spawn_blocking(move || {
         let cache = {
             let _guard = crate::core::game_info_cache::lock_generation();
-            load_cache(&worker_app)
+            load_cache()
         };
         if let Some(cached) = cache.entries.get(&worker_path) {
             if cache.version == 1 && cached.upscalers.is_some() && cached.graphics_api != "Pesquisando..." && cached.graphics_api != "Verificando..." && cached.graphics_api != "Pesquisando API..." {
@@ -238,11 +236,11 @@ pub async fn analyze_game(app: AppHandle, path: String, name: Option<String>, ap
         // Merge with the latest file so a slower analysis does not erase newer results.
         let current_generation = crate::core::game_info_cache::lock_generation();
         if *current_generation != generation { return; }
-        let mut cache = load_cache(&app);
+        let mut cache = load_cache();
         if cache.version != 1 { cache.entries.clear(); }
         cache.version = 1;
         cache.entries.insert(path, saved_result);
-        save_cache(&app, &cache);
+        save_cache(&cache);
     }).await.map_err(|error| error.to_string())?;
     Ok(result)
 }

@@ -24,7 +24,7 @@
     {
       "domain": "cyberpunk2077",
       "name": "Cyberpunk 2077",
-      "module_version": "1.1.3",
+      "module_version": "1.1.4",
       "nexus_game_id": 3333,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -58,6 +58,16 @@
           "mod_id": 4197,
           "title": "TweakXL",
           "url": "https://www.nexusmods.com/cyberpunk2077/mods/4197"
+        },
+        {
+          "mod_id": 12001,
+          "title": "Audioware",
+          "url": "https://www.nexusmods.com/cyberpunk2077/mods/12001"
+        },
+        {
+          "mod_id": 7780,
+          "title": "Codeware",
+          "url": "https://www.nexusmods.com/cyberpunk2077/mods/7780"
         }
       ],
       "route_sample_kind": "synthetic_documented_layout",
@@ -81,6 +91,10 @@
         {
           "source": "engine/config/base/scripts.ini",
           "target": "engine/config/base/scripts.ini"
+        },
+        {
+          "source": "r6/audioware/holygrenade/audios.yml",
+          "target": "r6/audioware/holygrenade/audios.yml"
         }
       ],
       "findings": [
@@ -89,10 +103,9 @@
       ],
       "pending_checks": [
         "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
-        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família."
       ],
-      "runtime_verified": false,
+      "runtime_verified": true,
       "real_package_tests": [
         {
           "package": "Cyber Engine Tweaks — ZIP local contendo bin/x64/global.ini, version.dll e cyber_engine_tweaks.asi",
@@ -105,6 +118,22 @@
           "scope": "Cópias em diretório temporário: instalação dos dois frameworks, rollback, desativação do redscript mantendo CET, desativação do CET e preservação de arquivo externo.",
           "result": "passed",
           "game_runtime_verified": false
+        }
+      ],
+      "runtime_evidence": [
+        {
+          "date": "2026-10-11",
+          "platform": "Proton, deploy symlink",
+          "loader": "RED4ext 1.30.0, Cyber Engine Tweaks 1.37.1, redscript 0.5.31, ArchiveXL 1.27.4, TweakXL 1.11.4, Codeware 1.20.5, Audioware 1.9.9 (todos instalados pelo PeliGames)",
+          "mods": [
+            "Holy Hand Grenade (Nexus 35079): log do mod com 'holygrenade loaded', item Items.HolyHandGrenade encontrado pelo TweakXL, ganchos de projétil e veículo instalados, item entregue ao inventário; Audioware inicializado sem erros."
+          ],
+          "confirmation": "Usuário viu o mod ativo no menu; o log confirma o carregamento.",
+          "findings": [
+            "Requisitos do mod estavam só no texto da página; o PeliGames passou a citá-los a partir da descrição.",
+            "r6/audioware passou a ser instalado (antes o pacote seria recusado)."
+          ],
+          "game_build": "Steam buildid 20383525"
         }
       ]
     },
@@ -140,35 +169,59 @@
       "findings": [],
       "pending_checks": [
         "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
-        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família."
       ],
-      "runtime_verified": false
+      "runtime_verified": true,
+      "runtime_evidence": [
+        {
+          "date": "2026-10-11",
+          "game_build": "Stardew Valley 1.6.15 build 24356",
+          "platform": "Proton Experimental (11.0 bleeding-edge), deploy copy",
+          "loader": "SMAPI 4.5.2 (instalado como mod pelo PeliGames)",
+          "mods": [
+            "Content Patcher 2.9.1, Farm Type Manager 1.26.1 e Stardew Valley Expanded 1.15.11 (código + pacotes [CP] e [FTM]): 5 mods carregados; verificador do SVE sem dependências ausentes; 803 edições do Content Patcher aplicadas; save novo criado e carregado sem erros."
+          ],
+          "confirmation": "Jogo aberto pelo usuário com o save do SVE.",
+          "findings": [
+            "Corrigido no PeliGames: conferência dos 2164 arquivos ao iniciar levava ~58 s (identificação do jogo repetida por arquivo); agora ~0,33 s.",
+            "Sobra de mod removido (Mods/NPCMapLocations/config.json, gerado pelo próprio mod) faz o SMAPI registrar 'Skipped mods'; o PeliGames não apaga arquivos que não instalou."
+          ]
+        }
+      ]
     },
     {
       "domain": "readyornot",
       "name": "Ready or Not",
-      "module_version": "1.0.0",
+      "module_version": "1.1.1",
       "nexus_game_id": 4205,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://www.nexusmods.com/site/mods/342"
+        "https://www.nexusmods.com/site/mods/342",
+        "https://github.com/BeYkeRYkt/vortex_readyornot_extension/blob/e6375a56a9b0d80d990b795bf3e0e959ad64ad3b/index.js"
       ],
-      "extension_code_compared": false,
+      "extension_code_compared": true,
       "framework_ids_checked": [],
       "route_sample_kind": "synthetic_documented_layout",
       "route_cases": [
         {
           "source": "Example_P.pak",
-          "target": "ReadyOrNot/Content/Paks/Example_P.pak"
+          "target": "ReadyOrNot/Content/Paks/~mods/Example_P.pak"
         },
         {
           "source": "Example_P.utoc",
-          "target": "ReadyOrNot/Content/Paks/Example_P.utoc"
+          "target": "ReadyOrNot/Content/Paks/~mods/Example_P.utoc"
         },
         {
           "source": "Example_P.ucas",
-          "target": "ReadyOrNot/Content/Paks/Example_P.ucas"
+          "target": "ReadyOrNot/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "MyMod_P.pak",
+          "target": "ReadyOrNot/Content/Paks/~mods/MyMod_P.pak"
+        },
+        {
+          "source": "VO_MOD/swat/line.ogg",
+          "target": "ReadyOrNot/Content/VO_MOD/swat/line.ogg"
         }
       ],
       "findings": [
@@ -180,12 +233,24 @@
         "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
         "Execução no jogo real com versão do jogo, loader e Proton registradas."
       ],
-      "runtime_verified": false
+      "runtime_verified": false,
+      "vortex_comparison": {
+        "reviewed_at": "2026-10-11",
+        "differences": [
+          "Igual: .pak/.utoc/.ucas em Content/Paks/~mods.",
+          "Vortex: tipos FMOD (Content/FMOD/Desktop), Movies, VO_MOD, configs e saves em LocalAppData (Saved/Config/Windows, Saved/SaveGames), binários; PeliGames não.",
+          "Vortex: ordem de carga de paks por perfil; PeliGames usa só a prioridade da lista de mods."
+        ],
+        "status_after_review": [
+          "Implementado: paks soltos em Content/Paks/~mods; VO_MOD, FMOD e Movies quando não substituem arquivos originais.",
+          "Pendente: substituição de bancos de áudio/vídeos originais (o PeliGames não sobrescreve arquivos que não instalou), configs/saves em LocalAppData e ordem de carga de paks."
+        ]
+      }
     },
     {
       "domain": "hogwartslegacy",
       "name": "Hogwarts Legacy",
-      "module_version": "1.1.0",
+      "module_version": "1.2.0",
       "nexus_game_id": 5113,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -344,7 +409,7 @@
       "vortex_evidence": [
         "https://www.nexusmods.com/site/mods/325"
       ],
-      "extension_code_compared": false,
+      "extension_code_compared": true,
       "framework_ids_checked": [],
       "route_sample_kind": "synthetic_documented_layout",
       "route_cases": [
@@ -370,12 +435,19 @@
         "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
         "Execução no jogo real com versão do jogo, loader e Proton registradas."
       ],
-      "runtime_verified": false
+      "runtime_verified": false,
+      "vortex_comparison": {
+        "reviewed_at": "2026-10-11",
+        "source": "Comparado em 2026-10-11 com o pacote publicado no Nexus (download manual pelo usuário): Final Fantasy 7 Remake support 1.1.2 (site/mods/325)",
+        "differences": [
+          "Igual: paks em End/Content/Paks/~mods; a extensão também detecta a edição Epic (o PeliGames identifica pela pasta)."
+        ]
+      }
     },
     {
       "domain": "finalfantasy7rebirth",
       "name": "Final Fantasy VII Rebirth",
-      "module_version": "1.1.0",
+      "module_version": "1.3.0",
       "nexus_game_id": 7237,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -527,7 +599,7 @@
     {
       "domain": "monsterhunterrise",
       "name": "Monster Hunter Rise",
-      "module_version": "1.1.0",
+      "module_version": "1.1.1",
       "nexus_game_id": 4095,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -565,7 +637,7 @@
     {
       "domain": "monsterhunterwilds",
       "name": "Monster Hunter Wilds",
-      "module_version": "1.1.0",
+      "module_version": "1.1.1",
       "nexus_game_id": 6993,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -603,7 +675,7 @@
     {
       "domain": "residentevil22019",
       "name": "Resident Evil 2 (2019)",
-      "module_version": "1.1.0",
+      "module_version": "1.1.1",
       "nexus_game_id": 2702,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -641,7 +713,7 @@
     {
       "domain": "residentevil32020",
       "name": "Resident Evil 3 (2020)",
-      "module_version": "1.1.0",
+      "module_version": "1.1.1",
       "nexus_game_id": 3191,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -679,7 +751,7 @@
     {
       "domain": "residentevil42023",
       "name": "Resident Evil 4 (2023)",
-      "module_version": "1.1.0",
+      "module_version": "1.1.1",
       "nexus_game_id": 5195,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -717,7 +789,7 @@
     {
       "domain": "residentevilvillage",
       "name": "Resident Evil Village",
-      "module_version": "1.1.0",
+      "module_version": "1.1.1",
       "nexus_game_id": 3669,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -755,7 +827,7 @@
     {
       "domain": "devilmaycry5",
       "name": "Devil May Cry 5",
-      "module_version": "1.1.0",
+      "module_version": "1.1.1",
       "nexus_game_id": 2751,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -793,7 +865,7 @@
     {
       "domain": "dragonsdogma2",
       "name": "Dragon's Dogma 2",
-      "module_version": "1.1.0",
+      "module_version": "1.1.1",
       "nexus_game_id": 6234,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -831,7 +903,7 @@
     {
       "domain": "streetfighter6",
       "name": "Street Fighter 6",
-      "module_version": "1.1.0",
+      "module_version": "1.1.1",
       "nexus_game_id": 5329,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -869,7 +941,7 @@
     {
       "domain": "residentevilrequiem",
       "name": "Resident Evil Requiem",
-      "module_version": "1.1.0",
+      "module_version": "1.1.1",
       "nexus_game_id": 8863,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -907,13 +979,14 @@
     {
       "domain": "subnautica",
       "name": "Subnautica",
-      "module_version": "1.1.0",
+      "module_version": "1.2.1",
       "nexus_game_id": 1155,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://www.nexusmods.com/site/mods/202"
+        "https://www.nexusmods.com/site/mods/202",
+        "https://github.com/toebeann/subnautica-support/blob/f78e96803c5ca65b2d277bc4cff0965847673671/src/index.ts"
       ],
-      "extension_code_compared": false,
+      "extension_code_compared": true,
       "framework_ids_checked": [],
       "route_sample_kind": "synthetic_documented_layout",
       "route_cases": [
@@ -928,6 +1001,14 @@
         {
           "source": "BepInEx/config/Example.cfg",
           "target": "BepInEx/config/Example.cfg"
+        },
+        {
+          "source": "CustomPosters/Posters/MyPoster/info.json",
+          "target": "BepInEx/plugins/CustomPosters/Posters/MyPoster/info.json"
+        },
+        {
+          "source": "CustomCraft2SML/WorkingFiles/recipes.txt",
+          "target": "BepInEx/plugins/CustomCraft2SML/WorkingFiles/recipes.txt"
         }
       ],
       "findings": [
@@ -942,18 +1023,32 @@
         "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
         "Execução no jogo real com versão do jogo, loader e Proton registradas."
       ],
-      "runtime_verified": false
+      "runtime_verified": false,
+      "vortex_comparison": {
+        "reviewed_at": "2026-10-11",
+        "differences": [
+          "Vortex: BepInEx 5 e 6, plugins, patchers e pacotes mistos; PeliGames: família Unity com BepInEx (equivalente).",
+          "Vortex: QModManager 4 e mods em QMods/ (ramo legacy do jogo); PeliGames recusa QMods/ (ramo atual usa BepInEx/Nautilus).",
+          "Vortex: pacotes de conteúdo CustomCraft2, CustomHullPlates e CustomPosters (incluindo addon packs do MrPurple6411); PeliGames não reconhece pacotes sem DLL nessas estruturas.",
+          "Vortex: avisa mudança de ramo (legacy/stable); PeliGames não."
+        ],
+        "status_after_review": [
+          "Implementado: CustomCraft2SML, CustomPosters e CustomHullPlates em BepInEx/plugins.",
+          "Pendente: pacotes soltos de pôsteres/placas (sem a pasta do plugin) e QModManager/QMods (ramo legacy, recusado de propósito)."
+        ]
+      }
     },
     {
       "domain": "subnauticabelowzero",
       "name": "Subnautica: Below Zero",
-      "module_version": "1.1.0",
+      "module_version": "1.2.1",
       "nexus_game_id": 2706,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://www.nexusmods.com/site/mods/203"
+        "https://www.nexusmods.com/site/mods/203",
+        "https://github.com/toebeann/subnautica-below-zero-support/blob/0708eb6a82a2979bf65b7ed1f60c1bf8b6d8bfdf/src/index.ts"
       ],
-      "extension_code_compared": false,
+      "extension_code_compared": true,
       "framework_ids_checked": [],
       "route_sample_kind": "synthetic_documented_layout",
       "route_cases": [
@@ -968,6 +1063,10 @@
         {
           "source": "BepInEx/config/Example.cfg",
           "target": "BepInEx/config/Example.cfg"
+        },
+        {
+          "source": "CustomHullPlates/HullPlates/Plate/icon.png",
+          "target": "BepInEx/plugins/CustomHullPlates/HullPlates/Plate/icon.png"
         }
       ],
       "findings": [
@@ -982,18 +1081,28 @@
         "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
         "Execução no jogo real com versão do jogo, loader e Proton registradas."
       ],
-      "runtime_verified": false
+      "runtime_verified": false,
+      "vortex_comparison": {
+        "reviewed_at": "2026-10-11",
+        "differences": [
+          "Mesma estrutura da extensão do Subnautica: QModManager/QMods recusados no PeliGames; pacotes CustomCraft2/HullPlates/Posters não reconhecidos."
+        ],
+        "status_after_review": [
+          "Implementado: CustomCraft2SML, CustomPosters e CustomHullPlates em BepInEx/plugins.",
+          "Pendente: pacotes soltos e QMods (ramo legacy)."
+        ]
+      }
     },
     {
       "domain": "tcgcardshopsimulator",
       "name": "TCG Card Shop Simulator",
-      "module_version": "1.1.0",
+      "module_version": "1.1.1",
       "nexus_game_id": 6826,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://www.nexusmods.com/site/mods/1058"
       ],
-      "extension_code_compared": false,
+      "extension_code_compared": true,
       "framework_ids_checked": [],
       "route_sample_kind": "synthetic_documented_layout",
       "route_cases": [
@@ -1022,18 +1131,27 @@
         "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
         "Execução no jogo real com versão do jogo, loader e Proton registradas."
       ],
-      "runtime_verified": false
+      "runtime_verified": false,
+      "vortex_comparison": {
+        "reviewed_at": "2026-10-11",
+        "source": "Comparado em 2026-10-11 com o pacote publicado no Nexus (download manual pelo usuário): TCG Card Simulator Extension 1.4.3 (site/mods/1058)",
+        "differences": [
+          "Igual: usa o tipo BepInEx padrão do Vortex; o PeliGames usa a família Unity com BepInEx.",
+          "Diferente: a extensão baixa o BepInEx automaticamente; o PeliGames exige instalá-lo como mod."
+        ]
+      }
     },
     {
       "domain": "supermarketsimulator",
       "name": "Supermarket Simulator",
-      "module_version": "1.1.0",
+      "module_version": "1.2.1",
       "nexus_game_id": 6225,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://www.nexusmods.com/site/mods/942"
+        "https://www.nexusmods.com/site/mods/942",
+        "https://github.com/Senjay-id/Supermarket-Simulator-Vortex-Extension/blob/3afba2d161d55918610ad37222a9b372673352ec/index.js"
       ],
-      "extension_code_compared": false,
+      "extension_code_compared": true,
       "framework_ids_checked": [],
       "route_sample_kind": "synthetic_documented_layout",
       "route_cases": [
@@ -1048,6 +1166,18 @@
         {
           "source": "BepInEx/config/Example.cfg",
           "target": "BepInEx/config/Example.cfg"
+        },
+        {
+          "source": "objects_textures/shelf.png",
+          "target": "BepInEx/plugins/TextureReplacer/objects_textures/shelf.png"
+        },
+        {
+          "source": "TextureReplacer/products_icons/milk.png",
+          "target": "BepInEx/plugins/TextureReplacer/products_icons/milk.png"
+        },
+        {
+          "source": "MyProducts/products.json",
+          "target": "BepInEx/plugins/MoreProducts/MyProducts/products.json"
         }
       ],
       "findings": [
@@ -1062,7 +1192,18 @@
         "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
         "Execução no jogo real com versão do jogo, loader e Proton registradas."
       ],
-      "runtime_verified": false
+      "runtime_verified": false,
+      "vortex_comparison": {
+        "reviewed_at": "2026-10-11",
+        "differences": [
+          "Vortex: aceita mods BepInEx e MelonLoader; PeliGames só BepInEx (módulo restrito a um carregador).",
+          "Vortex: instaladores próprios para TextureReplacer (BepInEx/plugins/texturereplacer) e MoreProducts (BepInEx/plugins/moreproducts), pacotes sem DLL; PeliGames não os reconhece.",
+          "Igual: plugins, patchers e config do BepInEx."
+        ],
+        "status_after_review": [
+          "Implementado: MelonLoader além de BepInEx; TextureReplacer e MoreProducts (products.json)."
+        ]
+      }
     },
     {
       "domain": "7daystodie",
@@ -1165,14 +1306,17 @@
     {
       "domain": "mountandblade2bannerlord",
       "name": "Mount & Blade II: Bannerlord",
-      "module_version": "1.0.0",
+      "module_version": "1.1.0",
       "nexus_game_id": 3174,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://www.nexusmods.com/site/mods/875"
+        "https://www.nexusmods.com/site/mods/875",
+        "https://github.com/BUTR/game-mount-and-blade2/blob/68f066424877a09e258f7c93c201919c5a2f6eef/src/index.ts"
       ],
-      "extension_code_compared": false,
-      "framework_ids_checked": [],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        1
+      ],
       "route_sample_kind": "synthetic_documented_layout",
       "route_cases": [
         {
@@ -1182,6 +1326,10 @@
         {
           "source": "Example/assets/config.json",
           "target": "Modules/Example/assets/config.json"
+        },
+        {
+          "source": "bin/Win64_Shipping_Client/Bannerlord.BLSE.Launcher.exe",
+          "target": "bin/Win64_Shipping_Client/Bannerlord.BLSE.Launcher.exe"
         }
       ],
       "findings": [
@@ -1193,7 +1341,20 @@
         "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
         "Execução no jogo real com versão do jogo, loader e Proton registradas."
       ],
-      "runtime_verified": false
+      "runtime_verified": false,
+      "vortex_comparison": {
+        "reviewed_at": "2026-10-11",
+        "differences": [
+          "Vortex: instala e inicia pelo BLSE (Bannerlord Software Extender); PeliGames não.",
+          "Vortex: gerencia ordem e ativação de módulos (LauncherData.xml) com ordenação por dependências do SubModule.xml; PeliGames deixa a ordem para o launcher do jogo.",
+          "Vortex: coleções com ordem de carga, opções de mods e checagem de saves; PeliGames não.",
+          "Igual: módulos com SubModule.xml vão para Modules/."
+        ],
+        "status_after_review": [
+          "Implementado: BLSE instalado em bin/Win64_Shipping_Client e Iniciar com mods pelo Bannerlord.BLSE.Launcher.exe.",
+          "Pendente: ordenação automática de módulos por dependências (LauncherManager do BUTR), coleções com ordem de carga, opções de mods e checagem de saves."
+        ]
+      }
     },
     {
       "domain": "darkestdungeon",
@@ -1294,7 +1455,7 @@
     {
       "domain": "monsterhunterworld",
       "name": "Monster Hunter: World",
-      "module_version": "1.0.0",
+      "module_version": "1.0.1",
       "nexus_game_id": 2531,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -1358,7 +1519,7 @@
     {
       "domain": "witcher",
       "name": "The Witcher",
-      "module_version": "1.0.0",
+      "module_version": "1.1.0",
       "nexus_game_id": 150,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -1436,7 +1597,7 @@
     {
       "domain": "skyrimspecialedition",
       "name": "Skyrim Special Edition",
-      "module_version": "1.1.0",
+      "module_version": "1.2.2",
       "nexus_game_id": 1704,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -1463,6 +1624,10 @@
         {
           "source": "skse64_2_00_00/skse64_1_0_0.dll",
           "target": "skse64_1_0_0.dll"
+        },
+        {
+          "source": "CBBE/CalienteTools/BodySlide/SliderGroups/CBBE.xml",
+          "target": "Data/CalienteTools/BodySlide/SliderGroups/CBBE.xml"
         }
       ],
       "findings": [
@@ -1479,7 +1644,7 @@
     {
       "domain": "skyrimspecialedition",
       "name": "Skyrim VR",
-      "module_version": "1.0.0",
+      "module_version": "1.1.2",
       "nexus_game_id": 1704,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -1525,7 +1690,7 @@
     {
       "domain": "enderalspecialedition",
       "name": "Enderal Special Edition",
-      "module_version": "1.0.0",
+      "module_version": "1.1.2",
       "nexus_game_id": 3685,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -1567,7 +1732,7 @@
     {
       "domain": "skyrim",
       "name": "Skyrim",
-      "module_version": "1.1.0",
+      "module_version": "1.2.2",
       "nexus_game_id": 110,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -1610,7 +1775,7 @@
     {
       "domain": "enderal",
       "name": "Enderal",
-      "module_version": "1.0.0",
+      "module_version": "1.1.2",
       "nexus_game_id": 2736,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -1653,7 +1818,7 @@
     {
       "domain": "fallout4",
       "name": "Fallout 4",
-      "module_version": "1.1.0",
+      "module_version": "1.2.2",
       "nexus_game_id": 1151,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -1681,6 +1846,10 @@
         {
           "source": "f4se_2_00_00/f4se_1_0_0.dll",
           "target": "f4se_1_0_0.dll"
+        },
+        {
+          "source": "AWKCR v9.2.1/MCM/Config/ArmorKeywords/config.json",
+          "target": "Data/MCM/Config/ArmorKeywords/config.json"
         }
       ],
       "findings": [
@@ -1697,7 +1866,7 @@
     {
       "domain": "fallout4",
       "name": "Fallout 4 VR",
-      "module_version": "1.0.0",
+      "module_version": "1.1.2",
       "nexus_game_id": 1151,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -1743,7 +1912,7 @@
     {
       "domain": "newvegas",
       "name": "Fallout New Vegas",
-      "module_version": "1.1.0",
+      "module_version": "1.2.2",
       "nexus_game_id": 130,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -1770,6 +1939,10 @@
         {
           "source": "nvse_2_00_00/nvse_1_0_0.dll",
           "target": "nvse_1_0_0.dll"
+        },
+        {
+          "source": "uio/settings.ini",
+          "target": "Data/uio/settings.ini"
         }
       ],
       "findings": [
@@ -1781,12 +1954,28 @@
         "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
         "Execução no jogo real com versão do jogo, loader e Proton registradas."
       ],
-      "runtime_verified": false
+      "runtime_verified": true,
+      "runtime_evidence": [
+        {
+          "date": "2026-10-11",
+          "game_build": "FalloutNV.exe 1.4.0.525",
+          "platform": "GE-Proton11-7 no prefixo do Heroic, deploy copy",
+          "loader": "xNVSE 6.4.9 (instalado como mod pelo PeliGames), lançado por nvse_loader.exe",
+          "mods": [
+            "Yukichigai Unofficial Patch (YUP), Fallout New Vegas Tradução Definitiva PT-BR (mod 96075, instalador FOMOD com todas as etapas) e The Mod Configuration Menu: 25 plugins em plugins.txt, masters de todos os .esp presentes e carregados antes; nvse.log com init complete."
+          ],
+          "confirmation": "Jogo aberto pelo usuário com os mods ativos.",
+          "findings": [
+            "Corrigido no PeliGames: masters() não lia o subregistro XXXX (ONAM maior que 65535 bytes do YUP).",
+            "Requisitos do Nexus: artigo e vídeo de tutorial cadastrados como requisitos externos agora aparecem como Guia do autor."
+          ]
+        }
+      ]
     },
     {
       "domain": "fallout3",
       "name": "Fallout 3",
-      "module_version": "1.1.0",
+      "module_version": "1.2.2",
       "nexus_game_id": 120,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -1829,7 +2018,7 @@
     {
       "domain": "oblivion",
       "name": "Oblivion",
-      "module_version": "1.1.0",
+      "module_version": "1.2.2",
       "nexus_game_id": 101,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -1872,7 +2061,7 @@
     {
       "domain": "starfield",
       "name": "Starfield",
-      "module_version": "1.1.0",
+      "module_version": "1.2.1",
       "nexus_game_id": 4187,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -1953,7 +2142,7 @@
       "vortex_evidence": [
         "https://www.nexusmods.com/site/mods/501"
       ],
-      "extension_code_compared": false,
+      "extension_code_compared": true,
       "framework_ids_checked": [],
       "route_sample_kind": "synthetic_documented_layout",
       "route_cases": [
@@ -1979,12 +2168,19 @@
         "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
         "Execução no jogo real com versão do jogo, loader e Proton registradas."
       ],
-      "runtime_verified": false
+      "runtime_verified": false,
+      "vortex_comparison": {
+        "reviewed_at": "2026-10-11",
+        "source": "Comparado em 2026-10-11 com o pacote publicado no Nexus (download manual pelo usuário): Crisis Core Final Fantasy VII Reunion Vortex Extension 1.0.0 (site/mods/501, arquivo de 2022-12-25)",
+        "differences": [
+          "Igual: paks em CCFF7R/Content/Paks/~mods (família Unreal sem UE4SS)."
+        ]
+      }
     },
     {
       "domain": "finalfantasy16",
       "name": "Final Fantasy XVI",
-      "module_version": "1.0.0",
+      "module_version": "1.1.0",
       "nexus_game_id": 6815,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -2015,7 +2211,7 @@
     {
       "domain": "finalfantasytacticstheivalicechronicles",
       "name": "Final Fantasy Tactics The Ivalice Chronicles",
-      "module_version": "1.0.0",
+      "module_version": "1.1.0",
       "nexus_game_id": 8229,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -2052,7 +2248,7 @@
       "vortex_evidence": [
         "https://www.nexusmods.com/site/mods/406"
       ],
-      "extension_code_compared": false,
+      "extension_code_compared": true,
       "framework_ids_checked": [],
       "route_sample_kind": "synthetic_documented_layout",
       "route_cases": [
@@ -2072,12 +2268,19 @@
         "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
         "Execução no jogo real com versão do jogo, loader e Proton registradas."
       ],
-      "runtime_verified": false
+      "runtime_verified": false,
+      "vortex_comparison": {
+        "reviewed_at": "2026-10-11",
+        "source": "Comparado em 2026-10-11 com o pacote publicado no Nexus (download manual pelo usuário): Vortex Extension - Final Fantasy IX 0.1.0 (site/mods/406)",
+        "differences": [
+          "A extensão só detecta o jogo e copia na raiz; o PeliGames instala pacotes Memoria (ModDescription.xml) e os ativa no Memoria.ini."
+        ]
+      }
     },
     {
       "domain": "baldursgate3",
       "name": "Baldur’s Gate 3",
-      "module_version": "1.0.0",
+      "module_version": "1.2.0",
       "nexus_game_id": 3474,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -2094,6 +2297,22 @@
         {
           "source": "Data/Public/Example/file.lsx",
           "target": "Data/Public/Example/file.lsx"
+        },
+        {
+          "source": "Script Extender/ScriptExtenderSettings.json",
+          "target": "@local/Larian Studios/Baldur's Gate 3/Script Extender/ScriptExtenderSettings.json"
+        },
+        {
+          "source": "Mod/bin/NativeMods/Example.dll",
+          "target": "bin/NativeMods/Example.dll"
+        },
+        {
+          "source": "Public/Example/file.lsx",
+          "target": "Data/Public/Example/file.lsx"
+        },
+        {
+          "source": "DWrite.dll",
+          "target": "bin/DWrite.dll"
         }
       ],
       "findings": [],
@@ -2107,7 +2326,7 @@
     {
       "domain": "dragonage",
       "name": "Dragon Age Origins",
-      "module_version": "1.0.0",
+      "module_version": "1.1.0",
       "nexus_game_id": 140,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -2133,7 +2352,7 @@
     {
       "domain": "witcher3",
       "name": "The Witcher 3 Wild Hunt",
-      "module_version": "1.0.0",
+      "module_version": "1.1.0",
       "nexus_game_id": 952,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -2150,6 +2369,10 @@
         {
           "source": "DLC/dlcExample/content/file.bundle",
           "target": "DLC/dlcExample/content/file.bundle"
+        },
+        {
+          "source": "HD Reworked/bin/config/base/rendering.ini",
+          "target": "bin/config/base/rendering.ini"
         }
       ],
       "findings": [],
@@ -2163,7 +2386,7 @@
     {
       "domain": "reddeadredemption2",
       "name": "Red Dead Redemption 2",
-      "module_version": "1.0.0",
+      "module_version": "1.0.1",
       "nexus_game_id": 3024,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -2194,13 +2417,14 @@
     {
       "domain": "eldenring",
       "name": "Elden Ring",
-      "module_version": "1.0.0",
+      "module_version": "1.1.1",
       "nexus_game_id": 4333,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://www.nexusmods.com/site/mods/370"
+        "https://www.nexusmods.com/site/mods/370",
+        "https://github.com/Senjay-id/eldenring-vortex-extension/blob/47631fca282607fc6c7eaa834d2dbae36e985179/src/index.ts"
       ],
-      "extension_code_compared": false,
+      "extension_code_compared": true,
       "framework_ids_checked": [],
       "route_sample_kind": "synthetic_documented_layout",
       "route_cases": [
@@ -2211,6 +2435,14 @@
         {
           "source": "regulation.bin",
           "target": "Game/mod/regulation.bin"
+        },
+        {
+          "source": "Game/SeamlessCoop/ersc.dll",
+          "target": "Game/SeamlessCoop/ersc.dll"
+        },
+        {
+          "source": "Game/ersc_launcher.exe",
+          "target": "Game/ersc_launcher.exe"
         }
       ],
       "findings": [],
@@ -2220,12 +2452,25 @@
         "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
         "Execução no jogo real com versão do jogo, loader e Proton registradas."
       ],
-      "runtime_verified": false
+      "runtime_verified": false,
+      "vortex_comparison": {
+        "reviewed_at": "2026-10-11",
+        "differences": [
+          "Igual: mods de dados pelo Mod Engine 2 e DLLs pelo Elden Mod Loader (game/mods).",
+          "Diferente: Vortex usa game/modengine2/mod e config_eldenring.toml com ordem de carga de DLLs do ME2; PeliGames usa modengine2_launcher.exe na raiz e Game/mod, com toml próprio.",
+          "Vortex: instalador e ferramenta para Seamless Co-op; PeliGames não.",
+          "Vortex: aviso para pacotes com executáveis; PeliGames recusa executáveis desconhecidos."
+        ],
+        "status_after_review": [
+          "Implementado: Seamless Co-op (Game/ersc_launcher.exe e Game/SeamlessCoop) com ferramenta própria.",
+          "Diferente: o Mod Engine 2 fica na raiz (Vortex: game/modengine2) e não há ordem de carga de DLLs do ME2."
+        ]
+      }
     },
     {
       "domain": "marvelrivals",
       "name": "Marvel Rivals",
-      "module_version": "1.1.0",
+      "module_version": "1.1.1",
       "nexus_game_id": 7106,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -2262,7 +2507,7 @@
     {
       "domain": "dragonage2",
       "name": "Dragon Age 2",
-      "module_version": "1.0.0",
+      "module_version": "1.1.0",
       "nexus_game_id": 141,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -2318,13 +2563,13 @@
     {
       "domain": "mysummercar",
       "name": "My Summer Car",
-      "module_version": "1.0.0",
+      "module_version": "1.1.0",
       "nexus_game_id": 2600,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://www.nexusmods.com/site/mods/294"
       ],
-      "extension_code_compared": false,
+      "extension_code_compared": true,
       "framework_ids_checked": [],
       "route_sample_kind": "synthetic_documented_layout",
       "route_cases": [
@@ -2335,6 +2580,10 @@
         {
           "source": "Assets/Example/config.json",
           "target": "@msc/Assets/Example/config.json"
+        },
+        {
+          "source": "VehicleTextureSwap/car_paint.png",
+          "target": "Images/VehicleTextureSwap/car_paint.png"
         }
       ],
       "findings": [],
@@ -2344,7 +2593,15 @@
         "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
         "Execução no jogo real com versão do jogo, loader e Proton registradas."
       ],
-      "runtime_verified": false
+      "runtime_verified": false,
+      "vortex_comparison": {
+        "reviewed_at": "2026-10-11",
+        "source": "Comparado em 2026-10-11 com o pacote publicado no Nexus (download manual pelo usuário): My Summer Car Support 1.0.1 (site/mods/294)",
+        "differences": [
+          "Igual: DLLs com Assets/References na pasta de mods do MSCLoader (o PeliGames segue a pasta configurada no doorstop_config.ini).",
+          "Implementado: VehicleTextureSwap em Images/VehicleTextureSwap."
+        ]
+      }
     },
     {
       "domain": "helldivers2",
@@ -2380,7 +2637,7 @@
     {
       "domain": "oblivionremastered",
       "name": "Oblivion Remastered",
-      "module_version": "1.0.0",
+      "module_version": "1.1.0",
       "nexus_game_id": 7587,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -2393,6 +2650,11 @@
           "mod_id": 32,
           "title": "UE4SS for OblivionRemastered",
           "url": "https://www.nexusmods.com/oblivionremastered/mods/32"
+        },
+        {
+          "mod_id": 282,
+          "title": "Oblivion Remastered Script Extender (OBSE64)",
+          "url": "https://www.nexusmods.com/oblivionremastered/mods/282"
         }
       ],
       "route_sample_kind": "synthetic_documented_layout",
@@ -2512,13 +2774,13 @@
     {
       "domain": "repo",
       "name": "R.E.P.O.",
-      "module_version": "1.1.0",
+      "module_version": "1.2.0",
       "nexus_game_id": 7398,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://www.nexusmods.com/site/mods/1218"
       ],
-      "extension_code_compared": false,
+      "extension_code_compared": true,
       "framework_ids_checked": [],
       "route_sample_kind": "synthetic_documented_layout",
       "route_cases": [
@@ -2544,10 +2806,32 @@
       "pending_checks": [
         "Comparação detalhada do código da extensão publicada; nesta revisão foram conferidos cadastro oficial e documentação disponíveis.",
         "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
-        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família."
       ],
-      "runtime_verified": false
+      "runtime_verified": true,
+      "vortex_comparison": {
+        "reviewed_at": "2026-10-11",
+        "source": "Comparado em 2026-10-11 com o pacote publicado no Nexus (download manual pelo usuário): R.E.P.O. Vortex Extension 1.0.1 (site/mods/1218)",
+        "differences": [
+          "Implementado: MelonLoader além de BepInEx, com DLLs classificadas pela referência ao carregador (como a extensão).",
+          "Diferente: a extensão baixa BepInEx/MelonLoader do GitHub automaticamente; o PeliGames exige instalá-los como mod."
+        ]
+      },
+      "runtime_evidence": [
+        {
+          "date": "2026-10-11",
+          "game_build": "Steam buildid 23363152 (jogo 0.1, ce995a182ddc)",
+          "platform": "Proton Experimental (experimental-bleeding-edge-11.0-450256-20261010-pb94341-w981e2f-d71ec7b-v223075-x86_64), deploy copy",
+          "loader": "BepInEx 5.4.23.5 (Mono, winhttp/doorstop)",
+          "mods": [
+            "R.E.P.O - Trainer 3.0.1 (Nexus 190): carregado pelo Chainloader; o mod reportou 'Assembly compatibility: OK', 54 recursos verificados, rede Solo."
+          ],
+          "confirmation": "Usuário confirmou o mod funcionando no jogo.",
+          "findings": [
+            "Teste feito em modo solo; mods de trapaça não devem ser usados em salas públicas."
+          ]
+        }
+      ]
     },
     {
       "domain": "valheim",
@@ -2589,7 +2873,7 @@
     {
       "domain": "palworld",
       "name": "Palworld",
-      "module_version": "1.2.0",
+      "module_version": "1.2.1",
       "nexus_game_id": 6063,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -2618,10 +2902,27 @@
       ],
       "pending_checks": [
         "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
-        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+        "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família."
       ],
-      "runtime_verified": false
+      "runtime_verified": true,
+      "runtime_evidence": [
+        {
+          "date": "2026-10-11",
+          "game_build": "Steam buildid 25246127",
+          "platform": "Proton (GE-Proton11-7), deploy copy",
+          "loader": "RE-UE4SS experimental-palworld (v3.0.1 Beta, Git SHA ba2efd55), layout ue4ss/, importado como pacote local",
+          "mods": [
+            "Pal Insight 2.6.0 (Nexus 4638, arquivo 25542): DLL C++ e script Lua iniciados sem erro; parte Blueprint PalInsightX carregada pelo BPModLoaderMod",
+            "Pal Insight - Quick Stack 1.5.2 (Nexus 5474) e Pal Insight - Breeding Link 1.0.3 (Nexus 5566): scripts Lua iniciados sem erro (atalhos F5 e F8 registrados), instalados em ue4ss/Mods ao lado do Pal Insight."
+          ],
+          "confirmation": "Usuário abriu as configurações do mod com F6 no jogo.",
+          "findings": [
+            "Com UE4SS 3.0.1 estável (layout plano), o Pal Insight 2.6.0 falha: main.dll erro 0x13d e LoopInGameThreadWithDelay ausente. O requisito (UE4SS experimental do Palworld) só existe no texto da página do mod.",
+            "Corrigido no PeliGames: pacote do carregador satisfaz o próprio requisito com perfil existente; troca de layout do UE4SS move scripts já instalados; remoção apaga pastas vazias.",
+            "Fluxo nxm confirmado: Quick Stack e Breeding Link baixados pelo botão Mod Manager Download do site entraram na fila do PeliGames, instalaram sem erro e carregaram no jogo."
+          ]
+        }
+      ]
     },
     {
       "domain": "finalfantasy12",
@@ -2632,7 +2933,7 @@
       "vortex_evidence": [
         "https://www.nexusmods.com/site/mods/59"
       ],
-      "extension_code_compared": false,
+      "extension_code_compared": true,
       "framework_ids_checked": [
         {
           "mod_id": 170,
@@ -2663,7 +2964,15 @@
         "Pacotes reais adicionais, variantes e ciclo completo de instalar/ativar/desativar/remover por família.",
         "Execução no jogo real com versão do jogo, loader e Proton registradas."
       ],
-      "runtime_verified": false
+      "runtime_verified": false,
+      "vortex_comparison": {
+        "reviewed_at": "2026-10-11",
+        "source": "Comparado em 2026-10-11 com o pacote publicado no Nexus (download manual pelo usuário): Final Fantasy XII The Zodiac Age Vortex support 0.9.2 (site/mods/59)",
+        "differences": [
+          "Igual: ff12data e pastas gamedata/jsondata/prefetchdata/ps2data em mods/deploy/ff12data; modules e scripts em x64; External File Loader e LUA Loader como requisitos.",
+          "Diferente: a extensão aceita qualquer arquivo dentro de uma pasta x64/ do pacote; o PeliGames aceita só os arquivos conhecidos dos carregadores."
+        ]
+      }
     },
     {
       "domain": "crimsondesert",
@@ -2695,6 +3004,753 @@
         "Execução no jogo real com versão do jogo, loader e Proton registradas."
       ],
       "runtime_verified": false
+    },
+    {
+      "domain": "falloutshelter",
+      "name": "Fallout Shelter",
+      "module_version": "1.0.0",
+      "nexus_game_id": 1632,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://www.nexusmods.com/site/mods/1808",
+        "https://github.com/Toemmsen96/FSVortexExtension/blob/6d64d257fafe9a28c66446a4ab3b94cb35e016dc/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "BepInEx/plugins/Example/Example.dll",
+          "target": "BepInEx/plugins/Example/Example.dll"
+        },
+        {
+          "source": "BepInEx/plugins/Example/assets/data.json",
+          "target": "BepInEx/plugins/Example/assets/data.json"
+        },
+        {
+          "source": "BepInEx/config/Example.cfg",
+          "target": "BepInEx/config/Example.cfg"
+        }
+      ],
+      "findings": [
+        "Extensão da comunidade comparada: Unity com BepInEx 5.4.23 x64, mods na pasta do jogo, download automático do BepInEx pelo modtype-bepinex.",
+        "Download do BepInEx implementado: release oficial no GitHub, pacote Windows (o jogo roda no Proton), importado como mod e instalado pela janela de instalação."
+      ],
+      "pending_checks": [
+        "Amostragem dos mods mais baixados com a prévia de conteúdo do Nexus.",
+        "Execução no jogo real com BepInEx e um plugin."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "fallout76",
+      "name": "Fallout 76",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2590,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://www.nexusmods.com/site/mods/1580",
+        "https://github.com/mehmetkursataydin/Vortex-Fallout-76-Steam-Xbox-Game-Pass/blob/7284aa442b76b82136e02bd24deb3c6e099449cc/index.js",
+        "https://www.nexusmods.com/site/mods/1581",
+        "https://www.nexusmods.com/site/mods/110",
+        "https://github.com/Dakraid/Vortex_Fallout76/blob/771ffa82eef8946153844591e930197545c69782/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Mod.ba2",
+          "target": "Data/Mod.ba2"
+        },
+        {
+          "source": "Data/Mod - Textures.ba2",
+          "target": "Data/Mod - Textures.ba2"
+        },
+        {
+          "source": "textures/x.dds",
+          "target": "Data/textures/x.dds"
+        }
+      ],
+      "findings": [
+        "Extensões da comunidade comparadas: mods em Data, BA2 dos mods ativos em sResourceArchive2List do Custom INI (criado se faltar), entradas manuais preservadas, ferramenta FO76Edit; página de ordem dos BA2.",
+        "Etiquetas de cor e seleção múltipla da página de ordem não reproduzidas."
+      ],
+      "pending_checks": [
+        "Amostragem dos mods mais baixados com a prévia de conteúdo do Nexus.",
+        "Execução no jogo real."
+      ],
+      "runtime_verified": false
+    },
+    {
+      "domain": "breakingwheel",
+      "name": "Breaking Wheel",
+      "module_version": "1.0.0",
+      "nexus_game_id": 1767,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-breakingwheel/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Level/level.json",
+          "target": "ModdingTools/Level/level.json"
+        },
+        {
+          "source": "Level/preview.png",
+          "target": "ModdingTools/Level/preview.png"
+        }
+      ]
+    },
+    {
+      "domain": "stateofdecay",
+      "name": "State of Decay",
+      "module_version": "1.0.0",
+      "nexus_game_id": 223,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-stateofdecay/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "libs/mod.xml",
+          "target": "game/libs/mod.xml"
+        },
+        {
+          "source": "libs/scripts/x.lua.dat",
+          "target": "game/libs/scripts/x.lua.dat"
+        }
+      ]
+    },
+    {
+      "domain": "grimdawn",
+      "name": "Grim Dawn",
+      "module_version": "1.0.0",
+      "nexus_game_id": 1190,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-grimdawn/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "MyMod/database/MyMod.arz",
+          "target": "mods/MyMod/database/MyMod.arz"
+        },
+        {
+          "source": "MyMod/resources/Text_EN.arc",
+          "target": "mods/MyMod/resources/Text_EN.arc"
+        }
+      ]
+    },
+    {
+      "domain": "greedfall",
+      "name": "GreedFall",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2945,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-greedfall/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Wrapper/datalocal/gfx/hero.dds",
+          "target": "datalocal/gfx/hero.dds"
+        },
+        {
+          "source": "Wrapper/datalocal/text/fr.csv",
+          "target": "datalocal/text/fr.csv"
+        }
+      ]
+    },
+    {
+      "domain": "elex",
+      "name": "ELEX",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2144,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-elex/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Mod v1/m_9_mymod.pak",
+          "target": "data/packed/m_9_mymod.pak"
+        }
+      ]
+    },
+    {
+      "domain": "sekiro",
+      "name": "Sekiro: Shadows Die Twice",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2763,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-sekiro/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        {
+          "mod_id": 6,
+          "title": "Sekiro Mod Engine",
+          "url": "https://www.nexusmods.com/sekiro/mods/6"
+        }
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Mod/parts/wp_a_0300.partsbnd.dcx",
+          "target": "mods/parts/wp_a_0300.partsbnd.dcx"
+        },
+        {
+          "source": "Mod/chr/c1000.chrbnd.dcx",
+          "target": "mods/chr/c1000.chrbnd.dcx"
+        }
+      ]
+    },
+    {
+      "domain": "darksouls",
+      "name": "Dark Souls: Prepare to Die Edition",
+      "module_version": "1.0.0",
+      "nexus_game_id": 162,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-darksouls/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [
+        {
+          "mod_id": 19,
+          "title": "DSfix",
+          "url": "https://www.nexusmods.com/darksouls/mods/19"
+        }
+      ],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "DSFix 2.4/DINPUT8.dll",
+          "target": "DATA/dinput8.dll"
+        },
+        {
+          "source": "DSFix 2.4/DSfix.ini",
+          "target": "DATA/DSfix.ini"
+        },
+        {
+          "source": "DSFix 2.4/dsfix/VSSAO.fx",
+          "target": "DATA/dsfix/VSSAO.fx"
+        },
+        {
+          "source": "DSFix 2.4/dsfix/tex_override/3f28b833.png",
+          "target": "DATA/dsfix/tex_override/3f28b833.png"
+        }
+      ]
+    },
+    {
+      "domain": "vampirebloodlines",
+      "name": "Vampire: The Masquerade - Bloodlines",
+      "module_version": "1.0.0",
+      "nexus_game_id": 437,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-vtmbloodlines/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "materials/models/x.vtf",
+          "target": "Vampire/materials/models/x.vtf"
+        },
+        {
+          "source": "python/mod.py",
+          "target": "Vampire/python/mod.py"
+        }
+      ]
+    },
+    {
+      "domain": "wolcenlordsofmayhem",
+      "name": "Wolcen: Lords of Mayhem",
+      "module_version": "1.0.0",
+      "nexus_game_id": 3169,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-wolcen/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Mod/Umbra/Skills/x.xml",
+          "target": "Game/Umbra/Skills/x.xml"
+        },
+        {
+          "source": "Mod/Loot/table.xml",
+          "target": "Game/Loot/table.xml"
+        }
+      ]
+    },
+    {
+      "domain": "kenshi",
+      "name": "Kenshi",
+      "module_version": "1.0.0",
+      "nexus_game_id": 736,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-kenshi/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Better Mod/Better.mod",
+          "target": "mods/Better/Better.mod"
+        },
+        {
+          "source": "Better Mod/textures/a.dds",
+          "target": "mods/Better/textures/a.dds"
+        }
+      ]
+    },
+    {
+      "domain": "totalwarthreekingdoms",
+      "name": "Total War: Three Kingdoms",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2847,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-totalwarthreekingdoms/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Mod/my_mod.pack",
+          "target": "data/my_mod.pack"
+        },
+        {
+          "source": "Mod/my_mod.png",
+          "target": "data/my_mod.png"
+        }
+      ]
+    },
+    {
+      "domain": "pathfinderwrathoftherighteous",
+      "name": "Pathfinder: Wrath of the Righteous",
+      "module_version": "1.0.0",
+      "nexus_game_id": 3662,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-pathfinderwrathoftherighteous/src/index.ts",
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/modtype-umm/src/common.ts"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "UnityModManager/UnityModManager.exe",
+          "target": "UnityModManager/UnityModManager.exe"
+        },
+        {
+          "source": "CoolMod/Info.json",
+          "target": "Mods/CoolMod/Info.json"
+        },
+        {
+          "source": "CoolMod/CoolMod.dll",
+          "target": "Mods/CoolMod/CoolMod.dll"
+        }
+      ]
+    },
+    {
+      "domain": "dawnofman",
+      "name": "Dawn of Man",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2748,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-dawnofman/src/index.js",
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/modtype-umm/src/common.ts"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "UnityModManager/UnityModManager.exe",
+          "target": "UnityModManager/UnityModManager.exe"
+        },
+        {
+          "source": "CoolMod/Info.json",
+          "target": "Mods/CoolMod/Info.json"
+        },
+        {
+          "source": "CoolMod/CoolMod.dll",
+          "target": "Mods/CoolMod/CoolMod.dll"
+        }
+      ]
+    },
+    {
+      "domain": "gardenpaws",
+      "name": "Garden Paws",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2680,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-gardenpaws/src/index.js",
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/modtype-umm/src/common.ts"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "UnityModManager/UnityModManager.exe",
+          "target": "UnityModManager/UnityModManager.exe"
+        },
+        {
+          "source": "CoolMod/Info.json",
+          "target": "Mods/CoolMod/Info.json"
+        },
+        {
+          "source": "CoolMod/CoolMod.dll",
+          "target": "Mods/CoolMod/CoolMod.dll"
+        }
+      ]
+    },
+    {
+      "domain": "thesims3",
+      "name": "The Sims 3",
+      "module_version": "1.0.0",
+      "nexus_game_id": 301,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-sims3/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Hair/NewHair.package",
+          "target": "@documents/Electronic Arts/The Sims 3/Mods/Packages/Hair/NewHair.package"
+        }
+      ]
+    },
+    {
+      "domain": "elderscrollsonline",
+      "name": "The Elder Scrolls Online",
+      "module_version": "1.0.0",
+      "nexus_game_id": 419,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-teso/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "LibAddonMenu-2.0/LibAddonMenu-2.0.txt",
+          "target": "@documents/Elder Scrolls Online/live/AddOns/LibAddonMenu-2.0/LibAddonMenu-2.0.txt"
+        }
+      ]
+    },
+    {
+      "domain": "galacticcivilizations3",
+      "name": "Galactic Civilizations III",
+      "module_version": "1.0.0",
+      "nexus_game_id": 965,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-galciv3/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "MyMod/Data/x.xml",
+          "target": "@documents/My Games/GalCiv3/Mods/MyMod/Data/x.xml"
+        },
+        {
+          "source": "MyMod/Race.faction",
+          "target": "@documents/My Games/GalCiv3/Factions/MyMod/Race.faction"
+        }
+      ]
+    },
+    {
+      "domain": "ahatintime",
+      "name": "A Hat in Time",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2361,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-ahatintime/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "CoolHat/modinfo.ini",
+          "target": "HatInTimeGame/Mods/CoolHat/modinfo.ini"
+        },
+        {
+          "source": "CoolHat/CookedPC/CoolHat.u",
+          "target": "HatInTimeGame/Mods/CoolHat/CookedPC/CoolHat.u"
+        }
+      ]
+    },
+    {
+      "domain": "neverwinter2",
+      "name": "Neverwinter Nights 2",
+      "module_version": "1.0.0",
+      "nexus_game_id": 181,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-neverwinter-nights2/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Adventure/Story.mod",
+          "target": "@documents/Neverwinter Nights 2/modules/Story.mod"
+        },
+        {
+          "source": "Pack/override/item.uti",
+          "target": "@documents/Neverwinter Nights 2/override/item.uti"
+        }
+      ]
+    },
+    {
+      "domain": "dragonsdogma",
+      "name": "Dragon's Dogma: Dark Arisen",
+      "module_version": "1.0.0",
+      "nexus_game_id": 1249,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-dragons-dogma/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Mod/rom/eq/x.arc",
+          "target": "nativePC/rom/eq/x.arc"
+        },
+        {
+          "source": "Mod/sound/se/y.sngw",
+          "target": "nativePC/sound/se/y.sngw"
+        }
+      ]
+    },
+    {
+      "domain": "conanexiles",
+      "name": "Conan Exiles",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2358,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-conanexiles/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "MyMod/MyMod.pak",
+          "target": "ConanSandbox/Mods/MyMod.pak"
+        }
+      ]
+    },
+    {
+      "domain": "worldoftanks",
+      "name": "World of Tanks",
+      "module_version": "1.0.0",
+      "nexus_game_id": 160,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-worldoftanks/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Mod/res_mods/1.24.1.0/gui/x.xml",
+          "target": "res_mods/1.24.1.0/gui/x.xml"
+        },
+        {
+          "source": "Mod/mods/1.24.1.0/x.wotmod",
+          "target": "mods/1.24.1.0/x.wotmod"
+        }
+      ]
+    },
+    {
+      "domain": "bloodstainedritualofthenight",
+      "name": "Bloodstained: Ritual of the Night",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2874,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-bloodstainedritualofthenight/src/index.ts"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Mod/pakchunk99-Mod_P.pak",
+          "target": "BloodstainedRotN/Content/Paks/~mods/pakchunk99-Mod_P.pak"
+        }
+      ]
+    },
+    {
+      "domain": "spyroreignitedtrilogy",
+      "name": "Spyro Reignited Trilogy",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2943,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-spyroreignitedtrilogy/src/index.ts"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Mod/Skin_P.pak",
+          "target": "falcon/content/paks/~mods/Skin_P.pak"
+        }
+      ]
+    },
+    {
+      "domain": "divinityoriginalsin2",
+      "name": "Divinity: Original Sin 2",
+      "module_version": "1.0.0",
+      "nexus_game_id": 1661,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-divinityoriginalsin2/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "MyMod/MyMod.pak",
+          "target": "@documents/Larian Studios/Divinity Original Sin 2/Mods/MyMod.pak"
+        }
+      ]
+    },
+    {
+      "domain": "divinityoriginalsin2definitiveedition",
+      "name": "Divinity: Original Sin 2 - Definitive Edition",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2569,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-divinityoriginalsin2/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "MyMod/MyMod.pak",
+          "target": "@documents/Larian Studios/Divinity Original Sin 2 Definitive Edition/Mods/MyMod.pak"
+        }
+      ]
+    },
+    {
+      "domain": "halothemasterchiefcollection",
+      "name": "Halo: The Master Chief Collection",
+      "module_version": "1.0.0",
+      "nexus_game_id": 2971,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-masterchiefcollection/src/index.ts"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Cool/ModInfo.json",
+          "target": "PeliGames-Mods/Cool/ModInfo.json"
+        },
+        {
+          "source": "Cool/halo3/maps/x.map",
+          "target": "PeliGames-Mods/Cool/halo3/maps/x.map"
+        }
+      ]
+    },
+    {
+      "domain": "darksouls2",
+      "name": "Dark Souls II",
+      "module_version": "1.0.0",
+      "nexus_game_id": 482,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-darksouls2/src/installers.ts"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Wrapper/enc_regulation.bnd.dcx",
+          "target": "Game/enc_regulation.bnd.dcx"
+        },
+        {
+          "source": "Tex/a1b2.dds",
+          "target": "Game/tex_override/a1b2.dds"
+        }
+      ]
+    },
+    {
+      "domain": "microsoftflightsimulator",
+      "name": "Microsoft Flight Simulator",
+      "module_version": "1.0.0",
+      "nexus_game_id": 3400,
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-microsoftflightsimulator/src/index.js"
+      ],
+      "extension_code_compared": true,
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_documented_layout",
+      "route_cases": [
+        {
+          "source": "Pack/livery-a320/manifest.json",
+          "target": "@msfs/Community/livery-a320/manifest.json"
+        },
+        {
+          "source": "Pack/livery-a320/layout.json",
+          "target": "@msfs/Community/livery-a320/layout.json"
+        }
+      ]
     }
   ],
   "operational_review": {

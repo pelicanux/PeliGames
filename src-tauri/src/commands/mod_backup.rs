@@ -5,7 +5,7 @@ use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeMap,
     fs,
-    io::Read,
+    io::{Read, Write},
     path::{Component, Path, PathBuf},
     sync::Mutex,
 };
@@ -29,6 +29,14 @@ struct Snapshot {
     game: NexusGame,
     storage: String,
     files: BTreeMap<String, String>,
+    /// Size and modification time of each storage file when it was copied, so
+    /// an unchanged file is reused from the previous copy without reading it.
+    #[serde(default)]
+    stamps: BTreeMap<String, (u64, u128)>,
+    /// Extracted profiles were left out; recovery extracts them again from the
+    /// packages, so the copy takes about half the space.
+    #[serde(default)]
+    lean: bool,
 }
 #[derive(Serialize, Deserialize)]
 struct Backup {
@@ -124,9 +132,43 @@ fn keep(entry: &walkdir::DirEntry) -> bool {
     ) && !n.starts_with("rollback-")
         && !n.ends_with(".log")
 }
-fn copy_tree(source: &Path, target: &Path) -> Result<BTreeMap<String, String>, String> {
-    let mut files = BTreeMap::new();
-    directory(target)?;
+/// Storage folders a copy leaves out: converted archives, loader downloads
+/// (already imported into `archives/`) and logs are rebuilt or disposable; the
+/// extracted profiles too in a lean copy.
+fn rebuildable(rel: &Path, lean: bool) -> bool {
+    let first = rel.components().next().and_then(|c| c.as_os_str().to_str()).unwrap_or("");
+    matches!(first, "archive-cache" | "downloads" | "logs") || lean && first == "profiles"
+}
+fn stamp(meta: &fs::Metadata) -> (u64, u128) {
+    let modified = meta.modified().ok().and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok()).map(|d| d.as_nanos()).unwrap_or(0);
+    (meta.len(), modified)
+}
+const CHANGED: &str = "Os dados mudaram durante a cópia; a recuperação anterior foi preservada. Tente novamente com o jogo fechado.";
+/// Copies a file and hashes it in the same read.
+fn copy_hashed(source: &Path, dest: &Path) -> Result<String, String> {
+    let before = stamp(&fs::metadata(source).map_err(error)?);
+    let mut input = fs::File::open(source).map_err(error)?;
+    let mut output = fs::File::create(dest).map_err(error)?;
+    let mut h = Sha256::new();
+    let mut b = vec![0; 65536];
+    let mut total = 0u64;
+    loop {
+        let n = input.read(&mut b).map_err(error)?;
+        if n == 0 {
+            break;
+        }
+        h.update(&b[..n]);
+        output.write_all(&b[..n]).map_err(error)?;
+        total += n as u64;
+    }
+    if total != before.0 || stamp(&fs::metadata(source).map_err(error)?) != before {
+        return Err(CHANGED.into());
+    }
+    Ok(format!("{:x}", h.finalize()))
+}
+/// Storage files with their size and modification time.
+fn storage_files(source: &Path, lean: bool) -> Result<Vec<(PathBuf, String, (u64, u128))>, String> {
+    let mut files = Vec::new();
     if !source.exists() {
         return Ok(files);
     }
@@ -134,11 +176,11 @@ fn copy_tree(source: &Path, target: &Path) -> Result<BTreeMap<String, String>, S
     for entry in walkdir::WalkDir::new(source)
         .follow_links(false)
         .into_iter()
-        .filter_entry(keep)
+        .filter_entry(|entry| keep(entry) && !entry.path().strip_prefix(source).is_ok_and(|rel| rebuildable(rel, lean)))
     {
         let entry = entry.map_err(error)?;
         let p = entry.path().strip_prefix(source).map_err(error)?;
-        if p.as_os_str().is_empty() {
+        if p.as_os_str().is_empty() || entry.file_type().is_dir() {
             continue;
         }
         if entry.file_type().is_symlink() {
@@ -147,23 +189,47 @@ fn copy_tree(source: &Path, target: &Path) -> Result<BTreeMap<String, String>, S
                 entry.path().display()
             ));
         }
-        let dest = target.join(p);
-        if entry.file_type().is_dir() {
-            directory(&dest)?;
-        } else if entry.file_type().is_file() {
-            fs::copy(entry.path(), &dest).map_err(error)?;
-            let checksum = hash(&dest)?;
-            if hash(entry.path())? != checksum {
-                return Err("Os dados mudaram durante a cópia; a recuperação anterior foi preservada. Tente novamente com o jogo fechado.".into());
-            }
-            files.insert(p.to_string_lossy().into_owned(), checksum);
-        } else {
+        if !entry.file_type().is_file() {
             return Err("Arquivo especial não suportado no backup.".into());
         }
+        let meta = entry.metadata().map_err(error)?;
+        files.push((entry.path().to_path_buf(), p.to_string_lossy().into_owned(), stamp(&meta)));
     }
     Ok(files)
 }
-fn validate_files(root: &Path, files: &BTreeMap<String, String>) -> Result<(), String> {
+type Copied = (BTreeMap<String, String>, BTreeMap<String, (u64, u128)>);
+/// Copies the storage; a file unchanged since `previous` (its data folder and
+/// record) is linked from there, or copied without hashing it again.
+fn copy_tree(source: &Path, target: &Path, lean: bool, previous: Option<(&Path, &Snapshot)>) -> Result<Copied, String> {
+    let (mut files, mut stamps) = (BTreeMap::new(), BTreeMap::new());
+    directory(target)?;
+    for (path, rel, current) in storage_files(source, lean)? {
+        let dest = target.join(&rel);
+        if let Some(parent) = dest.parent() {
+            fs::create_dir_all(parent).map_err(error)?;
+        }
+        let reused = previous.and_then(|(data, snapshot)| {
+            let checksum = snapshot.files.get(&rel)?;
+            if snapshot.stamps.get(&rel) != Some(&current) {
+                return None;
+            }
+            let old = data.join(&rel);
+            let meta = fs::symlink_metadata(&old).ok()?;
+            (meta.is_file() && meta.len() == current.0).then_some((old, checksum.clone()))
+        });
+        let checksum = match reused {
+            Some((old, checksum)) => {
+                fs::hard_link(&old, &dest).or_else(|_| fs::copy(&old, &dest).map(|_| ())).map_err(error)?;
+                checksum
+            }
+            None => copy_hashed(&path, &dest)?,
+        };
+        files.insert(rel.clone(), checksum);
+        stamps.insert(rel, current);
+    }
+    Ok((files, stamps))
+}
+fn validate_files(root: &Path, files: &BTreeMap<String, String>, verify: bool) -> Result<(), String> {
     if files.len() > 200_000 {
         return Err("Backup contém arquivos demais.".into());
     }
@@ -178,13 +244,18 @@ fn validate_files(root: &Path, files: &BTreeMap<String, String>) -> Result<(), S
                 return Err("Link não permitido no backup.".into());
             }
         }
-        if !path.is_file() || hash(&path)? != *expected {
+        if !path.is_file() || verify && hash(&path)? != *expected {
             return Err(format!("Backup incompleto ou alterado: {name}"));
         }
     }
     Ok(())
 }
 fn read_snapshot(root: &Path) -> Result<Snapshot, String> {
+    read_snapshot_with(root, true)
+}
+/// `verify`: hash every file. A copy just written was hashed while copying, so
+/// it is only checked for structure and presence.
+fn read_snapshot_with(root: &Path, verify: bool) -> Result<Snapshot, String> {
     existing_directory(root)?;
     let file = root.join("snapshot.json");
     if fs::symlink_metadata(&file)
@@ -215,65 +286,113 @@ fn read_snapshot(root: &Path) -> Result<Snapshot, String> {
             return Err("Pacote ausente no backup.".into());
         }
     }
-    validate_files(&root.join("data"), &snapshot.files)?;
+    validate_files(&root.join("data"), &snapshot.files, verify)?;
     Ok(snapshot)
 }
-fn capture_configs(
-    game: &NexusGame,
-    storage: &Path,
-    data: &Path,
-    files: &mut BTreeMap<String, String>,
-) -> Result<(), String> {
+/// Game configuration files the mods own (`AppConfig.json`, BepInEx configs),
+/// as copy path → live file. A full copy refreshes the profile's file; a lean
+/// one keeps them in `settings/`, which the profile rebuild copies back.
+fn config_sources(game: &NexusGame, storage: &Path, lean: bool) -> Result<Vec<(String, PathBuf)>, String> {
     let Some(module) = super::nexus_deployment::definition(game) else {
-        return Ok(());
+        return Ok(Vec::new());
     };
-    let manifest = data.join("deployment.json");
+    let manifest = storage.join("deployment.json");
     if !manifest.exists() {
-        return Ok(());
+        return Ok(Vec::new());
     }
     let value: serde_json::Value =
         serde_json::from_slice(&fs::read(manifest).map_err(error)?).map_err(error)?;
     let Some(sources) = value["sources"].as_object() else {
-        return Ok(());
+        return Ok(Vec::new());
     };
+    let destination = super::nexus_deployment::destinations(game)?;
+    let mut configs = Vec::new();
     for (key, source) in sources {
         if !super::nexus_deployment::config(&module, key) {
             continue;
         }
-        let source = Path::new(source.as_str().ok_or("Fonte de configuração inválida.")?);
-        let rel = source.strip_prefix(storage).map_err(error)?;
-        relative(rel.to_str().ok_or("Configuração inválida.")?)?;
-        if !rel.starts_with("profiles") {
-            return Err("Configuração fora do perfil.".into());
-        }
-        let current = super::nexus_deployment::destination(game, key)?;
-        if current.is_file() {
-            let dest = data.join(rel);
-            if !dest.is_file() {
-                continue;
+        let rel = if lean {
+            relative(key)?;
+            format!("settings/{key}")
+        } else {
+            let source = Path::new(source.as_str().ok_or("Fonte de configuração inválida.")?);
+            let rel = source.strip_prefix(storage).map_err(error)?;
+            let rel = rel.to_str().ok_or("Configuração inválida.")?;
+            relative(rel)?;
+            if !rel.starts_with("profiles") {
+                return Err("Configuração fora do perfil.".into());
             }
-            fs::copy(&current, &dest).map_err(error)?;
-            files.insert(rel.to_string_lossy().into_owned(), hash(&dest)?);
+            rel.to_owned()
+        };
+        let current = destination(key)?;
+        if current.is_file() {
+            configs.push((rel, current));
         }
+    }
+    Ok(configs)
+}
+fn capture_configs(configs: &[(String, PathBuf)], data: &Path, files: &mut BTreeMap<String, String>, lean: bool) -> Result<(), String> {
+    for (rel, current) in configs {
+        let dest = data.join(rel);
+        if !lean && !dest.is_file() {
+            continue;
+        }
+        fs::create_dir_all(dest.parent().ok_or("Configuração inválida.")?).map_err(error)?;
+        // The file may be a link to the previous copy; never write through it.
+        let _ = fs::remove_file(&dest);
+        files.insert(rel.clone(), copy_hashed(current, &dest)?);
     }
     Ok(())
 }
+/// Previous copy, read without hashing its files.
+fn previous_snapshot(target: &Path) -> Option<Snapshot> {
+    let file = target.join("snapshot.json");
+    let meta = fs::symlink_metadata(&file).ok()?;
+    if !meta.is_file() || meta.len() > 8 * 1024 * 1024 {
+        return None;
+    }
+    serde_json::from_slice::<Snapshot>(&fs::read(file).ok()?).ok().filter(|snapshot| snapshot.format == 1)
+}
+/// Nothing to write: same game record, same storage files and same configs.
+fn unchanged(game: &NexusGame, storage: &Path, previous: &Snapshot, lean: bool) -> Result<bool, String> {
+    if previous.lean != lean || previous.storage != storage.to_string_lossy()
+        || serde_json::to_value(&previous.game).map_err(error)? != serde_json::to_value(game).map_err(error)? {
+        return Ok(false);
+    }
+    let files = storage_files(storage, lean)?;
+    if files.len() != previous.stamps.len() || files.iter().any(|(_, rel, current)| previous.stamps.get(rel) != Some(current)) {
+        return Ok(false);
+    }
+    for (rel, current) in config_sources(game, storage, lean)? {
+        if previous.files.get(&rel) != Some(&hash(&current)?) {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
 fn write_snapshot(game: &NexusGame, target: &Path) -> Result<(), String> {
+    let storage = super::nexus_profile::directory(game)?;
+    let lean = super::nexus_deployment::supports(game);
+    let previous = previous_snapshot(target);
+    if previous.as_ref().is_some_and(|previous| unchanged(game, &storage, previous, lean).unwrap_or(false)) {
+        return Ok(());
+    }
     if super::nexus_profile::running(game) {
         return Err(format!(
             "Feche o jogo para atualizar sua recuperação: {}",
             game.game["name"]
         ));
     }
-    let storage = super::nexus_profile::directory(game)?;
-    write_snapshot_from(game, &storage, target)
+    write_snapshot_from(game, &storage, target, lean, previous.as_ref())
 }
-fn write_snapshot_from(game: &NexusGame, storage: &Path, target: &Path) -> Result<(), String> {
+fn write_snapshot_from(game: &NexusGame, storage: &Path, target: &Path, lean: bool, previous: Option<&Snapshot>) -> Result<(), String> {
     let stage = target.with_file_name(format!(".recovery-{}", uuid::Uuid::new_v4()));
     directory(&stage)?;
     let result = (|| {
-        let mut files = copy_tree(storage, &stage.join("data"))?;
-        capture_configs(game, storage, &stage.join("data"), &mut files)?;
+        let old_data = target.join("data");
+        let reuse = previous.filter(|_| old_data.is_dir()).map(|snapshot| (old_data.as_path(), snapshot));
+        let (mut files, stamps) = copy_tree(storage, &stage.join("data"), lean, reuse)?;
+        capture_configs(&config_sources(game, storage, lean)?, &stage.join("data"), &mut files, lean)?;
         json(
             &stage.join("snapshot.json"),
             &Snapshot {
@@ -281,10 +400,13 @@ fn write_snapshot_from(game: &NexusGame, storage: &Path, target: &Path) -> Resul
                 game: game.clone(),
                 storage: storage.to_string_lossy().into_owned(),
                 files,
+                stamps,
+                lean,
             },
         )?;
-        // Validate the copy before making it the current recovery point.
-        read_snapshot(&stage)?;
+        // Check the copy before making it the current recovery point; its files
+        // were hashed while being copied.
+        read_snapshot_with(&stage, false)?;
         let previous = target.with_file_name(format!(".previous-{}", uuid::Uuid::new_v4()));
         if target.exists() {
             directory(target)?;
@@ -436,6 +558,7 @@ fn repair_links(
         .as_object()
         .ok_or("Destinos da implantação inválidos.")?;
     let mut changes = Vec::new();
+    let destination = super::nexus_deployment::destinations(game)?;
     for (key, source) in sources {
         let Some(source) = source.as_str() else {
             return Err("Fonte inválida.".into());
@@ -457,7 +580,7 @@ fn repair_links(
         relative(target_rel.to_str().ok_or("Destino inválido.")?)?;
         let dest = new_game.join(target_rel);
         let next = new_storage.join(source_rel);
-        if super::nexus_deployment::destination(game, key)? != dest {
+        if destination(key)? != dest {
             return Err("Destino de recuperação divergente do módulo do jogo.".into());
         }
         if !fs::symlink_metadata(&dest).is_ok_and(|m| m.file_type().is_symlink()) {
@@ -589,8 +712,21 @@ fn restore_game_at(
             json(&old_manifest, &value)?;
         }
         fs::rename(&stage, &target).map_err(error)?;
+        // A lean copy has no extracted profile: extract it again from the packages,
+        // under the same revision the deployment record points to. Without the game
+        // folder (or on failure) the mods stay listed and the next apply rebuilds it.
+        let mut profile_ready = true;
+        if snapshot.lean {
+            if let Some(revision) = snapshot.game.profile.clone() {
+                let rebuilt = if new_game.is_dir() { super::nexus_deployment::rebuild_profile(&snapshot.game, &revision) } else { Err("pasta do jogo indisponível".into()) };
+                if let Err(e) = rebuilt {
+                    super::nexus_reports::event(&snapshot.game, "WARN", "recuperação de mods", &format!("Perfil não reconstruído ({e}); aplique os mods novamente."));
+                    profile_ready = false;
+                }
+            }
+        }
         // Relinking reads the old ownership record; the live manifest already uses this home.
-        if new_game.is_dir() {
+        if new_game.is_dir() && profile_ready {
             if let Err(e) = repair_links(
                 &snapshot.game,
                 &target,
@@ -864,7 +1000,7 @@ mod tests {
         let root = base(); let (game, storage) = fixture(&root);
         let source = root.join("source"); fs::create_dir_all(source.join("Nexus")).unwrap();
         let folder = format!("example-game--{}", game.id);
-        write_snapshot_from(&game, &storage, &source.join("Nexus").join(&folder)).unwrap();
+        write_snapshot_from(&game, &storage, &source.join("Nexus").join(&folder), false, None).unwrap();
         json(&source.join("backup.json"), &Backup { format: 2, games: vec![folder.clone()] }).unwrap();
         let zip = root.join("backup.zip"); compress_backup(&source, &zip).unwrap();
         assert!(compress_backup(&source, &zip).is_err()); // Never overwrite a backup.
@@ -961,9 +1097,10 @@ mod tests {
         let p = base();
         fs::write(p.join("a"), "mod").unwrap();
         let files = BTreeMap::from([("a".into(), hash(&p.join("a")).unwrap())]);
-        validate_files(&p, &files).unwrap();
+        validate_files(&p, &files, true).unwrap();
         fs::write(p.join("a"), "changed").unwrap();
-        assert!(validate_files(&p, &files).is_err());
+        assert!(validate_files(&p, &files, true).is_err());
+        validate_files(&p, &files, false).unwrap();
         fs::remove_dir_all(p).unwrap();
     }
     #[test]
@@ -972,7 +1109,7 @@ mod tests {
         let source = p.join("source");
         fs::create_dir(&source).unwrap();
         std::os::unix::fs::symlink("/etc", source.join("external")).unwrap();
-        assert!(copy_tree(&source, &p.join("target")).is_err());
+        assert!(copy_tree(&source, &p.join("target"), false, None).is_err());
         fs::remove_dir_all(p).unwrap();
     }
     #[test]
@@ -1076,7 +1213,7 @@ mod tests {
         let base = base();
         let (game, storage) = fixture(&base);
         let backup = base.join("snapshot");
-        write_snapshot_from(&game, &storage, &backup).unwrap();
+        write_snapshot_from(&game, &storage, &backup, false, None).unwrap();
         let target = base.join("new-store");
         let new_game = base.join("new-game");
         let mut workspace = Workspace::default();
@@ -1112,11 +1249,55 @@ mod tests {
         fs::remove_dir_all(base).unwrap();
     }
     #[test]
+    fn unchanged_storage_is_skipped_and_reused_without_reading() {
+        let base = base();
+        let (game, storage) = fixture(&base);
+        let target = base.join("recovery");
+        write_snapshot_from(&game, &storage, &target, false, None).unwrap();
+        let first = previous_snapshot(&target).unwrap();
+        assert!(unchanged(&game, &storage, &first, false).unwrap());
+        assert!(!unchanged(&game, &storage, &first, true).unwrap(), "outro modo de cópia");
+        let mut renamed = game.clone();
+        renamed.mods[0].name = "Other".into();
+        assert!(!unchanged(&renamed, &storage, &first, false).unwrap(), "registro do jogo mudou");
+        // A package unchanged on disk is taken from the previous copy, not read again:
+        // the previous copy's (same size) content shows up in the new one.
+        fs::write(target.join("data/archives/mod.zip"), b"PACKAGE").unwrap();
+        fs::write(storage.join("deployment.json"), b"{}").unwrap();
+        assert!(!unchanged(&game, &storage, &first, false).unwrap(), "arquivo mudou");
+        write_snapshot_from(&game, &storage, &target, false, Some(&first)).unwrap();
+        assert_eq!(fs::read(target.join("data/archives/mod.zip")).unwrap(), b"PACKAGE");
+        assert_eq!(fs::read(target.join("data/deployment.json")).unwrap(), b"{}");
+        let second = previous_snapshot(&target).unwrap();
+        assert!(unchanged(&game, &storage, &second, false).unwrap());
+        fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
+    fn copies_leave_out_rebuildable_folders() {
+        let base = base();
+        let (game, storage) = fixture(&base);
+        for folder in ["archive-cache", "downloads", "logs"] {
+            fs::create_dir_all(storage.join(folder)).unwrap();
+            fs::write(storage.join(folder).join("file.zip"), b"x").unwrap();
+        }
+        let full = base.join("full");
+        write_snapshot_from(&game, &storage, &full, false, None).unwrap();
+        let files = previous_snapshot(&full).unwrap().files;
+        assert!(files.keys().any(|name| name.starts_with("profiles")));
+        assert!(!files.keys().any(|name| ["archive-cache", "downloads", "logs"].iter().any(|folder| name.starts_with(folder))));
+        let lean = base.join("lean");
+        write_snapshot_from(&game, &storage, &lean, true, None).unwrap();
+        let snapshot = read_snapshot(&lean).unwrap();
+        assert!(snapshot.lean && !snapshot.files.keys().any(|name| name.starts_with("profiles")));
+        assert!(snapshot.files.contains_key("archives/mod.zip"));
+        fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
     fn corrupt_snapshot_does_not_create_destination() {
         let base = base();
         let (game, storage) = fixture(&base);
         let backup = base.join("snapshot");
-        write_snapshot_from(&game, &storage, &backup).unwrap();
+        write_snapshot_from(&game, &storage, &backup, false, None).unwrap();
         fs::write(backup.join("data/archives/mod.zip"), "bad").unwrap();
         let target = base.join("new-store");
         assert!(restore_game_at(&backup, None, &mut Workspace::default(), Some(&target)).is_err());

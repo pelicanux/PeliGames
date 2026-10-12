@@ -28,8 +28,8 @@
     radial-gradient(ellipse at 0 0, rgba(var(--accent-rgb), var(--glass-corner-fill)), transparent 52%),
     radial-gradient(ellipse at 100% 100%, rgba(var(--accent-rgb), var(--glass-corner-fill)), transparent 44%),
     linear-gradient(125deg, rgba(var(--glass-base-start), var(--glass-opacity-start)), rgba(var(--glass-base-end), var(--glass-opacity-end))) !important;
-  backdrop-filter: blur(16px) saturate(1.15) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(1.15) !important;
+  backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35) !important;
+  -webkit-backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35) !important;
   box-shadow: inset 0 1px rgba(217, 225, 255, .04), 0 10px 28px var(--glass-shadow) !important;
 }
 /* The masked layer traces the border without tinting the other two corners. */
@@ -69,8 +69,8 @@
 }
 /* Let the selected cover tint carousel panels while keeping a readable veil. */
 :root[data-appearance] .menu-glass-panel {
-  backdrop-filter: blur(20px) saturate(1.35) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+  backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35) !important;
+  -webkit-backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35) !important;
 }
 /* The gear menu sits above busy content and needs a denser base. */
 :root .dialog-popover {
@@ -108,6 +108,11 @@
   border-radius: inherit;
 }
 .license-dialog > .modal-scroll-body { display: flex; flex-direction: column; }
+.dialog-backdrop { animation: modal-shade-in .2s ease-out; }
+.modal-content.fixed-glass-frame { animation: modal-shade-in .22s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay, .dialog-backdrop, .modal-content.fixed-glass-frame { animation: none; }
+}
 @media (max-width: 600px) {
   .dialog-glass > .modal-scroll-body { padding: 1.2rem; }
   .setup-wizard > .modal-scroll-body { padding: 20px; }
@@ -125,8 +130,8 @@
   padding: 10px 54px 10px 20px;
   border: 1px solid rgba(var(--accent-rgb), .3);
   background: linear-gradient(125deg, rgba(var(--glass-base-start), .64), rgba(var(--glass-base-end), .42));
-  backdrop-filter: blur(16px) saturate(1.15);
-  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35);
+  -webkit-backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35);
   border-radius: inherit;
   box-shadow: inset 0 1px rgba(var(--surface-255-255-255, 255,255,255), .1);
 }
@@ -144,20 +149,73 @@
 :root .fixed-glass-frame.has-dialog-titlebar::before { z-index: 6; }
 :root .performance-mode .dialog-titlebar { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgb(var(--glass-base-start)); }
 
-/* The full dialog backs the clear header surround; only the inset header blurs
-   the dialog content scrolling underneath it, without exposing the library. */
-:root[data-appearance] .modal-content.fixed-glass-frame.has-dialog-titlebar {
-  background:
-    radial-gradient(ellipse at 0 0, rgba(var(--accent-rgb), var(--glass-corner-fill)), transparent 52%),
-    radial-gradient(ellipse at 100% 100%, rgba(var(--accent-rgb), var(--glass-corner-fill)), transparent 44%),
-    linear-gradient(125deg, rgb(var(--glass-base-start)), rgb(var(--glass-base-end))) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-:root[data-appearance] .performance-mode .modal-content.fixed-glass-frame.has-dialog-titlebar {
-  background: rgb(var(--glass-base-end)) !important;
-}
 @media (max-width: 480px) {
   .dialog-titlebar { left: 10px; right: 10px; padding-left: 15px; }
   :root .dialog-titlebar :is(h2, h3) { font-size: 1rem !important; }
+}
+
+/* Shared soft neon material. Small fixed corner lights leave the centre translucent. */
+:root[data-appearance="dark"] :is(
+  .menu-glass-panel, .modal-content, .dialog-popover, .cover-context-menu,
+  .ui-hover-tooltip, .installation-name-hint, .effects-menu, .custom-select-menu,
+  .text-context-menu, .model-source-tooltip, .launcher-update-tooltip
+) {
+  --glass-base-start: 35, 43, 60;
+  --glass-base-end: 30, 34, 49;
+  --glass-opacity-start: .28;
+  --glass-opacity-end: .20;
+  background:
+    radial-gradient(ellipse 220px 180px at 0 0, rgba(var(--accent-rgb), .16), rgba(var(--accent-rgb), .04) 48%, transparent 78%),
+    radial-gradient(ellipse 200px 170px at 100% 100%, rgba(var(--accent-rgb), .14), rgba(var(--accent-rgb), .03) 48%, transparent 78%),
+    linear-gradient(125deg, rgba(var(--glass-base-start), var(--glass-opacity-start)), rgba(var(--glass-base-end), var(--glass-opacity-end))) !important;
+}
+:root[data-appearance="dark"] .neon-lit-object {
+  text-shadow:
+    var(--surface-neon-x, 0px) var(--surface-neon-y, 0px) 4px rgba(0, 0, 0, calc(.42 * var(--surface-neon-strength, 0))),
+    0 0 8px rgba(var(--accent-rgb), var(--surface-neon-light, 0));
+}
+:root[data-appearance="dark"] .neon-lit-control {
+  box-shadow:
+    inset var(--surface-neon-edge-x, 1px) var(--surface-neon-edge-y, 1px) 1px rgba(var(--accent-rgb), var(--surface-neon-edge, 0)),
+    var(--surface-neon-x, 0px) var(--surface-neon-y, 0px) 10px rgba(0, 0, 0, calc(.38 * var(--surface-neon-strength, 0))),
+    0 0 14px rgba(var(--accent-rgb), var(--surface-neon-light, 0));
+}
+:root[data-appearance="dark"] .dialog-titlebar {
+  background: linear-gradient(125deg, rgba(var(--glass-base-start), .28), rgba(var(--glass-base-end), .20));
+}
+/* Preferences need a stronger veil over the library so form text stays legible. */
+:root[data-appearance="dark"] .modal-content.preferences-modal,
+:root[data-appearance="dark"] .dialog-popover {
+  --glass-base-start: 12, 17, 32;
+  --glass-base-end: 19, 13, 27;
+}
+:root[data-appearance="dark"] .modal-content.preferences-modal {
+  --glass-opacity-start: .78;
+  --glass-opacity-end: .70;
+}
+:root[data-appearance="dark"] .dialog-popover {
+  --glass-opacity-start: .99;
+  --glass-opacity-end: .98;
+  backdrop-filter: blur(calc(36px * var(--window-blur-factor, 1))) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(calc(36px * var(--window-blur-factor, 1))) saturate(1.15) !important;
+}
+:root[data-appearance="dark"] :is(.credits-neon-card, .credits-neon-logo).neon-lit-control {
+  box-shadow:
+    inset var(--surface-neon-edge-x, 1px) var(--surface-neon-edge-y, 1px) 1px rgba(var(--accent-rgb), var(--surface-neon-edge, 0)),
+    var(--surface-neon-x, 0px) var(--surface-neon-y, 0px) 10px rgba(0, 0, 0, calc(.38 * var(--surface-neon-strength, 0))),
+    0 0 14px rgba(var(--accent-rgb), var(--surface-neon-light, 0)) !important;
+}
+:root[data-appearance="dark"] :is(.performance-mode, .performance-mode *) :is(
+  .menu-glass-panel, .modal-content, .dialog-popover, .cover-context-menu,
+  .ui-hover-tooltip, .installation-name-hint, .effects-menu, .custom-select-menu,
+  .text-context-menu, .model-source-tooltip, .launcher-update-tooltip
+) { background: rgb(var(--glass-base-end)) !important; }
+:root .performance-mode :is(.neon-lit-object, .neon-lit-control) {
+  text-shadow: none; box-shadow: none !important;
+}
+/* One outline per path field: the wrapper owns the frame, the input only edits text. */
+:root .installation-path-box > .installation-path-input {
+  border: 0;
+  background: transparent;
+  box-shadow: none !important;
 }

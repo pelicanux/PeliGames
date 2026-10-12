@@ -19,6 +19,7 @@ fn scan_roots(roots: impl IntoIterator<Item = PathBuf>) -> Vec<InstalledProton> 
         };
         for entry in entries.flatten() {
             let path = entry.path();
+            if entry.file_name().to_string_lossy().starts_with('.') { continue; }
             if !path.is_dir() || !path.join("proton").is_file() {
                 continue;
             }
@@ -152,4 +153,21 @@ pub fn cancel_proton_install(state: tauri::State<'_, ProtonDownloadState>) -> Re
         flag.store(true, Ordering::Relaxed);
     }
     Ok(())
+}
+
+#[tauri::command]
+pub async fn uninstall_proton(
+    state: tauri::State<'_, ProtonDownloadState>,
+    family: Family,
+    version: String,
+) -> Result<(), String> {
+    {
+        let mut current = state.inner().0.lock().map_err(|e| e.to_string())?;
+        if current.is_some() { return Err("Uma operação de Proton já está em andamento.".into()); }
+        *current = Some(Arc::new(AtomicBool::new(false)));
+    }
+    let _guard = DownloadGuard(state.inner());
+    let root = proton_manager::runners_dir()?;
+    tauri::async_runtime::spawn_blocking(move || proton_manager::uninstall_at(family, &root, &version))
+        .await.map_err(|e| e.to_string())?
 }

@@ -695,7 +695,7 @@
     {
       "domain": "dragonballsparkingzero",
       "name": "Dragon Ball: Sparking! Zero",
-      "module_version": "1.0.0",
+      "module_version": "1.1.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonballsparkingzero/index.js"
@@ -2120,7 +2120,7 @@
     {
       "domain": "ninjagaiden2black",
       "name": "NINJA GAIDEN 2 Black",
-      "module_version": "1.0.0",
+      "module_version": "1.1.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-ninjagaiden2black/index.js"

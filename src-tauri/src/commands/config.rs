@@ -31,8 +31,7 @@ pub fn save_custom_game_path(game_name: String, new_path: String) -> Result<(), 
 
 #[tauri::command]
 pub async fn clear_game_caches(app: tauri::AppHandle) -> Result<(), String> {
-    use tauri::Manager;
-    let cache_dir = app.path().app_local_data_dir().map_err(|error| error.to_string())?;
+    let cache_dir = crate::core::paths::app_root()?;
     let result = tauri::async_runtime::spawn_blocking(move || crate::core::game_info_cache::clear_files(&cache_dir))
         .await.map_err(|error| error.to_string())?;
     crate::core::logger::log_result(&app, "Limpeza das informações em cache", &result);
@@ -73,10 +72,9 @@ fn remove_launcher_directory(config_root: &std::path::Path) -> Result<(), String
 }
 
 #[tauri::command]
-pub async fn emergency_reset_launcher(app: tauri::AppHandle) -> Result<(), String> {
-    use tauri::Manager;
+pub async fn emergency_reset_launcher() -> Result<(), String> {
     let config_root = dirs::config_dir().ok_or("Configuration directory unavailable")?;
-    let cache_dir = app.path().app_local_data_dir().map_err(|error| error.to_string())?;
+    let cache_dir = crate::core::paths::app_root()?;
     tauri::async_runtime::spawn_blocking(move || {
         crate::core::game_info_cache::clear_files(&cache_dir)?;
         remove_launcher_directory(&config_root)

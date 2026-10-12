@@ -1,3 +1,4 @@
+import { orderWorkspaceMods } from "./modules/nexus/dependencyOrder";
 // Visual fixtures only: no Nexus account, downloads or game files are accessed.
 import type { GameInfo } from "./components/GameGrid";
 import type { NexusGame } from "./modules/nexus/useNexusWorkspace";
@@ -7,9 +8,12 @@ const specs = [
   ["Palworld", "1623730", "palworld"],
   ["Cyberpunk 2077", "1091500", "cyberpunk2077"],
   ["Final Fantasy XII The Zodiac Age", "595520", "finalfantasy12"],
+  ["Baldur's Gate 3", "1086940", "baldursgate3"],
+  ["Tomb Raider", "203160", "tombraider"],
+  ["Fallout: New Vegas", "22380", "newvegas"],
 ];
-export const demoGames: GameInfo[] = specs.map(([name, id], i) => ({ name, app_id: id, path: `/preview/game-${i}/game.exe`, directory: `/preview/game-${i}`, launcher: i > 1 ? "PeliGames" : "Steam", cover_url: `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_600x900.jpg` }));
-const workspace: { games: NexusGame[] } = { games: demoGames.map((game, i) => ({ id: `demo-${i}`, game, platform: specs[i][2] === "stardewvalley" ? "native" : "proton", adapter: specs[i][2], nexus_domain: specs[i][2], running: false, compat_data: i === 0 ? "" : `/preview/prefix-${i}`, proton: i === 0 ? "" : "/preview/GE-Proton", mods: [
+export const demoGames: GameInfo[] = specs.map(([name, id], i) => ({ name, app_id: id, path: `/preview/game-${i}/game.exe`, directory: `/preview/game-${i}`, launcher: i > 1 && !["203160", "22380"].includes(id) ? "PeliGames" : "Steam", cover_url: `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_600x900.jpg` }));
+const workspace: { games: NexusGame[] } = { games: demoGames.map((game, i) => ({ id: `demo-${i}`, game, platform: specs[i][2] === "stardewvalley" ? "native" : "proton", adapter: specs[i][2] === "tombraider" ? "" : specs[i][2], nexus_domain: specs[i][2], running: false, compat_data: i === 0 ? "" : `/preview/prefix-${i}`, proton: i === 0 ? "" : "/preview/proton/Proton-GE Latest", mods: specs[i][2] === "tombraider" ? [] : [
   { id: "demo-installed", name: "Mod visual — exemplo ativo", version: "2.0.0", archive: "/preview/visual.zip", size: 2048000, installed: true, enabled: true },
   { id: "demo-unstructured", name: "Mod sem estrutura — exemplo", version: "1.0.0", archive: "/preview/sem-estrutura.zip", size: 1024000, installed: false, enabled: false },
   { id: "demo-imported", name: "Mod de interface — exemplo importado", version: "1.2.0", archive: "/preview/interface.zip", size: 4096000, installed: false, enabled: false, nexus_source: { domain: specs[i][2], mod_id: 3, file_id: 30, requirements: { complete: true, items: i === 2 ? [{name:"TweakXL",kind:"nexus",notes:"",url:"https://www.nexusmods.com/cyberpunk2077/mods/4197"}] : [] } } },
@@ -18,7 +22,16 @@ const workspace: { games: NexusGame[] } = { games: demoGames.map((game, i) => ({
     {id:"demo-red4ext",name:"RED4ext",archive:"/preview/RED4ext.zip",size:575488,installed:false,enabled:false,nexus_source:{domain:"cyberpunk2077",mod_id:2380,file_id:23800,requirements:{complete:true,items:[]}}},
   ] : []),
 ] })) };
+let tombRaiderAssociated = false;
 let jobs: NexusDownload[] = [];
+const demoLoadOrder = {
+  entries: ["Interface de exemplo", "Dados de exemplo"].map((name, i) => ({
+    file: `demo-bg3-${i}.pak`, name, uuid: `demo-bg3-${i}`, locked: false,
+    managed: "Demonstração", missing: [] as string[], late: [] as string[],
+  })),
+  auto_export: false, format: "v8", mod_fixer: false,
+  settings: "/preview/prefix-4/AppData/Local/Larian Studios/Baldur's Gate 3/PlayerProfiles/Public/modsettings.lsx",
+};
 const sleep = (ms = 400) => new Promise(resolve => window.setTimeout(resolve, ms));
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 function catalog(domain: string) {
@@ -63,21 +76,39 @@ function confirm() {
   }, 2000);
 }
 export async function demoInvoke(command: string, args: Record<string, unknown>): Promise<{ value: unknown } | undefined> {
+  workspace.games = orderWorkspaceMods(workspace).games;
   const domain = String(args.gameDomain || "stardewvalley");
   switch (command) {
+    case "nexus_user_profiles": return { value: [
+      { id: "demo-default", name: "Padrão", active: true, enabled: 1, own_saves: false, own_settings: false, saves_supported: true },
+      ...(new URLSearchParams(location.search).get("profiles") === "1" ? [{ id: "demo-extra", name: "Perfil de teste", active: false, enabled: 3, own_saves: true, own_settings: false, saves_supported: true }] : []),
+    ] };
+    case "prepare_default_installation_directory": return {value: `/preview/games${typeof args.folder === "string" && args.folder ? `/${args.folder}` : ""}`};
     case "read_nexus_mod_logs": return {value:`Demonstração — registros simulados\n--- red4ext/logs/red4ext.log | modified_unix=${Math.floor(Date.now()/1000)} ---\n[RED4ext] Plugin TweakXL loaded\n[TweakXL] Loading tweaks: example.yaml`};
     case "read_nexus_logs": return {value: args.previous ? "Demonstração — execução anterior\nJogo encerrado." : "Demonstração — execução atual\nIniciando o jogo com mods."};
-    case "scan_installed_protons": return {value:[{name:"GE-Proton",path:"/preview/GE-Proton"},{name:"Proton Experimental",path:"/preview/Proton-Experimental"}]};
-    case "scan_nexus_library": await sleep(1200); return { value: clone(workspace) };
-    case "load_nexus_workspace": return { value: clone(workspace) };
-    case "list_nexus_catalog_games": return { value: specs.map(([name, , domain_name]) => ({ name, domain_name, vortex_supported: true })) };
+    case "scan_installed_protons": {
+      const installed = [...demoRunnerInstalled].map(family => {
+        const name = family === "ge-proton" ? "Proton-GE Latest" : "Proton-CachyOS Latest";
+        return { name, path: `/preview/proton/${name}` };
+      });
+      if (new URLSearchParams(location.search).get("protons") === "none") return { value: installed };
+      return { value: [{ name: "Proton-GE Latest", path: "/preview/proton/Proton-GE Latest" }, { name: "Proton Experimental", path: "/preview/Proton-Experimental" }, ...installed.filter(item => item.name !== "Proton-GE Latest")] };
+    }
+    case "scan_nexus_library": await sleep(1200); return { value: clone(orderWorkspaceMods(workspace)) };
+    case "load_nexus_workspace": return { value: clone(orderWorkspaceMods(workspace)) };
+    case "list_nexus_catalog_games": return { value: [
+      ...specs.map(([name, , domain_name]) => ({ name: domain_name === "tombraider" ? "Tomb Raider (2013)" : name, domain_name, vortex_supported: true })),
+      { name: "Rise of the Tomb Raider", domain_name: "riseofthetombraider", vortex_supported: true },
+      { name: "Tomb Raider Remastered", domain_name: "tombraiderremastered", vortex_supported: true },
+    ] };
     case "list_nexus_catalog_mods": {
       await sleep();
-      const mods = catalog(domain);
+      const mods = domain === "tombraider" && !tombRaiderAssociated ? [] : catalog(domain);
       return { value: args.feed === "trending" ? mods.slice(0, 2) : args.feed === "latest_updated" ? mods.slice(1, 3).reverse() : mods.reverse() };
     }
     case "list_nexus_catalog_page": {
       await sleep();
+      if (domain === "tombraider" && !tombRaiderAssociated) return {value:{mods:[],total_count:0,next_offset:0}};
       const originals = catalog(domain);
       let mods = Array.from({length:64},(_,i) => ({...originals[i % originals.length],mod_id:i + 1,name:i < 4 ? originals[i].name : `${originals[i % originals.length].name} — exemplo ${i + 1}`,downloads:120000 - i * 1500}));
       const words = String(args.search || "").toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
@@ -86,11 +117,23 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
       return {value:{mods:mods.slice(offset,offset+count),total_count:mods.length,next_offset:Math.min(mods.length,offset+count)}};
     }
     case "nexus_deploy_options": return {value:["copy","symlink","hardlink","vfs"].map(method => ({method,available:true,reason:"Demonstração visual"}))};
+    case "configure_nexus_domain": {
+      await sleep();
+      const game = workspace.games.find(game => game.id === args.gameId);
+      if (game) {
+        game.nexus_domain = String(args.gameDomain);
+        if (game.game.app_id === "203160" && args.gameDomain === "tombraider") {
+          tombRaiderAssociated = true;
+          game.game.name = "Tomb Raider (2013)";
+        }
+      }
+      return {value:clone(orderWorkspaceMods(workspace))};
+    }
     case "configure_nexus_settings": {
       await sleep();
       const game = workspace.games.find(game => game.id === args.gameId);
       if (game) { game.game.directory = String(args.directory); game.compat_data = String(args.compatData); game.proton = String(args.proton); }
-      return {value:clone(workspace)};
+      return {value:clone(orderWorkspaceMods(workspace))};
     }
     case "get_nexus_launch_options": {
       const game = workspace.games.find(game => game.id === args.gameId);
@@ -102,23 +145,35 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
       await sleep();
       const game = workspace.games.find(game => game.id === args.gameId);
       if(game) game.advanced = args.settings as NexusGame["advanced"];
-      return {value:clone(workspace)};
+      return {value:clone(orderWorkspaceMods(workspace))};
     }
     case "configure_nexus_launch_options": {
       await sleep();
       const game = workspace.games.find(game => game.id === args.gameId);
       if (game) game.launch_options = args.options == null ? null : String(args.options);
-      return {value: clone(workspace)};
+      return {value: clone(orderWorkspaceMods(workspace))};
     }
     case "configure_nexus_deploy": {
       await sleep();
       const game = workspace.games.find(game => game.id === args.gameId);
       if(game)game.deploy_method = args.method as NexusGame["deploy_method"];
-      return {value:clone(workspace)};
+      return {value:clone(orderWorkspaceMods(workspace))};
     }
     case "translate_nexus_description": await sleep(); return { value: "Tradução simulada para português Brasil.\n\nNesta prévia, nenhuma descrição é enviada ao serviço de tradução. No programa, este botão traduz o texto original do autor e permite voltar ao original." };
     case "get_nexus_catalog_mod": await sleep(); return { value: details(domain, Number(args.modId)) };
-    case "list_nexus_modules": return { value: { definitions: specs.map(([, , domain]) => ({ domain, tools: [] })), errors: [] } };
+    case "list_nexus_modules": return { value: { definitions: specs.map(([, , domain]) => ({ domain, tools: domain === "newvegas" ? [{name:"FNVEdit"},{name:"Wrye Bash"},{name:"FNV 4GB Patcher"}] : [], activation: domain === "baldursgate3" ? { kind: "baldurs_gate3" } : null })), errors: [] } };
+    case "open_nexus_game_tool": throw new Error(`Ferramenta não instalada (demonstração): ${String(args.name)}.`); // Never launches an external tool.
+    case "nexus_load_order": return { value: clone(demoLoadOrder) };
+    case "set_nexus_load_order": {
+      const order = args.order as string[];
+      demoLoadOrder.entries.sort((a, b) => order.indexOf(a.file) - order.indexOf(b.file));
+      return { value: clone(demoLoadOrder) };
+    }
+    case "set_nexus_load_order_auto_export":
+      demoLoadOrder.auto_export = Boolean(args.enabled);
+      return { value: clone(demoLoadOrder) };
+    case "import_nexus_load_order":
+    case "export_nexus_load_order": return { value: clone(demoLoadOrder) };
     case "inspect_nexus_game": {
       const game = workspace.games.find(g => g.game.directory === args.source) || workspace.games[0];
       return { value: { domain: game.adapter, name: game.game.name, module_version: "Prévia", notes: ["Configurações simuladas para visualizar a interface."], mod_destinations: ["Mods"], isolated_profile: false, frameworks: [] } };
@@ -127,7 +182,7 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "stop_nexus_game": {
       const game = workspace.games.find(g => g.id === args.gameId);
       if (game) game.running = command === "launch_nexus_game";
-      return { value: clone(workspace) };
+      return { value: clone(orderWorkspaceMods(workspace)) };
     }
     case "open_folder":
     case "open_nexus_game_tool": return { value: null };
@@ -174,8 +229,19 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "move_nexus_mod": {
       await sleep();
       const game = workspace.games.find(g => g.id === args.gameId);
-      if (game) { const i = game.mods.findIndex(m => m.id === args.modId), j = args.up ? i - 1 : i + 1; if (i >= 0 && j >= 0 && j < game.mods.length) [game.mods[i], game.mods[j]] = [game.mods[j], game.mods[i]]; }
-      return { value: clone(workspace) };
+      if (game) {
+        const i = game.mods.findIndex(m => m.id === args.modId), j = args.up ? i - 1 : i + 1;
+        if (i >= 0 && j >= 0 && j < game.mods.length) {
+          const before = [...game.mods];
+          [game.mods[i], game.mods[j]] = [game.mods[j], game.mods[i]];
+          game.mods = orderWorkspaceMods({games:[game]}).games[0].mods;
+          if (game.mods.findIndex(m => m.id === args.modId) === i) {
+            game.mods = before;
+            throw new Error("Os requisitos precisam permanecer antes dos mods que dependem deles.");
+          }
+        }
+      }
+      return { value: clone(orderWorkspaceMods(workspace)) };
     }
     case "nexus_mod_overrides": {
       const game = workspace.games.find(g => g.id === args.gameId), active = game?.mods.filter(m => m.installed && m.enabled) || [];
@@ -189,7 +255,7 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
       await sleep();
       const mod = workspace.games.find(game => game.id === args.gameId)?.mods.find(mod => mod.id === args.modId) as { manual_root?: unknown } | undefined;
       if (mod) mod.manual_root = args.root ?? undefined;
-      return { value: clone(workspace) };
+      return { value: clone(orderWorkspaceMods(workspace)) };
     }
     case "plan_nexus_installation": {
       await sleep();
@@ -215,7 +281,43 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
       const mod = game?.mods.find(m => m.id === args.modId);
       if (command === "remove_nexus_archive" && game) game.mods = game.mods.filter(m => m.id !== args.modId);
       else if (mod) { mod.installed = true; mod.enabled = command === "install_nexus_mod" || Boolean(args.enabled); }
-      return { value: clone(workspace) };
+      return { value: clone(orderWorkspaceMods(workspace)) };
     }
+  }
+}
+
+// Demonstration-only runner endpoints: no downloads or filesystem writes.
+const demoRunnerInstalled = new Set<string>(new URLSearchParams(location.search).get("protonUpdates") === "1" ? ["ge-proton", "cachyos-proton"] : []);
+const demoRunnerOutdated = new Set(demoRunnerInstalled);
+let cancelDemoRunner: (() => void) | undefined;
+export function demoRunnerFetch(input: string): Response | undefined {
+  if (!input.startsWith('/__preview/runner/')) return;
+  const family = new URL(input, location.origin).searchParams.get('family') ?? 'ge-proton';
+  const headers = { 'Content-Type': 'application/json' };
+  if (input.startsWith('/__preview/runner/check')) {
+    const latest = family === 'ge-proton' ? 'GE-Proton — demonstração' : 'CachyOS — demonstração';
+    return new Response(JSON.stringify({ result: { family, latest, current: demoRunnerInstalled.has(family) ? (demoRunnerOutdated.has(family) ? `${latest} anterior` : latest) : null, installed_path: null, needs_update: !demoRunnerInstalled.has(family) || demoRunnerOutdated.has(family), release_url: '', asset: { name: 'pacote-simulado.tar.gz', size: 500 * 1024 * 1024 } } }), { headers });
+  }
+  if (input.startsWith('/__preview/runner/uninstall')) {
+    demoRunnerInstalled.delete(family);
+    demoRunnerOutdated.delete(family);
+    return new Response('{}', { headers });
+  }
+  if (input.startsWith('/__preview/runner/cancel')) {
+    cancelDemoRunner?.();
+    return new Response('{}', { headers });
+  }
+  if (input.startsWith('/__preview/runner/install')) {
+    const encoder = new TextEncoder();
+    return new Response(new ReadableStream({ start(controller) {
+      let percent = 0;
+      const send = (value: unknown) => controller.enqueue(encoder.encode(JSON.stringify(value) + '\n'));
+      const timer = window.setInterval(() => {
+        percent += 5;
+        send({ progress: { family, phase: percent < 100 ? 'downloading' : 'extracting', downloaded: percent * 5 * 1024 * 1024, total: 500 * 1024 * 1024, speed_bytes_per_sec: 2.9 * 1024 * 1024 } });
+        if (percent >= 100) { window.clearInterval(timer); cancelDemoRunner = undefined; demoRunnerInstalled.add(family); demoRunnerOutdated.delete(family); send({ result: { path: '/preview/proton/' + (family === 'ge-proton' ? 'Proton-GE Latest' : 'Proton-CachyOS Latest') } }); controller.close(); }
+      }, 500);
+      cancelDemoRunner = () => { window.clearInterval(timer); cancelDemoRunner = undefined; send({ error: 'Download simulado cancelado.' }); controller.close(); };
+    } }), { headers: { 'Content-Type': 'application/x-ndjson' } });
   }
 }

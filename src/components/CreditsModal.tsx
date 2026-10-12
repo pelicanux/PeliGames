@@ -2,7 +2,7 @@ import { ModalSurface } from "./ModalSurface";
 import { useI18n } from "../i18n/I18nContext";
 import { BrandName } from "./BrandName";
 import React, { useEffect, useRef, useState } from 'react';
-import { creditLicenses } from '../services/licenses';
+import { bundledLicenseNotices } from '../services/licenses';
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { APP_BUILD_LABEL } from "../services/buildInfo";
 
@@ -13,7 +13,11 @@ interface Props {
 export const CreditsModal: React.FC<Props> = ({ onClose }) => {
   const { t } = useI18n();
   const [licenseId, setLicenseId] = useState<string | null>(null);
-  const selectedLicense = creditLicenses.find(item => item.id === licenseId);
+  const selectedLicense = licenseId ? {
+    name: t("credits", "licenses"),
+    text: bundledLicenseNotices,
+    url: "https://github.com/pelicanux/PeliGames/tree/main/licenses",
+  } : null;
   const dialogRef = useRef<HTMLDivElement>(null);
   const returnButtonRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
@@ -48,9 +52,9 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
 
   return (
     <div style={{ position: "fixed", top: "50px", left: 0, right: 0, height: "calc(100dvh - 50px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-      <div className="dialog-backdrop" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }} onClick={() => licenseId ? setLicenseId(null) : onClose()} />
+      <div className="dialog-backdrop" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(calc(6px * var(--backdrop-blur-factor, 1)))", WebkitBackdropFilter: "blur(calc(6px * var(--backdrop-blur-factor, 1)))" }} onClick={() => licenseId ? setLicenseId(null) : onClose()} />
       
-      <ModalSurface header={<h2 id="credits-heading">{selectedLicense ? (selectedLicense.id === "thirdParty" ? t("credits", "thirdParty") : selectedLicense.name) : t("credits", "title")}</h2>} onDismiss={() => licenseId ? setLicenseId(null) : onClose()} ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="credits-heading" onKeyDown={handleKeyDown} className={`modal-content dialog-glass credits-dialog ${selectedLicense ? "license-dialog" : ""}`} style={{
+      <ModalSurface header={<h2 id="credits-heading">{selectedLicense ? selectedLicense.name : t("credits", "title")}</h2>} onDismiss={() => licenseId ? setLicenseId(null) : onClose()} ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="credits-heading" onKeyDown={handleKeyDown} className={`modal-content dialog-glass credits-dialog ${selectedLicense ? "license-dialog" : ""}`} style={{
         background: "rgba(var(--surface-10-5-10, 10, 5, 10), 0.95)", 
         padding: "1.5rem", 
         borderRadius: "16px", 
@@ -63,7 +67,6 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
         {selectedLicense ? <>
           <button className="credits-license-back" onClick={() => setLicenseId(null)}>← {t("credits", "backToCredits")}</button>
 
-          <div className="credits-license-label">{selectedLicense.label}</div>
           <p className="credits-license-note">{t("credits", "originalNotice")}</p>
           <pre className="credits-license-text" tabIndex={0}>{selectedLicense.text}</pre>
           <div className="credits-license-actions">
@@ -73,7 +76,7 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
         </> : <>
         {/* Banner Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
-          <div style={{
+          <div className="credits-neon-logo" style={{
             width: "80px", height: "80px", flexShrink: 0, boxSizing: "border-box", borderRadius: "12px", background: "rgba(var(--accent-rgb),0.1)",
             border: "1px solid rgba(var(--accent-rgb),0.5)", overflow: "hidden", boxShadow: "0 0 20px rgba(var(--accent-rgb),0.4)"
           }}>
@@ -81,8 +84,8 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
           </div>
           <div>
             <h3 className="titlebar-title" style={{ margin: 0, width: "fit-content", color: "var(--tone-edf4ff, #edf4ff)" }}><BrandName /></h3>
-            <div style={{ color: "var(--tone-e2e8f0, #e2e8f0)", fontSize: "0.9rem", marginTop: "0.2rem" }}>{t("credits", "devBy")}</div>
-            <div style={{ color: "var(--tone-64748b, #64748b)", fontSize: "0.8rem", marginTop: "0.2rem" }}>{t("credits", "description")}</div>
+            <div className="credits-neon-copy" style={{ color: "var(--tone-e2e8f0, #e2e8f0)", fontSize: "0.9rem", marginTop: "0.2rem" }}>{t("credits", "devBy")}</div>
+            <div className="credits-neon-copy" style={{ color: "var(--tone-64748b, #64748b)", fontSize: "0.8rem", marginTop: "0.2rem" }}>{t("credits", "description")}</div>
           </div>
         </div>
 
@@ -94,7 +97,7 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
         
         <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "1.5rem" }}>
           {/* Apoie o projeto */}
-          <div 
+          <div className="credits-neon-card"
             style={{ display: "flex", alignItems: "center", gap: "1rem", background: "rgba(var(--accent-rgb), 0.1)", border: "1px solid rgba(var(--accent-rgb), 0.4)", borderRadius: "8px", padding: "0.8rem", cursor: "pointer", transition: "all 0.2s" }}
             onClick={() => handleLink("https://livepix.gg/thepelicano")}
             onMouseOver={(e) => e.currentTarget.style.background = "rgba(var(--accent-rgb), 0.2)"}
@@ -112,7 +115,7 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
 
           <div style={{ display: "flex", gap: "0.6rem" }}>
             {/* YouTube */}
-            <div 
+            <div className="credits-neon-card"
               style={{ flex: 1, display: "flex", alignItems: "center", gap: "0.8rem", background: "rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)", borderRadius: "8px", padding: "0.8rem", cursor: "pointer", transition: "all 0.2s" }}
               onClick={() => handleLink("https://www.youtube.com/@Pelicanux/")}
               onMouseOver={(e) => e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)"}
@@ -128,7 +131,7 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             </div>
             {/* Discord */}
-            <div 
+            <div className="credits-neon-card"
               style={{ flex: 1, display: "flex", alignItems: "center", gap: "0.8rem", background: "rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)", borderRadius: "8px", padding: "0.8rem", cursor: "pointer", transition: "all 0.2s" }}
               onClick={() => handleLink("https://discord.gg/78XSB9bHst")}
               onMouseOver={(e) => e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)"}
@@ -153,7 +156,7 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
         </div>
         
         <div className="credits-project-grid">
-          <div 
+          <div className="credits-neon-card"
             style={{ display: "flex", alignItems: "center", gap: "1rem", background: "rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)", borderRadius: "8px", padding: "0.6rem 0.8rem", cursor: "pointer", transition: "all 0.2s" }}
             onClick={() => handleLink("https://github.com/pelicanux/PeliGames")}
             onMouseOver={(e) => e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)"}
@@ -173,7 +176,7 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
         <section className="credits-mod-section" aria-labelledby="credits-mod-heading">
           <h4 id="credits-mod-heading">{t("credits", "modCredits")}</h4>
           <div className="credits-mod-grid">
-          <div 
+          <div className="credits-neon-card"
             style={{ display: "flex", alignItems: "center", gap: "1rem", background: "rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)", borderRadius: "8px", padding: "0.6rem 0.8rem", cursor: "pointer", transition: "all 0.2s" }}
             onClick={() => handleLink("https://github.com/mochizuki0323/DLSSNR-AMD")}
             onMouseOver={(e) => e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)"}
@@ -189,7 +192,7 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </div>
 
-          <div 
+          <div className="credits-neon-card"
             style={{ display: "flex", alignItems: "center", gap: "1rem", background: "rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)", borderRadius: "8px", padding: "0.6rem 0.8rem", cursor: "pointer", transition: "all 0.2s" }}
             onClick={() => handleLink("https://github.com/mauri870/DLSSNR-RDNA3")}
             onMouseOver={(e) => e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)"}
@@ -214,14 +217,13 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
           </h4>
           <p className="credits-license-note">{t("credits", "launcherLicenseNotice")}</p>
           <div className="credits-license-grid">
-            {creditLicenses.map(item => <button key={item.id} onClick={event => {
+            <button onClick={event => {
               returnButtonRef.current = event.currentTarget;
-              setLicenseId(item.id);
+              setLicenseId("notices");
             }}>
-              <span>{item.id === 'thirdParty' ? t("credits", "thirdParty") : item.name}</span>
-              <small>{item.label}</small>
+              <span>{t("credits", "licenses")}</span>
               <span className="credits-license-read">{t("credits", "readLicense")} →</span>
-            </button>)}
+            </button>
           </div>
         </section>
 

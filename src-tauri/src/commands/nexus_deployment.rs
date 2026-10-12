@@ -34,10 +34,20 @@ fn crimson_plugin_header(mut reader: impl Read, name: &str) -> Result<(), String
         || u16::from_le_bytes([pe[24],pe[25]]) != 0x20b {return Err(invalid());}
     Ok(())
 }
+/// `unmapped_file`, after the files the game's module declares as ignored.
+pub(super) fn unmapped(module: &super::nexus_modules::Definition, name: &str) -> Result<(), String> {
+    if module.ignores(name) { Ok(()) } else { unmapped_file(name) }
+}
 pub(super) fn unmapped_file(name: &str) -> Result<(), String> {
     // Thunderstore metadata is not a game configuration. Other unmapped
     // configuration/content files must not disappear from a mixed package.
     if matches!(name.to_ascii_lowercase().as_str(), "manifest.json" | "thunderstore.toml") { return Ok(()); }
+    // MO2 metadata, the author's source code and an Xbox build beside the Steam one are not game content.
+    if name.rsplit('/').next().is_some_and(|file| file.eq_ignore_ascii_case("meta.ini")) { return Ok(()); }
+    if super::nexus_modules::source_tree(name) || super::nexus_modules::xbox_variant(name) { return Ok(()); }
+    // FOMOD metadata (`fomod/info.xml`, screenshots) without an installer is only a description.
+    let lower = name.to_ascii_lowercase();
+    if lower.split('/').rev().nth(1) == Some("fomod") && (lower.ends_with("/info.xml") || [".png", ".jpg", ".jpeg", ".gif", ".bmp"].iter().any(|ext| lower.ends_with(ext))) { return Ok(()); }
     let extension = Path::new(name).extension().and_then(|value| value.to_str()).unwrap_or("").to_ascii_lowercase();
     if name.to_ascii_lowercase().contains(".patch_") || ["dll", "asi", "lua", "exe", "pak", "utoc", "ucas", "archive", "esp", "esm", "esl", "bsa", "ba2", "vbf", "fbmod", "fbpack", "smp", "dazip", "daimod", "mem", "ts4script", "package", "dl_bin",
         "json", "ini", "cfg", "xml", "bin", "dat", "dds", "repobundle", "assetbundle", "vbuild", "toml", "yaml", "yml", "bnk", "bank", "wem", "paz", "pamt", "modpatch", "cdmod", "py", "pyc", "pyo"].contains(&extension.as_str()) {
@@ -73,9 +83,9 @@ pub(super) fn manual_files(module: &super::nexus_modules::Definition, mod_id: &s
     let mut files = Vec::new();
     for (original, rel) in &inside {
         let target = if root.destination.is_empty() { module.route_package(rel, mod_id, &relative_entries)? } else { Some(module.manual_target(rel, &root.destination, mod_id)?) };
-        match target { Some(target) => files.push(((*original).clone(), target)), None => unmapped_file(original)? }
+        match target { Some(target) => files.push(((*original).clone(), target)), None => unmapped(module, original)? }
     }
-    for entry in entries.iter().filter(|e| !e.ends_with('/') && !e.starts_with(&prefix)) { unmapped_file(entry)?; }
+    for entry in entries.iter().filter(|e| !e.ends_with('/') && !e.starts_with(&prefix)) { unmapped(module, entry)?; }
     Ok(files)
 }
 
@@ -240,19 +250,40 @@ struct Deployment {
     files: BTreeMap<String, String>,
     #[serde(default)]
     targets: BTreeMap<String, String>,
+    /// Game files replaced by a mod approved as a replacer, with the checksum of
+    /// the original kept in `originals/` (Vortex renames them to `.vortex_backup`).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    originals: BTreeMap<String, String>,
+}
+fn originals(game: &NexusGame) -> Result<PathBuf, String> {
+    Ok(directory(game)?.join("originals"))
+}
+/// Targets whose deployed file comes from a mod the player installed as a replacer
+/// (the mod with the highest priority wins, as in the profile).
+fn replacer_targets(game: &NexusGame) -> BTreeSet<String> {
+    let mut winner: BTreeMap<String, bool> = BTreeMap::new();
+    for m in game.mods.iter().filter(|m| m.installed && m.enabled) {
+        for (_, target) in m.installed_files.iter().chain(m.fomod_files.iter()).flatten() {
+            winner.insert(target.to_ascii_lowercase(), m.replace_originals);
+        }
+    }
+    winner.into_iter().filter(|(_, replacer)| *replacer).map(|(target, _)| target).collect()
 }
 fn verify_targets(game:&NexusGame,old:&Deployment)->Result<(),String>{
+    if old.targets.is_empty() { return Ok(()); }
+    let destination = destinations(game)?;
+    let profiles = directory(game).unwrap_or_default().join("profiles");
     for(relative,previous)in &old.targets {
-        let dest = destination(game, relative)?;
+        let dest = destination(relative)?;
         if fs::symlink_metadata(&dest).is_ok_and(|meta| meta.file_type().is_symlink()) {
             let expected = old.sources.get(relative).ok_or("Link externo preservado; restaure os arquivos do perfil.")?;
             let source = fs::read_link(&dest).map_err(|e| e.to_string())?;
             if old.method != super::nexus_deploy_methods::Method::Symlink || source != Path::new(expected)
-                || !fs::canonicalize(&source).is_ok_and(|path| path.starts_with(directory(game).unwrap_or_default().join("profiles"))) {
+                || !fs::canonicalize(&source).is_ok_and(|path| path.starts_with(&profiles)) {
                 return Err(format!("Link alterado fora do gerenciador; preservado: {relative}"));
             }
         }
-        if old.files.contains_key(relative) && destination(game,relative)?.to_string_lossy()!=previous.as_str(){return Err("O destino dos mods mudou no prefixo/carregador. Restaure o destino anterior e desative os mods antes de mudar a configuração.".into());}
+        if old.files.contains_key(relative) && dest.to_string_lossy()!=previous.as_str(){return Err("O destino dos mods mudou no prefixo/carregador. Restaure o destino anterior e desative os mods antes de mudar a configuração.".into());}
     }
     Ok(())
 }
@@ -283,8 +314,14 @@ pub(super) fn config(module: &super::nexus_modules::Definition, path: &str) -> b
             && path.ends_with(".modconfig.json")))
 }
 pub(super) fn destination(game: &NexusGame, path: &str) -> Result<PathBuf, String> {
+    destinations(game)?(path)
+}
+/// Identifies the game once and resolves many destinations. Identification
+/// checks every bundled module on disk, so it must stay outside per-file loops.
+pub(super) fn destinations(game: &NexusGame) -> Result<impl Fn(&str) -> Result<PathBuf, String> + '_, String> {
     let module = definition(game).ok_or("Módulo do jogo não identificado.")?;
-    destination_in(&folder(game)?, &module, path, &game.compat_data)
+    let root = fs::canonicalize(game.game["directory"].as_str().ok_or("Pasta inválida.")?).map_err(|e| e.to_string())?;
+    Ok(move |path: &str| destination_in(&root, &module, path, &game.compat_data))
 }
 fn destination_in(root: &Path, module: &super::nexus_modules::Definition, path: &str, prefix: &str) -> Result<PathBuf, String> {
     destination_managed(root, module, path, prefix, &BTreeSet::new())
@@ -325,13 +362,51 @@ fn destination_managed(root: &Path, module: &super::nexus_modules::Definition, p
     }
     Ok(target)
 }
-pub(super) fn build(game: &NexusGame) -> Result<String, String> { build_inner(game, true) }
+/// `AAA`, `AAB`, … `ZZZ`: alphabetical prefix of a load order position.
+fn order_prefix(position: usize) -> String {
+    let position = position.min(26 * 26 * 26 - 1);
+    [position / 676, position / 26 % 26, position % 26].iter().map(|&n| (b'A' + n as u8) as char).collect()
+}
+/// Games loading their mod folder alphabetically (Vortex Bloodstained/Spyro load
+/// order): each mod gets its own folder whose prefix follows the mod order.
+fn ordered_target(module: &super::nexus_modules::Definition, position: usize, mod_id: &str, target: String) -> String {
+    let Some(folder) = &module.ordered_folder else { return target; };
+    match target.strip_prefix(&format!("{folder}/")) {
+        Some(rest) => format!("{folder}/{}-{mod_id}/{rest}", order_prefix(position)),
+        None => target,
+    }
+}
+/// Mod list read by the game (Conan Exiles `modlist.txt`): its `.pak` files in
+/// mod order, as Windows paths of the deployed files.
+fn write_pak_list(module: &super::nexus_modules::Definition, game: &NexusGame, dir: &Path, written: &BTreeMap<String, (String, String)>) -> Result<(), String> {
+    let Some(list) = &module.pak_list else { return Ok(()); };
+    let root = fs::canonicalize(game.game["directory"].as_str().ok_or("Pasta inválida.")?).map_err(|e| e.to_string())?;
+    let mut lines = Vec::new();
+    for item in game.mods.iter().filter(|m| m.enabled) {
+        let mut paks: Vec<&String> = written.values().filter(|(target, owner)| owner == &item.id && target.to_ascii_lowercase().ends_with(".pak")
+            && target.strip_prefix(&format!("{}/", list.folder)).is_some_and(|rest| !rest.contains('/'))).map(|(target, _)| target).collect();
+        paks.sort();
+        for target in paks { lines.push(format!("Z:{}", root.join(target).to_string_lossy().replace('/', "\\"))); }
+    }
+    if lines.is_empty() { return Ok(()); }
+    let path = dir.join(&list.file);
+    fs::create_dir_all(path.parent().ok_or("Caminho inválido.")?).map_err(|e| e.to_string())?;
+    fs::write(path, lines.join("\r\n") + "\r\n").map_err(|e| e.to_string())
+}
+pub(super) fn build(game: &NexusGame) -> Result<String, String> { build_inner(game, true, None) }
 // Removing a loader must remain possible even when enabled mods depend on it.
-pub(super) fn build_after_removal(game: &NexusGame) -> Result<String, String> { build_inner(game, false) }
-fn build_inner(game: &NexusGame, require_dependencies: bool) -> Result<String, String> {
+pub(super) fn build_after_removal(game: &NexusGame) -> Result<String, String> { build_inner(game, false, None) }
+/// Extracts the current profile again from the packages, under its recorded
+/// revision (recovery copies leave the extracted files out to save space).
+pub(super) fn rebuild_profile(game: &NexusGame, revision: &str) -> Result<(), String> {
+    uuid::Uuid::parse_str(revision).map_err(|_| "Perfil inválido.")?;
+    if directory(game)?.join("profiles").join(revision).exists() { return Ok(()); }
+    build_inner(game, false, Some(revision.to_string())).map(|_| ())
+}
+fn build_inner(game: &NexusGame, require_dependencies: bool, revision: Option<String>) -> Result<String, String> {
     idle(game)?;
     let module = definition(game).ok_or("Módulo do jogo não identificado.")?;
-    let revision = uuid::Uuid::new_v4().to_string();
+    let revision = revision.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
     let dir = directory(game)?.join("profiles").join(&revision);
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let mut overrides: BTreeMap<String, Override> = BTreeMap::new();
@@ -341,14 +416,26 @@ fn build_inner(game: &NexusGame, require_dependencies: bool) -> Result<String, S
         let mut written: BTreeMap<String, (String, String)> = BTreeMap::new();
         let mut total = 0u64;
         let mut patches = super::nexus_patches::Planner::new(game, &module)?;
-        for item in game.mods.iter().filter(|m| m.enabled) {
+        // The UE4SS layout follows the loader that will be active (also for mods
+        // installed earlier), so replacing the loader moves the scripts with it.
+        let ue4ss_kind = match module.ue4ss() {
+            Some(layout) => {
+                let deployed: Vec<&str> = game.mods.iter().filter(|m| m.enabled)
+                    .flat_map(|m| m.installed_files.iter().chain(m.fomod_files.iter()).flatten().map(|(_, target)| target.as_str())).collect();
+                let owned = load_deployment(game)?;
+                super::nexus_scan::ue4ss_kind(&folder(game)?, &layout, &deployed, &|path| owned.files.contains_key(path))?
+            }
+            None => None,
+        };
+        let plugin_oracle = super::nexus_loot::PluginOracle::new(game, &module);
+        for (position, item) in game.mods.iter().filter(|m| m.enabled).enumerate() {
             uuid::Uuid::parse_str(&item.id).map_err(|_| "Mod inválido.")?;
             let mut zip = super::nexus_archive::open(game,item)?;
             let selected = if let Some(files) = item.installed_files.as_ref().or(item.fomod_files.as_ref()) {
                 super::nexus_fomod::validate_installation_files(&mut zip,&module,files)?;
                 Some(files.clone())
             } else {
-                let resolution = super::nexus_fomod::resolve(&mut zip, &module, &folder(game)?, &item.id, item.fomod_selection.as_deref())?;
+                let resolution = super::nexus_fomod::resolve(&mut zip, &module, &folder(game)?, &item.id, item.fomod_selection.as_deref(), Some(&plugin_oracle))?;
                 if !resolution.issues.is_empty() {return Err(resolution.issues.join("\n"));}
                 resolution.files
             };
@@ -365,19 +452,22 @@ fn build_inner(game: &NexusGame, require_dependencies: bool) -> Result<String, S
                 _ => None,
             };
             let mut recognized = false;
+            let mut progress = super::nexus_progress::Reporter::new(&game.id, "extract", &item.name, zip.len());
             for i in 0..zip.len() {
+                progress.step();
                 let entry = zip.by_index(i).map_err(|e| e.to_string())?;
                 let name = entry.name().replace('\\', "/");
                 if entry.is_dir() {continue;}
                 drop(entry);
                 let targets = if let Some(selected) = &selected { selected.iter().filter(|(source,_)|source == &name).map(|(_,target)|target.clone()).collect::<Vec<_>>() } else if let Some(planned) = &unity_targets { planned.get(&name).cloned().into_iter().collect() } else {module.route_package(&name,&item.id,&entries)?.into_iter().collect()};
-                if targets.is_empty() && selected.is_none() {unmapped_file(&name)?;}
+                if targets.is_empty() && selected.is_none() {unmapped(&module, &name)?;}
                 if module.domain == "crimsondesert" && !targets.is_empty() {
                     module.route_package(&name,&item.id,&entries)?;
                 }
                 for target in targets {
-                let target = match module.ue4ss() { Some(layout) if item.installed_files.is_none() => super::nexus_scan::ue4ss_mod_target(&folder(game)?, &layout, target)?, _ => target };
+                let target = match module.ue4ss() { Some(layout) => super::nexus_scan::ue4ss_layout_target(&layout, ue4ss_kind, target), None => target };
                 let target = if module.domain == "helldivers2" {patch_map.get(&name).cloned().unwrap_or(target)} else {target};
+                let target = ordered_target(&module, position, &item.id, target);
                 let entry = zip.by_index(i).map_err(|e|e.to_string())?;
                 total = total
                     .checked_add(entry.size())
@@ -420,6 +510,7 @@ fn build_inner(game: &NexusGame, require_dependencies: bool) -> Result<String, S
                 ));
             }
         }
+        write_pak_list(&module, game, &dir, &written)?;
         let old = load_deployment(game)?;
         verify_targets(game,&old)?;
         let files: Vec<_> = walkdir::WalkDir::new(&dir).into_iter().filter_map(Result::ok)
@@ -427,10 +518,11 @@ fn build_inner(game: &NexusGame, require_dependencies: bool) -> Result<String, S
         validate_companions(&files.iter().map(|target| (target.clone(), target.clone())).collect::<Vec<_>>())?;
         let missing = missing_frameworks(&module, &folder(game)?, &files, Some(&dir), &old.files);
         if require_dependencies && !missing.is_empty() { return Err(format!("Instale as dependências do módulo antes deste mod: {}", missing.iter().map(|item| item.name.as_str()).collect::<Vec<_>>().join(", "))); }
+        let resolve = destinations(game)?;
         for path in old.files.keys().filter(|p| config(&module, p)) {
             let source = if old.method == super::nexus_deploy_methods::Method::Vfs {
-                super::nexus_deploy_methods::view(game)?.map(|view| view.join(path)).unwrap_or(destination(game,path)?)
-            } else {destination(game,path)?};
+                super::nexus_deploy_methods::view(game)?.map(|view| view.join(path)).unwrap_or(resolve(path)?)
+            } else {resolve(path)?};
             let cached = directory(game)?.join("settings").join(path);
             if source.is_file() {
                 fs::create_dir_all(cached.parent().ok_or("Configuração inválida.")?)
@@ -457,6 +549,7 @@ fn build_inner(game: &NexusGame, require_dependencies: bool) -> Result<String, S
         }
         Ok(())
     })();
+    super::nexus_progress::clear(&game.id);
     if result.is_ok() {
         // Recorded beside (never inside) the profile so it is not deployed to the game.
         save_overrides(game, overrides.into_values().collect())?;
@@ -475,21 +568,24 @@ pub(super) struct Transaction {
     backup: PathBuf,
     paths: Vec<String>,
     old_manifest: Option<Vec<u8>>,
+    /// Stored originals put back into the game; dropped once committed.
+    restored: Vec<PathBuf>,
     committed: bool,
 }
 impl Transaction {
     pub(super) fn commit(mut self) {
         self.committed = true;
-        // SMAPI reports empty mod directories as invalid mods. Clean only the
-        // parents of managed files, after the library commit makes rollback unnecessary.
-        if self.module.domain == "stardewvalley" {
-            let mods = self.root.join("Mods");
-            for path in &self.paths {
-                if let Ok(dest) = destination_in(&self.root, &self.module, path, &self.game.compat_data) {
-                    prune_empty_mod_parents(&mods, &dest);
-                }
-            }
+        // Removing a mod must not leave its empty folders (SMAPI even reports them as
+        // invalid mods). Only parents of managed files are pruned, after the library
+        // commit makes rollback unnecessary, and never the module's destination folders.
+        for path in &self.paths {
+            let Some(folder) = self.module.destinations.iter().filter(|folder| path.starts_with(&format!("{folder}/"))).max_by_key(|folder| folder.len()) else { continue };
+            let Ok(dest) = destination_in(&self.root, &self.module, path, &self.game.compat_data) else { continue };
+            // The destination folder is the ancestor as many levels up as the path below it.
+            let levels = path[folder.len() + 1..].split('/').count();
+            if let Some(boundary) = dest.ancestors().nth(levels) { prune_empty_mod_parents(boundary, &dest); }
         }
+        for stored in &self.restored { let _ = fs::remove_file(stored); }
         let _ = fs::remove_dir_all(&self.backup);
     }
 }
@@ -563,6 +659,10 @@ pub(super) fn apply(game: &NexusGame) -> Result<Transaction, String> {
     let managed: BTreeSet<PathBuf> = managed.into_iter().chain(next.targets.values().map(PathBuf::from)).collect();
     let old_physical: BTreeSet<_> = if old.method == super::nexus_deploy_methods::Method::Vfs { BTreeSet::new() } else { old.files.keys().cloned().collect() };
     let all: BTreeSet<_> = old_physical.iter().chain(next.files.keys()).cloned().collect();
+    let replacers = replacer_targets(game);
+    // Originals replaced now, and replaced originals the game changed back
+    // (update or file verification): the game's file becomes the new original.
+    let (mut replace, mut refresh) = (BTreeSet::new(), BTreeSet::new());
     for path in &all {
         let dest = destination_managed(&root, &module, path, &game.compat_data, &managed)?;
         if fs::symlink_metadata(&dest).is_err() {
@@ -571,14 +671,18 @@ pub(super) fn apply(game: &NexusGame) -> Result<Transaction, String> {
         if fs::symlink_metadata(&dest).is_ok_and(|m|m.file_type().is_symlink()) && !old_physical.contains(path) { return Err(format!("Link externo preservado: {path}")); }
         let hash = checksum(&dest)?;
         match old.files.get(path).filter(|_| old_physical.contains(path)) {
+            Some(expected) if expected != &hash && old.originals.contains_key(path) => { refresh.insert(path.clone()); }
             Some(expected) if expected != &hash && !config(&module, path) => {
                 return Err(format!(
                     "Arquivo modificado fora do gerenciador; preservado: {path}"
                 ))
             }
+            None if next.files.contains_key(path) && replacers.contains(&path.to_ascii_lowercase()) => {
+                if game.deploy_method != super::nexus_deploy_methods::Method::Vfs { replace.insert(path.clone()); }
+            }
             None if !super::nexus_activation::generated_config(&module,path) => {
                 return Err(format!(
-                    "Arquivo existente não pertence ao perfil; preservado: {path}"
+                    "Arquivo existente não pertence ao perfil; preservado: {path}. Se for um arquivo original do jogo, reinstale o mod e confirme “Instalar como substituição”."
                 ))
             }
             _ => {}
@@ -591,12 +695,32 @@ pub(super) fn apply(game: &NexusGame) -> Result<Transaction, String> {
         backup: directory(game)?.join(format!("rollback-{}", uuid::Uuid::new_v4())),
         paths: Vec::new(),
         old_manifest: fs::read(manifest(game)?).ok(),
+        restored: Vec::new(),
         committed: false,
     };
+    let stored_originals = originals(game)?;
     fs::create_dir_all(&tx.backup).map_err(|e| e.to_string())?;
+    // Copy can take long for big mods; links are near instant but reported the same way.
+    let phase = if game.deploy_method == super::nexus_deploy_methods::Method::Copy { "copy" } else { "link" };
+    let mut progress = super::nexus_progress::Reporter::new(&game.id, phase, "", all.len());
     for path in all {
+        progress.step();
         if game.deploy_method == super::nexus_deploy_methods::Method::Vfs && !old_physical.contains(&path) {continue;}
         let dest = destination_managed(&root, &module, &path, &game.compat_data, &managed)?;
+        // The game's own file is back and no mod replaces it any more: keep it.
+        if refresh.contains(&path) && !next.files.contains_key(&path) { continue; }
+        let stored = stored_originals.join(&path);
+        if replace.contains(&path) || refresh.contains(&path) {
+            fs::create_dir_all(stored.parent().ok_or("Cópia inválida.")?).map_err(|e| e.to_string())?;
+            fs::copy(&dest, &stored).map_err(|e| format!("Falha ao guardar o arquivo original {path}: {e}"))?;
+            next.originals.insert(path.clone(), checksum(&stored)?);
+        } else if let Some(hash) = old.originals.get(&path).filter(|_| next.files.contains_key(&path)) {
+            next.originals.insert(path.clone(), hash.clone());
+        }
+        let restore = (!next.files.contains_key(&path)).then(|| old.originals.get(&path)).flatten();
+        if let Some(hash) = restore {
+            if !stored.is_file() || checksum(&stored)? != *hash { return Err(format!("A cópia do arquivo original de {path} está ausente ou alterada; nada foi mudado. Verifique os arquivos do jogo na loja.")); }
+        }
         if fs::symlink_metadata(&dest).is_ok() {
             let backup = tx.backup.join(&path);
             fs::create_dir_all(backup.parent().ok_or("Backup inválido.")?)
@@ -613,9 +737,15 @@ pub(super) fn apply(game: &NexusGame) -> Result<Transaction, String> {
             // Mutable settings stay independent of profile files and link methods.
             let method = if config(&module,&path) || super::nexus_activation::generated_config(&module,&path) {super::nexus_deploy_methods::Method::Copy} else {game.deploy_method};
             method.place(&runtime.join(&path), &dest)?;
+        } else if restore.is_some() {
+            fs::create_dir_all(dest.parent().ok_or("Destino inválido.")?).map_err(|e| e.to_string())?;
+            fs::copy(&stored, &dest).map_err(|e| format!("Falha ao restaurar o arquivo original {path}: {e}"))?;
+            tx.restored.push(stored);
         }
     }
+    super::nexus_progress::clear(&game.id);
     if game.deploy_method != super::nexus_deploy_methods::Method::Vfs {super::nexus_activation::timestamps(game, &module, &runtime)?;}
+    super::nexus_gamebryo::backdate(&root, &module)?;
     let temporary = tx.backup.join("manifest.tmp");
     fs::write(
         &temporary,
@@ -648,8 +778,9 @@ fn launch_with(game: &NexusGame, tool: Option<&super::nexus_modules::GameTool>) 
         Some(super::nexus_deploy_methods::mount(game, &profile(game)?, &dir)?)
     } else {None};
     let visible = virtual_view.as_deref().unwrap_or(&dir);
+    let resolve = destinations(game)?;
     for (path, hash) in &installed.files {
-        if !config(&module, path) && checksum(&if virtual_view.is_some() {visible.join(path)} else {destination(game,path)?})? != *hash {
+        if !config(&module, path) && checksum(&if virtual_view.is_some() {visible.join(path)} else {resolve(path)?})? != *hash {
             return Err(format!(
                 "Arquivo do perfil alterado: {path}. Reinstale o mod."
             ));
@@ -742,19 +873,21 @@ pub(super) fn framework_status(module: &super::nexus_modules::Definition, root: 
 fn missing_frameworks(module: &super::nexus_modules::Definition, root: &Path, targets: &[String], staged: Option<&Path>, owned: &BTreeMap<String,String>) -> Vec<FrameworkStatus> {
     module.frameworks.iter().filter(|item| targets.iter().any(|target| item.for_paths.iter().any(|prefix| target.starts_with(prefix)) && (item.for_extensions.is_empty() || item.for_extensions.iter().any(|ext| target.to_ascii_lowercase().ends_with(ext)))))
         .filter(|item| {
-            let present = |file: &String| staged.map(|stage| stage.join(file).is_file()).unwrap_or_else(|| targets.contains(file))
+            // The package being installed may itself provide the loader (e.g. a UE4SS
+            // package with its built-in ue4ss/Mods), with or without an existing profile.
+            let present = |file: &String| targets.contains(file) || staged.is_some_and(|stage| stage.join(file).is_file())
                 || !owned.contains_key(file) && root.join(file).is_file() && fs::canonicalize(root.join(file)).is_ok_and(|path| path.starts_with(root));
             !item.required_files.iter().all(present) || !item.any_files.is_empty() && !item.any_files.iter().any(present)
         }).map(|item| FrameworkStatus { name:item.name.clone(), mod_id:item.mod_id, url:item.url.clone().unwrap_or_else(|| format!("https://www.nexusmods.com/{}/mods/{}",module.domain,item.mod_id)), kind: if item.mod_id == 0 { "external" } else { "nexus" }.into(), installed:false }).collect()
 }
 #[derive(Serialize)]
-pub struct InstallationPlan { pub overrides: Vec<(String, String)>, pub manual_root: Option<super::nexus_local::ManualRoot>, pub resolved_files: Vec<(String,String)>, pub activation_file: Option<String>, pub module: String, pub files: Vec<(String,String)>, pub missing: Vec<FrameworkStatus>, pub notes: Vec<String>, pub fomod: Option<super::nexus_fomod::Installer>, pub selection: Vec<String>, pub issues: Vec<String> }
+pub struct InstallationPlan { pub originals: Vec<String>, pub replace_originals: bool, pub overrides: Vec<(String, String)>, pub manual_root: Option<super::nexus_local::ManualRoot>, pub resolved_files: Vec<(String,String)>, pub activation_file: Option<String>, pub module: String, pub files: Vec<(String,String)>, pub missing: Vec<FrameworkStatus>, pub notes: Vec<String>, pub fomod: Option<super::nexus_fomod::Installer>, pub selection: Vec<String>, pub issues: Vec<String> }
 pub(super) fn plan(game: &NexusGame, mod_id: &str) -> Result<InstallationPlan,String> {
     let module = super::nexus_discovery::at(Path::new(game.game["directory"].as_str().ok_or("Pasta ausente.")?)).ok_or("Módulo do jogo não identificado.")?;
     let item = game.mods.iter().find(|item| item.id == mod_id).ok_or("Mod não encontrado.")?;
     uuid::Uuid::parse_str(mod_id).map_err(|_| "Mod inválido.")?;
     let mut archive = super::nexus_archive::open(game,item)?;
-    let resolution = super::nexus_fomod::resolve(&mut archive,&module,Path::new(game.game["directory"].as_str().unwrap()),mod_id,item.fomod_selection.as_deref())?;
+    let resolution = super::nexus_fomod::resolve(&mut archive,&module,Path::new(game.game["directory"].as_str().unwrap()),mod_id,item.fomod_selection.as_deref(),Some(&super::nexus_loot::PluginOracle::new(game,&module)))?;
     let entries = (0..archive.len()).map(|i| archive.by_index(i).map(|entry| entry.name().replace('\\', "/")).map_err(|e| e.to_string())).collect::<Result<Vec<_>, _>>()?;
     let unity = module.unity();
     let mut files = if let Some(selected) = resolution.files {selected} else if let Some(root) = &item.manual_root {
@@ -764,7 +897,7 @@ pub(super) fn plan(game: &NexusGame, mod_id: &str) -> Result<InstallationPlan,St
     } else if let Some(layout) = &unity {
         let files = super::nexus_unity::plan_package(&module, layout, &mut archive, &entries, mod_id, &folder(game)?)?;
         let planned: BTreeSet<&String> = files.iter().map(|(source, _)| source).collect();
-        for name in entries.iter().filter(|e| !e.ends_with('/') && !planned.contains(e)) { unmapped_file(name)?; }
+        for name in entries.iter().filter(|e| !e.ends_with('/') && !planned.contains(e)) { unmapped(&module, name)?; }
         files
     } else {
         let mut files = Vec::new();
@@ -772,7 +905,7 @@ pub(super) fn plan(game: &NexusGame, mod_id: &str) -> Result<InstallationPlan,St
             let entry = archive.by_index(index).map_err(|error|error.to_string())?;
             if entry.is_dir() {continue;}
             let name = entry.name().replace('\\', "/");
-            if let Some(target) = module.route_package(&name,mod_id,&entries)? {files.push((name,target));} else {unmapped_file(&name)?;}
+            if let Some(target) = module.route_package(&name,mod_id,&entries)? {files.push((name,target));} else {unmapped(&module, &name)?;}
         }
         files
     };
@@ -787,8 +920,13 @@ pub(super) fn plan(game: &NexusGame, mod_id: &str) -> Result<InstallationPlan,St
         for (source,target) in &mut files {if let Some(path) = patch_map.get(source) {*target=path.clone();}}
     }
     if let Some(layout) = module.ue4ss() {
-        let root = folder(game)?;
-        for (_, target) in &mut files { *target = super::nexus_scan::ue4ss_mod_target(&root, &layout, target.clone())?; }
+        // This package's loader, then the loaders of other enabled mods, then a manual install.
+        let others: Vec<String> = game.mods.iter().filter(|m| m.enabled && m.id != item.id)
+            .flat_map(|m| m.installed_files.iter().chain(m.fomod_files.iter()).flatten().map(|(_, target)| target.clone())).collect();
+        let deployed: Vec<&str> = files.iter().map(|(_, target)| target.as_str()).chain(others.iter().map(String::as_str)).collect();
+        let owned = load_deployment(game)?;
+        let kind = super::nexus_scan::ue4ss_kind(&folder(game)?, &layout, &deployed, &|path| owned.files.contains_key(path))?;
+        for (_, target) in &mut files { *target = super::nexus_scan::ue4ss_layout_target(&layout, kind, target.clone()); }
     }
     files.sort();
     if module.domain == "crimsondesert" {
@@ -811,9 +949,18 @@ pub(super) fn plan(game: &NexusGame, mod_id: &str) -> Result<InstallationPlan,St
         }
     }
     let mut resolved_files=Vec::new();
+    // Game files the package would replace (Vortex "Mod looks like a replacer").
+    let owned = load_deployment(game)?;
+    let mut originals = Vec::new();
     for(source,target)in &files {
         match destination_in(Path::new(game.game["directory"].as_str().unwrap()),&module,target,&game.compat_data) {
-            Ok(path)=>resolved_files.push((source.clone(),path.to_string_lossy().into_owned())),
+            Ok(path)=>{
+                if fs::symlink_metadata(&path).is_ok_and(|meta| meta.is_file()) && !owned.files.contains_key(target)
+                    && !config(&module, target) && !super::nexus_activation::generated_config(&module, target) {
+                    originals.push(target.clone());
+                }
+                resolved_files.push((source.clone(),path.to_string_lossy().into_owned()))
+            },
             Err(error)=>if !issues.contains(&error){issues.push(error);},
         }
     }
@@ -824,6 +971,7 @@ pub(super) fn plan(game: &NexusGame, mod_id: &str) -> Result<InstallationPlan,St
             super::nexus_modules::ActivationKind::Bethesda => [".esp", ".esm", ".esl"].iter().any(|ext| target.to_ascii_lowercase().ends_with(ext)),
             super::nexus_modules::ActivationKind::Morrowind => [".esp", ".esm", ".bsa"].iter().any(|ext| target.to_ascii_lowercase().ends_with(ext)),
             super::nexus_modules::ActivationKind::BaldursGate3 => target.to_ascii_lowercase().ends_with(".pak"),
+            super::nexus_modules::ActivationKind::ArchiveList => target.to_ascii_lowercase().ends_with(".ba2"),
             _ => true,
         });
         if needs_activation {
@@ -847,7 +995,7 @@ pub(super) fn plan(game: &NexusGame, mod_id: &str) -> Result<InstallationPlan,St
         }
     }
     overrides.sort(); overrides.dedup(); overrides.truncate(500);
-    Ok(InstallationPlan {overrides, manual_root: item.manual_root.clone(), resolved_files, activation_file, module:module.name, files, missing, notes:module.notes, fomod:resolution.installer, selection:resolution.selection, issues})
+    Ok(InstallationPlan {originals, replace_originals: item.replace_originals, overrides, manual_root: item.manual_root.clone(), resolved_files, activation_file, module:module.name, files, missing, notes:module.notes, fomod:resolution.installer, selection:resolution.selection, issues})
 }
 
 #[cfg(test)]
@@ -951,6 +1099,18 @@ mod crimson_tests {
         assert!(crimson_plugin_header(bytes.as_slice(),"plugin.asi").is_err());
     }
     #[test]
+    fn removed_mods_leave_no_empty_folders_but_keep_destinations() {
+        let root = std::env::temp_dir().join(format!("prune-{}", uuid::Uuid::new_v4()));
+        let mods = root.join("Pal/Binaries/Win64/ue4ss/Mods");
+        fs::create_dir_all(mods.join("Gone/Scripts")).unwrap();
+        fs::create_dir_all(mods.join("Kept/Scripts")).unwrap();
+        fs::write(mods.join("Kept/Scripts/main.lua"), "x").unwrap();
+        prune_empty_mod_parents(&mods, &mods.join("Gone/Scripts/main.lua"));
+        prune_empty_mod_parents(&mods, &mods.join("Kept/Scripts/other.lua"));
+        assert!(!mods.join("Gone").exists() && mods.join("Kept/Scripts/main.lua").exists() && mods.is_dir());
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
     fn crimson_requires_loader_for_asi_but_accepts_loader_in_same_package() {
         let module = super::super::nexus_modules::registry().definitions.into_iter().find(|m|m.domain=="crimsondesert").unwrap();
         let root = std::env::temp_dir().join(format!("crimson-requirements-{}",uuid::Uuid::new_v4()));
@@ -963,6 +1123,22 @@ mod crimson_tests {
         assert!(missing_frameworks(&module,&root,&plugins,None,&BTreeMap::new()).is_empty());
         let owned = BTreeMap::from([("bin64/version.dll".into(),"previous loader".into())]);
         assert_eq!(missing_frameworks(&module,&root,&plugins,None,&owned).len(),1);
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn loader_package_satisfies_itself_when_a_profile_already_exists() {
+        // Palworld with Pal Insight installed (profile exists) and the old UE4SS removed:
+        // importing the UE4SS package must not ask for UE4SS.
+        let module = super::super::nexus_modules::registry().definitions.into_iter().find(|m|m.domain=="palworld").unwrap();
+        let root = std::env::temp_dir().join(format!("ue4ss-self-{}",uuid::Uuid::new_v4()));
+        let profile = root.join("profile");
+        fs::create_dir_all(root.join("Pal/Binaries/Win64")).unwrap();
+        fs::create_dir_all(&profile).unwrap();
+        let script: Vec<String> = vec!["Pal/Binaries/Win64/ue4ss/Mods/PalInsight/Scripts/main.lua".into()];
+        assert_eq!(missing_frameworks(&module,&root,&script,Some(&profile),&BTreeMap::new()).len(),1);
+        let package: Vec<String> = vec!["Pal/Binaries/Win64/dwmapi.dll".into(),"Pal/Binaries/Win64/ue4ss/UE4SS.dll".into(),
+            "Pal/Binaries/Win64/ue4ss/Mods/BPModLoaderMod/Scripts/main.lua".into()];
+        assert!(missing_frameworks(&module,&root,&package,Some(&profile),&BTreeMap::new()).is_empty());
         fs::remove_dir_all(root).unwrap();
     }
 }
@@ -1070,6 +1246,31 @@ mod manual_root_tests {
     fn root(source: &str, destination: &str) -> ManualRoot { ManualRoot { source: source.into(), destination: destination.into() } }
 
     #[test]
+    fn load_order_folders_and_pak_lists_follow_the_mod_order() {
+        assert_eq!([order_prefix(0), order_prefix(1), order_prefix(26), order_prefix(675)], ["AAA", "AAB", "ABA", "AZZ"]);
+        let modules = super::super::nexus_modules::registry().definitions;
+        let find = |domain: &str| modules.iter().find(|m| m.domain == domain).unwrap().clone();
+        let spyro = find("spyroreignitedtrilogy");
+        assert_eq!(ordered_target(&spyro, 1, ID, "falcon/content/paks/~mods/Skin_P.pak".into()), format!("falcon/content/paks/~mods/AAB-{ID}/Skin_P.pak"));
+        assert_eq!(ordered_target(&spyro, 1, ID, "falcon/other.txt".into()), "falcon/other.txt");
+        // Conan Exiles: Windows paths of the enabled mods' paks, in mod order.
+        let conan = find("conanexiles");
+        let base = std::env::temp_dir().join(format!("pak-list-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(base.join("game")).unwrap();
+        let (first, second) = ("00000000-0000-4000-8000-0000000000aa", "00000000-0000-4000-8000-0000000000bb");
+        let game: NexusGame = serde_json::from_value(serde_json::json!({"id": "test", "platform": "proton", "game": {"directory": base.join("game")},
+            "mods": [{"id": second, "name": "B", "version": "", "archive": "", "size": 0, "enabled": true, "installed": true}, {"id": first, "name": "A", "version": "", "archive": "", "size": 0, "enabled": true, "installed": true}]})).unwrap();
+        let written = BTreeMap::from([
+            ("conansandbox/mods/a.pak".to_string(), ("ConanSandbox/Mods/A.pak".to_string(), first.to_string())),
+            ("conansandbox/mods/b.pak".to_string(), ("ConanSandbox/Mods/B.pak".to_string(), second.to_string())),
+        ]);
+        write_pak_list(&conan, &game, &base.join("profile"), &written).unwrap();
+        let text = fs::read_to_string(base.join("profile/ConanSandbox/Mods/modlist.txt")).unwrap();
+        let root = fs::canonicalize(base.join("game")).unwrap().to_string_lossy().replace('/', "\\");
+        assert_eq!(text, format!("Z:{root}\\ConanSandbox\\Mods\\B.pak\r\nZ:{root}\\ConanSandbox\\Mods\\A.pak\r\n"));
+        fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
     fn chosen_root_feeds_module_routes_or_an_allowed_destination() {
         let m = module();
         let pack = entries(&["Author Pack/Main/Plugin.esp", "Author Pack/Main/textures/a.dds", "Author Pack/readme.txt"]);
@@ -1173,5 +1374,176 @@ mod priority_tests {
         game.mods[1].enabled = false;
         assert!(build(&game).unwrap_err().contains("mesmo pacote"));
         fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    #[ignore = "Requires an isolated XDG_CONFIG_HOME (/tmp/peligames-*)"]
+    fn new_vegas_archives_get_overrides_backdate_and_redirection() {
+        let config_root = PathBuf::from(std::env::var("XDG_CONFIG_HOME").expect("Isolated config required"));
+        assert!(config_root.starts_with("/tmp") && config_root.file_name().unwrap().to_string_lossy().starts_with("peligames-"));
+        let base = config_root.join(format!("nv-{}", uuid::Uuid::new_v4()));
+        let root = base.join("game");
+        fs::create_dir_all(root.join("Data")).unwrap();
+        fs::write(root.join("FalloutNV.exe"), b"MZ fixture").unwrap();
+        fs::write(root.join("Data/Fallout - Textures.bsa"), b"original").unwrap();
+        fs::write(root.join("Data/Other.bsa"), b"not the game's").unwrap();
+        let documents = base.join("prefix/pfx/drive_c/users/steamuser/Documents/My Games/FalloutNV");
+        fs::create_dir_all(&documents).unwrap();
+        fs::write(base.join("prefix/pfx/system.reg"), "").unwrap();
+        fs::write(documents.join("Fallout.ini"), "[Archive]\r\nSArchiveList=Fallout - Textures.bsa, Fallout - Meshes.bsa\r\n").unwrap();
+        let id = uuid::Uuid::new_v4().to_string();
+        let mut game: NexusGame = serde_json::from_value(serde_json::json!({
+            "id": uuid::Uuid::new_v4().to_string(), "game": {"directory": root, "name": "Fallout New Vegas", "path": root.join("FalloutNV.exe")},
+            "platform": "proton", "compat_data": base.join("prefix"),
+            "mods": [{"id": id, "name": "Archive mod", "archive": "mod.zip", "size": 1, "installed": true, "enabled": true}]
+        })).unwrap();
+        assert_eq!(definition(&game).unwrap().domain, "newvegas");
+        let managed = directory(&game).unwrap().join("archives");
+        fs::create_dir_all(&managed).unwrap();
+        zip(&managed.join(format!("{id}.zip")), &[("Data/MyMod.bsa", b"bsa"), ("Data/textures/x.dds", b"dds")]);
+        game.profile = Some(build(&game).unwrap());
+        apply(&game).unwrap().commit();
+        assert!(root.join("Data/MyMod.override").is_file(), "arquivo .override ao lado do BSA do mod");
+        let date = super::super::nexus_gamebryo::date("2006-02-01").unwrap();
+        assert_eq!(fs::metadata(root.join("Data/Fallout - Textures.bsa")).unwrap().modified().unwrap(), date);
+        assert_ne!(fs::metadata(root.join("Data/Other.bsa")).unwrap().modified().unwrap(), date);
+        let ini = fs::read_to_string(documents.join("Fallout.ini")).unwrap();
+        assert!(ini.contains("bInvalidateOlderFiles=1") && ini.contains("SArchiveList=Fallout - Textures.bsa, Fallout - Meshes.bsa"));
+
+        // Redirection on: archive generated and listed first.
+        super::super::nexus_gamebryo::set_redirection(&game, true).unwrap();
+        game.profile = Some(build(&game).unwrap());
+        apply(&game).unwrap().commit();
+        let redirection = root.join("Data").join(super::super::nexus_gamebryo::REDIRECTION_FILE);
+        assert!(fs::read(&redirection).unwrap().starts_with(b"BSA\0"));
+        assert!(!root.join("Data/PeliGames - BSA Redirection.override").exists());
+        let ini = fs::read_to_string(documents.join("Fallout.ini")).unwrap();
+        assert!(ini.contains("SArchiveList=PeliGames - BSA Redirection.bsa, Fallout - Textures.bsa, Fallout - Meshes.bsa") && ini.contains("bUseArchives=1"), "{ini}");
+
+        // Off again, and with no mod left the list loses the archive too.
+        super::super::nexus_gamebryo::set_redirection(&game, false).unwrap();
+        game.mods[0].enabled = false;
+        game.profile = Some(build_after_removal(&game).unwrap());
+        apply(&game).unwrap().commit();
+        assert!(!redirection.exists() && !root.join("Data/MyMod.override").exists() && !root.join("Data/MyMod.bsa").exists());
+        let ini = fs::read_to_string(documents.join("Fallout.ini")).unwrap();
+        assert!(ini.contains("SArchiveList=Fallout - Textures.bsa, Fallout - Meshes.bsa") && !ini.contains("Redirection"), "{ini}");
+        fs::remove_dir_all(&base).unwrap();
+    }
+
+    #[test]
+    #[ignore = "Requires an isolated XDG_CONFIG_HOME (/tmp/peligames-*)"]
+    fn fallout_76_lists_archives_of_enabled_mods_in_the_custom_ini() {
+        let config_root = PathBuf::from(std::env::var("XDG_CONFIG_HOME").expect("Isolated config required"));
+        assert!(config_root.starts_with("/tmp") && config_root.file_name().unwrap().to_string_lossy().starts_with("peligames-"));
+        let base = config_root.join(format!("fo76-{}", uuid::Uuid::new_v4()));
+        let root = base.join("game");
+        fs::create_dir_all(root.join("Data")).unwrap();
+        fs::write(root.join("Fallout76.exe"), b"MZ fixture").unwrap();
+        let documents = base.join("prefix/pfx/drive_c/users/steamuser/Documents/My Games/Fallout 76");
+        fs::create_dir_all(&documents).unwrap();
+        fs::write(base.join("prefix/pfx/system.reg"), "").unwrap();
+        let id = uuid::Uuid::new_v4().to_string();
+        let mut game: NexusGame = serde_json::from_value(serde_json::json!({
+            "id": uuid::Uuid::new_v4().to_string(), "game": {"directory": root, "name": "Fallout 76", "path": root.join("Fallout76.exe")},
+            "platform": "proton", "compat_data": base.join("prefix"),
+            "mods": [{"id": id, "name": "Archive", "archive": "a.zip", "size": 1, "installed": true, "enabled": true,
+                "installed_files": [["Mod.ba2", "Data/Mod.ba2"]]}]
+        })).unwrap();
+        assert_eq!(definition(&game).unwrap().domain, "fallout76");
+        let managed = directory(&game).unwrap().join("archives");
+        fs::create_dir_all(&managed).unwrap();
+        zip(&managed.join(format!("{id}.zip")), &[("Mod.ba2", b"BTDX")]);
+        game.profile = Some(build(&game).unwrap());
+        apply(&game).unwrap().commit();
+        let ini = fs::read_to_string(documents.join("Fallout76Custom.ini")).unwrap();
+        assert!(ini.contains("sResourceArchive2List=Mod.ba2") && ini.contains("bInvalidateOlderFiles=1"), "{ini}");
+        assert!(root.join("Data/Mod.ba2").is_file());
+        // A manual entry stays; the archive of a disabled mod leaves the list.
+        fs::write(documents.join("Fallout76Custom.ini"), ini.replace("sResourceArchive2List=Mod.ba2", "sResourceArchive2List=Mod.ba2, Manual.ba2")).unwrap();
+        game.mods[0].enabled = false;
+        game.profile = Some(build_after_removal(&game).unwrap());
+        apply(&game).unwrap().commit();
+        let ini = fs::read_to_string(documents.join("Fallout76Custom.ini")).unwrap();
+        assert!(ini.contains("sResourceArchive2List=Manual.ba2\r\n"), "{ini}");
+        fs::remove_dir_all(&base).unwrap();
+    }
+
+    #[test]
+    #[ignore = "Requires an isolated XDG_CONFIG_HOME (/tmp/peligames-*)"]
+    fn replacer_keeps_and_restores_the_game_original() {
+        let config_root = PathBuf::from(std::env::var("XDG_CONFIG_HOME").expect("Isolated config required"));
+        assert!(config_root.starts_with("/tmp") && config_root.file_name().unwrap().to_string_lossy().starts_with("peligames-"));
+        let root = config_root.join(format!("game-{}", uuid::Uuid::new_v4()));
+        let bin = root.join("bin");
+        fs::create_dir_all(&bin).unwrap();
+        fs::write(bin.join("bg3_dx11.exe"), b"MZ fixture").unwrap();
+        fs::write(bin.join("bink2w64.dll"), b"original").unwrap();
+        let id = uuid::Uuid::new_v4().to_string();
+        let mut game: NexusGame = serde_json::from_value(serde_json::json!({
+            "id": uuid::Uuid::new_v4().to_string(), "game": {"directory": root, "name": "Baldur's Gate 3", "path": bin.join("bg3_dx11.exe")},
+            "platform": "proton", "mods": [{"id": id, "name": "Native Mod Loader", "archive": "nml.zip", "size": 1}]
+        })).unwrap();
+        assert_eq!(definition(&game).unwrap().domain, "baldursgate3");
+        let managed = directory(&game).unwrap().join("archives");
+        fs::create_dir_all(&managed).unwrap();
+        zip(&managed.join(format!("{id}.zip")), &[("bin/bink2w64.dll", b"loader"), ("bin/NativeMods/Fix.dll", b"fix")]);
+        // The plan names the original the package replaces.
+        assert_eq!(plan(&game, &id).unwrap().originals, ["bin/bink2w64.dll"]);
+        game.mods[0].installed_files = Some(vec![("bin/bink2w64.dll".into(), "bin/bink2w64.dll".into()), ("bin/NativeMods/Fix.dll".into(), "bin/NativeMods/Fix.dll".into())]);
+        game.mods[0].installed = true;
+        game.mods[0].enabled = true;
+
+        // Without the replacer approval the original is preserved.
+        game.profile = Some(build(&game).unwrap());
+        assert!(apply(&game).err().unwrap().contains("Instalar como substituição"));
+        assert_eq!(fs::read(bin.join("bink2w64.dll")).unwrap(), b"original");
+
+        game.mods[0].replace_originals = true;
+        game.profile = Some(build(&game).unwrap());
+        apply(&game).unwrap().commit();
+        let stored = directory(&game).unwrap().join("originals/bin/bink2w64.dll");
+        assert_eq!(fs::read(bin.join("bink2w64.dll")).unwrap(), b"loader");
+        assert_eq!(fs::read(&stored).unwrap(), b"original");
+
+        // A game update (or file verification) brings its own file back: it becomes the original.
+        fs::write(bin.join("bink2w64.dll"), b"original v2").unwrap();
+        apply(&game).unwrap().commit();
+        assert_eq!(fs::read(bin.join("bink2w64.dll")).unwrap(), b"loader");
+        assert_eq!(fs::read(&stored).unwrap(), b"original v2");
+
+        // A failed deployment rolls back without losing the stored original.
+        game.mods[0].enabled = false;
+        game.profile = Some(build_after_removal(&game).unwrap());
+        drop(apply(&game).unwrap());
+        assert_eq!(fs::read(bin.join("bink2w64.dll")).unwrap(), b"loader");
+        assert_eq!(fs::read(&stored).unwrap(), b"original v2");
+
+        // Disabling the mod restores the original and drops the stored copy.
+        apply(&game).unwrap().commit();
+        assert_eq!(fs::read(bin.join("bink2w64.dll")).unwrap(), b"original v2");
+        assert!(!stored.exists() && !bin.join("NativeMods/Fix.dll").exists());
+        assert!(load_deployment(&game).unwrap().originals.is_empty());
+        fs::remove_dir_all(&root).unwrap();
+    }
+}
+
+#[cfg(test)]
+mod launch_timing_tests {
+    use super::*;
+    #[test]
+    #[ignore = "Read-only timing with the real library of PELIGAMES_TIMING_GAME (game id)"]
+    fn resolving_destinations_once_is_fast() {
+        let id = std::env::var("PELIGAMES_TIMING_GAME").expect("PELIGAMES_TIMING_GAME");
+        let game = super::super::nexus_local::workspace().unwrap().games.into_iter().find(|g| g.id == id).unwrap();
+        let installed = load_deployment(&game).unwrap();
+        let paths: Vec<&String> = installed.files.keys().collect();
+        let start = std::time::Instant::now();
+        for path in paths.iter().take(100) { destination_in(&folder(&game).unwrap(), &definition(&game).unwrap(), path, &game.compat_data).unwrap(); }
+        let old = start.elapsed() * (paths.len() as u32) / 100;
+        let start = std::time::Instant::now();
+        let resolve = destinations(&game).unwrap();
+        for path in &paths { resolve(path).unwrap(); }
+        eprintln!("TIMING arquivos={} antigo(estimado)={:.1}s novo={:.2}s", paths.len(), old.as_secs_f64(), start.elapsed().as_secs_f64());
     }
 }

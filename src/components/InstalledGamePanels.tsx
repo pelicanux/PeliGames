@@ -1,6 +1,8 @@
 import { TimedFeedback } from "./TimedFeedback";
 import { WinetricksModal } from "./WinetricksModal";
 import { runWineTool } from "../services/wineTools";
+import { InstalledLaunchOptions } from "./InstalledLaunchOptions";
+import { normalizeAdvanced } from "../services/advancedSettings";
 import { AdvancedGameSettings } from "./AdvancedGameSettings";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePerformanceMode } from "./EffectsContext";
@@ -69,13 +71,14 @@ export function InstalledGamePanels({ game, disabled, onSaved, onRunProgram }: {
     if (patch.executable !== undefined) setExecutable(updated.executable || updated.path);
   };
   const save = async (patch: Partial<Pick<GameInfo, "name" | "proton" | "executable" | "prefix" | "advanced">>) => {
-    if (blocked || saving.current) return;
+    if (blocked || saving.current) return false;
     saving.current = true;
     setBusy(true); setError(""); setSaved(false);
-    try { await persist(patch); }
+    try { await persist(patch); return true; }
     catch (error) {
       setError(String(error));
       if (patch.proton !== undefined) setProton(currentGame.current?.proton || "");
+      return false;
     } finally { saving.current = false; setBusy(false); }
   };
   const choose = async (run = false) => {
@@ -106,7 +109,7 @@ export function InstalledGamePanels({ game, disabled, onSaved, onRunProgram }: {
   };
   const prefixChanged = Boolean(game && prefix.trim() !== game.prefix);
   return <>
-    {winetricks && game && <WinetricksModal path={game.path} name={game.name} onClose={() => setWinetricks(false)} />}
+    {winetricks && game && <WinetricksModal path={game.path} name={game.name} proton={proton} onProtonChange={async value => { if (blocked || saving.current) throw new Error(t("gameModes", "installerWait")); await persist({ proton: value }); }} onClose={() => setWinetricks(false)} />}
     <div className="mod-config-panel menu-glass-panel installation-config-panel">
       <div style={{ display: "flex", alignItems: "center", gap: ".5rem" }}><MenuIcon name="settings" /><span style={{ fontWeight: "bold" }}>{t("installedSettings", "title")}</span></div>
       <fieldset className="installation-fields" disabled={blocked}>
@@ -135,10 +138,10 @@ export function InstalledGamePanels({ game, disabled, onSaved, onRunProgram }: {
     <div className="installed-info-carousel">
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={advanced ? "advanced" : "information"} className="installed-info-slide"
-          initial={{ x: reducedMotion ? 0 : "100%", opacity: reducedMotion ? 1 : 0 }}
-          animate={{ x: 0, opacity: 1 }} exit={{ x: reducedMotion ? 0 : "-100%", opacity: reducedMotion ? 1 : 0 }}
+          initial={{ x: reducedMotion ? 0 : "100%" }}
+          animate={{ x: 0 }} exit={{ x: reducedMotion ? 0 : "-100%" }}
           transition={{ duration: reducedMotion ? 0 : .29, ease: [0.4, 0, 0.2, 1] }}>
-          {advanced ? <AdvancedGameSettings value={game?.advanced} disabled={blocked} reducedMotion={reducedMotion} saved={saved === "advanced"} onChange={value => void save({ advanced: value })} /> : <GameInfoPanel release={t("gameInfo", "unknown")} platform="Windows (Proton / Wine)"
+          {advanced ? <AdvancedGameSettings launchOptions={game && <InstalledLaunchOptions game={game} disabled={blocked} errorMessage={error} onSave={options => save({ advanced: { ...normalizeAdvanced(currentGame.current?.advanced), launch_options: options } })} />} value={game?.advanced} disabled={blocked} reducedMotion={reducedMotion} saved={saved === "advanced"} onChange={value => void save({ advanced: value })} /> : <GameInfoPanel release={t("gameInfo", "unknown")} platform="Windows (Proton / Wine)"
             directoryRow={<fieldset className="installed-info-paths" disabled={blocked}>
               <form className="installation-field" onSubmit={event => { event.preventDefault(); if (prefixChanged && prefix.trim()) void save({ prefix: prefix.trim() }); }}>
                 <label htmlFor={`${id}-prefix`}>{t("gameInfo", "prefixDirectory")}</label>

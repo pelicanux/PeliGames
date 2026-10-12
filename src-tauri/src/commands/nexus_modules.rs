@@ -77,6 +77,201 @@ pub(super) struct Definition {
     /// adds such games; others can still be added by hand.
     #[serde(default = "default_true")]
     pub vortex_supported: bool,
+    /// File names skipped in any folder of a package (Vortex `ignoreDeploy`/
+    /// `IGNORE_PATTERNS`), e.g. `info.json` beside Baldur's Gate 3 paks.
+    #[serde(default)]
+    pub ignored_files: Vec<String>,
+    /// Loose DLLs of a loader package go beside it (Vortex BG3SE installer:
+    /// a package with `DWrite.dll` puts every root DLL in `bin/`).
+    #[serde(default)]
+    pub loader_bundle: Option<LoaderBundle>,
+    /// Package without any `unless` file and without a known layout: its files
+    /// keep their package path below `target` (Vortex BG3 replacer into Data).
+    #[serde(default)]
+    pub loose_fallback: Option<LooseFallback>,
+    /// Gamebryo archives (Vortex gamebryo-archive-invalidation): original
+    /// archives are backdated and BSA redirection can be switched on.
+    #[serde(default)]
+    pub archives: Option<Archives>,
+    /// Empty `<name>.override` beside each mod BSA, so it overrides earlier
+    /// archives (Fallout New Vegas Sanity Checks).
+    #[serde(default)]
+    pub bsa_override: bool,
+    /// Packages anchored by a marker file go to the game folder relative to it
+    /// (Vortex modtype-enb `enbseries.ini`, modtype-dinput `dinput8.dll`).
+    #[serde(default)]
+    pub root_packages: Vec<RootPackage>,
+    /// Problems of the game folder reported to the player (FNV Sanity Checks).
+    #[serde(default)]
+    pub checks: Vec<GameCheck>,
+    /// Plugins page (Vortex gamebryo-plugin-management): game plugins that are
+    /// always active, and the light/medium plugin support of the game.
+    #[serde(default)]
+    pub plugins: Option<PluginRules>,
+    /// Save games and profile settings (Vortex gamebryo-savegame-management
+    /// and local-gamesettings).
+    #[serde(default)]
+    pub saves: Option<SaveRules>,
+    /// Loader the game extension downloads by itself (Vortex modtype-bepinex
+    /// `autoDownloadBepInEx`).
+    #[serde(default)]
+    pub loader_download: Option<LoaderDownload>,
+    /// Loaders the extension downloads from GitHub releases (UE4SS).
+    #[serde(default)]
+    pub downloads: Vec<GithubDownload>,
+    #[serde(default)]
+    pub seed_files: Vec<SeedFile>,
+    /// Folder the game loads alphabetically: each mod goes to `<folder>/AAA-<id>/`
+    /// following the mod order (Vortex Bloodstained and Spyro load order).
+    #[serde(default)]
+    pub ordered_folder: Option<String>,
+    /// File listing the `.pak` files of `folder` in mod order (Conan Exiles).
+    #[serde(default)]
+    pub pak_list: Option<PakList>,
+}
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct PakList { pub file: String, pub folder: String }
+#[derive(Clone, Copy, Default, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub(super) enum DownloadSource { #[default] Github, BepinexBe, Nexus }
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct GithubDownload {
+    pub name: String,
+    /// Where the package comes from (GitHub release by default).
+    #[serde(default)]
+    pub source: DownloadSource,
+    /// `owner/repository` on GitHub.
+    #[serde(default)]
+    pub repository: String,
+    /// Module destination the package is installed into as its root (Reloaded-II
+    /// release into `Reloaded`), as the manual root folder does.
+    #[serde(default)]
+    pub root: Option<String>,
+    /// Nexus page (`source: nexus`) and its game, when not the module's own (`site`).
+    #[serde(default)]
+    pub mod_id: Option<u64>,
+    #[serde(default)]
+    pub domain: Option<String>,
+    /// Bleeding Edge artifact used when builds.bepinex.dev cannot be read.
+    #[serde(default)]
+    pub fallback: Option<String>,
+    /// Files that show it is installed (all of them); empty = UE4SS of the layout.
+    #[serde(default)]
+    pub present: Vec<String>,
+    /// Alternatives of one group (BepInEx or MelonLoader): one installed is enough.
+    #[serde(default)]
+    pub group: Option<String>,
+    #[serde(default)]
+    pub recommended: bool,
+    /// Fixed release tag (`experimental-latest`); none = newest release with the asset.
+    #[serde(default)]
+    pub tag: Option<String>,
+    /// Asset name prefix and words it must not contain (`_zDev`).
+    pub prefix: String,
+    #[serde(default)]
+    pub exclude: Vec<String>,
+    /// The extension downloads it on setup without asking.
+    #[serde(default)]
+    pub automatic: bool,
+}
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct LoaderDownload {
+    /// BepInEx release `major.minor.patch` and architecture (`x64`, `x86`).
+    pub version: String,
+    pub architecture: String,
+}
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct SaveRules {
+    /// `@documents/My Games/<game>/`, folder of the INIs and of `Saves`.
+    pub folder: String,
+    /// INI holding `[General] SLocalSavePath`.
+    pub ini: String,
+    /// Value of SLocalSavePath for the shared saves (`Saves`; Enderal uses `..\Enderal\Saves`).
+    pub base: String,
+    /// Save extension (`.ess`, `.fos`) and the script extender co-save (`.skse`).
+    pub extension: String,
+    #[serde(default)]
+    pub co_save: Option<String>,
+    /// Game settings kept per profile; `optional` ones may be absent.
+    pub settings: Vec<String>,
+    #[serde(default)]
+    pub optional: Vec<String>,
+}
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct PluginRules {
+    pub native: Vec<String>,
+    #[serde(default)]
+    pub light: bool,
+    #[serde(default)]
+    pub medium: bool,
+}
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct Archives {
+    /// Archive extension (`.bsa`, `.ba2`) and name prefixes of the game's own archives.
+    pub extension: String,
+    pub prefixes: Vec<String>,
+    /// `YYYY-MM-DD`: newer original archives get this date so loose files win.
+    pub backdate: String,
+    #[serde(default)]
+    pub redirection: Option<Redirection>,
+}
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct Redirection {
+    /// BSA format (103 Oblivion, 104 Fallout 3/New Vegas).
+    pub version: u32,
+    pub ini: String,
+    pub key: String,
+    /// Archive list used when the INI has none.
+    pub defaults: Vec<String>,
+}
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct RootPackage {
+    pub marker: String,
+    /// Root files (by extension) and root folders this kind of package may add.
+    #[serde(default)]
+    pub extensions: Vec<String>,
+    #[serde(default)]
+    pub folders: Vec<String>,
+    /// Folder of the game executable when it is not the game root (Dark Souls II
+    /// `Game`): the package goes there, relative to the marker.
+    #[serde(default)]
+    pub target: String,
+}
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub(super) enum GameCheck {
+    /// A file shipped with the game that breaks mods; the player may set it aside.
+    UnwantedFile { path: String, url: Option<String> },
+    /// Executable without the large address flag (4GB patch).
+    LargeAddress { executable: String, url: String },
+    /// Script extender loader older than `minimum` (major version).
+    LegacyExtender { loader: String, minimum: u16, url: String },
+}
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct LoaderBundle { pub marker: String, pub target: String }
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct LooseFallback {
+    pub target: String,
+    #[serde(default)]
+    pub unless: Vec<String>,
+    /// DLLs and executables are mod content too (Vortex default installer into
+    /// a mods folder, such as Unity Mod Manager mods).
+    #[serde(default)]
+    pub binaries: bool,
+    /// Also for files beside routed ones (Galactic Civilizations III: `.faction`
+    /// files to Factions, everything else of the same package to Mods).
+    #[serde(default)]
+    pub mixed: bool,
 }
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -88,6 +283,11 @@ pub(super) struct StoreVariant {
     /// Folder name of this store edition, e.g. `Skyrim Special Edition GOG`.
     pub replacement: String,
 }
+/// File the game needs before mods work, written once when absent and then left
+/// to the player (Vortex `prepareForModding`, e.g. The Sims 3 `Resource.cfg`).
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct SeedFile { pub path: String, pub content: String }
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct IniSetting {
@@ -120,8 +320,16 @@ pub(super) struct ScriptExtender {
     /// Log files or folders (`@documents/...` inside the prefix).
     #[serde(default)]
     pub logs: Vec<String>,
+    /// Folder of the loader and runtime DLLs when it is not the game root
+    /// (OBSE64 lives in `OblivionRemastered/Binaries/Win64`).
+    #[serde(default)]
+    pub folder: String,
 }
 impl ScriptExtender {
+    /// Game path of a loader or runtime file.
+    pub(super) fn at(&self, file: &str) -> String {
+        if self.folder.is_empty() { file.to_string() } else { format!("{}/{file}", self.folder) }
+    }
     /// Loader or runtime DLL, by file name.
     fn owns(&self, file: &str) -> bool {
         let file = file.to_ascii_lowercase();
@@ -140,6 +348,18 @@ pub(super) enum Family {
         /// UE4SS scripts and LogicMods; disabled for games where the loader is unsafe.
         #[serde(default = "default_true")]
         ue4ss: bool,
+        /// Signature bypass for games with `.sig` files (Universal Sig Bypasser:
+        /// `dsound.dll` plus `.asi` plugins beside the executable).
+        #[serde(default)]
+        sig_bypass: bool,
+        /// Folder below the project for Unreal plugin mods (`.uplugin` folders of
+        /// FF7RML, SZModLoader): each plugin folder goes there whole.
+        #[serde(default)]
+        plugin_mods: Option<String>,
+        /// Mod loader as `d3d9.dll` beside the executable, with its mods in `mods/`
+        /// there (Ninja Gaiden 2 Black).
+        #[serde(default)]
+        d3d9_loader: bool,
     },
     /// RE Engine with REFramework (scripts, plugins, data and its dinput8 loader).
     /// `natives/` and Fluffy packages need specialized processing and are refused.
@@ -219,7 +439,7 @@ pub(super) struct Activation {
 }
 #[derive(Clone, Copy, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
-pub(super) enum ActivationKind { Bethesda, Morrowind, Memoria, Elden, BaldursGate3, Reloaded, Sims4 }
+pub(super) enum ActivationKind { Bethesda, Morrowind, Memoria, Elden, BaldursGate3, Reloaded, Sims4, ArchiveList, FolderList }
 #[derive(Clone, Copy, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub(super) enum Engine { Deployment, ValheimProfile }
@@ -228,12 +448,29 @@ pub(super) enum Engine { Deployment, ValheimProfile }
 pub(super) enum Route {
     Prefix { source: String, target: String, #[serde(default)] search: bool },
     File { source: String, target: String, #[serde(default)] search: bool },
-    Extension { extension: String, target: String, #[serde(default)] root_only: bool },
-    Manifest { marker: String, target: String },
+    /// `keep_path`: keep the package's folders below `target` (Witcher 1 Override)
+    /// instead of placing only the file name.
+    Extension { extension: String, target: String, #[serde(default)] root_only: bool, #[serde(default)] keep_path: bool },
+    /// `first`: checked before the other routes (Halo MCC plug-and-play mods win
+    /// over the game folders they contain).
+    Manifest { marker: String, target: String, #[serde(default)] first: bool },
+    /// Vortex installers anchored on a file kind (`.pak`, `.mod`, `.pack`): the
+    /// files beside and below the first such file keep their path below
+    /// `target`, inside a folder named after it when `folder` is set.
+    Anchor { suffix: String, target: String, #[serde(default)] folder: bool },
     Patch { target: String },
 }
 fn push_new<T: PartialEq>(items: &mut Vec<T>, item: T) {
     if !items.contains(&item) { items.push(item); }
+}
+/// `<Project>/Binaries/WinGDK/…`: the Xbox (Game Pass) build of an Unreal mod.
+pub(super) fn xbox_variant(path: &str) -> bool { path.to_ascii_lowercase().contains("/binaries/wingdk/") }
+/// Files under the author's source folder (`Source/`, `src/`, `Mod 1.2 Source/`)
+/// at the top of the package or right below one wrapper folder.
+pub(super) fn source_tree(path: &str) -> bool {
+    let parts: Vec<String> = path.split('/').map(str::to_ascii_lowercase).collect();
+    let folders = &parts[..parts.len().saturating_sub(1)];
+    folders.iter().take(2).any(|part| matches!(part.as_str(), "source" | "sources" | "src") || part.ends_with(" source") || part.ends_with(" src"))
 }
 pub(super) fn relative(path: &str) -> bool {
     !path.is_empty() && !path.starts_with('/') && !path.contains('\\')
@@ -241,6 +478,10 @@ pub(super) fn relative(path: &str) -> bool {
         && path.split('/').all(|part| !part.is_empty() && part != "." && part != ".." && !part.contains(':'))
 }
 impl Definition {
+    pub(super) fn ignores(&self, path: &str) -> bool {
+        let file = path.rsplit('/').next().unwrap_or(path);
+        self.ignored_files.iter().any(|name| name.eq_ignore_ascii_case(file))
+    }
     /// Paths of the store edition installed at `root` (first matching marker).
     pub(super) fn for_store(mut self, root: &Path) -> Self {
         let Some(variant) = self.store_variants.iter().find(|v| super::nexus_discovery::locate(root, &v.marker).is_some_and(|p| p.is_file())).cloned() else { return self; };
@@ -255,11 +496,12 @@ impl Definition {
         self.config_files.iter_mut().chain(self.allowed_files.iter_mut()).for_each(rewrite);
         self.ini_settings.iter_mut().for_each(|setting| rewrite(&mut setting.file));
         if let Some(extender) = &mut self.script_extender { extender.logs.iter_mut().for_each(rewrite); }
+        if let Some(saves) = &mut self.saves { rewrite(&mut saves.folder); }
         self
     }
     pub(super) fn ue4ss(&self) -> Option<Ue4ssLayout> {
         match &self.family {
-            Some(Family::Unreal { project, binaries, ue4ss: true }) => Some(Ue4ssLayout {
+            Some(Family::Unreal { project, binaries, ue4ss: true, .. }) => Some(Ue4ssLayout {
                 binaries: format!("{project}/Binaries/{binaries}"),
                 logic_mods: format!("{project}/Content/Paks/LogicMods"),
                 paks: format!("{project}/Content/Paks/~mods"),
@@ -297,7 +539,8 @@ impl Definition {
             self.apply_re_engine();
             return Ok(());
         }
-        let Some(Family::Unreal { project, binaries, ue4ss }) = self.family.clone() else { return Ok(()); };
+        let Some(Family::Unreal { project, binaries, ue4ss, sig_bypass, plugin_mods, d3d9_loader }) = self.family.clone() else { return Ok(()); };
+        if plugin_mods.as_ref().is_some_and(|folder| !relative(folder) || folder.contains('/')) { return Err("Família Unreal com pasta de plugins inválida.".into()); }
         if !relative(&project) || !relative(&binaries) || binaries.contains('/') {
             return Err("Família Unreal com pastas inválidas.".into());
         }
@@ -331,13 +574,30 @@ impl Definition {
         } else {
             for rejected in ["ue4ss/", "LogicMods/"] { push_new(&mut self.rejected_prefixes, rejected.into()); }
         }
+        if let Some(folder) = &plugin_mods { destinations.push(format!("{project}/{folder}")); }
+        if d3d9_loader {
+            explicit.push(Route::File { source: "d3d9.dll".into(), target: format!("{bin}/d3d9.dll"), search: true });
+            explicit.push(prefix("mods", &format!("{bin}/mods"), false));
+            destinations.push(format!("{bin}/mods"));
+            push_new(&mut self.allowed_files, format!("{bin}/d3d9.dll"));
+            push_new(&mut self.dll_overrides, DllOverride { name: "d3d9".into(), file: format!("{bin}/d3d9.dll") });
+        }
+        if sig_bypass {
+            // ASI loader beside the executable; its plugins go to `plugins/`, a folder it
+            // also reads, so the binaries folder itself stays closed.
+            explicit.push(Route::File { source: "dsound.dll".into(), target: format!("{bin}/dsound.dll"), search: true });
+            destinations.push(format!("{bin}/plugins"));
+            push_new(&mut self.allowed_files, format!("{bin}/dsound.dll"));
+            push_new(&mut self.dll_overrides, DllOverride { name: "dsound".into(), file: format!("{bin}/dsound.dll") });
+        }
         explicit.push(prefix("~mods", &paks, true));
         let mut generic: Vec<Route> = [".pak", ".utoc", ".ucas"].into_iter()
-            .map(|extension| Route::Extension { extension: extension.into(), target: format!("{paks}/"), root_only: false }).collect();
+            .map(|extension| Route::Extension { extension: extension.into(), target: format!("{paks}/"), root_only: false, keep_path: false }).collect();
+        if sig_bypass { generic.push(Route::Extension { extension: ".asi".into(), target: format!("{bin}/plugins/"), root_only: false, keep_path: false }); }
         if ue4ss {
             // A script folder is recognized by its entry point, as in the Vortex template.
-            generic.push(Route::Manifest { marker: "Scripts/main.lua".into(), target: format!("{bin}/ue4ss/Mods/") });
-            generic.push(Route::Manifest { marker: "dlls/main.dll".into(), target: format!("{bin}/ue4ss/Mods/") });
+            generic.push(Route::Manifest { marker: "Scripts/main.lua".into(), target: format!("{bin}/ue4ss/Mods/"), first: false });
+            generic.push(Route::Manifest { marker: "dlls/main.dll".into(), target: format!("{bin}/ue4ss/Mods/"), first: false });
         }
         let own = std::mem::take(&mut self.routes);
         for route in explicit.into_iter().chain(own).chain(generic) { push_new(&mut self.routes, route); }
@@ -352,7 +612,7 @@ impl Definition {
         let Some(extender) = self.script_extender.clone() else { return Ok(()); };
         let loader_ok = relative(&extender.loader) && !extender.loader.contains('/') && extender.loader.to_ascii_lowercase().ends_with(".exe");
         let prefix_ok = extender.dll_prefix.len() >= 3 && extender.dll_prefix.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_');
-        if !loader_ok || !prefix_ok || !relative(&extender.plugins) || extender.mod_id == 0 || extender.nexus_name.trim().is_empty()
+        if !loader_ok || !prefix_ok || !relative(&extender.plugins) || !(extender.folder.is_empty() || relative(&extender.folder)) || extender.mod_id == 0 || extender.nexus_name.trim().is_empty()
             || extender.logs.iter().any(|log| !relative(log.trim_start_matches('@'))) {
             return Err("Script extender inválido no módulo.".into());
         }
@@ -360,13 +620,13 @@ impl Definition {
         if domain.is_empty() || !domain.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit()) {
             return Err("Script extender inválido no módulo.".into());
         }
-        if self.mod_launch_executable.is_none() { self.mod_launch_executable = Some(extender.loader.clone()); }
+        if self.mod_launch_executable.is_none() { self.mod_launch_executable = Some(extender.at(&extender.loader)); }
         // Framework ids belong to the module's domain; another game's page is only a link.
         let own = domain == self.domain;
         push_new(&mut self.frameworks, Framework {
             name: extender.name.clone(), mod_id: if own { extender.mod_id } else { 0 }, nexus_name: own.then(|| extender.nexus_name.clone()),
             url: Some(format!("https://www.nexusmods.com/{domain}/mods/{}", extender.mod_id)),
-            required_files: vec![extender.loader.clone()], any_files: Vec::new(),
+            required_files: vec![extender.at(&extender.loader)], any_files: Vec::new(),
             for_paths: vec![format!("{}/", extender.plugins)], for_extensions: Vec::new(),
         });
         Ok(())
@@ -377,7 +637,7 @@ impl Definition {
     fn apply_re_engine(&mut self) {
         let prefix = |folder: &str| Route::Prefix { source: format!("reframework/{folder}/"), target: format!("reframework/{folder}/"), search: true };
         let explicit = [prefix("autorun"), prefix("plugins"), prefix("data"), Route::File { source: "dinput8.dll".into(), target: "dinput8.dll".into(), search: false }];
-        let generic = [Route::Extension { extension: ".lua".into(), target: "reframework/autorun/".into(), root_only: true }];
+        let generic = [Route::Extension { extension: ".lua".into(), target: "reframework/autorun/".into(), root_only: true, keep_path: false }];
         let own = std::mem::take(&mut self.routes);
         for route in explicit.into_iter().chain(own).chain(generic) { push_new(&mut self.routes, route); }
         for folder in ["autorun", "plugins", "data"] { push_new(&mut self.destinations, format!("reframework/{folder}")); }
@@ -406,8 +666,11 @@ impl Definition {
         let mut explicit = Vec::new();
         if bepinex {
             explicit.extend([prefix("BepInEx", "BepInEx"), file("winhttp.dll"), file("doorstop_config.ini"), file(".doorstop_version"),
-                prefix("plugins", "BepInEx/plugins"), prefix("patchers", "BepInEx/patchers"), prefix("config", "BepInEx/config")]);
+                prefix("plugins", "BepInEx/plugins"), prefix("patchers", "BepInEx/patchers"), prefix("config", "BepInEx/config"),
+                Route::Prefix { source: "dotnet/".into(), target: "dotnet/".into(), search: false }]);
+            // BepInEx 6 IL2CPP builds ship their .NET runtime in `dotnet/` at the game root.
             push_new(&mut self.destinations, "BepInEx".into());
+            push_new(&mut self.destinations, "dotnet".into());
             for name in ["winhttp.dll", "doorstop_config.ini", ".doorstop_version"] { push_new(&mut self.allowed_files, name.into()); }
             push_new(&mut self.dll_overrides, DllOverride { name: "winhttp".into(), file: "winhttp.dll".into() });
             // A module may declare its own, more specific BepInEx requirement (e.g. a game pack).
@@ -434,7 +697,7 @@ impl Definition {
         let loose = if bepinex { "BepInEx/plugins/{mod_id}/" } else { "Mods/" };
         // Only a DLL at the package root (after removing a shared wrapper) is loose;
         // sibling variant folders stay ambiguous and are refused.
-        let generic = [Route::Extension { extension: ".dll".into(), target: loose.into(), root_only: true }];
+        let generic = [Route::Extension { extension: ".dll".into(), target: loose.into(), root_only: true, keep_path: false }];
         let own = std::mem::take(&mut self.routes);
         for route in explicit.into_iter().chain(own).chain(generic) { push_new(&mut self.routes, route); }
         // Game data, managed assemblies and asset replacements modify original files.
@@ -476,6 +739,11 @@ impl Definition {
             .chain(self.launch_executable.iter()).any(|path| self.allowed(path)) {
             return Err("O destino não pode incluir executáveis ou arquivos de identificação do jogo.".into());
         }
+        if self.seed_files.iter().any(|seed| !relative(&seed.path) || seed.content.len() > 65536) { return Err("Arquivo inicial inválido no módulo.".into()); }
+        if self.ordered_folder.as_ref().is_some_and(|folder| !self.destinations.contains(folder))
+            || self.pak_list.as_ref().is_some_and(|list| !self.destinations.contains(&list.folder) || !self.allowed(&list.file)) {
+            return Err("Ordem de carga inválida no módulo.".into());
+        }
         for tool in &self.tools {
             if tool.name.trim().is_empty() || !relative(&tool.executable) || !tool.executable.ends_with(".exe") || tool.arguments.len() > 16 || tool.arguments.iter().any(|a| a.len()>256 || a.chars().any(char::is_control)) {return Err("Ferramenta de mods inválida.".into());}
         }
@@ -507,6 +775,39 @@ impl Definition {
                 return Err("Variante de loja inválida no módulo.".into());
             }
         }
+        if self.ignored_files.iter().any(|file| file.is_empty() || file.contains(['/', '\\']) || !relative(file)) { return Err("Arquivo ignorado inválido no módulo.".into()); }
+        if self.loader_bundle.as_ref().is_some_and(|bundle| !relative(&bundle.marker) || bundle.marker.contains('/') || !bundle.target.ends_with('/') || !relative(bundle.target.trim_end_matches('/')))
+            || self.loose_fallback.as_ref().is_some_and(|fallback| !fallback.target.ends_with('/') || !relative(fallback.target.trim_end_matches('/'))) {
+            return Err("Regra de pacote inválida no módulo.".into());
+        }
+        if self.root_packages.iter().any(|rule| rule.marker.contains('/') || !relative(&rule.marker) || !rule.target.is_empty() && !self.destinations.contains(&rule.target) || rule.folders.iter().any(|f| f.contains('/') || !relative(f)) || rule.extensions.iter().any(|e| !e.starts_with('.')))
+            || self.archives.as_ref().is_some_and(|a| !a.extension.starts_with('.') || super::nexus_gamebryo::date(&a.backdate).is_none()
+                || a.redirection.as_ref().is_some_and(|r| ![103, 104].contains(&r.version) || !relative(r.ini.trim_start_matches('@'))))
+            || self.checks.iter().any(|check| match check {
+                GameCheck::UnwantedFile { path, .. } => !relative(path),
+                GameCheck::LargeAddress { executable, .. } => !relative(executable),
+                GameCheck::LegacyExtender { loader, .. } => !relative(loader),
+            }) {
+            return Err("Regra de jogo inválida no módulo.".into());
+        }
+        if self.loader_download.as_ref().is_some_and(|loader| !["x64", "x86"].contains(&loader.architecture.as_str())
+            || loader.version.split('.').count() != 3 || !loader.version.split('.').all(|part| !part.is_empty() && part.bytes().all(|b| b.is_ascii_digit()))) {
+            return Err("Download de loader inválido no módulo.".into());
+        }
+        if self.downloads.iter().any(|d| d.name.trim().is_empty() || d.prefix.len() < 3 || d.tag.as_ref().is_some_and(|tag| tag.contains(['/', '?', '#']))
+            || d.present.iter().any(|file| !relative(file)) || d.root.as_ref().is_some_and(|root| !self.destinations.contains(root)) || (d.present.is_empty() && (d.name != "UE4SS" || self.ue4ss().is_none()))
+            || match d.source {
+                DownloadSource::Github => d.repository.split('/').count() != 2 || !d.repository.bytes().all(|b| b.is_ascii_alphanumeric() || b"-_./".contains(&b)),
+                DownloadSource::BepinexBe => !d.fallback.as_deref().is_some_and(|url| url.starts_with("https://builds.bepinex.dev/projects/bepinex_be/")),
+                DownloadSource::Nexus => d.mod_id.is_none_or(|id| id == 0) || d.domain.as_ref().is_some_and(|domain| domain.is_empty() || !domain.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit())),
+            }) {
+            return Err("Download do GitHub inválido no módulo.".into());
+        }
+        if self.saves.as_ref().is_some_and(|saves| !saves.folder.starts_with("@documents/") || !saves.folder.ends_with('/') || !relative(saves.folder.trim_start_matches('@').trim_end_matches('/'))
+            || saves.settings.iter().chain(&saves.optional).chain(std::iter::once(&saves.ini)).any(|file| file.contains(['/', '\\']) || !relative(file))
+            || !saves.extension.starts_with('.')) {
+            return Err("Regra de saves inválida no módulo.".into());
+        }
         let name = |text: &str| !text.trim().is_empty() && text == text.trim() && !text.contains(['=', '[', ']', ';', '#']) && !text.chars().any(char::is_control);
         for setting in &self.ini_settings {
             if !relative(&setting.file) || !setting.file.to_ascii_lowercase().ends_with(".ini") || !name(&setting.section) || !name(&setting.key)
@@ -526,7 +827,7 @@ impl Definition {
             return Err("Configuração de execução inválida.".into());
         }
         if let Some(activation) = &self.activation {
-            let suffix = match activation.kind { ActivationKind::Bethesda => ".txt", ActivationKind::Morrowind | ActivationKind::Memoria => ".ini", ActivationKind::Elden => ".toml", ActivationKind::BaldursGate3 => ".lsx", ActivationKind::Reloaded => "AppConfig.json", ActivationKind::Sims4 => "Resource.cfg" };
+            let suffix = match activation.kind { ActivationKind::Bethesda => ".txt", ActivationKind::Morrowind | ActivationKind::Memoria => ".ini", ActivationKind::Elden => ".toml", ActivationKind::BaldursGate3 => ".lsx", ActivationKind::Reloaded => "AppConfig.json", ActivationKind::Sims4 => "Resource.cfg", ActivationKind::ArchiveList => ".ini", ActivationKind::FolderList => ".txt" };
             if !relative(&activation.path) || !relative(&activation.data)
                 || !self.allowed_files.contains(&activation.path) || !self.config_files.contains(&activation.path) {
                 return Err("Destino de ativação inválido.".into());
@@ -552,8 +853,12 @@ impl Definition {
                     if self.domain != "helldivers2" || target != "data/" {return Err("Rota de patch fora do jogo autorizado.".into());}
                     (None, target)
                 }
-                Route::Manifest { marker, target } => {
+                Route::Manifest { marker, target, .. } => {
                     if !relative(marker) || !target.ends_with('/') { return Err("Manifesto inválido.".into()); }
+                    (None, target)
+                }
+                Route::Anchor { suffix, target, .. } => {
+                    if suffix.len() < 2 || suffix.contains('/') || !relative(suffix) || !target.ends_with('/') { return Err("Rota por arquivo âncora inválida.".into()); }
                     (None, target)
                 }
             };
@@ -579,11 +884,14 @@ impl Definition {
                 || (!file.contains('/') || file.starts_with("plugins/"))
                     && (file.ends_with(".asi") || file.ends_with(".ini")));
         }
-        if !path.contains('/') && self.script_extender.as_ref().is_some_and(|extender| extender.owns(path)) && relative(path) {
+        let (parent, file) = path.rsplit_once('/').unwrap_or(("", path));
+        if self.script_extender.as_ref().is_some_and(|extender| extender.folder == parent && extender.owns(file)) && relative(path) {
             return true;
         }
         relative(path) && !self.protected_files.iter().any(|file|file.eq_ignore_ascii_case(path)) && (self.allowed_files.iter().any(|file| file == path)
             || !path.contains('/') && self.root_extensions.iter().any(|ext| path.to_ascii_lowercase().ends_with(ext))
+            || self.root_packages.iter().any(|rule| !path.contains('/') && rule.extensions.iter().any(|ext| path.to_ascii_lowercase().ends_with(&ext.to_ascii_lowercase()))
+                || rule.folders.iter().any(|folder| path.split('/').next().is_some_and(|first| first.eq_ignore_ascii_case(folder)) && path.contains('/')))
             || self.destinations.iter().any(|folder| path.strip_prefix(folder).is_some_and(|rest| rest.starts_with('/'))))
     }
     /// Destination for a file of a manually rooted package. The module's
@@ -626,7 +934,7 @@ impl Definition {
         if let Some(extender) = &self.script_extender {
             let name = source.rsplit('/').next().unwrap_or(source);
             if source.matches('/').count() <= 1 && extender.owns(name) {
-                return Ok(Some(name.to_string()));
+                return Ok(Some(extender.at(name)));
             }
         }
         for rule in &self.routes {
@@ -644,11 +952,11 @@ impl Definition {
                     let (path, file) = if self.platform == "proton" { (source.to_ascii_lowercase(), file.to_ascii_lowercase()) } else { (source.to_string(), file.clone()) };
                     (path == file || *search && path.ends_with(&format!("/{file}"))).then(|| target.clone())
                 },
-                Route::Extension { extension, target, root_only } => {
+                Route::Extension { extension, target, root_only, keep_path } => {
                     (!(*root_only && source.contains('/')) && source.to_ascii_lowercase().ends_with(&extension.to_ascii_lowercase()))
-                        .then(|| format!("{target}{}", source.rsplit('/').next().unwrap_or(source)))
+                        .then(|| format!("{target}{}", if *keep_path { source } else { source.rsplit('/').next().unwrap_or(source) }))
                 }
-                Route::Manifest { .. } => None,
+                Route::Manifest { .. } | Route::Anchor { .. } => None,
                 Route::Patch { target } => {
                     let name = source.rsplit('/').next().unwrap_or(source);
                     super::nexus_patches::parts(name).map(|_| format!("{target}{name}"))
@@ -662,7 +970,24 @@ impl Definition {
         }
         Ok(None)
     }
+    /// The folder holding `marker` goes whole below `target`, named after it.
+    fn manifest_target(&self, marker: &str, target: &str, source: &str, mod_id: &str, entries: &[String]) -> Result<Option<String>, String> {
+        let mut roots: Vec<_> = entries.iter().filter(|entry| entry.eq_ignore_ascii_case(marker) || entry.to_ascii_lowercase().ends_with(&format!("/{}", marker.to_ascii_lowercase())))
+            .map(|entry| entry[..entry.len()-marker.len()].to_string())
+            .filter(|root| source.starts_with(root)).collect();
+        roots.sort_by_key(|root| std::cmp::Reverse(root.len()));
+        let Some(root) = roots.first() else { return Ok(None); };
+        let folder = root.trim_end_matches('/').rsplit('/').next().filter(|name| !name.is_empty()).unwrap_or(mod_id);
+        let target = format!("{target}{folder}/{}", &source[root.len()..]).replace("{mod_id}", mod_id);
+        if !self.allowed(&target) { return Err("Destino de manifesto inválido.".into()); }
+        Ok(Some(target))
+    }
     pub(super) fn route_package(&self, source: &str, mod_id: &str, entries: &[String]) -> Result<Option<String>, String> {
+        if self.ignores(source) { return Ok(None); }
+        // Extras shipped beside the real mod are skipped, as Vortex leaves them unused:
+        // the Xbox build next to the Steam one, and the author's source code.
+        if xbox_variant(source) && entries.iter().any(|entry| entry.to_ascii_lowercase().contains("/binaries/win64/")) { return Ok(None); }
+        if source_tree(source) && entries.iter().any(|entry| !entry.ends_with('/') && !source_tree(entry)) { return Ok(None); }
         if self.domain == "crimsondesert" {
             let lower = source.to_ascii_lowercase();
             let extension = Path::new(&lower).extension().and_then(|e| e.to_str()).unwrap_or("");
@@ -682,22 +1007,63 @@ impl Definition {
             }
         }
         if self.domain == "masseffectlegendaryedition" && entries.iter().any(|entry| entry.rsplit('/').next().is_some_and(|name| name.eq_ignore_ascii_case("moddesc.ini") || name.to_ascii_lowercase().ends_with(".mem"))) {return Err("Este pacote requer processamento pelo ME3Tweaks/Mass Effect Modder; use o gerenciador especializado.".into());}
+        // Unreal plugin mods: the folder holding a `.uplugin` goes whole to the plugin
+        // folder, named after the plugin (`Mods/<Name>/` for `Name.uplugin`), as Vortex does.
+        if let Some(Family::Unreal { project, plugin_mods: Some(folder), .. }) = &self.family {
+            let plugins = entries.iter().filter(|entry| entry.to_ascii_lowercase().ends_with(".uplugin")).map(|entry| match entry.rsplit_once('/') {
+                Some((parent, file)) => (format!("{parent}/"), file),
+                None => (String::new(), entry.as_str()),
+            });
+            if let Some((root, file)) = plugins.filter(|(root, file)| file.len() > ".uplugin".len() && source.starts_with(root.as_str())).max_by_key(|(root, _)| root.len()) {
+                let name = &file[..file.len() - ".uplugin".len()];
+                let target = format!("{project}/{folder}/{name}/{}", &source[root.len()..]);
+                if !self.allowed(&target) { return Err(format!("Destino fora das regras do módulo: {target}")); }
+                return Ok(Some(target));
+            }
+        }
+        // ENB/dinput packages: the files beside the marker go to the game folder.
+        for rule in &self.root_packages {
+            let bases: std::collections::BTreeSet<String> = entries.iter().filter(|entry| entry.rsplit('/').next().is_some_and(|name| name.eq_ignore_ascii_case(&rule.marker)))
+                .map(|entry| entry.rsplit_once('/').map(|(parent, _)| format!("{parent}/")).unwrap_or_default()).collect();
+            if bases.len() > 1 { return Err(format!("O pacote traz mais de um {}; escolha uma variante.", rule.marker)); }
+            if let Some(base) = bases.first() {
+                let Some(rest) = source.strip_prefix(base.as_str()) else { return Ok(None); };
+                let target = if rule.target.is_empty() { rest.to_string() } else { format!("{}/{rest}", rule.target) };
+                return Ok(self.allowed(&target).then_some(target));
+            }
+        }
+        for rule in &self.routes {
+            let Route::Manifest { marker, target, first: true } = rule else { continue; };
+            if let Some(target) = self.manifest_target(marker, target, source, mod_id, entries)? { return Ok(Some(target)); }
+        }
         if let Some(target) = self.route(source, mod_id)? {
             if self.domain == "masseffectlegendaryedition" && target.split("/BioGame/DLC/").nth(1).is_none_or(|rest| !rest.starts_with("DLC_MOD_")) {return Err("Somente DLC novo DLC_MOD_ com destino explícito é instalado; dados originais ficam preservados.".into());}
             return Ok(Some(target));
         }
-        for rule in &self.routes {
-            let Route::Manifest { marker, target } = rule else { continue; };
-            let mut roots: Vec<_> = entries.iter().filter(|entry| entry.eq_ignore_ascii_case(marker) || entry.to_ascii_lowercase().ends_with(&format!("/{}", marker.to_ascii_lowercase())))
-                .map(|entry| entry[..entry.len()-marker.len()].to_string())
-                .filter(|root| source.starts_with(root)).collect();
-            roots.sort_by_key(|root| std::cmp::Reverse(root.len()));
-            if let Some(root) = roots.first() {
-                let folder = root.trim_end_matches('/').rsplit('/').next().filter(|name| !name.is_empty()).unwrap_or(mod_id);
-                let target = format!("{target}{folder}/{}", &source[root.len()..]).replace("{mod_id}", mod_id);
-                if !self.allowed(&target) { return Err("Destino de manifesto inválido.".into()); }
-                return Ok(Some(target));
+        // An ASI plugin's settings (`Fix.ini` beside `Fix.asi`) follow the plugin.
+        if let Some(stem) = source.strip_suffix(".ini").or_else(|| source.strip_suffix(".INI")) {
+            if let Some(plugin) = entries.iter().find(|entry| entry.len() == stem.len() + 4 && entry.starts_with(stem) && entry.to_ascii_lowercase().ends_with(".asi")) {
+                if let Some(target) = self.route_package(plugin, mod_id, entries)? {
+                    let target = format!("{}.ini", &target[..target.len() - 4]);
+                    if !self.allowed(&target) { return Err(format!("Destino fora das regras do módulo: {target}")); }
+                    return Ok(Some(target));
+                }
             }
+        }
+        for rule in &self.routes {
+            let Route::Anchor { suffix, target, folder } = rule else { continue; };
+            let lower = suffix.to_ascii_lowercase();
+            let Some(anchor) = entries.iter().find(|entry| !entry.ends_with('/') && entry.to_ascii_lowercase().ends_with(&lower) && entry.rsplit('/').next().is_some_and(|name| name.len() > suffix.len())) else { continue; };
+            let (root, file) = anchor.rsplit_once('/').map(|(parent, file)| (format!("{parent}/"), file)).unwrap_or((String::new(), anchor.as_str()));
+            // Files outside the anchor's folder are left out, as the Vortex installers do.
+            let Some(rest) = source.strip_prefix(root.as_str()) else { return Ok(None); };
+            let target = if *folder { format!("{target}{}/{rest}", &file[..file.len() - suffix.len()]) } else { format!("{target}{rest}") };
+            if !self.allowed(&target) { return Err(format!("Destino fora das regras do módulo: {target}")); }
+            return Ok(Some(target));
+        }
+        for rule in &self.routes {
+            let Route::Manifest { marker, target, .. } = rule else { continue; };
+            if let Some(target) = self.manifest_target(marker, target, source, mod_id, entries)? { return Ok(Some(target)); }
         }
         if self.unwrap_common_root {
             for prefix in common_package_roots(entries)? {
@@ -722,6 +1088,30 @@ impl Definition {
                 if !["json", "cfg", "ini", "xml", "txt", "png", "jpg", "dds", "assetbundle", "repobundle", "bundle", "bytes", "dat"].contains(&extension.as_str()) { continue; }
                 let target = format!("{parent}/{tail}");
                 if self.allowed(&target) { return Ok(Some(target)); }
+            }
+        }
+        let file = source.rsplit('/').next().unwrap_or(source);
+        let lower = file.to_ascii_lowercase();
+        if let Some(bundle) = &self.loader_bundle {
+            let has_marker = entries.iter().any(|entry| entry.rsplit('/').next().is_some_and(|name| name.eq_ignore_ascii_case(&bundle.marker)));
+            if has_marker && lower.ends_with(".dll") {
+                let target = format!("{}{file}", bundle.target);
+                if !self.allowed(&target) { return Err(format!("Destino fora das regras do módulo: {target}")); }
+                return Ok(Some(target));
+            }
+        }
+        if let Some(fallback) = &self.loose_fallback {
+            // Like the Vortex replacer, only a package no other rule recognizes.
+            let excluded = entries.iter().any(|entry| fallback.unless.iter().any(|ext| entry.to_ascii_lowercase().ends_with(&ext.to_ascii_lowercase())))
+                || !fallback.mixed && entries.iter().any(|entry| !entry.ends_with('/') && self.route(entry, mod_id).ok().flatten().is_some());
+            // Read-me files stay out; executables and DLLs are tools or loaders, never data.
+            let document = [".md", ".pdf", ".url", ".htm", ".html", ".rtf"].iter().any(|ext| lower.ends_with(ext))
+                || ["readme", "changelog", "license", "licence"].iter().any(|name| lower.starts_with(name));
+            let binary = [".exe", ".dll", ".asi", ".bat", ".cmd"].iter().any(|ext| lower.ends_with(ext));
+            if !excluded && !document && (!binary || fallback.binaries) {
+                let target = format!("{}{source}", fallback.target);
+                if !self.allowed(&target) { return Err(format!("Destino fora das regras do módulo: {target}")); }
+                return Ok(Some(target));
             }
         }
         Ok(None)
@@ -990,6 +1380,8 @@ mod tests {
             ("cyberpunk2077", "Redscript", 1511, "redscript"),
             ("cyberpunk2077", "ArchiveXL", 4198, "ArchiveXL"),
             ("cyberpunk2077", "TweakXL", 4197, "TweakXL"),
+            ("cyberpunk2077", "Audioware", 12001, "Audioware"),
+            ("cyberpunk2077", "Codeware", 7780, "Codeware"),
             ("stardewvalley", "SMAPI", 2400, "SMAPI - Stardew Modding API"),
             ("monsterhunterworld", "Stracker's Loader", 1982, "Stracker's Loader"),
             ("oblivionremastered", "UE4SS para Oblivion Remastered", 32, "UE4SS for OblivionRemastered"),
@@ -1006,6 +1398,10 @@ mod tests {
             ("skyrimspecialedition", "Skyrim VR ESL Support", 106712, "Skyrim VR ESL Support"),
             ("fallout4", "F4SEVR", 42159, "Fallout 4 Script Extender VR (F4SEVR)"),
             ("fallout4", "Daytripper 4", 91141, "Daytripper 4"),
+            ("oblivionremastered", "OBSE64", 282, "Oblivion Remastered Script Extender (OBSE64)"),
+            // Requirements of the official Vortex extensions, checked on 2026-10-11.
+            ("sekiro", "Sekiro Mod Engine", 6, "Sekiro Mod Engine"),
+            ("darksouls", "DSfix", 19, "DSfix"),
         ];
         let modules = builtins();
         assert_eq!(modules.iter().flat_map(|m| &m.frameworks).filter(|f| f.mod_id > 0).count(), expected.len());
@@ -1051,7 +1447,8 @@ mod tests {
         assert!(game.route("REPO.exe", ID).unwrap().is_none());
         assert!(!game.allowed("REPO.exe"));
         assert!(game.route("REPO_Data/Managed/Assembly-CSharp.dll", ID).is_err());
-        assert!(game.route("Mods/MelonMod.dll", ID).is_err());
+        // MelonLoader is accepted too, as in the Vortex extension (site/mods/1218).
+        assert_eq!(game.route("Mods/MelonMod.dll", ID).unwrap().as_deref(), Some("Mods/MelonMod.dll"));
         assert!(game.route("../plugins/escape.dll", ID).is_err());
         assert_eq!(game.dll_overrides[0].name, "winhttp");
         assert_eq!(game.steam_id.as_deref(), Some("3241660"));
@@ -1133,6 +1530,99 @@ mod tests {
         }
     }
     #[test]
+    fn anchored_packages_and_mod_folders_follow_the_vortex_installers() {
+        let modules = builtins();
+        let find = |domain: &str| modules.iter().find(|m| m.domain == domain).unwrap();
+        // Kenshi: the folder of the first .mod goes to mods/<name>; files outside it stay out.
+        let kenshi = find("kenshi");
+        let entries: Vec<String> = ["Pack/Better/Better.mod", "Pack/Better/data/x.dds", "Pack/readme.txt"].map(String::from).to_vec();
+        assert_eq!(kenshi.route_package(&entries[1], ID, &entries).unwrap().as_deref(), Some("mods/Better/data/x.dds"));
+        assert_eq!(kenshi.route_package(&entries[2], ID, &entries).unwrap(), None);
+        // Total War: the .pack folder goes straight to data.
+        let tw = find("totalwarthreekingdoms");
+        assert_eq!(tw.route_package("Mod/a.pack", ID, &["Mod/a.pack".into()]).unwrap().as_deref(), Some("data/a.pack"));
+        // Folder games: anything else keeps its path below the mod folder.
+        let grim = find("grimdawn");
+        assert_eq!(grim.route_package("Mod/a.arz", ID, &["Mod/a.arz".into()]).unwrap().as_deref(), Some("mods/Mod/a.arz"));
+        assert_eq!(grim.route_package("Mod/tool.dll", ID, &["Mod/tool.dll".into()]).unwrap(), None, "binários ficam fora sem a opção");
+        // Sekiro: data folders, loose parts and the Mod Engine.
+        let sekiro = find("sekiro");
+        assert_eq!(sekiro.route_package("x/wp.partsbnd.dcx", ID, &["x/wp.partsbnd.dcx".into()]).unwrap().as_deref(), Some("mods/parts/wp.partsbnd.dcx"));
+        let engine: Vec<String> = ["ModEngine-0.1.16/dinput8.dll", "ModEngine-0.1.16/modengine.ini", "ModEngine-0.1.16/readme.txt"].map(String::from).to_vec();
+        assert_eq!(sekiro.route_package(&engine[0], ID, &engine).unwrap().as_deref(), Some("dinput8.dll"));
+        assert_eq!(sekiro.route_package(&engine[1], ID, &engine).unwrap().as_deref(), Some("modengine.ini"));
+        assert_eq!(sekiro.route_package(&engine[2], ID, &engine).unwrap(), None);
+        // A bad anchor is refused when the module loads.
+        let mut broken = kenshi.clone();
+        broken.routes = vec![Route::Anchor { suffix: "a/b".into(), target: "mods/".into(), folder: false }];
+        assert!(broken.validate().is_err());
+    }
+    #[test]
+    fn dark_souls_2_and_halo_mcc_follow_their_extensions() {
+        let modules = builtins();
+        let find = |domain: &str| modules.iter().find(|m| m.domain == domain).unwrap();
+        let ds2 = find("darksouls2");
+        // ModEngine and proxy loaders go beside the executable, relative to the loader.
+        let engine: Vec<String> = ["ModEngine/dinput8.dll", "ModEngine/modengine.ini", "ModEngine/mod/map/m10.dcx", "readme.txt"].map(String::from).to_vec();
+        assert_eq!(ds2.route_package(&engine[2], ID, &engine).unwrap().as_deref(), Some("Game/mod/map/m10.dcx"));
+        assert_eq!(ds2.route_package(&engine[3], ID, &engine).unwrap(), None);
+        let coop: Vec<String> = ["Seamless/ds2sc_launcher.exe", "Seamless/SeamlessCoop/ds2sc.dll"].map(String::from).to_vec();
+        assert_eq!(ds2.route_package(&coop[1], ID, &coop).unwrap().as_deref(), Some("Game/SeamlessCoop/ds2sc.dll"));
+        assert!(!ds2.allowed("Game/DarkSoulsII.exe"));
+        // Halo MCC: plug-and-play mods win over the game folders inside them.
+        let mcc = find("halothemasterchiefcollection");
+        let pnp: Vec<String> = ["Cool/ModInfo.json", "Cool/halo3/maps/x.map"].map(String::from).to_vec();
+        assert_eq!(mcc.route_package(&pnp[1], ID, &pnp).unwrap().as_deref(), Some("PeliGames-Mods/Cool/halo3/maps/x.map"));
+        assert_eq!(mcc.route_package("Classic/halo3/maps/x.map", ID, &["Classic/halo3/maps/x.map".into()]).unwrap().as_deref(), Some("halo3/maps/x.map"));
+    }
+    #[test]
+    fn unity_mod_manager_games_follow_modtype_umm() {
+        let modules = builtins();
+        for domain in ["pathfinderwrathoftherighteous", "dawnofman", "gardenpaws"] {
+            let game = modules.iter().find(|m| m.domain == domain).unwrap();
+            let umm: Vec<String> = ["UnityModManager/UnityModManager.exe", "UnityModManager/winhttp_x64.dll", "UnityModManager/Redownload.bat"].map(String::from).to_vec();
+            for source in &umm { assert_eq!(game.route_package(source, ID, &umm).unwrap().as_deref(), Some(source.as_str()), "{domain}"); }
+            // UMM mods carry DLLs; an archive without a folder still lands in Mods.
+            assert_eq!(game.route_package("Mod.dll", ID, &["Mod.dll".into(), "Info.json".into()]).unwrap().as_deref(), Some(format!("Mods/{ID}/Mod.dll").as_str()));
+            assert!(game.tools.iter().any(|tool| tool.executable == "UnityModManager/UnityModManager.exe"));
+            let download = game.downloads.iter().find(|d| d.name == "Unity Mod Manager").unwrap();
+            assert_eq!((download.tag.as_deref(), download.automatic), (Some("0.24.2"), domain == "pathfinderwrathoftherighteous"));
+        }
+        // Dawn of Man scenarios go to Documents, in a folder named after the scenario.
+        let dawn = modules.iter().find(|m| m.domain == "dawnofman").unwrap();
+        let scenario: Vec<String> = ["Pack/Valley.scn.xml", "Pack/Valley.png"].map(String::from).to_vec();
+        assert_eq!(dawn.route_package(&scenario[1], ID, &scenario).unwrap().as_deref(), Some("@documents/DawnOfMan/Scenarios/Valley/Valley.png"));
+    }
+    #[test]
+    fn unreal_plugin_mods_and_d3d9_loader_follow_the_vortex_extensions() {
+        let modules = builtins();
+        let find = |domain: &str| modules.iter().find(|m| m.domain == domain).unwrap();
+        // SZModLoader: the loader and each `.uplugin` mod go whole to Mods/<plugin>.
+        let sz = find("dragonballsparkingzero");
+        let loader: Vec<String> = ["SZModLoader107/Mods/SZModLib/SZModLib.uplugin", "SZModLoader107/Mods/SZModLib/Binaries/Win64/SZModLib.dll"].map(String::from).to_vec();
+        assert_eq!(sz.route_package(&loader[1], ID, &loader).unwrap().as_deref(), Some("SparkingZERO/Mods/SZModLib/Binaries/Win64/SZModLib.dll"));
+        let single: Vec<String> = ["Goku.uplugin", "Content/Paks/Goku.pak"].map(String::from).to_vec();
+        assert_eq!(sz.route_package(&single[1], ID, &single).unwrap().as_deref(), Some("SparkingZERO/Mods/Goku/Content/Paks/Goku.pak"));
+        assert_eq!(sz.route_package("Outfit_P.pak", ID, &["Outfit_P.pak".into()]).unwrap().as_deref(), Some("SparkingZERO/Content/Paks/~mods/Outfit_P.pak"));
+        // FF7RML and its mods share the same rule.
+        let ff7 = find("finalfantasy7rebirth");
+        let menu: Vec<String> = ["FF7RML/FF7RML.uplugin", "FF7RModMenu/FF7RModMenu.uplugin", "FF7RModMenu/Content/Paks/Menu.pak"].map(String::from).to_vec();
+        assert_eq!(ff7.route_package(&menu[2], ID, &menu).unwrap().as_deref(), Some("End/Mods/FF7RModMenu/Content/Paks/Menu.pak"));
+        assert_eq!(ff7.route_package(&menu[0], ID, &menu).unwrap().as_deref(), Some("End/Mods/FF7RML/FF7RML.uplugin"));
+        // NG2B Mod Loader: d3d9.dll beside the executable and its mods in mods/.
+        let ng = find("ninjagaiden2black");
+        let bin = "NINJAGAIDEN2BLACK/Binaries/Win64";
+        assert_eq!(ng.route_package("ModLoader/d3d9.dll", ID, &["ModLoader/d3d9.dll".into()]).unwrap(), Some(format!("{bin}/d3d9.dll")));
+        assert_eq!(ng.route_package("mods/Costume/model.dat", ID, &["mods/Costume/model.dat".into()]).unwrap(), Some(format!("{bin}/mods/Costume/model.dat")));
+        assert!(ng.dll_overrides.iter().any(|o| o.name == "d3d9"));
+        // Reloaded-II goes into the Reloaded folder as the download's root.
+        for domain in ["finalfantasy16", "finalfantasytacticstheivalicechronicles"] {
+            let game = find(domain);
+            let reloaded = game.downloads.iter().find(|d| d.name == "Reloaded-II").unwrap();
+            assert_eq!((reloaded.root.as_deref(), reloaded.tag.as_deref()), (Some("Reloaded"), Some("latest")));
+        }
+    }
+    #[test]
     fn vortex_mod_types_resolve_only_inside_module_destinations() {
         let mut game = builtins().into_iter().find(|m| m.domain == "stellarblade").unwrap();
         game.vortex_mod_types.insert("stellarblade-logicmods".into(), "SB/Content/Paks/LogicMods".into());
@@ -1210,29 +1700,79 @@ mod tests {
     #[test]
     fn script_extenders_install_at_root_launch_and_are_required() {
         let modules: Vec<_> = builtins().into_iter().filter(|m| m.script_extender.is_some()).collect();
-        assert_eq!(modules.len(), 11);
+        assert_eq!(modules.len(), 12);
         for game in modules {
             let extender = game.script_extender.clone().unwrap();
             let (d, loader, prefix) = (&game.domain, extender.loader.clone(), extender.dll_prefix.clone());
             let package: Vec<String> = [format!("{prefix}2_02_06/{loader}"), format!("{prefix}2_02_06/{prefix}1_6_1170.dll"), format!("{prefix}2_02_06/Data/Scripts/Game.pex"), format!("{prefix}2_02_06/src/common/IDebugLog.cpp")].to_vec();
-            assert_eq!(game.route_package(&package[0], ID, &package).unwrap(), Some(loader.clone()), "{d}");
-            assert_eq!(game.route_package(&package[1], ID, &package).unwrap(), Some(format!("{prefix}1_6_1170.dll")), "{d}");
-            assert_eq!(game.route_package(&package[2], ID, &package).unwrap().as_deref(), Some("Data/Scripts/Game.pex"), "{d}");
+            assert_eq!(game.route_package(&package[0], ID, &package).unwrap(), Some(extender.at(&loader)), "{d}");
+            assert_eq!(game.route_package(&package[1], ID, &package).unwrap(), Some(extender.at(&format!("{prefix}1_6_1170.dll"))), "{d}");
+            assert_eq!(game.route_package(&package[2], ID, &package).unwrap(), game.route("Data/Scripts/Game.pex", ID).unwrap(), "{d}");
             assert_eq!(game.route_package(&package[3], ID, &package).unwrap(), None, "{d}: código-fonte não é implantado");
             // A plugin DLL with the extender prefix stays in the plugin folder.
             let plugin = format!("{}/{prefix}helper.dll", extender.plugins);
             assert_eq!(game.route_package(&plugin, ID, &[plugin.clone()]).unwrap().as_deref(), Some(plugin.as_str()), "{d}");
-            assert!(!game.allowed("other.dll") && !game.allowed("dinput8.dll"), "{d}: só o loader e as DLLs do extender vão para a raiz");
+            // A loose DLL reaches the game folder only inside an ENB or dinput package.
+            assert_eq!(game.route_package("other.dll", ID, &["other.dll".into()]).unwrap(), None, "{d}: só o loader e as DLLs do extender vão para a raiz");
+            assert!(!game.allowed("other.exe"), "{d}");
             assert!(!game.allowed(&game.executable), "{d}");
-            assert_eq!(game.mod_launch_executable.as_deref(), Some(loader.as_str()), "{d}");
+            assert_eq!(game.mod_launch_executable, Some(extender.at(&loader)), "{d}");
             let framework = game.frameworks.iter().find(|f| f.name == extender.name).unwrap();
-            assert_eq!(framework.required_files, [loader.clone()]);
+            assert_eq!(framework.required_files, [extender.at(&loader)]);
             assert_eq!(framework.for_paths, [format!("{}/", extender.plugins)]);
             let page = extender.domain.clone().unwrap_or_else(|| d.clone());
             assert_eq!(framework.url.as_deref(), Some(format!("https://www.nexusmods.com/{page}/mods/{}", extender.mod_id).as_str()));
             // Another game's page is linked but cannot vouch for a download of this game.
             assert_eq!(framework.mod_id > 0, page == *d, "{d}");
         }
+    }
+    #[test]
+    fn asi_plugins_bring_their_settings_and_keep_the_binaries_folder_closed() {
+        let game = builtins().into_iter().find(|m| m.domain == "finalfantasy7rebirth").unwrap();
+        let bin = "End/Binaries/Win64";
+        let package: Vec<String> = ["EXTRACT_TO_GAME_FOLDER", "End/Binaries/Win64/FF7RebirthFix.asi", "End/Binaries/Win64/FF7RebirthFix.ini", "End/Binaries/Win64/dsound.dll"].map(String::from).to_vec();
+        assert_eq!(game.route_package(&package[1], ID, &package).unwrap(), Some(format!("{bin}/plugins/FF7RebirthFix.asi")));
+        assert_eq!(game.route_package(&package[2], ID, &package).unwrap(), Some(format!("{bin}/plugins/FF7RebirthFix.ini")));
+        assert_eq!(game.route_package(&package[3], ID, &package).unwrap(), Some(format!("{bin}/dsound.dll")));
+        // An INI without its plugin is not placed next to the loader.
+        assert_eq!(game.route_package("Other.ini", ID, &["Other.ini".into()]).unwrap(), None);
+        assert_eq!(game.route_package("FF7RML/FF7RML.dll", ID, &["FF7RML/FF7RML.dll".into()]).unwrap().as_deref(), Some("End/Mods/FF7RML/FF7RML.dll"));
+        assert!(!game.allowed(&format!("{bin}/other.dll")) && !game.allowed(&game.executable));
+        assert!(game.dll_overrides.iter().any(|o| o.name == "dsound" && o.file == format!("{bin}/dsound.dll")));
+    }
+    #[test]
+    fn bg3_loader_dlls_and_loose_packages_follow_the_vortex_installers() {
+        let game = builtins().into_iter().find(|m| m.domain == "baldursgate3").unwrap();
+        let route = |source: &str, entries: &[&str]| game.route_package(source, ID, &entries.iter().map(|e| e.to_string()).collect::<Vec<_>>()).unwrap();
+        // BG3SE: every loose DLL of a package with DWrite.dll goes to bin.
+        assert_eq!(route("Extra.dll", &["DWrite.dll", "Extra.dll"]).as_deref(), Some("bin/Extra.dll"));
+        assert_eq!(route("DWrite.dll", &["DWrite.dll", "Extra.dll"]).as_deref(), Some("bin/DWrite.dll"));
+        assert_eq!(route("Extra.dll", &["Extra.dll"]), None);
+        // Replacer without Data/Public/Generated: the package path below Data.
+        let loose = ["Localization/English/x.loca", "readme.txt", "Tool.exe"];
+        assert_eq!(route(loose[0], &loose).as_deref(), Some("Data/Localization/English/x.loca"));
+        assert_eq!(route(loose[1], &loose), None);
+        assert_eq!(route(loose[2], &loose), None);
+        // Not when the package has a pak or another recognized layout.
+        assert_eq!(route("Localization/x.loca", &["Localization/x.loca", "Mod.pak"]), None);
+        assert_eq!(route("notes.txt", &["notes.txt", "bin/NativeMods/Fix.dll"]), None);
+        assert!(!game.allowed("bin/bg3.exe") && !game.allowed("bin/bg3_dx11.exe"));
+    }
+    #[test]
+    fn enb_and_dinput_packages_go_to_the_game_folder() {
+        let game = builtins().into_iter().find(|m| m.domain == "newvegas").unwrap();
+        let enb: Vec<String> = ["Preset/enbseries.ini", "Preset/enblocal.ini", "Preset/d3d9.dll", "Preset/enbseries/effect.fx", "Preset/Data/textures/x.dds", "Preset/readme.txt"].map(String::from).to_vec();
+        assert_eq!(game.route_package(&enb[2], ID, &enb).unwrap().as_deref(), Some("d3d9.dll"));
+        assert_eq!(game.route_package(&enb[3], ID, &enb).unwrap().as_deref(), Some("enbseries/effect.fx"));
+        assert_eq!(game.route_package(&enb[4], ID, &enb).unwrap().as_deref(), Some("Data/textures/x.dds"));
+        assert_eq!(game.route_package(&enb[5], ID, &enb).unwrap(), None);
+        let twice: Vec<String> = ["A/enbseries.ini", "B/enbseries.ini"].map(String::from).to_vec();
+        assert!(game.route_package(&twice[0], ID, &twice).is_err(), "duas variantes");
+        let dinput: Vec<String> = ["Loader/dinput8.dll", "Loader/dinput8.ini"].map(String::from).to_vec();
+        assert_eq!(game.route_package(&dinput[1], ID, &dinput).unwrap().as_deref(), Some("dinput8.ini"));
+        assert!(!game.allowed("FalloutNV.exe") && game.allowed("FNVpatch.exe"));
+        assert_eq!(game.route_package("FNV 4GB Patcher/FNVpatch.exe", ID, &["FNV 4GB Patcher/FNVpatch.exe".into()]).unwrap().as_deref(), Some("FNVpatch.exe"));
+        assert!(game.dll_overrides.iter().any(|o| o.name == "d3d9") && game.bsa_override && game.archives.as_ref().unwrap().redirection.is_some());
     }
     #[test]
     fn bethesda_editions_are_told_apart_by_executable_or_steam_id() {
@@ -1285,9 +1825,9 @@ mod tests {
         let routes = game.routes.len();
         game.apply_family().unwrap();
         assert_eq!(game.routes.len(), routes);
-        game.family = Some(Family::Unreal { project: "../SB".into(), binaries: "Win64".into(), ue4ss: true });
+        game.family = Some(Family::Unreal { project: "../SB".into(), binaries: "Win64".into(), ue4ss: true, sig_bypass: false, plugin_mods: None, d3d9_loader: false });
         assert!(game.apply_family().is_err());
-        game.family = Some(Family::Unreal { project: "SB".into(), binaries: "Win64/../..".into(), ue4ss: true });
+        game.family = Some(Family::Unreal { project: "SB".into(), binaries: "Win64/../..".into(), ue4ss: true, sig_bypass: false, plugin_mods: None, d3d9_loader: false });
         assert!(game.apply_family().is_err());
     }
     #[test]
@@ -1306,5 +1846,71 @@ mod tests {
         let registry = external(&folder, builtins());
         assert_eq!(registry.definitions.len(), builtins().len()); assert_eq!(registry.errors.len(), 2);
         fs::remove_dir_all(folder).unwrap();
+    }
+}
+
+#[cfg(test)]
+mod package_extras_tests {
+    use super::*;
+    #[test]
+    fn xbox_builds_source_code_and_mo2_metadata_are_skipped() {
+        let modules = registry().definitions;
+        let pal = modules.iter().find(|m| m.domain == "palworld").unwrap();
+        let id = "00000000-0000-4000-8000-000000000001";
+        // Palworld Mod Config Menu ships the Steam and the Xbox builds.
+        let both: Vec<String> = ["Pal/Binaries/Win64/Mods/Menu/Scripts/main.lua", "Pal/Binaries/WinGDK/Mods/Menu/Scripts/main.lua"].map(String::from).to_vec();
+        assert_eq!(pal.route_package(&both[1], id, &both).unwrap(), None);
+        assert!(pal.route_package(&both[0], id, &both).unwrap().is_some());
+        // An Xbox-only package is still refused.
+        assert!(pal.route_package(&both[1], id, &both[1..]).is_err());
+        // lStewieAl's Tweaks ships its source code beside the plugin.
+        let nv = modules.iter().find(|m| m.domain == "newvegas").unwrap();
+        let tweaks: Vec<String> = ["nvse/plugins/nvse_stewie_tweaks.dll", "Stewie Tweaks 9.90 Source/nvse/nvse/ArrayVar.cpp", "Stewie Tweaks 9.90 Source/libs/libdeflate/libdeflate.dll"].map(String::from).to_vec();
+        assert_eq!(nv.route_package(&tweaks[1], id, &tweaks).unwrap(), None);
+        assert_eq!(nv.route_package(&tweaks[2], id, &tweaks).unwrap(), None);
+        assert!(super::super::nexus_deployment::unmapped_file(&tweaks[2]).is_ok());
+        assert!(super::super::nexus_deployment::unmapped_file("AWKCR/meta.ini").is_ok());
+        assert!(super::super::nexus_deployment::unmapped_file("FOMod/info.xml").is_ok());
+        assert!(super::super::nexus_deployment::unmapped_file("Mod/fomod/screenshot.png").is_ok());
+        // A real game folder named like a source folder deeper in the tree is kept.
+        assert!(!source_tree("Data/textures/source/rock.dds"));
+    }
+}
+
+#[cfg(test)]
+mod real_package_survey {
+    use super::*;
+    /// Reads `PELIGAMES_SURVEY` (JSON: domain → [{mod_id, name, files}]) produced from
+    /// the public Nexus content previews and routes every package like an install.
+    #[test]
+    #[ignore = "Survey of real package layouts; needs PELIGAMES_SURVEY"]
+    fn survey_real_package_layouts() {
+        let data: serde_json::Value = serde_json::from_slice(&fs::read(std::env::var("PELIGAMES_SURVEY").unwrap()).unwrap()).unwrap();
+        let modules = registry().definitions;
+        for (domain, mods) in data.as_object().unwrap() {
+            // The flat edition when an edition shares the Nexus game (Skyrim VR, Fallout 4 VR).
+            let Some(module) = modules.iter().filter(|m| &m.domain == domain).min_by_key(|m| m.name.len()) else { println!("SURVEY {domain}: sem módulo"); continue };
+            for item in mods.as_array().unwrap() {
+                let Some(files) = item["files"].as_array() else { continue };
+                let entries: Vec<String> = files.iter().filter_map(|f| f.as_str().map(str::to_string)).collect();
+                let name = item["name"].as_str().unwrap_or("");
+                let id = "00000000-0000-4000-8000-000000000001";
+                if entries.iter().any(|e| e.to_ascii_lowercase().ends_with("fomod/moduleconfig.xml")) { println!("SURVEY {domain} | {name} | FOMOD | {} arquivos", entries.len()); continue; }
+                if !super::super::nexus_bain::packages(&entries).is_empty() && module.activation.is_some() { println!("SURVEY {domain} | {name} | BAIN | {} arquivos", entries.len()); continue; }
+                let mut problems = Vec::new();
+                let mut mapped = 0;
+                for entry in &entries {
+                    match module.route_package(entry, id, &entries) {
+                        Ok(Some(_)) => mapped += 1,
+                        Ok(None) => if let Err(error) = super::super::nexus_deployment::unmapped(module, entry) { problems.push(format!("sem destino: {entry} ({})", error.split(':').next().unwrap_or(""))); },
+                        Err(error) => problems.push(format!("recusado: {entry} → {error}")),
+                    }
+                }
+                let status = if problems.is_empty() { "OK" } else { "FALHA" };
+                println!("SURVEY {domain} | {name} | {status} | {mapped}/{} com destino", entries.len());
+                for problem in problems.iter().take(4) { println!("SURVEY     {problem}"); }
+                if problems.len() > 4 { println!("SURVEY     … +{} arquivos", problems.len() - 4); }
+            }
+        }
     }
 }

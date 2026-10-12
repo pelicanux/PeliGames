@@ -35,6 +35,12 @@ fn parse(value: &str) -> Result<Options, String> {
     }
     Ok(result)
 }
+/// Shared syntax for editable launcher arguments and environment variables.
+pub(crate) fn validate_custom(value: &str) -> Result<(), String> { parse(value).map(|_| ()) }
+pub(crate) fn apply_custom(command: &mut Command, value: &str) -> Result<(), String> {
+    apply_options(command, parse(value)?, true);
+    Ok(())
+}
 fn automatic(game: &NexusGame, visible: &Path) -> Options {
     let mut options = Options::default();
     if let Some(module) = super::nexus_deployment::definition(game) {
@@ -188,6 +194,24 @@ pub async fn configure_nexus_launch_options(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn main_library_launch_options_persist_and_apply_without_shell() {
+        let mut settings = crate::core::advanced_settings::AdvancedSettings::default();
+        settings.launch_options = Some("MANGOHUD=1 %command% -windowed \"two words\"".into());
+        settings.validate().unwrap();
+        let saved = serde_json::to_vec(&settings).unwrap();
+        let loaded: crate::core::advanced_settings::AdvancedSettings = serde_json::from_slice(&saved).unwrap();
+        assert_eq!(loaded.launch_options, settings.launch_options);
+        let mut command = Command::new("/bin/echo");
+        command.arg("game.exe");
+        apply_custom(&mut command, loaded.launch_options.as_deref().unwrap()).unwrap();
+        assert_eq!(command.get_args().map(|v| v.to_string_lossy().into_owned()).collect::<Vec<_>>(), ["game.exe", "-windowed", "two words"]);
+        assert!(command.get_envs().any(|(key, value)| key == "MANGOHUD" && value == Some(std::ffi::OsStr::new("1"))));
+        settings.launch_options = Some("--name \"unclosed".into());
+        assert!(settings.validate().is_err());
+        settings.launch_options = None;
+        settings.validate().unwrap();
+    }
     #[test]
     fn preserves_quoted_arguments_and_environment_without_shell() {
         let options = parse("WINEDLLOVERRIDES=\"winhttp=n,b;version=n,b\" %command% --name \"two words\" \"$(touch /tmp/no)\"").unwrap();

@@ -133,7 +133,7 @@ pub(super) fn build(game: &NexusGame) -> Result<String, String> {
                 super::nexus_fomod::validate_installation_files(&mut zip,&definition,files)?;
                 Some(files.clone())
             } else {
-                let resolved = super::nexus_fomod::resolve(&mut zip,&definition,Path::new(game.game["directory"].as_str().unwrap()),&item.id,item.fomod_selection.as_deref())?;
+                let resolved = super::nexus_fomod::resolve(&mut zip,&definition,Path::new(game.game["directory"].as_str().unwrap()),&item.id,item.fomod_selection.as_deref(),Some(&super::nexus_loot::PluginOracle::new(game,&definition)))?;
                 if !resolved.issues.is_empty() {return Err(resolved.issues.join("\n"));}
                 resolved.files
             };

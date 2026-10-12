@@ -228,13 +228,16 @@ fn relative(value: &str, empty: bool) -> Result<String, String> {
     }
     super::nexus_archive::safe_name(value)
 }
-fn condition(node: &Node, flags: &BTreeMap<String, String>, root: &Path) -> Result<bool, String> {
+/// What conditions can inspect: the game's mod folder and, for Bethesda games, the plugin list.
+struct Env<'a> { root: std::path::PathBuf, plugins: Option<&'a super::nexus_loot::PluginOracle<'a>> }
+fn condition(node: &Node, flags: &BTreeMap<String, String>, env: &Env) -> Result<bool, String> {
+    let root = env.root.as_path();
     match node.name.as_str() {
         "dependencies" | "moduleDependencies" | "visible" => {
             let values = node
                 .children
                 .iter()
-                .map(|n| condition(n, flags, root))
+                .map(|n| condition(n, flags, env))
                 .collect::<Result<Vec<_>, _>>()?;
             match node.attr("operator") {
                 "" | "And" => Ok(values.iter().all(|v| *v)),
@@ -250,12 +253,23 @@ fn condition(node: &Node, flags: &BTreeMap<String, String>, root: &Path) -> Resu
             let path = root.join(&file);
             let present =
                 path.is_file() && fs::canonicalize(&path).is_ok_and(|p| p.starts_with(root));
-            if ["esp", "esm", "esl"]
+            let is_plugin = !file.contains('/') && ["esp", "esm", "esl"]
                 .iter()
-                .any(|ext| file.to_ascii_lowercase().ends_with(&format!(".{ext}")))
-                && node.attr("state") != "Missing"
-            {
-                return Err("Este FOMOD precisa consultar a ativação de plugins Bethesda, ainda não disponível.".into());
+                .any(|ext| file.to_ascii_lowercase().ends_with(&format!(".{ext}")));
+            if is_plugin {
+                // Plugins are judged by the load order: Active, Inactive (present but disabled) or Missing.
+                use super::nexus_loot::PluginState;
+                let Some(plugins) = env.plugins else {
+                    if node.attr("state") == "Missing" { return Ok(!present); }
+                    return Err("Este FOMOD precisa consultar a ativação de plugins Bethesda, indisponível para este jogo.".into());
+                };
+                let state = plugins.state(&file)?;
+                return match node.attr("state") {
+                    "Active" => Ok(state == PluginState::Active),
+                    "Inactive" => Ok(state == PluginState::Inactive),
+                    "Missing" => Ok(state == PluginState::Missing),
+                    _ => Err("Estado de dependência FOMOD desconhecido.".into()),
+                };
             }
             match node.attr("state") {
                 "Active" => Ok(present),
@@ -273,7 +287,7 @@ fn condition(node: &Node, flags: &BTreeMap<String, String>, root: &Path) -> Resu
 fn plugin_kind(
     plugin: &Node,
     flags: &BTreeMap<String, String>,
-    root: &Path,
+    env: &Env,
 ) -> Result<String, String> {
     let Some(descriptor) = plugin.child("typeDescriptor") else {
         return Ok("Optional".into());
@@ -290,7 +304,7 @@ fn plugin_kind(
                 .child("dependencies")
                 .ok_or("Condição FOMOD ausente.")?,
             flags,
-            root,
+            env,
         )? {
             return Ok(pattern
                 .child("type")
@@ -356,6 +370,7 @@ pub(super) fn resolve(
     root: &Path,
     mod_id: &str,
     choices: Option<&[String]>,
+    plugins: Option<&super::nexus_loot::PluginOracle>,
 ) -> Result<Resolution, String> {
     let entries = (0..archive.len())
         .filter_map(|i| match archive.by_index(i) {
@@ -410,6 +425,13 @@ pub(super) fn resolve(
     let config = xml(&bytes)?;
     let prefix = &config_path[..config_path.len() - "fomod/ModuleConfig.xml".len()];
     let root = fs::canonicalize(root).map_err(|e| e.to_string())?;
+    // File conditions are relative to the game's mod folder, as in Vortex: Data
+    // (Data Files in Morrowind) for Bethesda games, the game root otherwise.
+    let root = match module.activation.as_ref().filter(|rule| matches!(rule.kind, super::nexus_modules::ActivationKind::Bethesda | super::nexus_modules::ActivationKind::Morrowind)) {
+        Some(rule) => super::nexus_discovery::locate(&root, &rule.data).and_then(|path| fs::canonicalize(path).ok()).filter(|path| path.starts_with(&root)).unwrap_or_else(|| root.join(&rule.data)),
+        None => root,
+    };
+    let env = Env { root, plugins };
     let requested = choices
         .unwrap_or_default()
         .iter()
@@ -422,7 +444,7 @@ pub(super) fn resolve(
     let mut steps = Vec::new();
     let mut files = Vec::new();
     if let Some(dependencies) = config.child("moduleDependencies") {
-        if !condition(dependencies, &flags, &root)? {
+        if !condition(dependencies, &flags, &env)? {
             issues.push(
                 "As dependências declaradas pelo instalador FOMOD não estão satisfeitas.".into(),
             );
@@ -432,7 +454,7 @@ pub(super) fn resolve(
     for step in ordered(config.child("installSteps"), "installStep")? {
         let visible = step
             .child("visible")
-            .map(|v| condition(v, &flags, &root))
+            .map(|v| condition(v, &flags, &env))
             .transpose()?
             .unwrap_or(true);
         let mut groups = Vec::new();
@@ -457,7 +479,7 @@ pub(super) fn resolve(
             {
                 plugins
                     .iter()
-                    .map(|plugin| plugin_kind(plugin, &flags, &root).map(|kind| (plugin.id, kind)))
+                    .map(|plugin| plugin_kind(plugin, &flags, &env).map(|kind| (plugin.id, kind)))
                     .collect::<Result<Vec<_>, _>>()?
                     .into_iter()
                     .find(|(_, kind)| kind == "Recommended")
@@ -471,7 +493,7 @@ pub(super) fn resolve(
                 if !visible {
                     continue;
                 }
-                let ptype = plugin_kind(plugin, &flags, &root)?;
+                let ptype = plugin_kind(plugin, &flags, &env)?;
                 if ![
                     "Required",
                     "Optional",
@@ -554,7 +576,7 @@ pub(super) fn resolve(
                     .child("dependencies")
                     .ok_or("Condição FOMOD ausente.")?,
                 &flags,
-                &root,
+                &env,
             )? {
                 rules(pattern.child("files"), true, true, &mut files)?;
             }
@@ -671,6 +693,35 @@ pub(super) fn validate_installation_files(
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod data_folder_tests {
+    use super::*;
+    use std::io::Write;
+    #[test]
+    fn bethesda_file_conditions_are_relative_to_data() {
+        let base = std::env::temp_dir().join(format!("peligames-fomod-data-{}", uuid::Uuid::new_v4()));
+        let root = base.join("game");
+        fs::create_dir_all(&root).unwrap();
+        fs::write(root.join("SkyrimSE.exe"), b"MZ").unwrap();
+        let path = base.join("mod.zip");
+        let mut writer = zip::ZipWriter::new(fs::File::create(&path).unwrap());
+        writer.start_file("fomod/ModuleConfig.xml", zip::write::FileOptions::default()).unwrap();
+        writer.write_all(br#"<config><moduleName>Patch</moduleName><conditionalFileInstalls><patterns><pattern><dependencies operator="And"><fileDependency file="SKSE\Plugins\x.dll" state="Active"/></dependencies><files><file source="patch.esp" destination="patch.esp"/></files></pattern></patterns></conditionalFileInstalls></config>"#).unwrap();
+        writer.start_file("patch.esp", zip::write::FileOptions::default()).unwrap();
+        writer.write_all(b"TES4").unwrap();
+        writer.finish().unwrap();
+        let module = super::super::nexus_modules::registry().definitions.into_iter().find(|m| m.name == "Skyrim Special Edition").unwrap();
+        let id = "00000000-0000-4000-8000-000000000001";
+        let files = |archive: &mut zip::ZipArchive<fs::File>| resolve(archive, &module, &root, id, None, None).unwrap().files.unwrap();
+        let mut archive = zip::ZipArchive::new(fs::File::open(&path).unwrap()).unwrap();
+        assert!(files(&mut archive).is_empty(), "sem SKSE o patch não entra");
+        fs::create_dir_all(root.join("Data/SKSE/Plugins")).unwrap();
+        fs::write(root.join("Data/SKSE/Plugins/x.dll"), b"MZ").unwrap();
+        assert_eq!(files(&mut archive), [("patch.esp".to_string(), "Data/patch.esp".to_string())]);
+        fs::remove_dir_all(base).unwrap();
+    }
 }
 
 #[cfg(test)]

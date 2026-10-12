@@ -182,7 +182,8 @@ pub(crate) fn prepare_launch_program(
         .find(|entry| entry.path == path)
         .ok_or("Executável não registrado na biblioteca PeliGames.")?;
     // This launches the registered executable without replacing the installation manifest.
-    let arguments = if executable.is_none() { entry.launch_arguments.clone() } else { Vec::new() };
+    let registered_program = executable.is_none();
+    let arguments = if registered_program { entry.launch_arguments.clone() } else { Vec::new() };
     let mut prepared = prepare_run_in_prefix(
         InstallationRequest {
             name: entry.name,
@@ -199,7 +200,11 @@ pub(crate) fn prepare_launch_program(
         Some(Path::new(&entry.prefix)),
         Some(&entry.advanced),
     )?;
-    prepared.command.args(arguments);
+    if registered_program {
+        if let Some(options) = &entry.advanced.launch_options {
+            crate::commands::nexus_launch_options::apply_custom(&mut prepared.command, options)?;
+        } else { prepared.command.args(arguments); }
+    }
     Ok(prepared)
 }
 pub fn launch(path: String) -> Result<(), String> {

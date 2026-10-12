@@ -32,6 +32,16 @@
     ],
     "launch_executable": "AbioticFactor.exe",
     "steam_id": "427410",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "source": "nexus",
+        "mod_id": 35,
+        "domain": null,
+        "prefix": "UE4SS",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "abioticfactor-ue5-sortable-modtype": "AbioticFactor/Content/Paks/~mods",
       "abioticfactor-scripts": "AbioticFactor/Binaries/Win64/ue4ss/Mods",
@@ -77,6 +87,16 @@
     ],
     "launch_executable": "AtomicHeart.exe",
     "steam_id": "668580",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "source": "nexus",
+        "mod_id": 186,
+        "domain": null,
+        "prefix": "UE4SS",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "atomicheart-uesortablepak": "AtomicHeart/Content/Paks/~mods",
       "atomicheart-scripts": "AtomicHeart/Binaries/Win64/ue4ss/Mods",
@@ -123,6 +143,15 @@
     ],
     "launch_executable": "Avowed.exe",
     "steam_id": "2457220",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "avowed-ue5-sortable-modtype": "Alabama/Content/Paks/~mods",
       "ue5-sortable-modtype": "Alabama/Content/Paks/~mods",
@@ -145,7 +174,8 @@
     "engine": "deployment",
     "family": {
       "kind": "unreal",
-      "project": "BeastOfReincarnation"
+      "project": "BeastOfReincarnation",
+      "sig_bypass": true
     },
     "executable": "BeastOfReincarnation/Binaries/Win64/BeastOfReincarnation-Win64-Shipping.exe",
     "required": [
@@ -169,6 +199,26 @@
     ],
     "launch_executable": "BeastOfReincarnation.exe",
     "steam_id": "2001760",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "source": "nexus",
+        "mod_id": 37,
+        "domain": null,
+        "prefix": "UE4SS",
+        "automatic": false
+      },
+      {
+        "name": "Sig Bypass",
+        "source": "nexus",
+        "mod_id": 1416,
+        "domain": "site",
+        "prefix": "dsound",
+        "present": [
+          "BeastOfReincarnation/Binaries/Win64/dsound.dll"
+        ]
+      }
+    ],
     "vortex_mod_types": {
       "beastofreincarnation-uesortablepak": "BeastOfReincarnation/Content/Paks/~mods",
       "beastofreincarnation-scripts": "BeastOfReincarnation/Binaries/Win64/ue4ss/Mods",
@@ -213,6 +263,15 @@
     ],
     "launch_executable": "BellwrightGame.exe",
     "steam_id": "1812450",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "bellwright-ue5-sortable-modtype": "Bellwright/Content/Paks/~mods",
       "ue5-sortable-modtype": "Bellwright/Content/Paks/~mods",
@@ -236,7 +295,8 @@
     "engine": "deployment",
     "family": {
       "kind": "unreal",
-      "project": "b1"
+      "project": "b1",
+      "sig_bypass": true
     },
     "executable": "b1/Binaries/Win64/b1-Win64-Shipping.exe",
     "required": [
@@ -260,6 +320,25 @@
     ],
     "launch_executable": "b1.exe",
     "steam_id": "2358720",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      },
+      {
+        "name": "Sig Bypass",
+        "source": "nexus",
+        "mod_id": 133,
+        "domain": null,
+        "prefix": "dsound",
+        "present": [
+          "b1/Binaries/Win64/dsound.dll"
+        ]
+      }
+    ],
     "vortex_mod_types": {
       "blackmythwukong-ue5-sortable-modtype": "b1/Content/Paks/~mods",
       "ue5-sortable-modtype": "b1/Content/Paks/~mods",
@@ -305,6 +384,15 @@
     ],
     "launch_executable": "Borderlands4.exe",
     "steam_id": "1285190",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "borderlands4-uesortablepak": "OakGame/Content/Paks/~mods",
       "borderlands4-scripts": "OakGame/Binaries/Win64/ue4ss/Mods",
@@ -351,6 +439,15 @@
     ],
     "launch_executable": "Hellraiser.exe",
     "steam_id": "1551980",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "clivebarkershellraiserrevival-uesortablepak": "Hellraiser/Content/Paks/~mods",
       "clivebarkershellraiserrevival-scripts": "Hellraiser/Binaries/Win64/ue4ss/Mods",
@@ -395,6 +492,15 @@
     ],
     "launch_executable": "CodeVein2.exe",
     "steam_id": "2362060",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "codevein2-uesortablepak": "CodeVein2/Content/Paks/~mods",
       "codevein2-scripts": "CodeVein2/Binaries/Win64/ue4ss/Mods",
@@ -440,6 +546,15 @@
     ],
     "launch_executable": "Cronos.exe",
     "steam_id": "2101960",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "cronosthenewdawn-uesortablepak": "Cronos/Content/Paks/~mods",
       "cronosthenewdawn-scripts": "Cronos/Binaries/Win64/ue4ss/Mods",
@@ -485,6 +600,15 @@
     ],
     "launch_executable": "Pagoda.exe",
     "steam_id": "3404260",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "deadasdisco-uesortablepak": "Pagoda/Content/Paks/~mods",
       "deadasdisco-scripts": "Pagoda/Binaries/Win64/ue4ss/Mods",
@@ -529,6 +653,15 @@
     ],
     "launch_executable": "Dispatch.exe",
     "steam_id": "2592160",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "dispatch-uesortablepak": "Dispatch/Content/Paks/~mods",
       "dispatch-scripts": "Dispatch/Binaries/Win64/ue4ss/Mods",
@@ -542,14 +675,16 @@
   },
   {
     "schema": 1,
-    "version": "1.0.0",
+    "version": "1.1.0",
     "domain": "dragonballsparkingzero",
     "name": "Dragon Ball: Sparking! Zero",
     "platform": "proton",
     "engine": "deployment",
     "family": {
       "kind": "unreal",
-      "project": "SparkingZERO"
+      "project": "SparkingZERO",
+      "sig_bypass": true,
+      "plugin_mods": "Mods"
     },
     "executable": "SparkingZERO/Binaries/Win64/SparkingZERO-Win64-Shipping.exe",
     "required": [
@@ -569,10 +704,39 @@
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
     ],
     "notes": [
-      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo.",
+      "Como na extensão Vortex: mods do SZModLoader (pastas com .uplugin) vão inteiros para SparkingZERO/Mods."
     ],
     "launch_executable": "SparkingZERO.exe",
     "steam_id": "1790600",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      },
+      {
+        "name": "Sig Bypass",
+        "source": "nexus",
+        "mod_id": 18,
+        "domain": null,
+        "prefix": "dsound",
+        "present": [
+          "SparkingZERO/Binaries/Win64/dsound.dll"
+        ]
+      },
+      {
+        "name": "SZModLoader",
+        "source": "nexus",
+        "mod_id": 348,
+        "prefix": "SZModLoader",
+        "present": [
+          "SparkingZERO/Mods/SZModLib/SZModLib.uplugin"
+        ]
+      }
+    ],
     "vortex_mod_types": {
       "dragonballsparkingzero-ue5-sortable-modtype": "SparkingZERO/Content/Paks/~mods",
       "ue5-sortable-modtype": "SparkingZERO/Content/Paks/~mods",
@@ -618,6 +782,15 @@
     ],
     "launch_executable": "DQIandIIHD2DRemake.exe",
     "steam_id": "2893570",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "dragonquest1and2hd2dremake-uesortablepak": "Game/Content/Paks/~mods",
       "dragonquest1and2hd2dremake-scripts": "Game/Binaries/Win64/ue4ss/Mods",
@@ -663,6 +836,15 @@
     ],
     "launch_executable": "DQ7R.exe",
     "steam_id": "2499860",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "dragonquest7reimagined-uesortablepak": "DQ7R/Content/Paks/~mods",
       "dragonquest7reimagined-scripts": "DQ7R/Binaries/Win64/ue4ss/Mods",
@@ -752,6 +934,16 @@
     ],
     "launch_executable": "FarFarWest.exe",
     "steam_id": "3124540",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "source": "nexus",
+        "mod_id": 27,
+        "domain": null,
+        "prefix": "UE4SS",
+        "automatic": true
+      }
+    ],
     "vortex_mod_types": {
       "farfarwest-uesortablepak": "FarFarWest/Content/Paks/~mods",
       "farfarwest-scripts": "FarFarWest/Binaries/Win64/ue4ss/Mods",
@@ -772,7 +964,8 @@
     "engine": "deployment",
     "family": {
       "kind": "unreal",
-      "project": "SLASHER"
+      "project": "SLASHER",
+      "sig_bypass": true
     },
     "executable": "SLASHER/Binaries/Win64/SLASHER-Win64-Shipping.exe",
     "required": [
@@ -796,6 +989,25 @@
     ],
     "launch_executable": "SLASHER.exe",
     "steam_id": "2186990",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      },
+      {
+        "name": "Sig Bypass",
+        "source": "nexus",
+        "mod_id": 1416,
+        "domain": "site",
+        "prefix": "dsound",
+        "present": [
+          "SLASHER/Binaries/Win64/dsound.dll"
+        ]
+      }
+    ],
     "vortex_mod_types": {
       "fatekeeper-uesortablepak": "SLASHER/Content/Paks/~mods",
       "fatekeeper-scripts": "SLASHER/Binaries/Win64/ue4ss/Mods",
@@ -816,7 +1028,8 @@
     "engine": "deployment",
     "family": {
       "kind": "unreal",
-      "project": "Frostpunk2"
+      "project": "Frostpunk2",
+      "sig_bypass": true
     },
     "executable": "Frostpunk2/Binaries/Win64/Frostpunk2-Win64-Shipping.exe",
     "required": [
@@ -840,6 +1053,25 @@
     ],
     "launch_executable": "Frostpunk2.exe",
     "steam_id": "1601580",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      },
+      {
+        "name": "Sig Bypass",
+        "source": "nexus",
+        "mod_id": 1,
+        "domain": null,
+        "prefix": "dsound",
+        "present": [
+          "Frostpunk2/Binaries/Win64/dsound.dll"
+        ]
+      }
+    ],
     "vortex_mod_types": {
       "ue5-sortable-modtype": "Frostpunk2/Content/Paks/~mods",
       "frostpunk2-ue5-sortable-modtype": "Frostpunk2/Content/Paks/~mods",
@@ -884,6 +1116,15 @@
       "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
     ],
     "steam_id": "3010850",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "gearsofwareday-uesortablepak": "FairlightConcept/Content/Paks/~mods",
       "gearsofwareday-scripts": "FairlightConcept/Binaries/Win64/ue4ss/Mods",
@@ -926,6 +1167,15 @@
       "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
     ],
     "steam_id": "3219630",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "halloweenthegame-uesortablepak": "Ravage/Content/Paks/~mods",
       "halloweenthegame-scripts": "Ravage/Binaries/Win64/ue4ss/Mods",
@@ -946,7 +1196,8 @@
     "engine": "deployment",
     "family": {
       "kind": "unreal",
-      "project": "HellIsUs"
+      "project": "HellIsUs",
+      "sig_bypass": true
     },
     "executable": "HellIsUs/Binaries/Win64/HellIsUs-Win64-Shipping.exe",
     "required": [
@@ -970,6 +1221,25 @@
     ],
     "launch_executable": "HellIsUs.exe",
     "steam_id": "1620730",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      },
+      {
+        "name": "Sig Bypass",
+        "source": "nexus",
+        "mod_id": 22,
+        "domain": null,
+        "prefix": "dsound",
+        "present": [
+          "HellIsUs/Binaries/Win64/dsound.dll"
+        ]
+      }
+    ],
     "vortex_mod_types": {
       "hellisus-uesortablepak": "HellIsUs/Content/Paks/~mods",
       "hellisus-scripts": "HellIsUs/Binaries/Win64/ue4ss/Mods",
@@ -1015,6 +1285,15 @@
     ],
     "launch_executable": "Oregon.exe",
     "steam_id": "1583230",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "highonlife-uesortablepak": "Oregon/Content/Paks/~mods",
       "highonlife-scripts": "Oregon/Binaries/Win64/ue4ss/Mods",
@@ -1059,6 +1338,15 @@
     ],
     "launch_executable": "HighOnLife2.exe",
     "steam_id": "2069250",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "highonlife2-uesortablepak": "HighOnLife2/Content/Paks/~mods",
       "highonlife2-scripts": "HighOnLife2/Binaries/Win64/ue4ss/Mods",
@@ -1103,6 +1391,15 @@
     ],
     "launch_executable": "Humanitz.exe",
     "steam_id": "1766060",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "humanitz-uesortablepak": "Humanitz/Content/Paks/~mods",
       "humanitz-scripts": "Humanitz/Binaries/Win64/ue4ss/Mods",
@@ -1147,6 +1444,15 @@
     ],
     "launch_executable": "inZOI.exe",
     "steam_id": "2456740",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "inzoi-ue5-sortable-modtype": "BlueClient/Content/Paks/~mods",
       "inzoi-scripts": "BlueClient/Binaries/Win64/ue4ss/Mods",
@@ -1192,6 +1498,16 @@
     ],
     "launch_executable": "LEGOBatmanLotDK.exe",
     "steam_id": "2215200",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "source": "nexus",
+        "mod_id": 5,
+        "domain": null,
+        "prefix": "UE4SS",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "legobatmanlegacyofthedarkknight-uesortablepak": "LEGOBatmanLotDK/Content/Paks/~mods",
       "legobatmanlegacyofthedarkknight-scripts": "LEGOBatmanLotDK/Binaries/Win64/ue4ss/Mods",
@@ -1236,6 +1552,15 @@
     ],
     "launch_executable": "LOP.exe",
     "steam_id": "1627720",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "liesofp-uesortablepak": "LiesofP/Content/Paks/~mods",
       "liesofp-scripts": "LiesofP/Binaries/Win64/ue4ss/Mods",
@@ -1280,6 +1605,15 @@
     ],
     "launch_executable": "LOTF2.exe",
     "steam_id": "1501750",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "ue5-sortable-modtype": "LOTF2/Content/Paks/~mods",
       "lordsofthefallen2023-ue5-sortable-modtype": "LOTF2/Content/Paks/~mods",
@@ -1302,7 +1636,8 @@
     "engine": "deployment",
     "family": {
       "kind": "unreal",
-      "project": "Projectlsa"
+      "project": "Projectlsa",
+      "sig_bypass": true
     },
     "executable": "Projectlsa/Binaries/Win64/Projectlsa-Win64Steam-Shipping.exe",
     "required": [
@@ -1326,6 +1661,25 @@
     ],
     "launch_executable": "LostSoulAside.exe",
     "steam_id": "3378960",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      },
+      {
+        "name": "Sig Bypass",
+        "source": "nexus",
+        "mod_id": 3,
+        "domain": null,
+        "prefix": "dsound",
+        "present": [
+          "Projectlsa/Binaries/Win64/dsound.dll"
+        ]
+      }
+    ],
     "vortex_mod_types": {
       "lostsoulaside-uesortablepak": "Projectlsa/Content/Paks/~mods",
       "lostsoulaside-scripts": "Projectlsa/Binaries/Win64/ue4ss/Mods",
@@ -1347,7 +1701,8 @@
     "engine": "deployment",
     "family": {
       "kind": "unreal",
-      "project": "man"
+      "project": "man",
+      "sig_bypass": true
     },
     "executable": "man/Binaries/Win64/man-Win64-Shipping.exe",
     "required": [
@@ -1371,6 +1726,25 @@
     ],
     "launch_executable": "man.exe",
     "steam_id": "1721060",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      },
+      {
+        "name": "Sig Bypass",
+        "source": "nexus",
+        "mod_id": 1,
+        "domain": null,
+        "prefix": "dsound",
+        "present": [
+          "man/Binaries/Win64/dsound.dll"
+        ]
+      }
+    ],
     "vortex_mod_types": {
       "mandragorawhispersofthewitchtree-uesortablepak": "man/Content/Paks/~mods",
       "mandragorawhispersofthewitchtree-scripts": "man/Binaries/Win64/ue4ss/Mods",
@@ -1415,6 +1789,16 @@
     ],
     "launch_executable": "ManorLords.exe",
     "steam_id": "1363080",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "source": "nexus",
+        "mod_id": 229,
+        "domain": null,
+        "prefix": "UE4SS",
+        "automatic": true
+      }
+    ],
     "vortex_mod_types": {
       "manorlords-uesortablepak": "ManorLords/Content/Paks/~mods",
       "manorlords-scripts": "ManorLords/Binaries/Win64/ue4ss/Mods",
@@ -1459,6 +1843,15 @@
     ],
     "launch_executable": "MechWarrior.exe",
     "steam_id": "2000890",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "mechwarrior5clans-ue5-sortable-modtype": "MW5Clans/Content/Paks/~mods",
       "ue5-sortable-modtype": "MW5Clans/Content/Paks/~mods",
@@ -1481,7 +1874,8 @@
     "engine": "deployment",
     "family": {
       "kind": "unreal",
-      "project": "MetalEden"
+      "project": "MetalEden",
+      "sig_bypass": true
     },
     "executable": "MetalEden/Binaries/Win64/MetalEden-Win64-Shipping.exe",
     "required": [
@@ -1505,6 +1899,18 @@
     ],
     "launch_executable": "MetalEden.exe",
     "steam_id": "990380",
+    "downloads": [
+      {
+        "name": "Sig Bypass",
+        "source": "nexus",
+        "mod_id": 1416,
+        "domain": "site",
+        "prefix": "dsound",
+        "present": [
+          "MetalEden/Binaries/Win64/dsound.dll"
+        ]
+      }
+    ],
     "vortex_mod_types": {
       "metaleden-sigbypass": "MetalEden/Binaries/Win64",
       "metaleden-logicmods": "MetalEden/Content/Paks/LogicMods",
@@ -1549,6 +1955,15 @@
     ],
     "launch_executable": "MGSDelta.exe",
     "steam_id": "2417610",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "metalgearsoliddeltasnakeeater-uesortablepak": "MGSDelta/Content/Paks/~mods",
       "metalgearsoliddeltasnakeeater-scripts": "MGSDelta/Binaries/Win64/ue4ss/Mods",
@@ -1593,6 +2008,16 @@
     ],
     "launch_executable": "MISERY.exe",
     "steam_id": "2119830",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "source": "nexus",
+        "mod_id": 2,
+        "domain": null,
+        "prefix": "UE4SS",
+        "automatic": true
+      }
+    ],
     "vortex_mod_types": {
       "misery-uesortablepak": "MISERY/Content/Paks/~mods",
       "misery-scripts": "MISERY/Binaries/Win64/ue4ss/Mods",
@@ -1615,7 +2040,8 @@
     "engine": "deployment",
     "family": {
       "kind": "unreal",
-      "project": "MK12"
+      "project": "MK12",
+      "sig_bypass": true
     },
     "executable": "MK12/Binaries/Win64/MK12.exe",
     "required": [
@@ -1639,6 +2065,25 @@
     ],
     "launch_executable": "MK12.exe",
     "steam_id": "1971870",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      },
+      {
+        "name": "Sig Bypass",
+        "source": "nexus",
+        "mod_id": 62,
+        "domain": null,
+        "prefix": "dsound",
+        "present": [
+          "MK12/Binaries/Win64/dsound.dll"
+        ]
+      }
+    ],
     "vortex_mod_types": {
       "ue5-sortable-modtype": "MK12/Content/Paks/~mods",
       "mortalkombat-ue5-sortable-modtype": "MK12/Content/Paks/~mods",
@@ -1654,14 +2099,15 @@
   },
   {
     "schema": 1,
-    "version": "1.0.0",
+    "version": "1.1.0",
     "domain": "ninjagaiden2black",
     "name": "NINJA GAIDEN 2 Black",
     "platform": "proton",
     "engine": "deployment",
     "family": {
       "kind": "unreal",
-      "project": "NINJAGAIDEN2BLACK"
+      "project": "NINJAGAIDEN2BLACK",
+      "d3d9_loader": true
     },
     "executable": "NINJAGAIDEN2BLACK/Binaries/Win64/NINJAGAIDEN2BLACK-Win64-Shipping.exe",
     "required": [
@@ -1681,10 +2127,30 @@
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
     ],
     "notes": [
-      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
+      "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo.",
+      "Como na extensão Vortex: Mod Loader (d3d9.dll) em NINJAGAIDEN2BLACK/Binaries/Win64, com seus mods na pasta mods/ ao lado."
     ],
     "launch_executable": "NINJAGAIDEN2BLACK.exe",
     "steam_id": "3287520",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "source": "nexus",
+        "mod_id": 14,
+        "domain": null,
+        "prefix": "UE4SS",
+        "automatic": true
+      },
+      {
+        "name": "NG2B Mod Loader",
+        "source": "nexus",
+        "mod_id": 18,
+        "prefix": "d3d9",
+        "present": [
+          "NINJAGAIDEN2BLACK/Binaries/Win64/d3d9.dll"
+        ]
+      }
+    ],
     "vortex_mod_types": {
       "ue5-sortable-modtype": "NINJAGAIDEN2BLACK/Content/Paks/~mods",
       "ninjagaiden2black-ue5-sortable-modtype": "NINJAGAIDEN2BLACK/Content/Paks/~mods",
@@ -1733,6 +2199,15 @@
     ],
     "launch_executable": "detnoir.exe",
     "steam_id": "1939970",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "ue5-sortable-modtype": "detnoir/Content/Paks/~mods",
       "nobodywantstodie-ue5-sortable-modtype": "detnoir/Content/Paks/~mods",
@@ -1779,6 +2254,15 @@
     ],
     "launch_executable": "Octopath_Traveler0.exe",
     "steam_id": "3014320",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "octopathtraveler0-uesortablepak": "Octopath_Traveler0/Content/Paks/~mods",
       "octopathtraveler0-scripts": "Octopath_Traveler0/Binaries/Win64/ue4ss/Mods",
@@ -1823,6 +2307,15 @@
     ],
     "launch_executable": "ofAshAndSteelGame.exe",
     "steam_id": "2893820",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "ofashandsteel-uesortablepak": "ofAshAndSteelGame/Content/Paks/~mods",
       "ofashandsteel-scripts": "ofAshAndSteelGame/Binaries/Win64/ue4ss/Mods",
@@ -1911,6 +2404,15 @@
     ],
     "launch_executable": "QZSim.exe",
     "steam_id": "3419520",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "quarantinezonethelastcheck-uesortablepak": "QZSim/Content/Paks/~mods",
       "quarantinezonethelastcheck-scripts": "QZSim/Binaries/Win64/ue4ss/Mods",
@@ -1955,6 +2457,15 @@
     ],
     "launch_executable": "RoboCop.exe",
     "steam_id": "1681430",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "ue5-sortable-modtype": "Game/Content/Paks/~mods",
       "robocoproguecity-logicmods": "Game/Content/Paks/LogicMods",
@@ -1995,6 +2506,16 @@
     ],
     "launch_executable": "RSDragonwilds.exe",
     "steam_id": "1374490",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "source": "nexus",
+        "mod_id": 4,
+        "domain": null,
+        "prefix": "UE4SS",
+        "automatic": true
+      }
+    ],
     "vortex_mod_types": {
       "runescapedragonwilds-ue5-sortable-modtype": "RSDragonwilds/Content/Paks/~mods",
       "ue5-sortable-modtype": "RSDragonwilds/Content/Paks/~mods",
@@ -2042,6 +2563,15 @@
     ],
     "launch_executable": "Ride.exe",
     "steam_id": "3949040",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "rvthereyet-uesortablepak": "Ride/Content/Paks/~mods",
       "rvthereyet-scripts": "Ride/Binaries/Win64/ue4ss/Mods",
@@ -2086,6 +2616,15 @@
     ],
     "launch_executable": "Hellblade2.exe",
     "steam_id": "2461850",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "ue5-sortable-modtype": "Hellblade2/Content/Paks/~mods",
       "senuassagahellblade2-ue5-sortable-modtype": "Hellblade2/Content/Paks/~mods",
@@ -2132,6 +2671,15 @@
     ],
     "launch_executable": "Sifu.exe",
     "steam_id": "2138710",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "ue5-sortable-modtype": "Sifu/Content/Paks/~mods",
       "sifu-ue5-sortable-modtype": "Sifu/Content/Paks/~mods",
@@ -2178,6 +2726,15 @@
     ],
     "launch_executable": "SHProto.exe",
     "steam_id": "2124490",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "silenthill2-ue5-sortable-modtype": "SHProto/Content/Paks/~mods",
       "ue5-sortable-modtype": "SHProto/Content/Paks/~mods",
@@ -2224,6 +2781,15 @@
     ],
     "launch_executable": "SHf.exe",
     "steam_id": "2947440",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "silenthillf-uesortablepak": "SHf/Content/Paks/~mods",
       "silenthillf-scripts": "SHf/Binaries/Win64/ue4ss/Mods",
@@ -2269,6 +2835,16 @@
     ],
     "launch_executable": "Townfall.exe",
     "steam_id": "1636440",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "source": "nexus",
+        "mod_id": 4,
+        "domain": null,
+        "prefix": "UE4SS",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "silenthilltownfall-uesortablepak": "Townfall/Content/Paks/~mods",
       "silenthilltownfall-scripts": "Townfall/Binaries/Win64/ue4ss/Mods",
@@ -2313,6 +2889,15 @@
     ],
     "launch_executable": "StarRuptureGameSteam.exe",
     "steam_id": "1631270",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "starrupture-uesortablepak": "StarRupture/Content/Paks/~mods",
       "starrupture-scripts": "StarRupture/Binaries/Win64/ue4ss/Mods",
@@ -2357,6 +2942,16 @@
     ],
     "launch_executable": "SWGR.exe",
     "steam_id": "4078430",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "source": "nexus",
+        "mod_id": 2,
+        "domain": null,
+        "prefix": "UE4SS",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "starwarsgalacticracer-uesortablepak": "Griffin/Content/Paks/~mods",
       "starwarsgalacticracer-scripts": "Griffin/Binaries/Win64/ue4ss/Mods",
@@ -2401,6 +2996,16 @@
     ],
     "launch_executable": "SWZeroCompany.exe",
     "steam_id": "2075800",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "source": "nexus",
+        "mod_id": 9,
+        "domain": null,
+        "prefix": "UE4SS",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "starwarszerocompany-uesortablepak": "SWZeroCompany/Content/Paks/~mods",
       "starwarszerocompany-scripts": "SWZeroCompany/Binaries/Win64/ue4ss/Mods",
@@ -2445,6 +3050,16 @@
     ],
     "launch_executable": "Subnautica2.exe",
     "steam_id": "1962700",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "source": "nexus",
+        "mod_id": 36,
+        "domain": null,
+        "prefix": "UE4SS",
+        "automatic": true
+      }
+    ],
     "vortex_mod_types": {
       "subnautica2-uesortablepak": "Subnautica2/Content/Paks/~mods",
       "subnautica2-scripts": "Subnautica2/Binaries/Win64/ue4ss/Mods",
@@ -2489,6 +3104,15 @@
     ],
     "launch_executable": "SurrounDead.exe",
     "steam_id": "1645820",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "surroundead-uesortablepak": "SurrounDead/Content/Paks/~mods",
       "surroundead-scripts": "SurrounDead/Binaries/Win64/ue4ss/Mods",
@@ -2533,6 +3157,15 @@
     ],
     "launch_executable": "SystemShock.exe",
     "steam_id": "482400",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "systemshock2023-uesortablepak": "SystemShock/Content/Paks/~mods",
       "systemshock2023-scripts": "SystemShock/Binaries/Win64/ue4ss/Mods",
@@ -2623,6 +3256,15 @@
     ],
     "launch_executable": "Dawnwalker.exe",
     "steam_id": "3751260",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "thebloodofdawnwalker-uesortablepak": "Dawnwalker/Content/Paks/~mods",
       "thebloodofdawnwalker-scripts": "Dawnwalker/Binaries/Win64/ue4ss/Mods",
@@ -2667,6 +3309,16 @@
     ],
     "launch_executable": "Voyage.exe",
     "steam_id": "1783560",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "source": "nexus",
+        "mod_id": 4,
+        "domain": null,
+        "prefix": "UE4SS",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "thelastcaretaker-uesortablepak": "Voyage/Content/Paks/~mods",
       "thelastcaretaker-scripts": "Voyage/Binaries/Win64/ue4ss/Mods",
@@ -2711,6 +3363,15 @@
     ],
     "launch_executable": "Moria.exe",
     "steam_id": "2933130",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "thelordoftheringsreturntomoria-uesortablepak": "Moria/Content/Paks/~mods",
       "thelordoftheringsreturntomoria-scripts": "Moria/Binaries/Win64/ue4ss/Mods",
@@ -2755,6 +3416,15 @@
     ],
     "launch_executable": "gamelaunchhelper.exe",
     "steam_id": "578650",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "theouterworlds-uesortablepak": "Indiana/Content/Paks/~mods",
       "theouterworlds-scripts": "Indiana/Binaries/Win64/ue4ss/Mods",
@@ -2799,6 +3469,15 @@
     ],
     "launch_executable": "TheOuterWorlds2.exe",
     "steam_id": "1449110",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "theouterworlds2-ue5-sortable-modtype": "Arkansas/Content/Paks/~mods",
       "theouterworlds2-scripts": "Arkansas/Binaries/Win64/ue4ss/Mods",
@@ -2842,6 +3521,15 @@
       "Módulo gerado do template Unreal do Vortex: paks em ~mods, LogicMods, UE4SS e scripts Lua/DLL. Estrutura verificada por testes sintéticos; não validado no jogo."
     ],
     "steam_id": "2825860",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "thesinkingcity2-uesortablepak": "PlayGround/Content/Paks/~mods",
       "thesinkingcity2-scripts": "PlayGround/Binaries/Win64/ue4ss/Mods",
@@ -2886,6 +3574,16 @@
     ],
     "launch_executable": "TQ2.exe",
     "steam_id": "1154030",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "source": "nexus",
+        "mod_id": 77,
+        "domain": null,
+        "prefix": "UE4SS",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "titanquest2-uesortablepak": "TQ2/Content/Paks/~mods",
       "titanquest2-scripts": "TQ2/Binaries/Win64/ue4ss/Mods",
@@ -2931,6 +3629,15 @@
     ],
     "launch_executable": "CPPFPS.exe",
     "steam_id": "1164940",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "trepang2-uesortablepak": "CPPFPS/Content/Paks/~mods",
       "trepang2-scripts": "CPPFPS/Binaries/Win64/ue4ss/Mods",
@@ -2975,6 +3682,15 @@
     ],
     "launch_executable": "Vein.exe",
     "steam_id": "1857950",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "vein-uesortablepak": "Vein/Content/Paks/~mods",
       "vein-scripts": "Vein/Binaries/Win64/ue4ss/Mods",
@@ -3019,6 +3735,15 @@
     ],
     "launch_executable": "VoidTrain.exe",
     "steam_id": "1159690",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "voidtrain-uesortablepak": "VoidTrain/Content/Paks/~mods",
       "voidtrain-scripts": "VoidTrain/Binaries/Win64/ue4ss/Mods",
@@ -3063,6 +3788,15 @@
     ],
     "launch_executable": "Bloodlines2.exe",
     "steam_id": "532790",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "vtmbloodlines2-uesortablepak": "Bloodlines2/Content/Paks/~mods",
       "vtmbloodlines2-scripts": "Bloodlines2/Binaries/Win64/ue4ss/Mods",
@@ -3108,6 +3842,15 @@
     ],
     "launch_executable": "Whiskerwood.exe",
     "steam_id": "2489330",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "whiskerwood-uesortablepak": "Whiskerwood/Content/Paks/~mods",
       "whiskerwood-scripts": "Whiskerwood/Binaries/Win64/ue4ss/Mods",
@@ -3152,6 +3895,15 @@
     ],
     "launch_executable": "Witchfire.exe",
     "steam_id": "3156770",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      }
+    ],
     "vortex_mod_types": {
       "witchfire-uesortablepak": "Witchfire/Content/Paks/~mods",
       "witchfire-scripts": "Witchfire/Binaries/Win64/ue4ss/Mods",
@@ -3172,7 +3924,8 @@
     "engine": "deployment",
     "family": {
       "kind": "unreal",
-      "project": "Project_Plague"
+      "project": "Project_Plague",
+      "sig_bypass": true
     },
     "executable": "Project_Plague/Binaries/Win64/Project_Plague-Win64-Shipping.exe",
     "required": [
@@ -3196,6 +3949,25 @@
     ],
     "launch_executable": "Project_Plague.exe",
     "steam_id": "2277560",
+    "downloads": [
+      {
+        "name": "UE4SS",
+        "repository": "UE4SS-RE/RE-UE4SS",
+        "tag": "experimental-latest",
+        "prefix": "UE4SS_v",
+        "automatic": false
+      },
+      {
+        "name": "Sig Bypass",
+        "source": "nexus",
+        "mod_id": 3,
+        "domain": null,
+        "prefix": "dsound",
+        "present": [
+          "Project_Plague/Binaries/Win64/dsound.dll"
+        ]
+      }
+    ],
     "vortex_mod_types": {
       "wuchangfallenfeathers-ue5-sortable-modtype": "Project_Plague/Content/Paks/~mods",
       "wuchangfallenfeathers-scripts": "Project_Plague/Binaries/Win64/ue4ss/Mods",

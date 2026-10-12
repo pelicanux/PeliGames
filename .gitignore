@@ -66,6 +66,7 @@ dist-ssr
 !/docs/nexus-re-engine-family.md
 !/docs/nexus-bethesda.md
 !/docs/nexus-launchers.md
+!/docs/supported-games.md
 /preview.html
 /src/preview.ts
 /scripts/preview-*.ts

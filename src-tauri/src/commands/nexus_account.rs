@@ -187,7 +187,7 @@ pub async fn disconnect_nexus_account() -> Result<(), String> {
 pub(super) async fn graphql(body: serde_json::Value) -> Result<serde_json::Value, String> {
     let data = request_metadata("https://api.nexusmods.com/v2/graphql", Some(body)).await?;
     if data.get("errors").is_some_and(|value| value.as_array().is_none_or(|errors| !errors.is_empty())) {
-        return Err("O Nexus recusou a consulta da coleção.".into());
+        return Err("O Nexus recusou a consulta.".into());
     }
     Ok(data)
 }
@@ -214,8 +214,27 @@ pub(super) async fn catalog_page(domain: &str, offset: u32, count: u32, most_dow
     data.pointer("/data/mods").filter(|value| value.is_object()).cloned()
         .ok_or_else(|| "Catálogo Nexus indisponível.".into())
 }
+/// `supportsVortex` of each mod: the Nexus page offers the mod manager download.
+pub(super) async fn vortex_support(domain: &str, ids: &[u64]) -> Result<std::collections::HashMap<u64, bool>, String> {
+    let mut support = std::collections::HashMap::new();
+    for chunk in ids.chunks(100) {
+        let keys: Vec<_> = chunk.iter().map(|id| serde_json::json!({"gameDomain": domain, "modId": id})).collect();
+        let data = graphql(serde_json::json!({"query": "query PeliGamesVortex($ids: [CompositeDomainWithIdInput!]!) { legacyModsByDomain(ids: $ids) { nodes { modId supportsVortex } } }", "variables": serde_json::json!({"ids": keys})})).await?;
+        for node in data.pointer("/data/legacyModsByDomain/nodes").and_then(|v| v.as_array()).ok_or("Resposta Nexus inválida.")? {
+            if let (Some(id), Some(flag)) = (node["modId"].as_u64(), node["supportsVortex"].as_bool()) { support.insert(id, flag); }
+        }
+    }
+    Ok(support)
+}
+/// `supportsVortex` of one mod. The per-file `manager` flag is not used: current
+/// main files of SMAPI, Jotunn and CET report 0 although the site offers the
+/// mod manager download for them.
+pub(super) async fn supports_vortex(domain: &str, mod_id: u64) -> Result<bool, String> {
+    vortex_support(domain, &[mod_id]).await?.get(&mod_id).copied().ok_or_else(|| "Mod não encontrado no Nexus.".into())
+}
 fn catalog_request(domain: &str, offset: u32, count: u32, sort: serde_json::Value, search: &str) -> serde_json::Value {
-    let mut filter = serde_json::json!({"op":"AND", "gameDomainName":[{"value":domain,"op":"EQUALS"}]});
+    // Only mods installable by a mod manager (the Nexus "Vortex" button).
+    let mut filter = serde_json::json!({"op":"AND", "gameDomainName":[{"value":domain,"op":"EQUALS"}], "supportsVortex":[{"value":true,"op":"EQUALS"}]});
     if !search.is_empty() {
         filter["nameStemmed"] = serde_json::json!([{"value":search,"op":"MATCHES"}]);
     }
@@ -235,6 +254,7 @@ mod catalog_search_tests {
         assert_eq!(vars["filter"]["gameDomainName"][0]["value"], "cyberpunk2077");
         assert_eq!(vars["filter"]["nameStemmed"][0]["value"], "Cyber Engine");
         assert_eq!(vars["filter"]["nameStemmed"][0]["op"], "MATCHES");
+        assert_eq!(vars["filter"]["supportsVortex"][0]["value"], true, "só mods com download por gerenciador");
         assert_eq!(vars["offset"], 40); assert_eq!(vars["count"], 20);
         let body = catalog_request("palworld", 0, 30, serde_json::json!([]), "");
         assert!(body["variables"]["filter"].get("nameStemmed").is_none());

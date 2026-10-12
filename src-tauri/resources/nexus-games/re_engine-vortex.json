@@ -28,7 +28,19 @@
     "notes": [
       "Módulo gerado do template RE Engine do Vortex: scripts, plugins e dados REFramework e o carregador dinput8.dll. Pacotes natives/, pak_mods e mods Fluffy são recusados. Estrutura verificada por testes sintéticos; não validado no jogo."
     ],
-    "steam_id": "2527390"
+    "steam_id": "2527390",
+    "downloads": [
+      {
+        "name": "REFramework",
+        "source": "nexus",
+        "mod_id": 2,
+        "domain": null,
+        "prefix": "REFramework",
+        "present": [
+          "dinput8.dll"
+        ]
+      }
+    ]
   },
   {
     "schema": 1,
@@ -59,7 +71,19 @@
     "notes": [
       "Módulo gerado do template RE Engine do Vortex: scripts, plugins e dados REFramework e o carregador dinput8.dll. Pacotes natives/, pak_mods e mods Fluffy são recusados. Estrutura verificada por testes sintéticos; não validado no jogo."
     ],
-    "steam_id": "2852190"
+    "steam_id": "2852190",
+    "downloads": [
+      {
+        "name": "REFramework",
+        "source": "nexus",
+        "mod_id": 12,
+        "domain": null,
+        "prefix": "REFramework",
+        "present": [
+          "dinput8.dll"
+        ]
+      }
+    ]
   },
   {
     "schema": 1,
@@ -90,7 +114,19 @@
     "notes": [
       "Módulo gerado do template RE Engine do Vortex: scripts, plugins e dados REFramework e o carregador dinput8.dll. Pacotes natives/, pak_mods e mods Fluffy são recusados. Estrutura verificada por testes sintéticos; não validado no jogo."
     ],
-    "steam_id": "2638890"
+    "steam_id": "2638890",
+    "downloads": [
+      {
+        "name": "REFramework",
+        "source": "nexus",
+        "mod_id": 54,
+        "domain": null,
+        "prefix": "REFramework",
+        "present": [
+          "dinput8.dll"
+        ]
+      }
+    ]
   },
   {
     "schema": 1,
@@ -121,7 +157,19 @@
     "notes": [
       "Módulo gerado do template RE Engine do Vortex: scripts, plugins e dados REFramework e o carregador dinput8.dll. Pacotes natives/, pak_mods e mods Fluffy são recusados. Estrutura verificada por testes sintéticos; não validado no jogo."
     ],
-    "steam_id": "3357650"
+    "steam_id": "3357650",
+    "downloads": [
+      {
+        "name": "REFramework",
+        "source": "nexus",
+        "mod_id": 40,
+        "domain": null,
+        "prefix": "REFramework",
+        "present": [
+          "dinput8.dll"
+        ]
+      }
+    ]
   },
   {
     "schema": 1,
@@ -152,6 +200,18 @@
     "notes": [
       "Módulo gerado do template RE Engine do Vortex: scripts, plugins e dados REFramework e o carregador dinput8.dll. Pacotes natives/, pak_mods e mods Fluffy são recusados. Estrutura verificada por testes sintéticos; não validado no jogo."
     ],
-    "steam_id": "418370"
+    "steam_id": "418370",
+    "downloads": [
+      {
+        "name": "REFramework",
+        "source": "nexus",
+        "mod_id": 80,
+        "domain": null,
+        "prefix": "REFramework",
+        "present": [
+          "dinput8.dll"
+        ]
+      }
+    ]
   }
 ]

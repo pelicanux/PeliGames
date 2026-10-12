@@ -63,6 +63,13 @@
 .nexus-catalog-card:not([aria-disabled="true"]):hover { border-color: rgba(var(--accent-rgb), .6); background: rgba(var(--accent-rgb), .07); box-shadow: 0 0 14px rgba(var(--accent-rgb), .12); }
 .nexus-catalog-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .nexus-catalog-card[aria-disabled="true"] { cursor: wait; }
+.nexus-catalog-card { position: relative; }
+.nexus-catalog-card.is-loading > :not(.nexus-card-loading) { opacity: .3; }
+.nexus-card-loading { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .65rem; border-radius: inherit; background: rgba(7, 11, 20, .65); color: var(--tone-e2e8f0,#e2e8f0); pointer-events: none; }
+.nexus-card-loading .nexus-loading-emblem { width: 76px; height: 76px; }
+.nexus-card-loading .nexus-loading-emblem img { width: 50px; height: 50px; }
+.nexus-card-loading > span { font-size: .8rem; }
+
 @media (prefers-reduced-motion: reduce) { .nexus-catalog-grid .nexus-catalog-card { transition: none; } }
 .nexus-catalog-grid .nexus-mod-thumbnail { flex-shrink: 0; margin-bottom: .55rem; }
 .nexus-catalog-grid h4 { margin: 0 0 .35rem; font-size: .9rem; line-height: 1.35; }
@@ -175,6 +182,7 @@
 .nexus-mod-summary:hover { background: transparent; }
 .nexus-local-identification-note { font-size: .7rem; line-height: 1.4; color: var(--tone-94a3b8, #94a3b8); }
 .nexus-mod-summary .nexus-installed-mod-info { flex: 1; min-width: 0; }
+.nexus-mod-position { flex-shrink: 0; color: var(--text-muted, #94a3b8); opacity: .7; font-size: .72rem; font-weight: 400; font-variant-numeric: tabular-nums; }
 .nexus-mod-title { display: flex; align-items: baseline; gap: .4rem; flex-wrap: wrap; }
 .nexus-mod-title strong { min-width: 0; overflow-wrap: anywhere; }
 .nexus-mod-version { font-size: .68rem; font-weight: 400; color: var(--tone-94a3b8, #94a3b8); white-space: nowrap; }
@@ -188,6 +196,12 @@
 .nexus-mods-content .nexus-installed-mod-row.collapsed { gap: 0; }
 @media (prefers-reduced-motion: reduce) { .nexus-mod-chevron { transition: none; } }
 .nexus-mod-tools { display: flex; align-items: center; flex-wrap: nowrap; gap: .4rem; margin-top: .5rem; }
+.nexus-expanded-mods-content .nexus-installed-mod-row { position: relative; }
+.nexus-expanded-mods-content .nexus-mod-summary { padding-right: 30px; }
+.nexus-mod-select { position: absolute; top: 10px; right: 12px; width: 16px; height: 16px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.nexus-selection-actions { display: flex; align-items: center; gap: .4rem; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+.nexus-selection-actions .nexus-hint { margin: 0; font-size: .75rem; }
+.nexus-selection-actions .btn { width: 36px; height: 36px; padding: 0; justify-content: center; }
 .nexus-mod-tools > .btn { box-sizing: border-box; height: 36px; min-width: 0; white-space: nowrap; padding-inline: .6rem; }
 
 .nexus-manual-root { margin: .6rem 0; }
@@ -233,8 +247,16 @@
 .nexus-queue-external-heading strong { flex: 1; min-width: 0; }
 .nexus-queue-entry-heading { display: flex; align-items: center; gap: .45rem; }
 .nexus-queue-entry-heading .nexus-queue-choice { flex: 1; min-width: 0; align-items: center; }
-.nexus-queue-note { display: inline-flex; flex-shrink: 0; color: var(--accent); cursor: help; }
-.nexus-queue-note svg { width: 14px; height: 14px; }
+.nexus-queue-note-anchor { flex-shrink: 0; margin-left: auto; }
+.nexus-queue-note { display: inline-flex; align-items: center; justify-content: center; color: var(--accent); cursor: help; padding: .3rem; background: transparent; border: 0; border-radius: 6px; }
+.nexus-queue-note svg { width: 20px; height: 20px; animation: nexus-queue-alert-pulse 1.25s ease-in-out infinite; }
+.nexus-queue-note:hover svg, .nexus-queue-note:focus-visible svg { animation-play-state: paused; }
+.nexus-queue-note:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@keyframes nexus-queue-alert-pulse {
+  0%, 100% { transform: scale(.94); opacity: .65; filter: drop-shadow(0 0 1px rgba(var(--accent-rgb), .2)); }
+  50% { transform: scale(1.14); opacity: 1; filter: drop-shadow(0 0 6px rgba(var(--accent-rgb), .85)); }
+}
+@media (prefers-reduced-motion: reduce) { .nexus-queue-note svg { animation: none; filter: drop-shadow(0 0 3px rgba(var(--accent-rgb), .5)); } }
 .nexus-queue-popup .nexus-popup-footer { padding: .75rem 1.1rem; }
 @media (min-width: 760px) { .nexus-queue-popup .nexus-queue-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .nexus-catalog-page-size { position: relative; }
@@ -444,6 +466,7 @@
 
 /* Compact installation review: one requirements block, details on demand. */
 :root .nexus-install-review-popup.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { padding: 76px 1.1rem .9rem; }
+.nexus-mod-usage-hint { color: var(--tone-f8fafc, #f8fafc); font-size: 1rem; line-height: 1.6; }
 .nexus-install-mod-name { margin: 0 0 .6rem; font-size: 1rem; line-height: 1.35; overflow-wrap: anywhere; }
 .nexus-install-review-popup .nexus-install-status { min-height: 0; margin: .25rem 0; }
 .nexus-install-review-popup .nexus-hint { font-size: .82rem; line-height: 1.4; margin: .45rem 0; }
@@ -573,3 +596,98 @@
 .advanced-detected-dlls { grid-column: 1 / -1; min-width: 0; font-size: .75rem; color: var(--text-secondary); }
 .advanced-detected-dlls code { display: block; overflow-wrap: anywhere; color: var(--accent-soft); margin-top: 5px; }
 .advanced-detected-dlls p { margin: 5px 0; line-height: 1.45; }
+
+.nexus-deploy-progress { display: grid; grid-template-columns: 1fr auto; gap: .25rem .75rem; align-items: baseline; padding: .5rem .75rem; margin: .5rem 0; border-radius: .6rem; background: color-mix(in srgb, var(--accent) 10%, transparent); font-size: .85rem; }
+.nexus-deploy-progress span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nexus-deploy-progress small { font-variant-numeric: tabular-nums; opacity: .85; }
+.nexus-deploy-progress progress { grid-column: 1 / -1; width: 100%; height: .3rem; accent-color: var(--accent); }
+
+/* Keep installation feedback inside the already allocated footer. */
+.nexus-install-review-popup .nexus-popup-footer { align-items: center; flex-wrap: nowrap; min-height: 72px; box-sizing: border-box; }
+.nexus-install-review-popup .nexus-popup-footer > .btn { flex-shrink: 0; }
+.nexus-install-footer-status { flex: 1; min-width: 0; height: 40px; display: flex; align-items: center; }
+.nexus-install-footer-status .nexus-deploy-progress { width: 100%; min-width: 0; box-sizing: border-box; margin: 0; padding: 0; background: none; font-size: .75rem; gap: .2rem .5rem; }
+.nexus-install-footer-wait { display: flex; align-items: center; gap: .5rem; color: var(--accent-light); font-size: .82rem; }
+@media (max-width: 480px) { .nexus-install-footer-status .nexus-deploy-progress { grid-template-columns: minmax(0, 1fr); } .nexus-install-footer-status .nexus-deploy-progress > span { display: none; } }
+
+.nexus-expand-mods { width: 34px; height: 34px; padding: 0 !important; justify-content: center; }
+.nexus-expanded-mods-popup { width: min(920px, calc(100vw - 48px)); height: min(760px, calc(100dvh - 96px)); max-width: none; transform-origin: top left; animation: none !important; }
+.nexus-expanded-mods-popup .modal-scroll-body { display: flex; min-height: 0; }
+.nexus-expanded-mods-content { display: flex; flex-direction: column; gap: .8rem; width: 100%; min-width: 0; min-height: 0; }
+.nexus-expanded-mods-content > .nexus-mod-list { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
+.nexus-expanded-mods-content > .nexus-mod-tools { margin-top: auto; flex-shrink: 0; flex-wrap: wrap; }
+.nexus-expanded-mods-content .nexus-install-start { flex: 1; }
+
+/* Fade only the shade; the panel keeps its independent zoom animation. */
+.modal-overlay.nexus-zoom-overlay { background: transparent !important; backdrop-filter: none; -webkit-backdrop-filter: none; animation: none; }
+.nexus-zoom-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, .6); backdrop-filter: blur(calc(4px * var(--backdrop-blur-factor, 1))); -webkit-backdrop-filter: blur(calc(4px * var(--backdrop-blur-factor, 1))); pointer-events: none; }
+.nexus-zoom-overlay > .modal-content { position: relative; z-index: 1; }
+:root[data-appearance="light"] .nexus-zoom-backdrop { background: rgba(16, 24, 40, .25); }
+
+.nexus-return-preview { position: fixed; display: block; z-index: 2; transform-origin: top left; pointer-events: none; margin: 0; }
+.nexus-return-preview > .nexus-mods-content { width: 100%; height: 100%; }
+/* Keep the snapshot opaque without strengthening the panel's glass colors.
+   Reapplying backdrop saturation here would brighten the return preview. */
+.nexus-return-preview { background: rgb(var(--glass-base-start)); border-radius: 12px; }
+:root[data-appearance] .nexus-return-preview > .nexus-mods-content { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+
+.nexus-return-preview { overflow: hidden; }
+
+.nexus-expand-mods-anchor { margin-left: auto; flex-shrink: 0; }
+.nexus-load-order-auto { display: flex; align-items: center; gap: .5rem; margin-bottom: .8rem; }
+.nexus-load-order-list { display: grid; gap: .45rem; padding: 0; margin: 0 0 .8rem; list-style: none; max-height: min(52vh, 520px); overflow-y: auto; }
+.nexus-load-order-row { display: flex; align-items: center; gap: .7rem; padding: .55rem .7rem; }
+.nexus-load-order-row .nexus-installed-mod-info { display: grid; gap: .15rem; min-width: 0; flex: 1; }
+.nexus-load-order-row small { overflow-wrap: anywhere; }
+.nexus-load-order-row .nexus-mod-order-actions > .btn { display: flex; align-items: center; justify-content: center; width: 34px; min-width: 34px; height: 34px; padding: 0; }
+.nexus-load-order-index { display: inline-flex; align-items: center; justify-content: center; min-width: 1.8rem; font-variant-numeric: tabular-nums; opacity: .75; }
+.nexus-load-order-row.locked { opacity: .75; }
+.nexus-replacer { display: grid; gap: .5rem; margin: .6rem 0; }
+.nexus-replacer h4 { margin: 0; }
+
+.nexus-catalog-association-warning { display: inline-flex; flex-shrink: 0; }
+.nexus-game-checks { display: grid; gap: .5rem; }
+.nexus-game-checks h4 { margin: 0; }
+.nexus-game-check { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.nexus-game-check > span { flex: 1 1 240px; min-width: 0; overflow-wrap: anywhere; }
+.nexus-expand-mods.nexus-has-checks { position: relative; }
+.nexus-expand-mods.nexus-has-checks::after { content: ""; position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--warning-color, #f59e0b); }
+.nexus-plugin-name { all: unset; cursor: pointer; display: inline-flex; gap: .3rem; align-items: baseline; overflow-wrap: anywhere; }
+.nexus-plugin-name:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.nexus-plugins-popup .nexus-tabs { align-items: center; }
+.nexus-plugin-details { display: grid; gap: .4rem; margin-top: .4rem; }
+.nexus-plugin-rule { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.nexus-plugin-rule select, .nexus-plugin-rule input { min-width: 0; max-width: 100%; }
+.nexus-active-profile { margin-left: .4rem; font-weight: 400; opacity: .75; font-size: .8em; }
+.nexus-save-shot { display: block; max-width: min(100%, 320px); border-radius: 6px; margin: .3rem 0; }
+
+/* Profiles share the launcher glass surface and preference switches. */
+.nexus-profile-list { display: grid; gap: .65rem; padding: 0; margin: 1rem 0; list-style: none; }
+.nexus-profile-row { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; padding: .85rem; border: 1px solid rgba(var(--glass-neutral-border), .22); border-radius: 10px; background: rgba(var(--surface-255-255-255,255,255,255), .035); }
+.nexus-profile-row.is-active { border-color: rgba(var(--accent-rgb), .4); background: rgba(var(--accent-rgb), .07); }
+.nexus-profile-status { display: inline-flex; align-items: center; justify-content: center; width: 22px; flex: 0 0 22px; color: var(--accent); }
+.nexus-profile-row .nexus-installed-mod-info { display: grid; gap: .3rem; min-width: 0; flex: 1 1 200px; }
+.nexus-profile-row small { font-size: .78rem; color: var(--tone-94a3b8,#94a3b8); }
+.nexus-profile-actions { display: flex; align-items: center; gap: .4rem; margin-left: auto; }
+.nexus-profile-actions .nexus-profile-icon { display: inline-flex; justify-content: center; align-items: center; width: 34px; height: 34px; padding: 0; }
+.nexus-profile-create { display: grid; gap: .85rem; width: 100%; }
+.nexus-profile-name-field { display: grid; gap: .45rem; font-size: .85rem; color: var(--tone-e2e8f0,#e2e8f0); }
+.nexus-profiles-popup .nexus-profile-name-input { box-sizing: border-box; width: 100%; min-width: 0; padding: .65rem .75rem; border: 1px solid rgba(var(--glass-neutral-border), .3); border-radius: 8px; background: var(--input-bg); color: var(--tone-e2e8f0,#e2e8f0); font: inherit; outline: none; box-shadow: none; }
+.nexus-profiles-popup .nexus-profile-name-input:focus { border-color: rgba(var(--accent-rgb), .65); outline: none; box-shadow: none; }
+.nexus-profile-create-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .85rem; }
+.nexus-profile-options { display: grid; gap: .5rem; margin-top: .4rem; }
+.nexus-profiles-popup .nexus-profile-toggle { margin: 0; padding: 0; border: 0; background: transparent; color: var(--tone-e2e8f0,#e2e8f0); font-size: .82rem; }
+@media (max-width: 520px) { .nexus-profile-create-actions > .btn { width: 100%; justify-content: center; } }
+
+.nexus-panel-heading-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin-left: auto; }
+
+.nexus-game-tools { margin-top:16px; padding-top:14px; border-top:1px solid rgba(var(--glass-neutral-border),.25); }
+.nexus-game-tools h4 { margin:0 0 10px; font-size:.9rem; font-weight:600; color:var(--tone-edf0fd, #edf0fd); }
+.nexus-game-tools .nexus-tabs { margin-bottom:0; flex-wrap:wrap; }
+
+.nexus-game-checks { flex-shrink:0; gap:.35rem; font-size:.78rem; line-height:1.35; }
+.nexus-game-checks h4 { font-size:.85rem; }
+.nexus-game-checks .nexus-game-check { gap:.4rem; }
+.nexus-game-checks .nexus-game-check > .btn { min-height:30px; padding:5px 9px; font-size:.75rem; }
+.nexus-game-checks .nexus-load-order-auto { margin-block:4px; }
+.nexus-game-checks .nexus-fomod-option { padding:7px 9px; font-size:.78rem; }

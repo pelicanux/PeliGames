@@ -50,6 +50,7 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
       try {
         const status = await invoke<BackendVersionStatus>("check_backend_version", { gpuArch });
         setVersionStatus(status);
+        window.dispatchEvent(new CustomEvent("backendVersionChecked", { detail: { target: gpuArch, status } }));
         if (status.current && !status.needs_update) {
           setDownloadComplete(true);
         } else {
@@ -103,7 +104,10 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
       setDownloadComplete(true);
       // Refresh version check after download
       const vStatus = await invoke<BackendVersionStatus>("check_backend_version", { gpuArch }).catch(() => null);
-      if (vStatus) setVersionStatus(vStatus);
+      if (vStatus) {
+        setVersionStatus(vStatus);
+        window.dispatchEvent(new CustomEvent("backendVersionChecked", { detail: { target: gpuArch, status: vStatus } }));
+      }
     } catch (err: any) {
       if (err === "Download cancelado pelo usuário.") {
         invoke("delete_backend", { gpuArch }).catch(console.error);

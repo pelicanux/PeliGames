@@ -3,7 +3,7 @@ import { nexusTarget, safeLink } from "./nexusLinks";
 import { supportedNexusFile } from "./archiveFormats";
 import type { Requirements } from "./NexusRequirements";
 import type { NexusGame } from "./useNexusWorkspace";
-export interface QueueDetails { requirements_file_id?: number | null; info: { name: string }; files: { file_id: number; name: string; file_name: string; description?: string; version: string; size: number; category_name?: string; category_id?: number }[]; requirements: Requirements }
+export interface QueueDetails { requirements_file_id?: number | null; supports_vortex?: boolean; info: { name: string }; files: { file_id: number; name: string; file_name: string; description?: string; version: string; size: number; category_name?: string; category_id?: number }[]; requirements: Requirements }
 export interface Entry { id: number; name: string; notes: string; parent: string; details?: QueueDetails; checked: boolean; file: number | null; installed: boolean; error?: string }
 export interface External { kind: Requirements["items"][number]["kind"]; name: string; notes: string; url: string | null; installed: boolean }
 export async function collectQueue({ game, domain, modId, details, fileId, selectedFiles, active, fetchDetails, limitWarning, incompleteWarning }: {

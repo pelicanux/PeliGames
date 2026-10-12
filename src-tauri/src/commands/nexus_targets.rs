@@ -49,8 +49,27 @@ pub(super) fn root(
             ),
         };
     }
+    if let Some(path) = relative.strip_prefix("@msfs/") {
+        // Microsoft Flight Simulator: the packages folder the player chose, from
+        // `InstalledPackagesPath` in UserCfg.opt, or `Packages` beside it.
+        let (base, config) = root(game_root, prefix, "@roaming/Microsoft Flight Simulator/UserCfg.opt")?;
+        let config = base.join(config);
+        let text = fs::read_to_string(&config).map_err(|_| "Inicie o Microsoft Flight Simulator uma vez no prefixo selecionado para criar o UserCfg.opt.".to_string())?;
+        let configured = text.lines().map(str::trim).find_map(|line| line.strip_prefix("InstalledPackagesPath"))
+            .map(|value| value.trim().trim_matches('"').to_string()).filter(|value| !value.is_empty());
+        let packages = match configured {
+            Some(value) => windows_path(prefix, &value)?,
+            None => config.parent().ok_or("UserCfg.opt inválido.")?.join("Packages"),
+        };
+        if !packages.is_dir() {
+            return Err(format!("Pasta de pacotes do Microsoft Flight Simulator não encontrada: {}", packages.display()));
+        }
+        return Ok((packages.clone(), existing_spelling(&packages, path)));
+    }
     let (kind, rest) = if let Some(path) = relative.strip_prefix("@local/") {
         ("AppData/Local", path)
+    } else if let Some(path) = relative.strip_prefix("@roaming/") {
+        ("AppData/Roaming", path)
     } else if let Some(path) = relative.strip_prefix("@low/") {
         ("AppData/LocalLow", path)
     } else if let Some(path) = relative.strip_prefix("@documents/") {
@@ -113,5 +132,91 @@ pub(super) fn root(
             1,
         );
     }
-    Ok((root, rest))
+    Ok((root.clone(), existing_spelling(&root, &rest)))
+}
+
+/// Host path of a Windows path inside the prefix, through its drive letters
+/// (`dosdevices/c:` → `drive_c`, `z:` → `/`).
+fn windows_path(prefix: &str, value: &str) -> Result<PathBuf, String> {
+    let (_, wine) = super::nexus_prefix::resolve(Path::new(prefix))?;
+    let (drive, rest) = value.split_once(':').filter(|(drive, _)| drive.len() == 1 && drive.chars().all(|c| c.is_ascii_alphabetic()))
+        .ok_or_else(|| format!("Caminho do Windows inválido: {value}"))?;
+    let device = fs::canonicalize(wine.join("dosdevices").join(format!("{}:", drive.to_ascii_lowercase())))
+        .map_err(|_| format!("Unidade {drive}: não existe no prefixo."))?;
+    let mut path = device;
+    for part in rest.split(['\\', '/']).filter(|part| !part.is_empty()) {
+        if part == ".." || part == "." { return Err(format!("Caminho do Windows inválido: {value}")); }
+        path.push(part);
+    }
+    Ok(path)
+}
+/// Windows ignores letter case, so a game and a tool may spell the same file
+/// differently (`Plugins.txt` / `plugins.txt`). Use the spelling already on disk
+/// for every existing segment (only when exactly one entry matches); the rest is kept.
+fn existing_spelling(root: &Path, relative: &str) -> String {
+    let mut current = root.to_path_buf();
+    let mut parts = Vec::new();
+    let mut resolving = true;
+    for part in relative.split('/') {
+        let mut chosen = part.to_string();
+        if resolving {
+            if !current.join(part).exists() {
+                let mut found = fs::read_dir(&current).into_iter().flatten().flatten().take(20_000)
+                    .filter(|entry| entry.file_name().to_string_lossy().eq_ignore_ascii_case(part))
+                    .map(|entry| entry.file_name().to_string_lossy().into_owned());
+                match (found.next(), found.next()) {
+                    (Some(name), None) => chosen = name,
+                    _ => resolving = false,
+                }
+            }
+            current.push(&chosen);
+        }
+        parts.push(chosen);
+    }
+    parts.join("/")
+}
+
+#[cfg(test)]
+mod spelling_tests {
+    use super::*;
+    #[test]
+    fn existing_files_keep_the_spelling_on_disk() {
+        let root = std::env::temp_dir().join(format!("peligames-spelling-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(root.join("Skyrim Special Edition")).unwrap();
+        fs::write(root.join("Skyrim Special Edition/Plugins.txt"), "").unwrap();
+        assert_eq!(existing_spelling(&root, "Skyrim Special Edition/plugins.txt"), "Skyrim Special Edition/Plugins.txt");
+        assert_eq!(existing_spelling(&root, "skyrim special edition/New.txt"), "Skyrim Special Edition/New.txt");
+        assert_eq!(existing_spelling(&root, "Other/plugins.txt"), "Other/plugins.txt");
+        // Two spellings on disk: ambiguous, left to the deployment's own refusal.
+        fs::write(root.join("Skyrim Special Edition/plugins.txt"), "").unwrap();
+        assert_eq!(existing_spelling(&root, "Skyrim Special Edition/PLUGINS.TXT"), "Skyrim Special Edition/PLUGINS.TXT");
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn flight_simulator_packages_follow_user_cfg() {
+        let base = std::env::temp_dir().join(format!("msfs-{}", uuid::Uuid::new_v4()));
+        let pfx = base.join("prefix/pfx");
+        let roaming = pfx.join("drive_c/users/steamuser/AppData/Roaming/Microsoft Flight Simulator");
+        fs::create_dir_all(&roaming).unwrap();
+        fs::write(pfx.join("system.reg"), "").unwrap();
+        fs::create_dir_all(pfx.join("dosdevices")).unwrap();
+        std::os::unix::fs::symlink("../drive_c", pfx.join("dosdevices/c:")).unwrap();
+        let prefix = base.join("prefix").to_string_lossy().into_owned();
+        // Not started yet: no UserCfg.opt.
+        assert!(root(&base, &prefix, "@msfs/Community/x").is_err());
+        // Default: Packages beside UserCfg.opt.
+        fs::write(roaming.join("UserCfg.opt"), "Version 63\n").unwrap();
+        fs::create_dir_all(roaming.join("Packages/Community")).unwrap();
+        let (dir, rest) = root(&base, &prefix, "@msfs/Community/pkg/manifest.json").unwrap();
+        assert_eq!(dir.join(rest), roaming.join("Packages/Community/pkg/manifest.json"));
+        // Player's folder, as a Windows path inside the prefix.
+        let custom = pfx.join("drive_c/MSFS");
+        fs::create_dir_all(custom.join("Community")).unwrap();
+        fs::write(roaming.join("UserCfg.opt"), "Version 63\nInstalledPackagesPath \"C:\\MSFS\"\n").unwrap();
+        let (dir, rest) = root(&base, &prefix, "@msfs/Community/pkg/manifest.json").unwrap();
+        assert_eq!(fs::canonicalize(dir).unwrap().join(rest), fs::canonicalize(&custom).unwrap().join("Community/pkg/manifest.json"));
+        fs::write(roaming.join("UserCfg.opt"), "InstalledPackagesPath \"C:\\..\\x\"\n").unwrap();
+        assert!(root(&base, &prefix, "@msfs/Community/x").is_err());
+        fs::remove_dir_all(base).unwrap();
+    }
 }

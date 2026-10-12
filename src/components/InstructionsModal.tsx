@@ -9,7 +9,7 @@ interface Props {
 export const InstructionsModal: React.FC<Props> = ({ onClose }) => {
   return (
     <div style={{ position: "fixed", top: "50px", left: 0, right: 0, height: "calc(100vh - 50px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-      <div className="dialog-backdrop" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} onClick={onClose} />
+      <div className="dialog-backdrop" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(calc(4px * var(--backdrop-blur-factor, 1)))", WebkitBackdropFilter: "blur(calc(4px * var(--backdrop-blur-factor, 1)))" }} onClick={onClose} />
       
       <ModalSurface header={<h2 style={{ margin: "0 0 1.5rem 0", color: "#c4b5fd", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>

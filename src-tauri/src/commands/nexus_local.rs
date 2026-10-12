@@ -34,6 +34,9 @@ pub struct LocalMod {
     /// User-chosen package root for archives without a recognized structure.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(super) manual_root: Option<ManualRoot>,
+    /// Approved as a replacer: may replace game files, which are kept and restored.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub(super) replace_originals: bool,
 }
 /// MO2-style "set data directory": `source` is a folder inside the archive
 /// (empty = archive root) and `destination` one of the module's destinations
@@ -90,7 +93,7 @@ pub(super) struct DetectedMod {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     mod_id: Option<u64>,
 }
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub struct Workspace {
     pub(super) games: Vec<NexusGame>,
 }
@@ -98,6 +101,27 @@ pub(super) fn root() -> Result<PathBuf, String> {
     let path = paths::app_root()?.join("Mod/Nexus");
     fs::create_dir_all(&path).map_err(|e| e.to_string())?;
     Ok(path)
+}
+/// Match requirements by Nexus domain and mod ID, never by a guessed display name.
+pub(super) fn dependency_order(game: &mut NexusGame) -> bool {
+    let dependencies: Vec<Vec<usize>> = game.mods.iter().map(|item| {
+        item.nexus_source.iter().flat_map(|source| source.requirements.items.iter())
+            .filter(|requirement| requirement.kind == "nexus")
+            .filter_map(|requirement| requirement.url.as_deref().and_then(|value| reqwest::Url::parse(value).ok()))
+            .filter(|url| url.scheme() == "https" && matches!(url.host_str(), Some("www.nexusmods.com" | "nexusmods.com")))
+            .flat_map(|url| {
+                let parts: Vec<_> = url.path().trim_matches('/').split('/').collect();
+                let target = if parts.len() == 3 && parts[1] == "mods" { parts[2].parse::<u64>().ok().map(|id| (parts[0].to_owned(), id)) } else { None };
+                game.mods.iter().enumerate().filter_map(move |(index, candidate)| {
+                    candidate.nexus_source.as_ref().filter(|source| target.as_ref().is_some_and(|(domain,id)| source.domain.eq_ignore_ascii_case(domain) && source.mod_id == *id)).map(|_| index)
+                })
+            }).collect()
+    }).collect();
+    let order = super::nexus_dependency_order::order(&dependencies);
+    if order.iter().enumerate().all(|(index, &other)| index == other) { return false; }
+    let mut mods: Vec<_> = std::mem::take(&mut game.mods).into_iter().map(Some).collect();
+    game.mods = order.into_iter().map(|index| mods[index].take().unwrap()).collect();
+    true
 }
 pub(super) fn load() -> Result<Workspace, String> {
     let path = root()?.join("library.json");
@@ -139,6 +163,7 @@ pub(super) fn load() -> Result<Workspace, String> {
                         }
                     }
                     game.running = super::nexus_profile::running(game);
+                    paths_changed |= dependency_order(game);
                 }
                 if paths_changed { save(&data)?; }
                 Ok(data)
@@ -148,6 +173,9 @@ pub(super) fn load() -> Result<Workspace, String> {
     }
 }
 pub(super) fn save(data: &Workspace) -> Result<(), String> {
+    let mut ordered = data.clone();
+    for game in &mut ordered.games { dependency_order(game); }
+    let data = &ordered;
     let directory = root()?;
     let temporary = directory.join(format!("library-{}.tmp", uuid::Uuid::new_v4()));
     let bytes = serde_json::to_vec_pretty(data).map_err(|e| e.to_string())?;
@@ -185,7 +213,7 @@ pub async fn scan_nexus_library(app: tauri::AppHandle) -> Result<Workspace, Stri
         if let Some(url) = game["cover_url"].as_str().filter(|url| url.starts_with("file://")) {
             let source = reqwest::Url::parse(url).ok().and_then(|url| url.to_file_path().ok());
             game["cover_url"] = match source {
-                Some(source) => super::covers::cache_heroic_cover(&app, source).await.ok()
+                Some(source) => super::covers::cache_heroic_cover(source).await.ok()
                     .and_then(|path| reqwest::Url::from_file_path(path).ok()).map(|url| serde_json::Value::String(url.to_string())).unwrap_or_default(),
                 None => serde_json::Value::Null,
             };
@@ -262,6 +290,29 @@ fn prune_unsupported(games: &mut Vec<NexusGame>) -> Vec<String> {
         false
     });
     kept
+}
+
+/// Deletes a Nexus library entry (right click → Remove). The game folder and the
+/// stored mod packages stay on disk. Refused while mods are installed, which
+/// would leave their files in the game, or while the game runs.
+#[tauri::command]
+pub async fn remove_nexus_game(game_id: String) -> Result<Workspace, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
+        let mut data = load()?;
+        let index = data.games.iter().position(|game| game.id == game_id).ok_or("Jogo não encontrado.")?;
+        removable(&data.games[index])?;
+        let game = data.games.remove(index);
+        super::nexus_reports::event(&game, "INFO", "remover da biblioteca Nexus", "entrada removida; jogo e pacotes preservados no disco");
+        save(&data)?;
+        Ok(data)
+    }).await.map_err(|e| e.to_string())?
+}
+fn removable(game: &NexusGame) -> Result<(), String> {
+    if game.mods.iter().any(|item| item.installed) {
+        return Err("Remova os mods instalados deste jogo antes de tirá-lo da biblioteca Nexus.".into());
+    }
+    super::nexus_profile::idle(game)
 }
 
 #[tauri::command]
@@ -453,6 +504,7 @@ pub async fn import_nexus_archive(game_id: String, source: String) -> Result<Wor
         }
         save(&data)?;
     }
+    for game in &mut data.games { dependency_order(game); }
     Ok(data)
 }
 
@@ -776,7 +828,9 @@ async fn import_archive_inner(
             fomod_files: None,
             installed_files: None,
             manual_root: None,
+            replace_originals: false,
         });
+        dependency_order(game);
         if let Err(error) = save(&data) {
             let _ = fs::remove_file(&destination);
             return Err(error);
@@ -832,6 +886,7 @@ fn change_mod_inner(
         if plan.fomod.is_some() && game.mods[index].fomod_selection.is_none() {return Err("Confirme as opções FOMOD na janela de instalação antes de continuar.".into());}
         if !plan.issues.is_empty() { return Err(plan.issues.join("\n")); }
         if !plan.missing.is_empty() { return Err("Instale as dependências indicadas antes deste mod.".into()); }
+        if !plan.originals.is_empty() && !game.mods[index].replace_originals { return Err("Este mod substitui arquivos originais do jogo. Confirme “Instalar como substituição” na janela de instalação.".into()); }
         game.mods[index].installed_files = Some(plan.files.clone());
         game.mods[index].fomod_files = plan.fomod.is_some().then_some(plan.files);
         game.mods[index].fomod_selection = Some(plan.selection);
@@ -859,6 +914,10 @@ fn change_mod_inner(
             game.mods.swap(index, other);
         }
         _ => return Err("Operação inválida.".into()),
+    }
+    dependency_order(game);
+    if matches!(operation, "move_up" | "move_down") && game.mods.iter().position(|item| item.id == mod_id) == Some(index) {
+        return Err("Os requisitos precisam permanecer antes dos mods que dependem deles.".into());
     }
     if rebuild {
         game.profile = Some(if (operation == "remove" || operation == "toggle" && !enabled) && super::nexus_deployment::supports(game) {
@@ -911,6 +970,20 @@ pub async fn install_nexus_mod(game_id: String, mod_id: String, selection: Optio
     tauri::async_runtime::spawn_blocking(move || change_mod(game_id, mod_id, "install", true, selection))
         .await
         .map_err(|e| e.to_string())?
+}
+/// Vortex "Install as Replacer": the mod may replace game files, kept in
+/// `originals/` and restored when the mod no longer provides them.
+#[tauri::command]
+pub async fn set_nexus_mod_replace_originals(game_id: String, mod_id: String, enabled: bool) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
+        let mut data = load()?;
+        let game = data.games.iter_mut().find(|game| game.id == game_id).ok_or("Jogo não encontrado.")?;
+        let item = game.mods.iter_mut().find(|item| item.id == mod_id).ok_or("Mod não encontrado.")?;
+        if item.installed { return Err("Desinstale o mod antes de mudar esta opção.".into()); }
+        item.replace_originals = enabled;
+        save(&data)
+    }).await.map_err(|e| e.to_string())?
 }
 #[tauri::command]
 pub async fn set_nexus_mod_enabled(
@@ -1223,7 +1296,7 @@ fn deploy_options(game_id: &str) -> Result<Vec<DeployOption>, String> {
     let profile_base = super::nexus_profile::directory(game)?;
     fs::create_dir_all(&profile_base).map_err(|e|e.to_string())?;
     let same_filesystem = fs::metadata(&profile_base).ok().zip(game.game["directory"].as_str().and_then(|root|fs::metadata(root).ok())).is_some_and(|(profile,root)|profile.dev() == root.dev());
-    let vfs_module = super::nexus_deployment::definition(game).is_some_and(|module| module.activation.is_none() && !module.routes.iter().any(|route| match route { super::nexus_modules::Route::Prefix {target,..} | super::nexus_modules::Route::File {target,..} | super::nexus_modules::Route::Extension {target,..} | super::nexus_modules::Route::Manifest {target,..} | super::nexus_modules::Route::Patch {target} => target.starts_with('@') }));
+    let vfs_module = super::nexus_deployment::definition(game).is_some_and(|module| module.activation.is_none() && !module.routes.iter().any(|route| match route { super::nexus_modules::Route::Prefix {target,..} | super::nexus_modules::Route::File {target,..} | super::nexus_modules::Route::Extension {target,..} | super::nexus_modules::Route::Manifest {target,..} | super::nexus_modules::Route::Anchor {target,..} | super::nexus_modules::Route::Patch {target} => target.starts_with('@') }));
     Ok([Method::Copy,Method::Symlink,Method::Hardlink,Method::Vfs].into_iter().map(|method| {
         let (available,reason) = if !supported {(false,"Este jogo utiliza um perfil isolado ou não possui módulo de deploy.".to_string())}
         else if method == Method::Hardlink && !same_filesystem {(false,"Hardlink exige que o perfil e o jogo estejam no mesmo sistema de arquivos.".into())}
@@ -1300,6 +1373,12 @@ mod prune_tests {
         assert_eq!(left, ["Manual", "Steam", "Heroic"]);
         assert_eq!(games[1].game["directory"].as_str(), supported.to_str());
         fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
+    fn manual_removal_requires_no_installed_mods() {
+        let folder = std::env::temp_dir();
+        assert!(removable(&game("Manual", &folder, false)).is_ok());
+        assert!(removable(&game("Manual", &folder, true)).unwrap_err().contains("mods instalados"));
     }
 }
 

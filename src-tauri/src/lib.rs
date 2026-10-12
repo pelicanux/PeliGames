@@ -59,6 +59,8 @@ fn run_mode(installer: bool) {
         }
     } else { None };
     if let Err(error) = core::pelinstall::register_appimage() { eprintln!("Integração AppImage: {error}"); }
+    // Before any webview opens: its storage moves with the rest of the launcher data.
+    for error in core::paths::migrate_scattered_data() { eprintln!("Migração de dados: {error}"); }
     let mut context = app_context();
     if startup.module != "launcher" {
         if let Some(window) = context.config_mut().app.windows.first_mut() {
@@ -111,6 +113,7 @@ fn run_mode(installer: bool) {
                 &format!("PeliGames v{} iniciado", env!("CARGO_PKG_VERSION")),
             );
             commands::app_updates::cleanup_obsolete_updates(&app_handle);
+            commands::nexus_progress::init(&app_handle);
             // Launch logs start empty on every launcher start (disk work off the UI thread).
             std::thread::spawn(commands::nexus_local::reset_session_logs_at_startup);
             Ok(())
@@ -149,12 +152,48 @@ fn run_mode(installer: bool) {
             commands::nexus_local::load_nexus_workspace,
             commands::nexus_local::scan_nexus_library,
             commands::nexus_local::add_nexus_game,
+            commands::nexus_local::remove_nexus_game,
             commands::nexus_local::inspect_nexus_game,
             commands::nexus_local::plan_nexus_installation,
             commands::nexus_local::nexus_package_layout,
             commands::nexus_local::set_nexus_manual_root,
             commands::nexus_loot::nexus_loot_status,
             commands::nexus_loot::update_nexus_loot_masterlist,
+            commands::nexus_load_order::nexus_load_order,
+            commands::nexus_gamebryo::nexus_game_checks,
+            commands::nexus_plugins::nexus_plugins,
+            commands::nexus_plugins::set_nexus_plugin_enabled,
+            commands::nexus_plugins::set_nexus_plugin_order,
+            commands::nexus_plugins::set_nexus_plugin_autosort,
+            commands::nexus_plugins::sort_nexus_plugins,
+            commands::nexus_plugins::set_nexus_plugin_rule,
+            commands::nexus_plugins::set_nexus_plugin_group,
+            commands::nexus_plugins::add_nexus_plugin_group,
+            commands::nexus_plugins::set_nexus_plugin_ghost,
+            commands::nexus_plugins::set_nexus_plugin_light,
+            commands::nexus_gamebryo::set_nexus_game_file_aside,
+            commands::nexus_gamebryo::set_nexus_bsa_redirection,
+            commands::nexus_gamebryo::ignore_nexus_extender_errors,
+            commands::nexus_gamebryo::download_nexus_loader,
+            commands::nexus_archive_order::nexus_archive_order,
+            commands::nexus_archive_order::set_nexus_archive_order,
+            commands::nexus_load_order::set_nexus_load_order,
+            commands::nexus_load_order::set_nexus_load_order_auto_export,
+            commands::nexus_load_order::import_nexus_load_order,
+            commands::nexus_load_order::export_nexus_load_order,
+            commands::nexus_local::set_nexus_mod_replace_originals,
+            commands::nexus_user_profiles::nexus_user_profiles,
+            commands::nexus_user_profiles::create_nexus_user_profile,
+            commands::nexus_user_profiles::rename_nexus_user_profile,
+            commands::nexus_user_profiles::delete_nexus_user_profile,
+            commands::nexus_user_profiles::switch_nexus_user_profile,
+            commands::nexus_user_profiles::set_nexus_profile_options,
+            commands::nexus_saves::nexus_saves,
+            commands::nexus_saves::nexus_save_screenshot,
+            commands::nexus_saves::delete_nexus_saves,
+            commands::nexus_saves::transfer_nexus_saves,
+            commands::nexus_saves::nexus_other_saves,
+            commands::nexus_saves::restore_nexus_save_plugins,
             commands::nexus_local::move_nexus_mod,
             commands::nexus_local::nexus_mod_overrides,
             commands::nexus_collections::load_nexus_collection,
@@ -209,6 +248,7 @@ fn run_mode(installer: bool) {
             commands::proton::check_proton_release,
             commands::proton::install_proton,
             commands::proton::cancel_proton_install,
+            commands::proton::uninstall_proton,
             commands::neural_settings::get_neural_startup,
             commands::neural_settings::set_neural_startup,
             commands::app_updates::check_launcher_update,
@@ -229,6 +269,7 @@ fn run_mode(installer: bool) {
             commands::updater::check_backend_version,
             commands::updater::get_backend_path,
             commands::updater::open_backend_folder,
+            commands::covers::cover_directories,
             commands::covers::import_game_cover,
             commands::scanner::scan_installed_games,
             commands::scanner::fetch_steam_release_date,

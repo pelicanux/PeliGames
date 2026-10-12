@@ -71,6 +71,19 @@ pub struct Features {
     pub game_version_query: bool,
 }
 
+/// Loader the extension downloads from GitHub releases (e.g. UE4SS).
+#[derive(Debug, Serialize, Clone, PartialEq)]
+pub struct GithubDownload {
+    pub name: String,
+    pub repository: String,
+    /// Fixed release tag (`experimental-latest`); none = newest release.
+    pub tag: Option<String>,
+    /// Asset name prefix (`UE4SS_v`).
+    pub prefix: String,
+    /// Downloaded on setup without asking (`autoDownloadUe4ss = true`).
+    pub automatic: bool,
+}
+
 #[derive(Debug, Serialize, Clone)]
 pub struct GameFacts {
     pub source: String,
@@ -94,6 +107,7 @@ pub struct GameFacts {
     /// Constantes conhecidas dos templates (ex.: `SHIPPING_EXE`, `EPIC_CODE_NAME`).
     pub constants: std::collections::BTreeMap<String, String>,
     pub features: Features,
+    pub downloads: Vec<GithubDownload>,
     pub unresolved: BTreeSet<String>,
     pub parse_errors: Vec<String>,
     pub classification: Classification,
@@ -152,14 +166,31 @@ fn source_files(dir: &Path) -> Vec<PathBuf> {
 }
 
 /// Uma extensão pode registrar vários jogos (ex.: KOTOR e KOTOR II).
+/// UE4SS from the RE-UE4SS rolling `experimental-latest` tag, as the ChemBoy1
+/// template downloads it (`UE4SS_URL_API`, `prereleaseTag`, `UE4SS_v` assets).
+pub fn github_downloads(text: &str) -> Vec<GithubDownload> {
+    let mut found = Vec::new();
+    let tag = text.contains("prereleaseTag: \"experimental-latest\"") || text.contains("prereleaseTag: 'experimental-latest'");
+    if text.contains("api.github.com/repos/UE4SS-RE/RE-UE4SS") && tag && text.contains("UE4SS_DLFILE_STRING = \"ue4ss_v\"") {
+        let automatic = text.lines().any(|line| {
+            let line = line.trim();
+            line.starts_with("const autoDownloadUe4ss") && line.split('=').nth(1).is_some_and(|value| value.trim().starts_with("true"))
+        });
+        found.push(GithubDownload { name: "UE4SS".into(), repository: "UE4SS-RE/RE-UE4SS".into(), tag: Some("experimental-latest".into()), prefix: "UE4SS_v".into(), automatic });
+    }
+    found
+}
+
 pub fn extract_extension(source: &str, dir: &Path) -> Vec<GameFacts> {
     let allocator = Allocator::default();
     let mut ctx = Ctx::default();
     let mut parse_errors = Vec::new();
     let mut header = String::new();
+    let mut whole = String::new();
 
     for (index, file) in source_files(dir).into_iter().enumerate() {
         let Ok(text) = fs::read_to_string(&file) else { continue };
+        whole.push_str(&text);
         if header.is_empty() {
             header = text.chars().take(1500).collect();
         }
@@ -194,6 +225,7 @@ pub fn extract_extension(source: &str, dir: &Path) -> Vec<GameFacts> {
         dependency_links: BTreeSet::new(),
         constants: Default::default(),
         features: Features::default(),
+        downloads: github_downloads(&whole),
         unresolved: BTreeSet::new(),
         parse_errors,
         classification: Classification { level: Level::Red, reasons: Vec::new(), game_data_complete: false },
@@ -290,6 +322,7 @@ fn empty_like(f: &GameFacts) -> GameFacts {
         dependency_links: BTreeSet::new(),
         constants: Default::default(),
         features: Features::default(),
+        downloads: f.downloads.clone(),
         unresolved: BTreeSet::new(),
         parse_errors: Vec::new(),
         classification: Classification { level: Level::Red, reasons: Vec::new(), game_data_complete: false },
@@ -370,6 +403,9 @@ impl<'a> Extractor<'_, 'a> {
             "SHIPPING_EXE", "EPIC_CODE_NAME", "EXEC_FOLDER_DEFAULT", "STEAMAPP_ID",
             // Template Unity (BepInEx/MelonLoader).
             "DATA_FOLDER_DEFAULT", "EXEC", "recommendedLoader", "loaderChoice", "isXna", "hasCustomLoader", "ARCH", "BEPINEX_BUILD",
+            "BEP_VER", "BEP_BE_VER", "BEP_BE_COMMIT", "BEPINEX_PAGE_NO", "MELON_PAGE_NO", "allowBepinexNexus", "allowMelonNexus",
+            // Requirements hosted on Nexus (UE4SS page, Sig Bypass, REFramework).
+            "GAME_ID", "UE4SS_PAGE_NO", "UE4SS_DOMAIN", "SIGBYPASS_REQUIRED", "SIGBYPASS_PAGE_NO", "SIGBYPASS_DOMAIN", "REF_PAGE_NO", "REF_DOMAIN", "useRefNightly", "autoDownloadUe4ss",
             // Template Basic.
             "MOD_PATH", "MOD_EXTS", "DATA_FOLDER", "needsModInstaller", "rootInstaller", "fallbackInstaller", "binariesInstaller",
         ] {

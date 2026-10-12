@@ -1,5 +1,7 @@
 #[path = "backend_folder.rs"]
 mod backend_folder;
+#[path = "backend_release.rs"]
+mod backend_release;
 use tauri::AppHandle;
 use serde::{Deserialize, Serialize};
 use reqwest::Client;
@@ -18,7 +20,49 @@ struct GitHubAsset {
 #[derive(Serialize, Deserialize, Debug)]
 struct GitHubRelease {
     tag_name: String,
+    #[serde(default)]
+    name: Option<String>,
+    #[serde(default)]
+    body: Option<String>,
+    #[serde(default)]
+    draft: bool,
+    #[serde(default)]
+    prerelease: bool,
     assets: Vec<GitHubAsset>,
+}
+
+impl GitHubRelease {
+    fn linux_assets(&self) -> Vec<(&GitHubAsset, &'static str)> {
+        let windows = backend_release::windows_release(&self.tag_name, self.name.as_deref().unwrap_or(""), self.body.as_deref().unwrap_or(""));
+        self.assets.iter().filter_map(|asset| backend_release::linux_bitness(&asset.name, windows).map(|bits| (asset, bits))).collect()
+    }
+    fn compatible(&self) -> bool {
+        !self.draft && !self.prerelease && !self.linux_assets().is_empty()
+    }
+}
+
+/// Both version checks and downloads must resolve the same Linux release.
+async fn linux_release(client: &Client, gpu_arch: &str) -> Result<GitHubRelease, String> {
+    let repo = match gpu_arch {
+        "rdna3" => "mauri870/DLSSNR-RDNA3",
+        "rdna4" => "mochizuki0323/DLSSNR-AMD",
+        _ => return Err("Arquitetura de backend inválida.".into()),
+    };
+    let base = format!("https://api.github.com/repos/{repo}/releases");
+    let latest: GitHubRelease = client.get(format!("{base}/latest")).send().await
+        .map_err(|e| e.to_string())?.error_for_status().map_err(|e| e.to_string())?
+        .json().await.map_err(|e| e.to_string())?;
+    if latest.compatible() { return Ok(latest); }
+    // GitHub's latest may be a stable release containing Windows assets only.
+    for page in 1..=5 {
+        let releases: Vec<GitHubRelease> = client.get(format!("{base}?per_page=30&page={page}")).send().await
+            .map_err(|e| e.to_string())?.error_for_status().map_err(|e| e.to_string())?
+            .json().await.map_err(|e| e.to_string())?;
+        let count = releases.len();
+        if let Some(release) = releases.into_iter().find(GitHubRelease::compatible) { return Ok(release); }
+        if count < 30 { break; }
+    }
+    Err("Nenhuma release com pacotes Linux compatíveis foi encontrada. O backend instalado foi preservado.".into())
 }
 
 #[tauri::command]
@@ -73,14 +117,7 @@ pub async fn check_backend_version(app: AppHandle, gpu_arch: String) -> Result<B
         .build()
         .map_err(|e| e.to_string())?;
 
-    let url = if gpu_arch == "rdna3" {
-        "https://api.github.com/repos/mauri870/DLSSNR-RDNA3/releases/latest"
-    } else {
-        "https://api.github.com/repos/mochizuki0323/DLSSNR-AMD/releases/latest"
-    };
-    
-    let release: GitHubRelease = client.get(url).send().await.map_err(|e| e.to_string())?
-        .json().await.map_err(|e| e.to_string())?;
+    let release = linux_release(&client, &gpu_arch).await?;
 
     let backend_dir = get_backend_dir(&app)?.join(&gpu_arch);
     let version_file = backend_dir.join("version.txt");
@@ -132,24 +169,17 @@ async fn update_backend_inner(app: AppHandle, gpu_arch: String) -> Result<String
         .build()
         .map_err(|e| e.to_string())?;
 
-    let url = if gpu_arch == "rdna3" {
-        "https://api.github.com/repos/mauri870/DLSSNR-RDNA3/releases/latest"
-    } else {
-        "https://api.github.com/repos/mochizuki0323/DLSSNR-AMD/releases/latest"
-    };
-    let release: GitHubRelease = client.get(url).send().await.map_err(|e| e.to_string())?
-        .json().await.map_err(|e| e.to_string())?;
+    let release = linux_release(&client, &gpu_arch).await?;
 
     let tag_with_arch = format!("{}-{}", release.tag_name, gpu_arch);
     let backend_dir = get_backend_dir(&app)?.join(&gpu_arch);
 
-    let tar_assets: Vec<_> = release.assets.into_iter()
-        .filter(|a| a.name.ends_with(".tar.gz") && (a.name.contains("i686") || a.name.contains("x86_64")))
-        .collect();
+    let linux_assets = release.linux_assets();
+    crate::core::logger::log_launcher(&app, "INFO", &format!("Backend Linux selecionado: GPU={gpu_arch}, release={}, pacotes={}", release.tag_name, linux_assets.iter().map(|(asset, _)| asset.name.as_str()).collect::<Vec<_>>().join(", ")));
 
     // Sum total sizes to give overall progress
     let mut overall_total: u64 = 0;
-    for asset in &tar_assets {
+    for (asset, _) in &linux_assets {
         let resp = client.head(&asset.browser_download_url).send().await.map_err(|e| e.to_string())?;
         if let Some(len) = resp.content_length() {
             overall_total += len;
@@ -160,10 +190,9 @@ async fn update_backend_inner(app: AppHandle, gpu_arch: String) -> Result<String
     let overall_start = Instant::now();
     let mut last_emit = Instant::now();
 
-    for asset in tar_assets {
-        let bitness = if asset.name.contains("i686") { "32" } else { "64" };
+    for (asset, bitness) in linux_assets {
 
-        let mut download_resp = client.get(&asset.browser_download_url).send().await.map_err(|e| format!("Error downloading {}: {}", asset.name, e))?;
+        let mut download_resp = client.get(&asset.browser_download_url).send().await.map_err(|e| format!("Error downloading {}: {}", asset.name, e))?.error_for_status().map_err(|e| e.to_string())?;
         
         // Use the actual size if we couldn't get it via HEAD
         let file_total = download_resp.content_length().unwrap_or(0);
@@ -201,9 +230,14 @@ async fn update_backend_inner(app: AppHandle, gpu_arch: String) -> Result<String
         fs::create_dir_all(&target_dir).map_err(|e| e.to_string())?;
 
         let cursor = Cursor::new(bytes_vec);
-        let tar = GzDecoder::new(cursor);
-        let mut archive = Archive::new(tar);
-        archive.unpack(&target_dir).map_err(|e| format!("Failed unpacking tar: {}", e))?;
+        if asset.name.to_ascii_lowercase().ends_with(".zip") {
+            let mut archive = zip::ZipArchive::new(cursor).map_err(|e| format!("Failed reading Linux ZIP: {e}"))?;
+            archive.extract(&target_dir).map_err(|e| format!("Failed unpacking Linux ZIP: {e}"))?;
+        } else {
+            let tar = GzDecoder::new(cursor);
+            let mut archive = Archive::new(tar);
+            archive.unpack(&target_dir).map_err(|e| format!("Failed unpacking tar: {}", e))?;
+        }
     }
     
     // final emit

@@ -20,9 +20,18 @@ export function FloatingScrollbars() {
         if (!bar.dragging && !bar.hovering) bar.track.classList.remove("is-active");
       }, 1000);
     };
-    const activeModal = () => Array.from(document.querySelectorAll<HTMLElement>(".modal-overlay, .preferences-overlay"))
+    const modalLevel = (element: HTMLElement) => {
+      let level = 0;
+      for (let current: HTMLElement | null = element; current; current = current.parentElement) {
+        level = Math.max(level, Number.parseInt(getComputedStyle(current).zIndex, 10) || 0);
+      }
+      return level;
+    };
+    // Some dialogs (About, for example) use their own overlay. Their dialog
+    // surface still identifies the foreground scroll area consistently.
+    const activeModal = () => Array.from(document.querySelectorAll<HTMLElement>('.modal-overlay, .preferences-overlay, [role="dialog"][aria-modal="true"]'))
       .filter(overlay => overlay.getClientRects().length > 0)
-      .sort((a, b) => (Number.parseInt(getComputedStyle(a).zIndex, 10) || 0) - (Number.parseInt(getComputedStyle(b).zIndex, 10) || 0)).slice(-1)[0];
+      .sort((a, b) => modalLevel(a) - modalLevel(b)).slice(-1)[0];
     const position = (host: HTMLElement, bar: Scrollbar, modal?: HTMLElement) => {
       const rect = host.getBoundingClientRect();
       const headerInset = host.classList.contains("modal-scroll-body") && host.parentElement?.classList.contains("has-dialog-titlebar") ? 72 : 12;
@@ -42,6 +51,10 @@ export function FloatingScrollbars() {
       const left = Math.min(window.innerWidth - 10, right + (outside ? 3 : -13));
       bar.track.style.cssText = `top:${top}px;left:${left}px;height:${height}px`;
       bar.track.hidden = Boolean(modal && !modal.contains(host)) || !host.getClientRects().length || height < 28 || rect.width === 0 || host.scrollHeight <= host.clientHeight;
+      if (bar.track.hidden) {
+        bar.hovering = false;
+        bar.track.classList.remove("is-active");
+      }
       const thumbHeight = Math.min(height, Math.max(28, height * host.clientHeight / host.scrollHeight));
       bar.thumb.style.height = `${thumbHeight}px`;
       bar.thumb.style.transform = `translateY(${(height - thumbHeight) * host.scrollTop / Math.max(1, host.scrollHeight - host.clientHeight)}px)`;

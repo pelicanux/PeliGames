@@ -1,3 +1,4 @@
+import "./installationNeonButton.css";
 import { HoverTooltip } from "./HoverTooltip";
 import { useI18n } from "../i18n/I18nContext";
 import { MenuIcon } from "./MenuIcon";
@@ -25,7 +26,7 @@ export function GameModeSelector({ mode, open, onChange, disabled, modLibrary, o
   const { t } = useI18n();
   return <div className="library-mode-buttons" role="group" aria-label={t("gameModes", "choose")}>
     {(["mods", "install"] as const).filter(value => !modLibrary || value !== "install").map(value => <HoverTooltip text={t("gameModes", value === "install" && modLibrary ? "goHome" : `${value}Hint`)} key={value}>
-      <button type="button" disabled={disabled} className={`library-mode-button ${open && !(value === "install" && modLibrary) && (mode === value || (value === "install" && mode === "add")) ? "active" : ""}`}
+      <button type="button" disabled={disabled} className={`library-mode-button ${value === "install" ? "installation-neon-button" : ""} ${open && !(value === "install" && modLibrary) && (mode === value || (value === "install" && mode === "add")) ? "active" : ""}`}
         aria-pressed={open && !(value === "install" && modLibrary) && (mode === value || (value === "install" && mode === "add"))} onClick={() => value === "install" && modLibrary ? onHome() : onChange(value)}>
         <MenuIcon name={value === "mods" ? "puzzle" : modLibrary ? "home" : "download"} />
         <span>{t("gameModes", value === "install" && modLibrary ? "home" : value)}</span>
