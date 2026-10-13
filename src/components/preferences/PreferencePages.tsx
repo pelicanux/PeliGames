@@ -1,4 +1,4 @@
-import { useEffect, useState, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { AppConfig } from "../SetupWizard";
@@ -6,16 +6,19 @@ import { MenuIcon } from "../MenuIcon";
 import { useI18n } from "../../i18n/I18nContext";
 import { useAccentTheme } from "../../theme/ThemeProvider";
 import { ACCENT_THEMES } from "../../theme/accentTheme";
+import { isFreeInterfaceTheme } from "../../theme/interfaceTheme";
 import { ProtonDistributionCards } from "./ProtonDistributionCards";
 import { LaunchEffectIcon } from "./LaunchEffectIcon";
 import { ModBackupPreferences } from "./ModBackupPreferences";
 import { usePreferencesText } from "./labels";
 import { notifyError } from "../../services/notifications";
+import { ConfirmModal } from "../ConfirmModal";
 
 type ConfigProps = { config: AppConfig; disabled: boolean; save: (patch: Partial<AppConfig>) => void };
 export function ThemePreferences({ onApplied, onOpenConnections }: { onApplied: () => void; onOpenConnections: () => void }) {
-  const text = usePreferencesText(), { t } = useI18n();
-  const { accent, appearance, setAccent, setAppearance, glassEffects, setGlassEffects, resetGlassEffects, exclusiveEffects, launchEffect, setLaunchEffect } = useAccentTheme();
+  const text = usePreferencesText(), { t, language } = useI18n();
+  const pt = language === "pt";
+  const { interfaceTheme, setInterfaceTheme, themeTransitioning, accent, appearance, setAccent, setAppearance, glassEffects, setGlassEffects, resetGlassEffects, exclusiveEffects, launchEffect, setLaunchEffect } = useAccentTheme();
   const launchEffects = [
     { id: "smooth", name: text.smoothEffect, hint: text.smoothHint },
     { id: "shrink", name: text.shrinkEffect, hint: text.shrinkHint },
@@ -26,15 +29,28 @@ export function ThemePreferences({ onApplied, onOpenConnections }: { onApplied: 
     { id: "penguin", name: text.penguinEffect, hint: text.penguinHint },
   ] as const;
   return <>
+    <section data-preference-id="interface-theme">
+      <h2>{pt ? "Temas da interface" : "Interface themes"}</h2>
+      <p>{pt ? "Escolha uma identidade visual para todo o launcher." : "Choose a visual identity for the entire launcher."}</p>
+      {!exclusiveEffects && <p className="preference-effects-locked">{text.exclusiveThemesBeforeLink}{" "}<button type="button" className="preference-connections-link" onClick={onOpenConnections}>{text.connections}</button>{" "}{text.exclusiveEffectsAfterLink}</p>}
+      <div className="interface-theme-cards" role="group" aria-label={pt ? "Temas da interface" : "Interface themes"}>
+        {(["standard", "hackerman"] as const).map(theme => { const locked = !exclusiveEffects && !isFreeInterfaceTheme(theme); return <button type="button" key={theme} disabled={themeTransitioning || locked} title={locked ? text.exclusiveThemesHint : undefined} className={`preference-choice interface-theme-card ${interfaceTheme === theme ? "selected" : ""}`} aria-pressed={interfaceTheme === theme} onClick={() => { setInterfaceTheme(theme); onApplied(); }}>
+          <span className={`interface-theme-sample ${theme}`} aria-hidden="true">{theme === "hackerman" ? ">_ HACKERMAN" : "PELiGAMES"}</span>
+          <strong>{theme === "hackerman" ? "Hackerman" : pt ? "Padrão" : "Standard"}{locked && <svg className="preference-effect-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-label={text.lockedTheme}><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>}</strong>
+          <small>{theme === "hackerman" ? pt ? "Preto e verde terminal, chuva digital e tela retrô." : "Black and terminal green, digital rain and a retro screen." : pt ? "Interface original com suas cores e aparência favoritas." : "Original interface with your preferred colors and appearance."}</small>
+        </button>; })}
+      </div>
+      {interfaceTheme === "hackerman" && <p>{pt ? "Hackerman usa sua própria paleta escura. Suas cores e aparência anteriores ficam guardadas no tema Padrão." : "Hackerman uses its own dark palette. Your previous colors and appearance are preserved in Standard."}</p>}
+    </section>
     <h2>{text.themes}</h2><p>{text.themesHint}</p>
     <div data-preference-id="themes" className="preference-theme-options">
-      {(["dark", "light"] as const).map(theme => <button type="button" key={theme} className={`preference-choice ${appearance === theme ? "selected" : ""}`} aria-pressed={appearance === theme} onClick={() => { setAppearance(theme); onApplied(); }}>
+      {(["dark", "light"] as const).map(theme => <button type="button" key={theme} disabled={interfaceTheme === "hackerman" || themeTransitioning} className={`preference-choice ${appearance === theme ? "selected" : ""}`} aria-pressed={appearance === theme} onClick={() => { setAppearance(theme); onApplied(); }}>
         <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">{theme === "dark" ? <path d="M20.9 13a9 9 0 0 1-9.9-9.9A9 9 0 1 0 20.9 13Z"/> : <><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l2 2m10 10 2 2M5 19l2-2m10-10 2-2"/></>}</svg>
         <span><strong>{t("theme", theme)}</strong><small>{theme === "dark" ? text.darkHint : text.lightHint}</small></span><i className="preference-radio"/>
       </button>)}
     </div>
     <h3>{text.accent}</h3><div data-preference-id="accent" className="preference-swatches" role="group" aria-label={text.accent}>
-      {ACCENT_THEMES.map(theme => <button type="button" key={theme.id} aria-label={t("theme", theme.id)} title={t("theme", theme.id)} aria-pressed={accent === theme.id} style={{ background: theme.color }} onClick={() => { setAccent(theme.id); onApplied(); }}>{accent === theme.id && <MenuIcon name="check"/>}</button>)}
+      {ACCENT_THEMES.map(theme => <button type="button" key={theme.id} disabled={interfaceTheme === "hackerman" || themeTransitioning} aria-label={t("theme", theme.id)} title={t("theme", theme.id)} aria-pressed={accent === theme.id} style={{ background: theme.color }} onClick={() => { setAccent(theme.id); onApplied(); }}>{accent === theme.id && <MenuIcon name="check"/>}</button>)}
     </div>
     <section className="preference-glass-settings">
       <h3>{text.glass}</h3><p>{text.glassHint}</p>
@@ -73,11 +89,33 @@ export function ModPreferences({ disabled, onUpdate, onWizard, onClear }: { disa
     <section className="preference-section"><h3>{text.modTools}</h3><div className="preference-tool-buttons"><button type="button" data-preference-id="setup" disabled={disabled} onClick={onWizard}><MenuIcon name="repair"/>{t("settings", "reset")}</button><button type="button" data-preference-id="clear-cache" className="danger" disabled={disabled} onClick={onClear}><MenuIcon name="trash"/>{t("gameCache", "clear")}</button></div></section>
   </>;
 }
-export function ProtonPreferences({ config, disabled, save, onBusy, focusRef }: ConfigProps & { onBusy: (busy: boolean) => void; focusRef: RefObject<HTMLInputElement | null> }) {
+export function ProtonPreferences({ config, disabled, save, onBusy, focusRef, onConfirmationChange }: ConfigProps & { onBusy: (busy: boolean) => void; focusRef: RefObject<HTMLInputElement | null>; onConfirmationChange: (open: boolean) => void }) {
   const text = usePreferencesText();
+  const [confirmSteam, setConfirmSteam] = useState(false);
+  const cancelSteamRef = useRef<HTMLButtonElement>(null);
+  const confirmationCallback = useRef(onConfirmationChange);
+  confirmationCallback.current = onConfirmationChange;
+  useEffect(() => { confirmationCallback.current(confirmSteam); return () => confirmationCallback.current(false); }, [confirmSteam]);
+  useEffect(() => {
+    if (!confirmSteam) return;
+    cancelSteamRef.current?.focus({ preventScroll:true });
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { event.preventDefault(); event.stopImmediatePropagation(); setConfirmSteam(false); focusRef.current?.focus({ preventScroll:true }); }
+      if (event.key === "Tab") {
+        const controls = cancelSteamRef.current?.closest('.modal-content')?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)');
+        if (!controls?.length) return;
+        const first = controls[0], last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
+    };
+    window.addEventListener("keydown", escape, true);
+    return () => window.removeEventListener("keydown", escape, true);
+  }, [confirmSteam, focusRef]);
   return <><h2>{text.protons}</h2><h3>{text.distribution}</h3><p>{text.distributionHint}</p>
     <div data-preference-id="proton-family"><ProtonDistributionCards disabled={disabled} onBusy={onBusy}/></div>
-    <section className="preference-section"><h3>{text.steam}</h3><label data-preference-id="steam-scan" className="preference-switch"><input ref={focusRef} type="checkbox" checked={Boolean(config.scan_steam_protons)} disabled={disabled} onChange={event => save({ scan_steam_protons: event.target.checked })}/><span className="preference-switch-track"/><span>{text.steamScan}<small>{text.steamHint}</small></span></label></section>
+    <section className="preference-section"><h3>{text.steam}</h3><label data-preference-id="steam-scan" className="preference-switch"><input ref={focusRef} type="checkbox" checked={Boolean(config.scan_steam_protons)} disabled={disabled} onChange={event => { if (event.target.checked) setConfirmSteam(true); else save({ scan_steam_protons:false }); }}/><span className="preference-switch-track"/><span>{text.steamScan}<small>{text.steamHint}</small></span></label></section>
+    {confirmSteam && <ConfirmModal title={text.steamConfirmTitle} message={text.steamConfirmMessage} confirmText={text.steamConfirmEnable} cancelText={text.steamConfirmCancel} cancelButtonRef={cancelSteamRef} busy={disabled} onCancel={() => { setConfirmSteam(false); focusRef.current?.focus({ preventScroll:true }); }} onConfirm={() => { if (disabled) return; setConfirmSteam(false); save({ scan_steam_protons:true }); }}/>}
   </>;
 }
 export function CoverPreferences({ config, disabled, save, focusRef, onError }: ConfigProps & { focusRef: RefObject<HTMLInputElement | null>; onError: (error: string) => void }) {

@@ -1,0 +1,175 @@
+/* Hackerman is a complete skin; the standard palette remains untouched. */
+:root[data-interface-theme="hackerman"] {
+  font-size:16px;
+  color-scheme: dark;
+  color: #c2ddc9;
+  --input-bg:#07120c;
+  --text-primary:#c2ddc9;
+  --text-secondary:#89aa93;
+  --glass-base-start: 4, 16, 10;
+  --glass-base-end: 5, 12, 8;
+  --glass-neutral-border: 72, 116, 83;
+  --glass-corner-fill: .12;
+  --glass-shadow: rgba(0, 0, 0, .45);
+  --tone-0c0207: #08140d;
+  --tone-0c1120: #08140d;
+  --tone-10b981: #89aa93;
+  --tone-111111: #08140d;
+  --tone-12121b: #08140d;
+  --tone-151422: #08140d;
+  --tone-160b12: #08140d;
+  --tone-169bff: #61b87e;
+  --tone-170a12: #08140d;
+  --tone-171722: #08140d;
+  --tone-180d1d: #08140d;
+  --tone-1e1b4b: #08140d;
+  --tone-1e1e2f: #08140d;
+  --tone-1e293b: #08140d;
+  --tone-202330: #08140d;
+  --tone-221a29: #08140d;
+  --tone-23232e: #08140d;
+  --tone-250c10: #08140d;
+  --tone-262631: #08140d;
+  --tone-292936: #08140d;
+  --tone-343442: #08140d;
+  --tone-34d399: #c2ddc9;
+  --tone-40131c: #08140d;
+  --tone-451111: #08140d;
+  --tone-47b9fc: #61b87e;
+  --tone-60a5fa: #61b87e;
+  --tone-64748b: #89aa93;
+  --tone-6b7280: #89aa93;
+  --tone-6ee7b7: #c2ddc9;
+  --tone-87aeb5: #89aa93;
+  --tone-8c98b1: #61b87e;
+  --tone-8faca8: #89aa93;
+  --tone-93c5fd: #61b87e;
+  --tone-94a3b8: #89aa93;
+  --tone-99a9c7: #61b87e;
+  --tone-9ca3af: #89aa93;
+  --tone-a7b7cb: #c2ddc9;
+  --tone-a7f3d0: #c2ddc9;
+  --tone-a9aec0: #89aa93;
+  --tone-aaaaaa: #89aa93;
+  --tone-aab0c0: #89aa93;
+  --tone-aab6ce: #c2ddc9;
+  --tone-aebbd3: #c2ddc9;
+  --tone-b2c4e5: #61b87e;
+  --tone-b3c0dd: #c2ddc9;
+  --tone-b6c2dc: #c2ddc9;
+  --tone-b8c3db: #c2ddc9;
+  --tone-b9c4dc: #c2ddc9;
+  --tone-c5cbd8: #c2ddc9;
+  --tone-c7a1fa: #61b87e;
+  --tone-cbd5e1: #c2ddc9;
+  --tone-d5d8eb: #c2ddc9;
+  --tone-d6dff4: #c2ddc9;
+  --tone-ded1ce: #c2ddc9;
+  --tone-e2e5ef: #c2ddc9;
+  --tone-e2e8f0: #c2ddc9;
+  --tone-e9edf9: #c2ddc9;
+  --tone-edf0fd: #c2ddc9;
+  --tone-edf4ff: #c2ddc9;
+  --tone-f1f1f1: #c2ddc9;
+  --tone-f1f5f9: #c2ddc9;
+  --tone-f2f3fb: #c2ddc9;
+  --tone-f5d66f: #c2ddc9;
+  --tone-f8fafc: #c2ddc9;
+  --tone-ffe1cf: #c2ddc9;
+  --tone-ffe2c0: #c2ddc9;
+  --tone-ffffff: #c2ddc9;
+  --surface-0-80-75: 8, 22, 14;
+  --surface-10-5-10: 8, 22, 14;
+  --surface-12-17-32: 8, 22, 14;
+  --surface-13-18-30: 8, 22, 14;
+  --surface-15-10-28: 8, 22, 14;
+  --surface-15-15-26: 8, 22, 14;
+  --surface-15-18-32: 8, 22, 14;
+  --surface-15-20-32: 8, 22, 14;
+  --surface-16-24-39: 8, 22, 14;
+  --surface-19-13-27: 8, 22, 14;
+  --surface-20-20-20: 8, 22, 14;
+  --surface-20-20-25: 8, 22, 14;
+  --surface-23-13-27: 8, 22, 14;
+  --surface-25-15-45: 8, 22, 14;
+  --surface-255-255-255: 172, 205, 181;
+  --surface-26-24-38: 8, 22, 14;
+  --surface-26-26-26: 8, 22, 14;
+  --surface-35-20-65: 8, 22, 14;
+  --surface-35-32-45: 8, 22, 14;
+  --surface-64-52-76: 8, 22, 14;
+  --surface-7-10-20: 8, 22, 14;
+}
+:root[data-interface-theme="hackerman"] body { background:#020905; }
+:root[data-interface-theme="hackerman"] body::before { background-image:none; filter:none; }
+:root[data-interface-theme="hackerman"] .ambient-background { visibility:hidden; }
+:root[data-interface-theme="hackerman"] .app-wrapper { background:rgba(3,12,7,.64); backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px); }
+:root[data-interface-theme="hackerman"][data-appearance="dark"] :is(.menu-glass-panel,.dialog-popover,.modal-content) {
+  --glass-base-start:4,16,10; --glass-base-end:5,12,8; --glass-neutral-border:72,116,83;
+}
+:root[data-interface-theme="hackerman"] .menu-glass-panel { --glass-opacity-start:.62; --glass-opacity-end:.54; }
+:root[data-interface-theme="hackerman"] :is(body, body *):not(svg):not(svg *) {
+  font-family:"Jersey 10", monospace !important;
+  font-synthesis:none;
+}
+:root[data-interface-theme="hackerman"] :is(h1,h2,h3,h4,strong,button) { font-weight:400; }
+/* Keep rem/em spacing on the standard scale; enlarge glyphs locally with
+   compact line boxes so controls do not grow along with the typography. */
+:root[data-interface-theme="hackerman"] body { font-size:16px; }
+:root[data-interface-theme="hackerman"] :is(button,input,textarea,select,label,p,a,li,dt,dd,pre,code) {
+  font-size:max(20px,1em) !important;
+}
+:root[data-interface-theme="hackerman"] :is(span,small,strong) {
+  font-size:max(18px,1em) !important;
+}
+:root[data-interface-theme="hackerman"] :is(h1,h2,h3,h4) { font-size:max(22px,1em) !important; }
+:root[data-interface-theme="hackerman"] .titlebar-title { font-size:26px !important; }
+:root[data-interface-theme="hackerman"] :is(button,input,select) { line-height:.95; }
+:root[data-interface-theme="hackerman"] :is(p,small,label,li,dt,dd,textarea) { line-height:1.2; }
+:root[data-interface-theme="hackerman"] .nexus-sidebar-action-label { line-height:1.05; }
+:root[data-interface-theme="hackerman"] .game-action-stack button:is(.nexus-sidebar-launch,.nexus-sidebar-install,.nexus-sidebar-report) {
+  padding:6px !important; gap:4px !important;
+}
+:root[data-interface-theme="hackerman"] .game-action-stack button.nexus-sidebar-launch { min-height:54px; }
+:root[data-interface-theme="hackerman"] .game-action-stack button:is(.nexus-sidebar-install,.nexus-sidebar-report) {
+  min-height:40px; font-size:18px !important;
+}
+:root[data-interface-theme="hackerman"] :is(.nexus-sidebar-install,.nexus-sidebar-report) > .nexus-sidebar-action-label { font-size:18px !important; white-space:nowrap; }
+:root[data-interface-theme="hackerman"] .nexus-mod-title { flex-wrap:nowrap; }
+:root[data-interface-theme="hackerman"] .nexus-mod-title strong { flex:1; font-size:18px !important; line-height:1.1; }
+:root[data-interface-theme="hackerman"] :is(.nexus-mod-position,.nexus-mod-version,.nexus-installed-mod-info small) { font-size:17px !important; }
+:root[data-interface-theme="hackerman"] .preferences-categories strong { font-size:18px !important; line-height:1; }
+:root[data-interface-theme="hackerman"] :is(.preferences-categories,.preference-choice) small { font-size:17px !important; line-height:1.1; margin-top:2px; }
+:root[data-interface-theme="hackerman"] .preference-choice:not(.interface-theme-card):not(.preference-launch-effect) { padding:6px 14px; }
+:root[data-interface-theme="hackerman"] .game-cover-column .game-back-button { font-size:16px !important; }
+:root[data-interface-theme="hackerman"] .game-action-stack .game-folder-link { font-size:16px !important; margin-top:-4px !important; line-height:1.2; }
+/* Small, targeted readability adjustments; no change to the global scale. */
+:root[data-interface-theme="hackerman"] :is([role="tooltip"],.info-tooltip,.model-source-tooltip,.launcher-update-tooltip,.installation-name-hint) { font-size:16px !important; line-height:1.35; }
+:root[data-interface-theme="hackerman"] .modal-body { font-size:18px !important; line-height:1.45 !important; }
+:root[data-interface-theme="hackerman"] .nexus-mod-description { font-size:17px !important; line-height:1.4; }
+:root[data-interface-theme="hackerman"] .nexus-old-files-toggle { font-size:16px !important; line-height:1.3; }
+:root[data-interface-theme="hackerman"] :is(input,textarea,select) { caret-color:#77bd8d; }
+:root[data-interface-theme="hackerman"] :is(.custom-select-trigger,.neural-startup-switch) { background:rgba(6,21,12,.8); border-color:rgba(var(--accent-rgb),.25); }
+:root[data-interface-theme="hackerman"] .neural-startup-switch.enabled { background:rgba(var(--accent-rgb),.1); color:var(--accent-soft); }
+:root[data-interface-theme="hackerman"] .neural-switch-track { background:#35523e; }
+:root[data-interface-theme="hackerman"] .enabled .neural-switch-track { background:var(--accent-button); }
+:root[data-interface-theme="hackerman"] :is(.app-title,.game-title,.dialog-titlebar-title) { color:#b5d8bf; }
+.hackerman-rain { position:fixed; inset:0; width:100%; height:100%; z-index:-1; pointer-events:none; opacity:.7; }
+.hackerman-crt { position:fixed; inset:0; z-index:2147483600; pointer-events:none; border-radius:16px;
+  background:repeating-linear-gradient(to bottom,transparent 0 3px,rgba(0,0,0,.045) 3px 4px),radial-gradient(ellipse at center,transparent 65%,rgba(0,0,0,.24) 100%);
+}
+.hackerman-crt::after { content:""; position:absolute; inset:0; background:url('/textures/matrix-crt-noise.svg') repeat; background-size:180px 180px; opacity:.035; }
+.theme-transition-status { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2147483601; pointer-events:none; width:max-content; max-width:calc(100vw - 40px); box-sizing:border-box; padding:14px 20px; border:1px solid rgba(var(--accent-rgb),.5); border-radius:7px; background:linear-gradient(125deg,rgba(var(--glass-base-start),.96),rgba(var(--glass-base-end),.96)); color:var(--accent-soft); font:17px/1.3 Inter,system-ui,sans-serif; text-align:center; view-transition-name:theme-status; }
+:root[data-interface-theme="hackerman"] .theme-transition-status { font-family:"Jersey 10",monospace; font-size:22px; line-height:1.2; }
+.interface-theme-reveal::view-transition-group(theme-status) { animation:none; z-index:1; }
+.interface-theme-reveal::view-transition-old(theme-status) { animation:none; opacity:0; }
+.interface-theme-reveal::view-transition-new(theme-status) { animation:none; }
+.interface-theme-reveal::view-transition-old(root) { animation:none; }
+.interface-theme-reveal::view-transition-new(root) { animation:hackerman-reveal 1.8s cubic-bezier(.4,0,.2,1) both; }
+@keyframes hackerman-reveal { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0); } }
+.interface-theme-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr)); gap:12px; margin-bottom:24px; }
+.interface-theme-cards .interface-theme-card { display:flex; flex-direction:column; align-items:stretch; gap:8px; text-align:left; }
+.interface-theme-card small { line-height:1.45; }
+.interface-theme-sample { height:72px; display:flex; align-items:center; justify-content:center; border-radius:7px; border:1px solid #477b5660; background:linear-gradient(125deg,#040d08,#12291b); color:#81b993; font:24px "Jersey 10",monospace; letter-spacing:3px; overflow:hidden; }
+.interface-theme-sample.standard { background:linear-gradient(125deg,#0b101e,#182b48); color:#a6c4e8; font-family:system-ui; font-size:15px; letter-spacing:1px; }
+@media(prefers-reduced-motion:reduce) { .interface-theme-reveal::view-transition-new(root) { animation:none; } }

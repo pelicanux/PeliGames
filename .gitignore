@@ -95,3 +95,17 @@ dist-ssr
 
 # Local interface restore snapshots
 /.local-backups/
+
+# Private authentication/automation services and their local configuration
+/tools/discord-auth/
+/tools/report-relay/
+/tools/proton-service/
+.dev.vars
+.dev.vars.*
+.wrangler/
+*.secrets.json
+
+# Local editor settings and unused artwork drafts
+/.vscode/
+/imagem_vetorizada_.svg
+/public/imagem_vetorizada.svg

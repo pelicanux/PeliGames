@@ -1,3 +1,5 @@
+import { MATRIX_PREMIUM_ROOM_ID } from "./services/matrixCommunity";
+import { previewAccount } from "./previewDiscordAccount";
 import { demoLauncher, demoLauncherInvoke } from "./previewLauncherDemo";
 import { orderWorkspaceMods } from "./modules/nexus/dependencyOrder";
 // Visual fixtures only: no Nexus account, downloads or game files are accessed.
@@ -238,6 +240,7 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     }
     case "launch_nexus_game":
     case "stop_nexus_game": {
+      if (command === "launch_nexus_game") await new Promise(resolve => window.setTimeout(resolve, 1800));
       const game = workspace.games.find(g => g.id === args.gameId);
       if (game) game.running = command === "launch_nexus_game";
       return { value: clone(orderWorkspaceMods(workspace)) };
@@ -253,12 +256,15 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "connect_matrix_chat": demoMatrixConnected = true; return {value:null};
     case "disconnect_matrix_chat": demoMatrixConnected = false; return {value:null};
     case "matrix_chat_rooms": return {value:{rooms:[{room_id:"!pNHMqrnxSAmcVFqrgf:matrix.org",name:"PeliGames · Geral"},{room_id:"!preview-help:matrix.org",name:"Ajuda com mods"}]}};
+    case "matrix_chat_premium_access":
+      if (previewAccount() !== "owner") throw new Error("Prévia: acesso premium bloqueado para usuário gratuito.");
+      return {value:{granted:true,room_id:MATRIX_PREMIUM_ROOM_ID,user_id:"@demo-preview:matrix.org"}};
     case "matrix_chat_join": return {value:null};
     case "matrix_chat_sync": {
       // Initial batch at once; later ones wait like the real long poll.
       if (args.since) { for (let waited = 0; waited < 30000 && !demoMatrixSent.length; waited += 500) await new Promise(resolve => setTimeout(resolve, 500)); }
       const events = args.since ? demoMatrixSent : demoMatrixMessages; demoMatrixSent = [];
-      return {value:{next_batch:`preview-${Date.now()}`,user_id:"@demo-preview:matrix.org",leave:[],ignored:args.since ? null : [],join:{"!pNHMqrnxSAmcVFqrgf:matrix.org":{events,prev_batch:args.since ? null : "preview-older",limited:false,encrypted:null,power:demoMatrixPower,names:{"@pelicanux:matrix.org":"Pelicano","@demo-preview:matrix.org":"Você (prévia)"}},"!preview-help:matrix.org":{events:[],prev_batch:null,limited:false,encrypted:null,power:demoMatrixPower,names:{}}}}};
+      return {value:{next_batch:`preview-${Date.now()}`,user_id:"@demo-preview:matrix.org",leave:[],ignored:args.since ? null : [],join:{...(previewAccount() === "owner" ? {[MATRIX_PREMIUM_ROOM_ID]:{events:[{kind:"message",id:"$premium-welcome",sender:"@pelicanux:matrix.org",ts:Date.now(),msgtype:"m.notice",body:"Suporte premium liberado automaticamente. Conte sua dúvida sobre jogos, mods ou Linux."}],prev_batch:null,limited:false,encrypted:null,power:demoMatrixPower,names:{}}} : {}),"!pNHMqrnxSAmcVFqrgf:matrix.org":{events,prev_batch:args.since ? null : "preview-older",limited:false,encrypted:null,power:demoMatrixPower,names:{"@pelicanux:matrix.org":"Pelicano","@demo-preview:matrix.org":"Você (prévia)"}},"!preview-help:matrix.org":{events:[],prev_batch:null,limited:false,encrypted:null,power:demoMatrixPower,names:{}}}}};
     }
     case "matrix_chat_history": return {value:{events:[{kind:"message",id:"$preview-matrix-older",sender:"@pelicanux:matrix.org",ts:Date.now()-3600000,msgtype:"m.notice",body:"Histórico de demonstração: mensagem anterior à conversa atual."}],end:null,names:{"@pelicanux:matrix.org":"Pelicano"}}};
     case "matrix_chat_ignore": case "matrix_chat_report": case "matrix_chat_moderate": throw new Error("Prévia visual: nada é enviado ao Matrix.");
@@ -266,9 +272,11 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "open_matrix_community": throw new Error("A janela do Element está disponível na versão nativa. A preview não faz login real.");
     case "load_nexus_account": return { value: { user_id: 0, name: "Demonstração visual", is_premium: false, is_supporter: false } };
     case "official_build_status": return {value:"unknown"};
+    case "cached_discord_account":
     case "load_discord_account": return { value: { configured: false, pending: false, offline: false, account: null } };
     case "connect_discord_account": throw new Error("O serviço Discord ainda não foi configurado. A preview não faz login real.");
     case "disconnect_discord_account": return { value: null };
+    case "nexus_backup_status": return { value: [] };
     case "register_nexus_handler": return { value: null };
     case "nexus_report_relay_configured": return { value: true };
     case "send_nexus_report": throw new Error("Prévia visual: nenhum relatório é enviado ao Discord.");

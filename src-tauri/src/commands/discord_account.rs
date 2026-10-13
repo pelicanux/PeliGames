@@ -81,6 +81,16 @@ pub async fn load_discord_account() -> Result<Status, String> {
         }
     }
 }
+/// The last verified account kept in the keyring, without contacting the
+/// relay: a still-valid signed entitlement applies at once when the launcher
+/// opens, before the online check (exclusive themes do not flash).
+#[tauri::command]
+pub async fn cached_discord_account() -> Result<Status, String> {
+    let Some(stored) = session().await? else {
+        return Ok(Status { configured: relay().is_ok(), pending: false, offline: true, account: None, session_id: None, entitlement: None });
+    };
+    Ok(Status { configured: true, pending: false, offline: true, account: stored.account, session_id: Some(stored.id), entitlement: stored.entitlement })
+}
 #[tauri::command]
 pub async fn connect_discord_account(app: tauri::AppHandle) -> Result<(), String> {
     let _guard = LOCK.lock().await;
@@ -109,4 +119,23 @@ pub async fn disconnect_discord_account() -> Result<(), String> {
     if let Some(stored) = session().await? { revoke(&stored).await?; }
     credential("clear", None).await?;
     Ok(())
+}
+
+/// Only the native Matrix bridge uses these fixed routes. Session secrets never
+/// reach the webview; the Worker independently checks Discord membership.
+pub(super) async fn matrix_premium_request(path: &str, body: &serde_json::Value) -> Result<serde_json::Value, String> {
+    if !matches!(path, "matrix/challenge" | "matrix/confirm") { return Err("Operação premium inválida.".into()); }
+    let _guard = LOCK.lock().await;
+    let stored = session().await?.ok_or("Entre com Discord em Conexões para liberar o suporte premium.")?;
+    let url = relay()?.join(path).map_err(|_| "Endereço premium inválido.")?;
+    let response = client()?.post(url).header("X-Session-Id", &stored.id).bearer_auth(&stored.secret).json(body).send().await.map_err(|_| "Sem conexão com o serviço premium. Tente novamente.")?;
+    match response.status() {
+        reqwest::StatusCode::UNAUTHORIZED => return Err("A conexão Discord expirou. Entre novamente em Conexões.".into()),
+        reqwest::StatusCode::FORBIDDEN => return Err("O Discord não confirmou acesso premium ou a confirmação Matrix expirou. Verifique sua conta em Conexões e tente novamente.".into()),
+        reqwest::StatusCode::SERVICE_UNAVAILABLE => return Err("O suporte premium Matrix ainda não está disponível no serviço.".into()),
+        reqwest::StatusCode::TOO_MANY_REQUESTS => return Err("Aguarde um minuto antes de validar novamente.".into()),
+        status if !status.is_success() => return Err("Não foi possível validar o suporte premium. Tente novamente.".into()),
+        _ => {},
+    }
+    response.json().await.map_err(|_| "Resposta premium inválida.".into())
 }

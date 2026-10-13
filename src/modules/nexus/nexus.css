@@ -464,13 +464,12 @@
 }
 .nexus-sidebar-action-label { display:block; min-width:0; flex:0 1 auto; text-align:center; line-height:1.25; }
 .game-action-stack button.nexus-sidebar-launch {
-  display:grid;
-  grid-template-columns:22px minmax(0,1fr) 22px;
-  column-gap:4px !important;
+  display:flex;
+  justify-content:center;
+  gap:4px !important;
 }
-.nexus-sidebar-launch::after { content:""; width:22px; pointer-events:none; }
-.nexus-sidebar-launch > .menu-icon { justify-self:center; }
-.nexus-sidebar-launch > .nexus-sidebar-action-label { justify-self:stretch; }
+.nexus-sidebar-launch::after { content:none; }
+.game-action-stack .nexus-sidebar-launch:not(.nexus-sidebar-stop) > .menu-icon { width:26px; height:26px; flex:0 0 26px; }
 .game-action-stack button.nexus-sidebar-stop {
   display:grid;
   grid-template-columns:1fr max-content 1fr;
@@ -787,3 +786,6 @@
 }
 :root :is(.nexus-mod-tools > .btn-secondary, .nexus-installed-mod-actions .btn-secondary, .nexus-game-tools .btn-secondary):hover:not(:disabled):not([aria-disabled="true"])::before { opacity:.42; }
 :root :is(.nexus-mod-tools > .btn-secondary, .nexus-installed-mod-actions .btn-secondary, .nexus-game-tools .btn-secondary):active:not(:disabled):not([aria-disabled="true"]) { box-shadow:inset 0 2px 5px rgba(0,0,0,.15) !important; }
+.nexus-game-backup-status { display:block; margin-top:6px; font-size:.74rem; line-height:1.35; color:var(--tone-94a3b8,#94a3b8); overflow-wrap:anywhere; }
+.nexus-game-backup-status.is-stale { color:var(--accent-soft,var(--accent)); }
+.nexus-game-backup-status.is-error { color:#ffb4bc; }

@@ -6,11 +6,11 @@ import { MenuIcon } from "./MenuIcon";
 import { changeLocalCover, resetGameCover, reportCoverError } from "../services/customCovers";
 import { canRemoveFromLibrary } from "../services/libraryVisibility";
 import { useI18n } from "../i18n/I18nContext";
-export const GameCoverMenu = forwardRef<HTMLDivElement, { game: GameInfo; x: number; y: number; blocked?: boolean; onClose: () => void; onAction: (action: CoverGameAction, game: GameInfo) => void }>(function GameCoverMenu({ game, x, y, blocked, onClose, onAction }, ref) {
+export const GameCoverMenu = forwardRef<HTMLDivElement, { game: GameInfo; x: number; y: number; blocked?: boolean; running?: boolean; preparing?: boolean; onClose: () => void; onAction: (action: CoverGameAction, game: GameInfo) => void }>(function GameCoverMenu({ game, x, y, blocked, running, preparing, onClose, onAction }, ref) {
   const { t, language } = useI18n();
   const action = (value: CoverGameAction) => { onClose(); onAction(value, game); };
   return <CoverContextMenuPanel ref={ref} x={x} y={y} onClose={onClose}>
-    <CoverGameActions game={game} blocked={blocked} onAction={value => action(value)} />
+    <CoverGameActions game={game} blocked={blocked} running={running} preparing={preparing} onAction={value => action(value)} />
     <SteamGridCoverHint />
     <button onClick={() => { onClose(); void changeLocalCover(game).catch(reportCoverError); }}><MenuIcon name="edit" />{t("gameGrid", "changeCover")}</button>
     <button onClick={() => { onClose(); void resetGameCover(game).catch(reportCoverError); }}><MenuIcon name="repair" />{t("gameGrid", "resetCover")}</button>

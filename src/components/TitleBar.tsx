@@ -42,8 +42,8 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
       style={{
         height: '50px',
         background: 'rgba(var(--surface-26-26-26, 26, 26, 26), 0.4)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
+        backdropFilter: 'blur(24px) saturate(1.2)',
+        WebkitBackdropFilter: 'blur(24px) saturate(1.2)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',

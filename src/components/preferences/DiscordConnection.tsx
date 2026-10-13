@@ -19,8 +19,10 @@ export function DiscordConnection() {
   };
   useEffect(() => {
     active.current = true;
+    const changed = (event: Event) => { if (active.current) setStatus((event as CustomEvent<Status>).detail); };
+    window.addEventListener("discordConnectionChanged", changed);
     void load().catch(() => { if (active.current) setError(pt ? "Não foi possível consultar a conexão Discord." : "Could not check the Discord connection."); });
-    return () => { active.current = false; };
+    return () => { active.current = false; window.removeEventListener("discordConnectionChanged", changed); };
   }, [pt]);
   useEffect(() => {
     if (!status?.pending) return;

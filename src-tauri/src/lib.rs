@@ -117,6 +117,7 @@ fn run_mode(installer: bool) {
             commands::app_updates::cleanup_obsolete_updates(&app_handle);
             if check_build { commands::official_build::verify_in_background(app_handle.clone()); }
             commands::nexus_progress::init(&app_handle);
+            commands::mod_backup::init(&app_handle);
             // Launch logs start empty on every launcher start (disk work off the UI thread).
             std::thread::spawn(commands::nexus_local::reset_session_logs_at_startup);
             Ok(())
@@ -147,6 +148,7 @@ fn run_mode(installer: bool) {
             commands::nexus_account::disconnect_nexus_account,
             commands::discord_account::connect_discord_account,
             commands::discord_account::load_discord_account,
+            commands::discord_account::cached_discord_account,
             commands::discord_account::disconnect_discord_account,
             commands::matrix_community::open_matrix_community,
             commands::matrix_chat::connect_matrix_chat,
@@ -154,6 +156,7 @@ fn run_mode(installer: bool) {
             commands::matrix_chat::matrix_chat_status,
             commands::matrix_chat::matrix_chat_rooms,
             commands::matrix_chat::matrix_chat_join,
+            commands::matrix_chat::matrix_chat_premium_access,
             commands::official_build::official_build_status,
             commands::matrix_chat::matrix_chat_moderate,
             commands::matrix_chat::matrix_chat_sync,
@@ -165,6 +168,7 @@ fn run_mode(installer: bool) {
             commands::matrix_chat::matrix_chat_upload,
             commands::matrix_chat::matrix_chat_image,
             commands::mod_backup::load_mod_backup_settings,
+            commands::mod_backup::nexus_backup_status,
             commands::mod_backup::set_mod_backup_settings,
             commands::mod_backup::set_nexus_game_backup,
             commands::mod_backup::delete_nexus_game_backup,

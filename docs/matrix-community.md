@@ -80,3 +80,24 @@ acesso ao espaço/salas, o envio, o upload e a denúncia.
 Fontes oficiais:
 - https://spec.matrix.org/latest/client-server-api/
 - https://web-docs.element.dev/
+
+
+## Suporte premium automático
+
+A sala `!d6uopxWbqNBgbKYC8uTxjgvzIP4F955uQi3rerKKX2Q` aparece na lista com cadeado
+para usuários sem benefício Discord. O conteúdo/compositor ficam ocultos enquanto
+a autorização não estiver confirmada. As outras salas continuam livres.
+
+Ao abrir o chat com Matrix e Discord conectados, o backend consulta o Worker,
+aceita uma sala temporária de confirmação, envia um nonce com a sessão Matrix local,
+e entrega ao Worker somente o ID desse evento. O Worker confere o remetente e o
+cargo Discord, convida para a sala premium, e o backend aceita o convite. Nenhum
+access token pessoal Matrix passa pelo frontend ou pelo Worker. A sala temporária
+é abandonada/esquecida pelo backend ao final.
+
+A validação local de benefícios decide o estado visual; a autorização real continua
+no Worker e na sala privada Matrix. Erros mantêm a sala bloqueada e oferecem tentar
+novamente. A revalidação diária/remoção roda no Worker mesmo com o launcher fechado.
+A preview owner/free simula os estados; o teste real precisa do aplicativo nativo
+recompilado e das duas contas conectadas. Detalhes em
+`tools/discord-auth/MATRIX-PREMIUM.md`.

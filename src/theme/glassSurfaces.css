@@ -129,9 +129,9 @@
   display: flex; align-items: center; gap: 12px;
   padding: 10px 54px 10px 20px;
   border: 1px solid rgba(var(--accent-rgb), .3);
-  background: linear-gradient(125deg, rgba(var(--glass-base-start), .64), rgba(var(--glass-base-end), .42));
-  backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35);
-  -webkit-backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35);
+  background: linear-gradient(125deg, rgba(var(--glass-base-start), .56), rgba(var(--glass-base-end), .46));
+  backdrop-filter: blur(24px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.2) !important;
   border-radius: inherit;
   box-shadow: inset 0 1px rgba(var(--surface-255-255-255, 255,255,255), .1);
 }
@@ -143,11 +143,35 @@
 }
 :root .dialog-titlebar > .surface-close-button { top: 9px; right: 10px; }
 :root .fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body {
+  /* Keep scrolling controls in one layer below the fixed, blurred header. */
+  position: relative;
+  z-index: 0;
   padding-top: calc(60px + var(--modal-content-padding));
   scroll-padding-top: 72px;
 }
 :root .fixed-glass-frame.has-dialog-titlebar::before { z-index: 6; }
-:root .performance-mode .dialog-titlebar { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgb(var(--glass-base-start)); }
+:root .performance-mode .dialog-titlebar { background: rgb(var(--glass-base-start)); }
+/* Title bars always keep their own blur, independent of window/backdrop sliders. */
+:root :is(.dialog-titlebar,.app-titlebar) {
+  backdrop-filter:blur(24px) saturate(1.2) !important;
+  -webkit-backdrop-filter:blur(24px) saturate(1.2) !important;
+}
+/* Keep the frame blur on a sibling: nested backdrop filters in WebKit can
+   omit scrolling text from the title bar's backdrop capture. */
+:root[data-appearance] .modal-content.fixed-glass-frame.has-dialog-titlebar {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+:root .modal-glass-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  border-radius: inherit;
+  pointer-events: none;
+  backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35);
+  -webkit-backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35);
+}
+:root .performance-mode .modal-glass-backdrop { display: none; }
 
 @media (max-width: 480px) {
   .dialog-titlebar { left: 10px; right: 10px; padding-left: 15px; }
@@ -181,7 +205,7 @@
     0 0 14px rgba(var(--accent-rgb), var(--surface-neon-light, 0));
 }
 :root[data-appearance="dark"] .dialog-titlebar {
-  background: linear-gradient(125deg, rgba(var(--glass-base-start), .28), rgba(var(--glass-base-end), .20));
+  background: linear-gradient(125deg, rgba(var(--glass-base-start), .56), rgba(var(--glass-base-end), .46));
 }
 /* Preferences need a stronger veil over the library so form text stays legible. */
 :root[data-appearance="dark"] .modal-content.preferences-modal,

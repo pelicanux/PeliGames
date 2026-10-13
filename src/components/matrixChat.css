@@ -1,6 +1,21 @@
-.matrix-chat-overlay { z-index:2100; }
-.matrix-chat.modal-content { width:calc(100vw - 40px); max-width:1100px; height:calc(100dvh - 90px); padding:0; }
-.matrix-chat .modal-scroll-body { display:flex; flex-direction:column; min-height:0; }
+.modal-overlay.matrix-chat-overlay { z-index:2100; padding:12px; height:calc(100dvh - 50px); }
+.matrix-chat.modal-content { box-sizing:border-box; width:100%; max-width:100%; height:100%; max-height:100% !important; min-width:min(480px,calc(100vw - 24px)); min-height:min(320px,calc(100dvh - 74px)); padding:0; resize:both; }
+.matrix-chat.modal-content::-webkit-resizer { background:linear-gradient(135deg,transparent 55%,rgba(var(--accent-rgb),.5) 56%,rgba(var(--accent-rgb),.5) 62%,transparent 63%,transparent 73%,rgba(var(--accent-rgb),.7) 74%,rgba(var(--accent-rgb),.7) 80%,transparent 81%); }
+:root .matrix-chat.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { display:flex; flex-direction:column; flex:1; min-height:0; padding:72px 10px 10px; overflow:hidden; }
+.matrix-terminal-status,.matrix-terminal-footer,.matrix-terminal-compose,.matrix-terminal-room > header { flex-shrink:0; }
+.matrix-terminal-frame { position:relative; isolation:isolate; display:flex; flex-direction:column; flex:1; min-height:0; min-width:0; overflow:hidden; border-radius:0; border:0; background:#090e12; }
+.matrix-crt-outline { position:absolute; inset:0; width:100%; height:100%; z-index:4; pointer-events:none; stroke:rgba(var(--accent-rgb),.75); stroke-width:2px; }
+.matrix-crt-definitions { position:absolute; pointer-events:none; }
+.matrix-crt-screen { display:flex; flex-direction:column; flex:1; min-height:0; min-width:0; padding:clamp(30px,5.5vh,44px) 3%; box-sizing:border-box; }
+.matrix-crt-screen > .matrix-terminal-status { padding-left:5%; padding-right:5%; }
+.matrix-crt-screen > .matrix-terminal-footer { padding-left:5%; padding-right:5%; }
+/* Small, cached noise tile; slow stepped drift rather than continuous repaint. */
+.matrix-terminal-frame::before { content:""; position:absolute; inset:0; z-index:2; pointer-events:none; border-radius:inherit; background:url("/textures/matrix-crt-noise.svg") repeat; opacity:.075; animation:matrix-crt-noise 1.2s steps(1,end) infinite; }
+/* Curved-glass illusion: central reflection, dark peripheral glass and scanlines. */
+.matrix-terminal-frame::after { content:""; position:absolute; inset:0; z-index:3; pointer-events:none; border-radius:inherit; box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.12),inset 0 0 32px 4px #0009; background:radial-gradient(ellipse 110% 75% at 50% 0,rgba(196,230,220,.045),transparent 56%),radial-gradient(ellipse at center,transparent 44%,rgba(0,0,0,.18) 76%,rgba(0,0,0,.55) 100%),repeating-linear-gradient(to bottom,transparent 0 2px,rgba(0,0,0,.12) 2px 3px),radial-gradient(ellipse 90px 70px at 0 0,rgba(var(--accent-rgb),.22),transparent 80%),radial-gradient(ellipse 90px 70px at 100% 100%,rgba(var(--accent-rgb),.22),transparent 80%); }
+@keyframes matrix-crt-noise { 0%,100% { background-position:0 0; } 25% { background-position:31px 17px; } 50% { background-position:-19px 47px; } 75% { background-position:53px -23px; } }
+@media (prefers-reduced-motion:reduce) { .matrix-terminal-frame::before { animation:none; } }
+.performance-mode .matrix-terminal-frame::before { display:none; }
 .matrix-terminal-tag { font-family:"Jersey 10",monospace; color:var(--accent); font-size:1.2rem; margin-left:8px; }
 .matrix-terminal-status,.matrix-terminal-layout,.matrix-terminal-welcome,.matrix-terminal-footer,.matrix-terminal-error { font-family:"Jersey 10",monospace; }
 .matrix-terminal-status { display:flex; align-items:center; gap:10px; padding:12px 18px; color:#b4ffcd; background:#080d11; border-bottom:1px solid #24473b; font-size:1.1rem; }
@@ -9,6 +24,11 @@
 .matrix-terminal-layout { display:grid; grid-template-columns:190px minmax(0,1fr); flex:1; min-height:0; background:#090e12; color:#d3e3db; }
 .matrix-terminal-rooms { padding:14px; border-right:1px solid #24473b; display:flex; flex-direction:column; gap:8px; overflow:auto; }
 .matrix-terminal-rooms h3 { color:#93a89e; font:16px "Jersey 10",monospace; margin:0 0 8px; }
+.matrix-rooms-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.matrix-rooms-heading h3 { margin:0; }
+.matrix-rooms-heading button { padding:4px; display:grid; place-items:center; }
+.matrix-rooms-heading .menu-icon { width:16px; height:16px; }
+.matrix-rooms-demo { color:#82948c; font:14px "Jersey 10",monospace; }
 .matrix-terminal-rooms button { border:1px solid transparent; background:transparent; color:#a4b9ae; padding:8px; text-align:left; font:18px "Jersey 10",monospace; word-break:break-word; }
 .matrix-terminal-rooms button:hover,.matrix-terminal-rooms button[aria-current=page] { border-color:#38644f; color:#b4ffcd; background:#14251e; }
 .matrix-terminal-rooms .matrix-terminal-disconnect { margin-top:auto; color:#e398a3; }
@@ -28,7 +48,30 @@
 .matrix-terminal-compose label { color:#7ba88e; font:15px "Jersey 10",monospace; }
 .matrix-terminal-compose > div { display:flex; align-items:center; gap:10px; margin-top:6px; }
 .matrix-terminal-compose textarea { flex:1; min-width:0; resize:vertical; min-height:50px; max-height:120px; background:#080d11; color:#d3e3db; border:1px solid #355440; border-radius:4px; padding:10px; font:19px "Jersey 10",monospace; }
-.matrix-terminal-footer { display:flex; align-items:center; flex-wrap:wrap; justify-content:space-between; gap:10px; padding:10px 16px; background:#080d11; color:#8ba094; font-size:16px; }
+:root .matrix-chat .matrix-terminal-compose textarea:focus {
+  outline:none; border-color:#62b584;
+  box-shadow:0 0 0 1px #62b58455,0 0 8px #62d69418;
+}
+/* Unfilled retro Enter key: its Matrix green stays independent of launcher themes. */
+:root .matrix-chat .matrix-terminal-compose .matrix-send-button {
+  display:grid; place-items:center; flex:0 0 auto;
+  width:72px; height:82px; min-height:0; padding:0; margin:0;
+  background:transparent !important; border:0 !important; border-radius:0;
+  color:#7ba88e !important; box-shadow:none !important; opacity:1;
+  cursor:pointer; transition:color .16s ease,filter .16s ease;
+}
+:root .matrix-chat .matrix-send-button::before,
+:root .matrix-chat .matrix-send-button::after { content:none !important; }
+:root .matrix-chat .matrix-send-button .matrix-enter-key { display:block; width:72px; height:82px; overflow:visible; }
+/* Compensate for the smaller SVG so the Enter label keeps its rendered size. */
+:root .matrix-chat .matrix-enter-key text { font:27.9px "Jersey 10",monospace; }
+:root .matrix-chat .matrix-terminal-compose .matrix-send-button:hover:not(:disabled) {
+  color:#b4ffcd !important; filter:drop-shadow(0 0 4px #62d69455);
+}
+:root .matrix-chat .matrix-send-button:focus-visible { outline:1px solid #7ba88e; outline-offset:3px; border-radius:4px; }
+:root .matrix-chat .matrix-send-button:active:not(:disabled) .matrix-enter-key { transform:translateY(2px); }
+:root .matrix-chat .matrix-terminal-compose .matrix-send-button:disabled { opacity:.45; cursor:not-allowed; filter:none; }
+.matrix-terminal-footer { display:flex; align-items:center; flex-wrap:wrap; justify-content:space-between; gap:10px; padding:10px 28px 10px 16px; background:#080d11; color:#8ba094; font-size:16px; }
 .matrix-terminal-welcome { flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:30px; background:#090e12; color:#b4ffcd; }
 .matrix-terminal-welcome > .menu-icon { width:48px; height:48px; }
 .matrix-terminal-welcome h3 { font:30px "Jersey 10",monospace; }
@@ -54,3 +97,7 @@
 .matrix-terminal-rooms .matrix-terminal-ignored { font-size:15px; color:#8fa59a; }
 .matrix-message-report > strong { flex-basis:100%; color:#b4ffcd; font:17px "Jersey 10",monospace; }
 .matrix-message-report.is-moderation > strong, .matrix-message-actions button.is-moderation { color:#ffb4bc; }
+
+.matrix-premium-gate { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:24px; text-align:center; color:#9db5a7; }
+.matrix-premium-gate h3 { margin:0; font:24px "Jersey 10",monospace; color:#b4ffcd; }
+.matrix-premium-gate p { max-width:460px; margin:0; font:19px/1.4 "Jersey 10",monospace; }
