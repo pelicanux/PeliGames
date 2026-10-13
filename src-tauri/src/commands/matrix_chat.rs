@@ -4,6 +4,8 @@ use serde_json::{json, Value};
 use std::io::{Read, Write};
 use std::time::{Duration, Instant};
 const API: &str = "https://matrix-client.matrix.org";
+const PREMIUM_ROOM: &str = "!d6uopxWbqNBgbKYC8uTxjgvzIP4F955uQi3rerKKX2Q";
+static PREMIUM_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 const ROOM: &str = "!pNHMqrnxSAmcVFqrgf:matrix.org";
 const EXPIRED: &str = "Sua sessão Matrix expirou ou foi encerrada. Entre novamente.";
 static AUTH: tokio::sync::Mutex<bool> = tokio::sync::Mutex::const_new(false);
@@ -52,7 +54,8 @@ async fn get(path: &str, token: &str) -> Result<Option<Value>, String> {
     response.json().await.map(Some).map_err(|_| "Resposta Matrix inválida.".into())
 }
 fn room_path(room: &str) -> Result<String, String> {
-    if !room.starts_with('!') || !room.contains(':') || room.len() > 512 || room.chars().any(char::is_control) { return Err("Sala Matrix inválida.".into()); }
+    // Room version 12 IDs are opaque hashes without the legacy :server suffix.
+    if !room.starts_with('!') || room.len() < 2 || room.len() > 512 || room.chars().any(|c| c.is_control() || c.is_whitespace()) { return Err("Sala Matrix inválida.".into()); }
     Ok(urlencoding::encode(room).into_owned())
 }
 fn event_path(event: &str) -> Result<String, String> {
@@ -383,6 +386,15 @@ pub async fn matrix_chat_image(mxc: String) -> Result<Option<String>,String> {
 mod tests {
     use super::*;
     #[test]
+    fn room_ids_accept_legacy_and_domainless_formats() {
+        assert!(room_path("!RFQsmEfiISJgSfldHh:matrix.org").is_ok());
+        assert!(room_path("!_HDT87EAvHDgjlVDmZT0Ny2nRLbBwRHjGw6xLoE3sdY").is_ok());
+        for invalid in ["", "!", "#teste2323:matrix.org", "!room with spaces", "!room\n"] {
+            assert!(room_path(invalid).is_err(), "accepted invalid room ID: {invalid:?}");
+        }
+        assert!(room_path(&format!("!{}", "a".repeat(512))).is_err());
+    }
+    #[test]
     fn timeline_events_become_messages_edits_and_removals() {
         let message = json!({"type":"m.room.message","event_id":"$1","sender":"@ana:matrix.org","origin_server_ts":5,
             "content":{"msgtype":"m.text","body":"> <@bia:matrix.org> testou o mod?\n\nTestei, funciona!","m.relates_to":{"m.in_reply_to":{"event_id":"$0"}}}});
@@ -403,4 +415,46 @@ mod tests {
         assert_eq!((power["kick"].as_i64(), power["ban"].as_i64(), power["users"]["@mod:matrix.org"].as_i64()), (Some(75), Some(50), Some(50)));
         assert!(room_path("#alias:matrix.org").is_err() && event_path("$abc").is_ok() && !user_valid("ana"));
     }
+}
+
+/// Prove ownership by sending a short-lived nonce with the local Matrix session.
+/// Neither the personal Matrix token nor the Discord session secret enters JS.
+#[tauri::command]
+pub async fn matrix_chat_premium_access() -> Result<Value, String> {
+    let _guard = PREMIUM_LOCK.lock().await;
+    let data = session().await?;
+    let response = super::discord_account::matrix_premium_request("matrix/challenge", &json!({"user_id":data.user_id})).await?;
+    let mut proof_room: Option<String> = None;
+    let result: Result<Value, String> = async {
+        let grant = if response["granted"] == true { response } else {
+            let challenge = &response["challenge"];
+            let challenge_room = challenge["room_id"].as_str().ok_or("Confirmação Matrix inválida.")?;
+            if challenge["user_id"].as_str() != Some(data.user_id.as_str()) || challenge_room == PREMIUM_ROOM || challenge_room == ROOM {
+                return Err("A sessão Discord está vinculada a outra conta Matrix. Reconecte o Discord para trocar a conta.".into());
+            }
+            let encoded = room_path(challenge_room)?;
+            let nonce = challenge["body"].as_str().filter(|value| value.starts_with("PELiGAMES_VERIFY_") && value.len() < 128).ok_or("Confirmação Matrix inválida.")?;
+            matrix_chat_join(challenge_room.to_owned()).await?;
+            proof_room = Some(encoded.clone());
+            if encrypted(&encoded, &data.access_token).await? { return Err("A sala de confirmação não pode ser criptografada.".into()); }
+            let sent = checked(client()?.put(format!("{API}/_matrix/client/v3/rooms/{encoded}/send/m.room.message/{}",uuid::Uuid::new_v4())).bearer_auth(&data.access_token).json(&json!({"msgtype":"m.text","body":nonce})).send().await.map_err(|_| "Não foi possível confirmar sua conta Matrix.")?).await?;
+            if !sent.status().is_success() { return Err("Não foi possível confirmar sua conta Matrix.".into()); }
+            let event: Value = sent.json().await.map_err(|_| "Confirmação Matrix inválida.")?;
+            let event_id = event["event_id"].as_str().ok_or("Confirmação Matrix inválida.")?;
+            super::discord_account::matrix_premium_request("matrix/confirm", &json!({"event_id":event_id})).await?
+        };
+        if grant["granted"] != true || grant["room_id"].as_str() != Some(PREMIUM_ROOM) || grant["user_id"].as_str() != Some(data.user_id.as_str()) {
+            return Err("A autorização premium pertence a outra sala ou conta Matrix. Reconecte o Discord em Conexões.".into());
+        }
+        if current().await?.as_ref().map(|session| &session.user_id) != Some(&data.user_id) { return Err("A conta Matrix mudou durante a confirmação. Tente novamente.".into()); }
+        matrix_chat_join(PREMIUM_ROOM.to_owned()).await?;
+        Ok(json!({"room_id":PREMIUM_ROOM,"user_id":data.user_id,"granted":true}))
+    }.await;
+    if let Some(encoded) = proof_room {
+        // Best-effort cleanup uses the captured session, not a newly signed-in account.
+        for action in ["leave", "forget"] {
+            let _ = client()?.post(format!("{API}/_matrix/client/v3/rooms/{encoded}/{action}")).bearer_auth(&data.access_token).json(&json!({})).send().await;
+        }
+    }
+    result
 }

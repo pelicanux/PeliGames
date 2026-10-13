@@ -36,6 +36,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
   }, []);
   const displayedPage = page === "home" && wideLayout ? "interface" : page;
   const [backendArch, setBackendArch] = useState(initialBackendArch);
+  const [protonConfirmationOpen, setProtonConfirmationOpen] = useState(false);
   const [downloadBusy, setDownloadBusy] = useState(false), [actionError, setActionError] = useState("");
   const [showLauncherLogs, setShowLauncherLogs] = useState(false);
   const [notice, setNotice] = useState("");
@@ -48,7 +49,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
   const busy = preferences.saving || downloadBusy || clearingCache;
   useEffect(() => { setBackendArch(initialBackendArch); setPage(initialSection === "general" ? "home" : initialSection); }, [initialSection, initialBackendArch]);
   useEffect(() => { onBusyChange?.(busy); return () => onBusyChange?.(false); }, [busy, onBusyChange]);
-  const close = () => { if (!busy && !preferences.isPending() && !cacheDialog && !showLauncherLogs) onClose(); };
+  const close = () => { if (!busy && !preferences.isPending() && !cacheDialog && !showLauncherLogs && !protonConfirmationOpen) onClose(); };
   const parent: Page = page === "backendUpdate" ? "mods" : "home";
   const back = () => { if (!busy && !preferences.isPending()) { setPage(parent); setActionError(""); } };
   useEffect(() => {
@@ -64,10 +65,10 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
   }, [preferences.ready, initialSection, page]);
   useEffect(() => {
     const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !cacheDialog && !showLauncherLogs) { event.stopImmediatePropagation(); if (search) { setSearch(""); return; } if (!busy && !preferences.isPending()) { if (page === "home" || (wideLayout && parent === "home")) onClose(); else setPage(parent); } }
+      if (event.key === "Escape" && !cacheDialog && !showLauncherLogs && !protonConfirmationOpen) { event.stopImmediatePropagation(); if (search) { setSearch(""); return; } if (!busy && !preferences.isPending()) { if (page === "home" || (wideLayout && parent === "home")) onClose(); else setPage(parent); } }
     };
     window.addEventListener("keydown", escape, true); return () => window.removeEventListener("keydown", escape, true);
-  }, [busy, cacheDialog, showLauncherLogs, page, parent, onClose, search, wideLayout]);
+  }, [busy, cacheDialog, showLauncherLogs, protonConfirmationOpen, page, parent, onClose, search, wideLayout]);
   const clearCache = async () => {
     if (clearingCache) return;
     setClearingCache(true);
@@ -88,6 +89,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
   const query = normalize(search.trim());
   // Index each real control separately; category names provide context.
   const options = [
+    { id: "interface-theme", page: "interface", title: "Hackerman", keywords: "temas theme Matrix Fallout retro hacker terminal verde green pixel" },
     { id: "connection-nexus", page: "connections", title: "Nexus Mods", keywords: text.connectionsSearch },
     { id: "connection-discord", page: "connections", title: "Discord", keywords: `${text.connectionsSearch} YouTube` },
     { id: "connection-matrix", page: "connections", title: "Matrix", keywords: text.connectionsSearch },
@@ -150,7 +152,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
         {displayedPage === "interface" && <ThemePreferences onApplied={() => setNotice(text.applied)} onOpenConnections={() => { if (!busy && !preferences.isPending()) { setPage("connections"); setSearch(""); setSearchTarget(null); setActionError(""); } }}/>}
         {displayedPage === "connections" && <ConnectionsPreferences/>}
         {displayedPage === "mods" && <ModPreferences {...configProps} onUpdate={architecture => { setBackendArch(architecture); setPage("backendUpdate"); }} onWizard={() => { if (!preferences.isPending()) { onOpenWizard(); onClose(); } }} onClear={() => setCacheDialog("confirm")}/>}
-        {displayedPage === "protons" && <ProtonPreferences {...configProps} onBusy={setDownloadBusy} focusRef={steamRef}/>}
+        {displayedPage === "protons" && <ProtonPreferences {...configProps} onBusy={setDownloadBusy} focusRef={steamRef} onConfirmationChange={setProtonConfirmationOpen}/>}
         {displayedPage === "covers" && preferences.ready && <CoverPreferences {...configProps} disabled={!preferences.ready} focusRef={coverRef} onError={setActionError}/>}
         {displayedPage === "tools" && <ToolsPreferences onRestored={async () => onConfigUpdated(await invoke<AppConfig | null>("load_app_config"))} onBusy={setDownloadBusy} onError={setActionError} onLogs={() => setShowLauncherLogs(true)}/>}
         {displayedPage === "backendUpdate" && <BackendUpdaterModal key={backendArch ?? preferences.config.backend} gpuArch={backendArch ?? (preferences.config.backend === "AMDNR" ? "rdna4" : "rdna3")} isEmbedded onBusyChange={setDownloadBusy} onClose={() => setPage("mods")}/>}

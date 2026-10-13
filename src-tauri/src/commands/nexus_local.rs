@@ -130,6 +130,8 @@ pub(super) fn load() -> Result<Workspace, String> {
             .map_err(|e| format!("Biblioteca Nexus inválida: {e}"))
             .and_then(|mut data| {
                 let mut paths_changed = false;
+                // One read of the running processes for every game.
+                let processes = super::nexus_deployment::ProcessSnapshot::take();
                 for game in &mut data.games {
                     let storage = super::nexus_profile::directory(game)?;
                     let legacy = root()?.join("games").join(&game.id);
@@ -162,7 +164,7 @@ pub(super) fn load() -> Result<Workspace, String> {
                             game.detected_mods.push(DetectedMod {name:framework.name.clone(),enabled:true,mod_id:Some(framework.mod_id)});
                         }
                     }
-                    game.running = super::nexus_profile::running(game);
+                    game.running = super::nexus_profile::running_in(&processes, game);
                     paths_changed |= dependency_order(game);
                 }
                 if paths_changed { save(&data)?; }

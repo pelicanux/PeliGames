@@ -959,8 +959,8 @@ select option {
 .setup-wizard .backend-option h3 { font-size: 1.15rem !important; }
 
 /* Borders belong to the surface, so they stay fixed when its content scrolls. */
+.modal-content:not(.matrix-chat) { width:min(90%,calc(100vw - 32px)) !important; }
 .modal-content {
-  width: min(90%, calc(100vw - 32px)) !important;
   max-height: calc(100dvh - 82px) !important;
   padding: 1.2rem !important;
   border: 1px solid transparent !important;
@@ -1759,8 +1759,9 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
 .detached-log-page .fixed-glass-frame { border-radius: 16px; box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), .2); }
 .log-window-actions .window-control { flex-shrink: 0; }
 .log-copy-error { position: absolute; right: 16px; top: 56px; font-size: .75rem; color: var(--accent-soft); z-index: 8; }
-/* Above the titlebar (2000), so its drag region cannot swallow edge resizing. */
-.window-resize-handle { position: absolute; z-index: 2100; }
+/* Native window edges stay above every dialog without blocking the interior. */
+.window-resize-layer { position:fixed; inset:0; z-index:2147483646; pointer-events:none; }
+.window-resize-handle { position:absolute; pointer-events:auto; }
 .resize-North, .resize-South { left: 12px; right: 12px; height: 5px; cursor: ns-resize; }
 .resize-North { top: 0; height: 7px; } .resize-South { bottom: 0; }
 .resize-East, .resize-West { top: 12px; bottom: 12px; width: 5px; cursor: ew-resize; }
@@ -2124,3 +2125,8 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
 .is-holding-freeze { animation:cover-freeze-frame 1.08s ease-out .12s both; }
 @keyframes cover-freeze-frame { to { border-color:#d9fbff; box-shadow:0 0 14px rgba(169,233,255,.7),inset 0 0 10px rgba(218,250,255,.65); } }
 @media(prefers-reduced-motion:reduce) { .is-holding-freeze { animation:none; } }
+
+/* Preparing the game pulses the Stop button without moving its geometry. */
+:root .game-launch-preparing { animation:game-launch-preparing-pulse 1.15s ease-in-out infinite; }
+@keyframes game-launch-preparing-pulse { 0%,100% { opacity:1; } 50% { opacity:.65; } }
+@media(prefers-reduced-motion:reduce) { :root .game-launch-preparing { animation:none; } }

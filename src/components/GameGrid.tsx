@@ -32,6 +32,7 @@ import { listPeliGamesEntries } from "../services/installedLibrary";
 export interface GameInfo {
   nexus_platform?: "native" | "proton";
   nexus_running?: boolean;
+  nexus_starting?: boolean;
   /** ID of the Nexus library entry (several entries may share a folder). */
   nexus_id?: string;
   discovery_source?: string | null;
@@ -70,6 +71,7 @@ interface Props {
   onSelectGame: (game: GameInfo, portrait?: HTMLElement) => void;
   selectedGameKey?: string;
   runningGamePath?: string;
+  startingGamePath?: string;
   mode: GamePanelMode;
   detailsOpen: boolean;
   libraryScope: "own" | "all";
@@ -77,7 +79,7 @@ interface Props {
   onModeChange: (mode: GamePanelMode) => void;
 }
 
-export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, coverHoldBlocked, homeRevision, onHome, onSelectGame, selectedGameKey, runningGamePath, mode, libraryScope, detailsOpen, onModeChange, modeDisabled, managedLibrary }) => {
+export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, coverHoldBlocked, homeRevision, onHome, onSelectGame, selectedGameKey, runningGamePath, startingGamePath, mode, libraryScope, detailsOpen, onModeChange, modeDisabled, managedLibrary }) => {
   const { launchEffect } = useAccentTheme();
   const [, setCoverRevision] = useState(0);
   const managed = Boolean(managedLibrary);
@@ -841,6 +843,8 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         </>}
       </motion.div>
       {contextMenu && createPortal(<GameCoverMenu game={contextMenu.game} x={contextMenu.x} y={contextMenu.y}
+        running={contextMenu.game.path === runningGamePath || Boolean(managedLibrary?.games.find(game => game.nexus_id && game.nexus_id === contextMenu.game.nexus_id)?.nexus_running)}
+        preparing={contextMenu.game.path === startingGamePath || Boolean(managedLibrary?.games.find(game => game.nexus_id && game.nexus_id === contextMenu.game.nexus_id)?.nexus_starting)}
         blocked={coverActionsBlocked} onClose={() => setContextMenu(null)}
         onAction={(action, game) => { if (action === "scan") void fetchGames(); else onCoverAction(action, game); }} />, document.body)}
 

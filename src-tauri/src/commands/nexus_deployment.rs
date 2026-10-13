@@ -166,7 +166,27 @@ pub(super) fn validate_runner(prefix: &str, proton: &str) -> Result<(PathBuf, Pa
     }
     Ok((prefix, proton))
 }
+/// The command lines of the user's own processes, read once and shared by
+/// every game checked in the same pass (games never run as another user).
+pub(super) struct ProcessSnapshot(Vec<(i32, Vec<u8>)>);
+impl ProcessSnapshot {
+    pub(super) fn take() -> Self {
+        use std::os::unix::fs::MetadataExt;
+        let user = unsafe { libc::getuid() };
+        let mut found = Vec::new();
+        let Ok(entries) = fs::read_dir("/proc") else { return Self(found); };
+        for entry in entries.flatten() {
+            let Some(pid) = entry.file_name().to_str().and_then(|v| v.parse::<i32>().ok()).filter(|v| *v > 1) else { continue; };
+            if entry.metadata().map(|meta| meta.uid()).ok() != Some(user) { continue; }
+            if let Ok(cmdline) = fs::read(entry.path().join("cmdline")) { found.push((pid, cmdline)); }
+        }
+        Self(found)
+    }
+}
 fn processes(game: &NexusGame, managed: bool) -> Vec<i32> {
+    processes_in(&ProcessSnapshot::take(), game, managed)
+}
+fn processes_in(snapshot: &ProcessSnapshot, game: &NexusGame, managed: bool) -> Vec<i32> {
     let Ok(dir) = folder(game) else {
         return vec![];
     };
@@ -176,47 +196,34 @@ fn processes(game: &NexusGame, managed: bool) -> Vec<i32> {
     if let Some(executable) = &module.mod_launch_executable { targets.push(dir.join(executable)); }
     if module.domain == "eldenring" {targets.push(dir.join("modengine2_launcher.exe"));}
     if module.domain == "finalfantasy12" {targets.push(dir.join("x64/ff12-launcher.exe"));}
-    let mut found = Vec::new();
-    let Ok(entries) = fs::read_dir("/proc") else {
-        return found;
-    };
+    let targets: Vec<String> = targets.iter().map(|path| path.to_string_lossy().into_owned()).collect();
     let marker = directory(game)
         .map(|p| format!("PELIGAMES_NEXUS_PROFILE={}", p.display()))
         .unwrap_or_default();
-    for entry in entries.flatten() {
-        let Some(pid) = entry
-            .file_name()
-            .to_str()
-            .and_then(|v| v.parse::<i32>().ok())
-            .filter(|v| *v > 1)
-        else {
-            continue;
-        };
-        let Ok(cmdline) = fs::read(entry.path().join("cmdline")) else {
-            continue;
-        };
+    let mut found = Vec::new();
+    for (pid, cmdline) in &snapshot.0 {
         let matches = cmdline.split(|b| *b == 0).any(|arg| {
             let arg = String::from_utf8_lossy(arg).replace('\\', "/");
-            targets.iter().any(|p| {
-                arg.strip_prefix("Z:")
-                    .unwrap_or(&arg)
-                    .eq_ignore_ascii_case(&p.to_string_lossy())
-            })
+            targets.iter().any(|p| arg.strip_prefix("Z:").unwrap_or(&arg).eq_ignore_ascii_case(p))
         });
         if !matches {
             continue;
         }
         if managed {
-            let Ok(env) = fs::read(entry.path().join("environ")) else {
+            let Ok(env) = fs::read(format!("/proc/{pid}/environ")) else {
                 continue;
             };
             if !env.split(|b| *b == 0).any(|v| v == marker.as_bytes()) {
                 continue;
             }
         }
-        found.push(pid);
+        found.push(*pid);
     }
     found
+}
+/// Whether the game runs, against a snapshot shared with the other games.
+pub(super) fn running_in(snapshot: &ProcessSnapshot, game: &NexusGame) -> bool {
+    !processes_in(snapshot, game, true).is_empty()
 }
 pub(super) fn running(game: &NexusGame) -> bool {
     !processes(game, true).is_empty()

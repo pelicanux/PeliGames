@@ -216,3 +216,8 @@
 .preferences-page button.preference-connections-link { display:inline; padding:0; border:0; border-radius:2px; background:none; box-shadow:none; color:var(--accent); font:inherit; font-weight:600; text-decoration:underline; text-underline-offset:3px; text-shadow:0 0 7px rgba(var(--accent-rgb),.4); transition:color .18s,text-shadow .18s; }
 .preferences-page button.preference-connections-link:hover,.preferences-page button.preference-connections-link:focus-visible { color:var(--accent-soft,var(--accent)); text-shadow:0 0 5px rgba(var(--accent-rgb),.7),0 0 12px rgba(var(--accent-rgb),.45); }
 @media (prefers-reduced-motion:reduce) { .preferences-page button.preference-connections-link { transition:none; } }
+.mod-backup-copies { list-style:none; margin:14px 0 0; padding:0; display:grid; gap:6px; }
+.mod-backup-copies li { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; }
+.mod-backup-copies small { color:var(--tone-94a3b8,#94a3b8); }
+.mod-backup-copies li.is-stale small { color:var(--accent-soft,var(--accent)); }
+.mod-backup-copies li.is-error small { color:#ffb4bc; }

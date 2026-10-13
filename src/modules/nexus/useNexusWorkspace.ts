@@ -9,6 +9,7 @@ import { applyCustomCovers } from "../../services/gameLibraryCache";
 import { hasNexusCatalog, matchingCatalogGame, type CatalogGame } from "./catalogGameMatch";
 import { setLibraryGameRemoved } from "../../services/libraryVisibility";
 import { useNexusText } from "./text";
+import { notifyError } from "../../services/notifications";
 export interface LocalMod { id: string; name: string; version?: string; identification_note?: string; archive: string; size: number; installed: boolean; enabled: boolean; fomod_selection?: string[]; manual_root?: { source: string; destination: string } | null; nexus_source?: { name?: string; version?: string; domain: string; mod_id: number; file_id: number; requirements: Requirements } }
 export type DeployMethod = "copy" | "symlink" | "hardlink" | "vfs";
 export interface NexusGame { advanced?: import("../../services/advancedSettings").AdvancedSettings; launch_options?: string | null; deploy_method?: DeployMethod; id: string; game: GameInfo; platform: "native" | "proton"; mods: LocalMod[]; profile?: string; running: boolean; adapter?: string; compat_data?: string; proton?: string; nexus_domain?: string; detected_mods?: { name: string; enabled: boolean; mod_id?: number }[] }
@@ -24,8 +25,10 @@ export function useNexusWorkspace() {
   const [catalogGames, setCatalogGames] = useState<CatalogGame[]>([]);
   const [error, setError] = useState("");
   const [progress, setProgress] = useState<Record<string, DeployProgress>>({});
-  // Game being started: shown as "Iniciando…" until the launch command returns.
+  // Preparing the selected game until the launch command returns.
   const [launching, setLaunching] = useState<string | null>(null);
+  const [stopping, setStopping] = useState<string | null>(null);
+  const stopRequested = useRef<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const lock = useRef(false);
   const scanTask = useRef<Promise<boolean> | null>(null);
@@ -34,6 +37,14 @@ export function useNexusWorkspace() {
   const coverSearches = useRef(new Set<string>());
   const covering = useRef(false);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  // A background recovery copy failed (e.g. the game was open): bell, and refresh the backup panels.
+  useEffect(() => {
+    const stop = listen<{ game: string; message: string }>("mod-backup-error", ({ payload }) => {
+      notifyError("Backup Nexus", `${payload.game}: ${payload.message}`);
+      window.dispatchEvent(new Event("modBackupSettingsChanged"));
+    });
+    return () => { void stop.then(unlisten => unlisten()); };
+  }, []);
   useEffect(() => {
     const receive = (payload: DeployProgress & { game_id: string }) => {
       if (!mounted.current) return;
@@ -76,15 +87,26 @@ export function useNexusWorkspace() {
   };
   useEffect(() => {
     if (!loaded) return;
-    const timer = window.setInterval(() => {
-      if (lock.current) return;
+    let timer: number | undefined, stopped = false, last = "";
+    // Every 2.5 s while the launcher is visible, every 10 s while it is hidden
+    // (minimized during a game). Only a real change re-renders the launcher.
+    const refresh = () => {
+      window.clearTimeout(timer);
+      if (stopped) return;
+      const next = () => { if (!stopped) timer = window.setTimeout(refresh, document.hidden ? 10000 : 2500); };
+      if (lock.current) { next(); return; }
       const revision = mutationRevision.current;
       void invoke<NexusWorkspace>("load_nexus_workspace").then(result => {
         // A refresh started before a save must not restore the old settings.
-        if (mounted.current && !lock.current && revision === mutationRevision.current) setWorkspace(orderWorkspaceMods(result));
-      }).catch(() => {});
-    }, 2500);
-    return () => window.clearInterval(timer);
+        if (!mounted.current || lock.current || revision !== mutationRevision.current) return;
+        const snapshot = JSON.stringify(result);
+        if (snapshot !== last) { last = snapshot; setWorkspace(orderWorkspaceMods(result)); }
+      }).catch(() => {}).finally(next);
+    };
+    const visible = () => { if (!document.hidden) refresh(); };
+    timer = window.setTimeout(refresh, 2500);
+    document.addEventListener("visibilitychange", visible);
+    return () => { stopped = true; window.clearTimeout(timer); document.removeEventListener("visibilitychange", visible); };
   }, [loaded]);
   const visibleGames = workspace.games.filter(entry => hasNexusCatalog(catalogGames, entry));
   const refreshCover = async (entry: NexusGame) => {
@@ -112,7 +134,7 @@ export function useNexusWorkspace() {
       finally { covering.current = false; }
     })();
   }, [workspace, catalogGames, loaded, busy, settingsBusy]);
-  return { workspace, visibleGames, busy, settingsBusy, error, loaded, setError, progress, launching, scanning,
+  return { workspace, visibleGames, busy, settingsBusy, error, loaded, setError, progress, launching, stopping, scanning,
     recoverCover: (game: GameInfo) => { const entry = workspace.games.find(entry => entry.game.path === game.path && entry.game.launcher === game.launcher); return entry ? refreshCover(entry) : Promise.resolve(); },
     refresh: () => {
       if (scanTask.current) return scanTask.current;
@@ -170,10 +192,19 @@ export function useNexusWorkspace() {
     configureProton: (gameId: string, compatData: string, proton: string, directory: string) => run("configure_nexus_settings", { gameId, compatData, proton, directory }, true),
     start: async (gameId: string) => {
       if (lock.current) return run("launch_nexus_game", { gameId });
-      setLaunching(gameId);
-      try { return await run("launch_nexus_game", { gameId }); } finally { if (mounted.current) setLaunching(null); }
+      stopRequested.current = null; setLaunching(gameId);
+      try {
+        const started = await run("launch_nexus_game", { gameId });
+        if (started && stopRequested.current === gameId) await run("stop_nexus_game", { gameId });
+        return started;
+      } finally { stopRequested.current = null; if (mounted.current) { setLaunching(null); setStopping(null); } }
     },
-    stop: (gameId: string) => run("stop_nexus_game", { gameId }),
+    stop: async (gameId: string) => {
+      if (launching === gameId) { stopRequested.current = gameId; setStopping(gameId); return true; }
+      if (lock.current) return run("stop_nexus_game", { gameId });
+      setStopping(gameId);
+      try { return await run("stop_nexus_game", { gameId }); } finally { if (mounted.current) setStopping(null); }
+    },
     removeArchive: (gameId: string, modId: string) => run("remove_nexus_archive", { gameId, modId }),
     removeGame: (gameId: string) => run("remove_nexus_game", { gameId }),
   };

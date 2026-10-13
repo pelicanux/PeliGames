@@ -13,6 +13,11 @@ let offerGames = false;
 const declined = new Set<string>();
 const json = (result: unknown) => new Response(JSON.stringify({ result }), { headers: { "Content-Type": "application/json" } });
 const start = (path: string) => (session = { id: crypto.randomUUID(), path, state: "running", log: "Execução simulada: nenhum programa real foi aberto." });
+function startPrepared(path: string) {
+  const started = start(path); session = { ...started, state: "starting" };
+  window.setTimeout(() => { if (session?.id === started.id && session.state === "starting") session = { ...session, state: "running" }; }, 1800);
+  return session;
+}
 export function simulateLauncherDiscovery() {
   const started = start(demoLauncher.path);
   window.setTimeout(() => { if (session?.id === started.id) { offerGames = true; session = { ...started, state: "exited" }; } }, 1800);
@@ -38,7 +43,7 @@ export function demoLauncherInvoke(command: string, args: Record<string, unknown
       return { value: null };
     }
     case "run_peligames_program":
-    case "start_peligames_shortcut": return { value: session?.state === "running" ? null : start(String(args.path)) };
+    case "start_peligames_shortcut": return { value: session?.state === "running" ? null : startPrepared(String(args.path)) };
     case "get_pelinstall_icon": return { value: null };
   }
 }
@@ -46,7 +51,7 @@ export function demoLauncherFetch(input: string, init: RequestInit | undefined, 
   if (input === "/__preview/game-execution") {
     if (!init?.body) return json(session);
     const body = JSON.parse(String(init.body));
-    if (body.action === "start") return json(start(body.path));
+    if (body.action === "start") return json(startPrepared(body.path));
     if (body.action === "cancel" && session && session.id === body.id) { if (session.path === demoLauncher.path) offerGames = true; session = { ...session, state: "cancelled" }; }
     return json(session);
   }

@@ -83,6 +83,13 @@ pub(super) fn running(game: &NexusGame) -> bool {
     }
     live_pid(game).is_some()
 }
+/// `running`, for a refresh that checks every game against one process snapshot.
+pub(super) fn running_in(snapshot: &super::nexus_deployment::ProcessSnapshot, game: &NexusGame) -> bool {
+    if super::nexus_deployment::supports(game) {
+        return super::nexus_deployment::running_in(snapshot, game);
+    }
+    live_pid(game).is_some()
+}
 pub(super) fn idle(game: &NexusGame) -> Result<(), String> {
     if super::nexus_deployment::supports(game) {
         return super::nexus_deployment::idle(game);

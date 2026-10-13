@@ -3,18 +3,25 @@ import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { MenuIcon } from "../MenuIcon";
 import { useI18n } from "../../i18n/I18nContext";
+import { backupDate, type GameBackupStatus } from "../../modules/nexus/NexusGameBackup";
 
 type Settings = { per_game: boolean; last_error: string; synchronizing: boolean };
 type Report = { restored: number; skipped: number; warnings: string[]; path: string };
 export function ModBackupPreferences({ onError, onBusy, onRestored }: { onError: (error: string) => void; onBusy: (busy: boolean) => void; onRestored: () => Promise<void> }) {
   const { language } = useI18n(), pt = language === "pt";
   const [settings, setSettings] = useState<Settings | null>(null), [busy, setBusy] = useState(false), [notice, setNotice] = useState("");
+  const [copies, setCopies] = useState<GameBackupStatus[]>([]);
   const lock = useRef(false);
   useEffect(() => {
     let mounted = true;
-    const refresh = () => void invoke<Settings>("load_mod_backup_settings").then(s => { if (mounted) setSettings(s); }).catch(e => { if (mounted) onError(String(e)); });
+    const refresh = () => {
+      void invoke<Settings>("load_mod_backup_settings").then(s => { if (mounted) setSettings(s); }).catch(e => { if (mounted) onError(String(e)); });
+      // The same per-game state the game panels show.
+      void invoke<GameBackupStatus[]>("nexus_backup_status", { gameId: null }).then(list => { if (mounted) setCopies(list.filter(game => game.has_mods || game.updated)); }).catch(() => {});
+    };
     refresh(); const timer = window.setInterval(refresh, 4000);
-    return () => { mounted = false; window.clearInterval(timer); };
+    window.addEventListener("modBackupSettingsChanged", refresh);
+    return () => { mounted = false; window.clearInterval(timer); window.removeEventListener("modBackupSettingsChanged", refresh); };
   }, []);
   const run = async (action: () => Promise<void>) => {
     if (lock.current) return;
@@ -58,6 +65,16 @@ export function ModBackupPreferences({ onError, onBusy, onRestored }: { onError:
       <input type="checkbox" disabled={busy || !settings} checked={settings?.per_game ?? false} onChange={event => { const perGame = event.target.checked; void run(async () => { setSettings(await invoke<Settings>("set_mod_backup_settings", { perGame })); window.dispatchEvent(new Event("modBackupSettingsChanged")); }); }}/>
       <span className="preference-switch-track"/><span>{pt ? "Cópia de recuperação na pasta de cada jogo" : "Recovery copy in each game folder"}<small>{pt ? "Mantém uma pasta oculta .peligames somente nos jogos com mods Nexus instalados. Ocupa espaço adicional. Ao escanear ou associar o jogo novamente, recupera os mods na .config. As escolhas individuais prevalecem sobre esta opção global." : "Keeps a hidden .peligames folder only for games with installed Nexus mods. Uses extra disk space. Scanning or associating the game again restores mods to .config. Individual choices override this global default."}</small></span>
     </label>
+    {copies.length > 0 && <ul className="mod-backup-copies" aria-label={pt ? "Cópias de recuperação por jogo" : "Recovery copies by game"}>
+      {copies.map(game => <li key={game.game_id} className={game.error ? "is-error" : game.updated && !game.enabled ? "is-stale" : ""}>
+        <strong>{game.name}</strong>
+        <small>{game.error ? (pt ? `falha: ${game.error}` : `failed: ${game.error}`)
+          : game.updating ? (pt ? "atualizando…" : "updating…")
+          : game.enabled ? (game.updated ? (pt ? `atualizada em ${backupDate(game.updated, pt)}` : `updated ${backupDate(game.updated, pt)}`) : (pt ? "aguardando a primeira cópia" : "waiting for the first copy"))
+          : game.updated ? (pt ? `cópia antiga de ${backupDate(game.updated, pt)}, desligada` : `old copy from ${backupDate(game.updated, pt)}, disabled`) : (pt ? "sem cópia" : "no copy")}
+          {game.choice !== null && (pt ? " · escolha do jogo" : " · game's own choice")}</small>
+      </li>)}
+    </ul>}
     {settings?.synchronizing && <p role="status">{pt ? "Atualizando as cópias de recuperação no disco…" : "Updating recovery copies on disk…"}</p>}
     {busy && <p role="status">{pt ? "Processando os arquivos…" : "Processing files…"}</p>}
     {notice && <p role="status" style={{ overflowWrap: "anywhere" }}>{notice}</p>}

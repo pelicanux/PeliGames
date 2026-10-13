@@ -2,7 +2,7 @@
 // signed in, so mentions reach the notification bell with the chat closed.
 import { useSyncExternalStore } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { MATRIX_COMMUNITY_ID } from "./matrixCommunity";
+import { MATRIX_COMMUNITY_ID, MATRIX_PREMIUM_ROOM_ID } from "./matrixCommunity";
 
 export interface ChatMessage { id: string; sender: string; ts: number; msgtype: string; body: string; url?: string | null; reply_to?: string | null; mentions?: string[]; edited?: boolean }
 type Incoming = ChatMessage & { kind: "message" } | { kind: "edit"; id: string; target: string; body: string } | { kind: "redaction"; id: string; target: string };
@@ -53,12 +53,18 @@ export function mergeEvents(messages: ChatMessage[], events: Incoming[], older =
   return next.slice(-MAX_MESSAGES);
 }
 
-async function loadRooms() {
+async function loadRooms(reportError = false) {
+  const user = state.userId;
   try {
     const data = await invoke<{ rooms: RoomInfo[] }>("matrix_chat_rooms");
+    if (state.userId !== user) return;
     const rooms = (data.rooms || []).filter(room => room.room_type !== "m.space");
-    set({ roomList: rooms.length ? rooms : [{ room_id: MATRIX_COMMUNITY_ID, name: "PeliGames" }] });
-  } catch { set({ roomList: [{ room_id: MATRIX_COMMUNITY_ID, name: "PeliGames" }] }); }
+    const discovered = rooms.length ? rooms : [{ room_id: MATRIX_COMMUNITY_ID, name: "PeliGames" }];
+    set({ roomList: [...discovered.filter(room => room.room_id !== MATRIX_PREMIUM_ROOM_ID), { room_id: MATRIX_PREMIUM_ROOM_ID, name: "Suporte premium" }] });
+  } catch (error) {
+    if (reportError) throw error;
+    if (state.userId === user) set({ roomList: [{ room_id: MATRIX_COMMUNITY_ID, name: "PeliGames" }] });
+  }
 }
 function apply(data: SyncResult, initial: boolean) {
   const rooms = { ...state.rooms }, names = { ...state.names };
@@ -123,6 +129,15 @@ export function startMatrixChat() {
 /** Reloads the room list and restarts the sync (after joining the community). */
 export async function reloadMatrixRooms() {
   if (state.userId) await begin();
+}
+/** Refresh discovery without resetting the active conversation or its history. */
+export async function refreshMatrixRooms() {
+  const user = state.userId;
+  if (!user) return;
+  const previous = state.roomList.map(room => room.room_id).sort().join();
+  await loadRooms(true);
+  if (state.userId !== user) return;
+  if (state.roomList.map(room => room.room_id).sort().join() !== previous) void syncLoop(++generation);
 }
 export async function loadOlderMessages(room: string) {
   const current = state.rooms[room];

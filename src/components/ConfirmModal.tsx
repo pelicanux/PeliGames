@@ -12,6 +12,7 @@ interface Props {
   cancelText?: string;
   isDanger?: boolean;
   busy?: boolean;
+  cancelButtonRef?: React.Ref<HTMLButtonElement>;
 }
 
 export const ConfirmModal: React.FC<Props> = ({ 
@@ -22,6 +23,7 @@ export const ConfirmModal: React.FC<Props> = ({
   confirmText = "Confirmar", 
   cancelText = "Cancelar",
   busy = false,
+  cancelButtonRef,
   isDanger = false 
 }) => {
   return createPortal(
@@ -33,13 +35,14 @@ export const ConfirmModal: React.FC<Props> = ({
             <line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
           {title}
-        </h2>} onDismiss={onCancel} closeDisabled={busy} className="modal-content" style={{ maxWidth: "450px", border: isDanger ? "1px solid rgba(239, 68, 68, 0.3)" : undefined }}>
+        </h2>} onDismiss={onCancel} closeDisabled={busy} role="dialog" aria-modal="true" aria-label={title} className="modal-content" style={{ maxWidth: "450px", border: isDanger ? "1px solid rgba(239, 68, 68, 0.3)" : undefined }}>
         
         <div className="modal-body" style={{ marginTop: "1rem", marginBottom: "2rem", lineHeight: "1.5" }}>
           {message}
         </div>
         <div className="modal-actions">
           <button 
+            ref={cancelButtonRef}
             disabled={busy}
             onClick={onCancel} 
             style={{ 

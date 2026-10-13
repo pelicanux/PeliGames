@@ -13,6 +13,9 @@ use std::{
 static OPERATIONS: Mutex<()> = Mutex::new(());
 static PENDING: Mutex<Option<Vec<NexusGame>>> = Mutex::new(None);
 static WORKER: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+// Background copies report failures to the launcher (notification bell) through it.
+static APP: std::sync::OnceLock<tauri::AppHandle> = std::sync::OnceLock::new();
+pub fn init(app: &tauri::AppHandle) { let _ = APP.set(app.clone()); }
 #[derive(Default, Serialize, Deserialize)]
 pub struct BackupSettings {
     pub per_game: bool,
@@ -20,6 +23,9 @@ pub struct BackupSettings {
     pub game_overrides: BTreeMap<String, bool>,
     #[serde(default)]
     pub last_error: String,
+    /// Last failure of each game's recovery copy, cleared when a copy succeeds.
+    #[serde(default)]
+    pub game_errors: BTreeMap<String, String>,
     #[serde(default, skip_deserializing)]
     pub synchronizing: bool,
 }
@@ -487,16 +493,31 @@ pub(super) fn schedule(data: &Workspace) {
         };
         let _operation = OPERATIONS.lock().unwrap();
         let mut messages = Vec::new();
+        let mut results: BTreeMap<String, Option<String>> = BTreeMap::new();
         if let Ok(current) = settings() {
             for game in games.iter().filter(|g| game_enabled(&current, &g.id) && has_installed_mods(g)) {
-                if let Err(e) = game_copy(game).and_then(|p| write_snapshot(game, &p)) {
-                    super::nexus_reports::event(game, "ERROR", "cópia de recuperação", &e);
-                    messages.push(e);
+                match game_copy(game).and_then(|p| write_snapshot(game, &p)) {
+                    Ok(()) => { results.insert(game.id.clone(), None); }
+                    Err(e) => {
+                        super::nexus_reports::event(game, "ERROR", "cópia de recuperação", &e);
+                        if let Some(app) = APP.get() {
+                            use tauri::Emitter;
+                            let _ = app.emit("mod-backup-error", serde_json::json!({"game": game.game["name"], "message": e}));
+                        }
+                        results.insert(game.id.clone(), Some(e.clone()));
+                        messages.push(e);
+                    }
                 }
             }
         }
         if let Ok(mut s) = settings() {
             s.last_error = messages.join("\n");
+            // Only games that are still copied keep an error.
+            let copied: Vec<String> = games.iter().filter(|g| game_enabled(&s, &g.id) && has_installed_mods(g)).map(|g| g.id.clone()).collect();
+            s.game_errors.retain(|id, _| copied.contains(id));
+            for (id, result) in results {
+                match result { Some(e) => { s.game_errors.insert(id, e); } None => { s.game_errors.remove(&id); } }
+            }
             let _ = json(&settings_path().unwrap(), &s);
         }
     });
@@ -779,6 +800,49 @@ pub(super) fn recover(directory: &Path, workspace: &mut Workspace) -> Result<boo
     }
     restore_game(&path, Some(directory), workspace)
 }
+/// What each game's recovery copy looks like now, shared by the game's panel
+/// and the general backup settings.
+#[derive(Serialize)]
+pub struct GameBackupStatus {
+    game_id: String,
+    name: String,
+    /// The copy is kept up to date (this game's choice, or the general default).
+    enabled: bool,
+    /// The game's own choice; `None` follows the general default.
+    choice: Option<bool>,
+    has_mods: bool,
+    /// When the copy in the game folder was last written (Unix seconds).
+    updated: Option<u64>,
+    /// Bytes of the copy, measured only when one game is asked for.
+    size: Option<u64>,
+    error: Option<String>,
+    updating: bool,
+}
+fn copy_size(path: &Path) -> u64 {
+    walkdir::WalkDir::new(path).follow_links(false).into_iter().flatten()
+        .filter(|entry| entry.file_type().is_file()).filter_map(|entry| entry.metadata().ok()).map(|meta| meta.len()).sum()
+}
+#[tauri::command]
+pub async fn nexus_backup_status(game_id: Option<String>) -> Result<Vec<GameBackupStatus>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let s = settings()?;
+        let data = nexus_local::workspace()?;
+        let working = WORKER.load(std::sync::atomic::Ordering::SeqCst);
+        Ok(data.games.iter().filter(|game| game_id.as_ref().is_none_or(|id| *id == game.id)).map(|game| {
+            let copy = game.game["directory"].as_str().map(|root| Path::new(root).join(".peligames/mod-recovery"));
+            let updated = copy.as_ref().and_then(|copy| fs::metadata(copy.join("snapshot.json")).ok())
+                .and_then(|meta| meta.modified().ok()).and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok()).map(|d| d.as_secs());
+            let enabled = game_enabled(&s, &game.id);
+            let has_mods = has_installed_mods(game);
+            GameBackupStatus {
+                game_id: game.id.clone(), name: game.game["name"].as_str().unwrap_or("").to_string(), enabled,
+                choice: s.game_overrides.get(&game.id).copied(), has_mods, updated,
+                size: if game_id.is_some() && updated.is_some() { copy.as_deref().map(copy_size) } else { None },
+                error: s.game_errors.get(&game.id).cloned(), updating: working && enabled && has_mods,
+            }
+        }).collect())
+    }).await.map_err(error)?
+}
 #[tauri::command]
 pub async fn load_mod_backup_settings() -> Result<BackupSettings, String> {
     settings()
@@ -815,6 +879,7 @@ pub async fn set_nexus_game_backup(
             return Err("Jogo não encontrado.".into());
         }
         let mut s = settings()?;
+        if !enabled { s.game_errors.remove(&game_id); }
         s.game_overrides.insert(game_id, enabled);
         s.last_error.clear();
         json(&settings_path()?, &s)?;
@@ -835,6 +900,7 @@ pub async fn delete_nexus_game_backup(game_id: String) -> Result<BackupSettings,
         let root = Path::new(game.game["directory"].as_str().ok_or("Pasta do jogo ausente.")?);
         // Save the explicit override before deletion so queued copies cannot recreate it.
         let mut s = settings()?;
+        s.game_errors.remove(&game_id);
         s.game_overrides.insert(game_id, false);
         s.last_error.clear();
         json(&settings_path()?, &s)?;

@@ -65,7 +65,34 @@ fn matches(root: &Path, definition: &Definition) -> bool {
         && locate(root, &definition.executable).is_some_and(|exe| file_header(&exe, &definition.header))
 }
 
+/// The module of a game folder. Identifying one checks every module (around
+/// 200, each listing the folder when a path is missing), and the library
+/// refresh asks for each game several times a cycle: the answer is reused for
+/// a minute, or until the folder's own listing changes.
 pub(super) fn at(root: &Path) -> Option<Definition> {
+    #[cfg(not(test))]
+    {
+        use std::{collections::HashMap, sync::Mutex, time::{Duration, Instant, SystemTime}};
+        type Entry = (Option<SystemTime>, Instant, Option<Definition>);
+        static KNOWN: Mutex<Option<HashMap<PathBuf, Entry>>> = Mutex::new(None);
+        let stamp = fs::metadata(root).and_then(|meta| meta.modified()).ok();
+        if let Ok(mut known) = KNOWN.lock() {
+            if let Some((seen, when, definition)) = known.get_or_insert_with(HashMap::new).get(root) {
+                if *seen == stamp && when.elapsed() < Duration::from_secs(60) { return definition.clone(); }
+            }
+        }
+        let definition = identify(root);
+        if let Ok(mut known) = KNOWN.lock() {
+            let known = known.get_or_insert_with(HashMap::new);
+            if known.len() > 256 { known.clear(); }
+            known.insert(root.to_path_buf(), (stamp, Instant::now(), definition.clone()));
+        }
+        definition
+    }
+    #[cfg(test)]
+    identify(root)
+}
+fn identify(root: &Path) -> Option<Definition> {
     let mut found: Vec<_> = registry().definitions.into_iter().filter(|definition| matches(root, definition)).collect();
     if found.len() > 1 {
         // Editions sharing executables are told apart by the Steam ID first.
