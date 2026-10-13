@@ -49,8 +49,8 @@ as de primeiro nível dela, criadas pela administração (poucas salas gerais, n
 ## Versão oficial
 
 Ao abrir, o launcher calcula o SHA-256 do próprio executável e procura na release
-da mesma versão o arquivo `PeliGames_<versão>_binaries.sha256`, gerado por
-`scripts/release-checksums.sh` depois da compilação e publicado junto com os pacotes.
+da mesma versão o arquivo `PeliGames_<versão>_binaries.sha256`, gerado na compilação
+das releases oficiais e publicado junto com os pacotes.
 O resultado (oficial, compilada localmente ou não verificada) entra no relatório de
 erro e na postagem do fórum do Discord. Uma versão modificada pode falsificar a
 resposta; a verificação serve para identificar builds locais no suporte.

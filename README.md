@@ -67,6 +67,30 @@ O PeliGames instala mods do Nexus Mods em **202 jogos**, com módulos baseados n
 
 **[Ver a lista completa de jogos suportados →](docs/supported-games.md)**
 
+## Compilar a partir do código
+
+1. Instale as dependências de sistema do Tauri 2:
+   - Debian/Ubuntu: `sudo apt install build-essential curl wget file libwebkit2gtk-4.1-dev libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev`
+   - Fedora: `sudo dnf install webkit2gtk4.1-devel openssl-devel curl wget file libappindicator-gtk3-devel librsvg2-devel libxdo-devel` e `sudo dnf group install c-development`
+2. Instale o [Rust](https://rustup.rs) e o [Bun](https://bun.sh).
+3. Baixe o código e as dependências da interface:
+   ```
+   git clone https://github.com/pelicanux/PeliGames.git
+   cd PeliGames
+   bun install
+   ```
+4. Compile a interface (gera também os ícones):
+   ```
+   bun run build
+   ```
+5. Compile os dois executáveis, com a interface embutida:
+   ```
+   cargo build --release --bins --features custom-protocol --manifest-path src-tauri/Cargo.toml
+   ```
+6. Os executáveis ficam em `src-tauri/target/release/`: `peligames` abre o launcher e `pelinstall /caminho/programa.exe` abre o instalador.
+
+Para gerar pacotes (AppImage, DEB e RPM) em `src-tauri/target/release/bundle/`, use `bun run tauri build`.
+
 ## Créditos e licença
 
 PeliGames é desenvolvido por Pelicano e distribuído sob [GNU GPL 3.0](LICENSE). Versões derivadas distribuídas devem disponibilizar o código-fonte correspondente sob a mesma licença.

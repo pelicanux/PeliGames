@@ -7,7 +7,7 @@
     "dev": "bun run icons && vite",
     "build": "bun run icons && tsc && vite build",
     "preview": "vite preview",
-    "tauri": "bash scripts/tauri.sh",
+    "tauri": "tauri",
     "icons": "bun node_modules/@tauri-apps/cli/tauri.js icon public/peligames.svg --output src-tauri/icons/generated"
   },
   "dependencies": {

@@ -76,6 +76,12 @@ dist-ssr
 /vite.preview.config.ts
 /.local-test-sources/
 /scripts/publish-release.sh
+# Release build and packaging scripts stay local; the README explains a manual build.
+/scripts/build-release.sh
+/scripts/tauri.sh
+/scripts/deb-package-name.sh
+/scripts/rpm-opt-layout.sh
+/scripts/release-checksums.sh
 /scripts/build-binaries.sh
 /scripts/build-container.sh
 /scripts/register-pelinstall.sh
