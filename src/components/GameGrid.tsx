@@ -316,6 +316,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   useEffect(() => () => { ++launchGeneration.current; cancelPendingLaunch.current?.(); }, []);
   const hold = useRef<{ key: string; pointer: number; x: number; y: number; timer: number; feedbackTimer?: number; target: HTMLDivElement } | null>(null);
   const suppressHoldClick = useRef<string | null>(null);
+  const coverPress = useRef<{ key: string; startedAt: number } | null>(null);
   const launchBlocked = useRef(coverHoldBlocked ?? coverActionsBlocked);
   launchBlocked.current = coverHoldBlocked ?? coverActionsBlocked;
   const runningSnapshot = useRef({ path: runningGamePath, games: managedLibrary?.games });
@@ -324,6 +325,11 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const launchFromHold = useRef(onCoverAction);
   launchFromHold.current = onCoverAction;
   const cancelHold = () => {
+    const press = coverPress.current;
+    coverPress.current = null;
+    // A cancelled hold must not become the browser's trailing click. Keep
+    // ordinary quick clicks available even when cover launching is disabled.
+    if (press && performance.now() - press.startedAt >= 200) suppressHoldClick.current = press.key;
     const active = hold.current;
     hold.current = null;
     if (active) {
@@ -358,7 +364,9 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const startHold = (event: React.PointerEvent<HTMLDivElement>, game: GameInfo) => {
     cancelHold();
     suppressHoldClick.current = null;
-    if (launchEffect === "disabled" || event.button !== 0 || !event.isPrimary || launchBlocked.current
+    if (event.button !== 0 || !event.isPrimary) return;
+    coverPress.current = { key: gameViewKey(game), startedAt: performance.now() };
+    if (launchEffect === "disabled" || launchBlocked.current
       || !(managed || game.launcher === "Steam" || game.launcher === "PeliGames")) return;
     const key = gameViewKey(game);
     const stopping = isRunning(game);

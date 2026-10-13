@@ -35,6 +35,7 @@ export const coverCrackPaths = [...crackEdges.values()].sort((a, b) => a.distanc
 export function CoverLaunchTeleport({ value, reducedMotion, onCancel, cancellingDisabled }: { value: CoverTeleport; reducedMotion: boolean; onCancel: () => void; cancellingDisabled: boolean }) {
   const { language } = useI18n();
   const [assembled, setAssembled] = useState(reducedMotion);
+  const [thawing, setThawing] = useState(false);
   const [viewport, setViewport] = useState({ width: window.innerWidth, height: window.innerHeight });
   const destination = useRef<HTMLDivElement>(null);
   const completedShards = useRef(new Set<number>());
@@ -56,6 +57,16 @@ export function CoverLaunchTeleport({ value, reducedMotion, onCancel, cancelling
     if (reducedMotion) setAssembled(true);
     return () => { window.removeEventListener("resize", resize); };
   }, [reducedMotion, value]);
+  useEffect(() => {
+    if (value.effect !== "freeze" || reducedMotion) return;
+    const arrival = window.setTimeout(() => setAssembled(true), 1050);
+    return () => window.clearTimeout(arrival);
+  }, [value, reducedMotion]);
+  useEffect(() => {
+    if (value.effect !== "freeze" || !assembled || reducedMotion) return;
+    const thaw = window.setTimeout(() => setThawing(true), 450);
+    return () => window.clearTimeout(thaw);
+  }, [value, assembled, reducedMotion]);
   return createPortal(<motion.div className="cover-launch-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: .18 }}>
     {!assembled && !reducedMotion && value.effect === "particles" && <CoverParticleTransport preview={value.preview} source={value.source} target={target} onComplete={() => setAssembled(true)} />}
     {!assembled && value.effect === "shatter" && pieces.map((piece, index) => <motion.div key={index} className="cover-launch-shard" style={{ clipPath: piece.clipPath, transformOrigin: `${piece.x}% ${piece.y}%` }}
@@ -75,8 +86,8 @@ export function CoverLaunchTeleport({ value, reducedMotion, onCancel, cancelling
     {value.effect === "freeze" ? <motion.div className="cover-launch-remounted cover-launch-remounted--shatter is-assembled cover-launch-frozen"
       initial={reducedMotion ? target : { left:value.source.left, top:value.source.top, width:value.source.width, height:value.source.height }}
       animate={target} transition={{duration:reducedMotion ? 0 : 1.05,ease:[.22,1,.36,1]}}
-      onAnimationComplete={() => setAssembled(true)} aria-hidden="true">
-        <div className="cover-launch-frozen-image" ref={destination}/><CoverFreeze phase="melt" reducedMotion={reducedMotion}/>
+      aria-hidden="true">
+        <div className="cover-launch-frozen-image" ref={destination}/><CoverFreeze phase={thawing ? "melt" : "frozen"} reducedMotion={reducedMotion}/>
       </motion.div> : value.effect === "shrink" ? <motion.div className="cover-launch-remounted is-assembled" style={target}
       initial={{ scale: reducedMotion ? 1 : 0 }} animate={{ scale: 1 }}
       transition={{ duration: reducedMotion ? 0 : .5, ease: [.22, 1, .36, 1] }}

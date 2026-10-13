@@ -8,9 +8,10 @@ import type { LauncherUpdateInfo } from "../services/launcherUpdates";
 import { checkRunner, type ProtonFamily } from "../services/protonService";
 import "./notifications.css";
 import { LAUNCHER_ERROR_EVENT, type LauncherErrorDetail } from "../services/notifications";
+import { MATRIX_MENTION_EVENT, OPEN_MATRIX_CHAT_EVENT, type MatrixMentionDetail } from "../services/matrixChat";
 
 export type UpdateTarget = "launcher" | "rdna4" | "rdna3" | ProtonFamily;
-type Notice = { id: string; target: UpdateTarget | "nexus" | "error"; version: string; message?: string; source?: string; unread: boolean };
+type Notice = { id: string; target: UpdateTarget | "nexus" | "error" | "matrix"; version: string; message?: string; source?: string; unread: boolean };
 type Store = { items: Notice[]; seen: string[] };
 type BackendStatus = { latest: string; current: string | null; needs_update: boolean };
 const storageKey = "peligames_update_notifications_v1";
@@ -18,7 +19,7 @@ function readStore(): Store {
   try {
     const value = JSON.parse(localStorage.getItem(storageKey) || "null");
     if (Array.isArray(value?.items) && Array.isArray(value?.seen)) return {
-      items: value.items.filter((n: Notice) => n && ["launcher", "rdna3", "rdna4", "ge-proton", "cachyos-proton", "nexus", "error"].includes(n.target) && (!["nexus", "error"].includes(n.target) || typeof n.message === "string") && typeof n.id === "string" && typeof n.version === "string").slice(0, 20),
+      items: value.items.filter((n: Notice) => n && ["launcher", "rdna3", "rdna4", "ge-proton", "cachyos-proton", "nexus", "error", "matrix"].includes(n.target) && (!["nexus", "error", "matrix"].includes(n.target) || typeof n.message === "string") && typeof n.id === "string" && typeof n.version === "string").slice(0, 20),
       seen: value.seen.filter((id: unknown) => typeof id === "string").slice(-100),
     };
   } catch { /* Storage may be unavailable; notifications still work in memory. */ }
@@ -96,6 +97,18 @@ export function NotificationCenter({ launcherUpdate, onNavigate, nexusError = ""
     };
     window.addEventListener(LAUNCHER_ERROR_EVENT, received);
     return () => window.removeEventListener(LAUNCHER_ERROR_EVENT, received);
+  }, []);
+  // Someone mentioned the user in the Matrix chat: one entry per message, opens the chat.
+  useEffect(() => {
+    const received = (event: Event) => {
+      const { sender, room, message } = (event as CustomEvent<MatrixMentionDetail>).detail;
+      const previous = storeRef.current;
+      const notice: Notice = { id: `matrix:${crypto.randomUUID()}`, target: "matrix", version: "", message: `${sender}: ${message}`, source: room, unread: !openRef.current };
+      commit({ ...previous, items: [notice, ...previous.items].slice(0, 20) });
+      if (!openRef.current) setToasts(queue => [...queue, notice]);
+    };
+    window.addEventListener(MATRIX_MENTION_EVENT, received);
+    return () => window.removeEventListener(MATRIX_MENTION_EVENT, received);
   }, []);
   useEffect(() => {
     if (launcherUpdate) reconcile("launcher", launcherUpdate.available ? launcherUpdate.latest : null);
@@ -216,7 +229,9 @@ export function NotificationCenter({ launcherUpdate, onNavigate, nexusError = ""
     window.addEventListener("keydown", escape, true);
     return () => window.removeEventListener("keydown", escape, true);
   }, []);
-  const title = (n: Notice) => n.target === "error"
+  const title = (n: Notice) => n.target === "matrix"
+    ? en ? `Matrix — you were mentioned in #${n.source || "PeliGames"}` : `Matrix — você foi mencionado em #${n.source || "PeliGames"}`
+    : n.target === "error"
     ? `${n.source || "PeliGames"} — ${en ? "error" : "erro"}`
     : n.target === "nexus"
     ? en ? "Nexus Mods — action failed" : "Nexus Mods — falha na ação"
@@ -230,7 +245,7 @@ export function NotificationCenter({ launcherUpdate, onNavigate, nexusError = ""
     if (navigationBusy) return;
     commit({ ...storeRef.current, items: storeRef.current.items.map(n => n.id === notice.id ? { ...n, unread: false } : n) });
     setToasts(queue => queue.filter(n => n.id !== notice.id));
-    close(); if (notice.target !== "nexus" && notice.target !== "error") onNavigate(notice.target);
+    close(); if (notice.target === "matrix") window.dispatchEvent(new Event(OPEN_MATRIX_CHAT_EVENT)); else if (notice.target !== "nexus" && notice.target !== "error") onNavigate(notice.target);
   };
   return <>
     <button ref={bellRef} type="button" data-tauri-drag-region="false" className="btn-titlebar notification-bell" title={en ? "Notifications" : "Notificações"} aria-label={en ? "Notifications" : "Notificações"} aria-expanded={open} aria-controls="update-notifications" onClick={() => {
@@ -242,12 +257,12 @@ export function NotificationCenter({ launcherUpdate, onNavigate, nexusError = ""
       <motion.aside ref={panelRef} initial={false} animate={{ height: panelHeight ?? "auto" }} transition={{ height: { duration: reducedMotion ? .08 : .26, ease: [.4, 0, .2, 1] } }} id="update-notifications" className={`notification-panel menu-glass-panel${open ? " is-open" : ""}`} aria-label={en ? "Notifications" : "Notificações"} inert={!open} aria-hidden={!open} onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); close(); bellRef.current?.focus(); } }}>
         <div ref={contentRef} className="notification-panel-content">
         <header><h2><Bell/>{en ? "Notifications" : "Notificações"}</h2></header>
-        <div ref={listRef} className="notification-list" style={{ maxHeight: store.items.length > 3 || !store.items.length ? listHeight : undefined }}><AnimatePresence initial={false} mode="wait">{store.items.length ? <motion.div key="notices" initial="visible" animate="visible" exit="exit" variants={{ visible: {}, exit: { transition: { staggerChildren: reducedMotion ? 0 : .045, when: "afterChildren" } } }}>{store.items.map(n => <motion.button variants={{ visible: { x: 0, opacity: 1 }, exit: { x: reducedMotion ? 0 : "110%", opacity: 0 } }} transition={{ duration: reducedMotion ? .08 : .2, ease: "easeIn" }} type="button" className="notification-entry" disabled={navigationBusy} key={n.id} onClick={() => navigate(n)}><MenuIcon name={n.target === "nexus" || n.target === "error" ? "info" : "download"}/><span><strong>{title(n)}</strong><small>{n.target === "nexus" || n.target === "error" ? n.message : `${en ? "Version" : "Versão"} ${n.version}`}</small>{n.target !== "nexus" && n.target !== "error" && <small className="notification-link">{en ? "Open updater" : "Abrir atualização"} →</small>}</span></motion.button>)}</motion.div> : <motion.p key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .12 }}>{en ? "No notifications." : "Nenhuma notificação."}</motion.p>}</AnimatePresence></div>
+        <div ref={listRef} className="notification-list" style={{ maxHeight: store.items.length > 3 || !store.items.length ? listHeight : undefined }}><AnimatePresence initial={false} mode="wait">{store.items.length ? <motion.div key="notices" initial="visible" animate="visible" exit="exit" variants={{ visible: {}, exit: { transition: { staggerChildren: reducedMotion ? 0 : .045, when: "afterChildren" } } }}>{store.items.map(n => <motion.button variants={{ visible: { x: 0, opacity: 1 }, exit: { x: reducedMotion ? 0 : "110%", opacity: 0 } }} transition={{ duration: reducedMotion ? .08 : .2, ease: "easeIn" }} type="button" className="notification-entry" disabled={navigationBusy} key={n.id} onClick={() => navigate(n)}><MenuIcon name={n.target === "nexus" || n.target === "error" ? "info" : n.target === "matrix" ? "chainLinked" : "download"}/><span><strong>{title(n)}</strong><small>{n.target === "nexus" || n.target === "error" || n.target === "matrix" ? n.message : `${en ? "Version" : "Versão"} ${n.version}`}</small>{n.target !== "nexus" && n.target !== "error" && <small className="notification-link">{n.target === "matrix" ? en ? "Open chat" : "Abrir chat" : en ? "Open updater" : "Abrir atualização"} →</small>}</span></motion.button>)}</motion.div> : <motion.p key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .12 }}>{en ? "No notifications." : "Nenhuma notificação."}</motion.p>}</AnimatePresence></div>
         <footer><button className="btn-primary" type="button" disabled={!store.items.length} onClick={() => { commit({ ...storeRef.current, items: [] }); setToasts([]); }}><MenuIcon name="trash"/>{en ? "Clear notifications" : "Limpar notificações"}</button></footer>
         </div>
       </motion.aside>
       </div>
-      <div className="notification-toast-region" aria-live="polite" aria-atomic="true">{toast && <button key={toast.id} className="notification-toast menu-glass-panel" style={{ animationPlayState: toastHovered || toastFocused ? "paused" : "running" }} onMouseEnter={() => setToastHovered(true)} onMouseLeave={() => setToastHovered(false)} onFocus={() => setToastFocused(true)} onBlur={() => setToastFocused(false)} disabled={navigationBusy} type="button" onClick={() => navigate(toast)}><Bell/><span><strong>{title(toast)}</strong><small>{toast.target === "nexus" || toast.target === "error" ? toast.message : `${en ? "Version" : "Versão"} ${toast.version}`}</small></span></button>}</div>
+      <div className="notification-toast-region" aria-live="polite" aria-atomic="true">{toast && <button key={toast.id} className="notification-toast menu-glass-panel" style={{ animationPlayState: toastHovered || toastFocused ? "paused" : "running" }} onMouseEnter={() => setToastHovered(true)} onMouseLeave={() => setToastHovered(false)} onFocus={() => setToastFocused(true)} onBlur={() => setToastFocused(false)} disabled={navigationBusy} type="button" onClick={() => navigate(toast)}><Bell/><span><strong>{title(toast)}</strong><small>{toast.target === "nexus" || toast.target === "error" || toast.target === "matrix" ? toast.message : `${en ? "Version" : "Versão"} ${toast.version}`}</small></span></button>}</div>
     </>, document.body)}
   </>;
 }

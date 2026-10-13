@@ -11,6 +11,7 @@ import { BackendUpdaterModal } from "./BackendUpdaterModal";
 import { ThemePreferences, ModPreferences, ProtonPreferences, CoverPreferences, ToolsPreferences } from "./preferences/PreferencePages";
 import { usePreferencesConfig } from "./preferences/usePreferencesConfig";
 import { usePreferencesText } from "./preferences/labels";
+import { ConnectionsPreferences } from "./preferences/ConnectionsPreferences";
 import "./preferences/preferences.css";
 
 interface Props {
@@ -21,7 +22,7 @@ interface Props {
   onConfigUpdated: (config: AppConfig | null) => void;
   onOpenWizard: () => void;
 }
-type Page = "home" | "interface" | "mods" | "protons" | "covers" | "tools" | "backendUpdate";
+type Page = "home" | "interface" | "mods" | "protons" | "covers" | "tools" | "connections" | "backendUpdate";
 export function SettingsModal({ onClose, initialSection = "general", initialBackendArch, onBusyChange, onConfigUpdated, onOpenWizard }: Props) {
   const text = usePreferencesText(), { t } = useI18n();
   const preferences = usePreferencesConfig(onConfigUpdated);
@@ -74,18 +75,22 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
     catch (error) { setCacheError(String(error)); setCacheDialog("error"); }
     finally { setClearingCache(false); }
   };
-  const categoryNames = { home: text.home, interface: text.interface, mods: text.mods, protons: text.protons, covers: text.covers, tools: text.tools, backendUpdate: t("app", "updateBackend") };
+  const categoryNames = { home: text.home, interface: text.interface, mods: text.mods, protons: text.protons, covers: text.covers, tools: text.tools, connections: text.connections, backendUpdate: t("app", "updateBackend") };
   const categories = [
     { page: "interface", icon: "platform", hint: text.interfaceHint },
     { page: "mods", icon: "puzzle", hint: text.modsHint },
     { page: "protons", icon: "cube", hint: text.protonsHint },
     { page: "covers", icon: "image", hint: text.coversHint },
+    { page: "connections", icon: "chainLinked", hint: text.connectionsHint },
     { page: "tools", icon: "tools", hint: text.toolsHint },
   ] as const;
   const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const query = normalize(search.trim());
   // Index each real control separately; category names provide context.
   const options = [
+    { id: "connection-nexus", page: "connections", title: "Nexus Mods", keywords: text.connectionsSearch },
+    { id: "connection-discord", page: "connections", title: "Discord", keywords: `${text.connectionsSearch} YouTube` },
+    { id: "connection-matrix", page: "connections", title: "Matrix", keywords: text.connectionsSearch },
     { id: "themes", page: "interface", title: text.themes, keywords: `${text.darkHint} ${text.lightHint}` },
     { id: "accent", page: "interface", title: text.accent, keywords: "accent color" },
     { id: "blur-windows", page: "interface", title: text.windowsEffect, keywords: text.blurSearch },
@@ -142,7 +147,8 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
           {!searchResults.length && <p role="status">{text.searchEmpty}</p>}
         </div></> : <>
         {displayedPage === "home" && <div className="preferences-categories">{categories.map(category => <button type="button" key={category.page} onClick={() => { setPage(category.page); setActionError(""); }}><span className="preferences-category-icon"><MenuIcon name={category.icon}/></span><span><strong>{categoryNames[category.page]}</strong><small>{category.hint}</small></span><span className="preferences-chevron">›</span></button>)}</div>}
-        {displayedPage === "interface" && <ThemePreferences onApplied={() => setNotice(text.applied)}/>}
+        {displayedPage === "interface" && <ThemePreferences onApplied={() => setNotice(text.applied)} onOpenConnections={() => { if (!busy && !preferences.isPending()) { setPage("connections"); setSearch(""); setSearchTarget(null); setActionError(""); } }}/>}
+        {displayedPage === "connections" && <ConnectionsPreferences/>}
         {displayedPage === "mods" && <ModPreferences {...configProps} onUpdate={architecture => { setBackendArch(architecture); setPage("backendUpdate"); }} onWizard={() => { if (!preferences.isPending()) { onOpenWizard(); onClose(); } }} onClear={() => setCacheDialog("confirm")}/>}
         {displayedPage === "protons" && <ProtonPreferences {...configProps} onBusy={setDownloadBusy} focusRef={steamRef}/>}
         {displayedPage === "covers" && preferences.ready && <CoverPreferences {...configProps} disabled={!preferences.ready} focusRef={coverRef} onError={setActionError}/>}

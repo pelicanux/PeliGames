@@ -39,11 +39,13 @@ async function handle(request, env) {
     const description = clean(body.description, 1500);
     const discord = clean(body.discord, 40);
     const version = clean(body.version, 64);
+    // Official build or not, as the launcher checked it (support sees it at a glance).
+    const build = clean((report.match(/^Versão: (.*)$/m) || [])[1], 64);
     const content = [
       `**${title}**`,
       description || "Sem descrição.",
       "",
-      `Versão: ${version || "não informada"}${discord ? ` · Discord: ${discord}` : ""}`,
+      `Versão: ${version || "não informada"}${build ? ` (${build})` : ""}${discord ? ` · Discord: ${discord}` : ""}`,
     ].join("\n").slice(0, 2000);
     const payload = {
       content,

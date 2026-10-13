@@ -72,6 +72,8 @@ fn run_mode(installer: bool) {
             window.center = true;
         }
     }
+    // Only the launcher window checks the build; game shortcuts and Pelinstall stay offline.
+    let check_build = startup.module == "launcher";
     tauri::Builder::default()
         .manage(startup)
         .manage(commands::nexus_downloads::Downloads::default())
@@ -113,6 +115,7 @@ fn run_mode(installer: bool) {
                 &format!("PeliGames v{} iniciado", env!("CARGO_PKG_VERSION")),
             );
             commands::app_updates::cleanup_obsolete_updates(&app_handle);
+            if check_build { commands::official_build::verify_in_background(app_handle.clone()); }
             commands::nexus_progress::init(&app_handle);
             // Launch logs start empty on every launcher start (disk work off the UI thread).
             std::thread::spawn(commands::nexus_local::reset_session_logs_at_startup);
@@ -142,6 +145,25 @@ fn run_mode(installer: bool) {
             commands::nexus_account::connect_nexus_account,
             commands::nexus_account::load_nexus_account,
             commands::nexus_account::disconnect_nexus_account,
+            commands::discord_account::connect_discord_account,
+            commands::discord_account::load_discord_account,
+            commands::discord_account::disconnect_discord_account,
+            commands::matrix_community::open_matrix_community,
+            commands::matrix_chat::connect_matrix_chat,
+            commands::matrix_chat::disconnect_matrix_chat,
+            commands::matrix_chat::matrix_chat_status,
+            commands::matrix_chat::matrix_chat_rooms,
+            commands::matrix_chat::matrix_chat_join,
+            commands::official_build::official_build_status,
+            commands::matrix_chat::matrix_chat_moderate,
+            commands::matrix_chat::matrix_chat_sync,
+            commands::matrix_chat::matrix_chat_history,
+            commands::matrix_chat::matrix_chat_ignore,
+            commands::matrix_chat::matrix_chat_report,
+            commands::matrix_chat::matrix_chat_send,
+            commands::matrix_chat::matrix_chat_avatar,
+            commands::matrix_chat::matrix_chat_upload,
+            commands::matrix_chat::matrix_chat_image,
             commands::mod_backup::load_mod_backup_settings,
             commands::mod_backup::set_mod_backup_settings,
             commands::mod_backup::set_nexus_game_backup,

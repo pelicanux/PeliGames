@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { motion } from "framer-motion";
 
 const cracks = [
   "M0 18 17 23 27 39 42 44 49 61 63 66 72 83 100 91",
@@ -10,15 +11,16 @@ const cracks = [
 ];
 const crystals = [[8,14],[88,9],[12,78],[84,87],[6,46],[94,48],[44,5],[54,95]];
 
-export function CoverFreeze({ phase = "hold", reducedMotion = false }: { phase?: "hold" | "melt"; reducedMotion?: boolean }) {
+export function CoverFreeze({ phase = "hold", reducedMotion = false }: { phase?: "hold" | "frozen" | "melt"; reducedMotion?: boolean }) {
   const id = useId().replace(/:/g, "");
   if (reducedMotion) return phase === "hold" ? <div className="library-hold-progress" aria-hidden="true"><span /></div> : null;
   return <svg className={`cover-freeze cover-freeze--${phase}`} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
     <defs>
-      <radialGradient id={`${id}-ice`}><stop stopColor="#d9f8ff" stopOpacity=".55"/><stop offset=".65" stopColor="#9dddef" stopOpacity=".8"/><stop offset="1" stopColor="#efffff" stopOpacity=".95"/></radialGradient>
+      <radialGradient id={`${id}-ice`}><stop stopColor="#d9f8ff" stopOpacity={phase === "hold" ? .55 : .82}/><stop offset=".65" stopColor="#9dddef" stopOpacity=".88"/><stop offset="1" stopColor="#efffff" stopOpacity=".98"/></radialGradient>
       <mask id={`${id}-freeze`} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
         <rect width="100" height="100" fill="white"/>
-        <circle className="cover-freeze-gap" cx="50" cy="50" r="75" fill="black"/>
+        {phase === "hold" ? <circle className="cover-freeze-gap" cx="50" cy="50" r="75" fill="black"/> :
+          <motion.circle className="cover-freeze-thaw-gap" cx="50" cy="50" fill="black" initial={{r:0}} animate={{r:phase === "melt" ? 75 : 0}} transition={{duration:2,delay:phase === "melt" ? .1 : 0,ease:"easeInOut"}}/>}
       </mask>
     </defs>
     <g mask={`url(#${id}-freeze)`}>
