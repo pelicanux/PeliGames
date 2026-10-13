@@ -32,7 +32,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
   const { language } = useI18n(); const pt = language === "pt";
   const preview = "__PELI_UI_PREVIEW__" in window;
   const chat = useMatrixChat();
-  const rooms = chat.roomList.length ? chat.roomList : [{ room_id: MATRIX_COMMUNITY_ID, name: "PeliGames" }];
+  const rooms = chat.roomList;
   const [room, setRoom] = useState(MATRIX_COMMUNITY_ID);
   const current = chat.rooms[room];
   const { exclusiveEffects, benefitsChecked } = useDiscordBenefits();
@@ -101,7 +101,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
   }, []);
   useEffect(() => { if (chat.error) setError(chat.error); }, [chat.error]);
   // Keep the selected room valid once the community's room list arrives.
-  useEffect(() => { if (!rooms.some(item => item.room_id === room)) setRoom(rooms[0].room_id); }, [rooms, room]);
+  useEffect(() => { if (rooms.length && !rooms.some(item => item.room_id === room)) setRoom(rooms[0].room_id); }, [rooms, room]);
   useEffect(() => { setReplyTo(null); setPending(null); atBottom.current = true; }, [room]);
   const messages = (premiumSelected && !premiumReady ? [] : current?.messages ?? []).filter(message => !chat.ignored.includes(message.sender));
   useEffect(() => {
@@ -161,7 +161,9 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
   };
   const byId = new Map(messages.map(message => [message.id, message]));
   const communityJoined = chat.rooms[MATRIX_COMMUNITY_ID]?.joined;
-  const roomName = rooms.find(item=>item.room_id === room)?.name || "PeliGames";
+  const selectedRoom = rooms.find(item=>item.room_id === room);
+  const roomName = selectedRoom?.name || room;
+  const roomTopic = selectedRoom?.topic?.trim();
   return createPortal(<div className="modal-overlay matrix-chat-overlay" onMouseDown={event => { if (event.target === event.currentTarget) close.current(); }}>
     <ModalSurface ref={frame} className="modal-content dialog-glass matrix-chat" role="dialog" aria-modal="true" aria-label="Matrix · PeliGames" onDismiss={() => close.current()}
       header={<h2><MatrixIcon/>Matrix <span className="matrix-terminal-tag">// PeliGames</span></h2>}>
@@ -173,15 +175,15 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
       {!chat.userId ? <div className="matrix-terminal-welcome"><MatrixIcon/><h3>{pt ? "Conecte-se à comunidade" : "Connect to the community"}</h3><p>{pt ? "Converse sobre jogos, mods e Linux num chat com cara de terminal. Entre com sua conta Matrix pelo navegador." : "Talk about games, mods and Linux in a terminal-style chat. Sign in with your Matrix account through the browser."}</p><button className="btn btn-primary" disabled={busy || chat.pending} onClick={() => void run("connect_matrix_chat").then(() => refreshMatrixStatus())}><MatrixIcon/>{chat.pending ? pt ? "Aguardando login…" : "Waiting for sign-in…" : pt ? "Entrar com Matrix" : "Sign in with Matrix"}</button><p>{chat.pending ? pt ? "Autorize no navegador e volte aqui. O login expira em três minutos." : "Authorize in your browser and return here. Sign-in expires in three minutes." : pt ? "Sua senha não fica salva no launcher." : "Your password is not saved in the launcher."}</p></div> : <div className="matrix-terminal-layout">
         <aside className="matrix-terminal-rooms">
           {chat.ready && !communityJoined && <button className="matrix-terminal-join" disabled={busy} onClick={() => void join(MATRIX_COMMUNITY_ID)}>{pt ? "+ Entrar na comunidade" : "+ Join the community"}</button>}
-          <div className="matrix-rooms-heading"><h3>{pt ? "# SALAS" : "# ROOMS"}</h3><button type="button" disabled={refreshingRooms} onClick={() => void refreshRooms()} aria-label={pt ? "Atualizar salas" : "Refresh rooms"} title={pt ? "Atualizar salas" : "Refresh rooms"}><MenuIcon name="repair"/></button></div>
+          <div className="matrix-rooms-heading"><h3>{pt ? "# SALAS" : "# ROOMS"}</h3><button type="button" className={refreshingRooms ? "matrix-rooms-refresh is-refreshing" : "matrix-rooms-refresh"} disabled={refreshingRooms} aria-busy={refreshingRooms} onClick={() => void refreshRooms()} aria-label={refreshingRooms ? pt ? "Atualizando salas…" : "Refreshing rooms…" : pt ? "Atualizar salas" : "Refresh rooms"} title={refreshingRooms ? pt ? "Atualizando salas…" : "Refreshing rooms…" : pt ? "Atualizar salas" : "Refresh rooms"}><MenuIcon name="repair"/></button></div>
           {preview && <small className="matrix-rooms-demo">{pt ? "Lista simulada na preview" : "Simulated preview rooms"}</small>}
-          {rooms.map(item => <button key={item.room_id} aria-current={room === item.room_id ? "page" : undefined} onClick={() => setRoom(item.room_id)}># {item.name || "PeliGames"}{item.room_id === MATRIX_PREMIUM_ROOM_ID && !premiumReady ? " 🔒" : ""}</button>)}
+          {rooms.map(item => <button key={item.room_id} aria-current={room === item.room_id ? "page" : undefined} onClick={() => setRoom(item.room_id)}># {item.name || item.room_id}{item.room_id === MATRIX_PREMIUM_ROOM_ID && !premiumReady ? " 🔒" : ""}</button>)}
           {chat.ignored.length > 0 && <><h3>{pt ? "# IGNORADOS" : "# IGNORED"}</h3>{chat.ignored.map(user => <button key={user} className="matrix-terminal-ignored" disabled={busy} title={pt ? "Voltar a mostrar" : "Show again"} onClick={() => void run("matrix_chat_ignore", { user, ignore: false })}>{displayName(user, chat.names)} ✕</button>)}</>}
           <button className="matrix-terminal-disconnect" disabled={busy} onClick={() => void run("disconnect_matrix_chat").then(() => refreshMatrixStatus())}>{pt ? "Desconectar" : "Disconnect"}</button>
         </aside>
-        <section className="matrix-terminal-room"><header><strong># {roomName}</strong>{!premiumSelected && chat.ready && !current?.joined && <button className="btn btn-secondary" disabled={busy} onClick={() => void join(room)}>{pt ? "Entrar na sala" : "Join room"}</button>}</header>
+        <section className="matrix-terminal-room"><header><div className="matrix-room-heading"><strong title={roomName}># {roomName}</strong>{roomTopic && <small className="matrix-room-topic" title={roomTopic}>{roomTopic}</small>}</div>{!premiumSelected && chat.ready && !current?.joined && <button className="btn btn-secondary" disabled={busy} onClick={() => void join(room)}>{pt ? "Entrar na sala" : "Join room"}</button>}</header>
           {premiumSelected && !premiumReady ? <div className="matrix-premium-gate" role="status">
-            <h3>{pt ? "Suporte premium" : "Premium support"}</h3>
+            <h3>{roomName}</h3>
             <p>{!benefitsChecked || premium?.phase === "checking" ? pt ? "Verificando o Discord e liberando sua conta Matrix…" : "Checking Discord and granting Matrix access…" : !exclusiveEffects ? pt ? "Exclusivo para membros do YouTube e impulsionadores do servidor no Discord. Entre com Discord em Preferências → Conexões para liberar." : "For YouTube members and Discord server boosters. Sign in with Discord in Preferences → Connections to unlock." : premium?.error || (pt ? "Confirme sua conexão para acessar esta sala." : "Confirm your connection to access this room.")}</p>
             {exclusiveEffects && premium?.phase !== "checking" && <button type="button" className="btn btn-secondary" onClick={() => setPremiumAttempt(value=>value+1)}>{pt ? "Tentar novamente" : "Try again"}</button>}
           </div> : <>

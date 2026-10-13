@@ -2,7 +2,7 @@
 // signed in, so mentions reach the notification bell with the chat closed.
 import { useSyncExternalStore } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { MATRIX_COMMUNITY_ID, MATRIX_PREMIUM_ROOM_ID } from "./matrixCommunity";
+import { MATRIX_COMMUNITY_ID } from "./matrixCommunity";
 
 export interface ChatMessage { id: string; sender: string; ts: number; msgtype: string; body: string; url?: string | null; reply_to?: string | null; mentions?: string[]; edited?: boolean }
 type Incoming = ChatMessage & { kind: "message" } | { kind: "edit"; id: string; target: string; body: string } | { kind: "redaction"; id: string; target: string };
@@ -59,11 +59,10 @@ async function loadRooms(reportError = false) {
     const data = await invoke<{ rooms: RoomInfo[] }>("matrix_chat_rooms");
     if (state.userId !== user) return;
     const rooms = (data.rooms || []).filter(room => room.room_type !== "m.space");
-    const discovered = rooms.length ? rooms : [{ room_id: MATRIX_COMMUNITY_ID, name: "PeliGames" }];
-    set({ roomList: [...discovered.filter(room => room.room_id !== MATRIX_PREMIUM_ROOM_ID), { room_id: MATRIX_PREMIUM_ROOM_ID, name: "Suporte premium" }] });
+    set({ roomList: rooms });
   } catch (error) {
     if (reportError) throw error;
-    if (state.userId === user) set({ roomList: [{ room_id: MATRIX_COMMUNITY_ID, name: "PeliGames" }] });
+    // Keep the last real room list on temporary discovery failures.
   }
 }
 function apply(data: SyncResult, initial: boolean) {

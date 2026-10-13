@@ -255,7 +255,7 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "matrix_chat_status": return {value:{pending:false,user_id:demoMatrixConnected ? "@demo-preview:matrix.org" : null}};
     case "connect_matrix_chat": demoMatrixConnected = true; return {value:null};
     case "disconnect_matrix_chat": demoMatrixConnected = false; return {value:null};
-    case "matrix_chat_rooms": return {value:{rooms:[{room_id:"!pNHMqrnxSAmcVFqrgf:matrix.org",name:"PeliGames · Geral"},{room_id:"!preview-help:matrix.org",name:"Ajuda com mods"}]}};
+    case "matrix_chat_rooms": return {value:{rooms:[{room_id:"!pNHMqrnxSAmcVFqrgf:matrix.org",name:"PeliGames · Geral",topic:"Jogos, Linux e conversa com a comunidade."},{room_id:"!preview-help:matrix.org",name:"Ajuda com mods",topic:"Dúvidas sobre instalação e compatibilidade de mods."}]}};
     case "matrix_chat_premium_access":
       if (previewAccount() !== "owner") throw new Error("Prévia: acesso premium bloqueado para usuário gratuito.");
       return {value:{granted:true,room_id:MATRIX_PREMIUM_ROOM_ID,user_id:"@demo-preview:matrix.org"}};
@@ -270,6 +270,9 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "matrix_chat_ignore": case "matrix_chat_report": case "matrix_chat_moderate": throw new Error("Prévia visual: nada é enviado ao Matrix.");
     case "matrix_chat_send": { const message = {kind:"message",id:`$preview-matrix-${Date.now()}`,sender:"@demo-preview:matrix.org",ts:Date.now(),msgtype:args.emote ? "m.emote" : "m.text",body:String(args.text),reply_to:args.replyTo ?? null}; demoMatrixMessages.push(message); demoMatrixSent.push(message); return {value:null}; }
     case "open_matrix_community": throw new Error("A janela do Element está disponível na versão nativa. A preview não faz login real.");
+    case "nexus_oauth_status": return {value: {configured:false,pending:false}};
+    case "connect_nexus_oauth": throw new Error("O login real Nexus depende do client_id e está disponível somente no aplicativo nativo.");
+    case "cancel_nexus_oauth": return {value:null};
     case "load_nexus_account": return { value: { user_id: 0, name: "Demonstração visual", is_premium: false, is_supporter: false } };
     case "official_build_status": return {value:"unknown"};
     case "cached_discord_account":

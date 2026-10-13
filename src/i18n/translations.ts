@@ -26,6 +26,7 @@ export const translations = {
     gameModes: {
       mods: "Gerenciador de mod",
       selectMod: "Selecione o mod a ser usado.",
+      dlssnrDescription: "Aplica DLSS 5 Neural Rendering em jogos e GPUs AMD Radeon compatíveis.",
       entryTitle: "Instalar jogo / adicionar jogo", addGame: "Adicionar jogo existente", add: "Adicionar", adding: "Adicionando…", addRequired: "Confirme o nome e escolha o destino, o Proton e o executável para adicionar.",
       home: "Início",
       goHome: "Voltar à tela inicial do launcher",
@@ -468,6 +469,7 @@ export const translations = {
     gameModes: {
       mods: "Mod manager",
       selectMod: "Select the mod to use.",
+      dlssnrDescription: "Applies DLSS 5 Neural Rendering in compatible games on supported AMD Radeon GPUs.",
       entryTitle: "Install game / add game", addGame: "Add existing game", add: "Add", adding: "Adding…", addRequired: "Confirm the name and select the destination, Proton and executable to add.",
       home: "Home",
       goHome: "Return to launcher home",

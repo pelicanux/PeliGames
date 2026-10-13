@@ -68,6 +68,7 @@ dist-ssr
 !/docs/nexus-launchers.md
 !/docs/supported-games.md
 !/docs/matrix-community.md
+!/docs/nexus-oauth.md
 /preview.html
 /src/preview.ts
 /scripts/preview-*.ts

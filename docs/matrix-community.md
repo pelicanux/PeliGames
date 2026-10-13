@@ -84,8 +84,11 @@ Fontes oficiais:
 
 ## Suporte premium automático
 
-A sala `!d6uopxWbqNBgbKYC8uTxjgvzIP4F955uQi3rerKKX2Q` aparece na lista com cadeado
-para usuários sem benefício Discord. O conteúdo/compositor ficam ocultos enquanto
+A lista usa somente salas reais retornadas pelo Matrix, com seus nomes originais.
+A sala privada configurada também pode ser descoberta após a confirmação de participação,
+mesmo quando não aparece na hierarquia do espaço. Nenhuma entrada "Suporte premium"
+é criada pelo cliente. Quando a sala configurada estiver visível, o cadeado indica
+que o benefício Discord ainda não foi validado. O conteúdo/compositor ficam ocultos enquanto
 a autorização não estiver confirmada. As outras salas continuam livres.
 
 Ao abrir o chat com Matrix e Discord conectados, o backend consulta o Worker,

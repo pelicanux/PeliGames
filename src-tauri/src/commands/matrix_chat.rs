@@ -152,8 +152,23 @@ pub async fn matrix_chat_rooms() -> Result<Value, String> {
     let data = session().await?;
     let root = room_path(ROOM)?;
     let hierarchy = get(&format!("/_matrix/client/v1/rooms/{root}/hierarchy?limit=50&max_depth=1"),&data.access_token).await?;
-    if let Some(value) = hierarchy { return Ok(value); }
-    Ok(json!({"rooms":[{"room_id":ROOM,"name":"PeliGames"}]}))
+    let mut value = hierarchy.unwrap_or_else(|| json!({"rooms":[]}));
+    // Private rooms may be absent from the space hierarchy. Only add the
+    // configured room after Matrix confirms membership, with its real name.
+    if let Ok(Some(joined)) = get("/_matrix/client/v3/joined_rooms", &data.access_token).await {
+        let joined = joined["joined_rooms"].as_array();
+        let already_listed = value["rooms"].as_array().is_some_and(|rooms| rooms.iter().any(|room| room["room_id"] == PREMIUM_ROOM));
+        if !already_listed && joined.is_some_and(|rooms| rooms.iter().any(|room| room == PREMIUM_ROOM)) {
+            let encoded = room_path(PREMIUM_ROOM)?;
+            if let Ok(Some(name)) = get(&format!("/_matrix/client/v3/rooms/{encoded}/state/m.room.name"), &data.access_token).await {
+                let topic = get(&format!("/_matrix/client/v3/rooms/{encoded}/state/m.room.topic"), &data.access_token).await.ok().flatten();
+                if let Some(rooms) = value["rooms"].as_array_mut() {
+                    rooms.push(json!({"room_id":PREMIUM_ROOM,"name":name["name"],"topic":topic.as_ref().map(|value| &value["topic"])}));
+                }
+            }
+        }
+    }
+    Ok(value)
 }
 #[tauri::command]
 pub async fn matrix_chat_join(room: String) -> Result<(), String> {
