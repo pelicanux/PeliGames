@@ -34,10 +34,10 @@ export function ModManagerModal({ onClose, onSelect, disabled = false }: {
       <p className="mod-manager-prompt">{t("gameModes", "selectMod")}</p>
       <div className="backend-options mod-manager-options">
         {availableMods.map((mod, index) => <button key={mod.id} type="button" ref={index === 0 ? firstOption : undefined}
-          className={`backend-option proton-preference-option mod-manager-option${mod.id === "nexus" ? " has-disclaimer" : ""}`} disabled={disabled} onClick={() => onSelect(mod.id)}>
+          className="btn btn-secondary backend-option proton-preference-option mod-manager-option" disabled={disabled} onClick={() => onSelect(mod.id)}>
           <span className="mod-manager-option-heading">{mod.id === "nexus" ? <img className="nexus-icon" src="/nexus-mods.svg" alt="" /> : <MenuIcon name="puzzle" />}<span>{mod.name}</span></span>
           {/* Third-party integration: shown every time the Nexus Mods manager is offered. */}
-          {mod.id === "nexus" && <small className="mod-manager-disclaimer">{t("gameModes", "nexusDisclaimer")}</small>}
+          <small className="mod-manager-disclaimer">{t("gameModes", mod.id === "nexus" ? "nexusDisclaimer" : "dlssnrDescription")}</small>
         </button>)}
       </div>
     </ModalSurface>

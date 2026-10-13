@@ -6,6 +6,8 @@ import { useNexusText } from "./text";
 interface Account { user_id: number; name: string; is_premium: boolean; is_supporter: boolean }
 export function NexusAccountPanel() {
   const text = useNexusText();
+  const [oauth, setOauth] = useState({ configured: false, pending: false });
+  const [authorizing, setAuthorizing] = useState(false);
   const [account, setAccount] = useState<Account | null>(null);
   const [key, setKey] = useState("");
   const [busy, setBusy] = useState(true);
@@ -15,11 +17,14 @@ export function NexusAccountPanel() {
   useEffect(() => {
     active.current = true;
     let cancelled = false;
+    const status = () => void invoke<{ configured: boolean; pending: boolean }>("nexus_oauth_status").then(value => { if (!cancelled) setOauth(value); }).catch(() => {});
+    status();
+    const interval = window.setInterval(status, 1000);
     lock.current = true;
     void invoke<Account | null>("load_nexus_account").then(value => { if (!cancelled) setAccount(value); })
       .catch(() => { if (!cancelled) setError(text.accountLoadError); })
       .finally(() => { if (!cancelled) { lock.current = false; setBusy(false); } });
-    return () => { cancelled = true; active.current = false; };
+    return () => { window.clearInterval(interval); cancelled = true; active.current = false; };
   }, [text.accountLoadError]);
   const run = async (operation: "connect" | "disconnect" | "verify") => {
     if (lock.current) return;
@@ -40,10 +45,26 @@ export function NexusAccountPanel() {
       if (active.current) setError(typeof e === "string" && !e.includes(apiKey || "\0") ? e : text.accountOperationError);
     } finally { lock.current = false; if (active.current) setBusy(false); }
   };
+  const login = async () => {
+    if (lock.current || oauth.pending) return;
+    lock.current = true; setBusy(true); setAuthorizing(true); setError(""); setKey("");
+    try {
+      const value = await invoke<Account>("connect_nexus_oauth");
+      if (active.current) setAccount(value);
+    } catch (e) {
+      if (active.current) setError(typeof e === "string" ? e : text.accountOperationError);
+    } finally { lock.current = false; if (active.current) { setBusy(false); setAuthorizing(false); } }
+  };
   const open = (url: string) => void openUrl(url).catch(() => setError(text.accountBrowserError));
   return <section className="nexus-account" aria-labelledby="nexus-account-title" aria-busy={busy}>
     <h3 id="nexus-account-title">{text.account}</h3>
-    <p className="nexus-hint">{text.personalKeyHint}</p>
+    <div className="nexus-account-actions">
+      <button type="button" className="btn btn-primary" disabled={busy || oauth.pending || !oauth.configured} onClick={() => void login()}><img className="nexus-icon" src="/nexus-mods.svg" alt="" />{text.oauthLogin}</button>
+      {(authorizing || oauth.pending) && <button type="button" className="btn btn-secondary" onClick={() => void invoke("cancel_nexus_oauth").catch(() => setError(text.accountOperationError))}>{text.oauthCancel}</button>}
+    </div>
+    {(authorizing || oauth.pending) && <p role="status" className="nexus-hint">{text.oauthWaiting}</p>}
+    {!oauth.configured && <p className="nexus-hint">{text.oauthUnavailable}</p>}
+    {!account && <p className="nexus-hint">{text.personalKeyHint}</p>}
     {account && <div className="nexus-account-summary"><MenuIcon name="check" /><strong>{account.name}</strong><span className="nexus-status">{account.is_premium ? text.premiumAccount : text.freeAccount}</span></div>}
     {error && <p className="nexus-error" role="alert">{error}</p>}
     {busy && <p role="status" className="nexus-hint">{text.loading}</p>}
@@ -55,7 +76,7 @@ export function NexusAccountPanel() {
     <div className="nexus-account-actions">
       <button type="button" className="btn btn-secondary" onClick={() => void openNexusBrowser().catch(error => setError(typeof error === "string" ? error : error instanceof Error ? error.message : text.accountBrowserError))}><MenuIcon name="platform" />{text.internalNexusLogin}</button>
       {account && <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void run("verify")}><MenuIcon name="check" />{text.verifyAccount}</button>}
-      <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void run("disconnect")}><MenuIcon name="trash" />{text.disconnectAccount}</button>
+      <button type="button" className="btn btn-secondary" disabled={busy || oauth.pending} onClick={() => void run("disconnect")}><MenuIcon name="trash" />{text.disconnectAccount}</button>
       <button type="button" className="btn btn-secondary" onClick={() => void openNexusBrowser("https://www.nexusmods.com/users/myaccount?tab=api").catch(error => setError(typeof error === "string" ? error : error instanceof Error ? error.message : text.accountBrowserError))}><MenuIcon name="platform" />{text.obtainKey}</button>
     </div>
     <p className="nexus-hint">{text.accountHint}</p>

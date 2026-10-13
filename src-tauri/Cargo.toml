@@ -1,6 +1,6 @@
 [package]
 name = "peligames"
-version = "0.3.3"
+version = "0.3.4"
 description = "A Tauri App"
 authors = ["Pelicano"]
 license = "GPL-3.0-only"
@@ -43,7 +43,7 @@ tauri-plugin-dialog = "2"
 tauri-plugin-shell = "2"
 tauri-plugin-clipboard-manager = "2"
 uuid = { version = "1.26.1", features = ["v4"] }
-reqwest = { version = "0.13.5", features = ["json", "rustls"] }
+reqwest = { version = "0.13.5", features = ["json", "rustls", "form"] }
 base64 = "0.22.1"
 flate2 = "1.1.10"
 xz2 = "0.1"

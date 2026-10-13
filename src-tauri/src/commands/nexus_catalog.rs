@@ -58,8 +58,11 @@ async fn vortex_support() -> (Vec<String>, Vec<u64>) {
     let (domains, mut ids) = vortex_support_snapshot();
     if let Ok(client) = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
+        .user_agent(concat!("PeliGames/", env!("CARGO_PKG_VERSION")))
         .redirect(reqwest::redirect::Policy::none()).build() {
-        if let Ok(response) = client.get("https://api.nexusmods.com/v3/vortex/extensions").send().await {
+        if super::nexus_account::before_request().await.is_err() { return (domains, ids); }
+        if let Ok(response) = client.get("https://api.nexusmods.com/v3/vortex/extensions").header("Application-Name", "PeliGames").header("Application-Version", env!("CARGO_PKG_VERSION")).send().await {
+            super::nexus_account::observe_response(&response);
             if response.status().is_success() {
                 if let Ok(value) = response.json::<serde_json::Value>().await {
                     if let Some(extensions) = value.pointer("/data/extensions").and_then(|v| v.as_array()) {

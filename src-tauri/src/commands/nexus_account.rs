@@ -5,7 +5,43 @@ use std::{
     process::{Command, Stdio},
     time::{Duration, Instant},
 };
+static REQUEST_TIMING: tokio::sync::Mutex<Option<Instant>> = tokio::sync::Mutex::const_new(None);
+static COOLDOWN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+fn epoch() -> u64 { std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs() }
+pub(super) async fn before_request() -> Result<(), String> {
+    if COOLDOWN.load(std::sync::atomic::Ordering::Relaxed) > epoch() {
+        return Err("Limite de consultas Nexus atingido. Aguarde antes de tentar novamente.".into());
+    }
+    let mut previous = REQUEST_TIMING.lock().await;
+    if let Some(last) = *previous { let delay = Duration::from_millis(200).saturating_sub(last.elapsed()); tokio::time::sleep(delay).await; }
+    *previous = Some(Instant::now());
+    Ok(())
+}
+pub(super) fn observe_response(response: &reqwest::Response) {
+    let headers = response.headers();
+    let exhausted = ["x-rl-hourly-remaining", "x-rl-daily-remaining"].iter().any(|key| headers.get(*key).and_then(|v| v.to_str().ok()) == Some("0"));
+    if response.status().as_u16() == 429 || exhausted {
+        let delay = headers.get("retry-after").and_then(|v| v.to_str().ok()).and_then(|v| v.parse::<u64>().ok()).unwrap_or(60).max(1);
+        COOLDOWN.fetch_max(epoch().saturating_add(delay), std::sync::atomic::Ordering::Relaxed);
+    }
+}
 static ACCOUNT_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+// Dropping a download future must not drop the lock halfway through token
+// rotation. The worker owns both the operation and its lock until persistence
+// finishes; logout and account changes wait for that same worker.
+pub(super) async fn with_account<T, F>(operation: F) -> Result<T, String>
+where
+    T: Send + 'static,
+    F: std::future::Future<Output = Result<T, String>> + Send + 'static,
+{
+    tauri::async_runtime::spawn(async move {
+        let _lock = ACCOUNT_LOCK.lock().await;
+        operation.await
+    })
+    .await
+    .map_err(|_| "Não foi possível concluir a operação da conta Nexus.".to_string())?
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct NexusAccount {
@@ -58,6 +94,11 @@ pub(super) fn credential_for(action: &str, key: Option<&str>, service: &str, lab
             return Err("Não foi possível enviar a chave ao chaveiro.".into());
         }
     }
+    let stdout = child.stdout.take().ok_or("Chaveiro indisponível.")?;
+    let output_task = std::thread::spawn(move || {
+        let mut output = String::new();
+        stdout.take(65537).read_to_string(&mut output).map(|_| output)
+    });
     let started = Instant::now();
     let status = loop {
         match child.try_wait() {
@@ -74,22 +115,21 @@ pub(super) fn credential_for(action: &str, key: Option<&str>, service: &str, lab
             }
         }
     };
-    let mut output = String::new();
-    child
-        .stdout
-        .take()
-        .ok_or("Chaveiro indisponível.")?
-        .take(4097)
-        .read_to_string(&mut output)
+    let output = output_task.join().map_err(|_| "Não foi possível ler o chaveiro.")?
         .map_err(|_| "Não foi possível ler o chaveiro.")?;
+    if output.len() > 65536 { return Err("Credencial excedeu o limite do chaveiro.".into()); }
     let mut diagnostic = Vec::new();
     if let Some(stderr) = child.stderr.take() {
         let _ = stderr.take(4096).read_to_end(&mut diagnostic);
     }
-    if !status.success() {
-        // secret-tool lookup returns 1 and no output when there is no matching item.
-        if action == "lookup"
-            && status.code() == Some(1)
+    credential_result(action, status.code(), output, &diagnostic)
+}
+fn credential_result(action: &str, code: Option<i32>, output: String, diagnostic: &[u8]) -> Result<Option<String>, String> {
+    if code != Some(0) {
+        // Both lookup and clear return 1 without diagnostics for a missing item.
+        // Clearing an already absent credential is successful (idempotent).
+        if matches!(action, "lookup" | "clear")
+            && code == Some(1)
             && output.is_empty()
             && diagnostic.is_empty()
         {
@@ -124,8 +164,10 @@ async fn validate(key: &str) -> Result<NexusAccount, String> {
         .redirect(reqwest::redirect::Policy::none())
         .build()
         .map_err(|_| "Não foi possível iniciar a conexão Nexus.")?;
+    before_request().await?;
     let response = client
         .get("https://api.nexusmods.com/v1/users/validate.json")
+        .header(reqwest::header::USER_AGENT, concat!("PeliGames/", env!("CARGO_PKG_VERSION")))
         .header("apikey", header)
         .header("Application-Name", "PeliGames")
         .header("Application-Version", env!("CARGO_PKG_VERSION"))
@@ -134,6 +176,7 @@ async fn validate(key: &str) -> Result<NexusAccount, String> {
         .map_err(|_| {
             "Não foi possível conectar ao Nexus Mods. Verifique sua conexão e tente novamente."
         })?;
+    observe_response(&response);
     match response.status().as_u16() {
         200 => {}
         401 | 403 => return Err(
@@ -164,25 +207,38 @@ async fn validate(key: &str) -> Result<NexusAccount, String> {
 }
 #[tauri::command]
 pub async fn connect_nexus_account(api_key: String) -> Result<NexusAccount, String> {
-    let _lock = ACCOUNT_LOCK.lock().await;
-    let key = checked_key(&api_key)?.to_string();
-    let account = validate(&key).await?;
-    stored("store", Some(key)).await?;
-    Ok(account)
+    super::nexus_oauth::cancel_nexus_oauth().await;
+    with_account(async move {
+        let key = checked_key(&api_key)?.to_string();
+        let account = validate(&key).await?;
+        stored("store", Some(key)).await?;
+        super::nexus_oauth::clear().await?;
+        Ok(account)
+    }).await
 }
 #[tauri::command]
 pub async fn load_nexus_account() -> Result<Option<NexusAccount>, String> {
-    let _lock = ACCOUNT_LOCK.lock().await;
-    match stored("lookup", None).await? {
-        Some(key) => validate(&key).await.map(Some),
-        None => Ok(None),
-    }
+    with_account(async {
+        if let Some(account) = super::nexus_oauth::load_account().await? {
+            return Ok(Some(account));
+        }
+        match stored("lookup", None).await? {
+            Some(key) => validate(&key).await.map(Some),
+            None => Ok(None),
+        }
+    }).await
 }
 #[tauri::command]
 pub async fn disconnect_nexus_account() -> Result<(), String> {
-    let _lock = ACCOUNT_LOCK.lock().await;
-    stored("clear", None).await?;
-    Ok(())
+    super::nexus_oauth::cancel_nexus_oauth().await;
+    with_account(async {
+        // Try both removals even when one service reports an actual failure.
+        let oauth = super::nexus_oauth::clear().await;
+        let personal = stored("clear", None).await;
+        oauth?;
+        personal?;
+        Ok(())
+    }).await
 }
 
 // Internal only: callers select fixed metadata endpoints and return typed summaries.
@@ -297,31 +353,44 @@ async fn request_metadata(
     url: &str,
     body: Option<serde_json::Value>,
 ) -> Result<serde_json::Value, String> {
-    let _lock = ACCOUNT_LOCK.lock().await;
-    let key = stored("lookup", None)
-        .await?
-        .ok_or("Conecte sua conta na aba Conta Nexus.")?;
-    let mut header = reqwest::header::HeaderValue::from_str(checked_key(&key)?)
-        .map_err(|_| "Chave inválida.")?;
+    let url = url.to_owned();
+    with_account(async move { request_metadata_locked(&url, body).await }).await
+}
+async fn request_metadata_locked(
+    url: &str,
+    body: Option<serde_json::Value>,
+) -> Result<serde_json::Value, String> {
+    let oauth = super::nexus_oauth::access(false).await?;
+    let mut header = if let Some(token) = oauth.as_ref() {
+        reqwest::header::HeaderValue::from_str(&format!("Bearer {token}"))
+    } else {
+        let key = stored("lookup", None).await?.ok_or("Conecte sua conta na aba Conta Nexus.")?;
+        reqwest::header::HeaderValue::from_str(checked_key(&key)?)
+    }.map_err(|_| "Credencial Nexus inválida.")?;
     header.set_sensitive(true);
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(25))
         .redirect(reqwest::redirect::Policy::none())
         .build()
         .map_err(|_| "Falha ao iniciar a consulta Nexus.")?;
-    let request = if let Some(body) = body {
-        client.post(url).json(&body)
-    } else {
-        client.get(url)
+    let request = || {
+        let request = if let Some(body) = body.as_ref() { client.post(url).json(body) } else { client.get(url) };
+        request.header(reqwest::header::USER_AGENT, concat!("PeliGames/", env!("CARGO_PKG_VERSION")))
+            .header("Application-Name", "PeliGames")
+            .header("Application-Version", env!("CARGO_PKG_VERSION"))
     };
-    let mut response = request
-        .header(reqwest::header::USER_AGENT, concat!("PeliGames/", env!("CARGO_PKG_VERSION")))
-        .header("apikey", header)
-        .header("Application-Name", "PeliGames")
-        .header("Application-Version", env!("CARGO_PKG_VERSION"))
-        .send()
-        .await
+    let auth_header = if oauth.is_some() { "Authorization" } else { "apikey" };
+    before_request().await?;
+    let mut response = request().header(auth_header, header).send().await
         .map_err(|_| "Não foi possível consultar o Nexus Mods. Verifique sua conexão.")?;
+    // Retry authentication once only; never turn rate-limit responses into loops.
+    if response.status().as_u16() == 401 && oauth.is_some() {
+        let token = super::nexus_oauth::access(true).await?.ok_or("Reconecte sua conta Nexus.")?;
+        before_request().await?;
+        response = request().bearer_auth(token).send().await
+            .map_err(|_| "Não foi possível consultar o Nexus Mods. Verifique sua conexão.")?;
+    }
+    observe_response(&response);
     match response.status().as_u16() {
         200 => {}
         401 | 403 => return Err("Acesso recusado. Verifique a conexão na aba Conta Nexus.".into()),
@@ -345,4 +414,79 @@ async fn request_metadata(
         body.extend_from_slice(&chunk);
     }
     serde_json::from_slice(&body).map_err(|_| "Resposta Nexus inválida.".into())
+}
+
+#[cfg(test)]
+mod auth_regression_tests {
+    use super::*;
+    use std::sync::{Arc, Mutex};
+
+    #[test]
+    fn missing_keyring_items_can_be_cleared_repeatedly() {
+        for action in ["lookup", "clear", "clear"] {
+            assert_eq!(credential_result(action, Some(1), String::new(), &[]).unwrap(), None);
+        }
+        assert_eq!(credential_result("clear", Some(0), String::new(), &[]).unwrap(), None);
+        assert_eq!(credential_result("lookup", Some(0), "test-credential\n".into(), &[]).unwrap(), Some("test-credential".into()));
+    }
+
+    #[test]
+    fn keyring_failures_are_not_mistaken_for_missing_items() {
+        for (action, code, output, diagnostic) in [
+            ("clear", Some(1), "", "keyring is locked: private-token"),
+            ("lookup", Some(1), "unexpected output", ""),
+            ("store", Some(1), "", ""),
+            ("clear", Some(2), "", ""),
+            ("clear", None, "", ""),
+        ] {
+            let error = credential_result(action, code, output.into(), diagnostic.as_bytes()).unwrap_err();
+            assert!(!error.contains("private-token"));
+        }
+    }
+
+    #[test]
+    fn cancelled_request_finishes_rotation_before_logout() {
+        tokio::runtime::Runtime::new().unwrap().block_on(async {
+            // Exercise cancellation both before the refresh result arrives and
+            // while a blocking keyring write is underway. No real keyring is used.
+            for during_write in [false, true] {
+                let credentials = Arc::new(Mutex::new(Some("old-refresh".to_string())));
+                let write_credentials = credentials.clone();
+                let (started_tx, started_rx) = tokio::sync::oneshot::channel();
+                let (release_tx, release_rx) = std::sync::mpsc::channel();
+                let requester = tokio::spawn(with_account(async move {
+                    if during_write {
+                        tauri::async_runtime::spawn_blocking(move || {
+                            let _ = started_tx.send(());
+                            release_rx.recv().map_err(|_| "test cancelled".to_string())?;
+                            *write_credentials.lock().unwrap() = Some("rotated-refresh".into());
+                            Ok::<_, String>(())
+                        }).await.map_err(|_| "test writer failed".to_string())??;
+                    } else {
+                        let _ = started_tx.send(());
+                        tauri::async_runtime::spawn_blocking(move || release_rx.recv())
+                            .await.map_err(|_| "test wait failed".to_string())?
+                            .map_err(|_| "test cancelled".to_string())?;
+                        *write_credentials.lock().unwrap() = Some("rotated-refresh".into());
+                    }
+                    Ok(())
+                }));
+                tokio::time::timeout(Duration::from_secs(5), started_rx).await.unwrap().unwrap();
+                requester.abort();
+                assert!(requester.await.unwrap_err().is_cancelled());
+                assert!(ACCOUNT_LOCK.try_lock().is_err(), "cancellation released the account lock before persistence");
+
+                let logout_credentials = credentials.clone();
+                let logout = tokio::spawn(with_account(async move {
+                    // Logout must see the committed rotation, then erase it.
+                    assert_eq!(logout_credentials.lock().unwrap().as_deref(), Some("rotated-refresh"));
+                    *logout_credentials.lock().unwrap() = None;
+                    Ok(())
+                }));
+                release_tx.send(()).unwrap();
+                tokio::time::timeout(Duration::from_secs(5), logout).await.unwrap().unwrap().unwrap();
+                assert!(credentials.lock().unwrap().is_none(), "late write restored credentials after logout");
+            }
+        });
+    }
 }
