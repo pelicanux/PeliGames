@@ -60,11 +60,6 @@ dist-ssr
 /docs/*
 # Exceções versionadas: importador Vortex e documentação das famílias de módulos.
 !/tools/vortex-import/
-!/tools/report-relay/
-/tools/report-relay/.wrangler/
-!/tools/discord-auth/
-/tools/discord-auth/.wrangler/
-/tools/discord-auth/node_modules/
 !/docs/nexus-unreal-family.md
 !/docs/nexus-unity-family.md
 !/docs/nexus-collections.md
