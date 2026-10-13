@@ -13,9 +13,9 @@ import { usePreferencesText } from "./labels";
 import { notifyError } from "../../services/notifications";
 
 type ConfigProps = { config: AppConfig; disabled: boolean; save: (patch: Partial<AppConfig>) => void };
-export function ThemePreferences({ onApplied }: { onApplied: () => void }) {
+export function ThemePreferences({ onApplied, onOpenConnections }: { onApplied: () => void; onOpenConnections: () => void }) {
   const text = usePreferencesText(), { t } = useI18n();
-  const { accent, appearance, setAccent, setAppearance, glassEffects, setGlassEffects, resetGlassEffects, launchEffect, setLaunchEffect } = useAccentTheme();
+  const { accent, appearance, setAccent, setAppearance, glassEffects, setGlassEffects, resetGlassEffects, exclusiveEffects, launchEffect, setLaunchEffect } = useAccentTheme();
   const launchEffects = [
     { id: "smooth", name: text.smoothEffect, hint: text.smoothHint },
     { id: "shrink", name: text.shrinkEffect, hint: text.shrinkHint },
@@ -47,10 +47,11 @@ export function ThemePreferences({ onApplied }: { onApplied: () => void }) {
     </section>
     <section data-preference-id="launch-effect" className="preference-section">
       <h3>{text.launchEffect}</h3><p>{text.launchEffectHint}</p>
+      {!exclusiveEffects && <p className="preference-effects-locked">{text.exclusiveEffectsBeforeLink}{" "}<button type="button" className="preference-connections-link" onClick={onOpenConnections}>{text.connections}</button>{" "}{text.exclusiveEffectsAfterLink}</p>}
       <div role="group" aria-label={text.launchEffect}>
         <div className="preference-launch-effects">
-          {launchEffects.map(effect => <button type="button" key={effect.id} className={`preference-choice preference-launch-effect ${launchEffect === effect.id ? "selected" : ""}`} aria-pressed={launchEffect === effect.id} onClick={() => { setLaunchEffect(effect.id); onApplied(); }}>
-            <span className="preference-launch-effect-heading"><span className="preference-launch-effect-icon"><LaunchEffectIcon effect={effect.id} /></span><strong>{effect.name}</strong><i className="preference-radio" aria-hidden="true" /></span>
+          {launchEffects.map(effect => <button type="button" key={effect.id} disabled={!exclusiveEffects && effect.id !== "smooth"} title={!exclusiveEffects && effect.id !== "smooth" ? text.exclusiveEffectsHint : undefined} className={`preference-choice preference-launch-effect ${launchEffect === effect.id ? "selected" : ""}`} aria-pressed={launchEffect === effect.id} onClick={() => { setLaunchEffect(effect.id); onApplied(); }}>
+            <span className="preference-launch-effect-heading"><span className="preference-launch-effect-icon"><LaunchEffectIcon effect={effect.id} /></span><strong>{effect.name}</strong>{!exclusiveEffects && effect.id !== "smooth" && <svg className="preference-effect-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-label={text.lockedEffect}><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>}<i className="preference-radio" aria-hidden="true" /></span>
             <small>{effect.hint}</small>
           </button>)}
         </div>

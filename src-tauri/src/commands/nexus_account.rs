@@ -19,6 +19,9 @@ pub struct NexusAccount {
 
 // Pass secrets on stdin, never as process arguments. Only our own item is queried.
 fn credential(action: &str, key: Option<&str>) -> Result<Option<String>, String> {
+    credential_for(action, key, "nexusmods-personal-api", "PeliGames — Nexus Mods")
+}
+pub(super) fn credential_for(action: &str, key: Option<&str>, service: &str, label: &str) -> Result<Option<String>, String> {
     let mut command = Command::new("secret-tool");
     command.arg(action);
     // The system helper must use system libraries even when launched from AppImage.
@@ -26,14 +29,14 @@ fn credential(action: &str, key: Option<&str>) -> Result<Option<String>, String>
         .env_remove("LD_LIBRARY_PATH")
         .env_remove("LD_PRELOAD");
     if action == "store" {
-        command.arg("--label=PeliGames — Nexus Mods");
+        command.arg(format!("--label={label}"));
     }
     command
         .args([
             "application",
             "com.pelicano.peligames",
             "service",
-            "nexusmods-personal-api",
+            service,
         ])
         .stdin(if key.is_some() {
             Stdio::piped()

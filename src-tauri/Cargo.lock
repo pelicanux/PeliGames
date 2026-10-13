@@ -3018,6 +3018,7 @@ dependencies = [
 name = "peligames"
 version = "0.3.2"
 dependencies = [
+ "base64 0.22.1",
  "dirs 5.0.1",
  "flate2",
  "gtk",

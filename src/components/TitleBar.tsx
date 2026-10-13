@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { DiscordPanel } from './DiscordPanel';
+import { MatrixChatPanel } from './MatrixChatPanel';
+import { MatrixIcon } from './MatrixIcon';
+import { OPEN_MATRIX_CHAT_EVENT, startMatrixChat } from '../services/matrixChat';
 import { BrandName } from './BrandName';
 import { useI18n } from '../i18n/I18nContext';
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -21,10 +24,19 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
   const appWindow = isTauri() ? getCurrentWindow() : null;
 
   const [showDiscord, setShowDiscord] = useState(false);
+  const [showMatrix, setShowMatrix] = useState(false);
+  // An existing Matrix sign-in resumes in the background (mentions reach the bell).
+  useEffect(() => {
+    startMatrixChat();
+    const open = () => setShowMatrix(true);
+    window.addEventListener(OPEN_MATRIX_CHAT_EVENT, open);
+    return () => window.removeEventListener(OPEN_MATRIX_CHAT_EVENT, open);
+  }, []);
 
   return (
     <>
     {showDiscord && <DiscordPanel onClose={() => setShowDiscord(false)} />}
+    {showMatrix && <MatrixChatPanel onClose={() => setShowMatrix(false)} />}
     <div className="app-titlebar"
       data-tauri-drag-region="true"
       style={{
@@ -67,6 +79,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.33-.35-.76-.53-1.09a.09.09 0 0 0-.07-.03c-1.5.26-2.93.71-4.27 1.33-.01 0-.02.01-.03.02-2.72 4.07-3.47 8.03-3.1 11.95 0 .02.01.04.03.05 1.8 1.32 3.53 2.12 5.24 2.65.03.01.06 0 .07-.02.4-.55.76-1.13 1.07-1.74.02-.04 0-.08-.04-.09-.57-.22-1.11-.48-1.64-.78-.04-.02-.04-.08-.01-.11.11-.08.22-.17.33-.25.02-.02.05-.02.07-.01 3.44 1.57 7.15 1.57 10.55 0 .02-.01.05-.01.07.01.11.09.22.17.33.26.03.03.03.09-.01.11-.52.31-1.07.56-1.64.78-.04.01-.05.06-.04.09.32.61.68 1.19 1.07 1.74.01.02.04.03.07.02 1.71-.53 3.44-1.33 5.24-2.65.02-.01.03-.03.03-.05.44-4.53-.73-8.46-3.1-11.95-.01-.01-.02-.02-.03-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.83 2.12-1.89 2.12z" /></svg>
           </button>
 
+        <button type="button" data-tauri-drag-region="false" className="btn-titlebar" title="Matrix · Comunidade" aria-label="Matrix · Comunidade" onClick={() => setShowMatrix(true)} style={{ background:'transparent', border:'none', color:'var(--tone-94a3b8, #94a3b8)', cursor:'pointer', padding:'0.3rem 0.5rem', display:'flex', alignItems:'center', borderRadius:'4px' }}><MatrixIcon/></button>
         {updateIndicator}
         <div inert={disabled} style={{ display: "flex", alignItems: "center", opacity: disabled ? 0.3 : 1, pointerEvents: disabled ? "none" : "auto" }}>
           <button 

@@ -51,6 +51,10 @@ mod nexus_unity;
 mod nexus_discovery;
 
 pub mod nexus_account;
+pub mod discord_account;
+pub mod matrix_community;
+pub mod matrix_chat;
+pub mod official_build;
 
 pub mod nexus_catalog;
 pub mod nexus_translation;
