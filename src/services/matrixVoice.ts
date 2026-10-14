@@ -191,6 +191,8 @@ export async function setMatrixVoiceControls(patch: Partial<VoiceSettings>) {
   if (devicesChanged) await invoke("matrix_audio_route", { input: state.input, output: state.output });
   await pushControls();
 }
+/** The call this launcher is in (or joining), if any; read outside React. */
+export function matrixVoiceRoom() { return state.phase === "idle" ? null : state.room; }
 export function useMatrixVoice() {
   return useSyncExternalStore(fn => { subscribers.add(fn); return () => subscribers.delete(fn); }, () => state);
 }
