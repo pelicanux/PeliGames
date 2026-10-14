@@ -16,6 +16,7 @@ import { TimedFeedback } from "./TimedFeedback";
 import { MenuIcon } from "./MenuIcon";
 import { STEAMGRIDDB_API_KEY } from "../services/coverConfig";
 import { hasCustomCover } from "../services/customCovers";
+import { forgetAutomaticCover, rememberAutomaticCover } from "../services/automaticCovers";
 import React, { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "../i18n/I18nContext";
@@ -27,7 +28,11 @@ import { GameEntryButton, GameModeSelector, type GamePanelMode } from "./GameMod
 import { HoverTooltip } from "./HoverTooltip";
 import { LauncherIcon } from "./LauncherIcon";
 import { openDirectoryPicker } from "../services/tauriService";
+import { launcherCoverFallback } from "../services/launcherInstallation";
 import { listPeliGamesEntries } from "../services/installedLibrary";
+
+const COVER_HOLD_FEEDBACK_DELAY = 250;
+const COVER_HOLD_ANIMATION_DURATION = 1200;
 
 export interface GameInfo {
   nexus_platform?: "native" | "proton";
@@ -35,6 +40,11 @@ export interface GameInfo {
   nexus_starting?: boolean;
   /** ID of the Nexus library entry (several entries may share a folder). */
   nexus_id?: string;
+  library_category?: "launchers";
+  launcher_id?: string;
+  external_id?: string;
+  external_store?: string;
+  flatpak?: boolean;
   discovery_source?: string | null;
   /** The clear favourite among an installation's executables. */
   recommended?: boolean;
@@ -100,13 +110,13 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const [cachedGames] = useState(() => readGameLibrary());
   const [initialSnapshots] = useState(() => ({
     all: cachedGames,
-    own: readGameLibrary("own") ?? cachedGames?.filter(game => game.launcher === "PeliGames") ?? null,
+    own: readGameLibrary("own") ?? cachedGames ?? null,
     nexus: readGameLibrary("nexus"),
   }));
   const librarySnapshots = useRef(initialSnapshots);
   const [games, setGames] = useState<GameInfo[]>(cachedGames ?? []);
   const [libraryLoaded, setLibraryLoaded] = useState(cachedGames !== null);
-  const startupHandled = useRef(false);
+  const startupHandled = useRef<string | null>(null);
   const scanInProgress = useRef(false);
   const pendingScanFolders = useRef<{ folders: string[]; background: boolean } | null>(null);
   const ownEntries = useRef<GameInfo[]>([]);
@@ -126,10 +136,10 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   useEffect(() => {
     if (managedLibrary) return;
     void refreshOwnLibrary(true).finally(() => setOwnLoaded(true));
-    const refresh = () => { void fetchGames(); };
+    const refresh = () => { void refreshOwnLibrary(true); };
     window.addEventListener("peligamesLibraryChanged", refresh);
     return () => { ++ownRequest.current; window.removeEventListener("peligamesLibraryChanged", refresh); };
-  }, []);
+  }, [Boolean(managedLibrary)]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
@@ -179,17 +189,16 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       setFallbackAttempted(new Set());
     }
     try {
-      if (libraryScope === "own") {
-        await refreshOwnLibrary(true);
-        setLibraryLoaded(true);
-        return;
-      }
-      const result = await invoke<GameInfo[]>("scan_installed_games", { apiKey: STEAMGRIDDB_API_KEY, customFolders: folders });
+      const result = libraryScope === "own"
+        ? await invoke<GameInfo[]>("scan_external_library")
+        : await invoke<GameInfo[]>("scan_installed_games", { apiKey: STEAMGRIDDB_API_KEY, customFolders: folders });
       setGames(applyCustomCovers([...result.filter(game => game.launcher !== "PeliGames"), ...ownEntries.current]));
       await refreshOwnLibrary(true);
       setLibraryLoaded(true);
     } catch (e) {
       console.error("Failed to scan games", e);
+      setLibraryError(String(e));
+      setLibraryLoaded(true);
     } finally {
       scanInProgress.current = false;
       const pending = pendingScanFolders.current;
@@ -219,10 +228,10 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
 
   useEffect(() => {
     if (managedLibrary) return;
-    if (libraryScope === "all" && !startupHandled.current) {
-      startupHandled.current = true;
-      if (cachedGames === null) void fetchGames();
-      else void invoke("log_cached_library", { count: cachedGames.length }).catch(() => {});
+    if (startupHandled.current !== libraryScope) {
+      startupHandled.current = libraryScope;
+      void fetchGames(customFolders, cachedGames !== null);
+      if (cachedGames !== null) void invoke("log_cached_library", { count: cachedGames.length }).catch(() => {});
     }
 
     const handleRefresh = (event: Event) => {
@@ -331,7 +340,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     coverPress.current = null;
     // A cancelled hold must not become the browser's trailing click. Keep
     // ordinary quick clicks available even when cover launching is disabled.
-    if (press && performance.now() - press.startedAt >= 200) suppressHoldClick.current = press.key;
+    if (press && performance.now() - press.startedAt >= COVER_HOLD_FEEDBACK_DELAY) suppressHoldClick.current = press.key;
     const active = hold.current;
     hold.current = null;
     if (active) {
@@ -369,7 +378,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     if (event.button !== 0 || !event.isPrimary) return;
     coverPress.current = { key: gameViewKey(game), startedAt: performance.now() };
     if (launchEffect === "disabled" || launchBlocked.current
-      || !(managed || game.launcher === "Steam" || game.launcher === "PeliGames")) return;
+      || !(managed || game.external_id || game.launcher === "Steam" || game.launcher === "PeliGames")) return;
     const key = gameViewKey(game);
     const stopping = isRunning(game);
     if (!stopping && coverActionsBlocked) return;
@@ -418,19 +427,22 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         setTeleport(null);
         setBrokenCards(previous => { const next = new Set(previous); next.delete(key); return next; });
       });
-    }, 1200);
+    }, COVER_HOLD_FEEDBACK_DELAY + COVER_HOLD_ANIMATION_DURATION);
     hold.current = { key, pointer: event.pointerId, x: event.clientX, y: event.clientY, timer, target: event.currentTarget };
-    if (launchEffect === "shrink") {
-      hold.current.feedbackTimer = window.setTimeout(() => {
-        const active = hold.current;
-        if (!active || active.key !== key) return;
+    // Every effect waits for an intentional hold, rather than animating on a click.
+    // Keep the full animation duration after this grace period.
+    hold.current.feedbackTimer = window.setTimeout(() => {
+      const active = hold.current;
+      if (!active || active.key !== key || launchBlocked.current) return;
+      if (launchEffect === "shrink") {
         // Shrinking must not make a stationary pointer leave the shrinking hit area.
         active.target.setPointerCapture(active.pointer);
-        setHoldingKey(key);
-      }, 150);
-    } else setHoldingKey(key);
+      }
+      setHoldingKey(key);
+    }, COVER_HOLD_FEEDBACK_DELAY);
   };
 
+  const isPreparing = (game: GameInfo) => (game.nexus_starting || game.path === startingGamePath) && !(game.nexus_running || game.path === runningGamePath);
   const runningBadge = (game: GameInfo) => (game.nexus_running || game.path === runningGamePath) && <span className="library-running-badge" role="status"><i aria-hidden="true" />{t("gameExecution", "running")}</span>;
   const renderCardContent = (game: GameInfo) => {
     if (brokenCards.has(gameViewKey(game))) return null;
@@ -438,7 +450,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       return (
         <div 
           key={gameViewKey(game)}
-          className={`game-card-placeholder ${viewMode === "list" ? "game-card-placeholder--list" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shatter" ? "is-holding-launch" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "particles" ? "is-holding-particles" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shrink" ? "is-holding-shrink" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "freeze" ? "is-holding-freeze" : ""}`}
+          className={`game-card-placeholder ${isPreparing(game) ? "is-preparing-game" : ""} ${viewMode === "list" ? "game-card-placeholder--list" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shatter" ? "is-holding-launch" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "particles" ? "is-holding-particles" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shrink" ? "is-holding-shrink" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "freeze" ? "is-holding-freeze" : ""}`}
           onPointerDown={event => { if (isRunning(game)) startHold(event, game); }}
           onPointerMove={event => { const active = hold.current; if (active && Math.hypot(event.clientX - active.x, event.clientY - active.y) > 10) cancelHold(); }}
           onPointerLeave={cancelHold}
@@ -475,7 +487,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
 
     return (
       <div
-        className={`library-game-card ${viewMode === "list" ? "library-game-card--list" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shatter" ? "is-holding-launch" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "particles" ? "is-holding-particles" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shrink" ? "is-holding-shrink" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "freeze" ? "is-holding-freeze" : ""}`}
+        className={`library-game-card ${isPreparing(game) ? "is-preparing-game" : ""} ${viewMode === "list" ? "library-game-card--list" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shatter" ? "is-holding-launch" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "particles" ? "is-holding-particles" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shrink" ? "is-holding-shrink" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "freeze" ? "is-holding-freeze" : ""}`}
         key={`${gameViewKey(game)}-${viewMode}-${performanceMode ? "performance" : "elegant"}`} 
         onPointerDown={event => startHold(event, game)}
         onPointerMove={event => {
@@ -530,13 +542,22 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
           style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block" }} 
           onError={async () => {
             setImageErrors(prev => new Set(prev).add(game.path));
+            if (!hasCustomCover(game)) forgetAutomaticCover(game);
+            const launcherFallback = launcherCoverFallback(game);
+            if (launcherFallback && game.cover_url !== launcherFallback && !hasCustomCover(game)) {
+              setGames(previous => previous.map(item => item.path === game.path ? {...item, cover_url:launcherFallback, automatic_cover_url:launcherFallback} : item));
+              setImageErrors(previous => { const next=new Set(previous); next.delete(game.path); return next; });
+              return;
+            }
             if (!hasCustomCover(game) && !fallbackAttempted.has(game.path)) {
               setFallbackAttempted(prev => new Set(prev).add(game.path));
               try {
                 if (managedLibrary?.onCoverFallback) { await managedLibrary.onCoverFallback(game); return; }
                 const newCover = await invoke<string | null>("fetch_steamgriddb_cover_command", { name: game.name, apiKey: STEAMGRIDDB_API_KEY });
                 if (newCover && !hasCustomCover(game)) {
-                  setGames(prev => prev.map(g => g.path === game.path ? { ...g, cover_url: newCover, automatic_cover_url: newCover } : g));
+                  const savedCover = await rememberAutomaticCover(game, newCover);
+                  if (hasCustomCover(game)) return;
+                  setGames(prev => prev.map(g => g.path === game.path ? { ...g, cover_url: savedCover, automatic_cover_url: savedCover } : g));
                   setImageErrors(prev => {
                     const next = new Set(prev);
                     next.delete(game.path);
@@ -596,7 +617,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     ? !managedLibrary.loaded || Boolean(managedLibrary.scanning)
     : loading || !libraryLoaded || !ownLoaded;
   const liveGames = managedLibrary ? managedLibrary.games
-    : libraryScope === "own" ? games.filter(game => game.launcher === "PeliGames") : games;
+    : libraryScope === "own" ? games.filter(game => game.launcher === "PeliGames" || Boolean(game.external_id)) : games;
   // A pending scan must not replace the last complete library with an empty or
   // partially discovered result. New entries can still appear during the scan.
   const previousGames = librarySnapshots.current[cacheScope] ?? [];
@@ -616,8 +637,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const layoutRevision = JSON.stringify([viewMode, filteredGames.map(gameViewKey), [...favorites], favoritesCollapsed, collapsedCats]);
   const favoriteGames = filteredGames.filter(game => favorites.has(gameViewKey(game)));
   const remainingGames = filteredGames.filter(game => !favorites.has(gameViewKey(game)));
-  const steamGames = remainingGames.filter(g => g.launcher === "Steam");
-  const otherGames = remainingGames.filter(g => g.launcher !== "Steam");
+  const otherGames = remainingGames;
   // Mod operations share the busy flag, but must not unmount the loaded covers.
   const scanning = managedLibrary
     ? !managedLibrary.loaded || (!hasLibraryCache && Boolean(managedLibrary.scanning))
@@ -764,35 +784,6 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
           </div>
           {!favoritesCollapsed && <div className={`game-collection game-collection--${viewMode}`}>{favoriteGames.map(game => renderCard(game))}</div>}
         </section>}
-        {steamGames.length > 0 && (
-          <div style={{ marginBottom: "1.5rem" }}>
-            <div 
-              className="launcher-category-header"
-              style={{ 
-                display: "flex", alignItems: "center", 
-                marginBottom: collapsedCats["Steam"] ? "0" : "1rem", userSelect: "none" 
-              }}
-            >
-              <svg 
-                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                style={{ transform: collapsedCats["Steam"] ? "rotate(-90deg)" : "rotate(0deg)", transition: "transform 0.2s", marginRight: "0.5rem" }}
-              >
-                <path d="m6 9 6 6 6-6"/>
-              </svg>
-              <span className="category-launcher-icon" style={{ color: "var(--tone-60a5fa, #60a5fa)" }}><LauncherIcon launcher="Steam" /></span>
-              <h3 style={{ margin: 0, fontSize: "1.1rem", color: "var(--tone-60a5fa, #60a5fa)" }}>
-                <button type="button" className="launcher-category-toggle" aria-expanded={!collapsedCats["Steam"]}
-                  onClick={() => setCollapsedCats(prev => ({ ...prev, Steam: !prev.Steam }))}>Steam</button> <span style={{ fontSize: "0.85rem", color: "var(--tone-6b7280, #6b7280)", fontWeight: "normal" }}>{steamGames.length}</span>
-              </h3>
-            </div>
-            
-            {!collapsedCats["Steam"] && (
-              <div className={`game-collection game-collection--${viewMode}`}>
-                {steamGames.map(game => renderCard(game))}
-              </div>
-            )}
-          </div>
-        )}
 
         {(() => {
           const grouped: Record<string, typeof otherGames> = {};
@@ -803,13 +794,16 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
               if (!grouped[catName]) grouped[catName] = [];
               grouped[catName].push(game);
             } else {
-              const catName = game.launcher;
+              const catName = game.library_category === "launchers" ? "Launchers" : game.launcher;
               if (!grouped[catName]) grouped[catName] = [];
               grouped[catName].push(game);
             }
           });
 
-          return Object.entries(grouped).map(([catName, gms]) => (
+          const priority = (category: string) => libraryScope === "own"
+            ? category === "PeliGames" ? 0 : category === "Launchers" ? 1 : category === "Steam" ? 2 : 3
+            : category === "Steam" ? 0 : 1;
+          return Object.entries(grouped).sort(([a], [b]) => priority(a) - priority(b)).map(([catName, gms]) => (
             <div key={catName} style={{ marginBottom: "1.5rem" }}>
               <div 
                 className="launcher-category-header"
@@ -819,14 +813,16 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
                 }}
               >
                 <svg 
-                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={catName === "PeliGames" ? "var(--accent-soft)" : "var(--tone-c084fc, #c084fc)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={catName === "PeliGames" ? "var(--accent-soft)" : catName === "Steam" ? "var(--tone-60a5fa, #60a5fa)" : "var(--tone-c084fc, #c084fc)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                   style={{ transform: collapsedCats[catName] ? "rotate(-90deg)" : "rotate(0deg)", transition: "transform 0.2s", marginRight: "0.5rem" }}
                 >
                   <path d="m6 9 6 6 6-6"/>
                 </svg>
                 {gms.some(game => game.launcher === "Heroic") && <span className="category-launcher-icon" style={{ color: "var(--tone-c084fc, #c084fc)" }}><LauncherIcon launcher="Heroic" /></span>}
+                {catName === "Steam" && <span className="category-launcher-icon" style={{color:"var(--tone-60a5fa, #60a5fa)"}}><LauncherIcon launcher="Steam" /></span>}
+                {catName === "Launchers" && <span className="category-launcher-icon"><MenuIcon name="gamepad" /></span>}
                 {catName === "PeliGames" && <span className="category-launcher-icon"><LauncherIcon launcher="PeliGames" /></span>}
-                <h3 style={{ margin: 0, fontSize: "1.1rem", color: catName === "PeliGames" ? "var(--accent-soft)" : "var(--tone-c084fc, #c084fc)" }}>
+                <h3 style={{ margin: 0, fontSize: "1.1rem", color: catName === "PeliGames" ? "var(--accent-soft)" : catName === "Steam" ? "var(--tone-60a5fa, #60a5fa)" : "var(--tone-c084fc, #c084fc)" }}>
                   <button type="button" className="launcher-category-toggle" aria-expanded={!collapsedCats[catName]}
                     onClick={() => setCollapsedCats(prev => ({ ...prev, [catName]: !prev[catName] }))}>{catName}</button> <span style={{ fontSize: "0.85rem", color: "var(--tone-6b7280, #6b7280)", fontWeight: "normal" }}>{gms.length}</span>
                 </h3>

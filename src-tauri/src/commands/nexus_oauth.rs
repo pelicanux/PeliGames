@@ -104,19 +104,46 @@ async fn bounded_json(mut response: reqwest::Response) -> Result<serde_json::Val
     }
     serde_json::from_slice(&data).map_err(|_| "Resposta Nexus inválida.".into())
 }
+enum TokenError {
+    /// The token endpoint refused the grant: the saved session can never work again.
+    Refused,
+    Other(String),
+}
+impl From<String> for TokenError {
+    fn from(error: String) -> Self {
+        TokenError::Other(error)
+    }
+}
+impl From<TokenError> for String {
+    fn from(error: TokenError) -> Self {
+        match error {
+            TokenError::Refused => "O Nexus recusou a autorização. Conecte sua conta novamente.".into(),
+            TokenError::Other(error) => error,
+        }
+    }
+}
+// RFC 6749 §5.2: a refused grant (revoked, expired or reused refresh token) is
+// 400 invalid_grant; 401 is a refused client. Neither recovers by retrying.
+fn grant_refused(status: u16) -> bool {
+    matches!(status, 400 | 401)
+}
 async fn exchange(
     fields: &[(&str, &str)],
     previous_refresh: Option<&str>,
-) -> Result<Session, String> {
+) -> Result<Session, TokenError> {
     super::nexus_account::before_request().await?;
     let response = client()?
         .post(format!("{USERS}/oauth/token"))
         .form(fields)
         .send()
         .await
-        .map_err(|_| "Não foi possível concluir o login Nexus. Verifique sua conexão.")?;
+        .map_err(|_| "Não foi possível concluir o login Nexus. Verifique sua conexão.".to_string())?;
+    if grant_refused(response.status().as_u16()) {
+        super::nexus_account::observe_response(&response);
+        return Err(TokenError::Refused);
+    }
     let data = bounded_json(response).await?;
-    parse_session(data, previous_refresh)
+    Ok(parse_session(data, previous_refresh)?)
 }
 fn parse_session(
     data: serde_json::Value,
@@ -173,7 +200,7 @@ pub(super) async fn access(force_refresh: bool) -> Result<Option<String>, String
         return Err("O registro OAuth mudou. Reconecte sua conta Nexus.".into());
     }
     if force_refresh || session.expires_at <= now().saturating_add(60) {
-        session = exchange(
+        let renewed = exchange(
             &[
                 ("grant_type", "refresh_token"),
                 ("client_id", client_id()),
@@ -181,7 +208,17 @@ pub(super) async fn access(force_refresh: bool) -> Result<Option<String>, String
             ],
             Some(&session.refresh_token),
         )
-        .await?;
+        .await;
+        session = match renewed {
+            Ok(session) => session,
+            // Revoked on the site or expired: drop the dead session instead of
+            // sending its refresh token again on every request.
+            Err(TokenError::Refused) => {
+                clear().await?;
+                return Err("A autorização Nexus foi encerrada. Conecte sua conta novamente.".into());
+            }
+            Err(error) => return Err(error.into()),
+        };
         save(&session).await?;
     }
     Ok(Some(session.access_token))
@@ -414,7 +451,8 @@ pub async fn connect_nexus_oauth(app: tauri::AppHandle) -> Result<NexusAccount, 
                 ],
                 None,
             )
-            .await?;
+            .await
+            .map_err(String::from)?;
             let account = account(&session.access_token).await?;
             with_account(async move {
                 if cancel.load(Ordering::SeqCst) {
@@ -487,6 +525,14 @@ mod tests {
         assert!(parse_session(serde_json::json!({"token_type":"Bearer","access_token":"access","refresh_token":"refresh"}), None).is_err());
         assert!(parse_session(serde_json::json!({"token_type":"Bearer","access_token":"bad\nheader","refresh_token":"refresh","expires_in":3600}), None).is_err());
         assert!(parse_session(serde_json::json!({"token_type":"Bearer","access_token":"access","refresh_token":"refresh","expires_in":0}), None).is_err());
+    }
+    #[test]
+    fn only_refused_grants_drop_the_saved_session() {
+        assert!(grant_refused(400) && grant_refused(401));
+        for status in [200, 403, 429, 500, 503] {
+            assert!(!grant_refused(status), "{status} must keep the session");
+        }
+        assert!(String::from(TokenError::Refused).contains("Conecte sua conta"));
     }
     #[test]
     fn cancelled_listener_exits_without_callback() {

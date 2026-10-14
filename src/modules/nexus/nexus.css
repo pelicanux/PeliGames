@@ -140,7 +140,13 @@
   .nexus-catalog-browser > .modal-scroll-body { overflow-y: auto; }
   .nexus-catalog-browser .nexus-catalog-grid { flex: none; height: 180px; }
 }
-:root .modal-content.nexus-popup.nexus-queue-popup { width: min(720px, calc(100vw - 32px)) !important; }
+:root .modal-content.nexus-popup.nexus-queue-popup {
+  width: min(1120px, calc(100vw - 32px)) !important;
+  height: min(900px, calc(100dvh - 82px));
+  max-width: calc(100vw - 32px); max-height: calc(100dvh - 82px) !important;
+  min-width: min(540px, calc(100vw - 32px)); min-height: min(420px, calc(100dvh - 82px));
+  resize: both;
+}
 .nexus-popup .dialog-titlebar h2 { display: flex; align-items: center; gap: .55rem; }
 .nexus-popup .nexus-tabs { margin-top: .8rem; }
 
@@ -231,8 +237,8 @@
 .nexus-queue-file span { min-width: 0; }
 
 :root .nexus-queue-popup.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { padding: 76px 1.1rem 1rem; }
-.nexus-queue-popup .nexus-queue-list { gap: .65rem; align-items: start; }
-.nexus-queue-popup .nexus-queue-list > article { padding: .75rem; min-width: 0; }
+.nexus-queue-popup .nexus-queue-list { gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+.nexus-queue-popup .nexus-queue-list > article { padding: 1rem; min-width: 0; container-type: inline-size; }
 .nexus-queue-popup .nexus-queue-files { margin-top: .5rem; padding: .5rem .65rem; min-width: 0; }
 .nexus-queue-file-info { display: grid; gap: .15rem; flex: 1; }
 .nexus-queue-file-info strong { font-size: .85rem; }
@@ -242,14 +248,14 @@
 .nexus-queue-file.selected { background: rgba(var(--accent-rgb),.12); }
 .nexus-queue-selected-description { font-size: .8rem; line-height: 1.45; color: var(--tone-94a3b8,#94a3b8); margin: .4rem 0 0; padding: .4rem .5rem; max-height: 5rem; overflow: auto; overflow-wrap: anywhere; }
 .nexus-queue-choice strong { min-width: 0; flex: 1; }
-.nexus-queue-popup .nexus-queue-badge { flex-shrink: 0; margin: 0; font-size: .7rem; padding: .15rem .4rem; border-radius: 5px; background: rgba(var(--accent-rgb),.12); color: var(--accent); }
+.nexus-queue-popup .nexus-queue-badge { flex-shrink: 0; margin: 0; font-size: .78rem; font-weight: 700; padding: .22rem .55rem; border-radius: 5px; background: rgba(var(--accent-rgb),.18); color: #edf2ff; border: 1px solid rgba(var(--accent-rgb),.35); }
 .nexus-queue-external-heading { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
 .nexus-queue-external-heading strong { flex: 1; min-width: 0; }
 .nexus-queue-entry-heading { display: flex; align-items: center; gap: .45rem; }
 .nexus-queue-entry-heading .nexus-queue-choice { flex: 1; min-width: 0; align-items: center; }
 .nexus-queue-note-anchor { flex-shrink: 0; margin-left: auto; }
-.nexus-queue-note { display: inline-flex; align-items: center; justify-content: center; color: var(--accent); cursor: help; padding: .3rem; background: transparent; border: 0; border-radius: 6px; }
-.nexus-queue-note svg { width: 20px; height: 20px; animation: nexus-queue-alert-pulse 1.25s ease-in-out infinite; }
+.nexus-queue-note { display: inline-flex; align-items: center; justify-content: center; color: #ffe095; cursor: help; padding: .3rem; background: rgba(255,193,77,.08); border: 0; border-radius: 6px; }
+.nexus-queue-note svg { width: 20px; height: 20px; filter: drop-shadow(0 0 1px #000); }
 .nexus-queue-note:hover svg, .nexus-queue-note:focus-visible svg { animation-play-state: paused; }
 .nexus-queue-note:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @keyframes nexus-queue-alert-pulse {
@@ -258,7 +264,22 @@
 }
 @media (prefers-reduced-motion: reduce) { .nexus-queue-note svg { animation: none; filter: drop-shadow(0 0 3px rgba(var(--accent-rgb), .5)); } }
 .nexus-queue-popup .nexus-popup-footer { padding: .75rem 1.1rem; }
-@media (min-width: 760px) { .nexus-queue-popup .nexus-queue-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* One row per mod: its main version and additional downloads stay together. */
+.nexus-queue-entry-columns { display: grid; grid-template-columns: minmax(0,1fr); gap: 1rem; margin-top: .8rem; }
+.nexus-queue-entry-columns:empty { display: none; }
+.nexus-queue-entry-columns > section { min-width: 0; }
+.nexus-queue-entry-columns h4 { margin: 0 0 .4rem; font-size: .95rem; }
+.nexus-queue-entry-columns h5 { margin: .8rem 0 .35rem; font-size: .85rem; color: var(--text-primary); }
+.nexus-queue-entry-columns .nexus-hint { font-size: .8rem; line-height: 1.5; margin: 0 0 .6rem; }
+.nexus-queue-optionals { border-top: 1px solid rgba(var(--glass-neutral-border),.22); padding-top: 1rem; }
+.nexus-queue-list .nexus-queue-additional-description { max-height: 4.5em; overflow-y: auto; line-height: 1.5; padding-right: .4rem; }
+@container (min-width: 720px) {
+  .nexus-queue-entry-columns:has(.nexus-queue-main-files):has(.nexus-queue-optionals) { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+  .nexus-queue-optionals { border-top: 0; border-left: 1px solid rgba(var(--glass-neutral-border),.22); padding: 0 0 0 1rem; }
+}
+:root[data-appearance="light"] .nexus-queue-popup .nexus-queue-badge { color: #202b40; background: rgba(var(--accent-rgb),.10); }
+:root[data-appearance="light"] .nexus-queue-note { color: #825000; background: #fff3d6; }
+:root[data-appearance="light"] .nexus-queue-note svg { filter: none; }
 .nexus-catalog-page-size { position: relative; }
 
 .nexus-library-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; color: var(--tone-94a3b8,#94a3b8); }
@@ -383,9 +404,21 @@
 .nexus-settings-content .nexus-settings-path { grid-column: 1 / -1; }
 .nexus-settings-content .nexus-deploy-options { margin: 0; padding: .6rem; font-size: .8rem; }
 .nexus-settings-content .nexus-deploy-options > div { gap: .6rem; }
-.nexus-module-details { font-size: .8rem; }
-.nexus-module-details > summary { color: var(--tone-b9c4dc, #b9c4dc); cursor: pointer; }
-.nexus-module-details .nexus-info { gap: .5rem; margin: .75rem 0; }
+.nexus-settings-content .nexus-module-link {
+  display: inline-flex; align-items: center; align-self: flex-start; gap: .4rem;
+  padding: .2rem 0; border: 0; border-radius: 3px; background: none !important; box-shadow: none !important;
+  color: var(--tone-99a9c7, #99a9c7); font: inherit; font-size: .8rem; cursor: pointer;
+  transition: color .15s ease, text-shadow .15s ease;
+}
+.nexus-module-link > span { text-decoration: underline; text-underline-offset: 3px; }
+.nexus-settings-info-links { display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; }
+.nexus-settings-info-links > .nexus-module-link { margin-left: auto; }
+.nexus-backup-status-tooltip { white-space: pre-line; }
+.nexus-settings-content .nexus-module-link:is(:hover, :focus-visible):not(:disabled) { color: var(--accent-light); text-shadow: 0 0 8px rgba(var(--accent-rgb), .6); }
+.nexus-module-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.nexus-module-link:disabled { opacity: .45; cursor: default; }
+.nexus-module-popup .nexus-info { gap: .5rem; margin: .75rem 0; }
+.nexus-module-popup .nexus-info dd { min-width: 0; overflow-wrap: anywhere; }
 .nexus-catalog-popup .nexus-catalog > div > .nexus-panel-heading > h3 { display: none; }
 .nexus-catalog-association { justify-content: flex-start; gap: .75rem; }
 .nexus-catalog-association > .btn { flex-shrink: 0; }
@@ -484,6 +517,9 @@
 
 .nexus-report-popup .modal-scroll-body { padding: .8rem 1rem; }
 .nexus-report-popup .nexus-hint { margin-top: 0; }
+.nexus-report-popup .nexus-profile-name-input { box-sizing: border-box; width: 100%; min-width: 0; padding: .65rem .75rem; border: 1px solid rgba(var(--accent-rgb), .3); border-radius: 8px; background: var(--input-bg, rgba(0,0,0,.2)); color: var(--tone-e2e8f0,#e2e8f0); caret-color: var(--accent); font: inherit; outline: none; box-shadow: none; transition: border-color .2s ease, box-shadow .2s ease; }
+.nexus-report-popup .nexus-profile-name-input:focus { border-color: rgba(var(--accent-rgb), .65); box-shadow: 0 0 0 2px rgba(var(--accent-rgb), .1); }
+.nexus-report-popup textarea.nexus-profile-name-input { resize: vertical; box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; }
 
 /* Keep the neon frame outside the scrolling settings content. */
 .nexus-settings-panel { display: flex; flex-direction: column; }
@@ -620,11 +656,11 @@
   color:#fff !important;
   font-weight:650;
   border-color:rgba(var(--accent-rgb),.85) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 0 7px rgba(var(--accent-rgb),.3),0 0 11px rgba(var(--accent-rgb),.3) !important;
+  box-shadow:inset 0 1px 0 rgba(var(--accent-rgb),.18),inset 0 0 7px rgba(var(--accent-rgb),.3),0 0 11px rgba(var(--accent-rgb),.3) !important;
 }
 :root .game-action-stack button.nexus-sidebar-install:hover:not(:disabled) {
   background:radial-gradient(ellipse at center,rgba(0,0,0,.3),rgba(0,0,0,.1) 50%,transparent),linear-gradient(120deg,var(--accent-button),var(--accent-hover)) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),inset 0 0 9px rgba(var(--accent-rgb),.4),0 0 15px rgba(var(--accent-rgb),.4) !important;
+  box-shadow:inset 0 1px 0 rgba(var(--accent-rgb),.28),inset 0 0 9px rgba(var(--accent-rgb),.4),0 0 15px rgba(var(--accent-rgb),.4) !important;
 }
 :root .game-action-stack .nexus-sidebar-install > .menu-icon { color:inherit !important; stroke-width:2.3; }
 
@@ -756,7 +792,7 @@
 .nexus-game-checks .nexus-fomod-option { padding:7px 9px; font-size:.78rem; }
 
 /* Quieter crystal material for mod tools and per-mod secondary actions. */
-:root :is(.nexus-mod-tools > .btn-secondary, .nexus-installed-mod-actions .btn-secondary, .nexus-game-tools .btn-secondary):not(:disabled):not([aria-disabled="true"]) {
+:root :is(.nexus-mod-tools > .btn-secondary, .nexus-installed-mod-actions .btn-secondary, .nexus-game-tools .btn-secondary) {
   position:relative;
   isolation:isolate;
   overflow:hidden;
@@ -766,7 +802,7 @@
   box-shadow:inset 0 1px 0 rgba(var(--accent-rgb),.12) !important;
   transition:background .16s ease,border-color .16s ease,box-shadow .16s ease;
 }
-:root :is(.nexus-mod-tools > .btn-secondary, .nexus-installed-mod-actions .btn-secondary, .nexus-game-tools .btn-secondary):not(:disabled):not([aria-disabled="true"])::before {
+:root :is(.nexus-mod-tools > .btn-secondary, .nexus-installed-mod-actions .btn-secondary, .nexus-game-tools .btn-secondary)::before {
   content:"";
   position:absolute;
   inset:0;
@@ -789,3 +825,23 @@
 .nexus-game-backup-status { display:block; margin-top:6px; font-size:.74rem; line-height:1.35; color:var(--tone-94a3b8,#94a3b8); overflow-wrap:anywhere; }
 .nexus-game-backup-status.is-stale { color:var(--accent-soft,var(--accent)); }
 .nexus-game-backup-status.is-error { color:#ffb4bc; }
+
+/* Account buttons also appear in Connections, outside the Nexus panel wrappers. */
+:root .nexus-account .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; vertical-align:middle; }
+:root .nexus-account .btn .nexus-icon { display:block; width:20px; height:20px; margin:0; align-self:center; }
+:root .nexus-account .btn .nexus-icon-button-label { display:block; min-width:0; line-height:1.25; text-align:center; }
+:root .nexus-account .nexus-account-actions .btn.nexus-account-login:not(:disabled):not([aria-disabled="true"]) {
+  background:linear-gradient(120deg,rgba(var(--accent-rgb),.14),rgba(var(--accent-rgb),.045)),linear-gradient(125deg,rgba(var(--glass-base-start),.55),rgba(var(--glass-base-end),.45));
+  border:1px solid rgba(var(--accent-rgb),.4);
+  color:var(--tone-edf0fd,#edf0fd);
+}
+:root .nexus-account .nexus-account-actions .btn.nexus-account-login:is(:hover,:focus-visible):not(:disabled) {
+  border-color:rgba(var(--accent-rgb),.65);
+  box-shadow:inset 0 1px 0 rgba(var(--accent-rgb),.18),0 0 9px rgba(var(--accent-rgb),.14);
+}
+:root .nexus-account .nexus-account-actions .btn.nexus-account-login:disabled {
+  background:linear-gradient(125deg,rgba(var(--glass-base-start),.4),rgba(var(--glass-base-end),.35));
+  border:1px solid rgba(var(--accent-rgb),.15);
+  color:var(--tone-94a3b8,#94a3b8);
+  box-shadow:none; cursor:not-allowed;
+}

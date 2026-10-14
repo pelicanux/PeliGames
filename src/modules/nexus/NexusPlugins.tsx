@@ -1,3 +1,4 @@
+import { SelectionMenu } from "../../components/SelectionMenu";
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { MenuIcon } from "../../components/MenuIcon";
@@ -84,15 +85,15 @@ export function NexusPlugins({ game, disabled, onClose }: { game: NexusGame; dis
               {plugin.rules.map(rule => <span key={`${rule.kind}:${rule.plugin}`} className="nexus-plugin-rule">{text[`pluginRule_${rule.kind}`]} {rule.plugin}
                 <button type="button" className="btn btn-secondary" aria-label={`${text.remove}: ${rule.plugin}`} disabled={locked} onClick={() => run("set_nexus_plugin_rule", { plugin: plugin.name, kind: rule.kind, target: rule.plugin, add: false })}><MenuIcon name="trash" /></button></span>)}
               <span className="nexus-plugin-rule">
-                <select aria-label={text.pluginRules} value={ruleKind} disabled={locked} onChange={event => setRuleKind(event.target.value as typeof ruleKind)}>{(["after", "requires", "incompatible"] as const).map(kind => <option key={kind} value={kind}>{text[`pluginRule_${kind}`]}</option>)}</select>
-                <select aria-label={text.pluginRuleTarget} value={ruleTarget} disabled={locked} onChange={event => setRuleTarget(event.target.value)}><option value="">{text.pluginRuleTarget}</option>{view.plugins.filter(other => other.name !== plugin.name).map(other => <option key={other.name} value={other.name}>{other.name}</option>)}</select>
+                <SelectionMenu label={text.pluginRules} value={ruleKind} disabled={locked} onChange={value => setRuleKind(value as typeof ruleKind)} options={(["after", "requires", "incompatible"] as const).map(kind => ({value:kind,label:text[`pluginRule_${kind}`]}))} />
+                <SelectionMenu label={text.pluginRuleTarget} value={ruleTarget} disabled={locked} onChange={setRuleTarget} options={[{value:"",label:text.pluginRuleTarget},...view.plugins.filter(other => other.name !== plugin.name).map(other => ({value:other.name,label:other.name}))]} />
                 <button type="button" className="btn btn-secondary" disabled={locked || !ruleTarget} onClick={() => run("set_nexus_plugin_rule", { plugin: plugin.name, kind: ruleKind, target: ruleTarget, add: true })}><MenuIcon name="plusCircle" />{text.pluginRuleAdd}</button>
               </span>
               <strong>{text.pluginGroup}</strong>
               <span className="nexus-plugin-rule">
-                <select aria-label={text.pluginGroup} value={plugin.group ?? ""} disabled={locked} onChange={event => run("set_nexus_plugin_group", { plugin: plugin.name, group: event.target.value || null })}><option value="">{text.pluginGroupDefault}</option>{view.groups.map(group => <option key={group} value={group}>{group}</option>)}</select>
+                <SelectionMenu label={text.pluginGroup} value={plugin.group ?? ""} disabled={locked} onChange={group => run("set_nexus_plugin_group", { plugin: plugin.name, group: group || null })} options={[{value:"",label:text.pluginGroupDefault},...view.groups.map(group => ({value:group,label:group}))]} />
                 <input aria-label={text.pluginGroupNew} placeholder={text.pluginGroupNew} value={newGroup} disabled={locked} onChange={event => setNewGroup(event.target.value)} />
-                <select aria-label={text.pluginGroupAfter} value={newGroupAfter} disabled={locked} onChange={event => setNewGroupAfter(event.target.value)}>{view.groups.map(group => <option key={group} value={group}>{text.pluginGroupAfter} {group}</option>)}</select>
+                <SelectionMenu label={text.pluginGroupAfter} value={newGroupAfter} disabled={locked} onChange={setNewGroupAfter} options={view.groups.map(group => ({value:group,label:`${text.pluginGroupAfter} ${group}`}))} />
                 <button type="button" className="btn btn-secondary" disabled={locked || !newGroup.trim()} onClick={() => { run("add_nexus_plugin_group", { name: newGroup, after: newGroupAfter ? [newGroupAfter] : [] }); setNewGroup(""); }}><MenuIcon name="plusCircle" />{text.pluginGroupCreate}</button>
               </span>
               {!plugin.native && <span className="nexus-plugin-rule">

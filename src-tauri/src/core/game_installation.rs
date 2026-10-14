@@ -97,11 +97,13 @@ pub fn repair(request: RepairRequest) -> Result<InstallationResult, String> {
     } else { super::installed_library::validate_selected_prefix(&request.prefix)? };
     let installation = InstallationRequest { name: request.name, proton: request.proton, executable: request.executable,
         directory: prefix.parent().ok_or("Prefixo inválido.")?.to_string_lossy().into_owned(), cover_url: entry.cover_url.clone() };
-    run_inner(installation, Some((entry, prefix)))
+    run_inner(installation, Some((entry, prefix)), None)
 }
-pub fn run(request: InstallationRequest) -> Result<InstallationResult, String> { run_inner(request, None) }
-fn run_inner(request: InstallationRequest, repair: Option<(super::installed_library::InstalledEntry, PathBuf)>) -> Result<InstallationResult, String> {
-    let cancel = Arc::new(AtomicBool::new(false));
+pub fn run(request: InstallationRequest) -> Result<InstallationResult, String> { run_inner(request, None, None) }
+pub(crate) struct LauncherInstallPlan { pub id: String, pub executable_paths: Vec<String>, pub dependencies: Vec<String>, pub cancel: Arc<AtomicBool> }
+pub(crate) fn run_launcher(request: InstallationRequest, plan: LauncherInstallPlan) -> Result<InstallationResult, String> { run_inner(request, None, Some(plan)) }
+fn run_inner(request: InstallationRequest, repair: Option<(super::installed_library::InstalledEntry, PathBuf)>, launcher: Option<LauncherInstallPlan>) -> Result<InstallationResult, String> {
+    let cancel = launcher.as_ref().map(|plan|plan.cancel.clone()).unwrap_or_else(||Arc::new(AtomicBool::new(false)));
     {
         let mut slot = INSTALLATION.lock().map_err(|e| e.to_string())?;
         if slot.is_some() { return Err("Um instalador já está em execução.".into()); }
@@ -127,6 +129,18 @@ fn run_inner(request: InstallationRequest, repair: Option<(super::installed_libr
     } else {
         let umu = find_umu()?;
         baseline = prefix_baseline(&request, &umu, &cancel)?;
+        if let Some(plan) = &launcher {
+            if !plan.dependencies.is_empty() {
+                let mut prepared=prepare_run_mode(request.clone(), &umu, None, None, true)?;
+                let mut command=Command::new(&umu);
+                command.arg("winetricks").args(&plan.dependencies);
+                for (key,value) in prepared.command.get_envs() { if let Some(value)=value { command.env(key,value); } else { command.env_remove(key); } }
+                let log=fs::OpenOptions::new().append(true).open(&prepared.log).map_err(|e|e.to_string())?;
+                command.current_dir(&prepared.prefix).stdin(Stdio::null()).stdout(Stdio::from(log.try_clone().map_err(|e|e.to_string())?)).stderr(Stdio::from(log));
+                prepared.command=command;
+                wait_for_installation(prepared, &cancel)?;
+            }
+        }
         run_with_umu_cancellable(request.clone(), &umu, &cancel)?
     };
     {
@@ -147,7 +161,7 @@ fn run_inner(request: InstallationRequest, repair: Option<(super::installed_libr
         }
         return Ok(result);
     }
-    let record = super::installed_library::InstallationRecord {
+    let mut record = super::installed_library::InstallationRecord {
         name: request.name,
         directory: absolute(&request.directory)?
             .canonicalize()
@@ -174,6 +188,22 @@ fn run_inner(request: InstallationRequest, repair: Option<(super::installed_libr
         install_shortcuts: None,
         profile_kind: Default::default(),
     };
+    if let Some(plan)=launcher {
+        let prefix=Path::new(&record.prefix).canonicalize().map_err(|e|e.to_string())?;
+        let matches: std::collections::BTreeSet<_> = plan.executable_paths.iter().filter_map(|relative| {
+            let path=prefix.join(relative).canonicalize().ok()?;
+            if !path.starts_with(&prefix) { return None; }
+            validate_executable(&path.to_string_lossy()).ok()
+        }).collect();
+        if matches.len()!=1 { return Err(format!("A instalação encerrou, mas o executável do launcher não foi confirmado. O prefixo e os logs foram preservados em {}.",record.directory)); }
+        let target=matches.into_iter().next().unwrap();
+        // Hide helper executables even after a rescan; never register the setup EXE.
+        record.overrides=super::installed_library::prefix_executables(&prefix)?.into_iter().filter(|path| Path::new(path) != target).map(|source| super::installed_library::EntryOverride {
+            source,name:String::new(),proton:record.proton.clone(),executable:String::new(),prefix:None,advanced:None,cover_url:None,
+        }).collect();
+        record.overrides.push(super::installed_library::EntryOverride { source:target.to_string_lossy().into_owned(), name:record.name.clone(), proton:record.proton.clone(), executable:target.to_string_lossy().into_owned(), prefix:None,advanced:None,cover_url:None });
+        fs::write(prefix.join(".peligames-launcher.json"),serde_json::to_vec(&serde_json::json!({"id":plan.id,"executable":target})).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;
+    }
     match super::installed_library::register(record) {
         Ok(count) => result.registered_count = count,
         Err(error) => result.library_error = Some(error),
@@ -221,6 +251,7 @@ pub(crate) fn prepare_launch_program(
         // Another program of the prefix (a shortcut's arguments, e.g. Battle.net `--exec`).
         prepared.command.args(arguments);
     }
+    super::mangohud_config::apply(&mut prepared.command, entry.advanced.options.get("mangohud") == Some(&true) || entry.advanced.options.get("mangohud_env") == Some(&true), entry.advanced.mangohud_fps_limit)?;
     Ok(prepared)
 }
 pub fn launch(path: String) -> Result<(), String> {

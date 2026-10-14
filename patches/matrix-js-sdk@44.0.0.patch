@@ -1,0 +1,34 @@
+diff --git a/lib/rust-crypto/rust-crypto.js b/lib/rust-crypto/rust-crypto.js
+index 5e88d71123c17997401b7f8de6d0dd90a36741c8..5eb83aac90f8608ab1d1716088afbedff58e0056 100644
+--- a/lib/rust-crypto/rust-crypto.js
++++ b/lib/rust-crypto/rust-crypto.js
+@@ -1230,6 +1230,12 @@ export class RustCrypto extends TypedEventEmitter {
+     const uniqueUsers = new Set(devices.map(({
+       userId
+     }) => userId));
++        // MatrixRTC also shares Olm-encrypted keys in rooms without message E2EE.
++        // Those users have no RoomEncryptor to track/query their device keys.
++        await this.olmMachine.updateTrackedUsers(
++            Array.from(uniqueUsers).map((userId) => new RustSdkCryptoJs.UserId(userId)),
++        );
++        await this.outgoingRequestsManager.doProcessOutgoingRequests();
+ 
+     // This will ensure we have Olm sessions for all of the users' devices.
+     // However, we only care about some of the devices.
+diff --git a/src/rust-crypto/rust-crypto.ts b/src/rust-crypto/rust-crypto.ts
+index c6f68cb3555c3be5606294f38d710b1115872bfa..b299e0c572713b72b1f924c5c65953e1ae84443f 100644
+--- a/src/rust-crypto/rust-crypto.ts
++++ b/src/rust-crypto/rust-crypto.ts
+@@ -1550,6 +1550,12 @@ export class RustCrypto extends TypedEventEmitter<RustCryptoEvents, CryptoEventH
+     ): Promise<ToDeviceBatch> {
+         const logger = new LogSpan(this.logger, "encryptToDeviceMessages");
+         const uniqueUsers = new Set(devices.map(({ userId }) => userId));
++        // MatrixRTC also shares Olm-encrypted keys in rooms without message E2EE.
++        // Those users have no RoomEncryptor to track/query their device keys.
++        await this.olmMachine.updateTrackedUsers(
++            Array.from(uniqueUsers).map((userId) => new RustSdkCryptoJs.UserId(userId)),
++        );
++        await this.outgoingRequestsManager.doProcessOutgoingRequests();
+ 
+         // This will ensure we have Olm sessions for all of the users' devices.
+         // However, we only care about some of the devices.

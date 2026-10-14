@@ -26,6 +26,7 @@ Endpoints oficiais de produção:
 - Verifier e state independentes gerados pelo gerador aleatório do sistema. State e caminho são conferidos; parâmetros duplicados, retorno estranho e código ausente são recusados.
 - Troca do código feita no Rust; somente o resumo da conta chega à interface. Cancelar ou expirar fecha o listener. Cancelar não revoga uma conta previamente conectada.
 - Access e refresh tokens ficam em um único item do chaveiro do sistema (`nexusmods-oauth`), nunca em localStorage ou configuração. Limite de tamanho e erros sanitizados; nada é registrado em logs.
+- Se o endpoint de token recusar a renovação (400/401: autorização revogada no site, refresh token expirado ou reutilizado), a sessão OAuth é apagada do chaveiro e a conta aparece desconectada, em vez de reenviar um token morto a cada consulta. Falhas de rede, 429 e erros do servidor mantêm a sessão.
 - Refresh automático 60 segundos antes da expiração; consultas de perfil e requests de API recebendo 401 renovam e tentam novamente uma única vez. Uma segunda recusa encerra a tentativa, sem repetição infinita ou troca silenciosa para outra conta/chave.
 - A operação de conta e seu bloqueio pertencem a uma tarefa que continua até concluir a persistência, mesmo quando o download que a iniciou é cancelado. Desconectar aguarda essa tarefa antes de apagar credenciais, impedindo uma gravação atrasada após a desconexão.
 - A remoção de uma credencial já ausente é bem-sucedida. Falhas reais do chaveiro continuam sendo reportadas, e a desconexão tenta remover as duas credenciais mesmo se uma remoção falhar.
@@ -44,22 +45,9 @@ Isso é uma revisão dos pontos acima, não uma aprovação formal do Nexus nem 
 
 Validação local realizada: TypeScript sem erros, build Vite concluído, `cargo check --release --lib --features custom-protocol` aprovado e onze testes Rust aprovados. Além dos cinco testes iniciais de PKCE, callback e leitura de tokens, os testes de regressão cobrem credenciais ausentes versus falhas reais do chaveiro, cancelamento durante renovação/persistência seguido de logout, perfil HTTP 401 com novo token, segunda recusa 401 e erros sem nova tentativa. Os testes usam credenciais fictícias, armazenamento simulado e servidor HTTP local; não acessam contas reais. A preview também foi conferida com o login desabilitado por ausência do client_id. Os avisos Rust restantes já existiam fora desta integração. Depois que o Nexus fornecer o registro, testar consentimento aceito/recusado, cancelamento, expiração, reinício do launcher, refresh e downloads com contas gratuita e Premium.
 
-Rascunho de e-mail (não enviado; anexar um build atual que contenha esta implementação, e não o release anterior):
+## Situação do registro
 
-> Hi Dominic,
->
-> Thank you for your guidance. We have reviewed the API Acceptable Use Policy and chosen Authorization Code with PKCE (S256) for PeliGames, our open-source Linux desktop launcher.
->
-> We have implemented the base OAuth flow: system-browser authorization, a loopback callback, authorization-code exchange, automatic refresh and local system-keyring storage. The application does not contain a client secret or send users' credentials to our own server. API requests identify PeliGames and its version. Free-account downloads continue through the Nexus website's authorization flow; direct download resolution is reserved for Premium accounts.
->
-> Our proposed redirect URI is http://127.0.0.1:17849/callback. We have left the client ID unset, so end-to-end OAuth validation is pending registration. Could you confirm the required scopes and registration details for this public desktop client, including metadata and file downloads?
->
-> Source: https://github.com/pelicanux/PeliGames
->
-> We can provide a testing build containing this framework. Please let us know which additional information you require.
->
-> Kind regards,
-> PeliGames
+O suporte do Nexus (Dominic) respondeu ao contato e o caminho escolhido foi Authorization Code + PKCE. Esta base existe para demonstrar o fluxo ao time do Nexus; o client_id só é entregue depois da aprovação do registro. Até lá `PELIGAMES_NEXUS_CLIENT_ID` fica sem valor e o botão de login permanece desabilitado, explicando a pendência. Ao receber o identificador: compilar com a variável definida e fazer os testes reais listados acima.
 
 Referências primárias:
 

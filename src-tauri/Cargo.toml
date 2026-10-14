@@ -1,6 +1,6 @@
 [package]
 name = "peligames"
-version = "0.3.4"
+version = "0.3.5"
 description = "A Tauri App"
 authors = ["Pelicano"]
 license = "GPL-3.0-only"
@@ -27,6 +27,12 @@ tauri-build = { version = "2", features = [] }
 custom-protocol = ["tauri/custom-protocol"]
 
 [dependencies]
+tokio-stream = "0.1"
+livekit = { version = "=0.9.5", features = ["rustls-tls-native-roots"] }
+# Only to choose the process-wide TLS crypto backend (see run_mode).
+rustls = { version = "0.23", default-features = false, features = ["aws_lc_rs"] }
+nnnoiseless = { version = "=0.5.2", default-features = false }
+cpal = "=0.15.3"
 libloot = { version = "=0.29.6", default-features = false }
 saphyr = "=0.0.6"
 ico = "0.5.0"
@@ -66,4 +72,4 @@ strip = true
 
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = "0.18.2"
-webkit2gtk = "2.0.2"
+webkit2gtk = { version = "2.0.2", features = ["v2_38"] }

@@ -5,6 +5,7 @@ import { listen } from "@tauri-apps/api/event";
 import type { Requirements } from "./NexusRequirements";
 import type { GameInfo } from "../../components/GameGrid";
 import { fetchGameCoverByName, hasCustomCover } from "../../services/customCovers";
+import { rememberAutomaticCover } from "../../services/automaticCovers";
 import { applyCustomCovers } from "../../services/gameLibraryCache";
 import { hasNexusCatalog, matchingCatalogGame, type CatalogGame } from "./catalogGameMatch";
 import { setLibraryGameRemoved } from "../../services/libraryVisibility";
@@ -121,7 +122,10 @@ export function useNexusWorkspace() {
       if (!mounted.current) return;
       if (!lock.current && revision === mutationRevision.current) setWorkspace(orderWorkspaceMods(result));
       const updated = result.games.find(game => game.id === entry.id);
-      if (updated) window.dispatchEvent(new CustomEvent("gameCoverChanged", { detail: applyCustomCovers([{ ...updated.game, library_view: "nexus" }])[0] }));
+      if (updated && updated.game.cover_url === coverUrl) {
+        await rememberAutomaticCover(updated.game, coverUrl);
+        if (mounted.current) window.dispatchEvent(new CustomEvent("gameCoverChanged", { detail: applyCustomCovers([{ ...updated.game, library_view: "nexus" }])[0] }));
+      }
     } catch { /* A missing cover must not interrupt library/mod operations. */ }
   };
   useEffect(() => {

@@ -385,6 +385,7 @@ async fn request_metadata_locked(
         .map_err(|_| "Não foi possível consultar o Nexus Mods. Verifique sua conexão.")?;
     // Retry authentication once only; never turn rate-limit responses into loops.
     if response.status().as_u16() == 401 && oauth.is_some() {
+        observe_response(&response);
         let token = super::nexus_oauth::access(true).await?.ok_or("Reconecte sua conta Nexus.")?;
         before_request().await?;
         response = request().bearer_auth(token).send().await

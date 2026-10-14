@@ -1,3 +1,4 @@
+import { SelectionMenu } from "./SelectionMenu";
 import { useEffect, useState } from "react";
 import { MenuIcon } from "./MenuIcon";
 import type { GamescopeSettings } from "../services/advancedSettings";
@@ -13,12 +14,12 @@ export function GamescopeSettingsPanel({ value, onChange }: { value: GamescopeSe
   return <div className="gamescope-settings">
     {toggle("enable_upscaling", "Permitir aprimoramento de escala (Upscaling)")}
     {value.enable_upscaling && <div className="gamescope-fields">
-      <label className="gamescope-full-row">Método de escala<select value={value.filter} onChange={e => update({ filter: e.target.value as GamescopeSettings["filter"] })}>
-        <option value="fsr">AMD FidelityFX Super Resolution 1.0 (FSR)</option><option value="nis">NVIDIA Image Scaling (NIS)</option><option value="integer">Escala inteira (Integer Upscale)</option><option value="stretch">Esticar imagem</option>
-      </select></label>
+      <div className="gamescope-full-row">Método de escala<SelectionMenu label="Método de escala" value={value.filter} onChange={filter => update({ filter: filter as GamescopeSettings["filter"] })} options={[
+        {value:"fsr",label:"AMD FidelityFX Super Resolution 1.0 (FSR)"},{value:"nis",label:"NVIDIA Image Scaling (NIS)"},{value:"integer",label:"Escala inteira (Integer Upscale)"},{value:"stretch",label:"Esticar imagem"}
+      ]} /></div>
       {number("width", "Largura do jogo")}{number("height", "Altura do jogo")}
       {number("output_width", "Largura de saída")}{number("output_height", "Altura de saída")}
-      <label className="gamescope-full-row">Tipo de janela<select value={value.window_type} onChange={e => update({ window_type: e.target.value as GamescopeSettings["window_type"] })}><option value="fullscreen">Tela cheia</option><option value="borderless">Sem borda</option><option value="windowed">Janela</option></select></label>
+      <div className="gamescope-full-row">Tipo de janela<SelectionMenu label="Tipo de janela" value={value.window_type} onChange={window_type => update({ window_type: window_type as GamescopeSettings["window_type"] })} options={[{value:"fullscreen",label:"Tela cheia"},{value:"borderless",label:"Sem borda"},{value:"windowed",label:"Janela"}]} /></div>
     </div>}
     {toggle("enable_limiter", "Habilitar limitador de FPS")}
     {value.enable_limiter && <div className="gamescope-fields">{number("fps", "Limite de FPS")}{number("fps_unfocused", "FPS sem foco")}</div>}

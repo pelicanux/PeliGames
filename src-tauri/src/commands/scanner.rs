@@ -103,7 +103,26 @@ pub(super) fn steam_libraries(home: &Path) -> Vec<PathBuf> {
     libraries
 }
 
-fn scan_steam(home: &Path) -> Vec<GameInfo> {
+pub(super) fn scan_steam(home: &Path) -> Vec<GameInfo> { scan_steam_inner(home, true) }
+pub(super) fn scan_steam_main(home: &Path) -> Vec<GameInfo> { scan_steam_inner(home, false) }
+// Steam also installs support packages as app manifests. These belong to runner
+// discovery, not the main game library. Match narrow families, never words like
+// "legacy", "soldier" or "runtime" anywhere in a game's title.
+fn steam_support_package(appid: &str, name: &str, installdir: &str) -> bool {
+    if ["228980", "1070560", "1391110", "1628350", "4183110", "4690330", "1161040", "1826330", "3086180"].contains(&appid) { return true; }
+    let name=name.trim().to_ascii_lowercase();
+    let folder=installdir.trim().to_ascii_lowercase();
+    let proton = name.strip_prefix("proton ").or_else(||name.strip_prefix("proton-")).is_some_and(|suffix|
+        suffix.as_bytes().first().is_some_and(u8::is_ascii_digit)
+        || ["experimental", "hotfix", "next", "battleye runtime", "easyanticheat runtime", "voice files"].contains(&suffix));
+    name == "proton" || proton
+        || name.starts_with("steam linux runtime") || name.starts_with("legacy steam runtime")
+        || name.starts_with("steamworks common redistributables")
+        || folder == "steamlinuxruntime" || folder.starts_with("steamlinuxruntime_")
+        || folder == "legacysteamruntime" || folder.starts_with("legacysteamruntime_")
+}
+
+fn scan_steam_inner(home: &Path, mod_library: bool) -> Vec<GameInfo> {
     let mut games = Vec::new();
     
     let steam_paths = vec![
@@ -117,7 +136,7 @@ fn scan_steam(home: &Path) -> Vec<GameInfo> {
 
     for steam_path in steam_paths {
         let vdf_path = steam_path.join("config/libraryfolders.vdf");
-        if vdf_path.exists() {
+        if vdf_path.exists() || (!mod_library && steam_path.join("steamapps").is_dir()) {
             libraries.extend(parse_library_folders(&vdf_path));
             // Add the default steamapps folder as well just in case
             libraries.push(steam_path.clone());
@@ -138,7 +157,7 @@ fn scan_steam(home: &Path) -> Vec<GameInfo> {
                 if p.is_file() && p.extension().and_then(|e| e.to_str()) == Some("acf") {
                     if let Some((appid, name, installdir)) = parse_acf_file(&p) {
                         let lower_name = name.to_lowercase();
-                        if lower_name.contains("proton") || lower_name.contains("steam linux runtime") || lower_name.contains("steamworks common") || lower_name.contains("sniper") || lower_name.contains("soldier") || lower_name.contains("legacy") || lower_name.contains("runtime") {
+                        if (mod_library && (lower_name.contains("proton") || lower_name.contains("steam linux runtime") || lower_name.contains("steamworks common") || lower_name.contains("sniper") || lower_name.contains("soldier") || lower_name.contains("legacy") || lower_name.contains("runtime"))) || (!mod_library && steam_support_package(&appid, &name, &installdir)) {
                             continue;
                         }
                         let game_path = steamapps.join("common").join(&installdir);
@@ -172,7 +191,7 @@ fn scan_heroic(home: &Path) -> Vec<GameInfo> {
 pub(super) fn nexus_store_games(home: &Path) -> Vec<super::launcher_library::LauncherGame> {
     let mut games: Vec<_> = scan_steam(home).into_iter().map(|game| super::launcher_library::LauncherGame {
         name: game.name, path: game.path, app_id: game.app_id, cover_url: game.cover_url, launcher: game.launcher,
-        prefix: None, proton: None, store: None,
+        prefix: None, proton: None, store: None, external_id: None, external_store: None, flatpak: false, executable: None,
     }).collect();
     // Heroic, Lutris, Faugus and Bottles report their own prefix and Proton runner.
     for game in super::launcher_library::all(home) {
@@ -644,4 +663,41 @@ pub fn request_steam_uninstall(app_id: String) -> Result<(), String> {
     steam_launch_uri(&app_id)?;
     std::process::Command::new("xdg-open").arg(format!("steam://uninstall/{app_id}")).env_remove("LD_LIBRARY_PATH").spawn().map_err(|e|e.to_string())?;
     Ok(())
+}
+
+#[cfg(test)]
+mod steam_main_filter_tests {
+    use super::*;
+    #[test]
+    fn filters_runtime_families_and_renamed_ids() {
+        assert!(steam_support_package("4690330", "Legacy Steam Runtime", "LegacySteamRuntime"));
+        assert!(steam_support_package("4690330", "Renamed support package", "Renamed"));
+        for (id,name,folder) in [
+            ("1070560","Steam Linux Runtime 1.0 (scout)","SteamLinuxRuntime"),
+            ("4183110","Steam Linux Runtime 4.0","SteamLinuxRuntime_4"),
+            ("4628710","Proton 11.0","Proton 11.0"),
+            ("228980","Steamworks Common Redistributables","Steamworks Shared"),
+            ("999999","Future runtime name","SteamLinuxRuntime_future"),
+        ] { assert!(steam_support_package(id,name,folder),"{name}"); }
+    }
+    #[test]
+    fn retains_games_with_similar_words() {
+        for name in ["Hogwarts Legacy","Rogue Legacy 2","Legacy of Kain","Sniper Elite 5","Soldier of Fortune","Runtime","Proton Pulse"] {
+            assert!(!steam_support_package("123456",name,name),"{name}");
+        }
+    }
+    #[test]
+    fn main_scan_omits_support_manifest_without_deleting_it() {
+        let root=std::env::temp_dir().join(format!("peligames-steam-filter-{}",uuid::Uuid::new_v4()));
+        let apps=root.join(".local/share/Steam/steamapps");
+        fs::create_dir_all(apps.join("common/LegacySteamRuntime")).unwrap();
+        fs::create_dir_all(apps.join("common/HogwartsLegacy")).unwrap();
+        let runtime=apps.join("appmanifest_4690330.acf");
+        fs::write(&runtime,"\"AppState\"\n{\n\"appid\" \"4690330\"\n\"name\" \"Legacy Steam Runtime\"\n\"installdir\" \"LegacySteamRuntime\"\n}").unwrap();
+        fs::write(apps.join("appmanifest_990000.acf"),"\"AppState\"\n{\n\"appid\" \"990000\"\n\"name\" \"Hogwarts Legacy\"\n\"installdir\" \"HogwartsLegacy\"\n}").unwrap();
+        let games=scan_steam_main(&root);
+        assert_eq!(games.len(),1); assert_eq!(games[0].name,"Hogwarts Legacy");
+        assert!(runtime.is_file());
+        fs::remove_dir_all(root).unwrap();
+    }
 }

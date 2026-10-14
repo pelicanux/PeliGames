@@ -284,6 +284,7 @@ pub(super) fn advanced_command(game: &NexusGame, original: Command) -> Result<Co
             command.env(key, value);
         }
     }
+    crate::core::mangohud_config::apply(&mut command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit)?;
     Ok(command)
 }
 

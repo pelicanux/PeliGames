@@ -44,5 +44,5 @@ export function useDiscordBenefits() {
     window.addEventListener("focus", focus);
     return () => { active = false; revision++; clearTimeout(expiryTimer); clearInterval(refreshTimer); window.removeEventListener("discordConnectionChanged", changed); window.removeEventListener("focus", focus); };
   }, []);
-  return { exclusiveEffects: Boolean(claims && claims.exp > Date.now()), benefitExpiresAt: claims?.exp ?? null, benefitsChecked: checked };
+  return { exclusiveEffects: Boolean(claims && claims.exp > Date.now()), benefitExpiresAt: claims?.exp ?? null, benefitsChecked: checked, benefit: claims && claims.exp > Date.now() ? claims.benefit : null };
 }

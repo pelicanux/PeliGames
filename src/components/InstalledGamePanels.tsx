@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core";
 import { TimedFeedback } from "./TimedFeedback";
 import { WinetricksModal } from "./WinetricksModal";
 import { runWineTool } from "../services/wineTools";
@@ -37,7 +38,7 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
   const [prefix, setPrefix] = useState(game?.prefix || "");
   const [name, setName] = useState(game?.name || "");
   const [proton, setProton] = useState(game?.proton || "");
-  const [executable, setExecutable] = useState(game?.executable || game?.path || "");
+  const [executable, setExecutable] = useState(game?.executable || (game?.external_id ? "" : game?.path) || "");
   const [busy, setBusy] = useState(false);
   const [error, setShownError] = useState("");
   const setError = (message: string) => { setShownError(message); if (message) notifyError(game?.name || t("installedSettings", "title"), message); };
@@ -51,25 +52,31 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
   useLayoutEffect(() => { setPrefix(game?.prefix || ""); }, [game?.path, game?.prefix]);
   useLayoutEffect(() => { setName(game?.name || ""); }, [game?.path, game?.name]);
   useLayoutEffect(() => { setProton(game?.proton || ""); }, [game?.path, game?.proton]);
-  useLayoutEffect(() => { setExecutable(game?.executable || game?.path || ""); }, [game?.path, game?.executable]);
+  useLayoutEffect(() => { setExecutable(game?.executable || (game?.external_id ? "" : game?.path) || ""); }, [game?.path, game?.executable]);
   useEffect(() => { setError(""); setSaved(false); }, [game?.path]);
   useEffect(() => {
     if (!saved) return;
     const timeout = window.setTimeout(() => setSaved(false), 3000);
     return () => window.clearTimeout(timeout);
   }, [saved]);
+  const external = Boolean(game?.external_id);
   const blocked = Boolean(disabled || busy || !game);
+  const installationBlocked = blocked || external;
   const nameChanged = Boolean(game && name.trim() !== game.name);
-  const executableChanged = Boolean(game && executable.trim() !== (game.executable || game.path));
+  const executableChanged = Boolean(!external && game && executable.trim() !== (game.executable || game.path));
   const persist = async (patch: Partial<Pick<GameInfo, "name" | "proton" | "executable" | "prefix" | "advanced">>) => {
     const entry = currentGame.current;
     if (!entry) return;
-    const updated = await updatePeliGamesSettings({
+    if (entry.external_id && Object.keys(patch).some(key => key !== "advanced" && key !== "proton")) return;
+    const updated = entry.external_id
+      ? await invoke<GameInfo>("configure_external_game", {settings: {external_id: entry.external_id, advanced: patch.advanced ?? entry.advanced, ...(patch.proton !== undefined ? {proton: patch.proton} : {})}})
+      : await updatePeliGamesSettings({
       path: entry.path, name: entry.name, proton: entry.proton || "",
       executable: entry.executable || entry.path, prefix: entry.prefix, advanced: entry.advanced, ...patch,
     });
-    currentGame.current = updated;
-    onSaved(updated);
+    const scoped = {...updated, library_view: entry.library_view, ...(entry.external_id ? {cover_url: entry.cover_url, automatic_cover_url: entry.automatic_cover_url} : {})};
+    currentGame.current = scoped;
+    onSaved(scoped);
     window.dispatchEvent(new Event("peligamesLibraryChanged"));
     setSaved(patch.advanced !== undefined ? "advanced" : "settings");
     if (patch.prefix !== undefined) setPrefix(updated.prefix || "");
@@ -98,7 +105,7 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
     } catch (error) { setError(String(error)); }
     finally { saving.current = false; setBusy(false); }
   };
-  const programsBlocked = Boolean(programsDisabled || !game);
+  const programsBlocked = Boolean(programsDisabled || !game || external);
   // Runs any program in this prefix, also beside the running game (Cheat Engine…).
   const runProgram = async () => {
     if (programsBlocked || !game) return;
@@ -126,7 +133,7 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
     {winetricks && game && <WinetricksModal path={game.path} name={game.name} proton={proton} onProtonChange={async value => { if (blocked || saving.current) throw new Error(t("gameModes", "installerWait")); await persist({ proton: value }); }} onClose={() => setWinetricks(false)} />}
     <div className="mod-config-panel menu-glass-panel installation-config-panel">
       <div style={{ display: "flex", alignItems: "center", gap: ".5rem" }}><MenuIcon name="settings" /><span style={{ fontWeight: "bold" }}>{t("installedSettings", "title")}</span></div>
-      <fieldset className="installation-fields" disabled={blocked}>
+      <fieldset className="installation-fields" disabled={installationBlocked}>
           <form className="installation-field" onSubmit={event => { event.preventDefault(); if (nameChanged && name.trim()) void save({ name: name.trim() }); }}>
             <label htmlFor={`${id}-name`}>{t("gameModes", "gameName")}</label>
             <HoverTooltip text={name} anchorClassName="installation-path-tooltip-anchor" tooltipClassName="installation-path-tooltip">
@@ -134,7 +141,7 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
             </HoverTooltip>
             {nameChanged && Boolean(name.trim()) && <button type="submit" className="installation-name-confirm" disabled={blocked}><MenuIcon name="check" />{t("gameModes", "confirmName")}</button>}
           </form>
-          <ProtonSelector value={proton} onChange={value => { if (value !== currentGame.current?.proton) { setProton(value); void save({ proton: value }); } }} label={t("installedSettings", "proton")} disabled={blocked} />
+          <ProtonSelector value={proton} onChange={value => { if (value !== currentGame.current?.proton) { setProton(value); void save({ proton: value }); } }} label={t("installedSettings", "proton")} disabled={blocked || (external && game?.launcher === "Bottles")} />
       </fieldset>
       <div className="installation-field installed-run-field">
         <span className="installation-field-label">{t("installedSettings", "runTitle")}</span>
@@ -149,7 +156,7 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
       <fieldset className="installation-fields" disabled={blocked}>
           <button type="button" className="installation-name-confirm installed-run-program" aria-expanded={advanced}
             onClick={() => setPanel(value => value === "advanced" ? "information" : "advanced")}><MenuIcon name={advanced ? "back" : "settings"} />{t("installedSettings", advanced ? "backToInfo" : "advancedButton")}</button>
-          <div className="installed-wine-tools"><button type="button" className="installation-name-confirm" onClick={() => setWinetricks(true)}><MenuIcon name="cube" />Winetricks</button><button type="button" className="installation-name-confirm" onClick={() => void openWinecfg()}><MenuIcon name="wine" />WineCFG</button></div>
+          <div className="installed-wine-tools"><button disabled={external} type="button" className="installation-name-confirm" onClick={() => setWinetricks(true)}><MenuIcon name="cube" />Winetricks</button><button type="button" className="installation-name-confirm" disabled={external} onClick={() => void openWinecfg()}><MenuIcon name="wine" />WineCFG</button></div>
         </fieldset>
       {toolStatus && <TimedFeedback>{toolStatus}</TimedFeedback>}
       {error && <TimedFeedback>{error}</TimedFeedback>}
@@ -161,8 +168,9 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
           initial={{ x: reducedMotion ? 0 : "100%" }}
           animate={{ x: 0 }} exit={{ x: reducedMotion ? 0 : "-100%" }}
           transition={{ duration: reducedMotion ? 0 : .29, ease: [0.4, 0, 0.2, 1] }}>
-          {panel === "programs" && game ? <LauncherProgramsPanel path={game.path} disabled={programsBlocked} onStart={id => onStartShortcut(game.path, id)} /> : advanced ? <AdvancedGameSettings launchOptions={game && <InstalledLaunchOptions game={game} disabled={blocked} errorMessage={error} onSave={options => save({ advanced: { ...normalizeAdvanced(currentGame.current?.advanced), launch_options: options } })} />} value={game?.advanced} disabled={blocked} reducedMotion={reducedMotion} saved={saved === "advanced"} onChange={value => void save({ advanced: value })} /> : <GameInfoPanel release={t("gameInfo", "unknown")} platform="Windows (Proton / Wine)"
-            directoryRow={<fieldset className="installed-info-paths" disabled={blocked}>
+          {panel === "programs" && game ? <LauncherProgramsPanel path={game.path} disabled={programsBlocked} onStart={id => onStartShortcut(game.path, id)} /> : advanced ? <AdvancedGameSettings key={game?.path} launchOptions={game && <InstalledLaunchOptions game={game} disabled={blocked} errorMessage={error} onSave={options => save({ advanced: { ...normalizeAdvanced(currentGame.current?.advanced), launch_options: options } })} />} value={game?.advanced} disabled={blocked} reducedMotion={reducedMotion} saved={saved === "advanced"} onChange={value => void save({ advanced: value })} /> : <GameInfoPanel release={t("gameInfo", "unknown")} platform="Windows (Proton / Wine)"
+            directoryRow={<fieldset className="installed-info-paths" disabled={installationBlocked}>
+              {external && <label className="installation-field">{t("gameInfo", "directory")}<input className="installation-path-input" value={game?.directory || game?.path || ""} readOnly /></label>}
               <form className="installation-field" onSubmit={event => { event.preventDefault(); if (prefixChanged && prefix.trim()) void save({ prefix: prefix.trim() }); }}>
                 <label htmlFor={`${id}-prefix`}>{t("gameInfo", "prefixDirectory")}</label>
                 <HoverTooltip text={prefix} anchorClassName="installation-path-tooltip-anchor" tooltipClassName="installation-path-tooltip">

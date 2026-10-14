@@ -134,8 +134,38 @@ pub(super) async fn matrix_premium_request(path: &str, body: &serde_json::Value)
         reqwest::StatusCode::FORBIDDEN => return Err("O Discord não confirmou acesso premium ou a confirmação Matrix expirou. Verifique sua conta em Conexões e tente novamente.".into()),
         reqwest::StatusCode::SERVICE_UNAVAILABLE => return Err("O suporte premium Matrix ainda não está disponível no serviço.".into()),
         reqwest::StatusCode::TOO_MANY_REQUESTS => return Err("Aguarde um minuto antes de validar novamente.".into()),
-        status if !status.is_success() => return Err("Não foi possível validar o suporte premium. Tente novamente.".into()),
+        status if !status.is_success() => {
+            let failure: serde_json::Value = response.json().await.unwrap_or_default();
+            return Err(matrix_service_error(failure["code"].as_str()).into());
+        },
         _ => {},
     }
     response.json().await.map_err(|_| "Resposta premium inválida.".into())
+}
+
+fn matrix_service_error(code: Option<&str>) -> &'static str {
+    match code {
+        Some("MATRIX_BOT_SESSION") => "A sessão da conta de automação Matrix expirou ou foi revogada. Atualize o token da automação no Cloudflare.",
+        Some("MATRIX_BOT_ACCESS") => "A conta de automação não tem acesso ou permissão nesta sala. Verifique se ela entrou na sala e pode convidar participantes.",
+        Some("MATRIX_ROOM_NOT_FOUND") => "A sala Matrix configurada não foi encontrada. Confira o ID interno da sala no serviço premium.",
+        Some("MATRIX_ROOM_PRIVATE") => "A sala premium precisa permitir entrada somente por convite. Ajuste a privacidade da sala no Element.",
+        Some("MATRIX_ROOM_HISTORY") => "O histórico da sala premium deve ser visível apenas para participantes ou convidados. Ajuste essa opção no Element.",
+        Some("MATRIX_ROOM_ENCRYPTED") => "A sala premium está criptografada. O chat interno ainda não oferece suporte a essa sala; use uma sala sem criptografia para esta integração.",
+        Some("MATRIX_RATE_LIMIT") => "O Matrix limitou temporariamente as solicitações. Aguarde alguns minutos antes de tentar novamente.",
+        Some("MATRIX_NETWORK") => "O serviço premium não conseguiu se comunicar com o Matrix. Tente novamente em alguns minutos.",
+        Some("DISCORD_PREMIUM_CONNECTION") => "Não foi possível revalidar a conexão Discord. Reconecte sua conta em Conexões.",
+        Some("MATRIX_VALIDATION_FAILED") => "A confirmação da conta Matrix não foi concluída. Tente novamente ou confira a configuração da automação.",
+        _ => "Não foi possível validar o suporte premium. Verifique a conexão Discord em Conexões e tente novamente.",
+    }
+}
+
+#[cfg(test)]
+mod matrix_diagnostic_tests {
+    use super::*;
+    #[test]
+    fn explains_bot_failures_without_displaying_untrusted_server_text() {
+        assert!(matrix_service_error(Some("MATRIX_BOT_SESSION")).contains("token da automação"));
+        assert!(matrix_service_error(Some("MATRIX_ROOM_HISTORY")).contains("histórico"));
+        assert_eq!(matrix_service_error(Some("arbitrary remote error")), matrix_service_error(None));
+    }
 }

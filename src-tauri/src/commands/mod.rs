@@ -84,3 +84,24 @@ pub mod mod_backup;
 pub mod log_windows;
 
 mod nexus_crash_logs;
+
+pub mod external_library;
+
+pub mod storage_automount;
+
+pub mod launcher_installation;
+
+pub mod runtime_activity;
+
+pub mod mangohud;
+
+pub mod mangohud_install;
+
+pub mod matrix_rtc_probe;
+
+pub mod matrix_voice;
+
+pub mod matrix_audio;
+pub mod matrix_call;
+
+pub mod matrix_rtc;

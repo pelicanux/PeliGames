@@ -4,6 +4,7 @@ import ReactDOM from "react-dom/client";
 import "./App.css";
 import "./theme/appearance.css";
 import "./theme/glassSurfaces.css";
+import "./theme/selectionMenus.css";
 import "./modules/nexus/nexus.css";
 const StartupRouter = React.lazy(() => import("./modules/startup/StartupRouter").then(module => ({ default: module.StartupRouter })));
 import { TextContextMenu } from "./components/TextContextMenu";

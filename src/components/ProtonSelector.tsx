@@ -49,9 +49,9 @@ export function ProtonSelector({ value, onChange, label, disabled = false, compa
       </HoverTooltip>
     </div>
     <div ref={anchor}>
-      <button type="button" className={`custom-select-trigger proton-trigger ${compactStyle ? "nexus-compact-select" : ""} ${compactStyle && open ? "open" : ""}`} aria-haspopup="listbox" aria-expanded={open}
-        disabled={disabled} aria-label={label ?? t("gameModes", "installerType")} aria-controls={open ? id : undefined} onClick={() => setOpen(value => !value)}>
-        <span>{selected?.name ?? (value ? value.split(/[\\/]/).pop() : t("gameModes", "selectProton"))}</span><span className="select-arrow">{compactStyle ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg> : "▼"}</span>
+      <button type="button" className={`custom-select-trigger proton-trigger ${compactStyle ? "nexus-compact-select" : ""} ${open ? "open" : ""}`} aria-haspopup="listbox" aria-expanded={open}
+        disabled={disabled} aria-label={label ?? t("gameModes", "installerType")} aria-controls={open ? id : undefined} onClick={() => setOpen(value => !value)} onKeyDown={event => { if (event.key === "ArrowDown" || event.key === "ArrowUp") { event.preventDefault(); setOpen(true); } }}>
+        <span>{selected?.name ?? (value ? value.split(/[\\/]/).pop() : t("gameModes", "selectProton"))}</span><span className="select-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></span>
       </button>
       {open && createPortal(<div ref={menu} id={id} role="listbox" aria-label={label ?? t("gameModes", "installerType")}
         className={`custom-select-menu route-select-menu proton-options select-scroll-frame ${compactStyle ? "nexus-compact-select-menu" : ""}`} style={position}

@@ -12,7 +12,18 @@
 /* Small, cached noise tile; slow stepped drift rather than continuous repaint. */
 .matrix-terminal-frame::before { content:""; position:absolute; inset:0; z-index:2; pointer-events:none; border-radius:inherit; background:url("/textures/matrix-crt-noise.svg") repeat; opacity:.075; animation:matrix-crt-noise 1.2s steps(1,end) infinite; }
 /* Curved-glass illusion: central reflection, dark peripheral glass and scanlines. */
-.matrix-terminal-frame::after { content:""; position:absolute; inset:0; z-index:3; pointer-events:none; border-radius:inherit; box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.12),inset 0 0 32px 4px #0009; background:radial-gradient(ellipse 110% 75% at 50% 0,rgba(196,230,220,.045),transparent 56%),radial-gradient(ellipse at center,transparent 44%,rgba(0,0,0,.18) 76%,rgba(0,0,0,.55) 100%),repeating-linear-gradient(to bottom,transparent 0 2px,rgba(0,0,0,.12) 2px 3px),radial-gradient(ellipse 90px 70px at 0 0,rgba(var(--accent-rgb),.22),transparent 80%),radial-gradient(ellipse 90px 70px at 100% 100%,rgba(var(--accent-rgb),.22),transparent 80%); }
+.matrix-terminal-frame::after {
+  content:""; position:absolute; inset:0; z-index:3; pointer-events:none; border-radius:inherit;
+  box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.12),inset 0 0 32px 4px #0009;
+  /* Thin lines with soft edges stay visible without broad hard-edged bands.
+     Keep a fixed tile so fractional webview scaling does not stretch them. */
+  background:
+    radial-gradient(ellipse 110% 75% at 50% 0,rgba(196,230,220,.045),transparent 56%),
+    radial-gradient(ellipse at center,transparent 44%,rgba(0,0,0,.18) 76%,rgba(0,0,0,.55) 100%),
+    linear-gradient(to bottom,transparent 0,transparent 3px,rgba(0,0,0,.20) 3.25px,rgba(0,0,0,.20) 3.75px,transparent 4px) 0 0 / 100% 4px repeat-y,
+    radial-gradient(ellipse 90px 70px at 0 0,rgba(var(--accent-rgb),.22),transparent 80%),
+    radial-gradient(ellipse 90px 70px at 100% 100%,rgba(var(--accent-rgb),.22),transparent 80%);
+}
 @keyframes matrix-crt-noise { 0%,100% { background-position:0 0; } 25% { background-position:31px 17px; } 50% { background-position:-19px 47px; } 75% { background-position:53px -23px; } }
 @media (prefers-reduced-motion:reduce) { .matrix-terminal-frame::before { animation:none; } }
 .performance-mode .matrix-terminal-frame::before { display:none; }
@@ -21,8 +32,10 @@
 .matrix-terminal-status { display:flex; align-items:center; gap:10px; padding:12px 18px; color:#b4ffcd; background:#080d11; border-bottom:1px solid #24473b; font-size:1.1rem; }
 .matrix-terminal-status small { margin-left:auto; font:12px monospace; color:#82948c; }
 .matrix-terminal-dot { width:7px; height:7px; background:#62d694; box-shadow:0 0 8px #62d69470; flex-shrink:0; }
-.matrix-terminal-layout { display:grid; grid-template-columns:190px minmax(0,1fr); flex:1; min-height:0; background:#090e12; color:#d3e3db; }
-.matrix-terminal-rooms { padding:14px; border-right:1px solid #24473b; display:flex; flex-direction:column; gap:8px; overflow:auto; }
+.matrix-terminal-layout { display:grid; grid-template-columns:230px minmax(0,1fr); flex:1; min-height:0; background:#090e12; color:#d3e3db; }
+.matrix-terminal-rooms { padding:14px 14px 0; border-right:1px solid #24473b; display:flex; flex-direction:column; gap:8px; overflow:hidden; min-height:0; }
+/* The channels scroll; the account panel below stays fixed, as in Discord. */
+.matrix-rooms-scroll { flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column; gap:8px; }
 .matrix-terminal-rooms h3 { color:#93a89e; font:16px "Jersey 10",monospace; margin:0 0 8px; }
 .matrix-rooms-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .matrix-rooms-heading h3 { margin:0; }
@@ -34,7 +47,6 @@
 .matrix-rooms-demo { color:#82948c; font:14px "Jersey 10",monospace; }
 .matrix-terminal-rooms button { border:1px solid transparent; background:transparent; color:#a4b9ae; padding:8px; text-align:left; font:18px "Jersey 10",monospace; word-break:break-word; }
 .matrix-terminal-rooms button:hover,.matrix-terminal-rooms button[aria-current=page] { border-color:#38644f; color:#b4ffcd; background:#14251e; }
-.matrix-terminal-rooms .matrix-terminal-disconnect { margin-top:auto; color:#e398a3; }
 .matrix-terminal-room { display:flex; flex-direction:column; min-width:0; min-height:0; }
 .matrix-terminal-room > header { padding:12px 16px; border-bottom:1px solid #24473b; display:flex; align-items:center; gap:10px; justify-content:space-between; font-size:21px; }
 .matrix-room-heading { display:flex; align-items:baseline; gap:12px; flex:1; min-width:0; }
@@ -84,7 +96,7 @@
 .matrix-terminal-welcome h3 { font:30px "Jersey 10",monospace; }
 .matrix-terminal-welcome p { max-width:560px; font:21px/1.4 "Jersey 10",monospace; color:#9db5a7; }
 .matrix-chat .matrix-terminal-error { padding:10px 18px; margin:0; color:#ffb4bc; background:#351a22; font-size:18px; }
-@media(max-width:700px) { .matrix-terminal-layout { grid-template-columns:125px minmax(0,1fr); } .matrix-terminal-status small { display:none; } .matrix-terminal-rooms { padding:8px; } }
+@media(max-width:700px) { .matrix-terminal-layout { grid-template-columns:170px minmax(0,1fr); } .matrix-terminal-status small { display:none; } .matrix-terminal-rooms { padding:8px; } }
 .matrix-terminal-avatar img { width:100%; height:100%; object-fit:cover; image-rendering:auto; }
 .matrix-message-image { display:block; max-width:min(100%,480px); max-height:320px; object-fit:contain; margin-top:8px; border:1px solid #355440; }
 .matrix-terminal-message.is-mention { background:#1d2a14; box-shadow:inset 3px 0 #d6e562; padding:6px 8px; margin-left:-8px; }
@@ -108,3 +120,225 @@
 .matrix-premium-gate { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:24px; text-align:center; color:#9db5a7; }
 .matrix-premium-gate h3 { margin:0; font:24px "Jersey 10",monospace; color:#b4ffcd; }
 .matrix-premium-gate p { max-width:460px; margin:0; font:19px/1.4 "Jersey 10",monospace; }
+
+.matrix-game-activities { margin-top:14px; padding-top:10px; border-top:1px solid #24473b; min-width:0; }
+.matrix-game-activity { display:flex; align-items:center; gap:8px; margin:8px 0; min-width:0; }
+.matrix-game-activity > img { width:28px; height:40px; flex:0 0 28px; object-fit:cover; border-radius:3px; border:1px solid #315e47; }
+.matrix-game-activity > div { min-width:0; flex:1; }
+.matrix-game-activity strong { display:block; color:#92cba5; font-size:18px; line-height:1.1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.matrix-game-activity span { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; font:12px/1.4 monospace; color:#a6b9ad; overflow:hidden; overflow-wrap:anywhere; }
+
+/* Activities share the top status strip, leaving the room list free. */
+.matrix-terminal-status { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr); min-height:64px; box-sizing:border-box; }
+.matrix-terminal-session { display:flex; align-items:center; gap:10px; min-width:0; }
+.matrix-terminal-session > span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.matrix-terminal-status > small { margin-left:0; text-align:right; font-size:10px; }
+.matrix-terminal-activity { min-width:0; }
+.matrix-terminal-activity .matrix-game-activities { display:flex; align-items:center; justify-content:safe center; gap:18px; margin:0; padding:0; border:0; overflow-x:auto; scrollbar-width:thin; }
+.matrix-terminal-activity .matrix-game-activities > h3 { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.matrix-terminal-activity .matrix-game-activity { flex:0 0 auto; max-width:260px; margin:0; }
+.matrix-terminal-activity .matrix-game-activity span { display:block; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; font-size:11px; }
+@media(max-width:700px) {
+  .matrix-terminal-status { grid-template-columns:minmax(0,1fr) minmax(0,2fr); }
+  .matrix-terminal-activity .matrix-game-activity { max-width:200px; }
+}
+
+.matrix-members-carousel { display:grid; grid-template-columns:minmax(0,1fr); align-items:center; gap:4px; min-width:0; }
+.matrix-terminal-activity .matrix-game-activities { justify-content:flex-start; gap:14px; scrollbar-width:thin; scrollbar-color:#38644f #0b1410; padding:3px 0 7px; }
+/* Native scrollbar occupies its own row below the content, never overlays it. */
+.matrix-terminal-activity .matrix-game-activities::-webkit-scrollbar { display:block; height:6px; }
+.matrix-terminal-activity .matrix-game-activities::-webkit-scrollbar-track { background:#0b1410; border-top:1px solid #24473b; }
+.matrix-terminal-activity .matrix-game-activities::-webkit-scrollbar-thumb { background:#38644f; border:1px solid #0b1410; border-radius:0; }
+.matrix-terminal-activity .matrix-game-activities::-webkit-scrollbar-thumb:hover { background:#62b584; }
+.matrix-members-carousel { align-items:start; }
+.matrix-terminal-activity .matrix-game-activity { min-width:160px; max-width:230px; min-height:42px; }
+.matrix-game-activity > .matrix-member-avatar { flex:0 0 32px; width:32px; height:32px; display:grid; place-items:center; border:1px solid #38644f; border-radius:4px; background:#14201b; color:#b4ffcd; font:18px "Jersey 10",monospace; overflow:hidden; }
+.matrix-member-avatar img { width:100%; height:100%; object-fit:cover; }
+.matrix-game-activity > .matrix-member-details { flex:1; min-width:0; }
+.matrix-members-carousel .matrix-game-activities:focus-visible { outline:1px solid #62b584; outline-offset:2px; }
+
+/* Calculator LCD: a recessed, static pixel surface for the member strip. */
+.matrix-terminal-activity .matrix-members-carousel {
+  box-sizing:border-box;
+  border:1px solid #19251c;
+  border-radius:5px;
+  padding:4px 8px 3px;
+  background:
+    radial-gradient(circle at 1px 1px,rgba(20,37,22,.10) .6px,transparent .8px) 0 0 / 3px 3px,
+    linear-gradient(160deg,#97a77f,#7e916d);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.5),inset 0 -1px 0 rgba(206,222,173,.25),0 0 0 2px #28352b;
+}
+.matrix-terminal-activity .matrix-members-carousel .matrix-member-details strong { color:#17271a; text-shadow:0 1px rgba(191,210,158,.2); }
+.matrix-terminal-activity .matrix-members-carousel .matrix-member-details span { color:#263b29; }
+.matrix-terminal-activity .matrix-members-carousel .matrix-member-avatar { color:#1c3020; background:rgba(54,76,39,.12); border-color:rgba(28,47,28,.45); border-radius:2px; box-shadow:inset 0 1px 2px rgba(0,0,0,.12); }
+.matrix-terminal-activity .matrix-members-carousel .matrix-game-activity > img { border-color:rgba(28,47,28,.45); border-radius:2px; }
+.matrix-terminal-activity .matrix-members-carousel .matrix-game-activities { scrollbar-color:#334a30 #748663; }
+.matrix-terminal-activity .matrix-members-carousel .matrix-game-activities::-webkit-scrollbar-track { background:#748663; border-color:#596f4a; }
+.matrix-terminal-activity .matrix-members-carousel .matrix-game-activities::-webkit-scrollbar-thumb { background:#334a30; border-color:#748663; }
+.matrix-terminal-activity .matrix-members-carousel .matrix-game-activities::-webkit-scrollbar-thumb:hover { background:#243b24; }
+.matrix-terminal-activity .matrix-members-carousel .matrix-game-activities:focus-visible { outline-color:#243b24; }
+
+/* Power-on belongs to the clipped CRT interior; the shell never moves. */
+.matrix-crt-screen.matrix-crt-power-on { animation:matrix-crt-power-on .78s cubic-bezier(.2,.65,.25,1) both; }
+.matrix-crt-power-beam { position:absolute; z-index:5; left:50%; top:50%; width:90%; height:2px; pointer-events:none; background:#c8f7dc; box-shadow:0 0 8px 2px rgba(139,241,180,.35); transform-origin:center; animation:matrix-crt-power-beam .78s ease-out both; }
+@keyframes matrix-crt-power-on {
+  0%,10% { clip-path:inset(50% 50%); opacity:0; }
+  30% { clip-path:inset(49.8% 5%); opacity:1; }
+  66% { clip-path:inset(8% 0); opacity:1; }
+  100% { clip-path:inset(0); opacity:1; }
+}
+@keyframes matrix-crt-power-beam {
+  0% { transform:translate(-50%,-50%) scaleX(.01); opacity:0; }
+  12% { transform:translate(-50%,-50%) scaleX(.03); opacity:.9; }
+  30% { transform:translate(-50%,-50%) scaleX(1); opacity:.85; }
+  60%,100% { transform:translate(-50%,-50%) scaleX(1); opacity:0; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .matrix-crt-screen.matrix-crt-power-on { animation:none; }
+  .matrix-crt-power-beam { display:none; }
+}
+.performance-mode .matrix-crt-power-beam { display:none; }
+
+/* Brief digital artifacts after the CRT opens: broken pixel rows, not camera shake. */
+.matrix-crt-artifacts {
+  position:absolute; inset:0; z-index:5; pointer-events:none; opacity:0;
+  background:
+    linear-gradient(90deg,transparent 8%,rgba(116,246,196,.5) 8% 18%,transparent 18% 26%,rgba(216,110,178,.4) 26% 31%,transparent 31% 68%,rgba(172,246,224,.45) 68% 83%,transparent 83%) 0 24% / 100% 7px,
+    repeating-linear-gradient(90deg,transparent 0 17px,rgba(100,205,229,.4) 17px 29px,transparent 29px 47px,rgba(173,241,181,.45) 47px 53px) 28% 62% / 65% 11px,
+    linear-gradient(90deg,transparent 16%,rgba(222,233,155,.4) 16% 28%,transparent 28% 56%,rgba(137,207,248,.45) 56% 75%,transparent 75%) 0 77% / 100% 3px,
+    repeating-linear-gradient(90deg,rgba(210,109,165,.35) 0 4px,transparent 4px 13px,rgba(160,244,215,.5) 13px 18px,transparent 18px 31px) 75% 42% / 42% 6px,
+    repeating-linear-gradient(0deg,transparent 0 11px,rgba(153,242,202,.08) 11px 12px) 0 0 / 100% 100%;
+  background-repeat:no-repeat;
+  animation:matrix-crt-artifact-burst .4s steps(1,end) .78s both;
+}
+@keyframes matrix-crt-artifact-burst {
+  0%,100% { opacity:0; }
+  8% { opacity:.8; background-position:0 24%,28% 62%,0 77%,75% 42%,0 0; }
+  28% { opacity:.55; background-position:-18px 31%,65% 48%,12px 83%,10% 68%,0 3px; }
+  48% { opacity:.75; background-position:14px 18%,18% 74%,-8px 53%,80% 35%,0 -2px; }
+  68% { opacity:.35; background-position:0 65%,55% 24%,0 44%,35% 81%,0 1px; }
+  84% { opacity:0; }
+}
+@media(prefers-reduced-motion:reduce) { .matrix-crt-artifacts { display:none; animation:none; } }
+.performance-mode .matrix-crt-artifacts { display:none; }
+
+.matrix-member-name { display:flex; align-items:center; gap:6px; min-width:0; }
+.matrix-member-name strong { min-width:0; }
+.matrix-chat .matrix-supporter-badge { display:inline-flex; align-items:center; flex:0 0 18px; width:18px; height:16px; color:#a0dba5; overflow:visible; }
+.matrix-supporter-badge svg { display:block; width:18px; height:14px; }
+.matrix-terminal-activity .matrix-members-carousel .matrix-supporter-badge { color:#1b3821; }
+.matrix-terminal-message header .matrix-supporter-badge { margin-left:-6px; }
+.matrix-chat .matrix-rtc-test-link { margin-left:auto; margin-right:36px; padding:5px 8px; font:12px monospace; color:#9cb5a6; background:transparent; border:1px solid #355440; border-radius:5px; cursor:pointer; }
+.matrix-chat .matrix-rtc-test-link:hover { color:#b4ffcd; background:#14251e; }
+
+
+/* Discord-style channels, in the terminal look of the room list. */
+.matrix-channel-heading-actions { display:flex; align-items:center; gap:4px; }
+.matrix-terminal-rooms .matrix-channel-add { padding:4px; display:grid; place-items:center; }
+.matrix-voice-heading { margin-top:10px; }
+.matrix-channel-form { display:grid; gap:6px; padding:6px; border:1px dashed #38644f; }
+.matrix-channel-form input { min-width:0; background:#080d11; color:#d3e3db; border:1px solid #355440; padding:6px 8px; font:17px "Jersey 10",monospace; }
+.matrix-channel-form > div { display:flex; gap:6px; }
+.matrix-terminal-rooms .matrix-channel-form button { padding:3px 8px; border-color:#2d4a3c; font-size:16px; }
+.matrix-voice-channel { display:grid; gap:2px; }
+.matrix-voice-channel > button { display:flex; align-items:center; gap:7px; }
+.matrix-channel-speaker { flex-shrink:0; }
+.matrix-terminal-rooms .matrix-voice-channel > button.is-in-call { color:#b4ffcd; border-color:#4e8a6c; }
+.matrix-voice-members { list-style:none; margin:0 0 4px; padding:0 0 0 24px; display:grid; gap:2px; }
+.matrix-voice-members li { display:flex; align-items:center; gap:7px; color:#a4b9ae; font:16px "Jersey 10",monospace; overflow-wrap:anywhere; }
+.matrix-voice-members li.is-me { color:#b4ffcd; }
+.matrix-voice-members small { color:#768d81; font-size:14px; }
+.matrix-voice-member-dot { width:6px; height:6px; flex-shrink:0; background:#62d694; box-shadow:0 0 6px #62d69470; }
+/* Fixed account panel: voice connection, noise filter, user row with mic, sound and settings. */
+.matrix-user-dock { display:grid; gap:8px; margin:0 -14px; padding:10px 12px 12px; border-top:1px solid #24473b; background:#0b1410; }
+.matrix-voice-dock { display:grid; gap:4px; padding:8px 10px; border:1px solid #38644f; background:#0b1712; }
+.matrix-voice-dock > strong { color:#d6e562; font:17px "Jersey 10",monospace; font-weight:400; }
+.matrix-voice-dock > strong.is-connected { color:#62d694; text-shadow:0 0 6px #62d69455; }
+.matrix-voice-dock > small { color:#a4b9ae; font:15px "Jersey 10",monospace; overflow-wrap:anywhere; }
+.matrix-terminal-rooms .matrix-voice-dock .matrix-voice-leave { justify-self:start; padding:3px 8px; color:#ffb4bc; border-color:#8a4a56; font-size:16px; }
+.matrix-terminal-rooms .matrix-voice-dock .matrix-voice-leave:hover { color:#ffd0d6; border-color:#c06373; background:#2a1418; }
+.matrix-user-noise { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:8px; color:#7ba88e; font:15px "Jersey 10",monospace; }
+.matrix-user-row { display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.matrix-user-identity { display:flex; align-items:center; gap:8px; min-width:0; }
+.matrix-user-identity > span:last-child { display:grid; min-width:0; }
+.matrix-user-identity b { color:#b4ffcd; font:17px "Jersey 10",monospace; font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.matrix-user-identity small { color:#62d694; font:13px "Jersey 10",monospace; }
+.matrix-user-avatar { width:32px; height:32px; flex-shrink:0; display:grid; place-items:center; overflow:hidden; border:1px solid #38644f; color:#b4ffcd; background:#10201a; font:15px "Jersey 10",monospace; transition:box-shadow .15s, border-color .15s; }
+.matrix-user-avatar img { width:100%; height:100%; object-fit:cover; }
+.matrix-user-identity.is-speaking .matrix-user-avatar { border-color:#62d694; box-shadow:0 0 0 1px #62d694, 0 0 10px #62d69488; }
+.matrix-user-buttons { display:flex; gap:2px; flex-shrink:0; }
+.matrix-terminal-rooms .matrix-user-buttons button { padding:5px; display:grid; place-items:center; color:#a4b9ae; border-color:transparent; }
+.matrix-terminal-rooms .matrix-user-buttons button:hover { color:#b4ffcd; border-color:#38644f; background:#14251e; }
+.matrix-terminal-rooms .matrix-user-buttons button.is-off { color:#ff8f9c; }
+.matrix-terminal-rooms .matrix-user-buttons button.is-off:hover { color:#ffb4bc; border-color:#8a4a56; background:#2a1418; }
+.matrix-voice-members li.is-speaking { color:#62d694; text-shadow:0 0 6px #62d69466; }
+.matrix-voice-members li.is-speaking .matrix-voice-member-dot { background:#b4ffcd; box-shadow:0 0 8px #62d694; }
+/* Unread messages on other channels. */
+.matrix-terminal-rooms button.has-unread { color:#d3e3db; }
+.matrix-channel-unread { margin-left:6px; padding:0 5px; display:inline-block; min-width:12px; text-align:center; color:#090e12; background:#62d694; font:14px "Jersey 10",monospace; line-height:17px; }
+/* Typing indicator and reactions. */
+.matrix-typing { margin:0 0 4px; color:#7ba88e; font:15px "Jersey 10",monospace; animation:matrix-typing-blink 1.4s steps(2,end) infinite; }
+@keyframes matrix-typing-blink { 50% { opacity:.55; } }
+@media(prefers-reduced-motion:reduce) { .matrix-typing { animation:none; } }
+.matrix-reactions, .matrix-reaction-picker { display:flex; flex-wrap:wrap; gap:5px; margin-top:5px; }
+.matrix-reactions button, .matrix-reaction-picker button { background:transparent; border:1px solid #2d4a3c; color:#a4b9ae; font:15px "Jersey 10",monospace; padding:1px 7px; cursor:pointer; }
+.matrix-reactions button:hover, .matrix-reaction-picker button:hover { border-color:#4e8a6c; color:#b4ffcd; background:#14251e; }
+.matrix-reactions button.is-mine { border-color:#62d694; color:#b4ffcd; background:#14251e; }
+.matrix-reaction-picker { padding:4px; border:1px dashed #38644f; width:max-content; max-width:100%; }
+.matrix-reaction-picker button { border-color:transparent; font-size:18px; }
+/* Settings behind the gear, drawn as a terminal window over the chat. */
+.matrix-settings-overlay { position:absolute; inset:0; z-index:1; display:grid; place-items:center; padding:clamp(30px,6vh,52px) 6%; background:#050a08d9; }
+.matrix-settings { width:min(560px,100%); max-height:100%; display:flex; flex-direction:column; border:1px solid #38644f; background:#090e12; box-shadow:0 0 0 1px #0b1712, 0 0 24px #62d69422; color:#d3e3db; font-family:"Jersey 10",monospace; }
+.matrix-settings > header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid #24473b; }
+.matrix-settings > header strong { color:#b4ffcd; font-size:21px; font-weight:400; }
+.matrix-settings button:not(.custom-select-trigger) { background:transparent; border:1px solid #2d4a3c; color:#a4b9ae; font:17px "Jersey 10",monospace; padding:3px 9px; cursor:pointer; }
+.matrix-settings button:not(.custom-select-trigger):hover:not(:disabled) { color:#b4ffcd; border-color:#4e8a6c; background:#14251e; }
+.matrix-settings button:disabled { opacity:.5; cursor:default; }
+.matrix-settings button.matrix-settings-close:not(.custom-select-trigger) { border-color:transparent; color:#ff8f9c; }
+.matrix-settings > nav { display:flex; gap:4px; padding:8px 14px 0; border-bottom:1px solid #24473b; }
+.matrix-settings > nav button:not(.custom-select-trigger) { border-bottom-color:transparent; }
+.matrix-settings > nav button[aria-selected=true]:not(.custom-select-trigger) { color:#b4ffcd; border-color:#38644f; border-bottom-color:#090e12; background:#0b1712; margin-bottom:-1px; }
+.matrix-settings-body { display:grid; gap:12px; padding:14px; overflow:auto; }
+.matrix-settings-field { display:grid; gap:6px; color:#7ba88e; font-size:16px; }
+.matrix-settings-field > div { display:flex; gap:8px; }
+.matrix-settings-field input { flex:1; min-width:0; padding:6px 8px; background:#0b1712; border:1px solid #2d4a3c; color:#d3e3db; font:17px "Jersey 10",monospace; }
+.matrix-settings-field input:focus { outline:none; border-color:#62d694; }
+.matrix-settings-field code { color:#b4ffcd; font:17px "Jersey 10",monospace; overflow-wrap:anywhere; }
+.matrix-settings small, .matrix-settings-hint { color:#768d81; font-size:14px; }
+.matrix-settings-profile { display:flex; align-items:center; gap:14px; }
+.matrix-settings-profile .matrix-user-avatar { width:72px; height:72px; font-size:28px; }
+.matrix-settings-profile > div { display:grid; gap:6px; justify-items:start; }
+.matrix-settings-slider { display:grid; gap:4px; color:#7ba88e; font-size:16px; }
+.matrix-settings-slider > span { display:flex; justify-content:space-between; }
+.matrix-settings-slider b { color:#b4ffcd; font-weight:400; }
+.matrix-settings-slider input { width:100%; accent-color:#62d694; }
+.matrix-settings-meter { height:8px; border:1px solid #2d4a3c; background:#0b1712; overflow:hidden; }
+.matrix-settings-meter span { display:block; height:100%; background:linear-gradient(90deg,#38644f,#62d694 70%,#d6e562); transition:width .1s linear; }
+.matrix-settings-check { display:flex; gap:10px; align-items:flex-start; color:#d3e3db; font-size:17px; cursor:pointer; }
+.matrix-settings-check input { accent-color:#62d694; margin-top:4px; }
+.matrix-settings-check span { display:grid; gap:2px; }
+.matrix-settings button.matrix-settings-danger:not(.custom-select-trigger) { justify-self:start; color:#ffb4bc; border-color:#8a4a56; }
+.matrix-settings button.matrix-settings-danger:not(.custom-select-trigger):hover:not(:disabled) { color:#ffd0d6; border-color:#c06373; background:#2a1418; }
+.matrix-settings-notice { margin:0; color:#62d694; font-size:16px; }
+/* Channel rows: the delete button shows on hover or keyboard focus. */
+.matrix-channel-row { display:grid; gap:2px; }
+.matrix-channel-line { display:flex; align-items:stretch; gap:2px; }
+.matrix-channel-line > button:first-child { flex:1; min-width:0; }
+.matrix-terminal-rooms .matrix-channel-delete { padding:4px 6px; display:grid; place-items:center; color:#e398a3; opacity:0; transition:opacity .15s; }
+.matrix-channel-line:hover .matrix-channel-delete, .matrix-channel-delete:focus-visible { opacity:1; }
+.matrix-channel-delete .menu-icon { width:15px; height:15px; }
+.matrix-channel-confirm { display:grid; gap:6px; padding:8px; border:1px dashed #6b3a44; background:#1a0f13; }
+.matrix-channel-confirm > strong { color:#ffb4bc; font:17px "Jersey 10",monospace; font-weight:400; overflow-wrap:anywhere; }
+.matrix-channel-confirm > small { color:#c9a2aa; font:14px "Jersey 10",monospace; line-height:1.25; }
+.matrix-channel-confirm > div { display:flex; gap:6px; }
+.matrix-terminal-rooms .matrix-channel-confirm button { padding:3px 8px; border-color:#4a2c34; font-size:16px; }
+.matrix-terminal-rooms .matrix-channel-confirm .matrix-channel-confirm-delete { color:#ffb4bc; border-color:#8a4a56; }
+@media (hover:none) { .matrix-terminal-rooms .matrix-channel-delete { opacity:1; } }
+/* Choice menus inside the Matrix terminal (the list opens in document.body);
+   as specific as the shared menu rules in theme/selectionMenus.css. */
+:root .matrix-select .custom-select-trigger.custom-select-trigger { min-height:0; padding:4px 8px; gap:6px; background:#0b1712; border:1px solid #2d4a3c; border-radius:0; color:#b4ffcd; font:16px "Jersey 10",monospace; font-weight:400; box-shadow:none; backdrop-filter:none; }
+:root .matrix-select .custom-select-trigger.custom-select-trigger:not(:disabled):is(:hover,.open) { border-color:#4e8a6c; background:#14251e; }
+:root .custom-select-menu.custom-select-menu.matrix-select-menu { padding:3px; border:1px solid #38644f; border-radius:0; background:#090e12; box-shadow:0 0 18px #62d69422; backdrop-filter:none; }
+:root .matrix-select-menu .custom-select-option.custom-select-option { min-height:0; padding:5px 8px; border-radius:0; color:#a4b9ae; font:16px "Jersey 10",monospace; background:transparent; }
+:root .matrix-select-menu .custom-select-option.custom-select-option:not(:disabled):not(.disabled):is(:hover,:focus-visible) { color:#b4ffcd; background:#14251e; outline:none; }
+:root .matrix-select-menu .custom-select-option.custom-select-option.selected { color:#090e12; background:#62d694; }

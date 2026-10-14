@@ -6,9 +6,21 @@ pub fn cancel_game_installer() -> Result<(), String> { game_installation::cancel
 #[tauri::command]
 pub async fn list_peligames_entries(
     rescan: Option<bool>,
-) -> Result<Vec<crate::core::installed_library::InstalledEntry>, String> {
+) -> Result<serde_json::Value, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        crate::core::installed_library::list(rescan.unwrap_or(false))
+        let entries=crate::core::installed_library::list(rescan.unwrap_or(false))?;
+        let values=entries.iter().map(|entry| {
+            let mut value=serde_json::to_value(entry).map_err(|e|e.to_string())?;
+            if super::launcher_installation::category(entry) {
+                value["library_category"]=serde_json::json!("launchers");
+                if let Some(id)=std::fs::read(std::path::Path::new(&entry.prefix).join(".peligames-launcher.json")).ok().and_then(|bytes|serde_json::from_slice::<serde_json::Value>(&bytes).ok()).and_then(|marker|marker["id"].as_str().map(str::to_owned)).filter(|id|["epic-games","ubisoft-connect","ea-app","battle-net"].contains(&id.as_str())) {
+                    value["launcher_id"]=serde_json::json!(id);
+                    if entry.cover_url.is_none() { value["cover_url"]=serde_json::json!(format!("/launchers/{id}-cover.svg")); }
+                }
+            }
+            Ok(value)
+        }).collect::<Result<Vec<_>,String>>()?;
+        Ok(serde_json::Value::Array(values))
     })
     .await
     .map_err(|e| e.to_string())?
@@ -27,7 +39,11 @@ pub async fn repair_peligames_entry(request: crate::core::game_installation::Rep
     }).await.map_err(|e| e.to_string())?
 }
 
-struct BusyGuard;
+pub(crate) struct BusyGuard;
+pub(crate) fn acquire_installer_busy() -> Result<BusyGuard, String> {
+    BUSY.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).map_err(|_| "Um jogo ou instalador já está em execução.".to_string())?;
+    Ok(BusyGuard)
+}
 impl Drop for BusyGuard {
     fn drop(&mut self) {
         BUSY.store(false, Ordering::Release);

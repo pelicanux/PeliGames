@@ -1,3 +1,4 @@
+import { MonitoringPreferences } from "./preferences/MonitoringPreferences";
 import { useEffect, useRef, useState } from "react";
 import type { AppConfig } from "./SetupWizard";
 import { invoke } from "@tauri-apps/api/core";
@@ -12,17 +13,19 @@ import { ThemePreferences, ModPreferences, ProtonPreferences, CoverPreferences, 
 import { usePreferencesConfig } from "./preferences/usePreferencesConfig";
 import { usePreferencesText } from "./preferences/labels";
 import { ConnectionsPreferences } from "./preferences/ConnectionsPreferences";
+import { ModBackupPreferences } from "./preferences/ModBackupPreferences";
+import { DiskAutomountPreferences } from "./preferences/DiskAutomountPreferences";
 import "./preferences/preferences.css";
 
 interface Props {
   onClose: () => void;
   onBusyChange?: (busy: boolean) => void;
-  initialSection?: "general" | "covers" | "protons" | "backendUpdate";
+  initialSection?: "general" | "covers" | "protons" | "backendUpdate" | "diskAutomount" | "monitoring";
   initialBackendArch?: "rdna3" | "rdna4";
   onConfigUpdated: (config: AppConfig | null) => void;
   onOpenWizard: () => void;
 }
-type Page = "home" | "interface" | "mods" | "protons" | "covers" | "tools" | "connections" | "backendUpdate";
+type Page = "home" | "interface" | "mods" | "protons" | "covers" | "tools" | "connections" | "backendUpdate" | "diskAutomount" | "monitoring";
 export function SettingsModal({ onClose, initialSection = "general", initialBackendArch, onBusyChange, onConfigUpdated, onOpenWizard }: Props) {
   const text = usePreferencesText(), { t } = useI18n();
   const preferences = usePreferencesConfig(onConfigUpdated);
@@ -38,6 +41,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
   const [backendArch, setBackendArch] = useState(initialBackendArch);
   const [protonConfirmationOpen, setProtonConfirmationOpen] = useState(false);
   const [downloadBusy, setDownloadBusy] = useState(false), [actionError, setActionError] = useState("");
+  const [storageDialogOpen, setStorageDialogOpen] = useState(false);
   const [showLauncherLogs, setShowLauncherLogs] = useState(false);
   const [notice, setNotice] = useState("");
   const [search, setSearch] = useState("");
@@ -50,7 +54,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
   useEffect(() => { setBackendArch(initialBackendArch); setPage(initialSection === "general" ? "home" : initialSection); }, [initialSection, initialBackendArch]);
   useEffect(() => { onBusyChange?.(busy); return () => onBusyChange?.(false); }, [busy, onBusyChange]);
   const close = () => { if (!busy && !preferences.isPending() && !cacheDialog && !showLauncherLogs && !protonConfirmationOpen) onClose(); };
-  const parent: Page = page === "backendUpdate" ? "mods" : "home";
+  const parent: Page = page === "backendUpdate" ? "mods" : page === "diskAutomount" || page === "monitoring" ? "tools" : "home";
   const back = () => { if (!busy && !preferences.isPending()) { setPage(parent); setActionError(""); } };
   useEffect(() => {
     if (wasSaving.current && !preferences.saving && !preferences.error) setNotice(text.saved);
@@ -65,10 +69,12 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
   }, [preferences.ready, initialSection, page]);
   useEffect(() => {
     const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !cacheDialog && !showLauncherLogs && !protonConfirmationOpen) { event.stopImmediatePropagation(); if (search) { setSearch(""); return; } if (!busy && !preferences.isPending()) { if (page === "home" || (wideLayout && parent === "home")) onClose(); else setPage(parent); } }
+      // A portaled choice menu consumes Escape before navigating out of preferences.
+      if (event.target instanceof Element && (event.target.closest('.custom-select-menu[role="listbox"]') || (event.target.getAttribute("aria-haspopup") === "listbox" && event.target.getAttribute("aria-expanded") === "true"))) return;
+      if (event.key === "Escape" && !storageDialogOpen && !cacheDialog && !showLauncherLogs && !protonConfirmationOpen) { event.stopImmediatePropagation(); if (search) { setSearch(""); return; } if (!busy && !preferences.isPending()) { if (page === "home" || (wideLayout && parent === "home")) onClose(); else setPage(parent); } }
     };
     window.addEventListener("keydown", escape, true); return () => window.removeEventListener("keydown", escape, true);
-  }, [busy, cacheDialog, showLauncherLogs, protonConfirmationOpen, page, parent, onClose, search, wideLayout]);
+  }, [busy, storageDialogOpen, cacheDialog, showLauncherLogs, protonConfirmationOpen, page, parent, onClose, search, wideLayout]);
   const clearCache = async () => {
     if (clearingCache) return;
     setClearingCache(true);
@@ -76,7 +82,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
     catch (error) { setCacheError(String(error)); setCacheDialog("error"); }
     finally { setClearingCache(false); }
   };
-  const categoryNames = { home: text.home, interface: text.interface, mods: text.mods, protons: text.protons, covers: text.covers, tools: text.tools, connections: text.connections, backendUpdate: t("app", "updateBackend") };
+  const categoryNames = { home: text.home, interface: text.interface, mods: text.mods, protons: text.protons, covers: text.covers, tools: text.tools, diskAutomount: text.diskAutomount, monitoring: text.monitoring, connections: text.connections, backendUpdate: t("app", "updateBackend") };
   const categories = [
     { page: "interface", icon: "platform", hint: text.interfaceHint },
     { page: "mods", icon: "puzzle", hint: text.modsHint },
@@ -106,11 +112,13 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
     { id: "proton-family", page: "protons", title: text.distribution, keywords: `GE-Proton CachyOS GloriousEggroll ${text.runnerUpdate} ${t("runners", "download")} ${t("runners", "check")}` },
     { id: "steam-scan", page: "protons", title: text.steamScan, keywords: `${text.steam} ${text.steamHint}` },
     { id: "cover-api", page: "covers", title: t("steamgrid", "keyLabel"), keywords: `SteamGridDB API ${text.showKey} ${text.hideKey}` },
+    { id: "disk-automount", page: "tools", title: text.diskAutomount, keywords: `${text.diskAutomountHint} HD HDD SSD storage GNOME Disks` },
+    { id: "monitoring-panel", page: "tools", title: text.monitoring, keywords: `${text.monitoringHint} FPS GPU CPU MangoHUD` },
     { id: "launcher-logs", page: "tools", title: text.launcherLogs, keywords: `${text.openLogs} ${text.logsHint}` },
-    { id: "backup-create", page: "tools", title: text.backupCreate, keywords: "Nexus ZIP" },
-    { id: "backup-restore", page: "tools", title: text.backupRestore, keywords: text.backupSearch },
-    { id: "backup-discover", page: "tools", title: text.backupDiscover, keywords: text.backupSearch },
-    { id: "backup-per-game", page: "tools", title: text.backupPerGame, keywords: text.backupSearch },
+    { id: "backup-create", page: "mods", title: text.backupCreate, keywords: "Nexus ZIP" },
+    { id: "backup-restore", page: "mods", title: text.backupRestore, keywords: text.backupSearch },
+    { id: "backup-discover", page: "mods", title: text.backupDiscover, keywords: text.backupSearch },
+    { id: "backup-per-game", page: "mods", title: text.backupPerGame, keywords: text.backupSearch },
     { id: "manual-folders", page: "tools", title: t("settings", "manualDirs"), keywords: text.directorySearch },
   ] as const;
   const searchResults = options.filter(option => query.split(/\s+/).every(word => normalize(`${categoryNames[option.page]} ${option.title} ${option.keywords}`).includes(word)));
@@ -126,7 +134,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
     return () => { window.clearTimeout(timer); target.classList.remove("preference-search-target"); };
   }, [searchTarget, query, displayedPage, preferences.ready]);
   const configProps = { config: preferences.config, disabled: !preferences.ready || busy, save: preferences.save };
-  const footer = <footer className="preferences-footer"><span role="status"><MenuIcon name="info"/>{preferences.saving ? text.saving : notice || text.automatic}</span></footer>;
+  const footer = <footer className="preferences-footer"><span role="status"><MenuIcon name="info"/>{preferences.saving ? text.saving : notice || (displayedPage === "monitoring" ? "As alterações do MangoHUD são salvas automaticamente." : text.automatic)}</span></footer>;
   return <div className="preferences-overlay">
     <div className="dialog-backdrop" onClick={close}/>
     {showLauncherLogs && <LauncherLogsModal onClose={() => setShowLauncherLogs(false)}/>}
@@ -140,7 +148,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
     </nav>}>
       <div className="preferences-layout">
         {wideLayout && <nav className="preferences-sidebar preferences-categories" aria-label={text.home}>
-          {categories.map(category => <button type="button" key={category.page} disabled={busy} aria-current={(displayedPage === category.page || (displayedPage === "backendUpdate" && category.page === "mods")) ? "page" : undefined} onClick={() => { if (!preferences.isPending()) { setPage(category.page); setSearch(""); setSearchTarget(null); setActionError(""); } }}><span className="preferences-category-icon"><MenuIcon name={category.icon}/></span><span><strong>{categoryNames[category.page]}</strong><small>{category.hint}</small></span></button>)}
+          {categories.map(category => <button type="button" key={category.page} disabled={busy} aria-current={(displayedPage === category.page || (displayedPage === "backendUpdate" && category.page === "mods") || ((displayedPage === "diskAutomount" || displayedPage === "monitoring") && category.page === "tools")) ? "page" : undefined} onClick={() => { if (!preferences.isPending()) { setPage(category.page); setSearch(""); setSearchTarget(null); setActionError(""); } }}><span className="preferences-category-icon"><MenuIcon name={category.icon}/></span><span><strong>{categoryNames[category.page]}</strong><small>{category.hint}</small></span></button>)}
         </nav>}
         <div ref={pageRef} className="preferences-page" key={displayedPage}>
 
@@ -151,11 +159,13 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
         {displayedPage === "home" && <div className="preferences-categories">{categories.map(category => <button type="button" key={category.page} onClick={() => { setPage(category.page); setActionError(""); }}><span className="preferences-category-icon"><MenuIcon name={category.icon}/></span><span><strong>{categoryNames[category.page]}</strong><small>{category.hint}</small></span><span className="preferences-chevron">›</span></button>)}</div>}
         {displayedPage === "interface" && <ThemePreferences onApplied={() => setNotice(text.applied)} onOpenConnections={() => { if (!busy && !preferences.isPending()) { setPage("connections"); setSearch(""); setSearchTarget(null); setActionError(""); } }}/>}
         {displayedPage === "connections" && <ConnectionsPreferences/>}
-        {displayedPage === "mods" && <ModPreferences {...configProps} onUpdate={architecture => { setBackendArch(architecture); setPage("backendUpdate"); }} onWizard={() => { if (!preferences.isPending()) { onOpenWizard(); onClose(); } }} onClear={() => setCacheDialog("confirm")}/>}
+        {displayedPage === "mods" && <><ModPreferences {...configProps} onUpdate={architecture => { setBackendArch(architecture); setPage("backendUpdate"); }} onWizard={() => { if (!preferences.isPending()) { onOpenWizard(); onClose(); } }} onClear={() => setCacheDialog("confirm")}/><ModBackupPreferences onError={setActionError} onBusy={setDownloadBusy} onRestored={async () => onConfigUpdated(await invoke<AppConfig | null>("load_app_config"))}/></>}
         {displayedPage === "protons" && <ProtonPreferences {...configProps} onBusy={setDownloadBusy} focusRef={steamRef} onConfirmationChange={setProtonConfirmationOpen}/>}
         {displayedPage === "covers" && preferences.ready && <CoverPreferences {...configProps} disabled={!preferences.ready} focusRef={coverRef} onError={setActionError}/>}
-        {displayedPage === "tools" && <ToolsPreferences onRestored={async () => onConfigUpdated(await invoke<AppConfig | null>("load_app_config"))} onBusy={setDownloadBusy} onError={setActionError} onLogs={() => setShowLauncherLogs(true)}/>}
-        {displayedPage === "backendUpdate" && <BackendUpdaterModal key={backendArch ?? preferences.config.backend} gpuArch={backendArch ?? (preferences.config.backend === "AMDNR" ? "rdna4" : "rdna3")} isEmbedded onBusyChange={setDownloadBusy} onClose={() => setPage("mods")}/>}
+        {displayedPage === "tools" && <ToolsPreferences onAutomount={() => setPage("diskAutomount")} onMonitoring={() => setPage("monitoring")} onError={setActionError} onLogs={() => setShowLauncherLogs(true)}/>}
+        {displayedPage === "diskAutomount" && <DiskAutomountPreferences onBusy={setDownloadBusy} onDialogChange={setStorageDialogOpen}/>}
+        {displayedPage === "monitoring" && <MonitoringPreferences onDirtyChange={setDownloadBusy}/>}
+        {displayedPage === "backendUpdate" && <section className="preference-panel"><BackendUpdaterModal key={backendArch ?? preferences.config.backend} gpuArch={backendArch ?? (preferences.config.backend === "AMDNR" ? "rdna4" : "rdna3")} isEmbedded onBusyChange={setDownloadBusy} onClose={() => setPage("mods")}/></section>}
         {(preferences.error || actionError) && <div className="preferences-error" role="alert"><p>{preferences.error || actionError}</p>{preferences.error && <button type="button" disabled={busy} onClick={preferences.retry}>{text.retry}</button>}</div>}
         </>}
       </div>
