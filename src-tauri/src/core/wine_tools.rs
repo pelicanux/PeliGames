@@ -140,8 +140,12 @@ fn prepare(umu: &Path, proton: &Path, prefix: &Path, action: &str, packages: &[S
     } else {
         "winetricks"
     });
-    if action != "winecfg" {
+    if action == "install" {
         cmd.args(packages);
+    } else if action == "winetricks-gui" {
+        // UMU requires a nonempty Winetricks argument list; --gui explicitly
+        // opens the original menus without selecting any installation verb.
+        cmd.arg("--gui");
     }
     cmd.env("WINEPREFIX", prefix)
         .env("PROTONPATH", proton)
@@ -150,6 +154,7 @@ fn prepare(umu: &Path, proton: &Path, prefix: &Path, action: &str, packages: &[S
         .env("PROTON_VERB", "waitforexitandrun")
         .env("UMU_LOG", "1")
         .env_remove("UMU_NO_PROTON")
+        .env_remove("WINETRICKS_SUPER_QUIET")
         .current_dir(prefix)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
@@ -164,8 +169,11 @@ pub async fn execute(request: ToolRequest, progress: Progress) -> Result<ToolRes
         return Err("Uma ferramenta Wine já está em execução.".into());
     }
     let _guard = Guard;
-    if !["catalog", "winecfg", "install"].contains(&request.action.as_str()) {
+    if !["catalog", "winecfg", "install", "winetricks-gui"].contains(&request.action.as_str()) {
         return Err("Ferramenta inválida.".into());
+    }
+    if request.action != "install" && !request.packages.is_empty() {
+        return Err("Esta ferramenta não aceita uma lista de componentes.".into());
     }
     let entry = super::installed_library::list(false)?
         .into_iter()

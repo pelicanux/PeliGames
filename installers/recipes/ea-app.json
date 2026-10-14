@@ -1,0 +1,157 @@
+{
+  "$schema": "../recipe.schema.json",
+  "schema_version": 1,
+  "recipe_version": 1,
+  "id": "ea-app",
+  "name": "EA app",
+  "category": "launchers",
+  "reviewed_on": "2026-10-13",
+  "validation": {
+    "status": "research-only",
+    "installation_tested": false,
+    "launch_tested": false
+  },
+  "download": {
+    "url": "https://origin-a.akamaihd.net/EA-Desktop-Client-Download/installer-releases/EAappInstaller.exe",
+    "filename": "EAappInstaller.exe",
+    "kind": "exe",
+    "evidence": [
+      "ea-recipe"
+    ],
+    "sha256": null,
+    "mutable_upstream": true,
+    "verify_windows_signature": true,
+    "record_download_sha256": true
+  },
+  "prefix": {
+    "architecture": "win64",
+    "windows_version": "win10",
+    "isolation": "dedicated",
+    "existing_prefix_policy": "ask",
+    "preferred_filesystems": [
+      "ext4",
+      "btrfs"
+    ],
+    "ntfs_policy": "warn",
+    "rationale": "Política inicial do PeliGames; validar por launcher antes de promover a receita."
+  },
+  "runners": [
+    {
+      "family": "ge-proton",
+      "backend": "umu",
+      "phases": [
+        "install",
+        "launch"
+      ],
+      "evidence": [
+        "ge-support"
+      ],
+      "reason": "Candidato inicial; resolver uma versão concreta e conservar essa versão durante a instalação.",
+      "tested_by_peligames": false
+    },
+    {
+      "family": "dw-proton",
+      "backend": "umu",
+      "phases": [
+        "install",
+        "launch"
+      ],
+      "evidence": [
+        "ea-recipe",
+        "dw-project"
+      ],
+      "reason": "Runner indicado na receita EA consultada; candidato específico para comparação com GE, ainda não validado no PeliGames.",
+      "tested_by_peligames": false
+    }
+  ],
+  "dependencies": [
+    {
+      "verb": "corefonts",
+      "evidence": [
+        "ea-recipe"
+      ],
+      "reason": "Fontes usadas na receita consultada.",
+      "status": "recipe-candidate",
+      "apply": "user-approved"
+    },
+    {
+      "verb": "physx",
+      "evidence": [
+        "ea-recipe"
+      ],
+      "reason": "Incluído pela receita consultada; avaliar necessidade por jogo antes de torná-lo obrigatório.",
+      "status": "recipe-candidate",
+      "apply": "user-approved"
+    }
+  ],
+  "mitigations": [],
+  "known_issues": [
+    {
+      "id": "missing-executable",
+      "symptom": "Instalação termina sem executável disponível.",
+      "evidence": [
+        "ea-install"
+      ],
+      "guidance": "Conferir arquivo instalado e logs; não registrar uma instalação incompleta.",
+      "affected_versions": [],
+      "resolution": "requires-validation",
+      "automatic_fix": false
+    },
+    {
+      "id": "black-window",
+      "symptom": "Janela preta ao abrir o EA app.",
+      "evidence": [
+        "ea-black"
+      ],
+      "guidance": "Comparar runner e driver em prefixo isolado; a fonte não confirma uma solução única.",
+      "affected_versions": [],
+      "resolution": "requires-validation",
+      "automatic_fix": false
+    },
+    {
+      "id": "versioned-path",
+      "symptom": "Atualização pode colocar o executável em uma subpasta versionada.",
+      "evidence": [
+        "ea-recipe"
+      ],
+      "guidance": "Procurar somente nas alternativas previstas dentro do prefixo. Se houver mais de uma, pedir seleção; não apagar ou mover diretórios automaticamente.",
+      "affected_versions": [],
+      "resolution": "requires-validation",
+      "automatic_fix": false
+    }
+  ],
+  "executable": {
+    "relative_paths": [
+      "drive_c/Program Files/Electronic Arts/EA Desktop/EA Desktop/EALauncher.exe"
+    ],
+    "relative_globs": [
+      "drive_c/Program Files/Electronic Arts/EA Desktop/*/EA Desktop/EALauncher.exe"
+    ],
+    "require_unique_match": true,
+    "verify_pe_header": true,
+    "evidence": [
+      "ea-recipe"
+    ]
+  },
+  "installer": {
+    "mode": "interactive",
+    "arguments": [
+      "EAX_LAUNCH_CLIENT=0"
+    ],
+    "success_requires_executable": true,
+    "close_launcher_before_verification": true
+  },
+  "steps": [
+    "preflight",
+    "select_runner",
+    "download_installer",
+    "create_prefix",
+    "review_dependencies",
+    "run_installer",
+    "verify_executable",
+    "register_launcher"
+  ],
+  "notes": [
+    "A compatibilidade do launcher não garante a compatibilidade dos jogos nem de seus sistemas anticheat."
+  ]
+}

@@ -1,5 +1,8 @@
+/* Blur changes diffusion only. Fixed backdrop attenuation prevents bright
+   content from turning into a luminous veil; it never filters foreground text. */
 /* One corner-lit surface for panels, dialogs and portal menus. */
 :root {
+  --glass-backdrop-brightness: 1;
   --glass-base-start: 12, 17, 32;
   --glass-base-end: 19, 13, 27;
   --glass-opacity-start: .9;
@@ -24,12 +27,13 @@
 ) {
   isolation: isolate;
   border: 1px solid rgba(var(--glass-neutral-border), .25) !important;
-  background:
+  --glass-surface-background:
     radial-gradient(ellipse at 0 0, rgba(var(--accent-rgb), var(--glass-corner-fill)), transparent 52%),
     radial-gradient(ellipse at 100% 100%, rgba(var(--accent-rgb), var(--glass-corner-fill)), transparent 44%),
-    linear-gradient(125deg, rgba(var(--glass-base-start), var(--glass-opacity-start)), rgba(var(--glass-base-end), var(--glass-opacity-end))) !important;
-  backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35) !important;
-  -webkit-backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35) !important;
+    linear-gradient(125deg, rgba(var(--glass-base-start), var(--glass-opacity-start)), rgba(var(--glass-base-end), var(--glass-opacity-end)));
+  background: var(--glass-surface-background) !important;
+  backdrop-filter: blur(calc(14px * var(--window-blur-factor, 1))) brightness(var(--glass-backdrop-brightness, 1)) !important;
+  -webkit-backdrop-filter: blur(calc(14px * var(--window-blur-factor, 1))) brightness(var(--glass-backdrop-brightness, 1)) !important;
   box-shadow: inset 0 1px rgba(217, 225, 255, .04), 0 10px 28px var(--glass-shadow) !important;
 }
 /* The masked layer traces the border without tinting the other two corners. */
@@ -55,13 +59,15 @@
   pointer-events: none;
 }
 :root .menu-glass-panel {
-  --glass-base-start: 35, 43, 60;
-  --glass-base-end: 30, 34, 49;
+  --glass-backdrop-brightness: .88;
+  --glass-base-start: 12, 17, 26;
+  --glass-base-end: 10, 14, 23;
   --glass-opacity-start: .38;
   --glass-opacity-end: .30;
   --glass-corner-fill: .09;
 }
 :root[data-appearance="light"] .menu-glass-panel {
+  --glass-backdrop-brightness: 1;
   --glass-base-start: 220, 228, 238;
   --glass-base-end: 198, 211, 228;
   --glass-opacity-start: .56;
@@ -69,8 +75,8 @@
 }
 /* Let the selected cover tint carousel panels while keeping a readable veil. */
 :root[data-appearance] .menu-glass-panel {
-  backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35) !important;
-  -webkit-backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35) !important;
+  backdrop-filter: blur(calc(14px * var(--window-blur-factor, 1))) brightness(var(--glass-backdrop-brightness, 1)) !important;
+  -webkit-backdrop-filter: blur(calc(14px * var(--window-blur-factor, 1))) brightness(var(--glass-backdrop-brightness, 1)) !important;
 }
 /* The gear menu sits above busy content and needs a denser base. */
 :root .dialog-popover {
@@ -130,8 +136,8 @@
   padding: 10px 54px 10px 20px;
   border: 1px solid rgba(var(--accent-rgb), .3);
   background: linear-gradient(125deg, rgba(var(--glass-base-start), .56), rgba(var(--glass-base-end), .46));
-  backdrop-filter: blur(24px) saturate(1.2) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(1.2) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
   border-radius: inherit;
   box-shadow: inset 0 1px rgba(var(--surface-255-255-255, 255,255,255), .1);
 }
@@ -153,25 +159,38 @@
 :root .performance-mode .dialog-titlebar { background: rgb(var(--glass-base-start)); }
 /* Title bars always keep their own blur, independent of window/backdrop sliders. */
 :root :is(.dialog-titlebar,.app-titlebar) {
-  backdrop-filter:blur(24px) saturate(1.2) !important;
-  -webkit-backdrop-filter:blur(24px) saturate(1.2) !important;
+  backdrop-filter:blur(24px) !important;
+  -webkit-backdrop-filter:blur(24px) !important;
 }
-/* Keep the frame blur on a sibling: nested backdrop filters in WebKit can
-   omit scrolling text from the title bar's backdrop capture. */
-:root[data-appearance] .modal-content.fixed-glass-frame.has-dialog-titlebar {
+/* Paint glass on its own first sibling, below every foreground control.
+   Avoid a negative-z backdrop behind the frame's own background: native
+   WebKit compositing can produce coloured haze around dialog content. */
+:root[data-appearance] .modal-content.fixed-glass-frame {
+  background: transparent !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 :root .modal-glass-backdrop {
   position: absolute;
   inset: 0;
-  z-index: -2;
+  z-index: 0;
+  background: var(--glass-surface-background);
   border-radius: inherit;
   pointer-events: none;
-  backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35);
-  -webkit-backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.35);
+  backdrop-filter: blur(calc(14px * var(--window-blur-factor, 1))) brightness(var(--glass-backdrop-brightness, 1));
+  -webkit-backdrop-filter: blur(calc(14px * var(--window-blur-factor, 1))) brightness(var(--glass-backdrop-brightness, 1));
 }
-:root .performance-mode .modal-glass-backdrop { display: none; }
+:root .modal-content.fixed-glass-frame > .modal-scroll-body { position: relative; z-index: 1; }
+:root .modal-content.fixed-glass-frame > :not(.modal-glass-backdrop) { z-index: 1; }
+:root .modal-content.fixed-glass-frame > .dialog-titlebar { z-index: 4; }
+:root[data-appearance] .modal-content.fixed-glass-frame::after { z-index: 0; }
+:root[data-appearance] .modal-content.fixed-glass-frame::before { z-index: 6; }
+:root[data-appearance] :is(.performance-mode, .performance-mode *) .modal-content.fixed-glass-frame { background: transparent !important; }
+:root .performance-mode .modal-glass-backdrop {
+  background: rgb(var(--glass-base-end));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
 
 @media (max-width: 480px) {
   .dialog-titlebar { left: 10px; right: 10px; padding-left: 15px; }
@@ -184,14 +203,16 @@
   .ui-hover-tooltip, .installation-name-hint, .effects-menu, .custom-select-menu,
   .text-context-menu, .model-source-tooltip, .launcher-update-tooltip
 ) {
-  --glass-base-start: 35, 43, 60;
-  --glass-base-end: 30, 34, 49;
+  --glass-backdrop-brightness: .88;
+  --glass-base-start: 12, 17, 26;
+  --glass-base-end: 10, 14, 23;
   --glass-opacity-start: .28;
   --glass-opacity-end: .20;
-  background:
-    radial-gradient(ellipse 220px 180px at 0 0, rgba(var(--accent-rgb), .16), rgba(var(--accent-rgb), .04) 48%, transparent 78%),
-    radial-gradient(ellipse 200px 170px at 100% 100%, rgba(var(--accent-rgb), .14), rgba(var(--accent-rgb), .03) 48%, transparent 78%),
-    linear-gradient(125deg, rgba(var(--glass-base-start), var(--glass-opacity-start)), rgba(var(--glass-base-end), var(--glass-opacity-end))) !important;
+  --glass-surface-background:
+    radial-gradient(ellipse 170px 140px at 0 0, rgba(var(--accent-rgb), .10), rgba(var(--accent-rgb), .025) 48%, transparent 78%),
+    radial-gradient(ellipse 160px 135px at 100% 100%, rgba(var(--accent-rgb), .09), rgba(var(--accent-rgb), .02) 48%, transparent 78%),
+    linear-gradient(125deg, rgba(var(--glass-base-start), var(--glass-opacity-start)), rgba(var(--glass-base-end), var(--glass-opacity-end)));
+  background: var(--glass-surface-background) !important;
 }
 :root[data-appearance="dark"] .neon-lit-object {
   text-shadow:
@@ -207,6 +228,18 @@
 :root[data-appearance="dark"] .dialog-titlebar {
   background: linear-gradient(125deg, rgba(var(--glass-base-start), .56), rgba(var(--glass-base-end), .46));
 }
+/* Floating windows need their own attenuation: diffusing bright covers behind
+   a nearly transparent surface produces a grey veil as blur increases.
+   These constants are independent of the blur slider and do not filter text. */
+:root[data-appearance="dark"] .modal-content {
+  --glass-backdrop-brightness: .72;
+  --glass-opacity-start: .62;
+  --glass-opacity-end: .54;
+}
+:root[data-appearance="dark"] :is(.modal-overlay, .preferences-overlay > .dialog-backdrop) {
+  backdrop-filter: blur(calc(4px * var(--backdrop-blur-factor, 1))) brightness(.78);
+  -webkit-backdrop-filter: blur(calc(4px * var(--backdrop-blur-factor, 1))) brightness(.78);
+}
 /* Preferences need a stronger veil over the library so form text stays legible. */
 :root[data-appearance="dark"] .modal-content.preferences-modal,
 :root[data-appearance="dark"] .dialog-popover {
@@ -214,14 +247,14 @@
   --glass-base-end: 19, 13, 27;
 }
 :root[data-appearance="dark"] .modal-content.preferences-modal {
-  --glass-opacity-start: .78;
-  --glass-opacity-end: .70;
+  --glass-opacity-start: .84;
+  --glass-opacity-end: .78;
 }
 :root[data-appearance="dark"] .dialog-popover {
   --glass-opacity-start: .99;
   --glass-opacity-end: .98;
-  backdrop-filter: blur(calc(36px * var(--window-blur-factor, 1))) saturate(1.15) !important;
-  -webkit-backdrop-filter: blur(calc(36px * var(--window-blur-factor, 1))) saturate(1.15) !important;
+  backdrop-filter: blur(calc(18px * var(--window-blur-factor, 1))) brightness(var(--glass-backdrop-brightness, 1)) !important;
+  -webkit-backdrop-filter: blur(calc(18px * var(--window-blur-factor, 1))) brightness(var(--glass-backdrop-brightness, 1)) !important;
 }
 :root[data-appearance="dark"] :is(.credits-neon-card, .credits-neon-logo).neon-lit-control {
   box-shadow:
@@ -277,3 +310,12 @@
 }
 :root[data-appearance="dark"] .app-wrapper.performance-mode { background:#080f1a; }
 :root .app-wrapper.performance-mode::before { content:none; }
+
+/* Context actions need a dark veil over bright covers and library backgrounds. */
+:root[data-appearance="dark"] :is(.cover-context-menu, .text-context-menu) {
+  --glass-base-start: 6, 9, 15;
+  --glass-base-end: 7, 10, 17;
+  --glass-opacity-start: .90;
+  --glass-opacity-end: .86;
+  --glass-backdrop-brightness: .72;
+}

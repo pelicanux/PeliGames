@@ -41,6 +41,13 @@ const workspace: { games: NexusGame[] } = { games: demoGames.map((game, i) => ({
   ] : []),
 ] })) };
 demoGames.push(demoLauncher);
+// Main-library examples; these are not included in the Nexus workspace fixture.
+demoGames.push(
+  {name:"Fallout: New Vegas — Heroic",path:"/preview/heroic/new-vegas",directory:"/preview/heroic/new-vegas",launcher:"Heroic",app_id:"gog-newvegas",prefix:"/preview/heroic/prefix",proton:"/preview/proton/Proton-GE Latest",cover_url:"https://cdn.cloudflare.steamstatic.com/steam/apps/22380/library_600x900.jpg"},
+  {name:"Tomb Raider — Lutris",path:"/preview/lutris/tomb-raider",directory:"/preview/lutris/tomb-raider",launcher:"Lutris",app_id:"42",prefix:"/preview/lutris/prefix",cover_url:"https://cdn.cloudflare.steamstatic.com/steam/apps/203160/library_600x900.jpg"},
+  {name:"Cyberpunk 2077 — Faugus",path:"/preview/faugus/cyberpunk",directory:"/preview/faugus/cyberpunk",launcher:"Faugus",app_id:"cyberpunk",prefix:"/preview/faugus/prefix",cover_url:"https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/library_600x900.jpg"}
+);
+
 const demoProfiles = new Map<string, ProfileSummary[]>();
 function profilesFor(gameId: string) {
   if (!demoProfiles.has(gameId)) demoProfiles.set(gameId, [
@@ -50,6 +57,7 @@ function profilesFor(gameId: string) {
   return demoProfiles.get(gameId)!;
 }
 let demoMatrixConnected = false;
+let demoMatrixActivity = "";
 const demoMatrixMessages: Record<string, unknown>[] = [
   {kind:"message",id:"$preview-matrix-1",sender:"@pelicanux:matrix.org",ts:Date.now()-60000,msgtype:"m.text",body:"Bem-vindos ao chat da comunidade PeliGames! Regras: https://github.com/pelicanux/PeliGames"},
   {kind:"message",id:"$preview-matrix-2",sender:"@linux_gamer:matrix.org",ts:Date.now()-30000,msgtype:"m.text",body:"Alguém testando mods no Linux hoje? >_"},
@@ -240,7 +248,11 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     }
     case "launch_nexus_game":
     case "stop_nexus_game": {
-      if (command === "launch_nexus_game") await new Promise(resolve => window.setTimeout(resolve, 1800));
+      if (command === "launch_nexus_game") {
+        window.dispatchEvent(new CustomEvent("previewRuntimeActivity", {detail:[{id:"preview-runtime",runtime:"Steam Runtime 4",phase:"downloading",downloaded_bytes:64*1048576}]}));
+        await new Promise(resolve => window.setTimeout(resolve, 1800));
+        window.dispatchEvent(new CustomEvent("previewRuntimeActivity", {detail:[]}));
+      }
       const game = workspace.games.find(g => g.id === args.gameId);
       if (game) game.running = command === "launch_nexus_game";
       return { value: clone(orderWorkspaceMods(workspace)) };
@@ -254,17 +266,23 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "matrix_chat_avatar": return {value:null};
     case "matrix_chat_status": return {value:{pending:false,user_id:demoMatrixConnected ? "@demo-preview:matrix.org" : null}};
     case "connect_matrix_chat": demoMatrixConnected = true; return {value:null};
+    case "matrix_chat_game_activity": demoMatrixActivity = args.gameName ? `Jogando ${args.gameName} · PeliGames` : ""; return {value:null};
     case "disconnect_matrix_chat": demoMatrixConnected = false; return {value:null};
-    case "matrix_chat_rooms": return {value:{rooms:[{room_id:"!pNHMqrnxSAmcVFqrgf:matrix.org",name:"PeliGames · Geral",topic:"Jogos, Linux e conversa com a comunidade."},{room_id:"!preview-help:matrix.org",name:"Ajuda com mods",topic:"Dúvidas sobre instalação e compatibilidade de mods."}]}};
+    case "matrix_chat_rooms": return {value:{rooms:[{room_id:"!pNHMqrnxSAmcVFqrgf:matrix.org",name:"PeliGames · Geral",topic:"Jogos, Linux e conversa com a comunidade."},{room_id:"!preview-help:matrix.org",name:"Ajuda com mods",topic:"Dúvidas sobre instalação e compatibilidade de mods."},{room_id:"!preview-voice:matrix.org",name:"Jogatina",room_type:"org.matrix.msc3417.call",topic:"Canal de voz da comunidade."}]}};
+    case "matrix_chat_create_channel": throw new Error("Prévia visual: nenhum canal é criado no Matrix.");
+    case "matrix_chat_delete_channel": throw new Error("Prévia visual: nenhum canal é apagado no Matrix.");
     case "matrix_chat_premium_access":
       if (previewAccount() !== "owner") throw new Error("Prévia: acesso premium bloqueado para usuário gratuito.");
       return {value:{granted:true,room_id:MATRIX_PREMIUM_ROOM_ID,user_id:"@demo-preview:matrix.org"}};
     case "matrix_chat_join": return {value:null};
+    case "matrix_chat_read": case "matrix_chat_typing": case "matrix_audio_route": return {value:null};
+    case "matrix_audio_devices": return {value:{inputs:[{id:"preview-headset-mic",name:"Headset USB Mono (demonstração)"},{id:"preview-webcam-mic",name:"Microfone da webcam (demonstração)"}],outputs:[{id:"preview-headset",name:"Headset USB Estéreo (demonstração)"},{id:"preview-speakers",name:"Caixas de som (demonstração)"}]}};
+    case "matrix_chat_edit": case "matrix_chat_react": case "matrix_profile_set_name": case "matrix_profile_set_avatar": throw new Error("Prévia visual: nada é enviado ao Matrix.");
     case "matrix_chat_sync": {
       // Initial batch at once; later ones wait like the real long poll.
       if (args.since) { for (let waited = 0; waited < 30000 && !demoMatrixSent.length; waited += 500) await new Promise(resolve => setTimeout(resolve, 500)); }
       const events = args.since ? demoMatrixSent : demoMatrixMessages; demoMatrixSent = [];
-      return {value:{next_batch:`preview-${Date.now()}`,user_id:"@demo-preview:matrix.org",leave:[],ignored:args.since ? null : [],join:{...(previewAccount() === "owner" ? {[MATRIX_PREMIUM_ROOM_ID]:{events:[{kind:"message",id:"$premium-welcome",sender:"@pelicanux:matrix.org",ts:Date.now(),msgtype:"m.notice",body:"Suporte premium liberado automaticamente. Conte sua dúvida sobre jogos, mods ou Linux."}],prev_batch:null,limited:false,encrypted:null,power:demoMatrixPower,names:{}}} : {}),"!pNHMqrnxSAmcVFqrgf:matrix.org":{events,prev_batch:args.since ? null : "preview-older",limited:false,encrypted:null,power:demoMatrixPower,names:{"@pelicanux:matrix.org":"Pelicano","@demo-preview:matrix.org":"Você (prévia)"}},"!preview-help:matrix.org":{events:[],prev_batch:null,limited:false,encrypted:null,power:demoMatrixPower,names:{}}}}};
+      return {value:{next_batch:`preview-${Date.now()}`,user_id:"@demo-preview:matrix.org",presence:{"@demo-preview:matrix.org":demoMatrixActivity,"@pelicanux:matrix.org":"Jogando Stardew Valley · PeliGames","@silent-preview:matrix.org":"Jogando Palworld · PeliGames"},leave:[],ignored:args.since ? null : [],join:{...(previewAccount() === "owner" ? {[MATRIX_PREMIUM_ROOM_ID]:{members:args.since?{}:{"@pelicanux:matrix.org":true,"@demo-preview:matrix.org":true},events:[{kind:"message",id:"$premium-welcome",sender:"@pelicanux:matrix.org",ts:Date.now(),msgtype:"m.notice",body:"Suporte premium liberado automaticamente. Conte sua dúvida sobre jogos, mods ou Linux."}],prev_batch:null,limited:false,encrypted:null,power:demoMatrixPower,names:{}}} : {}),"!pNHMqrnxSAmcVFqrgf:matrix.org":{members:args.since?{}:{"@pelicanux:matrix.org":true,"@demo-preview:matrix.org":true,"@linux_gamer:matrix.org":true,"@silent-preview:matrix.org":true},events:args.since ? events : [...events,{kind:"reaction",id:"$preview-reaction",target:demoMatrixMessages[demoMatrixMessages.length - 1]?.id ?? "",key:"👍",sender:"@pelicanux:matrix.org"}],typing:args.since ? null : ["@pelicanux:matrix.org"],prev_batch:args.since ? null : "preview-older",limited:false,encrypted:null,power:demoMatrixPower,names:{"@pelicanux:matrix.org":"Pelicano","@demo-preview:matrix.org":"Você (prévia)","@silent-preview:matrix.org":"Membro sem mensagens"}},"!preview-help:matrix.org":{members:args.since?{}:{"@demo-preview:matrix.org":true},events:[],unread:args.since ? null : 2,prev_batch:null,limited:false,encrypted:null,power:demoMatrixPower,names:{}}}}};
     }
     case "matrix_chat_history": return {value:{events:[{kind:"message",id:"$preview-matrix-older",sender:"@pelicanux:matrix.org",ts:Date.now()-3600000,msgtype:"m.notice",body:"Histórico de demonstração: mensagem anterior à conversa atual."}],end:null,names:{"@pelicanux:matrix.org":"Pelicano"}}};
     case "matrix_chat_ignore": case "matrix_chat_report": case "matrix_chat_moderate": throw new Error("Prévia visual: nada é enviado ao Matrix.");

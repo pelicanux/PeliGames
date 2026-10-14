@@ -1,0 +1,700 @@
+[
+  {
+    "section": "fps",
+    "key": "fps",
+    "label": "FPS",
+    "kind": "toggle",
+    "default": true
+  },
+  {
+    "section": "fps",
+    "key": "frametime",
+    "label": "Tempo de quadro",
+    "kind": "toggle",
+    "default": true
+  },
+  {
+    "section": "fps",
+    "key": "frame_timing",
+    "label": "Gráfico de tempo de quadro",
+    "kind": "toggle",
+    "default": true
+  },
+  {
+    "section": "fps",
+    "key": "frame_count",
+    "label": "Contagem de quadros",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "fps",
+    "key": "fps_color_change",
+    "label": "Cores por faixa de FPS",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "fps",
+    "key": "show_fps_limit",
+    "label": "Mostrar limite de FPS",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "fps",
+    "key": "fps_metrics",
+    "label": "Média e mínimos de FPS",
+    "kind": "select",
+    "default": "avg,0.01",
+    "values": [
+      "",
+      "avg",
+      "avg,0.01",
+      "avg,0.01,0.001"
+    ]
+  },
+  {
+    "section": "fps",
+    "key": "fps_limit",
+    "label": "Limite de FPS (0 = sem limite)",
+    "kind": "number",
+    "default": 0,
+    "min": 0,
+    "max": 1000,
+    "step": 1
+  },
+  {
+    "section": "fps",
+    "key": "fps_limit_method",
+    "label": "Método do limitador",
+    "kind": "select",
+    "default": "late",
+    "values": [
+      "late",
+      "early"
+    ]
+  },
+  {
+    "section": "fps",
+    "key": "vsync",
+    "label": "VSync Vulkan",
+    "kind": "select",
+    "default": "-1",
+    "values": [
+      "-1",
+      "0",
+      "1",
+      "2",
+      "3"
+    ]
+  },
+  {
+    "section": "fps",
+    "key": "gl_vsync",
+    "label": "VSync OpenGL",
+    "kind": "select",
+    "default": "-2",
+    "values": [
+      "-2",
+      "0",
+      "1",
+      "2",
+      "3",
+      "4"
+    ]
+  },
+  {
+    "section": "visual",
+    "key": "custom_text_center",
+    "label": "Título do painel",
+    "kind": "text",
+    "default": "PeliGames",
+    "max": 64
+  },
+  {
+    "section": "visual",
+    "key": "position",
+    "label": "Posição",
+    "kind": "select",
+    "default": "top-left",
+    "values": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "middle-left",
+      "middle-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  {
+    "section": "visual",
+    "key": "font_size",
+    "label": "Tamanho da fonte",
+    "kind": "number",
+    "default": 24,
+    "min": 12,
+    "max": 48,
+    "step": 1
+  },
+  {
+    "section": "visual",
+    "key": "background_alpha",
+    "label": "Opacidade do fundo",
+    "kind": "number",
+    "default": 0.5,
+    "min": 0,
+    "max": 1,
+    "step": 0.05
+  },
+  {
+    "section": "visual",
+    "key": "alpha",
+    "label": "Opacidade do painel",
+    "kind": "number",
+    "default": 1,
+    "min": 0.1,
+    "max": 1,
+    "step": 0.05
+  },
+  {
+    "section": "visual",
+    "key": "round_corners",
+    "label": "Arredondamento",
+    "kind": "number",
+    "default": 8,
+    "min": 0,
+    "max": 30,
+    "step": 1
+  },
+  {
+    "section": "visual",
+    "key": "table_columns",
+    "label": "Colunas",
+    "kind": "number",
+    "default": 3,
+    "min": 1,
+    "max": 6,
+    "step": 1
+  },
+  {
+    "section": "visual",
+    "key": "offset_x",
+    "label": "Deslocamento horizontal",
+    "kind": "number",
+    "default": 0,
+    "min": 0,
+    "max": 1000,
+    "step": 1
+  },
+  {
+    "section": "visual",
+    "key": "offset_y",
+    "label": "Deslocamento vertical",
+    "kind": "number",
+    "default": 0,
+    "min": 0,
+    "max": 1000,
+    "step": 1
+  },
+  {
+    "section": "visual",
+    "key": "text_color",
+    "label": "Texto",
+    "kind": "color",
+    "default": "FFFFFF"
+  },
+  {
+    "section": "visual",
+    "key": "background_color",
+    "label": "Fundo",
+    "kind": "color",
+    "default": "080D17"
+  },
+  {
+    "section": "visual",
+    "key": "gpu_color",
+    "label": "GPU",
+    "kind": "color",
+    "default": "54C58D"
+  },
+  {
+    "section": "visual",
+    "key": "cpu_color",
+    "label": "CPU",
+    "kind": "color",
+    "default": "55B9F3"
+  },
+  {
+    "section": "visual",
+    "key": "ram_color",
+    "label": "RAM",
+    "kind": "color",
+    "default": "DCA0D5"
+  },
+  {
+    "section": "visual",
+    "key": "vram_color",
+    "label": "VRAM",
+    "kind": "color",
+    "default": "B793EF"
+  },
+  {
+    "section": "visual",
+    "key": "frametime_color",
+    "label": "Gráfico",
+    "kind": "color",
+    "default": "58D68D"
+  },
+  {
+    "section": "visual",
+    "key": "horizontal",
+    "label": "Orientação horizontal",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "visual",
+    "key": "horizontal_stretch",
+    "label": "Estender horizontalmente",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "visual",
+    "key": "hud_compact",
+    "label": "Painel compacto",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "visual",
+    "key": "text_outline",
+    "label": "Contorno do texto",
+    "kind": "toggle",
+    "default": true
+  },
+  {
+    "section": "visual",
+    "key": "no_display",
+    "label": "Ocultar ao iniciar",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "visual",
+    "key": "toggle_hud",
+    "label": "Atalho para mostrar ou ocultar",
+    "kind": "select",
+    "default": "Shift_R+F12",
+    "values": [
+      "Shift_R+F12",
+      "Shift_L+F12",
+      "Shift_L+F11",
+      "F12"
+    ]
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_text",
+    "label": "Nome personalizado da GPU",
+    "kind": "text",
+    "default": "GPU"
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_stats",
+    "label": "Utilização da GPU",
+    "kind": "toggle",
+    "default": true
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_temp",
+    "label": "Temperatura da GPU",
+    "kind": "toggle",
+    "default": true
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_junction_temp",
+    "label": "Temperatura de junção",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_mem_temp",
+    "label": "Temperatura da memória",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_core_clock",
+    "label": "Frequência da GPU",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_mem_clock",
+    "label": "Frequência da memória",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_power",
+    "label": "Consumo da GPU",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_fan",
+    "label": "Ventoinhas",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_voltage",
+    "label": "Tensão da GPU",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_power_limit",
+    "label": "Limite de potência",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "gpu",
+    "key": "throttling_status",
+    "label": "Limitação térmica ou energética",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "gpu",
+    "key": "throttling_status_graph",
+    "label": "Limitação no gráfico",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_name",
+    "label": "Modelo da GPU",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "gpu",
+    "key": "vulkan_driver",
+    "label": "Driver Vulkan",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "gpu",
+    "key": "vram",
+    "label": "Uso de VRAM",
+    "kind": "toggle",
+    "default": true
+  },
+  {
+    "section": "gpu",
+    "key": "proc_vram",
+    "label": "VRAM do processo",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_list",
+    "label": "GPU monitorada",
+    "kind": "select",
+    "default": "",
+    "values": [
+      "",
+      "0",
+      "1",
+      "0,1"
+    ]
+  },
+  {
+    "section": "cpu",
+    "key": "cpu_text",
+    "label": "Nome personalizado da CPU",
+    "kind": "text",
+    "default": "CPU"
+  },
+  {
+    "section": "cpu",
+    "key": "cpu_stats",
+    "label": "Utilização da CPU",
+    "kind": "toggle",
+    "default": true
+  },
+  {
+    "section": "cpu",
+    "key": "core_load",
+    "label": "Uso por núcleo",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "cpu",
+    "key": "core_type",
+    "label": "Tipo dos núcleos",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "cpu",
+    "key": "cpu_temp",
+    "label": "Temperatura da CPU",
+    "kind": "toggle",
+    "default": true
+  },
+  {
+    "section": "cpu",
+    "key": "cpu_mhz",
+    "label": "Frequência da CPU",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "cpu",
+    "key": "cpu_power",
+    "label": "Consumo da CPU",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "cpu",
+    "key": "ram",
+    "label": "Uso de RAM",
+    "kind": "toggle",
+    "default": true
+  },
+  {
+    "section": "cpu",
+    "key": "swap",
+    "label": "Uso de swap",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "cpu",
+    "key": "procmem",
+    "label": "Memória do processo",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "cpu",
+    "key": "io_read",
+    "label": "Leitura do processo",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "cpu",
+    "key": "io_write",
+    "label": "Escrita do processo",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "resolution",
+    "label": "Resolução",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "display_server",
+    "label": "Servidor gráfico",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "time",
+    "label": "Relógio",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "arch",
+    "label": "Arquitetura",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "wine",
+    "label": "Versão do Wine",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "engine_version",
+    "label": "Versão da API gráfica",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "winesync",
+    "label": "Sincronização do Wine",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "version",
+    "label": "Versão do MangoHUD",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "gamemode",
+    "label": "Estado do GameMode",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "vkbasalt",
+    "label": "Estado do vkBasalt",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "battery",
+    "label": "Bateria",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "battery_watt",
+    "label": "Consumo da bateria",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "battery_time",
+    "label": "Autonomia",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "media_player",
+    "label": "Música em reprodução",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "network",
+    "label": "Tráfego de rede",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "extras",
+    "key": "temp_fahrenheit",
+    "label": "Temperaturas em Fahrenheit",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "logs",
+    "key": "log_duration",
+    "label": "Duração do registro (segundos)",
+    "kind": "number",
+    "default": 30,
+    "min": 0,
+    "max": 3600,
+    "step": 1
+  },
+  {
+    "section": "logs",
+    "key": "autostart_log",
+    "label": "Iniciar registro após (segundos; 0 = manual)",
+    "kind": "number",
+    "default": 0,
+    "min": 0,
+    "max": 600,
+    "step": 1
+  },
+  {
+    "section": "logs",
+    "key": "log_interval",
+    "label": "Intervalo do registro (milissegundos)",
+    "kind": "number",
+    "default": 100,
+    "min": 0,
+    "max": 5000,
+    "step": 1
+  },
+  {
+    "section": "logs",
+    "key": "toggle_logging",
+    "label": "Atalho para registrar",
+    "kind": "select",
+    "default": "Shift_L+F2",
+    "values": [
+      "Shift_L+F2",
+      "Shift_R+F2",
+      "Shift_L+F10"
+    ]
+  },
+  {
+    "section": "fps",
+    "key": "fps_value",
+    "label": "Faixas de FPS para as cores",
+    "kind": "select",
+    "default": "30,60",
+    "values": [
+      "30,60",
+      "60,120",
+      "30,120"
+    ]
+  },
+  {
+    "section": "fps",
+    "key": "fps_color",
+    "label": "Paleta das faixas de FPS",
+    "kind": "select",
+    "default": "E06C75,E5C07B,98C379",
+    "values": [
+      "E06C75,E5C07B,98C379",
+      "F87171,FBBF24,4ADE80",
+      "FF5555,FFCC55,55CCFF"
+    ]
+  },
+  {
+    "section": "launcher",
+    "key": "launcher_enabled",
+    "label": "Ativar MangoHUD por padrão em todos os jogos",
+    "kind": "toggle",
+    "default": false
+  }
+]

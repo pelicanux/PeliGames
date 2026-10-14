@@ -791,7 +791,7 @@ select option {
   height: 26px;
   flex: 0 0 26px;
 }
-.game-action-stack button.primary:not(:disabled) {
+.game-action-stack button.primary {
   background: linear-gradient(120deg, var(--accent-button), var(--accent-deep));
   border: 1px solid rgba(var(--accent-rgb), .75);
   box-shadow: 0 4px 16px rgba(var(--accent-rgb), .18), inset 0 1px 0 rgba(var(--surface-255-255-255, 255, 255, 255), .08);
@@ -1528,6 +1528,29 @@ button.primary.proton-download-button.is-downloading:disabled { background: line
 @media (max-width: 600px) { .mod-manager-options { grid-template-columns: 1fr; } }
 
 
+.modal-content .game-entry-option {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:.65rem;
+  min-width:0;
+  min-height:96px;
+  padding:1rem .85rem;
+  border-radius:10px;
+  font-size:1rem;
+  font-weight:600;
+  line-height:1.35;
+  text-align:center;
+  color:var(--tone-e9edf9,#e9edf9);
+  background:linear-gradient(125deg,rgba(var(--accent-rgb),.2),rgba(var(--accent-rgb),.075)),linear-gradient(125deg,rgba(var(--glass-base-start),.94),rgba(var(--glass-base-end),.94));
+}
+.modal-content .game-entry-option:hover {
+  background:linear-gradient(125deg,rgba(var(--accent-rgb),.28),rgba(var(--accent-rgb),.12)),linear-gradient(125deg,rgba(var(--glass-base-start),.94),rgba(var(--glass-base-end),.94));
+}
+.game-entry-option > span { min-width:0; padding:0; background:none; color:inherit; font:inherit; }
+.game-entry-option > .menu-icon { width:22px; height:22px; flex-shrink:0; color:var(--accent-light); stroke-width:2.3; }
+
+
 .welcome-modal { max-width: 460px; text-align: center; }
 .welcome-modal h2 { margin: 0 0 .4rem; color: var(--tone-e9edf9, #e9edf9); }
 .welcome-modal .primary { width: 100%; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .5rem; }
@@ -1657,6 +1680,9 @@ button.advanced-toggle.enabled { background: rgba(var(--accent-rgb), .4); border
 .launcher-program-badge .menu-icon { width: 11px; height: 11px; }
 .launcher-program-name { width: 100%; font-size: .78rem; text-align: center; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
 .winetricks-modal { width: min(760px, calc(100vw - 40px)); }
+.winetricks-interface-action { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 12px 0; }
+.winetricks-interface-action > button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.winetricks-interface-action > small { flex: 1 1 230px; color: var(--tone-94a3b8); font-size: .8rem; line-height: 1.4; }
 .wine-tool-terminal { min-height: 75px; max-height: 150px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; border: 1px solid rgba(var(--accent-rgb), .25); border-radius: 8px; padding: 10px; background: rgba(var(--surface-20-20-25, 20,20,25), .85); color: var(--tone-e2e8f0); font-size: .7rem; }
 .winetricks-search { display: flex; align-items: center; gap: 8px; margin: 14px 0; color: var(--accent-soft); }
 .winetricks-search input { flex: 1; min-width: 0; padding: 9px; border-radius: 7px; border: 1px solid rgba(var(--accent-rgb), .3); color: var(--tone-e2e8f0); }
@@ -1907,6 +1933,27 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
 .library-running-badge > i { flex-shrink:0; width:5px; height:5px; border-radius:50%; background:var(--accent); box-shadow:0 0 5px rgba(var(--accent-rgb),.6); }
 .library-game-card--list .library-running-badge { top:auto; bottom:5px; left:50%; }
 
+/* Preparation pulses only the same accent border/light used by cover hover. */
+:is(.library-game-card, .game-card-placeholder, .selected-cover).is-preparing-game {
+  animation: cover-preparation-neon 1.4s ease-in-out infinite;
+}
+.game-card-placeholder.is-preparing-game { opacity: 1 !important; }
+@keyframes cover-preparation-neon {
+  0%, 100% { border-color: rgba(var(--accent-rgb), .35); box-shadow: 0 0 6px rgba(var(--accent-rgb), .18), 0 12px 24px rgba(0,0,0,.35); }
+  50% { border-color: rgba(var(--accent-rgb), .8); box-shadow: 0 0 20px rgba(var(--accent-rgb), .6), 0 15px 30px rgba(0,0,0,.6); }
+}
+:root .performance-mode :is(.library-game-card, .game-card-placeholder, .selected-cover).is-preparing-game {
+  animation: none;
+  border-color: rgba(var(--accent-rgb), .6) !important;
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), .25) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.library-game-card, .game-card-placeholder, .selected-cover).is-preparing-game {
+    animation: none;
+    border-color: rgba(var(--accent-rgb), .6) !important;
+    box-shadow: 0 0 8px rgba(var(--accent-rgb), .25) !important;
+  }
+}
 .library-hold-progress { position:absolute; bottom:0; left:0; right:0; height:4px; z-index:12; pointer-events:none; background:rgba(var(--accent-rgb),.2); }
 .library-hold-progress > span { display:block; width:100%; height:100%; background:var(--accent); box-shadow:0 0 8px rgba(var(--accent-rgb),.6); transform-origin:left; animation:library-hold-fill 1.2s linear forwards; }
 @keyframes library-hold-fill { from { transform:scaleX(0); } to { transform:scaleX(1); } }
@@ -1964,7 +2011,7 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
   isolation:isolate;
   overflow:hidden;
   border:1px solid rgba(var(--action-glow-rgb),.9) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),inset 0 0 10px rgba(var(--action-glow-rgb),.5),0 0 7px rgba(var(--action-glow-rgb),.48),0 0 22px rgba(var(--action-glow-rgb),.16) !important;
+  box-shadow:inset 0 1px 0 rgba(var(--action-glow-rgb),.18),inset 0 0 10px rgba(var(--action-glow-rgb),.5),0 0 7px rgba(var(--action-glow-rgb),.48),0 0 22px rgba(var(--action-glow-rgb),.16) !important;
   transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease !important;
 }
 .game-action-stack button.game-play-button { --action-glow-rgb:0,220,164; }
@@ -2024,7 +2071,7 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
 :is(.game-action-stack .btn, .game-action-stack button.primary, .selected-game-shell .installation-name-confirm, .game-cover-column .game-back-button, .library-mode-button, .library-view-toggle button, .nexus-panel-heading-actions > .btn, .nexus-expand-mods, .nexus-launch-options-control > .btn):hover:not(:disabled):not([aria-disabled="true"]) {
   transform:translateY(-1px);
   border-color:rgba(var(--action-glow-rgb),1) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.85),inset 0 0 14px rgba(var(--action-glow-rgb),.65),0 0 8px rgba(var(--action-glow-rgb),.85),0 0 28px rgba(var(--action-glow-rgb),.46) !important;
+  box-shadow:inset 0 1px 0 rgba(var(--action-glow-rgb),.28),inset 0 0 14px rgba(var(--action-glow-rgb),.65),0 0 8px rgba(var(--action-glow-rgb),.85),0 0 28px rgba(var(--action-glow-rgb),.46) !important;
 }
 :is(.game-action-stack .btn, .game-action-stack button.primary, .selected-game-shell .installation-name-confirm, .game-cover-column .game-back-button, .library-mode-button, .library-view-toggle button, .nexus-panel-heading-actions > .btn, .nexus-expand-mods, .nexus-launch-options-control > .btn):hover:not(:disabled)::before { opacity:1; }
 :is(.game-action-stack .btn, .game-action-stack button.primary, .selected-game-shell .installation-name-confirm, .game-cover-column .game-back-button, .library-mode-button, .library-view-toggle button, .nexus-panel-heading-actions > .btn, .nexus-expand-mods, .nexus-launch-options-control > .btn):active:not(:disabled):not([aria-disabled="true"]) {
@@ -2039,7 +2086,7 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
   transform:none;
 }
 :is(.game-action-stack .btn, .game-action-stack button.primary, .selected-game-shell .installation-name-confirm, .game-cover-column .game-back-button, .library-mode-button, .library-view-toggle button, .nexus-panel-heading-actions > .btn, .nexus-expand-mods, .nexus-launch-options-control > .btn):is(:disabled,[aria-disabled="true"])::before { opacity:.18; }
-.game-action-stack :is(.game-play-button,.game-uninstall-button):disabled { background:rgba(var(--surface-255-255-255,255,255,255),.1) !important; color:var(--tone-94a3b8,#94a3b8) !important; }
+.game-action-stack :is(.game-play-button,.game-uninstall-button):disabled { color:var(--tone-94a3b8,#94a3b8) !important; }
 .game-action-stack .game-uninstall-button:disabled > .menu-icon { color:inherit; }
 :is(.game-action-stack .game-play-button,.game-action-stack .game-uninstall-button,.selected-game-shell .installed-run-program,.selected-game-shell .installed-wine-tools .installation-name-confirm):disabled > svg { filter:none; color:inherit; }
 @media(prefers-reduced-motion:reduce) {
@@ -2052,18 +2099,17 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
   background:radial-gradient(ellipse at center,rgba(0,0,0,.82),rgba(0,0,0,.68) 50%,rgba(0,0,0,.52) 100%),linear-gradient(120deg,var(--accent-button),var(--accent-deep)) !important;
   color:#fff !important;
   border-color:rgba(var(--accent-rgb),.55) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 0 5px rgba(var(--accent-rgb),.15),0 0 6px rgba(var(--accent-rgb),.12) !important;
+  box-shadow:inset 0 1px 0 rgba(var(--accent-rgb),.14),inset 0 0 5px rgba(var(--accent-rgb),.15),0 0 6px rgba(var(--accent-rgb),.12) !important;
 }
 :root :is(.library-mode-button, .library-view-toggle button, .nexus-panel-heading-actions > .btn, .nexus-expand-mods, .nexus-launch-options-control > .btn):hover:not(:disabled) {
   border-color:rgba(var(--accent-rgb),.8) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 0 7px rgba(var(--accent-rgb),.24),0 0 10px rgba(var(--accent-rgb),.24) !important;
+  box-shadow:inset 0 1px 0 rgba(var(--accent-rgb),.24),inset 0 0 7px rgba(var(--accent-rgb),.24),0 0 10px rgba(var(--accent-rgb),.24) !important;
   background:radial-gradient(ellipse at center,rgba(0,0,0,.72),rgba(0,0,0,.59) 50%,rgba(0,0,0,.42) 100%),linear-gradient(120deg,var(--accent-button),var(--accent-hover)) !important;
 }
 :root :is(.library-mode-button, .library-view-toggle button, .nexus-panel-heading-actions > .btn, .nexus-expand-mods, .nexus-launch-options-control > .btn):active:not(:disabled) {
   background:linear-gradient(120deg,var(--accent-deep),var(--accent-deeper)) !important;
 }
 :root :is(.library-mode-button, .library-view-toggle button, .nexus-panel-heading-actions > .btn, .nexus-expand-mods, .nexus-launch-options-control > .btn):disabled {
-  background:rgba(var(--surface-255-255-255,255,255,255),.1) !important;
   color:var(--tone-94a3b8,#94a3b8) !important;
 }
 :root .library-view-toggle button[aria-pressed="true"] {
@@ -2129,3 +2175,41 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
 :root .game-launch-preparing { animation:game-launch-preparing-pulse 1.15s ease-in-out infinite; }
 @keyframes game-launch-preparing-pulse { 0%,100% { opacity:1; } 50% { opacity:.65; } }
 @media(prefers-reduced-motion:reduce) { :root .game-launch-preparing { animation:none; } }
+
+.game-entry-launchers { margin-top:22px; padding-top:16px; border-top:1px solid rgba(var(--accent-rgb),.18); }
+.game-entry-launchers h3 { margin:0 0 14px; font-size:.95rem; }
+.game-entry-launcher-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.game-entry-launcher { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; min-height:105px; padding:12px 6px; border:1px solid rgba(var(--accent-rgb),.22); border-radius:10px; background:rgba(var(--accent-rgb),.04); color:var(--text-primary); font:inherit; font-size:.8rem; cursor:pointer; }
+.game-entry-launcher:hover { border-color:rgba(var(--accent-rgb),.6); background:rgba(var(--accent-rgb),.1); box-shadow:0 0 14px rgba(var(--accent-rgb),.12); }
+.game-entry-launcher img { width:38px; height:38px; object-fit:contain; filter:invert(.8); }
+.launcher-install-wizard { width:min(620px,calc(100vw - 32px)); }
+.launcher-install-wizard h2 { display:flex; align-items:center; gap:12px; }
+.launcher-install-wizard h2 img { width:26px; height:26px; filter:invert(.8); }
+.launcher-wizard-fields { display:grid; gap:12px; }
+.launcher-wizard-fields label { display:grid; gap:8px; }
+.launcher-wizard-summary { display:grid; grid-template-columns:auto minmax(0,1fr); gap:8px 16px; }
+.launcher-wizard-summary dd { margin:0; overflow-wrap:anywhere; }
+.launcher-wizard-dependency { display:flex; align-items:center; gap:10px; padding:7px; }
+.launcher-wizard-dependency input { width:16px; height:16px; accent-color:var(--accent); }
+.launcher-wizard-actions { display:flex; justify-content:space-between; gap:12px; margin-top:22px; }
+.launcher-install-progress > .menu-icon { width:28px; height:28px; color:var(--accent); }
+@media(max-width:480px) { .game-entry-launcher-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+.launcher-wizard-dependency small { display:block; margin:4px 0 0; }
+
+.runtime-activity-notice { position:fixed; right:18px; bottom:22px; z-index:2300; width:min(360px,calc(100vw - 36px)); box-sizing:border-box; padding:16px; border-radius:12px; }
+.runtime-activity-notice section + section { margin-top:12px; padding-top:12px; border-top:1px solid rgba(var(--accent-rgb),.2); }
+.runtime-activity-heading { display:flex; align-items:center; gap:8px; font-size:.88rem; }
+.runtime-activity-heading .menu-icon { color:var(--accent); flex-shrink:0; }
+.runtime-activity-notice small { display:block; margin-top:7px; color:var(--tone-94a3b8,#94a3b8); }
+.runtime-activity-notice p { margin:10px 0 0; font-size:.8rem; line-height:1.4; }
+.runtime-activity-progress { height:3px; margin-top:12px; overflow:hidden; border-radius:4px; background:rgba(var(--accent-rgb),.15); }
+.runtime-activity-progress i { display:block; height:100%; width:35%; background:var(--accent); animation:runtime-activity-progress 1.8s ease-in-out infinite; }
+@keyframes runtime-activity-progress { from {transform:translateX(-100%);} to {transform:translateX(385%);} }
+@media(prefers-reduced-motion:reduce) { .runtime-activity-progress i { animation:none; width:100%; opacity:.5; } }
+.advanced-monitoring-notice { padding:10px; margin:10px 0; border:1px solid rgba(var(--accent-rgb),.3); border-radius:8px; color:var(--tone-e2e8f0,#e2e8f0); background:rgba(var(--accent-rgb),.08); font-size:.85rem; line-height:1.5; }
+.advanced-monitoring-notice button { padding:0; border:0; background:transparent; color:var(--accent-soft); text-decoration:underline; font:inherit; cursor:pointer; }
+
+.advanced-fps-limiter { grid-template-columns: minmax(0, 1fr) 86px; }
+.advanced-fps-limiter input { width: 100%; min-width: 0; box-sizing: border-box; padding: 8px; border-radius: 7px; color: var(--tone-e2e8f0, #e2e8f0); background: rgba(0,0,0,.2); border: 1px solid rgba(var(--accent-rgb), .4); font: inherit; font-size: .8rem; }
+.advanced-fps-limiter input:focus-visible { outline: 1px solid var(--accent); border-color: var(--accent); }

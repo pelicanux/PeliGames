@@ -1,6 +1,8 @@
 import { useI18n } from "../../i18n/I18nContext";
 const text = {
   pt: {
+    queueSingleFileHint: "Escolha uma versão principal por mod.", queueAdditionalFiles: "Arquivos adicionais", queueAdditionalHint: "Seleção independente: você pode marcar vários arquivos sem trocar a versão principal. Confira as notas do autor; nem todos são compatíveis entre si.",
+    backupLatest: "Último backup",
     nexusBrowserTitle: "Navegador Nexus", browserReload: "Recarregar", browserPreview: "Prévia do navegador integrado. A página do Nexus, o login e a captura de downloads funcionam no aplicativo nativo.",
     internalNexusLogin: "Entrar no Nexus · navegador interno", externalBrowser: "Navegador externo", tryAgain: "Tentar novamente",
     internalBrowserHint: "Protótipo: entre no Nexus no navegador interno usando a mesma conta conectada ao launcher. Se a página não funcionar, use o navegador externo.",
@@ -54,6 +56,8 @@ const text = {
     checkMissingNexusDownload: "não instalado. A extensão do Vortex baixa da página do Nexus:", checkRecommended: "recomendado pela extensão",
   },
   en: {
+    queueSingleFileHint: "Choose one main version per mod.", queueAdditionalFiles: "Additional files", queueAdditionalHint: "Independent selection: choose multiple files without replacing the main version. Read the author’s notes; not all files are compatible with each other.",
+    backupLatest: "Latest backup",
     nexusBrowserTitle: "Nexus browser", browserReload: "Reload", browserPreview: "Integrated browser preview. The Nexus website, login and download capture run in the native application.",
     internalNexusLogin: "Sign in to Nexus · internal browser", externalBrowser: "External browser", tryAgain: "Try again",
     internalBrowserHint: "Prototype: sign in to Nexus in the internal browser using the same account connected to the launcher. If the page does not work, use the external browser.",

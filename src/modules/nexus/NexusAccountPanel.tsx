@@ -59,7 +59,7 @@ export function NexusAccountPanel() {
   return <section className="nexus-account" aria-labelledby="nexus-account-title" aria-busy={busy}>
     <h3 id="nexus-account-title">{text.account}</h3>
     <div className="nexus-account-actions">
-      <button type="button" className="btn btn-primary" disabled={busy || oauth.pending || !oauth.configured} onClick={() => void login()}><img className="nexus-icon" src="/nexus-mods.svg" alt="" />{text.oauthLogin}</button>
+      <button type="button" className="btn btn-secondary nexus-account-login" disabled={busy || oauth.pending || !oauth.configured} onClick={() => void login()}><img className="nexus-icon" src="/nexus-mods.svg" alt="" /><span className="nexus-icon-button-label">{text.oauthLogin}</span></button>
       {(authorizing || oauth.pending) && <button type="button" className="btn btn-secondary" onClick={() => void invoke("cancel_nexus_oauth").catch(() => setError(text.accountOperationError))}>{text.oauthCancel}</button>}
     </div>
     {(authorizing || oauth.pending) && <p role="status" className="nexus-hint">{text.oauthWaiting}</p>}
@@ -81,6 +81,6 @@ export function NexusAccountPanel() {
     </div>
     <p className="nexus-hint">{text.accountHint}</p>
     <p className="nexus-hint">{text.downloadAccountHint}</p>
-    <button type="button" className="btn btn-secondary" onClick={() => open("https://www.nexusmods.com/")}><img className="nexus-icon" src="/nexus-mods.svg" alt="" />{text.website}</button>
+    <button type="button" className="btn btn-secondary" onClick={() => open("https://www.nexusmods.com/")}><img className="nexus-icon" src="/nexus-mods.svg" alt="" /><span className="nexus-icon-button-label">{text.website}</span></button>
   </section>;
 }

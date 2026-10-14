@@ -83,6 +83,9 @@ export function NexusPanels({ tab, onTabChange, highlightedModId, highlightReque
   },[advanced,game?.id,game?.launch_options,game?.advanced?.dll_overrides,dllRevision,dllRefresh]);
   useEffect(() => { setAdvanced(false); }, [game?.id]);
   const [moduleDetailsGame, setModuleDetailsGame] = useState<string | null>(null);
+  const [backupStatusText, setBackupStatusText] = useState("");
+  useEffect(() => { setBackupStatusText(""); }, [game?.id]);
+  useEffect(() => { setModuleDetailsGame(null); }, [game?.id]);
   // Each mounted panel owns its ref: closing the overlay must not clear the compact list's ref.
   const modList = useRef<HTMLDivElement>(null);
   const expandedModList = useRef<HTMLDivElement>(null);
@@ -370,7 +373,7 @@ export function NexusPanels({ tab, onTabChange, highlightedModId, highlightReque
       <section className="nexus-settings-panel menu-glass-panel" aria-label={text.settings}>
         <AnimatePresence mode="wait" initial={false}><motion.div key={advanced ? "advanced" : "standard"} className="nexus-settings-content" data-scrollbar-outside="true" tabIndex={0}
           initial={{x: reducedMotion ? 0 : "100%"}} animate={{x:0}} exit={{x:reducedMotion ? 0 : "-100%"}} transition={{duration:reducedMotion ? 0 : .29,ease:[.4,0,.2,1]}}>
-        {advanced && game ? <AdvancedGameSettings embedded onResetDlls={() => setDllRefresh(value => value + 1)} automaticDllOverrides={dlls} dllOverridesError={dllError} value={game.advanced} disabled={settingsLocked} reducedMotion={reducedMotion} saved={settingsSaved} onBack={() => setAdvanced(false)} onChange={value => { void onConfigureAdvanced(game.id,value).then(ok => {if(ok) showSaved();}); }} launchOptions={<NexusLaunchOptions gameId={game.id} disabled={settingsLocked} busy={settingsBusy} errorMessage={error} onSave={onConfigureLaunch} />} /> : <>
+        {advanced && game ? <AdvancedGameSettings key={game.id} embedded onResetDlls={() => setDllRefresh(value => value + 1)} automaticDllOverrides={dlls} dllOverridesError={dllError} value={game.advanced} disabled={settingsLocked} reducedMotion={reducedMotion} saved={settingsSaved} onBack={() => setAdvanced(false)} onChange={value => { void onConfigureAdvanced(game.id,value).then(ok => {if(ok) showSaved();}); }} launchOptions={<NexusLaunchOptions gameId={game.id} disabled={settingsLocked} busy={settingsBusy} errorMessage={error} onSave={onConfigureLaunch} />} /> : <>
         <div className="nexus-settings-title"><h3 className="nexus-settings-heading"><MenuIcon name="settings" />{text.settings}</h3>{settingsSaved && <span className="nexus-settings-saved" role="status"><span className="nexus-saved-circle"><MenuIcon name="check" /></span>{text.settingsSaved}</span>}</div>
         {game && <>
           <div className="nexus-settings-fields game-info-fields">
@@ -385,16 +388,22 @@ export function NexusPanels({ tab, onTabChange, highlightedModId, highlightReque
             </div>)}
             <NexusDeployOptions game={game} disabled={settingsLocked} onChange={method => onConfigureDeploy(game.id,method)} onSaved={showSaved} />
             {game.platform === "proton" && <ProtonSelector compactStyle label="Proton" value={proton} onChange={value => { setProton(value); void saveSettings({proton:value}); }} disabled={settingsLocked} />}
-            <NexusGameBackup gameId={game.id} disabled={settingsLocked} onError={onError} onSaved={showSaved} />
+            <NexusGameBackup key={game.id} gameId={game.id} disabled={settingsLocked} onError={onError} onSaved={showSaved} onStatusTextChange={setBackupStatusText} />
             <div className="nexus-launch-options-control installation-field"><label><MenuIcon name="settings" />{text.settings}</label><button type="button" className="btn btn-primary" disabled={settingsLocked} onClick={() => setAdvanced(true)}><MenuIcon name="sliders" />{text.advanced}</button></div>
             <NexusLootControl gameId={game.id} disabled={settingsLocked} onError={onError} onSaved={showSaved} />
           </div>
         </>}
-        <details key={game?.id} className="nexus-module-details" onToggle={event => setModuleDetailsGame(event.currentTarget.open ? game?.id || null : null)}><summary>{text.moduleLabel}</summary>{game && moduleDetailsGame === game.id && <NexusModuleStatus game={game} />}</details>
+        <div className="nexus-settings-info-links">
+          {game && <HoverTooltip text={backupStatusText} tooltipClassName="nexus-backup-status-tooltip"><button type="button" className="nexus-module-link nexus-backup-info-link"><span>{text.backupLatest}</span></button></HoverTooltip>}
+          <button type="button" className="nexus-module-link" aria-haspopup="dialog" disabled={!game} onClick={() => setModuleDetailsGame(game?.id || null)}><span>{text.moduleLabel}</span></button>
+        </div>
         </>}
         </motion.div></AnimatePresence>
       </section>
     </div>
     {tab === "catalog" && <NexusCatalogPanel game={game} onAssociate={onAssociate} onImport={onImport} onClose={() => setTab("mods")} />}
+    {game && moduleDetailsGame === game.id && <NexusPopup className="nexus-module-popup" title={text.moduleLabel} onClose={() => setModuleDetailsGame(null)} reducedMotion={reducedMotion}>
+      <NexusModuleStatus game={game} />
+    </NexusPopup>}
   </div>;
 }

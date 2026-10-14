@@ -34,12 +34,26 @@ export function WinetricksModal({ path, name, proton, onProtonChange, onClose }:
     try { const result = await runWineTool(path,"install",selection,append); setComplete(`Instalação concluída. Log: ${result.log}`); setSelection([]); await load(); }
     catch(e) { setError(String(e)); } finally { setBusy(false); }
   };
+  const openInterface = async () => {
+    if (busy || !proton) return;
+    setBusy(true); setError(""); setComplete("");
+    try {
+      await runWineTool(path,"winetricks-gui",[],append);
+      setSelection([]);
+      await load();
+    } catch (failure) { setError(String(failure)); }
+    finally { setBusy(false); }
+  };
   const query = search.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
   const filtered = packages.filter(p => `${p.id} ${p.title} ${p.category}`.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().includes(query));
   return createPortal(<div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget && !busy && !protonManagerOpen) onClose(); }}>
     <ModalSurface className="modal-content dialog-glass winetricks-modal" role="dialog" aria-modal="true" aria-labelledby={titleId} onDismiss={() => { if (!busy && !protonManagerOpen) onClose(); }} closeDisabled={busy || protonManagerOpen} header={<h2 id={titleId}><MenuIcon name="cube" />Winetricks</h2>}>
       <p>Instale DLLs e fontes no prefixo de <strong>{name}</strong>, usando o Proton selecionado.</p>
       <ProtonSelector value={proton} onChange={value => void changeProton(value)} label="Proton" disabled={busy || protonManagerBusy} onManage={() => setProtonManagerOpen(true)} />
+      <div className="winetricks-interface-action">
+        <button type="button" className="installation-name-confirm" disabled={busy || protonManagerBusy || !proton} onClick={() => void openInterface()}><MenuIcon name="cube" />Abrir interface do Winetricks</button>
+        <small>Abre a ferramenta original no prefixo deste jogo. Feche essa janela para continuar aqui.</small>
+      </div>
       <pre ref={terminal} className="wine-tool-terminal" aria-label="Log do Winetricks" role="log">{lines.join("\n") || "Preparando Winetricks…"}</pre>
       {error && <TimedFeedback role="alert" className="advanced-validation-error">{error}</TimedFeedback>}{complete && <TimedFeedback>{complete}</TimedFeedback>}
       <label className="winetricks-search"><MenuIcon name="search" /><input type="search" aria-label="Buscar componentes Winetricks" placeholder="Buscar DLLs, fontes ou dependências…" value={search} onChange={e => setSearch(e.target.value)} /></label>

@@ -4,6 +4,7 @@ import { MatrixChatPanel } from './MatrixChatPanel';
 import { MatrixIcon } from './MatrixIcon';
 import { OPEN_MATRIX_CHAT_EVENT, startMatrixChat } from '../services/matrixChat';
 import { BrandName } from './BrandName';
+import { RunningGamesIndicator, type RunningGameSummary } from './RunningGamesIndicator';
 import { useI18n } from '../i18n/I18nContext';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { isTauri } from '@tauri-apps/api/core';
@@ -17,9 +18,10 @@ interface TitleBarProps {
   updateIndicator?: React.ReactNode;
   notificationIndicator?: React.ReactNode;
   disabled?: boolean;
+  runningGames?: RunningGameSummary[];
 }
 
-export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeDisabled, settingsMenu, updateIndicator, notificationIndicator, disabled }) => {
+export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeDisabled, settingsMenu, updateIndicator, notificationIndicator, disabled, runningGames = [] }) => {
   const { t } = useI18n();
   const appWindow = isTauri() ? getCurrentWindow() : null;
 
@@ -65,6 +67,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
         }}>
           <BrandName />
         </button>
+        <RunningGamesIndicator games={runningGames} />
       </div>
 
       {/* Right section: Links and Window Controls */}
@@ -81,7 +84,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
 
         <button type="button" data-tauri-drag-region="false" className="btn-titlebar" title="Matrix · Comunidade" aria-label="Matrix · Comunidade" onClick={() => setShowMatrix(true)} style={{ background:'transparent', border:'none', color:'var(--tone-94a3b8, #94a3b8)', cursor:'pointer', padding:'0.3rem 0.5rem', display:'flex', alignItems:'center', borderRadius:'4px' }}><MatrixIcon/></button>
         {updateIndicator}
-        <div inert={disabled} style={{ display: "flex", alignItems: "center", opacity: disabled ? 0.3 : 1, pointerEvents: disabled ? "none" : "auto" }}>
+        <div className="titlebar-optional-actions" inert={disabled} style={{ display: "flex", alignItems: "center", opacity: disabled ? 0.3 : 1, pointerEvents: disabled ? "none" : "auto" }}>
           <button 
             data-tauri-drag-region="false"
             className="btn-titlebar"

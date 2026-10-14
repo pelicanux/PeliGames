@@ -20,6 +20,12 @@ pub struct LauncherGame {
     /// Store that installed the game (`gog`, `epic`, `amazon`), when the launcher knows it.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub store: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub external_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub external_store: Option<String>,
+    pub flatpak: bool,
+    pub executable: Option<String>,
 }
 
 const MAX_FILE: u64 = 4 * 1024 * 1024;
@@ -77,6 +83,7 @@ pub(super) fn heroic(home: &Path) -> Vec<LauncherGame> {
             games.push(LauncherGame {
                 name: game.name, path: game.path, app_id: None, cover_url: game.cover, launcher: "Heroic".into(),
                 prefix, proton, store: store.map(str::to_string),
+                external_id: Some(game.id), external_store: Some(game.store.into()), flatpak: base.starts_with(home.join(".var")), executable: None,
             });
         }
     }
@@ -125,6 +132,7 @@ pub(super) fn lutris(home: &Path) -> Vec<LauncherGame> {
                 games.push(LauncherGame {
                     name: title_from_slug(&stem), path: directory.to_string_lossy().into_owned(), app_id: None, cover_url: None,
                     launcher: "Lutris".into(), prefix, proton, store: None,
+                    external_id: Some(stem), external_store: None, flatpak: data.starts_with(&flatpak), executable: Some(exe.to_string_lossy().into_owned()),
                 });
             }
         }
@@ -147,7 +155,7 @@ pub(super) fn faugus(home: &Path) -> Vec<LauncherGame> {
                 launcher: "Faugus".into(),
                 prefix: (!native).then(|| item["prefix"].as_str().and_then(existing_dir)).flatten(),
                 proton: (!native).then(|| named_proton(home, &[], runner)).flatten(),
-                store: None,
+                store: None, external_id: item["gameid"].as_str().map(str::to_string), external_store: None, flatpak: file.starts_with(home.join(".var")), executable: Some(exe.into()),
             });
         }
     }
@@ -176,7 +184,7 @@ pub(super) fn bottles(home: &Path) -> Vec<LauncherGame> {
             let bottle = text(&config, &["Custom_Path"]).map(PathBuf::from).unwrap_or_else(|| entry.path());
             let proton = text(&config, &["Runner"]).and_then(|runner| named_proton(home, &[data.join("runners")], runner));
             let Some(programs) = config.as_mapping_get("External_Programs").and_then(YamlOwned::as_mapping) else { continue };
-            for program in programs.values().take(1000) {
+            for (program_id, program) in programs.iter().take(1000) {
                 let Some(exe) = text(program, &["path"]).and_then(|path| bottle_path(&bottle, path)) else { continue };
                 let Some(directory) = exe.parent().filter(|dir| dir.is_dir()) else { continue };
                 let name = text(program, &["name"]).map(str::to_string)
@@ -184,6 +192,7 @@ pub(super) fn bottles(home: &Path) -> Vec<LauncherGame> {
                 games.push(LauncherGame {
                     name, path: directory.to_string_lossy().into_owned(), app_id: None, cover_url: None, launcher: "Bottles".into(),
                     prefix: existing_dir(&bottle.to_string_lossy()), proton: proton.clone(), store: None,
+                    external_id: program_id.as_str().map(str::to_string), external_store: text(&config, &["Name"]).map(str::to_string), flatpak: data.starts_with(home.join(".var")), executable: Some(exe.to_string_lossy().into_owned()),
                 });
             }
         }

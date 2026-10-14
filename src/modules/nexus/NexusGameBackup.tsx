@@ -10,21 +10,22 @@ type BackupSettings = { per_game: boolean; game_overrides?: Record<string, boole
 export type GameBackupStatus = { game_id: string; name: string; enabled: boolean; choice: boolean | null; has_mods: boolean; updated: number | null; size: number | null; error: string | null; updating: boolean };
 export const backupDate = (seconds: number, pt: boolean) => new Date(seconds * 1000).toLocaleString(pt ? "pt-BR" : "en-US", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 export const backupSize = (bytes: number) => bytes >= 1e9 ? `${(bytes / 1e9).toFixed(1)} GB` : `${Math.max(0.1, bytes / 1e6).toFixed(1)} MB`;
-export function NexusGameBackup({ gameId, disabled, onError, onSaved }: { gameId: string; disabled: boolean; onError: (error: string) => void; onSaved: () => void }) {
+export function NexusGameBackup({ gameId, disabled, onError, onSaved, onStatusTextChange }: { gameId: string; disabled: boolean; onError: (error: string) => void; onSaved: () => void; onStatusTextChange?: (text: string) => void }) {
   const { language } = useI18n(), pt = language === "pt";
   const [settings, setSettings] = useState<BackupSettings | null>(null), [saving, setSaving] = useState(false), [confirmDelete, setConfirmDelete] = useState(false), [deleteError, setDeleteError] = useState("");
   const [status, setStatus] = useState<GameBackupStatus | null>(null);
+  const [statusLoaded, setStatusLoaded] = useState(false), [statusReadFailed, setStatusReadFailed] = useState(false);
   const pending = useRef(false), currentGame = useRef(gameId); currentGame.current = gameId;
   useEffect(() => {
-    let active = true, timer: number | undefined; setSettings(null); setStatus(null); setConfirmDelete(false); setDeleteError("");
+    let active = true, timer: number | undefined; setSettings(null); setStatus(null); setStatusLoaded(false); setStatusReadFailed(false); setConfirmDelete(false); setDeleteError("");
     // Asked again only while a copy is being written; otherwise on changes.
     const loadStatus = () => {
       window.clearTimeout(timer);
       void invoke<GameBackupStatus[]>("nexus_backup_status", { gameId }).then(list => {
         if (!active) return;
-        const value = list[0] ?? null; setStatus(value);
+        const value = list[0] ?? null; setStatus(value); setStatusLoaded(true); setStatusReadFailed(false);
         if (value?.updating) timer = window.setTimeout(loadStatus, 2000);
-      }).catch(() => {});
+      }).catch(() => { if (active) { setStatusReadFailed(true); setStatusLoaded(true); } });
     };
     const refresh = () => { loadStatus(); if (pending.current) return; void invoke<BackupSettings>("load_mod_backup_settings").then(value => { if (active && !pending.current) setSettings(value); }).catch(e => { if (active) onError(String(e)); }); };
     refresh(); window.addEventListener("modBackupSettingsChanged", refresh);
@@ -69,6 +70,9 @@ export function NexusGameBackup({ gameId, disabled, onError, onSaved }: { gameId
       : when ? (pt ? `Última cópia: ${when}${size}` : `Last copy: ${when}${size}`) : (pt ? "Criando a primeira cópia…" : "Creating the first copy…"))
     : when ? (pt ? `Cópia antiga de ${when}${size}: não é mais atualizada. Ative para atualizar ou apague.` : `Old copy from ${when}${size}: no longer updated. Enable it to update, or delete it.`) : "";
   const follows = status && status.choice === null ? (pt ? "Segue a opção geral de Configurações → Ferramentas." : "Follows the general option in Settings → Tools.") : "";
+  const statusText = statusReadFailed ? pt ? "Não foi possível consultar os dados do backup." : "Could not read the backup information."
+    : [line || (statusLoaded ? pt ? "Nenhum backup salvo para este jogo." : "No backup saved for this game." : pt ? "Consultando o backup deste jogo…" : "Checking this game's backup…"), follows].filter(Boolean).join("\n");
+  useEffect(() => { onStatusTextChange?.(statusText); }, [statusText, onStatusTextChange]);
   return <div className="installation-field nexus-game-backup-control">
     <label><MenuIcon name="floppy" />{pt ? "Backup individual" : "Individual backup"}</label>
     <div className={`neural-startup-switch nexus-game-backup-box${enabled ? " enabled" : ""}`}>
@@ -82,8 +86,8 @@ export function NexusGameBackup({ gameId, disabled, onError, onSaved }: { gameId
         <button type="button" className="nexus-game-backup-delete" aria-label={pt ? "Apagar backup deste jogo" : "Delete this game's backup"} disabled={locked} onClick={() => { setDeleteError(""); setConfirmDelete(true); }}><MenuIcon name="trash" /></button>
       </HoverTooltip>
     </div>
-    {line && <small className={`nexus-game-backup-status${status?.error ? " is-error" : !status?.enabled ? " is-stale" : ""}`} role={status?.error ? "alert" : "status"}>{line}</small>}
-    {follows && <small className="nexus-game-backup-status">{follows}</small>}
+    {!onStatusTextChange && line && <small className={`nexus-game-backup-status${status?.error ? " is-error" : !status?.enabled ? " is-stale" : ""}`} role={status?.error ? "alert" : "status"}>{line}</small>}
+    {!onStatusTextChange && follows && <small className="nexus-game-backup-status">{follows}</small>}
     {confirmDelete && <NexusPopup className="nexus-remove-popup" title={pt ? "Apagar backup individual" : "Delete individual backup"} onClose={() => { if (!pending.current) setConfirmDelete(false); }} footer={<>
       <button type="button" className="btn btn-secondary" disabled={saving} onClick={() => setConfirmDelete(false)}>{pt ? "Cancelar" : "Cancel"}</button>
       <button type="button" className="btn btn-primary" disabled={locked} onClick={() => void removeBackup()}><MenuIcon name="trash" />{saving ? pt ? "Apagando…" : "Deleting…" : pt ? "Apagar backup" : "Delete backup"}</button>

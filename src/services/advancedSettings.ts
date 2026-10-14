@@ -12,19 +12,21 @@ export function gamescopeEnabled(g: GamescopeSettings): boolean {
 }
 export interface LaunchWrapper { program: string; arguments: string; enabled: boolean; }
 export interface AdvancedSettings {
-  schema_version?: number; launch_options?: string | null; options: Record<string, boolean>; dll_overrides: string;
+  mangohud_fps_limit?: number | null; schema_version?: number; launch_options?: string | null; options: Record<string, boolean>; dll_overrides: string;
   wrappers?: LaunchWrapper[]; launch_backend: "system" | "gamescope"; gamescope?: GamescopeSettings;
 }
 export const defaultGamescope: GamescopeSettings = { model_version: 2, enable_upscaling: false, enable_limiter: false, force_grab_cursor: false, width: 0, height: 0, output_width: 0, output_height: 0, fps: 0, fps_unfocused: 0, filter: "fsr", window_type: "fullscreen", additional_options: "" };
 export function normalizeAdvanced(value?: AdvancedSettings): AdvancedSettings {
   // Version 1 accidentally enabled screenshot selections by default. Reset once.
   const saved = value?.schema_version === 2 ? value : undefined;
-  return { schema_version: 2, launch_options: saved?.launch_options ?? null, wrappers: saved?.wrappers ?? [], options: Object.fromEntries(catalog.map(option => [option.id, saved?.options[option.id] ?? false])), dll_overrides: saved?.options.dll_overrides ? saved.dll_overrides ?? "" : "", launch_backend: saved?.launch_backend ?? "system", gamescope: { ...defaultGamescope, ...(saved?.gamescope?.model_version === 2 ? saved.gamescope : {}) } };
+  return { mangohud_fps_limit: saved?.mangohud_fps_limit ?? null, schema_version: 2, launch_options: saved?.launch_options ?? null, wrappers: saved?.wrappers ?? [], options: Object.fromEntries(catalog.map(option => [option.id, saved?.options[option.id] ?? false])), dll_overrides: saved?.options.dll_overrides ? saved.dll_overrides ?? "" : "", launch_backend: saved?.launch_backend ?? "system", gamescope: { ...defaultGamescope, ...(saved?.gamescope?.model_version === 2 ? saved.gamescope : {}) } };
 }
 export function toggleAdvanced(settings: AdvancedSettings, id: string): AdvancedSettings {
   return { ...settings, options: { ...settings.options, [id]: !settings.options[id] } };
 }
 export function advancedError(settings: AdvancedSettings): string | undefined {
+  const limit = settings.mangohud_fps_limit;
+  if (limit != null && (!Number.isInteger(limit) || limit < 0 || limit > 1000)) return "Informe um limite de FPS entre 0 e 1000.";
   for (const [id, dependency, message] of rules.dependencies) if (settings.options[id] && !settings.options[dependency]) return message;
   for (const [a, b, message] of rules.conflicts) if (settings.options[a] && settings.options[b]) return message;
   if (settings.dll_overrides.length > 2048) return "Use até 2048 caracteres nas prioridades de DLLs.";
@@ -35,7 +37,7 @@ export function advancedError(settings: AdvancedSettings): string | undefined {
     const error = wrapperArgumentsError(wrapper.arguments); if (error) return error;
   }
   const g = settings.gamescope ?? defaultGamescope;
-  if (gamescopeEnabled(g) && (settings.options.mangohud || settings.options.mangohud_env)) return "Desative os modos de MangoHud antes de usar o Gamescope.";
+  if (gamescopeEnabled(g) && (settings.options.mangohud || settings.options.mangohud_env || (limit ?? 0) > 0)) return "Desative o MangoHUD e o limitador individual antes de usar o Gamescope.";
   if (!["fsr", "nis", "integer", "stretch"].includes(g.filter) || !["fullscreen", "borderless", "windowed"].includes(g.window_type)) return "Método de escala ou tipo de janela inválido.";
   const extraError = validateGamescopeExtra(g.additional_options); if (extraError) return extraError;
   for (const key of ["width", "height", "output_width", "output_height", "fps", "fps_unfocused"] as const) {

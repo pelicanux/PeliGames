@@ -1,3 +1,4 @@
+import { previewLauncherEntries, launcherCoverFallback } from "./launcherInstallation";
 import { applyCustomCovers } from "./gameLibraryCache";
 import { invoke } from "@tauri-apps/api/core";
 import type { GameInfo } from "../components/GameGrid";
@@ -6,7 +7,7 @@ export async function listPeliGamesEntries(rescan = false): Promise<GameInfo[]> 
   const response = await fetch("/__preview/peligames-library", { method: rescan ? "POST" : "GET" });
   const body = await response.json();
   if (!response.ok || body.error) throw new Error(body.error || "Falha ao carregar a biblioteca PeliGames.");
-  return body.result;
+  return [...body.result, ...previewLauncherEntries].map(game => game.cover_url ? game : {...game, cover_url:launcherCoverFallback(game)});
 }
 
 export interface EntrySettings { advanced?: import("./advancedSettings").AdvancedSettings; prefix?: string; path: string; name: string; executable: string; proton: string; }

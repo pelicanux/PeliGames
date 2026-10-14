@@ -211,7 +211,7 @@ pub async fn extract_dll_wizard(
         script_runner::execute_standalone_install(
             &resource_path_clone,
             &temp_game_dir_clone.to_string_lossy(),
-            "reshade",
+            "reshade-feeder",
             Some(&dll_path_clone),
             None,
             "Insert",

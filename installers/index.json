@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "catalog_version": 1,
+  "reviewed_on": "2026-10-13",
+  "status": "experimental",
+  "minimum_recipe_schema": 1,
+  "scope": "windows-launchers",
+  "excluded": [
+    "gog-galaxy"
+  ],
+  "distribution": {
+    "transport": "https",
+    "cache": "last-validated-catalog",
+    "trust": "bundled-or-reviewed-release",
+    "hashes_are_signatures": false
+  },
+  "policy": {
+    "arbitrary_shell": false,
+    "requires_root": false,
+    "installer_eula": "user-accepts",
+    "resolve_and_record_runner_version": true,
+    "record_installer_hash": true,
+    "preserve_existing_prefixes": true,
+    "configuration_changes": "merge-with-backup",
+    "game_specific_dependencies": "separate-recipe",
+    "popularity_ranking": "not-established"
+  },
+  "preflight": [
+    {
+      "id": "umu-runtime",
+      "level": "required-for-proton",
+      "evidence": [
+        "ge-support",
+        "umu-runtime"
+      ],
+      "description": "UMU e runtime disponíveis; não executar diretamente o Wine interno do GE-Proton."
+    },
+    {
+      "id": "vulkan-drivers",
+      "level": "required-for-dxvk-vkd3d",
+      "evidence": [
+        "graphics",
+        "ge-support"
+      ],
+      "description": "Verificar GPU, driver e suporte Vulkan; validar bibliotecas de 32 bits quando exigidas pelo runner/aplicativo."
+    },
+    {
+      "id": "prefix-location",
+      "level": "warning",
+      "evidence": [
+        "battle-guide"
+      ],
+      "description": "Preferir prefixo em ext4/Btrfs; avisar sobre NTFS sem formatar ou modificar o disco."
+    },
+    {
+      "id": "download",
+      "level": "required",
+      "evidence": [],
+      "description": "Validar HTTPS em todos os redirecionamentos, assinatura Windows, formato MSI/PE e espaço livre. Rejeitar páginas HTML no lugar do instalador."
+    }
+  ],
+  "sources": [
+    {
+      "id": "ge-support",
+      "title": "GE-Proton: execução fora da Steam",
+      "url": "https://github.com/GloriousEggroll/proton-ge-custom/blob/master/README.md",
+      "kind": "project-documentation",
+      "reviewed_on": "2026-10-13"
+    },
+    {
+      "id": "umu-runtime",
+      "title": "UMU Launcher",
+      "url": "https://github.com/Open-Wine-Components/umu-launcher/blob/main/README.md",
+      "kind": "project-documentation",
+      "reviewed_on": "2026-10-13"
+    },
+    {
+      "id": "graphics",
+      "title": "Lutris: drivers gráficos",
+      "url": "https://github.com/lutris/docs/blob/master/InstallingDrivers.md",
+      "kind": "project-documentation",
+      "reviewed_on": "2026-10-13"
+    },
+    {
+      "id": "ubisoft-recipe",
+      "title": "Lutris: receita Ubisoft Connect",
+      "url": "https://lutris.net/games/install/5228/view",
+      "kind": "community-recipe",
+      "reviewed_on": "2026-10-13"
+    },
+    {
+      "id": "ubisoft-install",
+      "title": "Ubisoft: instalador e executável ausente",
+      "url": "https://github.com/lutris/lutris/issues/6658",
+      "kind": "first-hand-issue",
+      "reviewed_on": "2026-10-13"
+    },
+    {
+      "id": "ubisoft-ge",
+      "title": "GE-Proton: regressão no instalador Ubisoft",
+      "url": "https://github.com/GloriousEggroll/proton-ge-custom/issues/527",
+      "kind": "first-hand-issue",
+      "reviewed_on": "2026-10-13"
+    },
+    {
+      "id": "ea-recipe",
+      "title": "Lutris: receita EA app",
+      "url": "https://lutris.net/games/install/36644/view",
+      "kind": "community-recipe",
+      "reviewed_on": "2026-10-13"
+    },
+    {
+      "id": "ea-install",
+      "title": "EA app: instalação incompleta",
+      "url": "https://forums.lutris.net/t/ea-app-not-installing/22481",
+      "kind": "first-hand-issue",
+      "reviewed_on": "2026-10-13"
+    },
+    {
+      "id": "ea-black",
+      "title": "EA app: janela preta",
+      "url": "https://forums.lutris.net/t/black-screen-issue-when-launching-ea-app/23831",
+      "kind": "first-hand-issue",
+      "reviewed_on": "2026-10-13"
+    },
+    {
+      "id": "dw-project",
+      "title": "DW-Proton: projeto oficial",
+      "url": "https://github.com/human-sketch/DWproton",
+      "kind": "project-documentation",
+      "reviewed_on": "2026-10-13"
+    },
+    {
+      "id": "battle-recipe",
+      "title": "Lutris: receita Battle.net",
+      "url": "https://lutris.net/games/install/37360/view",
+      "kind": "community-recipe",
+      "reviewed_on": "2026-10-13"
+    },
+    {
+      "id": "battle-guide",
+      "title": "Lutris: diagnóstico Battle.net",
+      "url": "https://github.com/lutris/docs/blob/master/Battle.Net.md",
+      "kind": "project-documentation",
+      "reviewed_on": "2026-10-13"
+    }
+  ],
+  "launchers": [
+    {
+      "id": "ubisoft-connect",
+      "name": "Ubisoft Connect",
+      "path": "recipes/ubisoft-connect.json",
+      "recipe_version": 1,
+      "sha256": "6718d80ea924866d2d66dc4113bf297e8707f81c16214050fbe6d966d93dc72b"
+    },
+    {
+      "id": "ea-app",
+      "name": "EA app",
+      "path": "recipes/ea-app.json",
+      "recipe_version": 1,
+      "sha256": "8672c0b7c99070779504c58dea8014afbb0780eebaa6fa0623e07fe9432c2742"
+    },
+    {
+      "id": "battle-net",
+      "name": "Battle.net",
+      "path": "recipes/battle-net.json",
+      "recipe_version": 1,
+      "sha256": "cc57d1323e8af1ec93c49781544ad265f30a71e6a2432f66e24f887c37db130c"
+    }
+  ]
+}

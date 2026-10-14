@@ -1,0 +1,475 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "const": "../recipe.schema.json"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "recipe_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "category": {
+      "const": "launchers"
+    },
+    "reviewed_on": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "research-only",
+            "installation-tested",
+            "launch-tested"
+          ]
+        },
+        "installation_tested": {
+          "type": "boolean"
+        },
+        "launch_tested": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "installation_tested",
+        "launch_tested"
+      ]
+    },
+    "download": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "msi",
+            "exe"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          }
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "mutable_upstream": {
+          "type": "boolean"
+        },
+        "verify_windows_signature": {
+          "const": true
+        },
+        "record_download_sha256": {
+          "const": true
+        }
+      },
+      "required": [
+        "url",
+        "filename",
+        "kind",
+        "evidence",
+        "sha256",
+        "mutable_upstream",
+        "verify_windows_signature",
+        "record_download_sha256"
+      ]
+    },
+    "prefix": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "architecture": {
+          "const": "win64"
+        },
+        "windows_version": {
+          "enum": [
+            "win10",
+            "win11"
+          ]
+        },
+        "isolation": {
+          "const": "dedicated"
+        },
+        "existing_prefix_policy": {
+          "const": "ask"
+        },
+        "preferred_filesystems": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "ext4",
+              "btrfs"
+            ]
+          }
+        },
+        "ntfs_policy": {
+          "const": "warn"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "architecture",
+        "windows_version",
+        "isolation",
+        "existing_prefix_policy",
+        "preferred_filesystems",
+        "ntfs_policy",
+        "rationale"
+      ]
+    },
+    "runners": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "family": {
+            "enum": [
+              "ge-proton",
+              "dw-proton",
+              "wine-staging",
+              "cachyos-proton"
+            ]
+          },
+          "backend": {
+            "enum": [
+              "umu",
+              "wine"
+            ]
+          },
+          "phases": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "install",
+                "launch"
+              ]
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]+$"
+            }
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tested_by_peligames": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "family",
+          "backend",
+          "phases",
+          "evidence",
+          "reason",
+          "tested_by_peligames"
+        ]
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "verb": {
+            "enum": [
+              "corefonts",
+              "d3dcompiler_43",
+              "physx"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]+$"
+            }
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "const": "recipe-candidate"
+          },
+          "apply": {
+            "const": "user-approved"
+          }
+        },
+        "required": [
+          "verb",
+          "evidence",
+          "reason",
+          "status",
+          "apply"
+        ]
+      }
+    },
+    "mitigations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]+$"
+            }
+          },
+          "enabled_by_default": {
+            "const": false
+          },
+          "settings": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "ubisoft.overlay.enabled": {
+                "type": "boolean"
+              },
+              "battlenet.Client.HardwareAcceleration": {
+                "const": "false"
+              },
+              "battlenet.Client.Streaming.StreamingEnabled": {
+                "const": "false"
+              }
+            },
+            "required": []
+          },
+          "launch_arguments": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "-opengl",
+                "-SkipBuildPatchPrereq"
+              ]
+            }
+          },
+          "apply": {
+            "const": "user-approved"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "evidence",
+          "enabled_by_default",
+          "settings",
+          "launch_arguments",
+          "apply"
+        ]
+      }
+    },
+    "known_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "symptom": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]+$"
+            }
+          },
+          "guidance": {
+            "type": "string",
+            "minLength": 1
+          },
+          "affected_versions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "resolution": {
+            "const": "requires-validation"
+          },
+          "automatic_fix": {
+            "const": false
+          }
+        },
+        "required": [
+          "id",
+          "symptom",
+          "evidence",
+          "guidance",
+          "affected_versions",
+          "resolution",
+          "automatic_fix"
+        ]
+      }
+    },
+    "executable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "relative_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "relative_globs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "require_unique_match": {
+          "const": true
+        },
+        "verify_pe_header": {
+          "const": true
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          }
+        }
+      },
+      "required": [
+        "relative_paths",
+        "relative_globs",
+        "require_unique_match",
+        "verify_pe_header",
+        "evidence"
+      ]
+    },
+    "installer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "const": "interactive"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EAX_LAUNCH_CLIENT=0"
+            ]
+          }
+        },
+        "success_requires_executable": {
+          "const": true
+        },
+        "close_launcher_before_verification": {
+          "const": true
+        }
+      },
+      "required": [
+        "mode",
+        "arguments",
+        "success_requires_executable",
+        "close_launcher_before_verification"
+      ]
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "preflight",
+          "select_runner",
+          "download_installer",
+          "create_prefix",
+          "review_dependencies",
+          "run_installer",
+          "verify_executable",
+          "register_launcher"
+        ]
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "schema_version",
+    "recipe_version",
+    "id",
+    "name",
+    "category",
+    "reviewed_on",
+    "validation",
+    "download",
+    "prefix",
+    "runners",
+    "dependencies",
+    "mitigations",
+    "known_issues",
+    "executable",
+    "installer",
+    "steps",
+    "notes"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PeliGames launcher recipe v1"
+}

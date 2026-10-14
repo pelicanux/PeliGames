@@ -10,12 +10,13 @@ export function CoverGameActions({ game, onAction, blocked, running, preparing }
   const favorite = favorites.has(gameViewKey(game));
   const own = game.launcher === "PeliGames";
   const nexus = game.library_view === "nexus";
+  const external = game.library_view === "own" && Boolean(game.external_id);
   const steam = game.launcher === "Steam" && Boolean(game.app_id);
   const active = running || preparing;
   return <div className="cover-game-actions">
-    <button className={preparing ? "game-launch-preparing" : undefined} aria-busy={preparing} disabled={(blocked && !active) || (!nexus && !own && !steam)} title={!nexus && !own && !steam ? "Adicione ao PeliGames para iniciar por aqui." : undefined} onClick={() => onAction(active ? "stop" : "start", game)}><MenuIcon name={active ? "stop" : "play"} />{t("gameExecution", active ? "cancel" : "start")}</button>
+    <button className={preparing ? "game-launch-preparing" : undefined} aria-busy={preparing} disabled={(blocked && !active) || (!nexus && !own && !steam && !external)} title={!nexus && !own && !steam && !external ? "Adicione ao PeliGames para iniciar por aqui." : undefined} onClick={() => onAction(active ? "stop" : "start", game)}><MenuIcon name={active ? "stop" : "play"} />{t("gameExecution", active ? "cancel" : "start")}</button>
     <button className={`cover-favorite-action ${favorite ? "is-favorite" : ""}`} onClick={() => { toggleFavorite(game); onAction("favorite", game); }}><MenuIcon name="heart" />{t("gameGrid", favorite ? "unfavorite" : "favorite")}</button>
-    {(game.library_view ?? (own ? "own" : "all")) === "own" && <button className="cover-action-danger" disabled={blocked || (!own && !steam)} title={!own && !steam ? "Desinstale pelo launcher de origem." : undefined} onClick={() => onAction("uninstall", game)}><MenuIcon name="trash" />Desinstalar</button>}
+    {(game.library_view ?? (own ? "own" : "all")) === "own" && !external && <button className="cover-action-danger" disabled={blocked || (!own && !steam)} title={!own && !steam ? "Desinstale pelo launcher de origem." : undefined} onClick={() => onAction("uninstall", game)}><MenuIcon name="trash" />Desinstalar</button>}
     <button onClick={() => onAction("details", game)}><MenuIcon name="info" />Detalhes</button>
     <button onClick={() => onAction("logs", game)}><MenuIcon name="logs" />Exibir logs</button>
   </div>;

@@ -1,0 +1,37 @@
+/* The language/performance choice menu is the common selection surface. */
+:root .custom-select-trigger.custom-select-trigger {
+  box-sizing: border-box; width: 100%; min-width: 0; min-height: 34px;
+  padding: .5rem .65rem; gap: .4rem; border-radius: 9px;
+  background: rgba(118,125,148,.14); border-color: rgba(154,162,187,.22);
+  color: var(--tone-e2e5ef, #e2e5ef); font: inherit; font-size: .8rem;
+  font-weight: 600; text-align: left;
+}
+:root .custom-select-trigger.custom-select-trigger:not(:disabled):is(:hover,.open) {
+  background: rgba(135,143,164,.23); border-color: rgba(var(--accent-rgb),.4);
+}
+:root .custom-select-trigger > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root .custom-select-trigger .select-arrow { flex-shrink: 0; display: flex; align-items: center; color: inherit; }
+:root .custom-select-menu.custom-select-menu {
+  box-sizing: border-box; padding: .25rem; border-radius: 10px;
+  background: var(--tone-292936, #292936); border-color: rgba(154,162,187,.25);
+  box-shadow: 0 8px 20px rgba(0,0,0,.25); gap: 0;
+}
+:root .custom-select-menu .custom-select-option.custom-select-option {
+  box-sizing: border-box; width: 100%; margin: 0; min-height: 32px;
+  border-radius: 7px; padding: .5rem .65rem; text-align: left;
+  align-items: flex-start; font: inherit; font-size: .85rem; font-weight: 400;
+  color: var(--tone-e2e8f0, #e2e8f0); background-color: transparent;
+  white-space: normal; overflow-wrap: anywhere;
+}
+:root .custom-select-menu .custom-select-option.custom-select-option.selected {
+  background-color: rgba(var(--accent-rgb),.2); color: var(--accent-soft);
+}
+:root .custom-select-menu .custom-select-option.custom-select-option:not(:disabled):not(.disabled):is(:hover,:focus-visible) {
+  background-color: rgba(var(--accent-rgb),.15); outline: none;
+}
+:root .custom-select-trigger:disabled, :root .custom-select-option:disabled { cursor: not-allowed; opacity: .45; }
+.selection-menu { min-width: 0; }
+.selection-options { bottom: auto; }
+.mango-control > .selection-menu { flex: 0 1 155px; max-width: 55%; }
+.gamescope-full-row > .selection-menu { margin-top: 6px; }
+.nexus-plugin-rule > .selection-menu { flex: 1 1 150px; width: auto; }

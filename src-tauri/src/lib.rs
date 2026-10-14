@@ -15,17 +15,36 @@ fn app_context() -> tauri::Context<tauri::Wry> {
     tauri::generate_context!()
 }
 
+/// reqwest and LiveKit pull rustls with two crypto backends (aws-lc-rs and
+/// ring); rustls then cannot pick one by itself and aborts the process on the
+/// first TLS connection (joining a voice call). aws-lc-rs, reqwest's own, is
+/// chosen once for the whole process.
+fn choose_tls_backend() {
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+}
+#[cfg(test)]
+mod tls_tests {
+    #[test]
+    fn a_tls_client_config_builds_with_both_backends_compiled() {
+        super::choose_tls_backend();
+        // Without a chosen backend this panics: "Could not automatically determine the process-level CryptoProvider".
+        let _ = rustls::ClientConfig::builder();
+    }
+}
 fn run_mode(installer: bool) {
+    choose_tls_backend();
     #[cfg(unix)]
     if let Err(error) = core::launcher_instance::wait_for_restart_parent() { eprintln!("{error}"); return; }
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if args == ["--matrix-rtc-test"] { commands::matrix_rtc_probe::run_standalone(); return; }
     if args == ["--verify-ui"] {
         let context = app_context();
         let assets: Vec<String> = context.assets().iter().map(|(name, _)| name.to_string()).collect();
         let embedded = !tauri::is_dev()
             && assets.iter().any(|name| name.trim_start_matches('/') == "index.html")
             && assets.iter().any(|name| name.ends_with(".js"))
-            && assets.iter().any(|name| name.ends_with(".css"));
+            && assets.iter().any(|name| name.ends_with(".css"))
+            && assets.iter().any(|name| name.ends_with(".wasm"));
         println!("{}", serde_json::json!({"production": !tauri::is_dev(), "embedded_ui": embedded, "asset_count": assets.len()}));
         if !embedded { std::process::exit(1); }
         return;
@@ -157,16 +176,40 @@ fn run_mode(installer: bool) {
             commands::matrix_chat::connect_matrix_chat,
             commands::matrix_chat::disconnect_matrix_chat,
             commands::matrix_chat::matrix_chat_status,
+            commands::matrix_rtc_probe::open_matrix_rtc_probe,
+            commands::matrix_rtc_probe::matrix_rtc_probe_environment,
+            commands::matrix_rtc_probe::matrix_rtc_probe_report,
+            commands::matrix_voice::matrix_voice_start,
+            commands::matrix_voice::matrix_voice_stop,
+            commands::matrix_rtc::matrix_rtc_identity,
+            commands::matrix_rtc::matrix_rtc_request,
+            commands::matrix_rtc::matrix_room_call_prepare,
+            commands::matrix_audio::matrix_audio_devices,
+            commands::matrix_audio::matrix_audio_route,
+            commands::matrix_call::matrix_room_call_start,
+            commands::matrix_call::matrix_room_call_key,
+            commands::matrix_call::matrix_call_start,
+            commands::matrix_call::matrix_call_stop,
+            commands::matrix_call::matrix_call_controls,
             commands::matrix_chat::matrix_chat_rooms,
             commands::matrix_chat::matrix_chat_join,
+            commands::matrix_chat::matrix_chat_create_channel,
+            commands::matrix_chat::matrix_chat_delete_channel,
             commands::matrix_chat::matrix_chat_premium_access,
             commands::official_build::official_build_status,
             commands::matrix_chat::matrix_chat_moderate,
             commands::matrix_chat::matrix_chat_sync,
+            commands::matrix_chat::matrix_chat_game_activity,
             commands::matrix_chat::matrix_chat_history,
             commands::matrix_chat::matrix_chat_ignore,
             commands::matrix_chat::matrix_chat_report,
             commands::matrix_chat::matrix_chat_send,
+            commands::matrix_chat::matrix_chat_read,
+            commands::matrix_chat::matrix_chat_typing,
+            commands::matrix_chat::matrix_chat_edit,
+            commands::matrix_chat::matrix_chat_react,
+            commands::matrix_chat::matrix_profile_set_name,
+            commands::matrix_chat::matrix_profile_set_avatar,
             commands::matrix_chat::matrix_chat_avatar,
             commands::matrix_chat::matrix_chat_upload,
             commands::matrix_chat::matrix_chat_image,
@@ -268,6 +311,9 @@ fn run_mode(installer: bool) {
             commands::proton::scan_installed_protons,
             commands::installation_paths::prepare_default_installation_directory,
             commands::game_installation::run_game_installer,
+            commands::launcher_installation::install_launcher,
+            commands::runtime_activity::get_runtime_activity,
+            commands::launcher_installation::cancel_launcher_installation,
             commands::game_installation::cancel_game_installer,
             commands::game_installation::run_wine_tool,
             commands::game_installation::add_peligames_entry,
@@ -315,6 +361,25 @@ fn run_mode(installer: bool) {
             commands::updater::open_backend_folder,
             commands::covers::cover_directories,
             commands::covers::import_game_cover,
+            commands::covers::cache_automatic_game_cover,
+            commands::mangohud::load_mangohud_profile,
+            commands::mangohud::save_mangohud_profile,
+            commands::mangohud::update_mangohud_preview,
+            commands::mangohud::mangohud_preview,
+            commands::mangohud_install::mangohud_downloaded,
+            commands::mangohud_install::download_mangohud,
+            commands::mangohud_install::cancel_mangohud_download,
+            commands::mangohud_install::install_mangohud,
+            commands::mangohud::mangohud_status,
+            commands::mangohud::mangohud_latest_release,
+            commands::storage_automount::list_storage_volumes,
+            commands::storage_automount::save_storage_automount,
+            commands::storage_automount::format_ntfs_storage,
+            commands::storage_automount::prepare_empty_storage,
+            commands::storage_automount::manage_storage_volume,
+            commands::external_library::scan_external_library,
+            commands::external_library::configure_external_game,
+            commands::external_library::launch_external_game,
             commands::scanner::scan_installed_games,
             commands::scanner::fetch_steam_release_date,
             commands::scanner::launch_game,
@@ -343,6 +408,9 @@ fn run_mode(installer: bool) {
                 } else { handler(invoke) }
             }
         })
-        .run(context)
-        .expect("error while running tauri application");
+        .build(context)
+        .expect("error while building tauri application")
+        .run(|_, event| {
+            if matches!(event, tauri::RunEvent::Exit) { commands::mangohud::stop_preview(); commands::matrix_call::stop(); commands::matrix_voice::stop(); }
+        });
 }

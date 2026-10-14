@@ -9,6 +9,7 @@ import { checkRunner, type ProtonFamily } from "../services/protonService";
 import "./notifications.css";
 import { LAUNCHER_ERROR_EVENT, type LauncherErrorDetail } from "../services/notifications";
 import { MATRIX_MENTION_EVENT, OPEN_MATRIX_CHAT_EVENT, type MatrixMentionDetail } from "../services/matrixChat";
+import { playNotificationSound, unlockNotificationSound } from "../services/notificationSound";
 
 export type UpdateTarget = "launcher" | "rdna4" | "rdna3" | ProtonFamily;
 type Notice = { id: string; target: UpdateTarget | "nexus" | "error" | "matrix"; version: string; message?: string; source?: string; unread: boolean };
@@ -100,15 +101,22 @@ export function NotificationCenter({ launcherUpdate, onNavigate, nexusError = ""
   }, []);
   // Someone mentioned the user in the Matrix chat: one entry per message, opens the chat.
   useEffect(() => {
+    document.addEventListener("pointerdown", unlockNotificationSound);
+    document.addEventListener("keydown", unlockNotificationSound);
     const received = (event: Event) => {
       const { sender, room, message } = (event as CustomEvent<MatrixMentionDetail>).detail;
+      void playNotificationSound();
       const previous = storeRef.current;
       const notice: Notice = { id: `matrix:${crypto.randomUUID()}`, target: "matrix", version: "", message: `${sender}: ${message}`, source: room, unread: !openRef.current };
       commit({ ...previous, items: [notice, ...previous.items].slice(0, 20) });
       if (!openRef.current) setToasts(queue => [...queue, notice]);
     };
     window.addEventListener(MATRIX_MENTION_EVENT, received);
-    return () => window.removeEventListener(MATRIX_MENTION_EVENT, received);
+    return () => {
+      window.removeEventListener(MATRIX_MENTION_EVENT, received);
+      document.removeEventListener("pointerdown", unlockNotificationSound);
+      document.removeEventListener("keydown", unlockNotificationSound);
+    };
   }, []);
   useEffect(() => {
     if (launcherUpdate) reconcile("launcher", launcherUpdate.available ? launcherUpdate.latest : null);

@@ -372,6 +372,11 @@ fn start_prepared_registered(path: String, mut prepared: PreparedRun, wait_for_c
                 prepared.log.display()
             ));
         }
+        if failure.is_some() {
+            if let Some(hint)=crate::commands::runtime_activity::failure_hint(&prepared.log) {
+                failure=Some(format!("{hint}\n{}",failure.unwrap_or_default()));
+            }
+        }
         if let Ok(mut status) = worker.status.lock() {
             status.state = if failure.is_some() {
                 "failed"

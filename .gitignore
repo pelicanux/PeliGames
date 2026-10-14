@@ -71,9 +71,12 @@ dist-ssr
 !/docs/nexus-oauth.md
 /preview.html
 /src/preview.ts
+/mangohud-preview.html
+/src/mangohudPreview.ts
 /scripts/preview-*.ts
 /scripts/*.test.*
 /src/**/*.test.*
+!/src/services/matrixRtc.integration.test.ts
 /vite.preview.config.ts
 /.local-test-sources/
 /scripts/publish-release.sh
@@ -110,3 +113,6 @@ dist-ssr
 /.vscode/
 /imagem_vetorizada_.svg
 /public/imagem_vetorizada.svg
+
+# Python helpers compiled during validation
+__pycache__/

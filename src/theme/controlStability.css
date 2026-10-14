@@ -1,0 +1,72 @@
+:root { --control-fade-duration: .32s; --control-fade-easing: ease-out; }
+
+/* Keep static action bars on persistent layers, as in game-library-section.
+   Do not transform scrolling panels or travelling/animated surfaces: those
+   own their positioning, portal stacking and cover-flight transformations. */
+:root :is(
+  .app-titlebar, .game-action-stack, .library-toolbar,
+  .nexus-panel-heading-actions, .nexus-installed-mod-actions,
+  .nexus-browser-controls, .matrix-rooms-heading,
+  .modal-actions, .nexus-popup-footer, .preferences-breadcrumb,
+  .steamgrid-settings-footer, .proton-card-actions, .winetricks-actions
+) {
+  isolation: isolate;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Keep these properties present in both enabled and disabled states. Native
+   disabled/inert behavior still changes immediately; only paint fades. */
+:root[data-appearance][data-interface-theme] :is(button, [role="button"], select) {
+  --control-fade-duration: .32s;
+  --control-fade-easing: ease-out;
+  backface-visibility: hidden;
+  transition-property: opacity, color, border-color, background-color, box-shadow, filter, transform !important;
+  transition-duration: var(--control-fade-duration), var(--control-fade-duration), var(--control-fade-duration), var(--control-fade-duration), var(--control-fade-duration), var(--control-fade-duration), .16s !important;
+  transition-timing-function: var(--control-fade-easing) !important;
+}
+:root[data-appearance][data-interface-theme] :is(button, [role="button"])::before,
+:root[data-appearance][data-interface-theme] :is(button, [role="button"])::after {
+  transition: opacity var(--control-fade-duration) var(--control-fade-easing), border-color var(--control-fade-duration) var(--control-fade-easing), box-shadow var(--control-fade-duration) var(--control-fade-easing) !important;
+}
+:root[data-appearance][data-interface-theme] :is(button, [role="button"]) > :is(.menu-icon, svg) {
+  transition: color var(--control-fade-duration) var(--control-fade-easing), opacity var(--control-fade-duration) var(--control-fade-easing), filter var(--control-fade-duration) var(--control-fade-easing) !important;
+}
+:root :is(.titlebar-optional-actions, .launcher-update-indicator, .mod-shortcut-group, .mod-neural-startup) {
+  transition: opacity var(--control-fade-duration) var(--control-fade-easing);
+}
+
+/* Start dimming gently; hover and reactivation retain the shorter default. */
+:root[data-appearance][data-interface-theme] :is(button, [role="button"], select):is(:disabled, [aria-disabled="true"]),
+:root .titlebar-optional-actions[inert],
+:root .launcher-update-indicator:has(button:disabled) {
+  --control-fade-duration: .65s;
+  --control-fade-easing: ease-in-out;
+}
+
+/* Avoid replacing the runner controls' entire gradient with a flat block.
+   Their existing disabled opacity and text color provide the muted state. */
+.selected-game-shell :is(.installed-run-program, .installed-wine-tools .installation-name-confirm):disabled {
+  background: radial-gradient(ellipse at center,rgba(0,0,0,.82),rgba(0,0,0,.68) 50%,rgba(0,0,0,.52)),linear-gradient(120deg,var(--accent-button),var(--accent-deep));
+  filter: grayscale(.7);
+}
+
+/* Retain each button's background image and fade its colors/opacity instead.
+   Gradients cannot interpolate when replaced by a flat disabled background. */
+:root[data-appearance][data-interface-theme] :is(.btn, button.primary, .installation-name-confirm, .library-mode-button, .library-view-toggle button, .nexus-expand-mods):is(:disabled, [aria-disabled="true"]):not(.is-downloading):not([aria-busy="true"]) {
+  opacity: .48 !important;
+  filter: grayscale(.8) brightness(.85) !important;
+}
+:root[data-appearance][data-interface-theme] button:focus:not(:focus-visible) { outline: none !important; }
+:root[data-appearance][data-interface-theme] button:focus-visible { outline: 2px solid var(--accent-soft) !important; outline-offset: 3px; }
+/* The keyboard focus indication stays available; pointer activation has none. */
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-appearance][data-interface-theme] :is(button, [role="button"], select),
+  :root[data-appearance][data-interface-theme] :is(button, [role="button"])::before,
+  :root[data-appearance][data-interface-theme] :is(button, [role="button"])::after,
+  :root[data-appearance][data-interface-theme] :is(button, [role="button"]) > :is(.menu-icon, svg),
+  :root :is(.titlebar-optional-actions, .launcher-update-indicator, .mod-shortcut-group, .mod-neural-startup) {
+    transition: none !important;
+  }
+}

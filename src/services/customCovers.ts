@@ -15,7 +15,7 @@ export async function migrateCoverPaths() {
   try {
     for (let index = 0; index < localStorage.length; index++) {
       const key = localStorage.key(index);
-      if (!key || !(key === "custom_covers" || key.startsWith("game_library_cache_v1"))) continue;
+      if (!key || !(key === "custom_covers" || key === "automatic_cover_fallbacks_v1" || key.startsWith("game_library_cache_v1"))) continue;
       const value = localStorage.getItem(key) ?? "";
       const updated = pairs.reduce((text, [from, to]) => text.split(from).join(to), value);
       if (updated !== value) localStorage.setItem(key, updated);

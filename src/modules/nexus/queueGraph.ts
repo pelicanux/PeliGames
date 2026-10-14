@@ -6,8 +6,18 @@ import type { NexusGame } from "./useNexusWorkspace";
 export interface QueueDetails { requirements_file_id?: number | null; supports_vortex?: boolean; info: { name: string }; files: { file_id: number; name: string; file_name: string; description?: string; version: string; size: number; category_name?: string; category_id?: number }[]; requirements: Requirements }
 export interface Entry { id: number; name: string; notes: string; parent: string; details?: QueueDetails; checked: boolean; file: number | null; installed: boolean; error?: string }
 export interface External { kind: Requirements["items"][number]["kind"]; name: string; notes: string; url: string | null; installed: boolean }
-export async function collectQueue({ game, domain, modId, details, fileId, selectedFiles, active, fetchDetails, limitWarning, incompleteWarning }: {
-  game: NexusGame; domain: string; modId: number; details: QueueDetails; fileId?: number; selectedFiles?: Record<number, number>; active: () => boolean;
+/** A main-version choice is exclusive; patches, optionals and miscellaneous
+ * downloads alongside it are independent. With no main category, retain the
+ * choice of a standalone archive instead of making those mods undownloadable. */
+export function queueFileGroups(files: QueueDetails["files"], selected?: number | null) {
+  const available = files.filter(file => supportedNexusFile(file.file_name) && (!isObsoleteNexusFile(file) || file.file_id === selected));
+  const hasMain = available.some(file => nexusFileCategory(file) === 1);
+  const main = available.filter(file => hasMain ? [1, 4].includes(nexusFileCategory(file)) : nexusFileCategory(file) !== 3);
+  const ids = new Set(main.map(file => file.file_id));
+  return { main, additional: available.filter(file => !ids.has(file.file_id) && !isObsoleteNexusFile(file)) };
+}
+export async function collectQueue({ game, domain, modId, details, fileId, selectedFiles, additionalFiles, active, fetchDetails, limitWarning, incompleteWarning }: {
+  game: NexusGame; domain: string; modId: number; details: QueueDetails; fileId?: number; selectedFiles?: Record<number, number>; additionalFiles?: Record<number, number[]>; active: () => boolean;
   fetchDetails: (id: number, fileId?: number) => Promise<QueueDetails>; limitWarning: string; incompleteWarning: string;
 }) {
   const entries: Entry[] = [], external: External[] = [], seen = new Map<number, Entry>(), warnings: string[] = [];
@@ -38,12 +48,24 @@ export async function collectQueue({ game, domain, modId, details, fileId, selec
           entry.checked = !/\boptional\b|opcional/i.test(notes);
         }
       }
-      const files = value.files.filter(f => supportedNexusFile(f.file_name) && nexusFileCategory(f) !== 3 && (!isObsoleteNexusFile(f) || f.file_id === selected));
+      const files = queueFileGroups(value.files, selected).main;
       if (entry.file && !files.some(f => f.file_id === entry.file)) entry.file = null;
       if (!entry.file && files.some(f => f.file_id === value.requirements_file_id)) entry.file = value.requirements_file_id!;
       if (!entry.file && files.length === 1) entry.file = files[0].file_id;
-      if (!value.requirements.complete || value.requirements.error) warnings.push(`${entry.name}: ${incompleteWarning}`);
-      for (const requirement of value.requirements.items) {
+      // Requirements can differ by archive. Consult each additional selection
+      // as well, rather than assuming that the main file covers its needs.
+      const mainDetails = entry.file && value.requirements_file_id != null && value.requirements_file_id !== entry.file
+        ? await fetchDetails(id, entry.file) : value;
+      const requirements = [mainDetails.requirements];
+      const extraIds = new Set(queueFileGroups(value.files, entry.file).additional.map(file => file.file_id));
+      for (const extra of additionalFiles?.[id] || []) {
+        if (!extraIds.has(extra)) continue;
+        const extraDetails = value.requirements_file_id === extra ? value : await fetchDetails(id, extra);
+        if (!active()) return;
+        requirements.push(extraDetails.requirements);
+      }
+      if (requirements.some(requirement => !requirement.complete || requirement.error)) warnings.push(`${entry.name}: ${incompleteWarning}`);
+      for (const requirement of requirements.flatMap(requirement => requirement.items)) {
         const url = safeLink(requirement.url), target = requirement.kind === "nexus" ? nexusTarget(url) : null;
         if (target?.domain === domain) await visit(target.id, requirement.name, requirement.notes, entry.name);
         else if (!external.some(l => l.url === url && l.name === requirement.name)) {

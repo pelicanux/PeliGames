@@ -35,3 +35,5 @@ pub mod paths;
 pub mod launcher_instance;
 
 pub mod nxm;
+
+pub mod mangohud_config;
