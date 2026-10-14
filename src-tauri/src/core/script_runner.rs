@@ -3,6 +3,26 @@ use std::path::Path;
 use std::fs;
 use std::env;
 
+/// Route names of the backend's install.sh. Newer backends renamed the ReShade
+/// routes (reshade → reshade-feeder, vulkan → reshade-feeder-vulkan,
+/// dx9 → reshade-feeder-dx9) and refuse the old names; older ones only know
+/// the old names. The launcher keeps its own names and passes the one the
+/// installed backend understands.
+const RENAMED_ROUTES: [(&str, &str); 3] = [
+    ("reshade", "reshade-feeder"),
+    ("vulkan", "reshade-feeder-vulkan"),
+    ("dx9", "reshade-feeder-dx9"),
+];
+fn backend_route(script: &str, route: &str) -> String {
+    let renamed = script.contains("reshade-feeder)");
+    for (old, new) in RENAMED_ROUTES {
+        if route == old || route == new {
+            return if renamed { new } else { old }.to_string();
+        }
+    }
+    route.to_string()
+}
+
 /// Executes a standalone installation by copying bundled resources to a temp directory.
 pub fn execute_standalone_install(
     resource_path: &Path,
@@ -73,10 +93,11 @@ pub fn execute_standalone_install(
     cmd.env_remove("PYTHONHOME");
     cmd.env_remove("PYTHONPATH");
     
+    let script = fs::read_to_string(temp_dir.join("install.sh")).unwrap_or_default();
     cmd.current_dir(&temp_dir);
     cmd.arg("install.sh");
     cmd.arg(game_dir);
-    cmd.arg(route);
+    cmd.arg(backend_route(&script, route));
     
     if let Some(dll) = dll_path {
         cmd.arg("--dll");
@@ -216,4 +237,23 @@ fn inject_shortcut_key(game_dir: &str, shortcut_key: &str) -> Result<(), String>
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::backend_route;
+    const NEW: &str = "case \"$route\" in\n    reshade-feeder) kind=reshade;;\n    reshade-feeder-vulkan) kind=vulkan;;\n";
+    const OLD: &str = "case \"$route\" in\n    reshade) kind=reshade;;\n    vulkan) kind=vulkan;;\n";
+    #[test]
+    fn routes_follow_the_installed_backend() {
+        assert_eq!(backend_route(NEW, "reshade"), "reshade-feeder");
+        assert_eq!(backend_route(NEW, "vulkan"), "reshade-feeder-vulkan");
+        assert_eq!(backend_route(NEW, "dx9"), "reshade-feeder-dx9");
+        assert_eq!(backend_route(OLD, "reshade-feeder"), "reshade");
+        assert_eq!(backend_route(OLD, "reshade-feeder-dx9"), "dx9");
+        for route in ["optiscaler", "remove"] {
+            assert_eq!(backend_route(NEW, route), route);
+            assert_eq!(backend_route(OLD, route), route);
+        }
+    }
 }

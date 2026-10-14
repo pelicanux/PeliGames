@@ -533,7 +533,11 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     }
     setCoverContextMenu(null);
   });
-  const openModLibrary = () => requestDraftExit(() => {
+  const openModLibrary = (config: AppConfig | null = appConfig) => requestDraftExit(() => {
+    if (!hasDlssnrConfiguration(config)) {
+      setShowSetupWizard(true);
+      return;
+    }
     collapseGameDetailsNow();
     setIsEditingPath(false);
     setGamePanelMode("mods");
@@ -1443,7 +1447,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
             game_shortcut_keys: { ...previous?.game_shortcut_keys, ...config.game_shortcut_keys },
           }));
           setShowSetupWizard(false);
-          openModLibrary();
+          openModLibrary(config);
         }} 
       />
     )}

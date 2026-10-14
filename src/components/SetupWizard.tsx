@@ -10,6 +10,7 @@ import { ModelSource } from "../types/installer";
 
 import { useI18n } from "../i18n/I18nContext";
 import { EmergencyResetFlow } from "./EmergencyResetFlow";
+import { hasDlssnrConfiguration } from "../services/modConfiguration";
 
 export interface AppConfig {
   steamgriddb_api_key?: string;
@@ -233,7 +234,8 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
       
       await invoke("save_app_config", { config });
       const saved = await invoke<AppConfig | null>("load_app_config");
-      onComplete(saved ?? config);
+      if (!hasDlssnrConfiguration(saved)) throw new Error("A configuração do mod não foi persistida.");
+      onComplete(saved!);
     } catch (err) {
       console.error("Failed to save config:", err);
       setErrorMsg(t("setupWizard", "saveError"));
