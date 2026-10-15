@@ -1,19 +1,20 @@
+use super::storage::{automount, udisks::Udisks};
 use serde_json::{json, Value};
-use std::io::Write;
-use std::process::{Command, Stdio};
 use std::sync::Mutex;
 static SAVE_LOCK: Mutex<()> = Mutex::new(());
-const HELPER: &str = include_str!("storage/automount.py");
 fn run(request: Value) -> Result<Value, String> {
-    // Fixed interpreter/script; all untrusted input travels through JSON stdin, never a shell.
-    let mut child = Command::new("/usr/bin/python3").args(["-I", "-c", HELPER])
-        .env_remove("LD_LIBRARY_PATH").env_remove("LD_PRELOAD").env_remove("GI_TYPELIB_PATH")
-        .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped())
-        .spawn().map_err(|_| "Python 3 e PyGObject são necessários para acessar o UDisks2.".to_string())?;
-    child.stdin.take().ok_or("Entrada indisponível")?.write_all(request.to_string().as_bytes()).map_err(|e| e.to_string())?;
-    let output = child.wait_with_output().map_err(|e| e.to_string())?;
-    if !output.status.success() { return Err(String::from_utf8_lossy(&output.stderr).trim().to_string()); }
-    serde_json::from_slice(&output.stdout).map_err(|e| e.to_string())
+    let mut system = Udisks::connect()?;
+    match request["action"].as_str().unwrap_or("") {
+        "list" => {
+            let objects = automount::System::objects(&mut system)?;
+            Ok(Value::Array(automount::storage_listing(&objects)))
+        }
+        "save" => automount::save(&request, &mut system),
+        "operation" => automount::storage_operation(&request, &mut system),
+        "format_ntfs" => automount::format_ntfs(&request, &mut system),
+        "prepare_storage" => automount::prepare_storage(&request, &mut system),
+        _ => Err("Operação inválida.".into()),
+    }
 }
 #[tauri::command]
 pub async fn list_storage_volumes() -> Result<Value, String> {

@@ -176,6 +176,13 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       manualUpdateCheck.current = false;
     }
   };
+  // The update channel changed in Settings → Tools: offer what it now allows.
+  const recheckUpdates = useRef(checkUpdatesManually); recheckUpdates.current = checkUpdatesManually;
+  useEffect(() => {
+    const recheck = () => void recheckUpdates.current();
+    window.addEventListener("peligamesUpdateChannelChanged", recheck);
+    return () => window.removeEventListener("peligamesUpdateChannelChanged", recheck);
+  }, []);
   useEffect(() => {
     let active = true;
     checkLauncherUpdateOnStartup().then(info => {

@@ -42,7 +42,7 @@ requirement, not an end-user compiler dependency.
 
 ## Two-session local call
 
-Run `python3 scripts/test-native-call.py` after building. The script verifies the
+Run `bun scripts/test-native-call.ts` after building. The script verifies the
 pinned official LiveKit server archive, starts it on loopback ports 17880 (HTTP),
 17881 (RTC TCP), 17882 (RTC UDP), and opens two standalone windows. Credentials
 are randomly generated, valid for one hour, stored in a private temporary
@@ -56,7 +56,7 @@ the system's default input/output at 48 kHz; it supports one remote microphone.
 
 An ignored Rust integration test publishes and receives non-silent synthetic
 Opus audio in both directions, without opening microphone/speaker devices.
-Execute it with `python3 scripts/test-native-call.py --check PATH_TO_RUST_TEST_BINARY`.
+Execute it with `bun scripts/test-native-call.ts --check PATH_TO_RUST_TEST_BINARY`.
 The script shuts down the server and removes temporary credentials on exit.
 
 ## Matrix room integration: readiness stage

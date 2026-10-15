@@ -32,6 +32,12 @@ mod tls_tests {
     }
 }
 fn run_mode(installer: bool) {
+    // Root helper started through pkexec: nothing else of the launcher runs.
+    let first = std::env::args().nth(1);
+    if first.as_deref() == Some(core::mangohud_root::FLAG) {
+        let args: Vec<String> = std::env::args().skip(2).collect();
+        std::process::exit(core::mangohud_root::run(&args));
+    }
     choose_tls_backend();
     #[cfg(unix)]
     if let Err(error) = core::launcher_instance::wait_for_restart_parent() { eprintln!("{error}"); return; }
@@ -172,7 +178,6 @@ fn run_mode(installer: bool) {
             commands::discord_account::load_discord_account,
             commands::discord_account::cached_discord_account,
             commands::discord_account::disconnect_discord_account,
-            commands::matrix_community::open_matrix_community,
             commands::matrix_chat::connect_matrix_chat,
             commands::matrix_chat::disconnect_matrix_chat,
             commands::matrix_chat::matrix_chat_status,
@@ -342,6 +347,8 @@ fn run_mode(installer: bool) {
             commands::neural_settings::get_neural_startup,
             commands::neural_settings::set_neural_startup,
             commands::app_updates::check_launcher_update,
+            commands::app_updates::launcher_experimental_updates,
+            commands::app_updates::set_launcher_experimental_updates,
             commands::app_updates::download_launcher_update,
             commands::app_updates::restart_launcher_update,
             commands::installer::install_mod,

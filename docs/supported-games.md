@@ -11,7 +11,7 @@ A coluna **Concluído** mostra o quanto do suporte está pronto:
 | 70% | Gerado do template da família (Unreal, Unity ou RE Engine) e testado com pacotes de exemplo; ainda não revisado em jogo. | 100 |
 | 60% | Módulo disponível, mas sem suporte Vortex confirmado para o jogo. | 1 |
 
-Os módulos seguem as regras das extensões do Vortex (oficiais, da comunidade e templates de família). As diferenças de cada jogo estão nas notas dos módulos, em [src-tauri/resources/nexus-games](../src-tauri/resources/nexus-games). Lista gerada por `tools/vortex-import/supported-games.py`.
+Os módulos seguem as regras das extensões do Vortex (oficiais, da comunidade e templates de família). As diferenças de cada jogo estão nas notas dos módulos, em [src-tauri/resources/nexus-games](../src-tauri/resources/nexus-games). Lista gerada por `tools/vortex-import/supported-games.ts`.
 
 | Jogo | Concluído | Base das regras | Nexus Mods |
 |---|---|---|---|

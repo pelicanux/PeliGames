@@ -131,6 +131,24 @@ export function CoverPreferences({ config, disabled, save, focusRef, onError }: 
   </section></>;
 }
 /** The install offered on the welcome screen, for whoever skipped it. Only for an AppImage not installed yet. */
+/** Update channel: stable releases only (default), or test versions too. */
+export const UPDATE_CHANNEL_EVENT = "peligamesUpdateChannelChanged";
+function UpdateChannelPreferences({ onError }: { onError: (error: string) => void }) {
+  const text = usePreferencesText();
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  useEffect(() => { void invoke<boolean>("launcher_experimental_updates").then(setEnabled).catch(() => setEnabled(false)); }, []);
+  const change = async (value: boolean) => {
+    setEnabled(value);
+    try {
+      await invoke("set_launcher_experimental_updates", { enabled: value });
+      window.dispatchEvent(new Event(UPDATE_CHANNEL_EVENT)); // Check again with the new channel.
+    } catch (error) { setEnabled(!value); onError(String(error)); }
+  };
+  return <section data-preference-id="experimental-updates" className="preference-section"><h3>{text.launcherUpdates}</h3>
+    <label className="preference-switch"><input type="checkbox" checked={Boolean(enabled)} disabled={enabled === null} onChange={event => void change(event.target.checked)}/><span className="preference-switch-track"/><span>{text.experimentalUpdates}<small>{text.experimentalUpdatesHint}</small></span></label>
+  </section>;
+}
+
 function AppImageInstallPreferences({ onError }: { onError: (error: string) => void }) {
   const { t } = useI18n();
   const [target, setTarget] = useState(""), [installing, setInstalling] = useState(false);
@@ -156,6 +174,7 @@ export function ToolsPreferences({ onError, onLogs, onAutomount, onMonitoring }:
     <section data-preference-id="disk-automount" className="preference-section first"><h3>{text.diskAutomount}</h3><p>{text.diskAutomountHint}</p><button type="button" className="preference-outline" onClick={onAutomount}><MenuIcon name="eject"/>{text.diskAutomountEdit}</button></section>
     <section data-preference-id="monitoring-panel" className="preference-section"><h3>{text.monitoring}</h3><p>{text.monitoringHint}</p><button type="button" className="preference-outline" onClick={onMonitoring}><MenuIcon name="sliders"/>{text.monitoringEdit}</button></section>
     <section data-preference-id="launcher-logs" className="preference-section"><h3>{text.openLogs}</h3><p>{text.logsHint}</p><button type="button" className="preference-outline" onClick={onLogs}><MenuIcon name="logs"/>{text.openLogs}</button></section>
+    <UpdateChannelPreferences onError={onError}/>
     <AppImageInstallPreferences onError={onError}/>
     <section data-preference-id="manual-folders" className="preference-section"><h3>{t("settings", "manualDirs")}</h3><p>{t("settings", "manualDirsDesc")}</p>{folders.length ? <div className="preference-folders">{folders.map(folder => <div key={folder}><span>{folder}</span><button type="button" aria-label={`${t("settings", "removeDir")}: ${folder}`} onClick={() => remove(folder)}><MenuIcon name="trash"/></button></div>)}</div> : <p>{text.noFolders}</p>}</section>
   </>;

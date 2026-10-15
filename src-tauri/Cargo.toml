@@ -1,6 +1,6 @@
 [package]
 name = "peligames"
-version = "0.3.6"
+version = "0.3.7"
 description = "A Tauri App"
 authors = ["Pelicano"]
 license = "GPL-3.0-only"
@@ -49,6 +49,10 @@ tauri-plugin-dialog = "2"
 tauri-plugin-shell = "2"
 tauri-plugin-clipboard-manager = "2"
 uuid = { version = "1.26.1", features = ["v4"] }
+# UDisks2 (drive automount) on the system D-Bus; already part of the tree through Tauri.
+zbus = "5"
+# Lutris game database (read-only), SQLite built in: no system tool needed.
+rusqlite = { version = "0.37", features = ["bundled"] }
 reqwest = { version = "0.13.5", features = ["json", "rustls", "form"] }
 base64 = "0.22.1"
 flate2 = "1.1.10"

@@ -70,17 +70,23 @@ fn lutris_ids(home: &Path, flatpak: bool) -> BTreeMap<String, (String, String)> 
     if !db.is_file() {
         return BTreeMap::new();
     }
-    let script = "import sqlite3,json,sys,pathlib\nc=sqlite3.connect(pathlib.Path(sys.argv[1]).resolve().as_uri()+'?mode=ro',uri=True,timeout=1)\nc.execute('PRAGMA query_only=ON')\nprint(json.dumps({str(p):[str(i),str(n)] for i,n,p in c.execute('SELECT id,name,configpath FROM games WHERE installed=1 LIMIT 5000') if p}))";
-    Command::new("python3")
-        .args(["-c", script])
-        .arg(db)
-        .env_remove("LD_LIBRARY_PATH")
-        .env_remove("LD_PRELOAD")
-        .output()
-        .ok()
-        .filter(|out| out.status.success() && out.stdout.len() <= 4 * 1024 * 1024)
-        .and_then(|out| serde_json::from_slice(&out.stdout).ok())
-        .unwrap_or_default()
+    read_lutris_ids(&db).unwrap_or_default()
+}
+/// `configpath → (id, name)` of the installed games, from a read-only connection.
+fn read_lutris_ids(db: &Path) -> rusqlite::Result<BTreeMap<String, (String, String)>> {
+    use rusqlite::{types::Value, Connection, OpenFlags};
+    let connection = Connection::open_with_flags(db, OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX)?;
+    connection.busy_timeout(std::time::Duration::from_secs(1))?;
+    connection.pragma_update(None, "query_only", true)?;
+    let text = |value: Value| match value {
+        Value::Integer(number) => number.to_string(),
+        Value::Real(number) => number.to_string(),
+        Value::Text(text) => text,
+        _ => String::new(),
+    };
+    let mut query = connection.prepare("SELECT id, name, configpath FROM games WHERE installed=1 LIMIT 5000")?;
+    let rows = query.query_map([], |row| Ok((text(row.get(0)?), text(row.get(1)?), text(row.get(2)?))))?;
+    Ok(rows.flatten().filter(|(_, _, config)| !config.is_empty()).map(|(id, name, config)| (config, (id, name))).collect())
 }
 fn discover(home: &Path) -> Vec<ExternalGame> {
     let mut result = Vec::new();
@@ -660,7 +666,9 @@ mod tests {
             ),
         )
         .unwrap();
-        assert!(Command::new("python3").args(["-c","import sqlite3,sys\nc=sqlite3.connect(sys.argv[1]);c.execute('CREATE TABLE games(id,name,configpath,installed)');c.execute(\"INSERT INTO games VALUES(42,'Exact game name','test-game-123',1)\");c.commit()"]).arg(data.join("pga.db")).status().unwrap().success());
+        let db = rusqlite::Connection::open(data.join("pga.db")).unwrap();
+        db.execute_batch("CREATE TABLE games(id,name,configpath,installed); INSERT INTO games VALUES(42,'Exact game name','test-game-123',1); INSERT INTO games VALUES(43,'Not installed','other-456',0);").unwrap();
+        drop(db);
         let before = std::fs::read(data.join("pga.db")).unwrap();
         let games = discover(&home);
         assert_eq!(games.len(), 1);

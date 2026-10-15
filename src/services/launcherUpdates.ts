@@ -9,6 +9,8 @@ export type LauncherUpdateInfo = {
   preferred: number | null;
   appimage: boolean;
   format: string;
+  /** The offered version is a test (pre-release) build. */
+  experimental?: boolean;
 };
 export type LauncherUpdateStatus = "checking" | "available" | "current" | "error";
 

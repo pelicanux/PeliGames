@@ -113,6 +113,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
     { id: "steam-scan", page: "protons", title: text.steamScan, keywords: `${text.steam} ${text.steamHint}` },
     { id: "cover-api", page: "covers", title: t("steamgrid", "keyLabel"), keywords: `SteamGridDB API ${text.showKey} ${text.hideKey}` },
     { id: "disk-automount", page: "tools", title: text.diskAutomount, keywords: `${text.diskAutomountHint} HD HDD SSD storage GNOME Disks` },
+    { id: "experimental-updates", page: "tools", title: text.experimentalUpdates, keywords: `${text.launcherUpdates} ${text.experimentalUpdatesHint} beta update atualização` },
     { id: "monitoring-panel", page: "tools", title: text.monitoring, keywords: `${text.monitoringHint} FPS GPU CPU Goverlay` },
     { id: "launcher-logs", page: "tools", title: text.launcherLogs, keywords: `${text.openLogs} ${text.logsHint}` },
     { id: "backup-create", page: "mods", title: text.backupCreate, keywords: "Nexus ZIP" },

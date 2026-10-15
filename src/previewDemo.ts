@@ -275,6 +275,8 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
       if (previewAccount() !== "owner") throw new Error("Prévia: acesso premium bloqueado para usuário gratuito.");
       return {value:{granted:true,room_id:MATRIX_PREMIUM_ROOM_ID,user_id:"@demo-preview:matrix.org"}};
     case "matrix_chat_join": return {value:null};
+    case "launcher_experimental_updates": return {value:localStorage.getItem("peligames.preview.experimentalUpdates") === "true"};
+    case "set_launcher_experimental_updates": localStorage.setItem("peligames.preview.experimentalUpdates", String(Boolean(args.enabled))); return {value:null};
     case "matrix_chat_read": case "matrix_chat_typing": case "matrix_audio_route": return {value:null};
     case "matrix_audio_devices": return {value:{inputs:[{id:"preview-headset-mic",name:"Headset USB Mono (demonstração)"},{id:"preview-webcam-mic",name:"Microfone da webcam (demonstração)"}],outputs:[{id:"preview-headset",name:"Headset USB Estéreo (demonstração)"},{id:"preview-speakers",name:"Caixas de som (demonstração)"}]}};
     case "matrix_chat_edit": case "matrix_chat_react": case "matrix_profile_set_name": case "matrix_profile_set_avatar": throw new Error("Prévia visual: nada é enviado ao Matrix.");
@@ -287,7 +289,6 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "matrix_chat_history": return {value:{events:[{kind:"message",id:"$preview-matrix-older",sender:"@pelicanux:matrix.org",ts:Date.now()-3600000,msgtype:"m.notice",body:"Histórico de demonstração: mensagem anterior à conversa atual."}],end:null,names:{"@pelicanux:matrix.org":"Pelicano"}}};
     case "matrix_chat_ignore": case "matrix_chat_report": case "matrix_chat_moderate": throw new Error("Prévia visual: nada é enviado ao Matrix.");
     case "matrix_chat_send": { const message = {kind:"message",id:`$preview-matrix-${Date.now()}`,sender:"@demo-preview:matrix.org",ts:Date.now(),msgtype:args.emote ? "m.emote" : "m.text",body:String(args.text),reply_to:args.replyTo ?? null}; demoMatrixMessages.push(message); demoMatrixSent.push(message); return {value:null}; }
-    case "open_matrix_community": throw new Error("A janela do Element está disponível na versão nativa. A preview não faz login real.");
     case "nexus_oauth_status": return {value: {configured:false,pending:false}};
     case "connect_nexus_oauth": throw new Error("O login real Nexus depende do client_id e está disponível somente no aplicativo nativo.");
     case "cancel_nexus_oauth": return {value:null};

@@ -53,7 +53,6 @@ mod nexus_discovery;
 pub mod nexus_account;
 pub mod nexus_oauth;
 pub mod discord_account;
-pub mod matrix_community;
 pub mod matrix_chat;
 pub mod official_build;
 
@@ -87,6 +86,7 @@ mod nexus_crash_logs;
 
 pub mod external_library;
 
+mod storage;
 pub mod storage_automount;
 
 pub mod launcher_installation;

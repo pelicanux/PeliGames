@@ -45,4 +45,4 @@ Proton, UMU, Winetricks e componentes internos dos backends são baixados separa
 
 ## Reproduzir o inventário
 
-Gerar `cargo metadata` a partir do Cargo.lock, com a plataforma Linux e a feature `custom-protocol`, e executar `python3 scripts/generate-license-notices.py caminho/metadata.json` com as dependências locais instaladas. O script preserva os textos encontrados; ele não substitui a revisão das condições de cada licença nem a inspeção do pacote final. Atualizações de dependências, assets ou empacotamento exigem nova conferência.
+Gerar `cargo metadata` a partir do Cargo.lock, com a plataforma Linux e a feature `custom-protocol`, e executar `bun scripts/generate-license-notices.ts caminho/metadata.json` com as dependências locais instaladas. O script preserva os textos encontrados; ele não substitui a revisão das condições de cada licença nem a inspeção do pacote final. Atualizações de dependências, assets ou empacotamento exigem nova conferência.

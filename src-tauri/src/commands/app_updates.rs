@@ -11,7 +11,9 @@ fn update_cache_root() -> Result<PathBuf, String> {
     crate::core::paths::app_root().map_err(|error| format!("download|{error}"))
 }
 
-const API: &str = "https://api.github.com/repos/pelicanux/PeliGames/releases/latest";
+// The release list, not /releases/latest: that one skips experimental
+// (pre-release) versions, offered to whoever chose to receive them.
+const API: &str = "https://api.github.com/repos/pelicanux/PeliGames/releases?per_page=30";
 const DOWNLOAD_PREFIX: &str = "https://github.com/pelicanux/PeliGames/releases/download/";
 #[derive(Default)]
 pub struct AppUpdateState { downloaded: Mutex<Option<DownloadedUpdate>>, busy: AtomicBool }
@@ -20,9 +22,11 @@ struct DownloadedUpdate { path: PathBuf, sha256: String }
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Package { id: u64, name: String, size: u64, browser_download_url: String, digest: Option<String> }
 #[derive(Deserialize)]
-struct Release { tag_name: String, body: Option<String>, assets: Vec<Package> }
+struct Release { tag_name: String, body: Option<String>, assets: Vec<Package>, #[serde(default)] draft: bool, #[serde(default)] prerelease: bool }
 #[derive(Serialize)]
-pub struct UpdateInfo { current: String, latest: Option<String>, available: bool, notes: String, packages: Vec<Package>, preferred: Option<u64>, appimage: bool, format: String }
+pub struct UpdateInfo { current: String, latest: Option<String>, available: bool, notes: String, packages: Vec<Package>, preferred: Option<u64>, appimage: bool, format: String,
+    /// The offered version is a test (pre-release) build.
+    experimental: bool }
 fn client() -> Result<reqwest::Client, String> {
     reqwest::Client::builder().user_agent("PeliGames")
         .connect_timeout(Duration::from_secs(10)).timeout(Duration::from_secs(600))
@@ -34,7 +38,41 @@ async fn latest() -> Result<Option<Release>, String> {
         .send().await.map_err(|_| "network".to_string())?;
     if response.status() == reqwest::StatusCode::NOT_FOUND { return Ok(None); }
     if response.status() == reqwest::StatusCode::FORBIDDEN || response.status() == reqwest::StatusCode::TOO_MANY_REQUESTS { return Err("rateLimit".into()); }
-    response.error_for_status().map_err(|_| "network".to_string())?.json().await.map(Some).map_err(|_| "invalidRelease".into())
+    let releases: Vec<Release> = response.error_for_status().map_err(|_| "network".to_string())?.json().await.map_err(|_| "invalidRelease".to_string())?;
+    Ok(newest(releases, experimental_updates()))
+}
+/// The highest published version: stable only, or test versions too when the
+/// user chose them. Drafts and tags that are not versions are ignored.
+fn newest(releases: Vec<Release>, experimental: bool) -> Option<Release> {
+    releases.into_iter()
+        .filter(|release| !release.draft && (experimental || !release.prerelease))
+        .filter_map(|release| Some((semver::Version::parse(release.tag_name.trim_start_matches('v')).ok()?, release)))
+        .max_by(|(a, _), (b, _)| a.cmp(b))
+        .map(|(_, release)| release)
+}
+/// `updates.json`: the update channel, apart from config.json (which the
+/// interface rewrites as a whole).
+fn channel_file() -> Result<PathBuf, String> {
+    Ok(crate::core::paths::app_root()?.join("updates.json"))
+}
+/// Whether test (pre-release) versions are offered; stable only by default.
+fn experimental_updates() -> bool {
+    channel_file().ok().and_then(|path| std::fs::read(path).ok())
+        .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
+        .and_then(|value| value["experimental"].as_bool())
+        .unwrap_or(false)
+}
+#[tauri::command]
+pub fn launcher_experimental_updates() -> bool {
+    experimental_updates()
+}
+#[tauri::command]
+pub fn set_launcher_experimental_updates(enabled: bool) -> Result<(), String> {
+    let path = channel_file()?;
+    let temporary = path.with_extension(format!("{}.tmp", uuid::Uuid::new_v4()));
+    std::fs::write(&temporary, serde_json::json!({"experimental": enabled}).to_string())
+        .and_then(|_| std::fs::rename(&temporary, &path))
+        .map_err(|_| "Não foi possível salvar a preferência de atualizações.".into())
 }
 fn is_newer(tag: &str, current: &str) -> Result<bool, String> {
     let new = semver::Version::parse(tag.trim_start_matches('v')).map_err(|_| "invalidRelease".to_string())?;
@@ -76,9 +114,10 @@ pub async fn check_launcher_update(app: tauri::AppHandle) -> Result<UpdateInfo, 
 }
 async fn check_launcher_update_inner() -> Result<UpdateInfo, String> {
     let current = env!("CARGO_PKG_VERSION").to_string();
-    let mut info = UpdateInfo { current: current.clone(), latest: None, available: false, notes: String::new(), packages: vec![], preferred: None, appimage: std::env::var_os("APPIMAGE").is_some() || crate::core::pelinstall::running_installed(), format: preferred_format().into() };
+    let mut info = UpdateInfo { current: current.clone(), latest: None, available: false, notes: String::new(), packages: vec![], preferred: None, appimage: std::env::var_os("APPIMAGE").is_some() || crate::core::pelinstall::running_installed(), format: preferred_format().into(), experimental: false };
     if let Some(release) = latest().await? {
         info.available = is_newer(&release.tag_name, &current)?;
+        info.experimental = release.prerelease;
         info.latest = Some(release.tag_name);
         info.notes = release.body.unwrap_or_default();
         info.packages = release.assets.into_iter().filter(|a| compatible(&a.name) && update_policy::package_matches_format(&a.name, &info.format) && a.browser_download_url.starts_with(DOWNLOAD_PREFIX)).collect();
@@ -299,5 +338,32 @@ fn cleanup_installed_update(app: &tauri::AppHandle) {
     match result {
         Ok(()) => crate::core::logger::log_launcher(app, "INFO", "Pacotes temporários removidos após instalação da atualização"),
         Err(error) => crate::core::logger::log_launcher(app, "WARN", &format!("Atualização instalada, mas não foi possível limpar o cache de downloads: {error}")),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    fn release(tag: &str, draft: bool, prerelease: bool) -> Release {
+        Release { tag_name: tag.into(), body: None, assets: Vec::new(), draft, prerelease }
+    }
+    fn list() -> Vec<Release> {
+        // GitHub lists by date; the version decides, and drafts are not published yet.
+        vec![release("v0.3.5", false, true), release("v0.3.8", true, false), release("v0.3.6", false, true),
+            release("nightly", false, false), release("v0.3.1", false, false), release("v0.3.2", false, false)]
+    }
+    #[test]
+    fn stable_channel_skips_test_versions_and_drafts() {
+        assert_eq!(newest(list(), false).map(|r| r.tag_name), Some("v0.3.2".into()));
+        assert!(newest(vec![release("v0.4.0", false, true)], false).is_none());
+    }
+    #[test]
+    fn test_channel_offers_the_highest_version_stable_or_not() {
+        assert_eq!(newest(list(), true).map(|r| r.tag_name), Some("v0.3.6".into()));
+        let mut newer_stable = list();
+        newer_stable.push(release("v0.4.0", false, false));
+        assert_eq!(newest(newer_stable, true).map(|r| r.tag_name), Some("v0.4.0".into()));
+        assert!(newest(vec![release("v1.0.0", true, true)], true).is_none());
+        assert!(newest(Vec::new(), true).is_none());
     }
 }

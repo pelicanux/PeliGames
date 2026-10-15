@@ -1,12 +1,12 @@
 .modal-overlay.matrix-chat-overlay { z-index:2100; padding:12px; height:calc(100dvh - 50px); }
-.matrix-chat.modal-content { box-sizing:border-box; width:100%; max-width:100%; height:100%; max-height:100% !important; min-width:min(480px,calc(100vw - 24px)); min-height:min(320px,calc(100dvh - 74px)); padding:0; resize:both; }
+.matrix-chat.modal-content { box-sizing:border-box; width:100%; max-width:100%; height:100%; max-height:100% !important; min-width:min(480px,calc(100vw - 24px)); min-height:min(320px,calc(100dvh - 74px)); padding:0; resize:both; container:matrix-chat / inline-size; }
 .matrix-chat.modal-content::-webkit-resizer { background:linear-gradient(135deg,transparent 55%,rgba(var(--accent-rgb),.5) 56%,rgba(var(--accent-rgb),.5) 62%,transparent 63%,transparent 73%,rgba(var(--accent-rgb),.7) 74%,rgba(var(--accent-rgb),.7) 80%,transparent 81%); }
 :root .matrix-chat.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { display:flex; flex-direction:column; flex:1; min-height:0; padding:72px 10px 10px; overflow:hidden; }
 .matrix-terminal-status,.matrix-terminal-footer,.matrix-terminal-compose,.matrix-terminal-room > header { flex-shrink:0; }
 .matrix-terminal-frame { position:relative; isolation:isolate; display:flex; flex-direction:column; flex:1; min-height:0; min-width:0; overflow:hidden; border-radius:0; border:0; background:#090e12; }
 .matrix-crt-outline { position:absolute; inset:0; width:100%; height:100%; z-index:4; pointer-events:none; stroke:rgba(var(--accent-rgb),.75); stroke-width:2px; }
 .matrix-crt-definitions { position:absolute; pointer-events:none; }
-.matrix-crt-screen { display:flex; flex-direction:column; flex:1; min-height:0; min-width:0; padding:clamp(30px,5.5vh,44px) 3%; box-sizing:border-box; }
+.matrix-crt-screen { display:flex; flex-direction:column; flex:1; min-height:0; min-width:0; padding:clamp(28px,4vh,34px) 3% clamp(24px,3.8vh,30px); box-sizing:border-box; }
 .matrix-crt-screen > .matrix-terminal-status { padding-left:5%; padding-right:5%; }
 .matrix-crt-screen > .matrix-terminal-footer { padding-left:5%; padding-right:5%; }
 /* Small, cached noise tile; slow stepped drift rather than continuous repaint. */
@@ -29,7 +29,7 @@
 .performance-mode .matrix-terminal-frame::before { display:none; }
 .matrix-terminal-tag { font-family:"Jersey 10",monospace; color:var(--accent); font-size:1.2rem; margin-left:8px; }
 .matrix-terminal-status,.matrix-terminal-layout,.matrix-terminal-welcome,.matrix-terminal-footer,.matrix-terminal-error { font-family:"Jersey 10",monospace; }
-.matrix-terminal-status { display:flex; align-items:center; gap:10px; padding:12px 18px; color:#b4ffcd; background:#080d11; border-bottom:1px solid #24473b; font-size:1.1rem; }
+.matrix-terminal-status { display:flex; align-items:center; gap:10px; padding:6px 18px; color:#b4ffcd; background:#080d11; border-bottom:1px solid #24473b; font-size:1.1rem; }
 .matrix-terminal-status small { margin-left:auto; font:12px monospace; color:#82948c; }
 .matrix-terminal-dot { width:7px; height:7px; background:#62d694; box-shadow:0 0 8px #62d69470; flex-shrink:0; }
 .matrix-terminal-layout { display:grid; grid-template-columns:230px minmax(0,1fr); flex:1; min-height:0; background:#090e12; color:#d3e3db; }
@@ -63,9 +63,16 @@
 .matrix-terminal-message time { color:#768d81; font:11px monospace; }
 .matrix-terminal-message p { margin:3px 0 0; font:19px/1.3 "Jersey 10",monospace; white-space:pre-wrap; overflow-wrap:anywhere; user-select:text; color:#d3e3db; }
 .matrix-terminal-messages > p { color:#98b2a3; font:19px/1.4 "Jersey 10",monospace; }
-.matrix-terminal-compose { padding:12px 16px; border-top:1px solid #24473b; }
+.matrix-terminal-compose { padding:10px clamp(18px,3vw,36px) 4px; border-top:1px solid #24473b; }
 .matrix-terminal-compose label { color:#7ba88e; font:15px "Jersey 10",monospace; }
-.matrix-terminal-compose > div { display:flex; align-items:center; gap:10px; margin-top:6px; }
+.matrix-terminal-compose > div { display:flex; align-items:center; gap:12px; width:calc(100% - 32px); max-width:880px; margin:6px auto 0; }
+.matrix-terminal-compose > :is(label,.matrix-compose-reply,.matrix-typing) { display:block; width:calc(100% - 32px); max-width:880px; margin-left:auto; margin-right:auto; }
+:root .matrix-chat .matrix-terminal-compose .matrix-attach-button {
+  display:inline-flex; align-items:center; justify-content:center; flex:0 0 40px;
+  width:40px; height:40px; min-height:0; padding:9px; border-radius:8px;
+  color:var(--accent-soft); cursor:pointer;
+}
+.matrix-attach-button .menu-icon { width:20px; height:20px; }
 .matrix-terminal-compose textarea { flex:1; min-width:0; resize:vertical; min-height:50px; max-height:120px; background:#080d11; color:#d3e3db; border:1px solid #355440; border-radius:4px; padding:10px; font:19px "Jersey 10",monospace; }
 :root .matrix-chat .matrix-terminal-compose textarea:focus {
   outline:none; border-color:#62b584;
@@ -90,7 +97,7 @@
 :root .matrix-chat .matrix-send-button:focus-visible { outline:1px solid #7ba88e; outline-offset:3px; border-radius:4px; }
 :root .matrix-chat .matrix-send-button:active:not(:disabled) .matrix-enter-key { transform:translateY(2px); }
 :root .matrix-chat .matrix-terminal-compose .matrix-send-button:disabled { opacity:.45; cursor:not-allowed; filter:none; }
-.matrix-terminal-footer { display:flex; align-items:center; flex-wrap:wrap; justify-content:space-between; gap:10px; padding:10px 28px 10px 16px; background:#080d11; color:#8ba094; font-size:16px; }
+.matrix-terminal-footer { display:flex; align-items:center; justify-content:center; text-align:center; padding:4px 12px 0; min-height:22px; box-sizing:border-box; background:#080d11; color:#8ba094; font-size:16px; }
 .matrix-terminal-welcome { flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:30px; background:#090e12; color:#b4ffcd; }
 .matrix-terminal-welcome > .menu-icon { width:48px; height:48px; }
 .matrix-terminal-welcome h3 { font:30px "Jersey 10",monospace; }
@@ -342,3 +349,19 @@
 :root .matrix-select-menu .custom-select-option.custom-select-option { min-height:0; padding:5px 8px; border-radius:0; color:#a4b9ae; font:16px "Jersey 10",monospace; background:transparent; }
 :root .matrix-select-menu .custom-select-option.custom-select-option:not(:disabled):not(.disabled):is(:hover,:focus-visible) { color:#b4ffcd; background:#14251e; outline:none; }
 :root .matrix-select-menu .custom-select-option.custom-select-option.selected { color:#090e12; background:#62d694; }
+
+/* Keep the bottom-left controls inside the CRT's curved glass. */
+.matrix-terminal-rooms .matrix-user-dock { padding-left:16px; padding-bottom:8px; }
+/* Adapt to the dialog's resized width, rather than only to the app window. */
+@container matrix-chat (max-width:700px) {
+  .matrix-terminal-layout { grid-template-columns:160px minmax(0,1fr); }
+  .matrix-terminal-status { grid-template-columns:minmax(0,1fr) minmax(0,2fr); }
+  .matrix-terminal-status > small { display:none; }
+  .matrix-terminal-compose { padding:8px 12px 4px; }
+  .matrix-terminal-compose > div { width:100%; gap:6px; }
+  .matrix-terminal-compose > :is(label,.matrix-compose-reply,.matrix-typing) { width:100%; }
+  :root .matrix-chat .matrix-terminal-compose .matrix-attach-button { flex-basis:32px; width:32px; height:36px; padding:6px; }
+  :root .matrix-chat .matrix-terminal-compose .matrix-send-button,
+  :root .matrix-chat .matrix-send-button .matrix-enter-key { width:52px; height:60px; }
+  .matrix-terminal-rooms .matrix-user-dock { padding-left:10px; }
+}

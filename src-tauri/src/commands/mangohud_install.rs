@@ -243,9 +243,13 @@ pub async fn install_mangohud(app: tauri::AppHandle) -> Result<(), String> {
     progress(&app, "authorizing", 0, 0, 0.);
     tauri::async_runtime::spawn_blocking(move||{
   if !std::path::Path::new("/usr/bin/pkexec").is_file(){return Err("Instale o Polkit para autorizar a instalação do MangoHUD.".into());}
+  // The administrator runs this launcher's own executable; an AppImage that
+  // is not installed is mounted where root cannot read it.
+  if crate::core::pelinstall::appimage_status().is_ok_and(|status|status.appimage){return Err("Instale o PeliGames (botão Instalar) para instalar o MangoHUD.".into());}
+  let helper=std::env::current_exe().and_then(|path|path.canonicalize()).map_err(|_|"Não foi possível localizar o executável do PeliGames.")?;
   let log=fs::File::create(crate::core::mangohud_config::directory()?.join("installation.log")).map_err(|e|e.to_string())?;
   progress(&app,"installing",0,0,0.);
-  let status=std::process::Command::new("/usr/bin/pkexec").args(["/usr/bin/python3","-I","-c",include_str!("mangohud_install_helper.py")]).arg(file).arg(ready.sha256).arg(ready.size.to_string())
+  let status=std::process::Command::new("/usr/bin/pkexec").arg(helper).arg(crate::core::mangohud_root::FLAG).arg(file).arg(ready.sha256).arg(ready.size.to_string())
     .stdin(std::process::Stdio::null()).stdout(log.try_clone().map_err(|e|e.to_string())?).stderr(log).status().map_err(|_|"Não foi possível solicitar autorização de administrador.")?;
   match status.code(){Some(0)=>{progress(&app,"installed",0,0,0.);Ok(())},Some(126)=>Err("A autorização foi cancelada. O pacote continua disponível para instalar.".into()),Some(127)=>Err("A autorização de administrador falhou. Verifique o Polkit.".into()),_=>Err("A instalação do MangoHUD falhou. Consulte MangoHUD/installation.log e tente novamente.".into())}
  }).await.map_err(|e|e.to_string())?

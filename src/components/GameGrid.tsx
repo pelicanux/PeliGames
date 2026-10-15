@@ -33,6 +33,7 @@ import { listPeliGamesEntries } from "../services/installedLibrary";
 
 const COVER_HOLD_FEEDBACK_DELAY = 250;
 const COVER_HOLD_ANIMATION_DURATION = 1200;
+const libraryNameOrder = new Intl.Collator("pt-BR", { sensitivity: "base", numeric: true });
 
 export interface GameInfo {
   nexus_platform?: "native" | "proton";
@@ -632,7 +633,10 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const scopedGames = applyCustomCovers(displayedGames
     .map(game => ({ ...game, library_view: cacheScope })))
     .filter(game => !removedGames.has(gameViewKey(game)));
-  const filteredGames = scopedGames.filter(g => g.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  // Sort the shared presentation before splitting categories and favourites.
+  // filter creates a new array, so scanner results and saved libraries stay intact.
+  const filteredGames = scopedGames.filter(g => g.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => libraryNameOrder.compare(a.name, b.name));
   // Re-measure for actual library arrangement changes, not focus/polling renders.
   const layoutRevision = JSON.stringify([viewMode, filteredGames.map(gameViewKey), [...favorites], favoritesCollapsed, collapsedCats]);
   const favoriteGames = filteredGames.filter(game => favorites.has(gameViewKey(game)));
@@ -800,10 +804,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
             }
           });
 
-          const priority = (category: string) => libraryScope === "own"
-            ? category === "PeliGames" ? 0 : category === "Launchers" ? 1 : category === "Steam" ? 2 : 3
-            : category === "Steam" ? 0 : 1;
-          return Object.entries(grouped).sort(([a], [b]) => priority(a) - priority(b)).map(([catName, gms]) => (
+          return Object.entries(grouped).sort(([a], [b]) => libraryNameOrder.compare(a, b)).map(([catName, gms]) => (
             <div key={catName} style={{ marginBottom: "1.5rem" }}>
               <div 
                 className="launcher-category-header"
