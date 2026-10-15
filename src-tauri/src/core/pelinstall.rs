@@ -113,17 +113,31 @@ fn launcher_command() -> Result<Command, String> {
     }
     Ok(command)
 }
+/// Menu entries belong to the installed copy only: an AppImage opened from
+/// Downloads never adds itself to the menu (the Install button does that).
 pub fn register_appimage() -> Result<(), String> {
-    let binary = launcher_binary()?;
-    if running_installed() {
-        // This version opened: the one it replaced is no longer needed.
-        let previous = install_root()?.join("app.previous");
-        if fs::symlink_metadata(&previous).is_ok_and(|meta| meta.is_dir()) { let _ = fs::remove_dir_all(&previous); }
-    } else if !binary.extension().is_some_and(|ext|ext=="AppImage") || installed_command(&install_root()?).is_file() {
-        // Another AppImage file opened while an installed copy exists: the menu keeps the installed one.
+    let root = install_root()?;
+    if !running_installed() {
+        // Entries an earlier version created for a loose AppImage file.
+        let applications = dirs::data_dir().ok_or("Pasta de aplicativos indisponível.")?.join("applications");
+        remove_loose_entries(&applications, &installed_command(&root));
         return Ok(());
     }
-    register_appimage_at(&binary)
+    // This version opened: the one it replaced is no longer needed.
+    let previous = root.join("app.previous");
+    if fs::symlink_metadata(&previous).is_ok_and(|meta| meta.is_dir()) { let _ = fs::remove_dir_all(&previous); }
+    register_appimage_at(&launcher_binary()?)
+}
+const MENU_ENTRIES: [&str; 2] = ["peligames-appimage.desktop", "pelinstall-appimage.desktop"];
+/// Removes PeliGames' menu entries that do not start the installed command.
+fn remove_loose_entries(applications: &Path, installed: &Path) {
+    let installed = exec_arg(&installed.to_string_lossy()).unwrap_or_default();
+    for name in MENU_ENTRIES {
+        let path = applications.join(name);
+        let Ok(text) = fs::read_to_string(&path) else { continue };
+        let starts_installed = text.lines().any(|line| line.strip_prefix("Exec=").is_some_and(|exec| !installed.is_empty() && exec.starts_with(&installed)));
+        if !starts_installed { let _ = fs::remove_file(&path); }
+    }
 }
 /// Menu entries (Games category) for PeliGames and Pelinstall pointing at `binary`.
 fn register_appimage_at(binary: &Path) -> Result<(), String> {
@@ -565,6 +579,25 @@ pub fn monitor_background(entry: &str) -> Result<(), LaunchReport> {
 #[cfg(test)]
 mod appimage_install_tests {
     use super::*;
+    #[test]
+    fn loose_appimage_menu_entries_are_removed_and_installed_ones_kept() {
+        let base = std::env::temp_dir().join(format!("peligames-menu-{}", uuid::Uuid::new_v4()));
+        let applications = base.join("applications");
+        fs::create_dir_all(&applications).unwrap();
+        let installed = base.join("data/PeliGames/peligames");
+        let entry = |exec: &str| format!("[Desktop Entry]\nType=Application\nName=PeliGames\nExec={exec} %u\n");
+        // Left by an AppImage opened from Downloads: removed.
+        fs::write(applications.join("peligames-appimage.desktop"), entry("\"/home/user/Downloads/PeliGames_0.3.4_amd64.AppImage\"")).unwrap();
+        // Pointing at the installed command: kept.
+        fs::write(applications.join("pelinstall-appimage.desktop"), entry(&exec_arg(&installed.to_string_lossy()).unwrap())).unwrap();
+        // Another program's entry: never touched.
+        fs::write(applications.join("other.desktop"), entry("\"/home/user/Downloads/Other.AppImage\"")).unwrap();
+        remove_loose_entries(&applications, &installed);
+        assert!(!applications.join("peligames-appimage.desktop").exists());
+        assert!(applications.join("pelinstall-appimage.desktop").exists());
+        assert!(applications.join("other.desktop").exists());
+        fs::remove_dir_all(base).unwrap();
+    }
     #[test]
     fn appimage_installs_extracted_with_a_command_and_updates_in_place() {
         use std::os::unix::fs::PermissionsExt;

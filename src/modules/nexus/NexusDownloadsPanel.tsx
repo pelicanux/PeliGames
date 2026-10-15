@@ -16,6 +16,9 @@ export function NexusDownloadsPanel({ games, onViewMod, buttonClassName = "btn b
   const [jobs, setJobs] = useState<NexusDownload[]>([]);
   const [error, setError] = useState("");
   const [registered, setRegistered] = useState(false);
+  // Links follow the installed copy: a loose AppImage would register the downloaded file.
+  const [needsInstall, setNeedsInstall] = useState(false);
+  useEffect(() => { if (!("__PELI_UI_PREVIEW__" in window)) void invoke<{ appimage: boolean }>("appimage_install_status").then(status => setNeedsInstall(status.appimage)).catch(() => {}); }, []);
   const [busy, setBusy] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const seen = useRef(new Map<string, NexusDownload["status"]>());
@@ -47,7 +50,7 @@ export function NexusDownloadsPanel({ games, onViewMod, buttonClassName = "btn b
   const activeJobs = jobs.filter(job => ["preparing", "queued", "authorizing", "waiting", "downloading", "importing", "installing"].includes(job.status));
   const requirementJob = jobs.find(job => job.id === selectedJob);
   return <><div className="nexus-downloads-toolbar"><HoverTooltip text={text.downloadsHint}><button type="button" className={buttonClassName} onClick={() => setOpened(true)}><MenuIcon name="download" />{text.downloads}{activeJobs.length ? ` (${activeJobs.length})` : ""}</button></HoverTooltip></div>
-    {opened && <NexusPopup title={requirementJob?.requirements ? text.requirements : text.downloads} viewKey={requirementJob?.requirements ? `requirements-${requirementJob.id}` : "downloads"} onBack={requirementJob?.requirements ? () => setSelectedJob(null) : undefined} className="nexus-downloads-popup" headerActions={<HoverTooltip showOnFocus={false} text={registered ? text.nxmRegistered : text.nxmHint} anchorClassName="nexus-downloads-header-action"><button type="button" className="btn btn-secondary" aria-label={text.registerNxm} disabled={busy} onClick={() => void run("register_nexus_handler")}><MenuIcon name="platform" /><span>{text.registerNxm}</span></button></HoverTooltip>} onClose={() => { setOpened(false); setSelectedJob(null); }}><section className="nexus-downloads" hidden={Boolean(requirementJob?.requirements)}>
+    {opened && <NexusPopup title={requirementJob?.requirements ? text.requirements : text.downloads} viewKey={requirementJob?.requirements ? `requirements-${requirementJob.id}` : "downloads"} onBack={requirementJob?.requirements ? () => setSelectedJob(null) : undefined} className="nexus-downloads-popup" headerActions={<HoverTooltip showOnFocus={false} text={needsInstall ? text.nxmNeedsInstall : registered ? text.nxmRegistered : text.nxmHint} anchorClassName="nexus-downloads-header-action"><button type="button" className="btn btn-secondary" aria-label={text.registerNxm} disabled={busy || needsInstall} onClick={() => void run("register_nexus_handler")}><MenuIcon name="platform" /><span>{text.registerNxm}</span></button></HoverTooltip>} onClose={() => { setOpened(false); setSelectedJob(null); }}><section className="nexus-downloads" hidden={Boolean(requirementJob?.requirements)}>
 
     {error && <p role="alert" className="nexus-error">{error}</p>}
     <div className="nexus-browser-login"><button type="button" className="btn btn-secondary" onClick={() => void openNexusBrowser().catch(error => setError(typeof error === "string" ? error : error instanceof Error ? error.message : text.accountBrowserError))}><MenuIcon name="platform" />{text.internalNexusLogin}</button><p className="nexus-hint">{text.internalBrowserHint}</p></div>

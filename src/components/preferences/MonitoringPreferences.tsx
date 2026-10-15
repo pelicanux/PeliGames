@@ -2,6 +2,7 @@ import { MangoHudEditor } from "./MangoHudEditor";
 import { useEffect, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useI18n } from "../../i18n/I18nContext";
+import { invoke } from "@tauri-apps/api/core";
 import { getMangoHudRelease, getMangoHudStatus, type MangoHudRelease, type MangoHudStatus, getDownloadedMangoHud, downloadMangoHud, installMangoHud, cancelMangoHudDownload, type MangoHudReady, type MangoHudProgress } from "../../services/mangohud";
 
 export function MonitoringPreferences({ onDirtyChange }: { onDirtyChange:(dirty:boolean)=>void }) {
@@ -18,6 +19,10 @@ export function MonitoringPreferences({ onDirtyChange }: { onDirtyChange:(dirty:
   const [checking, setChecking] = useState(false), [fetching, setFetching] = useState(false);
   const [error, setError] = useState("");
   const mounted = useRef(false), checkLock = useRef(false), fetchLock = useRef(false);
+  // Installing runs this launcher as administrator; an AppImage that is not
+  // installed is mounted where the administrator cannot read it.
+  const [needsInstall, setNeedsInstall] = useState(false);
+  useEffect(() => { if (!("__PELI_UI_PREVIEW__" in window)) void invoke<{ appimage: boolean }>("appimage_install_status").then(value => setNeedsInstall(value.appimage)).catch(() => {}); }, []);
   const check = async () => {
     if (checkLock.current) return; checkLock.current = true; setChecking(true); setError("");
     try { const result = await getMangoHudStatus(); if (mounted.current) setStatus(result); }
@@ -59,13 +64,14 @@ export function MonitoringPreferences({ onDirtyChange }: { onDirtyChange:(dirty:
           {operation&&<span className={`proton-card-progress ${operation==="install"?"mango-install-working":""}`} style={{transform:`scaleX(${phase==="downloading"?percent/100:1})`}}/>}
           <div className="proton-distribution-info"><span><strong>MangoHUD {release?.version??ready?.version}</strong><small role="status">{operation?(cancelling?"Cancelando download…":phaseLabel):ready&&(!release||ready.version===release.version)?"Pacote baixado · pronto para instalar":`${((release?.size??0)/1048576).toFixed(1)} MiB · versão estável oficial`}</small></span></div>
           <div className="monitoring-actions mango-install-actions">
-            {operation==="download"?<button type="button" disabled={cancelling} onClick={()=>void cancel()}>Cancelar</button>:operation==="install"?<button type="button" disabled>Instalando…</button>:ready&&(!release||ready.version===release.version)?<button type="button" onClick={()=>void run("install")}>Instalar MangoHUD</button>:<button type="button" disabled={!release} onClick={()=>void run("download")}>Baixar MangoHUD</button>}
+            {operation==="download"?<button type="button" disabled={cancelling} onClick={()=>void cancel()}>Cancelar</button>:operation==="install"?<button type="button" disabled>Instalando…</button>:ready&&(!release||ready.version===release.version)?<button type="button" disabled={needsInstall} title={needsInstall ? (pt ? "Instale o PeliGames no sistema (botão Instalar) para instalar o MangoHUD." : "Install PeliGames (Install button) to install MangoHUD.") : undefined} onClick={()=>void run("install")}>Instalar MangoHUD</button>:<button type="button" disabled={!release} onClick={()=>void run("download")}>Baixar MangoHUD</button>}
           </div>
         </div>
         <p>A instalação executa o instalador oficial e solicita autorização de administrador. Ela pode atualizar uma instalação existente do MangoHUD.</p>
         {"__PELI_UI_PREVIEW__" in window&&<p>Pré-visualização: download e instalação demonstrativos, sem alterar o sistema.</p>}
         {release&&<div className="monitoring-actions"><button type="button" disabled={Boolean(operation)} onClick={()=>void open(release.release_url)}>Notas da versão ↗</button></div>}
       </div>}
+      {needsInstall&&ready&&<p role="note">{pt ? "Para instalar o MangoHUD, instale primeiro o PeliGames no sistema pelo botão Instalar da tela de boas-vindas ou em Configurações → Ferramentas." : "To install MangoHUD, first install PeliGames on the system with the Install button on the welcome screen or in Settings → Tools."}</p>}
       {message&&<p role="status">{message}</p>}
       {error && <p className="preferences-error" role="alert">{error}</p>}
     </details>

@@ -12,7 +12,7 @@ import { MatrixIcon } from "./MatrixIcon";
 import { MatrixGameActivities } from "./MatrixGameActivity";
 import { MenuIcon } from "./MenuIcon";
 import { useI18n } from "../i18n/I18nContext";
-import { openMatrixCommunity, MATRIX_COMMUNITY_ID, MATRIX_PREMIUM_ROOM_ID } from "../services/matrixCommunity";
+import { MATRIX_COMMUNITY_ID, MATRIX_PREMIUM_ROOM_ID } from "../services/matrixCommunity";
 import { displayName, loadOlderMessages, mentionsMe, moderation, powerOf, refreshMatrixRooms, refreshMatrixStatus, reloadMatrixRooms, useMatrixChat, type ChatMessage } from "../services/matrixChat";
 import { notifyError } from "../services/notifications";
 import { matrixAvatar, matrixImage } from "../services/matrixMedia";
@@ -328,7 +328,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
               : replyTo ? <p className="matrix-compose-reply">↳ {pt ? "respondendo a" : "replying to"} <b>{displayName(replyTo.sender, chat.names)}</b>: {replyTo.body.slice(0, 80)} <button type="button" onClick={() => setReplyTo(null)} aria-label={pt ? "Cancelar resposta" : "Cancel reply"}>✕</button></p>
               : <label htmlFor="matrix-message">{pt ? "> MENSAGEM · Enter envia, Shift+Enter quebra a linha, /me para ação" : "> MESSAGE · Enter sends, Shift+Enter new line, /me for actions"}</label>}
             <div><input ref={fileInput} type="file" hidden accept="image/png,image/jpeg,image/gif,image/webp,.txt,.log" onChange={event=>{const file = event.target.files?.[0]; event.target.value = ""; if (file) void upload(file);}}/>
-              <button type="button" className="btn btn-secondary" disabled={busy || current?.encrypted || !current?.joined} onClick={()=>fileInput.current?.click()} aria-label={pt ? "Enviar imagem ou log" : "Send image or log"}><MenuIcon name="plus"/></button>
+              <button type="button" className="btn btn-secondary matrix-attach-button" disabled={busy || current?.encrypted || !current?.joined} onClick={()=>fileInput.current?.click()} aria-label={pt ? "Enviar imagem ou log" : "Send image or log"} title={pt ? "Enviar imagem ou log" : "Send image or log"}><MenuIcon name="plus"/></button>
               <textarea ref={input} id="matrix-message" value={text} maxLength={8000} disabled={current?.encrypted || !current?.joined} onChange={event=>{setText(event.target.value); typing(Boolean(event.target.value.trim()));}} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void send(); } }} placeholder={pt ? "Digite sua mensagem…" : "Type your message…"}/>
               <button className="matrix-send-button" aria-label={pt ? "Enviar mensagem · Enter" : "Send message · Enter"} disabled={busy || current?.encrypted || !current?.joined || !text.trim()} type="submit">
                 <svg className="matrix-enter-key" width="72" height="82" viewBox="0 0 120 140" fill="none" aria-hidden="true" focusable="false">
@@ -346,7 +346,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
       {settingsOpen && chat.userId && <MatrixSettings pt={pt} me={chat.userId} names={chat.names} onClose={() => setSettingsOpen(false)} onError={fail}
         onDisconnect={() => { setSettingsOpen(false); void disconnect(); }} onAvatarChanged={() => { setAvatarVersion(value => value + 1); setAvatars(previous => { const next = { ...previous }; delete next[chat.userId!]; return next; }); avatarLookups.current.delete(chat.userId!); }} avatarVersion={avatarVersion}/>}
       {error && <p className="matrix-terminal-error" role="alert">{error}</p>}
-      <footer className="matrix-terminal-footer"><span>{chat.userId ? chat.ready ? pt ? "Matrix · comunidade conectada" : "Matrix · community connected" : pt ? "Matrix · sincronizando…" : "Matrix · syncing…" : pt ? "Matrix · comunidade PeliGames" : "Matrix · PeliGames community"}</span><button className="btn btn-secondary" onClick={() => void openMatrixCommunity().catch(e => fail(e, pt ? "Não foi possível abrir o Element." : "Could not open Element."))}>{pt ? "Abrir no Element" : "Open in Element"}</button></footer>
+      <footer className="matrix-terminal-footer"><span>{chat.userId ? chat.ready ? pt ? "Matrix · comunidade conectada" : "Matrix · community connected" : pt ? "Matrix · sincronizando…" : "Matrix · syncing…" : pt ? "Matrix · comunidade PeliGames" : "Matrix · PeliGames community"}</span></footer>
       </div>
       </div>
     </ModalSurface>

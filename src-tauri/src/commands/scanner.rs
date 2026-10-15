@@ -272,66 +272,6 @@ fn has_executable(dir: &Path, depth: u8) -> bool {
     false
 }
 
-pub(super) fn find_best_executable_dir(dir: &Path, max_depth: u8) -> Option<PathBuf> {
-    if max_depth == 0 {
-        return None;
-    }
-    
-    let mut best_dir: Option<PathBuf> = None;
-    let mut best_score = -1;
-
-    let mut dirs_to_check = vec![(dir.to_path_buf(), max_depth)];
-    
-    let keywords = ["win64", "x64", "binaries", "bin"];
-    
-    while let Some((current_dir, current_depth)) = dirs_to_check.pop() {
-        if let Ok(entries) = fs::read_dir(&current_dir) {
-            let mut has_exe = false;
-            let mut has_shipping_exe = false;
-            
-            for entry in entries.flatten() {
-                let p = entry.path();
-                if p.is_file() {
-                    if let Some(ext) = p.extension().and_then(|e| e.to_str()) {
-                        if ext.eq_ignore_ascii_case("exe") {
-                            has_exe = true;
-                            if let Some(name) = p.file_stem().and_then(|n| n.to_str()) {
-                                if name.to_lowercase().contains("shipping") {
-                                    has_shipping_exe = true;
-                                }
-                            }
-                        }
-                    }
-                } else if p.is_dir() && current_depth > 1 {
-                    dirs_to_check.push((p, current_depth - 1));
-                }
-            }
-            
-            if has_exe {
-                let mut score = 0;
-                let path_str = current_dir.to_string_lossy().to_lowercase();
-                
-                for keyword in &keywords {
-                    if path_str.contains(keyword) {
-                        score += 1;
-                    }
-                }
-                
-                if has_shipping_exe {
-                    score += 2;
-                }
-                
-                if score > best_score {
-                    best_score = score;
-                    best_dir = Some(current_dir.clone());
-                }
-            }
-        }
-    }
-    
-    best_dir
-}
-
 fn scan_custom(folders: Vec<String>) -> Vec<GameInfo> {
     let mut games = Vec::new();
     for folder in folders {
@@ -400,8 +340,8 @@ pub async fn scan_installed_games(app: AppHandle, api_key: String, custom_folder
         // 2. Apply heuristics for nested executable paths
         let base_path = Path::new(&game.path);
         if base_path.exists() {
-            // We search up to 4 levels deep for the most likely executable directory
-            if let Some(best_dir) = find_best_executable_dir(base_path, 4) {
+            // The folder of the game's real executable, up to 5 levels deep.
+            if let Some(best_dir) = crate::core::game_executable::best_executable_dir(base_path, 5) {
                 game.path = best_dir.to_string_lossy().to_string();
             }
         }

@@ -1014,6 +1014,10 @@ pub fn refresh_nexus_handler(binary: &std::path::Path) -> Result<(), String> {
 #[tauri::command]
 pub async fn register_nexus_handler() -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(|| {
+        // A loose AppImage would register the downloaded file; links follow the installed copy.
+        if crate::core::pelinstall::appimage_status().is_ok_and(|status| status.appimage) {
+            return Err("Instale o PeliGames (botão Instalar) antes de usá-lo nos links Nexus.".into());
+        }
         let binary = crate::core::pelinstall::launcher_binary()?;
         let directory = write_nexus_handler(&binary)?;
         let mut command = std::process::Command::new("xdg-mime");

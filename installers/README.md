@@ -22,11 +22,11 @@ O JSON separa **evidência**, **candidato a configuração** e **validação loc
 Na raiz do projeto:
 
 ```sh
-python3 scripts/validate-launcher-recipes.py
-python3 scripts/test-launcher-recipes.py
+bun scripts/validate-launcher-recipes.ts
+bun test ./scripts/test-launcher-recipes.ts
 ```
 
-O validador é offline, usa a biblioteca padrão do Python e rejeita comandos livres, campos desconhecidos, referências inexistentes, travessia de diretórios, globs recursivos e downloads fora dos hosts iniciais autorizados. Ele verifica os hashes do índice. Implementa somente os recursos de JSON Schema usados neste catálogo; não substitui uma biblioteca genérica de JSON Schema.
+O validador é offline, roda com o Bun sem dependências extras e rejeita comandos livres, campos desconhecidos, referências inexistentes, travessia de diretórios, globs recursivos e downloads fora dos hosts iniciais autorizados. Ele verifica os hashes do índice. Implementa somente os recursos de JSON Schema usados neste catálogo; não substitui uma biblioteca genérica de JSON Schema.
 
 Ao editar uma receita, revisar a alteração, aumentar `recipe_version` e atualizar seu SHA-256 e versão no índice. Ao publicar uma alteração do catálogo, aumentar `catalog_version`. O hash é dos bytes exatos do arquivo, incluindo a quebra de linha final.
 

@@ -633,7 +633,7 @@ mod tests {
         }));
     }
     #[test]
-    #[ignore = "requires scripts/test-native-call.py --check"]
+    #[ignore = "requires bun scripts/test-native-call.ts --check"]
     fn two_sessions_exchange_audio() {
         let path = std::env::var("PELIGAMES_RTC_TEST_CONFIG").unwrap();
         let c: Credentials = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();

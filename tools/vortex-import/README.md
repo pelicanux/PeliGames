@@ -79,10 +79,10 @@ página do Nexus) e do MelonLoader, agrupados como alternativas.
 
 ## Verificação de atualizações
 
-`check-updates.py` compara a revisão fixada de cada extensão com a atual e não altera nada:
+`check-updates.ts` compara a revisão fixada de cada extensão com a atual e não altera nada:
 
 ```
-python3 -I tools/vortex-import/check-updates.py --output /tmp/peligames-updates.md
+bun tools/vortex-import/check-updates.ts --output /tmp/peligames-updates.md
 ```
 
 - **Fontes:** o `sources.txt` mais todas as URLs `github.com/<dono>/<repo>/blob/<commit>/…` citadas em `sources` e `vortex_evidence` dos recursos (`src-tauri/resources/nexus-games/*.json`). Um repositório renomeado é seguido pela própria comparação.

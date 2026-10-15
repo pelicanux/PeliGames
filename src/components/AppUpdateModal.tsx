@@ -90,6 +90,7 @@ export function AppUpdateModal({ onClose, initialInfo, onDownloadProgress }: { o
         {!info && !error && <p>{t("launcherUpdate", "checking")}</p>}
         {info && <>
           <p>{!info.latest ? t("launcherUpdate", "noRelease") : info.available ? `${t("launcherUpdate", "available")} ${info.latest}` : t("launcherUpdate", "upToDate")}</p>
+          {info.available && info.experimental && <p className="app-update-muted">{t("launcherUpdate", "experimental")}</p>}
           {info.available && <>
             {info.notes && <pre className="app-update-notes" tabIndex={0}>{info.notes}</pre>}
             {packageSelected ? <div className="app-update-package">
