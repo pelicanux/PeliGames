@@ -124,14 +124,14 @@ On the RX 7000, native 4K does not reach a playable frame rate: use a Model reso
 
 ## Supported games
 
-PeliGames installs Nexus Mods mods in **202 games**, with modules based on the Vortex game extensions: Fallout, Skyrim, Starfield, Cyberpunk 2077, Baldur's Gate 3, Stardew Valley, Elden Ring, the Resident Evil and Monster Hunter families, and dozens of Unreal and Unity games.
+PeliGames installs Nexus Mods mods in **215 games**, with modules based on the Vortex game extensions: Fallout, Skyrim, Starfield, Cyberpunk 2077, Baldur's Gate 3, Stardew Valley, Elden Ring, the Resident Evil and Monster Hunter families, and dozens of Unreal and Unity games.
 
 | Completion | Games |
 |---|---|
 | 100% — verified in the real game | 5 |
 | 90% — parity with the Vortex extension | 67 |
 | 80% — some extension features still pending | 29 |
-| 70% — generated from the family template | 100 |
+| 70% — generated from the family template | 113 |
 | 60% — Vortex support not confirmed | 1 |
 
 **[See the full list of supported games →](docs/supported-games.md)** (in Portuguese)
