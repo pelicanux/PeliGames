@@ -54,7 +54,7 @@ export function ProtonSelector({ value, onChange, label, disabled = false, compa
         <span>{selected?.name ?? (value ? value.split(/[\\/]/).pop() : t("gameModes", "selectProton"))}</span><span className="select-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></span>
       </button>
       {open && createPortal(<div ref={menu} id={id} role="listbox" aria-label={label ?? t("gameModes", "installerType")}
-        className={`custom-select-menu route-select-menu proton-options select-scroll-frame ${compactStyle ? "nexus-compact-select-menu" : ""}`} style={position}
+        className={`custom-select-menu route-select-menu proton-options select-scroll-frame modern-proton-menu ${compactStyle ? "nexus-compact-select-menu" : ""}`} style={position}
         onKeyDown={event => {
           if (event.key === "Escape") { setOpen(false); anchor.current?.querySelector<HTMLButtonElement>("button")?.focus(); }
           if (event.key === "Tab") setOpen(false);

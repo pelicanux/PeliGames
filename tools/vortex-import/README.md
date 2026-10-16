@@ -64,6 +64,11 @@ Nexus e de extensões Vortex (sem chave de API) para validar domínio e extensã
 Jogos com módulo próprio nunca são substituídos. Depois de gerar, rode os testes
 do `src-tauri`: a matriz de rotas e a unicidade de identidade precisam passar.
 
+## Ajustes manuais e versão dos módulos
+
+- `overrides.json`: o que a análise estática não deduz, por domínio (`merge` mescla campos, `append` acrescenta itens que faltarem nas listas; `reason` é obrigatório). O `run.sh --emit` aplica os ajustes a cada geração, então nada feito à mão se perde. Um ajuste cujo jogo deixou de ser gerado interrompe a geração para revisão.
+- **Versão:** cada módulo mantém a versão anterior quando o conteúdo gerado não mudou (as revisões nas URLs são ignoradas) e sobe a de correção (`1.0.0` → `1.0.1`) quando mudou. Jogos novos começam em `1.0.0`. A auditoria (`module_version`) acompanha.
+
 ## Downloads do GitHub
 
 `github_downloads` (em `extract.rs`) reconhece o download do UE4SS do template
@@ -82,7 +87,7 @@ página do Nexus) e do MelonLoader, agrupados como alternativas.
 `check-updates.ts` compara a revisão fixada de cada extensão com a atual e não altera nada:
 
 ```
-bun tools/vortex-import/check-updates.ts --output /tmp/peligames-updates.md
+bun tools/vortex-import/check-updates.ts --output /tmp/peligames-updates.md [--git]
 ```
 
 - **Fontes:** o `sources.txt` mais todas as URLs `github.com/<dono>/<repo>/blob/<commit>/…` citadas em `sources` e `vortex_evidence` dos recursos (`src-tauri/resources/nexus-games/*.json`). Um repositório renomeado é seguido pela própria comparação.
@@ -91,7 +96,7 @@ bun tools/vortex-import/check-updates.ts --output /tmp/peligames-updates.md
   - por extensão alterada, os módulos que a usam e os arquivos mudados;
   - extensões novas, sem módulo.
 - **Classificação:** "cosmética" quando só mudam documentação (`.md`, `.bbcode`, `.txt`), pacote montado (`.zip`), imagens, comentários ou números de versão; "regra" no restante.
-- **Limite da API:** sem autenticação são 60 consultas por hora; com `GITHUB_TOKEN` no ambiente, 5000.
+- **Limite da API:** sem autenticação são 60 consultas por hora; com `GITHUB_TOKEN` no ambiente, 5000. Com `--git`, ou quando o limite é atingido, a comparação segue pelos repositórios públicos com `git` (clones parciais em `~/.cache/peligames/vortex-git`), sem limite.
 - **Depois do relatório:**
   - **famílias geradas** (`*-vortex.json`): rode `run.sh --emit` numa pasta temporária, compare e copie o que estiver certo;
   - **módulos feitos à mão:** revise o diff, ajuste o módulo, suba a versão dele e atualize `support-audit.json`;

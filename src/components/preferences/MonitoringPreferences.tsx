@@ -1,11 +1,11 @@
-import { MangoHudEditor } from "./MangoHudEditor";
-import { useEffect, useRef, useState } from "react";
+import { ModernMangoHudEditor } from "./ModernMangoHudEditor";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useI18n } from "../../i18n/I18nContext";
 import { invoke } from "@tauri-apps/api/core";
 import { getMangoHudRelease, getMangoHudStatus, type MangoHudRelease, type MangoHudStatus, getDownloadedMangoHud, downloadMangoHud, installMangoHud, cancelMangoHudDownload, type MangoHudReady, type MangoHudProgress } from "../../services/mangohud";
 
-export function MonitoringPreferences({ onDirtyChange }: { onDirtyChange:(dirty:boolean)=>void }) {
+export function MonitoringPreferences({ onDirtyChange, searchControl }: { onDirtyChange:(dirty:boolean)=>void; searchControl?: ReactNode }) {
   const { language } = useI18n(); const pt = language === "pt";
   const [editorDirty,setEditorDirty]=useState(false);
   const [operation,setOperation]=useState<"download"|"install"|null>(null);
@@ -49,10 +49,10 @@ export function MonitoringPreferences({ onDirtyChange }: { onDirtyChange:(dirty:
   const percent=progress?.total?Math.min(100,progress.downloaded/progress.total*100):0;
   const phase=progress?.phase??(operation==="install"?"authorizing":"checking");
   const phaseLabel=phase==="downloading"?`Baixando… ${percent.toFixed(0)}% · ${((progress?.speed_bytes_per_sec??0)/1048576).toFixed(1)} MB/s`:phase==="verifying"?"Verificando integridade…":phase==="authorizing"?"Aguardando autorização de administrador…":phase==="installing"?"Instalando MangoHUD…":"Preparando download…";
+  const showInstallation=()=>{const panel=installationRef.current;if(panel){panel.open=true;panel.scrollIntoView({behavior:"smooth",block:"start"});}};
   const open = async (url: string) => { try { await openUrl(url); } catch (e) { if (mounted.current) setError(String(e)); } };
   return <>
-    <h2>{pt ? "Painel de monitoramento · MangoHUD" : "Monitoring panel · MangoHUD"}</h2>
-    <MangoHudEditor onDirtyChange={setEditorDirty} onInstall={()=>{const panel=installationRef.current;if(panel){panel.open=true;panel.scrollIntoView({behavior:"smooth",block:"start"});}}}/>
+    <ModernMangoHudEditor searchControl={searchControl} onDirtyChange={setEditorDirty} onInstall={showInstallation}/>
     <details ref={installationRef} className="preference-panel monitoring-panel mango-installation">
       <summary>Instalação e versão do MangoHUD · {checking ? "Verificando…" : status?.installed ? "Detectado" : "Não detectado"}</summary>
       <h3>{pt ? "Instalação no sistema" : "System installation"}</h3>

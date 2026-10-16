@@ -11,7 +11,7 @@ let profileWrites:Promise<unknown>=Promise.resolve();
 export const loadMangoHudProfile = async () => { await profileWrites.catch(()=>{}); return invoke<MangoHudProfile>("load_mangohud_profile"); };
 export const saveMangoHudProfile = (settings: MangoHudSettings) => {
   const snapshot={...settings};
-  const task=profileWrites.catch(()=>{}).then(()=>invoke<string>("save_mangohud_profile",{settings:snapshot}));
+  const task=profileWrites.catch(()=>{}).then(()=>invoke<string>("save_mangohud_profile",{settings:snapshot})).then(path => {window.dispatchEvent(new CustomEvent("mangohudProfileChanged",{detail:snapshot}));return path;});
   profileWrites=task;return task;
 };
 export const updateMangoHudPreview = (settings: MangoHudSettings) => invoke<void>("update_mangohud_preview", { settings });

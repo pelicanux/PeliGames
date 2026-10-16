@@ -6,7 +6,7 @@ import { MenuIcon } from "../../components/MenuIcon";
 export interface NexusPanelPreview { element: HTMLElement; bounds: DOMRect; scroll: [number, number][] }
 let nextLayer = 0;
 const layers = new Set<number>();
-export function NexusPopup({ title, children, onClose, footer, headerActions, onBack, embedded = false, viewKey, className = "", zoomFrom, zoomPreview, reducedMotion = false }: { title: string; children: ReactNode; onClose: () => void; footer?: ReactNode; headerActions?: ReactNode; onBack?: () => void; embedded?: boolean; viewKey?: string; className?: string; zoomFrom?: DOMRect; zoomPreview?: () => NexusPanelPreview | null; reducedMotion?: boolean }) {
+export function NexusPopup({ title, titleIcon, children, onClose, footer, headerActions, onBack, embedded = false, viewKey, className = "", zoomFrom, zoomPreview, reducedMotion = false }: { title: string; titleIcon?: ReactNode; children: ReactNode; onClose: () => void; footer?: ReactNode; headerActions?: ReactNode; onBack?: () => void; embedded?: boolean; viewKey?: string; className?: string; zoomFrom?: DOMRect; zoomPreview?: () => NexusPanelPreview | null; reducedMotion?: boolean }) {
   const text = useNexusText();
   const titleId = useId();
   const frame = useRef<HTMLDivElement>(null);
@@ -94,7 +94,7 @@ export function NexusPopup({ title, children, onClose, footer, headerActions, on
   return createPortal(<div className={`modal-overlay nexus-popup-overlay${zoomFrom ? " nexus-zoom-overlay" : ""}`} style={{ zIndex: 1200 + layer }} onMouseDown={event => { if (event.target === event.currentTarget && layer === Math.max(...layers)) close.current(); }}>
     {zoomFrom && <div ref={backdrop} className="nexus-zoom-backdrop" aria-hidden="true" />}
     <ModalSurface ref={frame} tabIndex={-1} className={`modal-content dialog-glass nexus-popup ${className}`} role="dialog" aria-modal="true" aria-labelledby={titleId}
-      headerActions={headerActions} header={<>{onBack && <button type="button" className="nexus-titlebar-back" aria-label={text.back} onClick={zoomFrom ? () => close.current() : onBack}><MenuIcon name="back" /></button>}<h2 id={titleId}><MenuIcon name="puzzle" />{title}</h2></>} onDismiss={() => close.current()} footer={footer ? <div className="nexus-popup-footer">{footer}</div> : undefined}>
+      headerActions={headerActions} header={<>{onBack && <button type="button" className="nexus-titlebar-back" aria-label={text.back} onClick={zoomFrom ? () => close.current() : onBack}><MenuIcon name="back" /></button>}<h2 id={titleId}>{titleIcon ?? <MenuIcon name="puzzle" />}{title}</h2></>} onDismiss={() => close.current()} footer={footer ? <div className="nexus-popup-footer">{footer}</div> : undefined}>
       {children}
     </ModalSurface>
   </div>, document.body);

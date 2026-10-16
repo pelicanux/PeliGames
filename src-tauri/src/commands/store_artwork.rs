@@ -130,14 +130,14 @@ fn gog_cover(name: &str, response: &Value) -> Option<String> {
         .map(|(_, url)| url)
 }
 
-fn steam_asset_url(item: &Value) -> Option<String> {
+fn steam_asset_url(item: &Value, kind: &str) -> Option<String> {
     if item["success"].as_u64() != Some(1) {
         return None;
     }
     let app_id = item["appid"].as_u64()?;
     let assets = &item["assets"];
     let template = assets["asset_url_format"].as_str()?;
-    let file = assets["library_capsule"].as_str()?;
+    let file = assets[kind].as_str()?;
     if !template.starts_with(&format!("steam/apps/{app_id}/"))
         || !template.contains("${FILENAME}")
         || file.is_empty()
@@ -152,6 +152,10 @@ fn steam_asset_url(item: &Value) -> Option<String> {
 }
 
 pub(super) async fn fetch_steam_assets(app_ids: &[u32]) -> std::collections::HashMap<u32, String> {
+    fetch_steam_asset_kind(app_ids, "library_capsule").await
+}
+
+async fn fetch_steam_asset_kind(app_ids: &[u32], kind: &str) -> std::collections::HashMap<u32, String> {
     if app_ids.is_empty() {
         return Default::default();
     }
@@ -180,14 +184,14 @@ pub(super) async fn fetch_steam_assets(app_ids: &[u32]) -> std::collections::Has
                 .iter()
                 .filter_map(|item| {
                     let id = u32::try_from(item["appid"].as_u64()?).ok()?;
-                    Some((id, steam_asset_url(item)?))
+                    Some((id, steam_asset_url(item, kind)?))
                 })
                 .collect()
         })
         .unwrap_or_default()
 }
 
-pub(super) async fn fetch_steam_cover(name: &str) -> Option<String> {
+async fn steam_search_ids(name: &str) -> Option<Vec<u32>> {
     let response = client()
         .get(format!(
             "https://store.steampowered.com/api/storesearch/?term={}&l=english&cc=US",
@@ -201,8 +205,12 @@ pub(super) async fn fetch_steam_cover(name: &str) -> Option<String> {
         .json::<Value>()
         .await
         .ok()?;
-    let mut candidates: Vec<_> = response["items"]
-        .as_array()?
+    Some(steam_match_ids(name, &response))
+}
+
+fn steam_match_ids(name: &str, response: &Value) -> Vec<u32> {
+    let Some(items) = response["items"].as_array() else { return Vec::new(); };
+    let mut candidates: Vec<_> = items
         .iter()
         .filter_map(|game| {
             let score = title_score(name, game["name"].as_str()?);
@@ -213,7 +221,11 @@ pub(super) async fn fetch_steam_cover(name: &str) -> Option<String> {
         })
         .collect();
     candidates.sort_by_key(|(score, _)| std::cmp::Reverse(*score));
-    let ids: Vec<_> = candidates.iter().take(3).map(|(_, id)| *id).collect();
+    candidates.into_iter().take(3).map(|(_, id)| id).collect()
+}
+
+pub(super) async fn fetch_steam_cover(name: &str) -> Option<String> {
+    let ids = steam_search_ids(name).await?;
     let assets = fetch_steam_assets(&ids).await;
     ids.iter().find_map(|id| assets.get(id).cloned())
 }
@@ -258,4 +270,52 @@ pub(super) async fn fetch_cover(name: &str) -> Option<String> {
     let epic_task = tokio::spawn(async move { fetch_epic_cover(&epic_name).await });
     let gog = fetch_gog_cover(name).await;
     epic_task.await.ok().flatten().or(gog)
+}
+
+/// Horizontal artwork is independent of the launcher that installed the game.
+/// Return candidates: the UI verifies that an image loads before replacing its cover fallback.
+pub(super) async fn fetch_steam_banners(name: &str, app_id: Option<&str>) -> Option<Vec<String>> {
+    let ids = match app_id.and_then(|value| value.parse::<u32>().ok()).filter(|id| *id > 0) {
+        Some(id) => vec![id],
+        None => steam_search_ids(name).await?,
+    };
+    let assets = fetch_steam_asset_kind(&ids, "library_hero").await;
+    let mut urls = Vec::new();
+    for id in ids {
+        if let Some(url) = assets.get(&id) { urls.push(url.clone()); }
+        let legacy = format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{id}/library_hero.jpg");
+        if !urls.contains(&legacy) { urls.push(legacy); }
+    }
+    Some(urls)
+}
+
+#[cfg(test)]
+mod banner_tests {
+    use super::*;
+    #[test]
+    fn name_search_does_not_confuse_sequels_and_dlc() {
+        let response = json!({"items":[
+            {"id":2,"name":"Game Two"}, {"id":3,"name":"Game DLC"},
+            {"id":4,"name":"Game Deluxe Edition"}, {"id":1,"name":"Game"}
+        ]});
+        assert_eq!(steam_match_ids("Game", &response), vec![1,4]);
+        assert!(steam_match_ids("Other game", &response).is_empty());
+    }
+    #[test]
+    fn banner_uses_horizontal_asset_not_the_portrait() {
+        let item = json!({"success":1,"appid":42,"assets":{
+            "asset_url_format":"steam/apps/42/hash/${FILENAME}",
+            "library_hero":"hero.jpg","library_capsule":"portrait.jpg"}});
+        assert!(steam_asset_url(&item,"library_hero").unwrap().ends_with("/hero.jpg"));
+        assert!(steam_asset_url(&item,"library_capsule").unwrap().ends_with("/portrait.jpg"));
+        assert!(steam_asset_url(&item,"missing").is_none());
+    }
+    #[test]
+    fn missing_search_and_invalid_asset_do_not_create_a_banner() {
+        assert!(steam_match_ids("Game", &json!({})).is_empty());
+        assert!(steam_asset_url(&json!({"success":0}),"library_hero").is_none());
+        let item = json!({"success":1,"appid":42,"assets":{
+            "asset_url_format":"steam/apps/42/${FILENAME}","library_hero":"../hero.jpg"}});
+        assert!(steam_asset_url(&item,"library_hero").is_none());
+    }
 }

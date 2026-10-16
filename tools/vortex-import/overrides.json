@@ -1,0 +1,19 @@
+{
+  "$comment": "Ajustes manuais aplicados por run.sh --emit sobre os módulos gerados: o que a análise estática das extensões não deduz. merge mescla campos; append acrescenta itens que faltarem nas listas. Todo ajuste precisa de reason.",
+  "dragonballsparkingzero": {
+    "reason": "A extensão Vortex instala mods do SZModLoader (pastas com .uplugin) inteiros em SparkingZERO/Mods; o template genérico não descreve essa rota.",
+    "merge": { "family": { "plugin_mods": "Mods" } },
+    "append": {
+      "notes": ["Como na extensão Vortex: mods do SZModLoader (pastas com .uplugin) vão inteiros para SparkingZERO/Mods."],
+      "downloads": [{ "name": "SZModLoader", "source": "nexus", "mod_id": 348, "prefix": "SZModLoader", "present": ["SparkingZERO/Mods/SZModLib/SZModLib.uplugin"] }]
+    }
+  },
+  "ninjagaiden2black": {
+    "reason": "A extensão Vortex usa o NG2B Mod Loader como d3d9.dll ao lado do executável, com mods em mods/; o template genérico não descreve esse carregador.",
+    "merge": { "family": { "d3d9_loader": true } },
+    "append": {
+      "notes": ["Como na extensão Vortex: Mod Loader (d3d9.dll) em NINJAGAIDEN2BLACK/Binaries/Win64, com seus mods na pasta mods/ ao lado."],
+      "downloads": [{ "name": "NG2B Mod Loader", "source": "nexus", "mod_id": 18, "prefix": "d3d9", "present": ["NINJAGAIDEN2BLACK/Binaries/Win64/d3d9.dll"] }]
+    }
+  }
+}

@@ -22,7 +22,7 @@ function GameLogsContent({ game, onClose }: { game: GameInfo; onClose: () => voi
           const data = await response.json(); if (!response.ok || data.error) throw new Error(data.error || "Falha ao consultar logs."); result = data.result;
         } else result = await invoke<{ current: string; previous: string }>("get_peligames_game_logs", { path: game.path });
         if (active) { setLogs({ current: typeof result?.current === "string" ? result.current : "", previous: typeof result?.previous === "string" ? result.previous : "" }); setError(""); }
-      } catch (error) { if (active) setError(String(error)); }
+      } catch (error) { if (active) setError(String(error).replace(/^(?:Error:\s*)+/, "")); }
       finally { if (active) { setLoading(false); timer = setTimeout(poll, 1200); } }
     };
     void poll();

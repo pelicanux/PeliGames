@@ -96,7 +96,7 @@ pub fn repair(request: RepairRequest) -> Result<InstallationResult, String> {
         selected
     } else { super::installed_library::validate_selected_prefix(&request.prefix)? };
     let installation = InstallationRequest { name: request.name, proton: request.proton, executable: request.executable,
-        directory: prefix.parent().ok_or("Prefixo inválido.")?.to_string_lossy().into_owned(), cover_url: entry.cover_url.clone() };
+        directory: super::installation_layout::destination_of(&prefix).ok_or("Prefixo inválido.")?.to_string_lossy().into_owned(), cover_url: entry.cover_url.clone() };
     run_inner(installation, Some((entry, prefix)), None)
 }
 pub fn run(request: InstallationRequest) -> Result<InstallationResult, String> { run_inner(request, None, None) }
@@ -133,6 +133,7 @@ fn run_inner(request: InstallationRequest, repair: Option<(super::installed_libr
             if !plan.dependencies.is_empty() {
                 let mut prepared=prepare_run_mode(request.clone(), &umu, None, None, true)?;
                 let mut command=Command::new(&umu);
+                super::env_utils::host_environment(&mut command);
                 command.arg("winetricks").args(&plan.dependencies);
                 for (key,value) in prepared.command.get_envs() { if let Some(value)=value { command.env(key,value); } else { command.env_remove(key); } }
                 let log=fs::OpenOptions::new().append(true).open(&prepared.log).map_err(|e|e.to_string())?;
@@ -218,6 +219,18 @@ pub(crate) fn prepare_launch_program(
     executable: Option<String>,
     extra_arguments: Vec<String>,
 ) -> Result<PreparedRun, String> {
+    if path.starts_with("external:") || path.starts_with("nexus:") {
+        let (name, prefix, proton, _) = super::wine_tools::maintenance_entry(&path)?;
+        let prefix = PathBuf::from(prefix).canonicalize().map_err(|_| "Prefixo do jogo indisponível.")?;
+        if !prefix.join("drive_c").is_dir() { return Err("O prefixo Wine ainda não foi inicializado.".into()); }
+        let executable = executable.ok_or("Selecione um programa para executar neste prefixo.")?;
+        let mut prepared = prepare_run_in_prefix(InstallationRequest {
+            name, directory: prefix.parent().ok_or("Prefixo inválido.")?.to_string_lossy().into_owned(),
+            executable, proton, cover_url: None,
+        }, &find_umu()?, Some(&prefix), None)?;
+        prepared.command.args(extra_arguments);
+        return Ok(prepared);
+    }
     let entry = super::installed_library::list(false)?
         .into_iter()
         .find(|entry| entry.path == path)
@@ -251,7 +264,7 @@ pub(crate) fn prepare_launch_program(
         // Another program of the prefix (a shortcut's arguments, e.g. Battle.net `--exec`).
         prepared.command.args(arguments);
     }
-    super::mangohud_config::apply(&mut prepared.command, entry.advanced.options.get("mangohud") == Some(&true) || entry.advanced.options.get("mangohud_env") == Some(&true), entry.advanced.mangohud_fps_limit)?;
+    super::mangohud_config::apply_with_override(&mut prepared.command, entry.advanced.options.get("mangohud") == Some(&true) || entry.advanced.options.get("mangohud_env") == Some(&true), entry.advanced.mangohud_fps_limit, entry.advanced.mangohud_enabled)?;
     Ok(prepared)
 }
 pub fn launch(path: String) -> Result<(), String> {
@@ -278,14 +291,14 @@ pub(crate) struct PreparedRun {
 /// runtimes) never looks like the installed game.
 fn prefix_baseline(request: &InstallationRequest, umu: &Path, cancel: &AtomicBool) -> Result<Vec<String>, String> {
     let ready = |prefix: &Path| prefix.join("system.reg").is_file() && prefix.join("drive_c").is_dir();
-    if !ready(&absolute(&request.directory)?.join("prefix")) {
+    if !ready(&super::installation_layout::prefix_for(&absolute(&request.directory)?)) {
         let prepared = prepare_run_mode(request.clone(), umu, None, None, true)?;
         let log = prepared.log.to_string_lossy().into_owned();
         let status = super::game_execution::wait_for_prefix_update(prepared, cancel)?;
         if status.state == "cancelled" || cancel.load(Ordering::Acquire) { return Err(format!("Instalação cancelada. Log: {log}")); }
         if status.state == "failed" { return Err(status.error.unwrap_or_else(|| format!("Falha ao preparar o prefixo. Log: {log}"))); }
     }
-    let prefix = absolute(&request.directory)?.canonicalize().map_err(|e| e.to_string())?.join("prefix");
+    let prefix = super::installation_layout::prefix_for(&absolute(&request.directory)?.canonicalize().map_err(|e| e.to_string())?);
     // Without a ready prefix the comparison is skipped; the installer still runs.
     if !ready(&prefix) { return Ok(Vec::new()); }
     super::installed_library::prefix_executables(&prefix)
@@ -322,6 +335,15 @@ pub(crate) fn validate_proton(value: &str) -> Result<PathBuf, String> {
         return Err("A versão selecionada não contém um Proton executável.".into());
     }
     Ok(proton)
+}
+/// Proton that last ran a prefix, as Proton itself records it in `config_info`
+/// (second line: `<proton>/files/share/fonts/`, or `dist/` on older builds).
+/// The file sits beside `pfx`, so both the prefix and its parent are checked.
+pub(crate) fn proton_from_prefix(prefix: &Path) -> Option<String> {
+    let info = [prefix.join("config_info"), prefix.parent()?.join("config_info")].into_iter().find_map(|file| fs::read_to_string(file).ok())?;
+    let fonts = info.lines().nth(1)?.trim();
+    let root = ["/files/", "/dist/"].iter().find_map(|marker| fonts.rfind(marker).map(|at| &fonts[..at]))?;
+    validate_proton(root).ok().map(|path| path.to_string_lossy().into_owned())
 }
 pub(crate) fn validate_executable(value: &str) -> Result<PathBuf, String> {
     let executable = absolute(value)?
@@ -391,14 +413,18 @@ fn prepare_run_mode(
         .unwrap_or("")
         .to_ascii_lowercase();
     // Validate inputs before creating anything; never replace an existing prefix.
+    if selected_prefix.is_none() {
+        super::installation_layout::check_new_destination(&directory)?;
+    }
     fs::create_dir_all(&directory).map_err(|e| format!("Não foi possível criar o destino: {e}"))?;
     let directory = directory.canonicalize().map_err(|e| e.to_string())?;
     if selected_prefix.is_none() {
         super::installation_layout::migrate(&directory)?;
+        super::installation_layout::claim(&directory)?;
     }
     let prefix = selected_prefix
         .map(Path::to_path_buf)
-        .unwrap_or_else(|| directory.join("prefix"));
+        .unwrap_or_else(|| super::installation_layout::prefix_for(&directory));
     let logs = directory.join("logs");
     fs::create_dir_all(&prefix)
         .and_then(|_| fs::create_dir_all(&logs))
@@ -447,4 +473,29 @@ fn prepare_run_mode(
         log: log_path,
         executable: if prefix_update { PathBuf::from("wineboot.exe") } else { executable },
     })
+}
+
+#[cfg(test)]
+mod prefix_proton_tests {
+    use super::*;
+    use std::os::unix::fs::PermissionsExt;
+
+    #[test]
+    fn proton_is_read_from_the_config_info_beside_pfx() {
+        let root = std::env::temp_dir().join(format!("peligames-prefix-proton-{}", std::process::id()));
+        let proton = root.join("compatibilitytools.d/Proton Test");
+        let compat = root.join("compatdata/42");
+        fs::create_dir_all(proton.join("files/share/fonts")).unwrap();
+        fs::create_dir_all(compat.join("pfx")).unwrap();
+        fs::write(proton.join("proton"), "#!/bin/sh\n").unwrap();
+        fs::set_permissions(proton.join("proton"), fs::Permissions::from_mode(0o755)).unwrap();
+        assert_eq!(proton_from_prefix(&compat.join("pfx")), None);
+        fs::write(compat.join("config_info"), format!("Test-1.0\n{}/files/share/fonts/\n{}/files/lib/\n", proton.display(), proton.display())).unwrap();
+        let expected = Some(proton.canonicalize().unwrap().to_string_lossy().into_owned());
+        assert_eq!(proton_from_prefix(&compat.join("pfx")), expected);
+        assert_eq!(proton_from_prefix(&compat), expected);
+        fs::write(compat.join("config_info"), "Test-1.0\n/missing/Proton/files/share/fonts/\n").unwrap();
+        assert_eq!(proton_from_prefix(&compat.join("pfx")), None);
+        fs::remove_dir_all(root).unwrap();
+    }
 }

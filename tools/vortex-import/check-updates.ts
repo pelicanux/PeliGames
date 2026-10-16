@@ -8,9 +8,12 @@
 // e se a mudança parece só cosmética (comentários, versão, changelog).
 //
 // Só lê: nada é alterado nos módulos. Uso:
-//     bun tools/vortex-import/check-updates.ts [--output relatorio.md]
+//     bun tools/vortex-import/check-updates.ts [--output relatorio.md] [--git]
 // Com GITHUB_TOKEN no ambiente, o limite da API sobe de 60 para 5000 consultas por hora.
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+// --git (ou o limite da API atingido) compara pelos repositórios públicos com git, sem
+// limite: clones parciais, só histórico e árvores, em ~/.cache/peligames/vortex-git.
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { join } from "node:path";
 
 const HERE = import.meta.dir;
@@ -77,7 +80,36 @@ export function modules() {
   return pins;
 }
 
+const GIT_CACHE = join(process.env.XDG_CACHE_HOME || join(homedir(), ".cache"), "peligames", "vortex-git");
+function git(dir: string | null, ...args: string[]): string {
+  const result = Bun.spawnSync(["git", ...(dir ? ["-C", dir] : []), ...args], { env: { ...process.env, GIT_TERMINAL_PROMPT: "0" } });
+  if (result.exitCode !== 0) throw new Error(result.stderr.toString().trim() || `git ${args[0]} falhou`);
+  return result.stdout.toString();
+}
+const STATUS: Record<string, string> = { A: "added", M: "modified", D: "removed", T: "modified" };
+/** Same shape as the API comparison, read from a partial clone (no file contents until a patch is asked). */
+function compareWithGit(repo: string, rev: string): Json {
+  const url = `https://github.com/${repo}`;
+  const head = git(null, "ls-remote", url, "HEAD").split(/\s+/)[0];
+  if (!head) throw new Error("repositório sem HEAD");
+  if (head === rev) return { ahead_by: 0, html_url: `${url}/`, commits: [], files: [] };
+  const dir = join(GIT_CACHE, repo.replace("/", "__"));
+  if (!existsSync(dir)) { mkdirSync(GIT_CACHE, { recursive: true }); git(null, "clone", "--quiet", "--bare", "--filter=blob:none", url, dir); }
+  else git(dir, "fetch", "--quiet", "--filter=blob:none", "origin", "+HEAD:refs/heads/peligames-head");
+  const commits = git(dir, "log", "--format=%H%x00%s", `${rev}..${head}`).trim().split("\n").filter(Boolean).reverse()
+    .map(line => { const [sha, message] = line.split("\0"); return { sha, commit: { message } }; });
+  const files = git(dir, "diff", "--name-status", "--no-renames", `${rev}..${head}`).trim().split("\n").filter(Boolean).map(line => {
+    const [code, filename] = line.split("\t");
+    const entry: Json = { filename, status: STATUS[code[0]] ?? "modified" };
+    // The patch is read only when the cosmetic check needs it.
+    Object.defineProperty(entry, "patch", { enumerable: true, get: () => git(dir, "diff", `${rev}..${head}`, "--", filename) });
+    return entry;
+  });
+  return { ahead_by: commits.length, html_url: `${url}/`, commits, files };
+}
+
 async function changedFiles(repo: string, comparison: Json): Promise<Json[]> {
+  if (comparison.viaGit) return comparison.files ?? [];
   const files: Json[] = comparison.files ?? [];
   if (files.length < 300) return files;
   // A comparação lista no máximo 300 arquivos; nesse caso, junta os de cada commit.
@@ -97,6 +129,7 @@ const byText = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 async function main() {
   const output = process.argv.indexOf("--output") > -1 ? process.argv[process.argv.indexOf("--output") + 1] : undefined;
+  let viaGit = process.argv.includes("--git");
   const pins = modules();
   const report = ["# Atualizações das extensões Vortex", ""];
   let pending = 0;
@@ -116,7 +149,8 @@ async function main() {
   for (const { rev, folders, repo: pinned } of order) {
     let repo = pinned, comparison: Json, files: Json[];
     try {
-      comparison = await request(`/repos/${repo}/compare/${rev}...HEAD`);
+      if (viaGit) comparison = { ...compareWithGit(repo, rev), viaGit: true };
+      else comparison = await request(`/repos/${repo}/compare/${rev}...HEAD`);
       // The comparison follows renames; its page names the current repository.
       repo = String(comparison.html_url ?? `https://github.com/${repo}/`).split("/").slice(3, 5).join("/");
       files = await changedFiles(repo, comparison);
@@ -124,11 +158,19 @@ async function main() {
       if (error instanceof HttpError && [403, 429].includes(error.status) && error.headers.get("X-RateLimit-Remaining") === "0") {
         const reset = Number(error.headers.get("X-RateLimit-Reset") ?? 0);
         const time = reset ? new Date(reset * 1000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
-        console.error(`Limite da API do GitHub atingido (renova em ${time}). Tente depois ou defina GITHUB_TOKEN.`);
-        process.exit(1);
+        console.error(`Limite da API do GitHub atingido (renova em ${time}); seguindo pelo git.`);
+        viaGit = true;
+        try {
+          comparison = { ...compareWithGit(repo, rev), viaGit: true };
+          files = await changedFiles(repo, comparison);
+        } catch (gitError) {
+          report.push(`## ${repo}`, "", `Não foi possível comparar ${rev.slice(0, 7)}: ${gitError instanceof Error ? gitError.message : gitError}`, "");
+          continue;
+        }
+      } else {
+        report.push(`## ${repo}`, "", `Não foi possível comparar ${rev.slice(0, 7)}: ${error instanceof Error ? error.message : error}`, "");
+        continue;
       }
-      report.push(`## ${repo}`, "", `Não foi possível comparar ${rev.slice(0, 7)}: ${error instanceof Error ? error.message : error}`, "");
-      continue;
     }
     const ahead = comparison.ahead_by ?? 0;
     if (ahead === 0) {

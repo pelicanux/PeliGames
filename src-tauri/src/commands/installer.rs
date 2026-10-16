@@ -17,6 +17,8 @@ pub async fn install_mod(
     bin_path: Option<String>,
     shortcut_key: String,
     neural_startup: Option<bool>,
+    int4: Option<bool>,
+    renodx: Option<bool>,
 ) -> Result<String, String> {
     crate::core::logger::log_launcher(&app, "INFO", &format!("Operação no jogo: rota={route}, arquitetura={bitness}, GPU={gpu_arch}, diretório={game_dir}"));
     let result = async {
@@ -35,7 +37,8 @@ pub async fn install_mod(
         return Err("Arquivos do backend não encontrados! Clique no botão de Atualizar no topo direito para baixar os arquivos necessários.".to_string());
     }
 
-    let output = execute_standalone_install(&resource_path, &game_dir, &route, dll_path.as_ref(), bin_path.as_ref(), &shortcut_key)?;
+    let output = execute_standalone_install(&resource_path, &game_dir, &route, dll_path.as_ref(), bin_path.as_ref(), &shortcut_key,
+        crate::core::script_runner::InstallExtras { int4, renodx })?;
     if route != "remove" {
         if let Some(enabled) = neural_startup {
             super::neural_settings::set_enabled(std::path::Path::new(&game_dir), enabled)?;
@@ -74,6 +77,7 @@ use crate::commands::analyzer::scan_directory_for_exe;
 pub struct GameInstallationDetails {
     status: String,
     installed_dll: Option<String>,
+    dlssnr_installed: bool,
 }
 
 fn details_in_directory(dir: &std::path::Path) -> GameInstallationDetails {
@@ -103,7 +107,9 @@ fn details_in_directory(dir: &std::path::Path) -> GameInstallationDetails {
         "ReShade"
     };
     let installed_dll = if status == "Não Instalado" { None } else { proxy.map(|name| (*name).to_string()) };
-    GameInstallationDetails { status: status.to_string(), installed_dll }
+    let dlssnr_installed = proxy.is_some() && (addon || manifest
+        || has(&["dlssnr_core.dll", "nvngx.dll_dlssnr.dll", "nvngx_dlssnr.dll"]));
+    GameInstallationDetails { status: status.to_string(), installed_dll, dlssnr_installed }
 }
 
 pub(crate) fn installed_mod_directory(base_dir: &std::path::Path) -> Option<std::path::PathBuf> {
@@ -116,7 +122,7 @@ pub(crate) fn installed_mod_directory(base_dir: &std::path::Path) -> Option<std:
 fn installation_details(game_dir: &str) -> GameInstallationDetails {
     let base_dir = std::path::Path::new(game_dir);
     if !base_dir.exists() {
-        return GameInstallationDetails { status: "Não Instalado".to_string(), installed_dll: None };
+        return GameInstallationDetails { status: "Não Instalado".to_string(), installed_dll: None, dlssnr_installed: false };
     }
     let root_details = details_in_directory(base_dir);
     // install.sh writes into the selected folder, even when the largest EXE is nested.
@@ -215,6 +221,7 @@ pub async fn extract_dll_wizard(
             Some(&dll_path_clone),
             None,
             "Insert",
+            script_runner::InstallExtras { int4: Some(false), renodx: Some(false) },
         )
     }).await.map_err(|e| format!("Task error: {}", e))?;
 
@@ -231,5 +238,45 @@ pub async fn extract_dll_wizard(
         Ok(dest_path.to_string_lossy().to_string())
     } else {
         Err("A extração falhou: dlssnr.bin não foi gerado pelo backend.".to_string())
+    }
+}
+
+#[cfg(test)]
+mod modern_library_detection_tests {
+    use super::details_in_directory;
+    use std::{fs, path::PathBuf, sync::atomic::{AtomicU64, Ordering}};
+    static NEXT: AtomicU64 = AtomicU64::new(0);
+    struct Fixture(PathBuf);
+    impl Fixture {
+        fn new(files: &[&str]) -> Self {
+            let path = std::env::temp_dir().join(format!("peligames-library-detection-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)));
+            fs::create_dir(&path).unwrap();
+            for file in files { fs::write(path.join(file), []).unwrap(); }
+            Self(path)
+        }
+    }
+    impl Drop for Fixture { fn drop(&mut self) { let _ = fs::remove_dir_all(&self.0); } }
+    #[test]
+    fn generic_optiscaler_is_not_dlssnr() {
+        let fixture = Fixture::new(&["OptiScaler.dll", "OptiScaler.ini"]);
+        let details = details_in_directory(&fixture.0);
+        assert_eq!(details.status, "OptiScaler");
+        assert!(!details.dlssnr_installed);
+    }
+    #[test]
+    fn detects_dlssnr_with_a_loader() {
+        for core in ["dlssnr_core.dll", "dlssnr_amd.addon64", "nvngx_dlssnr.dll"] {
+            let fixture = Fixture::new(&["dxgi.dll", core]);
+            let details = details_in_directory(&fixture.0);
+            assert!(details.dlssnr_installed);
+            assert!(details.installed_dll.is_some());
+        }
+    }
+    #[test]
+    fn proxy_or_core_alone_does_not_enable_the_tab() {
+        for file in ["dxgi.dll", "dlssnr_amd.addon64", "dlssnr_core.dll"] {
+            let fixture = Fixture::new(&[file]);
+            assert!(!details_in_directory(&fixture.0).dlssnr_installed);
+        }
     }
 }

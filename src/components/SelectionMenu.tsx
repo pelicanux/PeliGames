@@ -1,11 +1,12 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useBoundedDropdown } from "../hooks/useBoundedDropdown";
 
 // Shared choice menu, using the language/performance selector material.
-export function SelectionMenu({ label, value, options, onChange, disabled = false, className = "", menuClassName = "" }: {
+export function SelectionMenu({ label, value, options, onChange, disabled = false, className = "", menuClassName = "", leadingIcon }: {
   label: string; value: string; options: { value: string; label: string; disabled?: boolean }[];
   onChange: (value: string) => void; disabled?: boolean; className?: string;
+  leadingIcon?: ReactNode;
   /** Extra class of the option list, which opens in document.body. */
   menuClassName?: string;
 }) {
@@ -38,6 +39,7 @@ export function SelectionMenu({ label, value, options, onChange, disabled = fals
       onClick={() => setOpen(current => !current)} onKeyDown={event => {
         if (event.key === "ArrowDown" || event.key === "ArrowUp") { event.preventDefault(); setOpen(true); }
       }}>
+      {leadingIcon}
       <span>{options.find(option => option.value === value)?.label ?? value}</span>
       <span className="select-arrow" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg></span>
     </button>

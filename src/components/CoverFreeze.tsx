@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { CoverHoldProgress } from "./CoverHoldProgress";
 import { motion } from "framer-motion";
 
 const cracks = [
@@ -10,13 +11,16 @@ const cracks = [
   "M48 17 39 18 35 10", "M91 61 89 71 94 75", "M84 19 80 11 85 5",
 ];
 const crystals = [[8,14],[88,9],[12,78],[84,87],[6,46],[94,48],[44,5],[54,95]];
+// Glints: x, y and the start of their twinkle.
+const glints = [[22,26,.1],[71,18,.5],[34,62,.9],[80,58,.3],[52,40,1.2],[18,88,.7]];
 
 export function CoverFreeze({ phase = "hold", reducedMotion = false }: { phase?: "hold" | "frozen" | "melt"; reducedMotion?: boolean }) {
   const id = useId().replace(/:/g, "");
-  if (reducedMotion) return phase === "hold" ? <div className="library-hold-progress" aria-hidden="true"><span /></div> : null;
+  if (reducedMotion) return phase === "hold" ? <CoverHoldProgress /> : null;
   return <svg className={`cover-freeze cover-freeze--${phase}`} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
     <defs>
-      <radialGradient id={`${id}-ice`}><stop stopColor="#d9f8ff" stopOpacity={phase === "hold" ? .55 : .82}/><stop offset=".65" stopColor="#9dddef" stopOpacity=".88"/><stop offset="1" stopColor="#efffff" stopOpacity=".98"/></radialGradient>
+      <radialGradient id={`${id}-ice`}><stop stopColor="#cdf3ff" stopOpacity={phase === "hold" ? .4 : .62}/><stop offset=".6" stopColor="#8fd3ee" stopOpacity=".78"/><stop offset="1" stopColor="#e6faff" stopOpacity=".95"/></radialGradient>
+      <linearGradient id={`${id}-sheen`} x1="0" y1="0" x2="1" y2="1"><stop offset=".25" stopColor="#fff" stopOpacity="0"/><stop offset=".42" stopColor="#fff" stopOpacity=".38"/><stop offset=".5" stopColor="#fff" stopOpacity="0"/><stop offset=".62" stopColor="#fff" stopOpacity=".18"/><stop offset=".7" stopColor="#fff" stopOpacity="0"/></linearGradient>
       <mask id={`${id}-freeze`} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
         <rect width="100" height="100" fill="white"/>
         {phase === "hold" ? <circle className="cover-freeze-gap" cx="50" cy="50" r="75" fill="black"/> :
@@ -26,6 +30,7 @@ export function CoverFreeze({ phase = "hold", reducedMotion = false }: { phase?:
     <g mask={`url(#${id}-freeze)`}>
       <rect width="100" height="100" fill={`url(#${id}-ice)`}/>
       <image href="/images/button-facets.svg" width="100" height="100" preserveAspectRatio="none" opacity=".55"/>
+      <rect width="100" height="100" fill={`url(#${id}-sheen)`}/>
       <g className="cover-freeze-crystals" fill="none" stroke="#f2ffff" strokeWidth=".65">
         {crystals.map(([x,y]) => <path key={`${x}-${y}`} d={`M${x-7} ${y}h14M${x} ${y-9}v18M${x-5} ${y-6}l10 12M${x-5} ${y+6}l10-12M${x-3} ${y-7}l3 3 3-3M${x-3} ${y+7}l3-3 3 3`}/>) }
       </g>
@@ -33,6 +38,7 @@ export function CoverFreeze({ phase = "hold", reducedMotion = false }: { phase?:
     <g className="cover-freeze-cracks" fill="none" strokeLinejoin="round" strokeLinecap="round">
       {cracks.map((d,index) => <g key={d} style={{ animationDelay:`${.66 + index * .015}s` }}><path className="cover-freeze-crack-shadow" d={d} pathLength="1"/><path d={d} pathLength="1"/></g>)}
     </g>
+    <g className="cover-freeze-glints" fill="#fff" mask={`url(#${id}-freeze)`}>{glints.map(([x, y, delay]) => <path key={`${x}-${y}`} style={{ animationDelay: `${delay}s` }} d={`M${x} ${y - 3.4}L${x + .7} ${y - .7}L${x + 3.4} ${y}L${x + .7} ${y + .7}L${x} ${y + 3.4}L${x - .7} ${y + .7}L${x - 3.4} ${y}L${x - .7} ${y - .7}Z`}/>)}</g>
     {phase === "melt" && <g className="cover-freeze-drops" fill="#c6f3ff">{[20,43,67,86].map((x,index) => <path key={x} style={{animationDelay:`${.45+index*.055}s`}} d={`M${x} 72q-3 6-3 9a3 3 0 0 0 6 0q0-3-3-9Z`}/>)}</g>}
   </svg>;
 }

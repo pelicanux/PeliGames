@@ -14,7 +14,7 @@ export async function installLauncher(request: LauncherInstallRequest): Promise<
     await new Promise(resolve => setTimeout(resolve, 1600));
     const recipe=launcherRecipes.find(item=>item.id===request.id);
     if (!recipe) throw new Error("Launcher desconhecido.");
-    const prefix=`${request.directory}/prefix`;
+    const prefix=request.directory;
     const executable=`${prefix}/${recipe.executable.relative_paths[0]}`;
     const entry:GameInfo={name:`${recipe.name} — demonstração`,path:executable,executable,prefix,directory:request.directory,proton:request.proton,launcher:"PeliGames",library_category:"launchers",launcher_id:recipe.id,cover_url:`/launchers/${recipe.id}-cover.svg`,library_view:"own"};
     const index=previewLauncherEntries.findIndex(item=>item.path===entry.path);

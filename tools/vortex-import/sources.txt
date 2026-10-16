@@ -1,7 +1,7 @@
 # Revisões fixadas das extensões Vortex lidas pelo extrator (repositório commit).
 # Mantidas iguais às de src-tauri/resources/nexus-games/support-audit.json.
-Nexus-Mods/Vortex acb3d8621085df657c0ae07d5df5d425570964ab
-ChemGuy1611/ChemBoy1-Vortex-Games 39e9ef13787900a1741e5d29165920bd4f48f7b6
+Nexus-Mods/Vortex e7698e5a038b74642544916c2bfafe6d64dc19bd
+ChemGuy1611/ChemBoy1-Vortex-Games 9951b6a04c6bc498be39c160b58df90927152b72
 Nexus-Mods/game-palworld 16850505152c67b0a4322a4c1ae4cdb5fd69d9e5
 Nexus-Mods/game-oblivionremastered 489f6b9683b4fa928ee412072430ae0ae2f1706a
 Nexus-Mods/game-masseffectlegendaryedition 84bbd3ea1695acd6c8013103c7cad82c88cbff3c

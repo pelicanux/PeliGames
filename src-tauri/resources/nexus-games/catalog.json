@@ -352,7 +352,7 @@
       "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-stardewvalley/src/index.ts",
       "https://stardewvalleywiki.com/Modding:Player_Guide/Getting_Started",
       "https://github.com/Pathoschild/SMAPI/blob/develop/src/SMAPI.Installer/assets/README.txt",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-stardewvalley/src/index.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-stardewvalley/src/index.ts",
       "https://www.nexusmods.com/site/mods/267"
     ],
     "credits": [
@@ -553,7 +553,7 @@
     "routes": [],
     "sources": [
       "https://www.nexusmods.com/stellarblade/mods/2650",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-stellarblade/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-stellarblade/index.js",
       "https://www.nexusmods.com/site/mods/1324"
     ],
     "credits": [
@@ -589,7 +589,7 @@
     "routes": [],
     "sources": [
       "https://github.com/tnebes/stalker2mods/blob/master/GUIDE.md",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-stalker2heartofchornobyl/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-stalker2heartofchornobyl/index.js",
       "https://www.nexusmods.com/site/mods/958"
     ],
     "credits": [
@@ -685,9 +685,9 @@
     ],
     "sources": [
       "https://www.nexusmods.com/finalfantasy7rebirth/mods/392",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-finalfantasy7rebirth/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-finalfantasy7rebirth/index.js",
       "https://www.nexusmods.com/site/mods/1150",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-finalfantasy7rebirth/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-finalfantasy7rebirth/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -750,7 +750,7 @@
     "routes": [],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-codevein/src/common.ts",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-codevein/src/index.ts"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-codevein/src/index.ts"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -784,7 +784,7 @@
     "routes": [],
     "sources": [
       "https://www.nexusmods.com/clairobscurexpedition33/mods/704",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-clairobscurexpedition33/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-clairobscurexpedition33/index.js",
       "https://www.nexusmods.com/site/mods/1279"
     ],
     "credits": [
@@ -817,7 +817,7 @@
     "sources": [
       "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_LooseLoading/monster_hunter_rise.py",
       "https://github.com/praydog/REFramework",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-monsterhunterrise/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-monsterhunterrise/index.js",
       "https://www.nexusmods.com/site/mods/349"
     ],
     "credits": [
@@ -862,7 +862,7 @@
     "sources": [
       "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_LooseLoading/monster_hunter_wilds.py",
       "https://github.com/praydog/REFramework",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-monsterhunterwilds/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-monsterhunterwilds/index.js",
       "https://www.nexusmods.com/site/mods/1149"
     ],
     "credits": [
@@ -907,7 +907,7 @@
     "sources": [
       "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_Invalidation/resident_evil_2.py",
       "https://github.com/praydog/REFramework",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevil22019/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-residentevil22019/index.js",
       "https://www.nexusmods.com/site/mods/432"
     ],
     "credits": [
@@ -952,7 +952,7 @@
     "sources": [
       "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_Invalidation/resident_evil_3.py",
       "https://github.com/praydog/REFramework",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevil32020/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-residentevil32020/index.js",
       "https://www.nexusmods.com/site/mods/433"
     ],
     "credits": [
@@ -997,7 +997,7 @@
     "sources": [
       "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_Invalidation/resident_evil_4.py",
       "https://github.com/praydog/REFramework",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevil42023/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-residentevil42023/index.js",
       "https://www.nexusmods.com/site/mods/913"
     ],
     "credits": [
@@ -1042,7 +1042,7 @@
     "sources": [
       "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_Invalidation/resident_evil_village.py",
       "https://github.com/praydog/REFramework",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevilvillage/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-residentevilvillage/index.js",
       "https://www.nexusmods.com/site/mods/237"
     ],
     "credits": [
@@ -1087,7 +1087,7 @@
     "sources": [
       "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_Invalidation/devil_may_cry_5.py",
       "https://github.com/praydog/REFramework",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-devilmaycry5/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-devilmaycry5/index.js",
       "https://www.nexusmods.com/site/mods/434"
     ],
     "credits": [
@@ -1132,7 +1132,7 @@
     "sources": [
       "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_Invalidation/dragons_dogma_2.py",
       "https://github.com/praydog/REFramework",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonsdogma2/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dragonsdogma2/index.js",
       "https://www.nexusmods.com/site/mods/851"
     ],
     "credits": [
@@ -1177,7 +1177,7 @@
     "sources": [
       "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_Invalidation/street_fighter_6.py",
       "https://github.com/praydog/REFramework",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-streetfighter6/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-streetfighter6/index.js",
       "https://www.nexusmods.com/site/mods/956"
     ],
     "credits": [
@@ -1222,7 +1222,7 @@
     "sources": [
       "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/RE_Engine_LooseLoading/resident_evil_requiem.py",
       "https://github.com/praydog/REFramework",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevilrequiem/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-residentevilrequiem/index.js",
       "https://www.nexusmods.com/site/mods/1653"
     ],
     "credits": [
@@ -1645,7 +1645,7 @@
     ],
     "sources": [
       "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/7%20Days%20to%20Die/7_days_to_die.py",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-7daystodie/src/index.tsx"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-7daystodie/src/index.tsx"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -1691,7 +1691,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-kingdomcome-deliverance/src/index.ts",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-kingdomcome-deliverance/src/index.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-kingdomcome-deliverance/src/index.ts",
       "https://www.nexusmods.com/site/mods/338"
     ],
     "credits": [
@@ -1737,7 +1737,7 @@
     ],
     "sources": [
       "https://github.com/ChrisDKN/Amethyst-Mod-Manager/blob/main/src/Games/Kingdom%20Come%20Deliverance%20II/kingdom_come_deliverance_2.py",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-kingdomcomedeliverance2/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-kingdomcomedeliverance2/index.js",
       "https://www.nexusmods.com/site/mods/1146"
     ],
     "credits": [
@@ -1844,7 +1844,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-darkestdungeon/src/index.js",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-darkestdungeon/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-darkestdungeon/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -1889,7 +1889,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-bladeandsorcery/src/index.js",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-bladeandsorcery/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-bladeandsorcery/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -1934,7 +1934,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-x4foundations/src/index.js",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-x4foundations/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-x4foundations/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -2005,7 +2005,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-monster-hunter-world/src/index.js",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-monster-hunter-world/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-monster-hunter-world/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -2080,7 +2080,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-daggerfallunity/src/index.js",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-daggerfallunity/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-daggerfallunity/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -2203,7 +2203,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-witcher/src/index.js",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-witcher/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-witcher/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -2268,7 +2268,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-witcher2/src/index.js",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-witcher2/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-witcher2/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -2410,7 +2410,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-sw-kotor/src/index.js",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-sw-kotor/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-sw-kotor/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -2578,7 +2578,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-skyrimse",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-skyrimse/src/index.js",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-skyrimse/src/index.js",
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/gamebryo-archive-invalidation",
       "https://github.com/Ortham/libloadorder/blob/18.8.2/src/game_settings.rs"
     ],
@@ -2884,9 +2884,9 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-skyrimvr",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-skyrimvr/src/index.js",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/gamebryo-archive-invalidation/src/gameSupport.ts",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/local-gamesettings/src/util/gameSupport.ts"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-skyrimvr/src/index.js",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/gamebryo-archive-invalidation/src/gameSupport.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/local-gamesettings/src/util/gameSupport.ts"
     ],
     "credits": [
       "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
@@ -3187,7 +3187,7 @@
     "sources": [
       "https://github.com/Pickysaurus/vortex-game-enderal-se/blob/d0ee7a3d54f99def03bd0d54cea65332be86ae7d/index.js",
       "https://www.nexusmods.com/site/mods/218",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/local-gamesettings/src/util/gameSupport.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/local-gamesettings/src/util/gameSupport.ts",
       "https://github.com/Ortham/libloadorder/blob/18.8.2/src/game_settings.rs"
     ],
     "credits": [
@@ -3447,7 +3447,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-skyrim",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-skyrim/src/index.js",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-skyrim/src/index.js",
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/gamebryo-archive-invalidation"
     ],
     "credits": [
@@ -3720,9 +3720,9 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-enderal",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-enderal/src/index.js",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/gamebryo-archive-invalidation/src/gameSupport.ts",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/local-gamesettings/src/util/gameSupport.ts"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-enderal/src/index.js",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/gamebryo-archive-invalidation/src/gameSupport.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/local-gamesettings/src/util/gameSupport.ts"
     ],
     "credits": [
       "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
@@ -3999,7 +3999,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-fallout4",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-fallout4/src/index.js",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-fallout4/src/index.js",
       "https://www.nexusmods.com/site/mods/1349",
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/gamebryo-archive-invalidation",
       "https://github.com/Ortham/libloadorder/blob/18.8.2/src/game_settings.rs"
@@ -4328,9 +4328,9 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-fallout4vr",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-fallout4vr/src/index.js",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/gamebryo-archive-invalidation/src/gameSupport.ts",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/local-gamesettings/src/util/gameSupport.ts"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-fallout4vr/src/index.js",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/gamebryo-archive-invalidation/src/gameSupport.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/local-gamesettings/src/util/gameSupport.ts"
     ],
     "credits": [
       "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
@@ -4626,12 +4626,12 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-falloutnv",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-falloutnv/src/index.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-falloutnv/src/index.ts",
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/gamebryo-archive-invalidation",
       "https://github.com/Ortham/libloadorder/blob/18.8.2/src/game_settings.rs",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-falloutnv/src/index.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-falloutnv/src/index.ts",
       "https://www.nexusmods.com/site/mods/945",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/gamebryo-archive-invalidation/src/util/gameSupport.ts"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/gamebryo-archive-invalidation/src/util/gameSupport.ts"
     ],
     "credits": [
       "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
@@ -4943,7 +4943,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-fallout3",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-fallout3/src/index.js",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-fallout3/src/index.js",
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/gamebryo-archive-invalidation"
     ],
     "credits": [
@@ -5209,7 +5209,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-oblivion",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-oblivion/src/index.js",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-oblivion/src/index.js",
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/gamebryo-archive-invalidation"
     ],
     "credits": [
@@ -5676,7 +5676,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-morrowind",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-morrowind/src/index.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-morrowind/src/index.ts",
       "https://www.nexusmods.com/site/mods/1295"
     ],
     "credits": [
@@ -5792,7 +5792,7 @@
     ],
     "sources": [
       "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/tree/main/game-finalfantasy16",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-finalfantasy16/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-finalfantasy16/index.js",
       "https://www.nexusmods.com/site/mods/1041"
     ],
     "credits": [
@@ -5919,7 +5919,7 @@
     ],
     "sources": [
       "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/tree/main/game-finalfantasytacticstheivalicechronicles",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-finalfantasytacticstheivalicechronicles/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-finalfantasytacticstheivalicechronicles/index.js",
       "https://www.nexusmods.com/site/mods/1515"
     ],
     "credits": [
@@ -6129,9 +6129,9 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-baldursgate3",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-baldursgate3/src/index.tsx",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-baldursgate3/src/installers.ts",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-baldursgate3/src/loadOrder.ts"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-baldursgate3/src/index.tsx",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-baldursgate3/src/installers.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-baldursgate3/src/loadOrder.ts"
     ],
     "credits": [
       "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
@@ -6331,7 +6331,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-dragonage",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-dragonage/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-dragonage/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
@@ -6393,7 +6393,7 @@
     ],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-witcher3",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-witcher3/src/index.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-witcher3/src/index.ts",
       "https://github.com/Nexus-Mods/Vortex/blob/master/extensions/games/game-witcher3/src/modTypes.ts"
     ],
     "credits": [
@@ -6496,7 +6496,7 @@
     ],
     "sources": [
       "https://www.nexusmods.com/site/mods/68",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-reddeadredemption2/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-reddeadredemption2/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas das extensões públicas; implementação independente PeliGames."
@@ -6783,7 +6783,7 @@
     "routes": [],
     "sources": [
       "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/tree/main/game-marvelrivals",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-marvelrivals/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-marvelrivals/index.js",
       "https://www.nexusmods.com/site/mods/1132"
     ],
     "credits": [
@@ -6947,7 +6947,7 @@
     "frameworks": [],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-dragonage2",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-dragonage2/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-dragonage2/src/index.js"
     ],
     "credits": [
       "Definições factuais de extensões públicas; implementação independente PeliGames."
@@ -7085,7 +7085,7 @@
     "frameworks": [],
     "sources": [
       "https://github.com/Nexus-Mods/Vortex/tree/master/extensions/games/game-sims4",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-sims4/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-sims4/src/index.js"
     ],
     "credits": [
       "Definições factuais de extensões públicas; implementação independente PeliGames."
@@ -7222,7 +7222,7 @@
     "frameworks": [],
     "sources": [
       "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/tree/main/game-helldivers2",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-helldivers2/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-helldivers2/index.js",
       "https://www.nexusmods.com/site/mods/845"
     ],
     "credits": [
@@ -7471,7 +7471,7 @@
     ],
     "sources": [
       "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/tree/main/game-dragonageinquisition",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonageinquisition/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dragonageinquisition/index.js",
       "https://www.nexusmods.com/site/mods/876"
     ],
     "credits": [
@@ -7611,7 +7611,7 @@
     ],
     "sources": [
       "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/tree/main/game-starwarsbattlefront22017",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-starwarsbattlefront22017/index.js",
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-starwarsbattlefront22017/index.js",
       "https://www.nexusmods.com/site/mods/112"
     ],
     "credits": [
@@ -7757,7 +7757,7 @@
     "sources": [
       "https://www.nexusmods.com/site/mods/1808",
       "https://github.com/Toemmsen96/FSVortexExtension/blob/6d64d257fafe9a28c66446a4ab3b94cb35e016dc/index.js",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/modtype-bepinex/src/common.ts"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/modtype-bepinex/src/common.ts"
     ],
     "credits": [
       "Regras factuais adaptadas da extensão Vortex da comunidade (Toemmsen96); implementação independente PeliGames."
@@ -7955,7 +7955,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-breakingwheel/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-breakingwheel/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -7998,7 +7998,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-stateofdecay/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-stateofdecay/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -8041,7 +8041,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-grimdawn/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-grimdawn/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -8084,7 +8084,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-greedfall/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-greedfall/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -8126,7 +8126,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-elex/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-elex/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -8304,7 +8304,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-sekiro/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-sekiro/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -8394,7 +8394,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-darksouls/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-darksouls/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -8463,7 +8463,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-vtmbloodlines/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-vtmbloodlines/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -8536,7 +8536,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-wolcen/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-wolcen/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -8581,7 +8581,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-kenshi/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-kenshi/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -8629,7 +8629,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-totalwarthreekingdoms/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-totalwarthreekingdoms/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -8699,8 +8699,8 @@
       "binaries": true
     },
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-pathfinderwrathoftherighteous/src/index.ts",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/modtype-umm/src/common.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-pathfinderwrathoftherighteous/src/index.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/modtype-umm/src/common.ts",
       "https://github.com/IDCs/unity-mod-manager/releases/tag/0.24.2"
     ],
     "credits": [
@@ -8802,8 +8802,8 @@
       "binaries": true
     },
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-dawnofman/src/index.js",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/modtype-umm/src/common.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-dawnofman/src/index.js",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/modtype-umm/src/common.ts",
       "https://github.com/IDCs/unity-mod-manager/releases/tag/0.24.2"
     ],
     "credits": [
@@ -8898,8 +8898,8 @@
       "binaries": true
     },
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-gardenpaws/src/index.js",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/modtype-umm/src/common.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-gardenpaws/src/index.js",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/modtype-umm/src/common.ts",
       "https://github.com/IDCs/unity-mod-manager/releases/tag/0.24.2"
     ],
     "credits": [
@@ -8983,7 +8983,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-sims3/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-sims3/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -9033,7 +9033,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-teso/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-teso/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -9081,7 +9081,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-galciv3/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-galciv3/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -9131,7 +9131,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-ahatintime/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-ahatintime/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -9182,7 +9182,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-neverwinter-nights2/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-neverwinter-nights2/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -9274,7 +9274,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-dragons-dogma/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-dragons-dogma/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -9320,7 +9320,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-conanexiles/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-conanexiles/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -9372,7 +9372,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-worldoftanks/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-worldoftanks/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -9411,7 +9411,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-bloodstainedritualofthenight/src/index.ts"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-bloodstainedritualofthenight/src/index.ts"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -9450,7 +9450,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-spyroreignitedtrilogy/src/index.ts"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-spyroreignitedtrilogy/src/index.ts"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -9508,7 +9508,7 @@
     },
     "launch_executable": "bin/EoCApp.exe",
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-divinityoriginalsin2/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-divinityoriginalsin2/src/index.js"
     ],
     "notes": [
       "Como na extensão Vortex: arquivos .pak em Documents/Larian Studios/Divinity Original Sin 2/Mods no prefixo. Ative os mods no menu do jogo."
@@ -9561,7 +9561,7 @@
     },
     "launch_executable": "DefEd/bin/EoCApp.exe",
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-divinityoriginalsin2/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-divinityoriginalsin2/src/index.js"
     ],
     "notes": [
       "Como na extensão Vortex: arquivos .pak em Documents/Larian Studios/Divinity Original Sin 2 Definitive Edition/Mods no prefixo. Ative os mods no menu do jogo."
@@ -9660,9 +9660,9 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-masterchiefcollection/src/index.ts",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-masterchiefcollection/src/installers.ts",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-masterchiefcollection/src/util.ts"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-masterchiefcollection/src/index.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-masterchiefcollection/src/installers.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-masterchiefcollection/src/util.ts"
     ],
     "notes": [
       "Como na extensão Vortex: mods plug-and-play (pasta com ModInfo.json) ficam na pasta PeliGames-Mods do jogo, listada em AppData/LocalLow/MCC/Config/ModManifest.txt no prefixo; mods clássicos com halo1, halo2, halo3, halo3odst, halo4 ou haloreach vão para essas pastas (substituir mapas originais exige Instalar como substituição).",
@@ -9785,8 +9785,8 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-darksouls2/src/index.ts",
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-darksouls2/src/installers.ts"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-darksouls2/src/index.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-darksouls2/src/installers.ts"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
@@ -9826,7 +9826,7 @@
       }
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-microsoftflightsimulator/src/index.js"
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-microsoftflightsimulator/src/index.js"
     ],
     "credits": [
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."

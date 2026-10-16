@@ -28,4 +28,5 @@ for repo in "$SRC"/Nexus-Mods/game-*; do
 done
 rm -rf tools/vortex-import/generated
 tools/vortex-import/target/release/peligames-vortex-import "${args[@]}" "${EMIT[@]}" \
+  --overrides tools/vortex-import/overrides.json \
   --modules src-tauri/resources/nexus-games --out tools/vortex-import/generated

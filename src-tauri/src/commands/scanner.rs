@@ -485,6 +485,16 @@ fn steam_launch_uri(app_id: &str) -> Result<String, String> {
     Ok(format!("steam://launch/{id}/dialog"))
 }
 
+/// Launch through Steam while sharing the launcher's preparation/stop lifecycle.
+#[tauri::command]
+pub async fn start_steam_game(path: String, app_id: String) -> Result<crate::core::game_execution::ExecutionStatus, String> {
+    let uri = steam_launch_uri(&app_id)?;
+    #[cfg(target_os = "linux")]
+    { tauri::async_runtime::spawn_blocking(move || crate::core::game_execution::steam::start(path, app_id, uri)).await.map_err(|e| e.to_string())? }
+    #[cfg(not(target_os = "linux"))]
+    { let _ = (path, uri); Err("Monitoramento da Steam disponível no Linux.".into()) }
+}
+
 #[tauri::command]
 pub async fn launch_game(app: AppHandle, path: String, app_id: Option<String>, launcher: String) -> Result<(), String> {
     if launcher == "PeliGames" { return crate::commands::game_installation::launch_peligames_entry(path).await; }
@@ -640,4 +650,10 @@ mod steam_main_filter_tests {
         assert!(runtime.is_file());
         fs::remove_dir_all(root).unwrap();
     }
+}
+
+#[tauri::command]
+pub async fn fetch_game_banners(name: String, app_id: Option<String>) -> Result<Vec<String>, String> {
+    super::store_artwork::fetch_steam_banners(&name, app_id.as_deref()).await
+        .ok_or_else(|| "Artwork catalog is temporarily unavailable".to_string())
 }

@@ -1,3 +1,4 @@
+import "./logWindow.css";
 import { GameLogsModal } from "./GameLogsModal";
 import { NexusLogsModal } from "../modules/nexus/NexusLogsModal";
 import { closeLogWindow } from "./DetachedLogWindow";

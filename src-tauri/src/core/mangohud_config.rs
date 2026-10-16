@@ -1,4 +1,4 @@
-//! Launcher-owned MangoHUD profile. No writes to the global MangoHud directory.
+//! Launcher-owned MangoHUD profile with optional export to the user's system profile.
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
@@ -97,7 +97,7 @@ pub fn render(settings: &Settings, logs: &Path) -> Result<String, String> {
     validate(settings)?;
     let mut text = String::from("# PeliGames · perfil exclusivo do launcher\nlegacy_layout=0\n");
     for spec in catalog() {
-        if spec.key == "launcher_enabled" {
+        if spec.key.starts_with("launcher_") {
             continue;
         }
         let value = &settings[&spec.key];
@@ -159,6 +159,50 @@ pub fn write(settings: &Settings, preview: bool) -> Result<String, String> {
     let dir = directory()?;
     write_in(&dir, settings, preview)
 }
+/// Called only by the settings editor. Game launches and live previews never export.
+pub fn save(settings: &Settings) -> Result<String, String> {
+    let _lock = FILE_LOCK.lock().map_err(|_| "Perfil ocupado.")?;
+    validate(settings)?;
+    let dir = directory()?;
+    let config = dirs::config_dir().ok_or("Pasta de configuração indisponível.")?;
+    save_in(&dir, &config.join("MangoHud"), settings)
+}
+fn save_in(dir: &Path, system: &Path, settings: &Settings) -> Result<String, String> {
+    validate(settings)?;
+    if settings.get("launcher_sync_system").and_then(Value::as_bool) == Some(true) {
+        export_system(system, settings).map_err(|e| format!("Não foi possível aplicar ao MangoHUD do sistema: {e}"))?;
+    }
+    write_in(dir, settings, false)
+}
+fn export_system(dir: &Path, settings: &Settings) -> Result<(), String> {
+    validate(settings)?;
+    // Preserve the original once, without following links or modifying other profiles.
+    match fs::symlink_metadata(dir) {
+        Ok(m) if !m.is_dir() || m.file_type().is_symlink() => return Err("Pasta MangoHud inválida.".into()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => fs::create_dir_all(dir).map_err(|e| e.to_string())?,
+        Err(e) => return Err(e.to_string()),
+        _ => {}
+    }
+    let path = dir.join("MangoHud.conf");
+    match fs::symlink_metadata(&path) {
+        Ok(m) if !m.is_file() || m.file_type().is_symlink() => return Err("MangoHud.conf não é um arquivo regular.".into()),
+        Ok(_) => {
+            let backup = dir.join("MangoHud.conf.peligames.bak");
+            match fs::symlink_metadata(&backup) {
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => atomic_write(&backup, &fs::read(&path).map_err(|e| e.to_string())?)?,
+                Err(e) => return Err(e.to_string()),
+                Ok(m) if !m.is_file() || m.file_type().is_symlink() => return Err("Backup MangoHUD inválido.".into()),
+                _ => {}
+            }
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {},
+        Err(e) => return Err(e.to_string()),
+    }
+    let logs = dir.join("logs");
+    let rendered = render(settings, &logs)?.replacen("perfil exclusivo do launcher", "configuração do usuário", 1);
+    fs::create_dir_all(logs).map_err(|e| e.to_string())?;
+    atomic_write(&path, rendered.as_bytes())
+}
 fn write_in(dir: &Path, settings: &Settings, preview: bool) -> Result<String, String> {
     validate(settings)?;
     let logs = dir.join("logs");
@@ -195,11 +239,17 @@ fn apply_environment(command: &mut Command, config_path: &Path, display: bool, l
 }
 pub fn apply(command: &mut Command, enabled: bool, limit: Option<u32>) -> Result<(), String> {
     if limit.is_some_and(|fps| fps > 1000) { return Err("Informe um limite de FPS entre 0 e 1000.".into()); }
-    let display = enabled || global_enabled()?;
+    apply_with_override(command, enabled, limit, None)
+}
+pub fn apply_with_override(command: &mut Command, enabled: bool, limit: Option<u32>, display_override: Option<bool>) -> Result<(), String> {
+    if limit.is_some_and(|fps| fps > 1000) { return Err("Informe um limite de FPS entre 0 e 1000.".into()); }
+    let display = match display_override { Some(value) => value, None => enabled || global_enabled()? };
     if display || limit.unwrap_or(0) > 0 {
         let profile = load()?;
         write(&profile.settings, false)?;
         apply_environment(command, Path::new(&profile.config_path), display, limit);
+    } else if display_override == Some(false) {
+        command.env("MANGOHUD", "0").env("MANGOHUD_CONFIG", "no_display=1");
     }
     Ok(())
 }
@@ -221,6 +271,48 @@ mod tests {
             .contains("network\n"));
         assert!(r.contains("permit_upload=0\n"));
         assert!(r.contains("output_folder=/tmp/PeliGames/MangoHUD/logs\n"));
+    }
+    #[test]
+    fn system_export_is_opt_in_and_preserves_original_backup() {
+        let root = std::env::temp_dir().join(format!("peligames-hud-export-{}", uuid::Uuid::new_v4()));
+        let own = root.join("launcher");
+        let system = root.join("MangoHud");
+        fs::create_dir_all(&own).unwrap();
+        fs::create_dir_all(&system).unwrap();
+        let path = system.join("MangoHud.conf");
+        fs::write(&path, "# original\nfps=0\n").unwrap();
+        let mut settings = defaults();
+        save_in(&own, &system, &settings).unwrap();
+        assert_eq!(fs::read_to_string(&path).unwrap(), "# original\nfps=0\n");
+        assert!(!system.join("MangoHud.conf.peligames.bak").exists());
+        settings.insert("launcher_sync_system".into(), Value::Bool(true));
+        save_in(&own, &system, &settings).unwrap();
+        let exported = fs::read_to_string(&path).unwrap();
+        assert!(exported.contains("fps=1\n"));
+        assert!(!exported.contains("launcher_"));
+        settings.insert("font_size".into(), serde_json::json!(40));
+        write_in(&own, &settings, true).unwrap();
+        assert_eq!(fs::read_to_string(&path).unwrap(), exported);
+        save_in(&own, &system, &settings).unwrap();
+        assert!(fs::read_to_string(&path).unwrap().contains("font_size=40\n"));
+        assert_eq!(fs::read_to_string(system.join("MangoHud.conf.peligames.bak")).unwrap(), "# original\nfps=0\n");
+        settings.insert("launcher_sync_system".into(), Value::Bool(false));
+        let before = fs::read(&path).unwrap();
+        save_in(&own, &system, &settings).unwrap();
+        assert_eq!(fs::read(path).unwrap(), before);
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn invalid_export_does_not_modify_system_profile() {
+        let root = std::env::temp_dir().join(format!("peligames-hud-invalid-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join("MangoHud.conf");
+        fs::write(&path, "original").unwrap();
+        let mut settings = defaults();
+        settings.insert("font_size".into(), serde_json::json!(-1));
+        assert!(export_system(&root, &settings).is_err());
+        assert_eq!(fs::read_to_string(path).unwrap(), "original");
+        fs::remove_dir_all(root).unwrap();
     }
     #[test]
     fn preview_does_not_replace_saved_game_profile() {
@@ -310,5 +402,19 @@ mod individual_fps_tests {
         apply_environment(&mut cmd, path, true, None);
         assert_eq!(override_value(&cmd), None);
         assert!(cmd.get_envs().any(|(k,v)| k == "MANGOHUD_CONFIGFILE" && v == Some(path.as_os_str())));
+    }
+}
+
+#[cfg(test)]
+mod per_game_display_tests {
+    use super::*;
+    #[test]
+    fn performance_explicitly_disabled_game_clears_inherited_monitoring() {
+        let mut command = Command::new("game");
+        command.env("MANGOHUD", "1");
+        apply_with_override(&mut command, true, Some(0), Some(false)).unwrap();
+        let value = |key: &str| command.get_envs().find(|(k, _)| *k == key).and_then(|(_, v)| v).map(|v| v.to_string_lossy().into_owned());
+        assert_eq!(value("MANGOHUD"), Some("0".into()));
+        assert_eq!(value("MANGOHUD_CONFIG"), Some("no_display=1".into()));
     }
 }

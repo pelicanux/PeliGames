@@ -3,11 +3,11 @@ use super::nexus_local::{NexusGame, Workspace};
 use std::{collections::BTreeMap, path::Path, process::Command};
 
 #[derive(Default)]
-struct Options {
-    args: Vec<String>,
-    env: BTreeMap<String, String>,
+pub(super) struct Options {
+    pub(super) args: Vec<String>,
+    pub(super) env: BTreeMap<String, String>,
 }
-fn parse(value: &str) -> Result<Options, String> {
+pub(super) fn parse(value: &str) -> Result<Options, String> {
     let normalized = value.replace(['\n', '\r', '\t'], " ");
     let tokens = crate::core::advanced_settings::wrapper_args(&normalized)
         .map_err(|_| "Opções inválidas. Use até 4096 caracteres e confira as aspas.".to_string())?;
@@ -69,7 +69,7 @@ fn automatic(game: &NexusGame, visible: &Path) -> Options {
 fn quote(value: &str) -> String {
     format!("\"{}\"", value.replace('\\', "\\\\").replace('"', "\\\""))
 }
-fn describe(options: &Options) -> String {
+pub(super) fn describe(options: &Options) -> String {
     options
         .env
         .iter()
@@ -284,7 +284,7 @@ pub(super) fn advanced_command(game: &NexusGame, original: Command) -> Result<Co
             command.env(key, value);
         }
     }
-    crate::core::mangohud_config::apply(&mut command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit)?;
+    crate::core::mangohud_config::apply_with_override(&mut command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit, game.advanced.mangohud_enabled)?;
     Ok(command)
 }
 

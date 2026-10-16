@@ -1,11 +1,12 @@
+import { RetractableInput } from "./RetractableInput";
 import { useEffect, useRef, useState } from "react";
 import { MenuIcon } from "./MenuIcon";
 import { useI18n } from "../i18n/I18nContext";
 import type { AdvancedSettings } from "../services/advancedSettings";
 
 /** Separate editing visibility from the saved priorities applied at launch. */
-export function WineDllPriorities({ settings, disabled, automatic, detectionError, onChange, onReset }: {
-  settings: AdvancedSettings; disabled?: boolean; automatic?: string; detectionError?: string;
+export function WineDllPriorities({ settings, disabled, automatic, detectionError, onChange, onReset, compact = false }: {
+  compact?: boolean; settings: AdvancedSettings; disabled?: boolean; automatic?: string; detectionError?: string;
   onReset?: () => void;
   onChange: (settings: AdvancedSettings) => boolean;
 }) {
@@ -37,11 +38,22 @@ export function WineDllPriorities({ settings, disabled, automatic, detectionErro
       const [names, order] = entry.split("=");
       for (const name of names.split(",")) priorities.set(name.toLowerCase(), order);
     }
-    if (save([...priorities].map(([name, order]) => `${name}=${order}`))) { setDraft(""); setError(""); }
+    if (save([...priorities].map(([name, order]) => `${name}=${order}`))) { setDraft(""); setError(""); if (compact) setEditing(false); }
   };
-  return <div className="advanced-option advanced-wine-dlls">
+  if (compact) return <div className="advanced-option advanced-wine-dlls modern-inline-dlls">
+    <div className="advanced-option-description"><label>{title}</label></div>
+    <RetractableInput open={editing} setOpen={setEditing} label={title} value={draft} onChange={value => { setDraft(value); setError(""); }} onOpen={() => { setDraft(""); setError(""); }} onSubmit={add} disabled={disabled} error={error || detectionError} maxLength={2048} />
+    {displayed.length > 0 && <div className="advanced-dll-summary"><div className="advanced-dll-pills">
+      {displayed.map(entry => <span className={`advanced-dll-pill${manual.includes(entry) ? "" : " detected"}`} key={entry}>{entry}{manual.includes(entry)
+        ? <button type="button" disabled={disabled} aria-label={`${pt ? "Remover" : "Remove"} ${entry}`} onClick={() => save(manual.filter(item => item !== entry))}><span aria-hidden="true">×</span></button>
+        : <small>mod</small>}</span>)}
+    </div></div>}
+    {manual.length > 0 && <div className="modern-dll-reset"><button type="button" className="modern-mini-btn" disabled={disabled} onClick={() => { if (save([])) onReset?.(); }}>{pt ? "Redefinir" : "Reset"}</button></div>}
+    {detectionError && !editing && <p role="alert" className="advanced-dll-error">{detectionError}</p>}
+  </div>;
+  return <div className={`advanced-option advanced-wine-dlls${compact ? " modern-inline-dlls" : ""}`}>
     <div className="advanced-option-description"><label htmlFor="advanced-dll-editor-toggle">{title}</label><p>{pt ? "Prioridades aplicadas ao iniciar o jogo. Abra o editor para adicionar ou remover DLLs." : "Priorities applied when launching the game. Open the editor to add or remove DLLs."}</p></div>
-    <button id="advanced-dll-editor-toggle" type="button" role="switch" aria-label={pt ? "Editar prioridades das DLLs do Wine" : "Edit Wine DLL priorities"} aria-checked={editing} disabled={disabled} className={`advanced-toggle ${editing ? "enabled" : ""}`} onClick={() => { setEditing(value => !value); setDraft(""); setError(""); }}><span /></button>
+    <button id="advanced-dll-editor-toggle" type="button" role={compact ? undefined : "switch"} aria-expanded={compact ? editing : undefined} aria-label={pt ? "Editar prioridades das DLLs do Wine" : "Edit Wine DLL priorities"} aria-checked={compact ? undefined : editing} disabled={disabled} className={compact ? "modern-mini-btn" : `advanced-toggle ${editing ? "enabled" : ""}`} onClick={() => { setEditing(value => !value); setDraft(""); setError(""); }}>{compact ? (editing ? (pt ? "Voltar" : "Back") : (pt ? "Editar" : "Edit")) : <span />}</button>
     {editing ? <form className="advanced-dll-tags-editor" onSubmit={event => { event.preventDefault(); add(); }}>
       <div className="advanced-dll-pills">
         {detected.filter(entry => !manual.includes(entry)).map(entry => <span className="advanced-dll-pill detected" key={`auto-${entry}`} title={pt ? "Detectada nos mods; gerenciada automaticamente." : "Detected in mods; managed automatically."}>{entry}<small>mod</small></span>)}

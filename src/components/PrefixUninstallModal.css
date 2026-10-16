@@ -1,0 +1,10 @@
+.uninstall-options { display:grid; gap:10px; margin:14px 0 0; }
+.uninstall-option { display:grid; grid-template-columns:18px minmax(0,1fr); align-items:start; gap:12px; padding:12px; border:1px solid rgba(var(--accent-rgb),.2); border-radius:8px; text-align:left; cursor:pointer; }
+.uninstall-option:has(input:checked) { border-color:rgba(239,68,68,.55); background:rgba(239,68,68,.06); }
+.uninstall-option input { width:18px; height:18px; margin:2px 0 0; accent-color:var(--tone-ef4444,#ef4444); }
+.uninstall-option > span { min-width:0; overflow-wrap:anywhere; }
+.uninstall-option strong { display:block; font-size:.9rem; }
+.uninstall-option small { display:block; margin-top:4px; color:var(--tone-94a3b8,#94a3b8); font-size:.8rem; line-height:1.45; }
+.uninstall-target { margin:0; font-size:.85rem; overflow-wrap:anywhere; }
+.uninstall-target code { font-size:.8rem; color:var(--tone-94a3b8,#94a3b8); }
+.uninstall-summary { margin:14px 0 0; font-size:.85rem; line-height:1.5; }

@@ -23,6 +23,15 @@ fn nexus_url(value: &str) -> Result<reqwest::Url, String> {
     Ok(url)
 }
 
+/// The account root needs the internal session; the system browser is
+/// usually not signed in and would show "Full authentication is required".
+fn external_url(mut url: reqwest::Url) -> reqwest::Url {
+    if url.host_str() == Some("users.nexusmods.com") && matches!(url.path(), "" | "/") {
+        url.set_path("/auth/sign_in");
+        url.set_query(None);
+    }
+    url
+}
 fn navigation_allowed(url: &reqwest::Url) -> bool {
     if nexus_url(url.as_str()).is_ok() {
         return true;
@@ -387,8 +396,8 @@ pub async fn nexus_browser_action(
     match action.as_str() {
         "reload" => view.reload().map_err(|e| e.to_string()),
         "external" => {
-            let url = nexus_url(view.url().map_err(|e| e.to_string())?.as_str())?;
-            super::nexus_downloads::register_nexus_handler().await?;
+            let url = external_url(nexus_url(view.url().map_err(|e| e.to_string())?.as_str())?);
+            super::nexus_downloads::register_for_external_browser().await?;
             super::browser::open(app.clone(), url.to_string()).await?;
             if session_label(&app)?.as_deref() == Some(&label) {
                 dismiss(&app, None);
@@ -431,6 +440,12 @@ mod tests {
         assert!(capability.get("windows").is_none());
         assert_eq!(capability["webviews"], serde_json::json!(["main"]));
         assert!(capability.get("remote").is_none());
+    }
+    #[test]
+    fn external_browser_opens_the_sign_in_page_instead_of_the_account_root() {
+        let open = |value: &str| external_url(reqwest::Url::parse(value).unwrap()).to_string();
+        assert_eq!(open("https://users.nexusmods.com/"), "https://users.nexusmods.com/auth/sign_in");
+        assert_eq!(open("https://www.nexusmods.com/skyrimspecialedition/mods/1"), "https://www.nexusmods.com/skyrimspecialedition/mods/1");
     }
     #[test]
     fn restricts_top_level_pages_to_real_nexus_https_hosts() {

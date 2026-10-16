@@ -26,7 +26,7 @@ export function NexusLootControl({ gameId, disabled, onError, onSaved }: { gameI
   const date = status.updated ? new Date(status.updated * 1000).toLocaleDateString() : "";
   return <div className="installation-field nexus-loot-control">
     <label><MenuIcon name="document" />LOOT</label>
-    <HoverTooltip text={text.lootHint}>
+    <HoverTooltip text={text.lootHint} align="left" anchorClassName="nexus-loot-tooltip-anchor" tooltipClassName="modern-tools-tooltip">
       <button type="button" className="btn btn-secondary" disabled={disabled || busy} onClick={update}>
         <MenuIcon name="download" />{busy ? text.loading : status.updated ? `${text.lootUpdate} · ${date}` : text.lootEnable}
       </button>

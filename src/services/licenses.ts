@@ -8,6 +8,8 @@ import nexusIconLicense from '../../licenses/upstream/Vortex-Nexus-Icon/LICENSE.
 import nativeNotices from '../../licenses/AppImage-Native-Notices.txt?raw';
 import thirdPartyNotices from '../../licenses/DLSSNR-AMD-THIRD-PARTY.md?raw';
 
+import myMemoryServiceNotice from '../../licenses/MyMemory-Service.md?raw';
+
 // Original notices are bundled verbatim so they remain available offline.
 export const creditLicenses = [
   { id: 'launcher', name: 'PeliGames', label: 'GPL-3.0-only · © 2026 Pelicano', text: launcherLicense, url: 'https://github.com/pelicanux/PeliGames/blob/main/LICENSE' },
@@ -18,6 +20,7 @@ export const creditLicenses = [
   { id: 'rust', name: 'Rust', label: 'Licenças das dependências', text: rustNotices, url: 'https://github.com/pelicanux/PeliGames/blob/main/licenses/Rust-Dependencies.txt' },
   { id: 'font', name: 'Jersey 10', label: 'OFL-1.1 · The Soft Type Project Authors', text: fontLicense, url: 'https://github.com/scfried/soft-type-jersey/blob/main/OFL.txt' },
   { id: 'nexusIcon', name: 'Nexus Mods · SVG', label: 'Vortex · GPL-3.0', text: nexusIconLicense, url: 'https://github.com/Nexus-Mods/Vortex/blob/master/LICENSE.md' },
+  { id: 'mymemory', name: 'MyMemory', label: 'Serviço online · Translated S.r.l.', text: myMemoryServiceNotice, url: 'https://mymemory.translated.net/terms-and-conditions' },
   { id: 'native', name: 'AppImage · Linux', label: 'Avisos dos componentes nativos', text: nativeNotices, url: 'https://github.com/pelicanux/PeliGames/blob/main/licenses/AppImage-Native-Notices.txt' },
 ] as const;
 

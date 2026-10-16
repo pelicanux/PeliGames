@@ -47,7 +47,28 @@ export function demoLauncherInvoke(command: string, args: Record<string, unknown
     case "get_pelinstall_icon": return { value: null };
   }
 }
-export function demoLauncherFetch(input: string, init: RequestInit | undefined, games: GameInfo[]): Response | undefined {
+export function demoLauncherFetch(input: string, init: RequestInit | undefined, games: GameInfo[]): Response | Promise<Response> | undefined {
+  if (input === "/__preview/wine-tools") {
+    const request = JSON.parse(String(init?.body || "{}"));
+    if (request.action !== "catalog") {
+      const mode = new URLSearchParams(location.search).get("wineTools");
+      if (["winecfg", "regedit", "explorer"].includes(request.action) && (mode === "slow" || mode === "error")) {
+        return new Promise(resolve => setTimeout(() => resolve(mode === "error"
+          ? new Response(JSON.stringify({ error: "Falha simulada ao abrir a ferramenta Wine." }), { status: 400 })
+          : json({ packages: [], log: "Prévia: nenhuma ferramenta Wine foi aberta." })), 5000));
+      }
+      return new Response(JSON.stringify({ error: "Prévia visual: nenhuma ferramenta Wine será executada." }), { status: 400 });
+    }
+    const packages = [
+      { id: "vcrun2022", title: "Microsoft Visual C++ 2015–2022", category: "dlls", installed: false },
+      { id: "d3dx9", title: "Bibliotecas DirectX 9", category: "dlls", installed: false },
+      { id: "corefonts", title: "Fontes básicas Microsoft", category: "fonts", installed: true },
+    ];
+    if (new URLSearchParams(location.search).get("winetricks") === "large") {
+      for (let index = 0; index < 1000; index++) packages.push({ id: `component_${index}`, title: `Componente de demonstração ${index}`, category: "dlls", installed: false });
+    }
+    return json({ packages, log: "Catálogo de demonstração; nenhum arquivo foi alterado." });
+  }
   if (input === "/__preview/game-execution") {
     if (!init?.body) return json(session);
     const body = JSON.parse(String(init.body));

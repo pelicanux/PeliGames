@@ -1,3 +1,4 @@
+import "./SetupWizard.css";
 import { ModalSurface } from "./ModalSurface";
 import { MenuIcon } from "./MenuIcon";
 import React, { useState, useEffect } from 'react';
@@ -246,7 +247,7 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
 
   return (
     <div className="modal-overlay setup-wizard-overlay">
-      <ModalSurface className="modal-content dialog-glass setup-wizard" role="dialog" aria-modal="true" aria-labelledby="setup-wizard-title"
+      <ModalSurface className="modal-content dialog-glass setup-wizard setup-wizard-modern" role="dialog" aria-modal="true" aria-labelledby="setup-wizard-title"
         hideClose={!allowCancel || !onCancel} onDismiss={onCancel} closeDisabled={isDownloading || loading || extractingDll}
         header={<><h2 id="setup-wizard-title">{onBack ? <button type="button" className="wizard-titlebar-back" aria-label={t("welcome", "back")} disabled={isDownloading || loading || extractingDll} onClick={onBack}><MenuIcon name="back" /></button> : <MenuIcon name="sliders" />}{t("setupWizard", "title")}</h2></>}
         headerActions={        <div className="setup-wizard-header-actions">
@@ -260,7 +261,7 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
           <button
             onClick={handleSave}
             disabled={!gpuCompatible || loading || extractingDll || !downloadComplete}
-            className="btn"
+            className="btn wizard-continue"
             style={{
               width: "100%", padding: "1rem", borderRadius: "8px", fontSize: "1.1rem",
               fontFamily: "'Rajdhani', sans-serif",
@@ -376,7 +377,7 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
 
         <div style={{ marginBottom: "2rem", display: "flex", gap: "1rem" }}>
           <button 
-            className="btn" 
+            className="btn wizard-download"
             style={{ 
               flex: 1, padding: "0.8rem", borderRadius: "8px", position: "relative",
               background: downloadComplete ? "rgba(16, 185, 129, 0.1)" : "rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)",
@@ -389,7 +390,7 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
             onClick={handleDownload}
           >
             {isDownloading && (
-              <div style={{
+              <div className="wizard-download-fill" style={{
                 position: "absolute", left: 0, top: 0, bottom: 0, width: `${progressPct}%`,
                 background: "rgba(59, 130, 246, 0.3)", transition: "width 0.2s linear", zIndex: 0
               }} />

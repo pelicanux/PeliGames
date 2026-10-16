@@ -7,12 +7,13 @@ export function useBoundedDropdown(
   menuRef: RefObject<HTMLDivElement | null>,
   setIsOpen: Dispatch<SetStateAction<boolean>>,
   minWidth = 0,
+  align: "left" | "right" = "left",
 ) {
   const [position, setPosition] = useState<CSSProperties>({});
   useLayoutEffect(() => {
     if (!isOpen) return;
     const update = () => {
-      const trigger = anchorRef.current?.querySelector(".custom-select-trigger");
+      const trigger = anchorRef.current?.querySelector("[data-dropdown-trigger], .custom-select-trigger");
       if (!trigger) return;
       const rect = trigger.getBoundingClientRect();
       const margin = 8, topLimit = 56;
@@ -26,7 +27,7 @@ export function useBoundedDropdown(
       const width = Math.min(Math.max(rect.width, minWidth), window.innerWidth - margin * 2);
       setPosition({
         position: "fixed", width,
-        left: Math.max(margin, Math.min(rect.left, window.innerWidth - width - margin)),
+        left: Math.max(margin, Math.min(align === "right" ? rect.right - width : rect.left, window.innerWidth - width - margin)),
         top: opensBelow ? rect.bottom + margin : undefined,
         bottom: opensBelow ? "auto" : window.innerHeight - rect.top + margin,
         maxHeight: Math.min(250, opensBelow ? below : above), zIndex: 1100,
@@ -49,6 +50,6 @@ export function useBoundedDropdown(
       document.removeEventListener("mousedown", outside);
       document.removeEventListener("keydown", key);
     };
-  }, [isOpen, anchorRef, menuRef, setIsOpen, minWidth]);
+  }, [isOpen, anchorRef, menuRef, setIsOpen, minWidth, align]);
   return position;
 }

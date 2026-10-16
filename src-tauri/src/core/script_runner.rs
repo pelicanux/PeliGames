@@ -23,6 +23,38 @@ fn backend_route(script: &str, route: &str) -> String {
     route.to_string()
 }
 
+/// Optional parts of an installation, on every route of current backends:
+/// int4 mixed (faster network) and the RenoDX style. `None` leaves the
+/// backend's default (off when not run in a terminal).
+#[derive(Clone, Copy, Default)]
+pub struct InstallExtras {
+    pub int4: Option<bool>,
+    pub renodx: Option<bool>,
+}
+/// The install.sh arguments for `extras`, or why this backend cannot do them.
+/// Older backends know RenoDX only as the route optiscaler-renodx.
+fn extra_arguments(script: &str, route: &str, extras: InstallExtras) -> Result<(String, Vec<&'static str>), String> {
+    let mut route = route.to_string();
+    let mut arguments = Vec::new();
+    if let Some(int4) = extras.int4 {
+        if script.contains("--int4)") {
+            arguments.push(if int4 { "--int4" } else { "--no-int4" });
+        } else if int4 {
+            return Err("O backend baixado não tem int4 misto. Atualize o backend e tente de novo.".into());
+        }
+    }
+    if let Some(renodx) = extras.renodx {
+        if script.contains("--renodx)") {
+            arguments.push(if renodx { "--renodx" } else { "--no-renodx" });
+        } else if renodx && route == "optiscaler" && script.contains("optiscaler-renodx") {
+            route = "optiscaler-renodx".into();
+        } else if renodx {
+            return Err("O backend baixado não tem o estilo RenoDX nesta rota. Atualize o backend e tente de novo.".into());
+        }
+    }
+    Ok((route, arguments))
+}
+
 /// Executes a standalone installation by copying bundled resources to a temp directory.
 pub fn execute_standalone_install(
     resource_path: &Path,
@@ -31,6 +63,7 @@ pub fn execute_standalone_install(
     dll_path: Option<&String>,
     bin_path: Option<&String>,
     shortcut_key: &str,
+    extras: InstallExtras,
 ) -> Result<String, String> {
     // 1. Create a unique temporary directory
     let temp_dir = env::temp_dir().join(format!("dlssnr-installer-{}", uuid::Uuid::new_v4()));
@@ -94,10 +127,15 @@ pub fn execute_standalone_install(
     cmd.env_remove("PYTHONPATH");
     
     let script = fs::read_to_string(temp_dir.join("install.sh")).unwrap_or_default();
+    let (route, extra) = match extra_arguments(&script, &backend_route(&script, route), extras) {
+        Ok(value) => value,
+        Err(error) => { let _ = fs::remove_dir_all(&temp_dir); return Err(error); }
+    };
     cmd.current_dir(&temp_dir);
     cmd.arg("install.sh");
     cmd.arg(game_dir);
-    cmd.arg(backend_route(&script, route));
+    cmd.arg(&route);
+    cmd.args(extra);
     
     if let Some(dll) = dll_path {
         cmd.arg("--dll");
@@ -241,7 +279,7 @@ fn inject_shortcut_key(game_dir: &str, shortcut_key: &str) -> Result<(), String>
 
 #[cfg(test)]
 mod tests {
-    use super::backend_route;
+    use super::{backend_route, extra_arguments, InstallExtras};
     const NEW: &str = "case \"$route\" in\n    reshade-feeder) kind=reshade;;\n    reshade-feeder-vulkan) kind=vulkan;;\n";
     const OLD: &str = "case \"$route\" in\n    reshade) kind=reshade;;\n    vulkan) kind=vulkan;;\n";
     #[test]
@@ -255,5 +293,21 @@ mod tests {
             assert_eq!(backend_route(NEW, route), route);
             assert_eq!(backend_route(OLD, route), route);
         }
+    }
+    #[test]
+    fn int4_and_renodx_follow_what_the_backend_knows() {
+        let current = "--int4) int4=1;;\n--no-int4) int4=0;;\n--renodx) renodx=1;;\n--no-renodx) renodx=0;;\n";
+        let both = InstallExtras { int4: Some(true), renodx: Some(true) };
+        assert_eq!(extra_arguments(current, "reshade-feeder", both).unwrap(), ("reshade-feeder".into(), vec!["--int4", "--renodx"]));
+        let off = InstallExtras { int4: Some(false), renodx: Some(false) };
+        assert_eq!(extra_arguments(current, "optiscaler", off).unwrap().1, vec!["--no-int4", "--no-renodx"]);
+        assert!(extra_arguments(current, "remove", InstallExtras::default()).unwrap().1.is_empty());
+        // Older backend: RenoDX only as the optiscaler-renodx route, no int4 flag.
+        let older = "optiscaler|optiscaler-renodx) kind=optiscaler;;\n";
+        let renodx = InstallExtras { int4: None, renodx: Some(true) };
+        assert_eq!(extra_arguments(older, "optiscaler", renodx).unwrap(), ("optiscaler-renodx".into(), vec![]));
+        assert!(extra_arguments(older, "reshade", renodx).is_err());
+        assert!(extra_arguments(older, "optiscaler", InstallExtras { int4: Some(true), renodx: None }).is_err());
+        assert!(extra_arguments(older, "optiscaler", off).unwrap().1.is_empty(), "desligado num backend antigo não muda nada");
     }
 }

@@ -22,13 +22,13 @@ export function useNeuralStartup(path: string | undefined, installed: boolean) {
   const initial = path ? readPreferences()[path] ?? true : true;
   const queueIdentity = useRef("");
   const queue = useRef<ReturnType<typeof createLatestWriteQueue<boolean, Feedback>> | null>(null);
-  const [state, setState] = useState({ identity, enabled: initial, busy: installed, initializing: installed, error: "", feedback: "" as Feedback });
+  const [state, setState] = useState({ identity, enabled: initial, busy: installed, initializing: Boolean(path), error: "", feedback: "" as Feedback });
   useEffect(() => {
     let active = true;
     let confirmed = initial;
-    setState({ identity, enabled: initial, busy: installed, initializing: installed, error: "", feedback: "" as Feedback });
+    setState({ identity, enabled: initial, busy: installed, initializing: Boolean(path), error: "", feedback: "" as Feedback });
     const writer = createLatestWriteQueue<boolean, Feedback>(async value => {
-      const feedback: Feedback = "nextLaunch";
+      const feedback: Feedback = installed ? "nextLaunch" : "";
       if (path && installed) {
         await migratePreferences();
         await invoke<void>("set_neural_startup", { gameDir: path, enabled: value });
@@ -62,9 +62,9 @@ export function useNeuralStartup(path: string | undefined, installed: boolean) {
   }, [state, identity]);
   const enabled = state.identity === identity ? state.enabled : initial;
   const busy = state.identity === identity ? state.busy : installed;
-  const initializing = state.identity === identity ? state.initializing : installed;
+  const initializing = state.identity === identity ? state.initializing : Boolean(path);
   const change = (value: boolean) => {
-    if (!path || !installed || initializing || !queue.current || queueIdentity.current !== identity) return;
+    if (!path || initializing || !queue.current || queueIdentity.current !== identity) return;
     // Show intent immediately. Saving never dims or locks the switch.
     setState({ identity, enabled: value, busy: true, initializing: false, error: "", feedback: "" as Feedback });
     queue.current.enqueue(value);

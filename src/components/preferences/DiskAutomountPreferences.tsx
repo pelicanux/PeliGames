@@ -11,11 +11,11 @@ import { storageNameInput } from "./storageName";
 import { NtfsMigrationWizard } from "./NtfsMigrationWizard";
 
 type StorageOperation = "mount" | "unmount" | "remount";
-export type Volume = { id: string; uuid: string; device: string; label: string; partition_name: string; filesystem: string; size: number; mounts: string[]; mount_at_startup: boolean; configured_path: string; blocked_reason: string; format_blocked_reason?: string; operations_blocked_reason?: string; preparation_kind?: "disk" | "partition" | "free_space"; preparation_identity?: Record<string, unknown>; parent_id?: string; offset?: number; extent_size?: number };
+export type Volume = { id: string; uuid: string; device: string; label: string; partition_name: string; filesystem: string; size: number; mounts: string[]; mount_at_startup: boolean; configured_path: string; blocked_reason: string; format_blocked_reason?: string; operations_blocked_reason?: string; preparation_kind?: "disk" | "partition" | "free_space"; preparation_identity?: Record<string, unknown>; parent_id?: string; offset?: number; extent_size?: number; shared_between_systems?: boolean };
 export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (busy: boolean) => void; onDialogChange: (open: boolean) => void }) {
   const { language } = useI18n(); const pt = language === "pt";
   const [volumes, setVolumes] = useState<Volume[]>([]), [selected, setSelected] = useState("");
-  const [name, setName] = useState(""), [startup, setStartup] = useState(true);
+  const [name, setName] = useState(""), [startup, setStartup] = useState(true), [shared, setShared] = useState(false);
   const [loading, setLoading] = useState(true), [saving, setSaving] = useState(false);
   const [error, setError] = useState(""), [success, setSuccess] = useState("");
   const [confirm, setConfirm] = useState<"save" | null>(null);
@@ -54,19 +54,19 @@ export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (
   useEffect(() => { void refresh(); }, []);
   const choose = (item: Volume) => {
     setSelected(item.id); setName(storageNameInput(item.label || item.partition_name || ""));
-    setStartup(item.configured_path ? item.mount_at_startup : true); setSuccess(""); setError("");
+    setStartup(item.configured_path ? item.mount_at_startup : true); setShared(Boolean(item.shared_between_systems)); setSuccess(""); setError("");
 
   };
   const save = async () => {
     if (!volume || !valid || volume.blocked_reason || saving) return;
     setSaving(true); setError(""); setSuccess("");
     try {
-      const result = await invoke<{mount_path:string}>("save_storage_automount", {id:volume.id, uuid:volume.uuid, name, mountAtStartup:startup});
+      const result = await invoke<{mount_path:string}>("save_storage_automount", {id:volume.id, uuid:volume.uuid, name, mountAtStartup:startup, sharedBetweenSystems:shared && !volume.shared_between_systems});
       setSuccess(pt ? `Configuração salva. Volume montado em ${result.mount_path}.` : `Settings saved. Volume mounted at ${result.mount_path}.`);
       await refresh();
     } catch (e) { setError(String(e)); } finally { setSaving(false); setConfirm(null); }
   };
-  const operationNames = { mount: pt ? "Montar de novo" : "Mount again", unmount: pt ? "Ejetar" : "Eject", remount: pt ? "Remontar" : "Remount" };
+  const operationNames = { mount: pt ? "Montar" : "Mount", unmount: pt ? "Ejetar" : "Eject", remount: pt ? "Remontar" : "Remount" };
   const requestOperation = async (item: Volume, operation: StorageOperation) => {
     if (operationLock.current || saving || confirmationOpen) return;
     operationLock.current = true;
@@ -91,7 +91,9 @@ export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (
           return <div className="storage-volume-card" key={item.id}>
             <button type="button" disabled={saving || confirmationOpen} className={`preference-choice storage-volume-select${item.id === selected ? " selected" : ""}`} aria-pressed={item.id === selected} aria-haspopup="dialog" onClick={event => { triggerRef.current = event.currentTarget; choose(item); }}><span><strong>{item.label || item.partition_name || (item.preparation_kind === "free_space" ? (pt ? "Espaço não particionado" : "Unallocated space") : item.device)}</strong><small>{item.device} · {item.filesystem || (item.preparation_kind === "free_space" ? (pt ? "Espaço livre" : "Free space") : pt ? "Sem sistema de arquivos" : "No filesystem")}</small><small className="storage-volume-capacity">{pt ? "Capacidade:" : "Capacity:"} {(item.size / 1024 ** 3).toFixed(1)} GiB</small><small>{mounted ? item.mounts.join(", ") : (pt ? "Não montado" : "Not mounted")}</small></span></button>
             <div className="storage-volume-card-actions">
-              <button type="button" className="preference-outline" title={operationNames.unmount} aria-label={`${operationNames.unmount} · ${item.label || item.device}`} disabled={saving || confirmationOpen || blocked || !mounted} onClick={() => void requestOperation(item, "unmount")}><MenuIcon name="eject"/></button>
+              {mounted || !configured
+                ? <button type="button" className="preference-outline" title={operationNames.unmount} aria-label={`${operationNames.unmount} · ${item.label || item.device}`} disabled={saving || confirmationOpen || blocked || !mounted} onClick={() => void requestOperation(item, "unmount")}><MenuIcon name="eject"/></button>
+                : <button type="button" className="preference-outline" title={operationNames.mount} aria-label={`${operationNames.mount} · ${item.label || item.device}`} disabled={saving || confirmationOpen || blocked} onClick={() => void requestOperation(item, "mount")}><MenuIcon name="folder"/></button>}
               <button type="button" className="preference-outline" title={operationNames.remount} aria-label={`${operationNames.remount} · ${item.label || item.device}`} disabled={saving || confirmationOpen || blocked || !mounted || !configured} onClick={() => void requestOperation(item, "remount")}><MenuIcon name="repair"/></button>
             </div>
           </div>;
@@ -109,7 +111,9 @@ export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (
         <p id="storage-name-hint">{pt ? "Use até 16 caracteres e inicie o nome com uma letra ou número. São permitidos: letras (sem acentos), números, ponto, hífen e sublinhado." : "Use up to 16 characters and start the name with a letter or number. Allowed: unaccented letters, numbers, dots, hyphens and underscores."}</p>
         <p>{pt ? "Pasta de montagem:" : "Mount folder:"} <strong className="storage-mount-path">/mnt/{name || "…"}</strong></p>
         <label className="preference-switch"><input type="checkbox" checked={startup} disabled={saving || confirmationOpen} onChange={event => setStartup(event.target.checked)}/><span className="preference-switch-track"/><span>{pt ? "Montar ao iniciar o sistema" : "Mount at system startup"}</span></label>
-        <p>{pt ? "A configuração usa UUID para identificar a partição e nofail para não bloquear a inicialização se o disco estiver desconectado. Salvar também monta o volume agora. As permissões dos arquivos permanecem como estão." : "Uses UUID to identify the partition and nofail so a disconnected drive does not block startup. Saving also mounts the volume now. Existing file permissions are preserved."}</p>
+        <label className="preference-switch"><input type="checkbox" checked={shared} disabled={saving || confirmationOpen || volume.shared_between_systems} onChange={event => setShared(event.target.checked)}/><span className="preference-switch-track"/><span>{pt ? "Usar em mais de um sistema Linux" : "Use in more than one Linux system"}</span></label>
+        <p>{volume.shared_between_systems ? (pt ? "Este armazenamento já está liberado para outros sistemas Linux: qualquer conta pode gravar nele." : "This storage is already open to other Linux systems: any account can write to it.") : pt ? "Para outro Linux instalado neste computador também gravar aqui. Ao salvar, todos os arquivos e pastas atuais passam a poder ser alterados por qualquer conta de qualquer sistema, e os novos também. Nada é apagado; em discos grandes isso pode levar alguns minutos." : "So another Linux installed on this computer can write here too. On save, every current file and folder becomes changeable by any account on any system, and new ones too. Nothing is deleted; large drives may take a few minutes."}</p>
+        <p>{pt ? "A configuração usa UUID para identificar a partição e nofail para não bloquear a inicialização se o disco estiver desconectado. Salvar também monta o volume agora." : "Uses UUID to identify the partition and nofail so a disconnected drive does not block startup. Saving also mounts the volume now."}{!shared || volume.shared_between_systems ? (pt ? " As permissões dos arquivos permanecem como estão." : " Existing file permissions are preserved.") : ""}</p>
         <button type="button" className="preference-outline" disabled={!valid || saving || confirmationOpen} onClick={() => setConfirm("save")}><MenuIcon name="floppy"/>{saving ? (pt ? "Aplicando…" : "Applying…") : (pt ? "Salvar automontagem" : "Save automatic mounting")}</button>
       </>}
       </section>
@@ -119,6 +123,6 @@ export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (
     </div>, document.body)}
     {error && !volume && <div className="preferences-error" role="alert">{error}</div>}
     {success && <p role="status">{success}</p>}
-    {confirm === "save" && volume && <ConfirmModal title={pt ? "Aplicar automontagem?" : "Apply automatic mounting?"} message={pt ? `Dispositivo: ${volume.device}. O volume será desmontado sem forçar, receberá o nome e label “${name}”, e sua configuração em /etc/fstab será atualizada para /mnt/${name}. Montagem na inicialização: ${startup ? "ativada" : "desativada"}. A configuração do systemd será recarregada e o volume será montado nesse caminho, sem reiniciar o computador. Feche jogos e arquivos abertos nesse disco. O sistema poderá pedir autorização de administrador para as etapas. Não haverá formatação nem exclusão de arquivos. Se uma etapa falhar, a mensagem informará o que já foi concluído.` : `Device: ${volume.device}. The volume will be unmounted without force, renamed to “${name}” (partition and label), configured in /etc/fstab at /mnt/${name}, then systemd will reload its configuration and the volume will be mounted there, without rebooting. Startup mounting: ${startup ? "enabled" : "disabled"}. Close games and files on this drive. The system may request administrator authorization for these steps. No formatting or file deletion. Any failure will report completed steps.`} confirmText={pt ? "Autorizar e salvar" : "Authorize and save"} cancelText={pt ? "Cancelar" : "Cancel"} busy={saving} onConfirm={() => void save()} onCancel={() => { if (!saving) setConfirm(null); }}/>}
+    {confirm === "save" && volume && <ConfirmModal title={pt ? "Aplicar automontagem?" : "Apply automatic mounting?"} message={pt ? `Dispositivo: ${volume.device}. O volume será desmontado sem forçar, receberá o nome e label “${name}”, e sua configuração em /etc/fstab será atualizada para /mnt/${name}. Montagem na inicialização: ${startup ? "ativada" : "desativada"}.${shared && !volume.shared_between_systems ? " Todos os arquivos e pastas do volume passarão a poder ser alterados por qualquer conta de qualquer sistema Linux." : ""} A configuração do systemd será recarregada e o volume será montado nesse caminho, sem reiniciar o computador. Feche jogos e arquivos abertos nesse disco. O sistema pedirá a senha de administrador. Não haverá formatação nem exclusão de arquivos. Se uma etapa falhar, a mensagem informará o que já foi concluído.` : `Device: ${volume.device}. The volume will be unmounted without force, renamed to “${name}” (partition and label), configured in /etc/fstab at /mnt/${name}, then systemd will reload its configuration and the volume will be mounted there, without rebooting. Startup mounting: ${startup ? "enabled" : "disabled"}.${shared && !volume.shared_between_systems ? " Every file and folder on the volume becomes changeable by any account on any Linux system." : ""} Close games and files on this drive. The system will ask for the administrator password. No formatting or file deletion. Any failure will report completed steps.`} confirmText={pt ? "Autorizar e salvar" : "Authorize and save"} cancelText={pt ? "Cancelar" : "Cancel"} busy={saving} onConfirm={() => void save()} onCancel={() => { if (!saving) setConfirm(null); }}/>}
     {operationFailure && <ResultModal title={operationFailure.title} message={operationFailure.message} type="error" logs="" showLogButton={false} onClose={() => setOperationFailure(null)}/>}</>;
 }

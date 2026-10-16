@@ -23,6 +23,7 @@ pub struct AdvancedSettings {
     pub schema_version: u32,
     pub launch_options: Option<String>,
     pub mangohud_fps_limit: Option<u32>,
+    pub mangohud_enabled: Option<bool>,
     pub gamescope: GamescopeSettings,
     pub options: BTreeMap<String, bool>,
     pub dll_overrides: String,
@@ -81,6 +82,7 @@ struct SavedSettings {
     schema_version: u32,
     launch_options: Option<String>,
     mangohud_fps_limit: Option<u32>,
+    mangohud_enabled: Option<bool>,
     options: BTreeMap<String, bool>,
     dll_overrides: Option<String>,
     wrappers: Vec<LaunchWrapper>,
@@ -93,6 +95,7 @@ impl From<SavedSettings> for AdvancedSettings {
         if saved.schema_version == 2 {
             settings.launch_options = saved.launch_options;
             settings.mangohud_fps_limit = saved.mangohud_fps_limit;
+            settings.mangohud_enabled = saved.mangohud_enabled;
             settings.options = saved.options;
             settings.wrappers = saved.wrappers;
             settings.dll_overrides = if settings.options.get("dll_overrides") == Some(&true) { saved.dll_overrides.unwrap_or_default() } else { String::new() };
@@ -115,6 +118,7 @@ impl Default for AdvancedSettings {
             schema_version: 2,
             launch_options: None,
             mangohud_fps_limit: None,
+            mangohud_enabled: None,
             gamescope: GamescopeSettings {
                 model_version: 2,
                 ..Default::default()
@@ -380,20 +384,32 @@ fn executable(name: &str) -> Result<PathBuf, String> {
     }
     Err(format!("{name} não está instalado ou não está no PATH. Instale a ferramenta ou desative sua opção avançada."))
 }
+/// The command that runs umu-run (and the game) with the game's settings, in
+/// the host's environment rather than the AppImage's.
 pub fn launch_command(umu: &Path, settings: Option<&AdvancedSettings>) -> Result<Command, String> {
+    let mut command = configured_launch_command(umu, settings)?;
+    super::env_utils::host_environment(&mut command);
+    Ok(command)
+}
+fn configured_launch_command(umu: &Path, settings: Option<&AdvancedSettings>) -> Result<Command, String> {
     let global = super::mangohud_config::global_enabled()?;
     if settings.is_none() && !global { return Ok(Command::new(umu)); }
     let effective = with_global_monitoring(settings, global);
-    if global && effective.gamescope.enabled() {
+    if global && effective.mangohud_enabled != Some(false) && effective.gamescope.enabled() {
         return Err("O MangoHUD global não é compatível com este modo de Gamescope. Desative a chave global de MangoHUD para executar com Gamescope.".into());
     }
     let mut command = launch_command_with_tools(umu, Some(&effective), executable)?;
-    super::mangohud_config::apply(&mut command, settings.is_some_and(|s| s.on("mangohud") || s.on("mangohud_env")), effective.mangohud_fps_limit)?;
+    super::mangohud_config::apply_with_override(&mut command, settings.is_some_and(|s| s.on("mangohud") || s.on("mangohud_env")), effective.mangohud_fps_limit, effective.mangohud_enabled)?;
     Ok(command)
 }
 fn with_global_monitoring(settings: Option<&AdvancedSettings>, global: bool) -> AdvancedSettings {
     let mut effective = settings.cloned().unwrap_or_default();
-    if (global || effective.mangohud_fps_limit.unwrap_or(0) > 0) && !effective.on("mangohud") && !effective.on("mangohud_env") {
+    if effective.mangohud_enabled == Some(false) {
+        effective.options.insert("mangohud".into(), false);
+        effective.options.insert("mangohud_env".into(), false);
+    }
+    let display = effective.mangohud_enabled.unwrap_or(global);
+    if (display || effective.mangohud_fps_limit.unwrap_or(0) > 0) && !effective.on("mangohud") && !effective.on("mangohud_env") {
         effective.options.insert("mangohud".into(), true);
     }
     effective
@@ -493,5 +509,36 @@ mod individual_fps_tests {
         let mut game = AdvancedSettings::default(); game.mangohud_fps_limit = Some(60);
         game.gamescope.enable_limiter = true;
         assert!(game.validate().is_err());
+    }
+}
+
+#[cfg(test)]
+mod per_game_monitoring_tests {
+    use super::*;
+    #[test]
+    fn performance_game_override_wins_over_global_monitoring() {
+        let mut game = AdvancedSettings::default();
+        game.mangohud_enabled = Some(false);
+        let hidden = with_global_monitoring(Some(&game), true);
+        assert!(!hidden.on("mangohud") && !hidden.on("mangohud_env"));
+        game.mangohud_enabled = Some(true);
+        assert!(with_global_monitoring(Some(&game), false).on("mangohud"));
+        game.mangohud_enabled = Some(false);
+        game.mangohud_fps_limit = Some(60);
+        let limited = with_global_monitoring(Some(&game), true);
+        assert!(limited.on("mangohud")); // Loaded for the limiter; display stays explicitly hidden.
+        assert_eq!(limited.mangohud_enabled, Some(false));
+    }
+    #[test]
+    fn performance_override_roundtrip_preserves_independent_game_settings() {
+        let mut first = AdvancedSettings::default();
+        first.mangohud_enabled = Some(false);
+        first.mangohud_fps_limit = Some(144);
+        let restored: AdvancedSettings = serde_json::from_str(&serde_json::to_string(&first).unwrap()).unwrap();
+        assert_eq!(restored.mangohud_enabled, Some(false));
+        assert_eq!(restored.mangohud_fps_limit, Some(144));
+        let second = AdvancedSettings::default();
+        assert_eq!(second.mangohud_enabled, None);
+        assert_eq!(second.mangohud_fps_limit, None);
     }
 }

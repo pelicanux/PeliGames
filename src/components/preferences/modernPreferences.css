@@ -1,0 +1,45 @@
+/* New interface: Settings window with a macOS-style sidebar (coloured
+   squircle icons, no boxed rows) and flat rounded cards. Only applies with
+   .preferences-modern, so the Legacy layout keeps its look. */
+/* Home and search results: the same rows, as cards. */
+
+/* All embedded modern settings share the same quiet panel material. */
+.modern-ui .settings-page { container: settings-page / inline-size; max-width: 1440px; margin: 0 auto; padding: 10px 8px 24px; }
+.modern-ui .settings-page :is(.preference-panel,.preference-section,.preference-glass-settings,.preference-connection,.menu-glass-panel) {
+  padding: 20px; border-radius: 18px !important; background: var(--modern-card) !important; border: 1px solid var(--modern-line) !important; box-shadow: none !important; backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.modern-ui .settings-page :is(.preference-panel,.preference-section,.preference-glass-settings,.preference-connection,.menu-glass-panel)::after,
+.modern-ui .settings-page :is(.preference-panel,.preference-section,.menu-glass-panel)::before { content: none !important; }
+.modern-ui .settings-page .preferences-page :is(h2,h3,h4) { color: var(--modern-text); }
+.modern-ui .settings-page .preferences-page h3 { font-size: 16px; font-weight: 650; margin-bottom: 9px; }
+.modern-ui .settings-page .preferences-page p { font-size: 13px; line-height: 1.55; color: var(--modern-muted); }
+.modern-ui .settings-page :is(.preference-outline,.preference-tool-buttons button,.steamgrid-key-controls button,.btn) { border-radius: 11px !important; background: var(--modern-card-2) !important; border: 1px solid var(--modern-line) !important; color: var(--modern-text); box-shadow: none !important; }
+.modern-ui .settings-page :is(.preference-outline,.preference-tool-buttons button,.steamgrid-key-controls button,.btn)::before,
+.modern-ui .settings-page :is(.preference-outline,.preference-tool-buttons button,.steamgrid-key-controls button,.btn)::after { content: none !important; }
+.modern-ui .settings-page :is(.preference-outline,.preference-tool-buttons button,.steamgrid-key-controls button,.btn):hover:not(:disabled) { border-color: rgba(var(--accent-rgb),.6) !important; background: rgba(var(--accent-rgb),.12) !important; }
+.modern-ui .settings-page :is(input[type="text"],input[type="password"],input[type="search"],input[type="number"],select) { border-radius: 10px; background-color: var(--modern-card-2); border-color: var(--modern-line); color: var(--modern-text); }
+.modern-ui .settings-page .preference-switch-track { border-radius: 99px; }
+.modern-ui .settings-page .preference-switch input:checked + .preference-switch-track { background: var(--accent); border-color: var(--accent); }
+.modern-ui .settings-page .settings-page-search { position: relative; display: flex; align-items: center; gap: 6px; flex: 0 0 132px; width: 132px; height: 36px; padding: 0 9px; box-sizing: border-box; border-radius: 12px; background: var(--modern-card); border: 1px solid var(--modern-line); }
+.settings-page-search > button { display: grid; place-items: center; width: 22px; height: 28px; flex-shrink: 0; padding: 0; background: transparent; border: 0; color: var(--modern-muted); cursor: pointer; }
+.settings-page-search > button:hover { background: transparent; color: var(--accent); }
+.modern-ui .settings-page-search input { width: 100%; min-width: 0; border: 0; border-radius: 0; padding: 0; background: transparent; font-size: 12px; outline: none; }
+.settings-page-search:focus-within { border-color: rgba(var(--accent-rgb),.6) !important; }
+@container settings-page (max-width: 1120px) {
+  .modern-ui .settings-page .settings-page-search { width: 36px; flex-basis: 36px; padding: 0 6px; }
+  .settings-page-search input { display: none; }
+  .settings-page-search[data-expanded] input { display: block; position: absolute; z-index: 85; right: 0; top: 42px; width: min(250px,calc(100vw - 40px)); height: 38px; box-sizing: border-box; padding: 0 12px; border: 1px solid rgba(var(--accent-rgb),.45) !important; border-radius: 11px !important; background: var(--modern-overlay) !important; backdrop-filter: blur(18px); box-shadow: 0 12px 30px #0004; }
+}
+
+/* Keep the monitoring search mounted while displaying global results. */
+.modern-ui .settings-searching .mm-grid { display: none; }
+.modern-ui .settings-page .preference-choice { background: var(--modern-card) !important; border: 1px solid var(--modern-line) !important; border-radius: 12px; box-shadow: none; }
+.modern-ui .settings-page .preference-choice::before, .modern-ui .settings-page .preference-choice::after { content: none !important; }
+.modern-ui .settings-page .preference-backend-card button { border-radius: 10px; background: rgba(var(--accent-rgb), .16); color: var(--modern-text); border: 1px solid rgba(var(--accent-rgb), .4); box-shadow: none; }
+.modern-ui .settings-page .preference-backend-card button::before, .modern-ui .settings-page .preference-backend-card button::after { content: none !important; }
+.modern-ui .settings-page .preference-choice.selected { border-color: rgba(var(--accent-rgb), .6) !important; background: rgba(var(--accent-rgb), .12) !important; }
+
+/* The two backend projects share one row, with their own management action. */
+.modern-ui .settings-page .preference-backend-projects { grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; }
+.modern-ui .settings-page .preference-backend-projects .preference-backend-card { flex-direction: column; align-items: flex-start; gap: 14px; }
+.modern-ui .settings-page .preference-backend-projects .preference-backend-update { margin-left: 0; margin-top: auto; }

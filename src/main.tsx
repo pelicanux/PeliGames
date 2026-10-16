@@ -8,6 +8,7 @@ import "./theme/selectionMenus.css";
 import "./modules/nexus/nexus.css";
 const StartupRouter = React.lazy(() => import("./modules/startup/StartupRouter").then(module => ({ default: module.StartupRouter })));
 import { TextContextMenu } from "./components/TextContextMenu";
+import { BootSplash } from "./components/BootSplash";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { I18nProvider } from "./i18n/I18nContext";
 import { ThemeProvider } from "./theme/ThemeProvider";
@@ -17,6 +18,14 @@ import { migrateCoverPaths } from "./services/customCovers";
 if (["game", "nexus"].includes(new URLSearchParams(window.location.search).get("logWindow") || "")) {
   document.documentElement.classList.add("log-monitor-window");
 }
+
+// The window's outer boxes never scroll; WebKitGTK may still scroll them (a focus,
+// an overflowing transform), which slides the title bar out of view. Put them back.
+window.addEventListener("scroll", event => {
+  const target = event.target === document ? document.scrollingElement : event.target as Element | null;
+  if (!target || !(target === document.scrollingElement || target === document.body || target.id === "root" || target.classList.contains("app-wrapper"))) return;
+  if (target.scrollTop || target.scrollLeft) { target.scrollTop = 0; target.scrollLeft = 0; }
+}, { capture: true, passive: true });
 
 // Suppress the webview menu, including dialogs rendered outside the root.
 // Cover handlers still receive the event and open the application's own menu.
@@ -35,7 +44,7 @@ void migrateCoverPaths().finally(() => ReactDOM.createRoot(document.getElementBy
     <ErrorBoundary>
       <I18nProvider>
         <ThemeProvider>
-        {["game", "nexus"].includes(new URLSearchParams(window.location.search).get("logWindow") || "") ? <LogMonitorPage /> : <React.Suspense fallback={<p role="status">Carregando…</p>}><StartupRouter /></React.Suspense>}
+        {["game", "nexus"].includes(new URLSearchParams(window.location.search).get("logWindow") || "") ? <LogMonitorPage /> : <React.Suspense fallback={<BootSplash />}><StartupRouter /></React.Suspense>}
         <TextContextMenu />
         <FloatingScrollbars />
         </ThemeProvider>

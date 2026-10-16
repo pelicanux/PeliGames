@@ -6,14 +6,14 @@ const CACHE_KEY = "automatic_cover_fallbacks_v1";
 export function automaticCoverKey(game: GameInfo): string {
   return game.launcher === "Steam" && game.app_id ? `Steam:${game.app_id}` : `${game.launcher}:${game.path}`;
 }
-function read(): Record<string, string> {
+export function readAutomaticCovers(): Record<string, string> {
   try {
     const value = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
     return value && typeof value === "object" && !Array.isArray(value) ? value : {};
   } catch { return {}; }
 }
-export function automaticCoverFor(game: GameInfo): string | undefined {
-  const value = read()[automaticCoverKey(game)];
+export function automaticCoverFor(game: GameInfo, covers = readAutomaticCovers()): string | undefined {
+  const value = covers[automaticCoverKey(game)];
   return typeof value === "string" && value ? value : undefined;
 }
 export async function rememberAutomaticCover(game: GameInfo, remoteUrl: string): Promise<string> {
@@ -23,12 +23,12 @@ export async function rememberAutomaticCover(game: GameInfo, remoteUrl: string):
     try { url = await invoke<string>("cache_automatic_game_cover", { url: remoteUrl }); }
     catch (error) { console.warn("Could not cache automatic artwork locally", error); }
   }
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ...read(), [automaticCoverKey(game)]: url })); }
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ...readAutomaticCovers(), [automaticCoverKey(game)]: url })); }
   catch (error) { console.warn("Could not remember automatic artwork", error); }
   return url;
 }
 export function forgetAutomaticCover(game: GameInfo) {
-  const covers = read();
+  const covers = readAutomaticCovers();
   delete covers[automaticCoverKey(game)];
   try { localStorage.setItem(CACHE_KEY, JSON.stringify(covers)); }
   catch (error) { console.warn("Could not reset automatic artwork", error); }

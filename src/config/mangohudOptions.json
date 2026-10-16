@@ -696,5 +696,12 @@
     "label": "Ativar MangoHUD por padrão em todos os jogos",
     "kind": "toggle",
     "default": false
+  },
+  {
+    "section": "launcher",
+    "key": "launcher_sync_system",
+    "label": "Aplicar também ao MangoHUD do sistema",
+    "kind": "toggle",
+    "default": false
   }
 ]

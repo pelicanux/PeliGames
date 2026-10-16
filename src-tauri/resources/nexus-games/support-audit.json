@@ -5,8 +5,8 @@
   "public_extension_manifest": "https://api.nexusmods.com/v3/vortex/extensions",
   "public_extension_manifest_sha256": "a4880af241db701d8164bd5687cf8a49354f099c9c65e58761f12ca71e67ff99",
   "source_revisions": {
-    "Nexus-Mods/Vortex": "acb3d8621085df657c0ae07d5df5d425570964ab",
-    "ChemGuy1611/ChemBoy1-Vortex-Games": "39e9ef13787900a1741e5d29165920bd4f48f7b6",
+    "Nexus-Mods/Vortex": "e7698e5a038b74642544916c2bfafe6d64dc19bd",
+    "ChemGuy1611/ChemBoy1-Vortex-Games": "9951b6a04c6bc498be39c160b58df90927152b72",
     "Nexus-Mods/game-palworld": "16850505152c67b0a4322a4c1ae4cdb5fd69d9e5",
     "Nexus-Mods/game-oblivionremastered": "489f6b9683b4fa928ee412072430ae0ae2f1706a",
     "Nexus-Mods/game-masseffectlegendaryedition": "84bbd3ea1695acd6c8013103c7cad82c88cbff3c",
@@ -144,7 +144,7 @@
       "nexus_game_id": 1303,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-stardewvalley/src/index.ts",
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-stardewvalley/src/index.ts",
         "https://www.nexusmods.com/site/mods/267"
       ],
       "extension_code_compared": true,
@@ -291,7 +291,7 @@
       "nexus_game_id": 7804,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-stellarblade/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-stellarblade/index.js",
         "https://www.nexusmods.com/site/mods/1324"
       ],
       "extension_code_compared": true,
@@ -349,7 +349,7 @@
       "nexus_game_id": 6944,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-stalker2heartofchornobyl/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-stalker2heartofchornobyl/index.js",
         "https://www.nexusmods.com/site/mods/958"
       ],
       "extension_code_compared": true,
@@ -451,7 +451,7 @@
       "nexus_game_id": 7237,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-finalfantasy7rebirth/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-finalfantasy7rebirth/index.js",
         "https://www.nexusmods.com/site/mods/1150"
       ],
       "extension_code_compared": true,
@@ -509,7 +509,7 @@
       "nexus_game_id": 2981,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-codevein/src/index.ts"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-codevein/src/index.ts"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -545,7 +545,7 @@
       "nexus_game_id": 7635,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-clairobscurexpedition33/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-clairobscurexpedition33/index.js",
         "https://www.nexusmods.com/site/mods/1279"
       ],
       "extension_code_compared": true,
@@ -603,7 +603,7 @@
       "nexus_game_id": 4095,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-monsterhunterrise/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-monsterhunterrise/index.js",
         "https://www.nexusmods.com/site/mods/349"
       ],
       "extension_code_compared": true,
@@ -641,7 +641,7 @@
       "nexus_game_id": 6993,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-monsterhunterwilds/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-monsterhunterwilds/index.js",
         "https://www.nexusmods.com/site/mods/1149"
       ],
       "extension_code_compared": true,
@@ -679,7 +679,7 @@
       "nexus_game_id": 2702,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevil22019/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-residentevil22019/index.js",
         "https://www.nexusmods.com/site/mods/432"
       ],
       "extension_code_compared": true,
@@ -717,7 +717,7 @@
       "nexus_game_id": 3191,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevil32020/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-residentevil32020/index.js",
         "https://www.nexusmods.com/site/mods/433"
       ],
       "extension_code_compared": true,
@@ -755,7 +755,7 @@
       "nexus_game_id": 5195,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevil42023/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-residentevil42023/index.js",
         "https://www.nexusmods.com/site/mods/913"
       ],
       "extension_code_compared": true,
@@ -793,7 +793,7 @@
       "nexus_game_id": 3669,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevilvillage/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-residentevilvillage/index.js",
         "https://www.nexusmods.com/site/mods/237"
       ],
       "extension_code_compared": true,
@@ -831,7 +831,7 @@
       "nexus_game_id": 2751,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-devilmaycry5/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-devilmaycry5/index.js",
         "https://www.nexusmods.com/site/mods/434"
       ],
       "extension_code_compared": true,
@@ -869,7 +869,7 @@
       "nexus_game_id": 6234,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonsdogma2/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dragonsdogma2/index.js",
         "https://www.nexusmods.com/site/mods/851"
       ],
       "extension_code_compared": true,
@@ -907,7 +907,7 @@
       "nexus_game_id": 5329,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-streetfighter6/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-streetfighter6/index.js",
         "https://www.nexusmods.com/site/mods/956"
       ],
       "extension_code_compared": true,
@@ -945,7 +945,7 @@
       "nexus_game_id": 8863,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevilrequiem/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-residentevilrequiem/index.js",
         "https://www.nexusmods.com/site/mods/1653"
       ],
       "extension_code_compared": true,
@@ -1212,7 +1212,7 @@
       "nexus_game_id": 1059,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-7daystodie/src/index.tsx"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-7daystodie/src/index.tsx"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -1244,7 +1244,7 @@
       "nexus_game_id": 2298,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-kingdomcome-deliverance/src/index.ts",
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-kingdomcome-deliverance/src/index.ts",
         "https://www.nexusmods.com/site/mods/338"
       ],
       "extension_code_compared": true,
@@ -1277,7 +1277,7 @@
       "nexus_game_id": 7286,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-kingdomcomedeliverance2/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-kingdomcomedeliverance2/index.js",
         "https://www.nexusmods.com/site/mods/1146"
       ],
       "extension_code_compared": true,
@@ -1363,7 +1363,7 @@
       "nexus_game_id": 804,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-darkestdungeon/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-darkestdungeon/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -1395,7 +1395,7 @@
       "nexus_game_id": 2673,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-bladeandsorcery/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-bladeandsorcery/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -1427,7 +1427,7 @@
       "nexus_game_id": 2659,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-x4foundations/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-x4foundations/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -1459,7 +1459,7 @@
       "nexus_game_id": 2531,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-monster-hunter-world/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-monster-hunter-world/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [
@@ -1495,7 +1495,7 @@
       "nexus_game_id": 2927,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-daggerfallunity/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-daggerfallunity/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -1523,7 +1523,7 @@
       "nexus_game_id": 150,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-witcher/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-witcher/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -1549,7 +1549,7 @@
       "nexus_game_id": 153,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-witcher2/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-witcher2/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -1575,7 +1575,7 @@
       "nexus_game_id": 234,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-sw-kotor/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-sw-kotor/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -1601,7 +1601,7 @@
       "nexus_game_id": 1704,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-skyrimse/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-skyrimse/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [
@@ -1648,8 +1648,8 @@
       "nexus_game_id": 1704,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-skyrimvr/src/index.js",
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/gamebryo-archive-invalidation/src/gameSupport.ts"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-skyrimvr/src/index.js",
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/gamebryo-archive-invalidation/src/gameSupport.ts"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [
@@ -1736,7 +1736,7 @@
       "nexus_game_id": 110,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-skyrim/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-skyrim/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [
@@ -1779,8 +1779,8 @@
       "nexus_game_id": 2736,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-enderal/src/index.js",
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/gamebryo-archive-invalidation/src/gameSupport.ts"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-enderal/src/index.js",
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/gamebryo-archive-invalidation/src/gameSupport.ts"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -1822,7 +1822,7 @@
       "nexus_game_id": 1151,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-fallout4/src/index.js",
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-fallout4/src/index.js",
         "https://www.nexusmods.com/site/mods/1349"
       ],
       "extension_code_compared": true,
@@ -1870,8 +1870,8 @@
       "nexus_game_id": 1151,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-fallout4vr/src/index.js",
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/gamebryo-archive-invalidation/src/gameSupport.ts"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-fallout4vr/src/index.js",
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/gamebryo-archive-invalidation/src/gameSupport.ts"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [
@@ -1916,7 +1916,7 @@
       "nexus_game_id": 130,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-falloutnv/src/index.ts"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-falloutnv/src/index.ts"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [
@@ -1979,7 +1979,7 @@
       "nexus_game_id": 120,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-fallout3/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-fallout3/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [
@@ -2022,7 +2022,7 @@
       "nexus_game_id": 101,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-oblivion/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-oblivion/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [
@@ -2109,7 +2109,7 @@
       "nexus_game_id": 100,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-morrowind/src/index.ts",
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-morrowind/src/index.ts",
         "https://www.nexusmods.com/site/mods/1295"
       ],
       "extension_code_compared": true,
@@ -2184,7 +2184,7 @@
       "nexus_game_id": 6815,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-finalfantasy16/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-finalfantasy16/index.js",
         "https://www.nexusmods.com/site/mods/1041"
       ],
       "extension_code_compared": true,
@@ -2215,7 +2215,7 @@
       "nexus_game_id": 8229,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-finalfantasytacticstheivalicechronicles/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-finalfantasytacticstheivalicechronicles/index.js",
         "https://www.nexusmods.com/site/mods/1515"
       ],
       "extension_code_compared": true,
@@ -2284,7 +2284,7 @@
       "nexus_game_id": 3474,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-baldursgate3/src/index.tsx"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-baldursgate3/src/index.tsx"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -2330,7 +2330,7 @@
       "nexus_game_id": 140,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-dragonage/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-dragonage/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -2356,7 +2356,7 @@
       "nexus_game_id": 952,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-witcher3/src/index.ts"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-witcher3/src/index.ts"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -2390,7 +2390,7 @@
       "nexus_game_id": 3024,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-reddeadredemption2/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-reddeadredemption2/index.js",
         "https://www.nexusmods.com/site/mods/68"
       ],
       "extension_code_compared": true,
@@ -2474,7 +2474,7 @@
       "nexus_game_id": 7106,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-marvelrivals/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-marvelrivals/index.js",
         "https://www.nexusmods.com/site/mods/1132"
       ],
       "extension_code_compared": true,
@@ -2511,7 +2511,7 @@
       "nexus_game_id": 141,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-dragonage2/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-dragonage2/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -2537,7 +2537,7 @@
       "nexus_game_id": 641,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-sims4/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-sims4/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -2610,7 +2610,7 @@
       "nexus_game_id": 6119,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-helldivers2/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-helldivers2/index.js",
         "https://www.nexusmods.com/site/mods/845"
       ],
       "extension_code_compared": true,
@@ -2683,7 +2683,7 @@
       "nexus_game_id": 728,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonageinquisition/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dragonageinquisition/index.js",
         "https://www.nexusmods.com/site/mods/876"
       ],
       "extension_code_compared": true,
@@ -2745,7 +2745,7 @@
       "nexus_game_id": 2229,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-starwarsbattlefront22017/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-starwarsbattlefront22017/index.js",
         "https://www.nexusmods.com/site/mods/112"
       ],
       "extension_code_compared": true,
@@ -2981,7 +2981,7 @@
       "nexus_game_id": 8969,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-crimsondesert/index.js",
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-crimsondesert/index.js",
         "https://www.nexusmods.com/site/mods/1746"
       ],
       "extension_code_compared": true,
@@ -3089,7 +3089,7 @@
       "nexus_game_id": 1767,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-breakingwheel/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-breakingwheel/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3112,7 +3112,7 @@
       "nexus_game_id": 223,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-stateofdecay/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-stateofdecay/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3135,7 +3135,7 @@
       "nexus_game_id": 1190,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-grimdawn/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-grimdawn/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3158,7 +3158,7 @@
       "nexus_game_id": 2945,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-greedfall/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-greedfall/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3181,7 +3181,7 @@
       "nexus_game_id": 2144,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-elex/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-elex/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3200,7 +3200,7 @@
       "nexus_game_id": 2763,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-sekiro/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-sekiro/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [
@@ -3229,7 +3229,7 @@
       "nexus_game_id": 162,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-darksouls/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-darksouls/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [
@@ -3266,7 +3266,7 @@
       "nexus_game_id": 437,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-vtmbloodlines/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-vtmbloodlines/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3289,7 +3289,7 @@
       "nexus_game_id": 3169,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-wolcen/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-wolcen/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3312,7 +3312,7 @@
       "nexus_game_id": 736,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-kenshi/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-kenshi/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3335,7 +3335,7 @@
       "nexus_game_id": 2847,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-totalwarthreekingdoms/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-totalwarthreekingdoms/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3358,8 +3358,8 @@
       "nexus_game_id": 3662,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-pathfinderwrathoftherighteous/src/index.ts",
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/modtype-umm/src/common.ts"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-pathfinderwrathoftherighteous/src/index.ts",
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/modtype-umm/src/common.ts"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3386,8 +3386,8 @@
       "nexus_game_id": 2748,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-dawnofman/src/index.js",
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/modtype-umm/src/common.ts"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-dawnofman/src/index.js",
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/modtype-umm/src/common.ts"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3414,8 +3414,8 @@
       "nexus_game_id": 2680,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-gardenpaws/src/index.js",
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/modtype-umm/src/common.ts"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-gardenpaws/src/index.js",
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/modtype-umm/src/common.ts"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3442,7 +3442,7 @@
       "nexus_game_id": 301,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-sims3/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-sims3/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3461,7 +3461,7 @@
       "nexus_game_id": 419,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-teso/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-teso/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3480,7 +3480,7 @@
       "nexus_game_id": 965,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-galciv3/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-galciv3/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3503,7 +3503,7 @@
       "nexus_game_id": 2361,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-ahatintime/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-ahatintime/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3526,7 +3526,7 @@
       "nexus_game_id": 181,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-neverwinter-nights2/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-neverwinter-nights2/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3549,7 +3549,7 @@
       "nexus_game_id": 1249,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-dragons-dogma/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-dragons-dogma/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3572,7 +3572,7 @@
       "nexus_game_id": 2358,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-conanexiles/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-conanexiles/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3591,7 +3591,7 @@
       "nexus_game_id": 160,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-worldoftanks/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-worldoftanks/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3614,7 +3614,7 @@
       "nexus_game_id": 2874,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-bloodstainedritualofthenight/src/index.ts"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-bloodstainedritualofthenight/src/index.ts"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3633,7 +3633,7 @@
       "nexus_game_id": 2943,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-spyroreignitedtrilogy/src/index.ts"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-spyroreignitedtrilogy/src/index.ts"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3652,7 +3652,7 @@
       "nexus_game_id": 1661,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-divinityoriginalsin2/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-divinityoriginalsin2/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3671,7 +3671,7 @@
       "nexus_game_id": 2569,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-divinityoriginalsin2/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-divinityoriginalsin2/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3690,7 +3690,7 @@
       "nexus_game_id": 2971,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-masterchiefcollection/src/index.ts"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-masterchiefcollection/src/index.ts"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3713,7 +3713,7 @@
       "nexus_game_id": 482,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-darksouls2/src/installers.ts"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-darksouls2/src/installers.ts"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3736,7 +3736,7 @@
       "nexus_game_id": 3400,
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games/game-microsoftflightsimulator/src/index.js"
+        "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games/game-microsoftflightsimulator/src/index.js"
       ],
       "extension_code_compared": true,
       "framework_ids_checked": [],
@@ -3764,9 +3764,9 @@
       "hooks e ferramentas externas: aplicação pode ocorrer fora do Vortex"
     ],
     "sources": [
-      "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/src/renderer/src/extensions/mod_management/InstallManager.ts",
+      "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/src/renderer/src/extensions/mod_management/InstallManager.ts",
       "https://github.com/Nexus-Mods/game-cyberpunk2077/blob/0ddc3e8a9c593dd6cf144d67739d9a9986d95f3b/src/installer.multitype.ts",
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevil42023/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-residentevil42023/index.js"
     ],
     "release_gates": [
       "Amostras reais populares e recentes por família",

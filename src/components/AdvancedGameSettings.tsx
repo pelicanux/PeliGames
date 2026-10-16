@@ -16,9 +16,9 @@ const groups = [
   { id: "gamescope", title: "Gamescope", icon: "platform" },
   { id: "performance", title: "Desempenho e monitoramento", icon: "chip" },
 ] as const;
-export function AdvancedGameSettings({ value, disabled, reducedMotion, saved, onChange, onBack, launchOptions, embedded = false, automaticDllOverrides, dllOverridesError, onResetDlls }: {
+export function AdvancedGameSettings({ value, disabled, reducedMotion, saved, onChange, onBack, launchOptions, hideExecutionEditors = false, embedded = false, automaticDllOverrides, dllOverridesError, onResetDlls }: {
   onResetDlls?: () => void; automaticDllOverrides?: string; dllOverridesError?: string;
-  embedded?: boolean; onBack?: () => void; launchOptions?: ReactNode;
+  hideExecutionEditors?: boolean; embedded?: boolean; onBack?: () => void; launchOptions?: ReactNode;
   value?: AdvancedSettings; disabled?: boolean; reducedMotion: boolean; saved?: boolean; onChange: (settings: AdvancedSettings) => void;
 }) {
   const { t } = useI18n();
@@ -48,6 +48,7 @@ export function AdvancedGameSettings({ value, disabled, reducedMotion, saved, on
   };
   const toggleOption = (id: string) => {
     const next = toggleAdvanced(settings, id);
+    if (["mangohud", "mangohud_env"].includes(id)) next.mangohud_enabled = next.options.mangohud || next.options.mangohud_env;
     return commitMonitoring(next, ["mangohud", "mangohud_env"].includes(id) && next.options[id]);
   };
   const scope = settings.gamescope ?? defaultGamescope;
@@ -56,9 +57,9 @@ export function AdvancedGameSettings({ value, disabled, reducedMotion, saved, on
   const [search, setSearch] = useState("");
   const textMatch = (text: string) => text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(search.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase());
   const searching = Boolean(search.trim());
-  const foundOptions = advancedOptions.filter(option => searching ? textMatch(`${option.title} ${option.description} ${option.key} ${groups.find(category => category.id === option.group)?.title}`) : option.group === group);
+  const foundOptions = advancedOptions.filter(option => !(hideExecutionEditors && option.id === "dll_overrides")).filter(option => searching ? textMatch(`${option.title} ${option.description} ${option.key} ${groups.find(category => category.id === option.group)?.title}`) : option.group === group);
   const foundLimiter = searching ? textMatch("Limite de FPS MangoHUD individual desempenho monitoramento") : group === "performance";
-  const foundLaunch = Boolean(launchOptions) && searching && textMatch("Opções de inicialização argumentos variáveis launch command DLL automáticas");
+  const foundLaunch = !hideExecutionEditors && Boolean(launchOptions) && searching && textMatch("Opções de inicialização argumentos variáveis launch command DLL automáticas");
   const foundWrappers = searching && textMatch("Comando do wrapper scripts argumentos empacotador compatibilidade Proton Wine");
   const foundGamescope = searching && textMatch("Gamescope escala upscaling FSR NIS integer inteira esticar imagem resolução largura altura jogo saída janela tela cheia sem borda FPS limitador foco captura cursor opções adicionais");
   return <div className={`installed-advanced-panel${embedded ? "" : " game-info-panel menu-glass-panel"}`}>
@@ -86,7 +87,7 @@ export function AdvancedGameSettings({ value, disabled, reducedMotion, saved, on
                 <div className="advanced-option-description">{searching && <small className="advanced-search-category">{groups.find(category => category.id === option.group)?.title}</small>}<label htmlFor={`advanced-${option.id}`}>{option.title}</label><p>{option.description}</p><code>{option.kind === "wrapper" ? option.key : `${option.key}=${option.value}`}</code></div>
                 <button id={`advanced-${option.id}`} type="button" role="switch" aria-label={option.title} aria-checked={settings.options[option.id]} disabled={option.id === "hdr" && !settings.options.wayland} className={`advanced-toggle ${settings.options[option.id] ? "enabled" : ""}`} onClick={() => void toggleOption(option.id)}><span /></button>
               </div>)}
-              {((!searching && group === "compatibility") || foundLaunch) && launchOptions}
+              {!hideExecutionEditors && ((!searching && group === "compatibility") || foundLaunch) && launchOptions}
               {((!searching && group === "compatibility") || foundWrappers) && <LaunchWrappersEditor value={settings.wrappers ?? []} onChange={wrappers => apply({ ...settings, wrappers })} />}
             </fieldset>
           </>}

@@ -4,8 +4,8 @@
   "family": "re_engine",
   "scope": "Módulos gerados por análise estática das extensões Vortex. Rotas verificadas por casos sintéticos; nenhum jogo foi executado.",
   "sources": {
-    "chemboy1": "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6",
-    "vortex": "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games"
+    "chemboy1": "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72",
+    "vortex": "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games"
   },
   "modules": [
     {
@@ -14,7 +14,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-deadrisingdeluxeremaster/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-deadrisingdeluxeremaster/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -55,7 +55,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-monsterhunterstories3twistedreflection/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-monsterhunterstories3twistedreflection/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -96,7 +96,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-onimushawayofthesword/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-onimushawayofthesword/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -137,7 +137,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-pragmata/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-pragmata/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -178,7 +178,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-residentevil7/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-residentevil7/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",

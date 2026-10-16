@@ -1,0 +1,128 @@
+.welcome-tour.modal-content { width: min(1180px, calc(100vw - 40px)); max-width: 1180px; max-height: calc(100dvh - 36px); padding: 0; --modal-content-padding: 0; text-align: left; }
+.welcome-tour .modal-scroll-body { padding: 0; min-height: 0; overflow: auto; }
+.welcome-brand { display: flex; align-items: center; gap: 10px; }
+.welcome-brand > img { width: 26px; height: 26px; }
+.welcome-brand > span:last-child { margin-left: 12px; font-size: .78rem; color: var(--tone-94a3b8, #94a3b8); font-family: inherit; }
+.welcome-language { margin-left: auto; flex: 0 0 92px; width: 92px; }
+.welcome-language .custom-select-trigger { min-height: 32px; padding: 6px 10px; }
+.welcome-slide { display: grid; grid-template-columns: .9fr 1.15fr; gap: 20px; align-items: center; min-height: 470px; padding: 38px 34px 26px; animation: welcome-reveal .3s ease-out both; }
+.welcome-eyebrow { font-size: .68rem; letter-spacing: .16em; font-weight: 700; color: var(--accent-light); }
+.welcome-copy h2 { font-size: clamp(1.7rem, 2.8vw, 2.5rem); line-height: 1.15; letter-spacing: -.03em; margin: 14px 0 18px; color: var(--tone-e9edf9, #e9edf9); }
+.welcome-copy h2:focus { outline: none; }
+.welcome-description { font-size: 1rem; line-height: 1.65; margin: 0 0 22px; color: var(--tone-cbd5e1, #cbd5e1); }
+.welcome-points { list-style: none; display: grid; gap: 13px; margin: 0 0 26px; padding: 0; color: var(--tone-cbd5e1, #cbd5e1); font-size: .88rem; line-height: 1.55; }
+.welcome-points li { display: flex; align-items: baseline; gap: 10px; }
+.welcome-points li > span { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; flex-shrink: 0; }
+.welcome-shortcut { display: inline-flex; gap: 12px; align-items: center; padding: 10px 14px; }
+.welcome-shortcut .menu-icon { width: 17px; height: 17px; }
+.welcome-community-link { display: block; border: 0; background: transparent; padding: 12px 0 0; color: var(--accent-light); cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
+.welcome-art { position: relative; isolation: isolate; min-width: 0; margin: 0; align-self: center; }
+.welcome-art::before { content: ""; position: absolute; z-index: -1; left: 12%; right: 12%; bottom: 32px; height: 26px; border-radius: 50%; background: #000b; filter: blur(16px); pointer-events: none; }
+.welcome-screens { position: relative; padding: 28px 16px 40px; mask-image: linear-gradient(#000 0%, #000 72%, transparent 100%); -webkit-mask-image: linear-gradient(#000 0%, #000 72%, transparent 100%); }
+.welcome-screens::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 46%, rgba(0, 0, 0, .25) 63%, rgba(0, 0, 0, .8) 86%, #000 100%); pointer-events: none; }
+.welcome-screen { display: block; width: 100%; height: auto; border: 1px solid rgba(var(--accent-rgb), .4); border-radius: 12px; box-sizing: border-box; box-shadow: 0 12px 30px #0005; }
+.welcome-art-stack .welcome-screens { padding-top: 128px; padding-bottom: 40px; }
+.welcome-art-stack .welcome-screen { width: 94%; position: relative; }
+.welcome-art-stack .welcome-screen-back { position: absolute; top: 32px; left: 16px; transform: rotate(-5deg); opacity: .65; }
+.welcome-art-stack .welcome-screen-middle { position: absolute; top: 80px; left: calc(3% + 12px); transform: rotate(-2deg); opacity: .9; }
+.welcome-art-stack .welcome-screen-front { margin-left: 6%; transform: rotate(1deg); }
+.welcome-art figcaption { text-align: center; font-size: .66rem; color: var(--tone-94a3b8, #94a3b8); margin-top: 2px; }
+.welcome-tour-footer { flex-shrink: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-top: 1px solid rgba(var(--accent-rgb), .17); }
+.welcome-skip { background: transparent; border: 0; border-radius: 7px; color: var(--tone-94a3b8, #94a3b8); cursor: pointer; padding: 6px 8px; font-size: .78rem; transition: background .2s ease, color .2s ease, box-shadow .2s ease; }
+.welcome-tour .welcome-skip:hover:not(:disabled), .welcome-tour .welcome-skip:focus-visible { background: rgba(var(--accent-rgb), .12); color: var(--accent-light); box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), .3); }
+.welcome-pagination { display: flex; gap: 7px; }
+.welcome-pagination button { width: 7px; height: 7px; border: 0; padding: 0; border-radius: 20px; background: rgba(var(--accent-rgb), .25); cursor: pointer; transition: width .2s, background .2s; }
+.welcome-pagination button[aria-current] { width: 23px; background: var(--accent); }
+.welcome-navigation { display: flex; align-items: center; gap: 9px; }
+.welcome-navigation .btn { min-height: 36px; padding: 7px 16px; }
+.welcome-step-count { font-size: .72rem; color: var(--tone-94a3b8, #94a3b8); margin-right: 5px; font-variant-numeric: tabular-nums; }
+.welcome-tour .welcome-install { margin-top: 18px; }
+.welcome-tour .welcome-install code { display: block; margin-top: 8px; }
+.welcome-tour .welcome-install + .welcome-shortcut { margin-top: 12px; }
+.welcome-slide-appimage .welcome-screens { mask-image: linear-gradient(#000 0%, #000 85%, transparent 100%); -webkit-mask-image: linear-gradient(#000 0%, #000 85%, transparent 100%); }
+.welcome-slide-appimage .welcome-screens::after { background: linear-gradient(180deg, transparent 75%, rgba(0, 0, 0, .6) 96%, #000 100%); }
+.welcome-tour .welcome-install button { margin-top: 12px; }
+@keyframes welcome-reveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (max-width: 760px) {
+  .welcome-tour.modal-content { width: calc(100vw - 20px); max-height: calc(100dvh - 20px); }
+  .welcome-slide { grid-template-columns: 1fr; min-height: 0; gap: 8px; padding: 24px 22px 14px; }
+  .welcome-copy h2 { font-size: 1.8rem; }
+  .welcome-description { margin-bottom: 14px; }
+  .welcome-points { gap: 8px; margin-bottom: 18px; }
+  .welcome-art { max-width: 550px; width: 100%; margin: 0 auto; }
+  .welcome-screens { padding-top: 12px; }
+  .welcome-art-stack .welcome-screens { padding-top: 100px; }
+  .welcome-art-stack .welcome-screen-middle { top: 66px; }
+  .welcome-tour-footer { padding: 12px 18px; gap: 12px; }
+  .welcome-pagination { order: 3; justify-content: center; width: 100%; }
+  .welcome-brand > span:last-child { display: none; }
+}
+@media (max-height: 700px) and (min-width: 761px) { .welcome-slide { min-height: 360px; padding-top: 24px; padding-bottom: 18px; } .welcome-copy h2 { font-size: 1.9rem; } .welcome-points { gap: 8px; margin-bottom: 16px; } }
+@media (prefers-reduced-motion: reduce) { .welcome-slide { animation: none; } .welcome-pagination button { transition: none; } }
+.welcome-tour button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+/* Keep the indicators discreet while providing a comfortable click target. */
+.welcome-pagination button { display: grid; place-items: center; width: 22px; height: 26px; background: transparent; }
+.welcome-pagination button::after { content: ""; width: 7px; height: 7px; border-radius: 20px; background: rgba(var(--accent-rgb), .25); transition: width .2s, background .2s; }
+.welcome-pagination button[aria-current] { width: 28px; background: transparent; }
+.welcome-pagination button[aria-current]::after { width: 23px; background: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .welcome-pagination button::after { transition: none; } }
+
+/* Shared modern welcome, including the first-run AppImage stage. */
+:root .modal-content.welcome-tour-modern {
+  --welcome-surface: rgba(20, 21, 29, .97);
+  --welcome-card: rgba(255, 255, 255, .055);
+  --welcome-line: rgba(255, 255, 255, .09);
+  --welcome-text: #f2f3f8;
+  --welcome-muted: #a0a5b8;
+  border: 1px solid var(--welcome-line) !important;
+  border-radius: 24px;
+  box-shadow: 0 24px 80px #0005 !important;
+  color: var(--welcome-text);
+}
+:root[data-appearance="light"] .modal-content.welcome-tour-modern {
+  --welcome-surface: rgba(247, 248, 252, .97);
+  --welcome-card: rgba(20, 24, 40, .045);
+  --welcome-line: rgba(20, 24, 40, .1);
+  --welcome-text: #141724;
+  --welcome-muted: #5d6378;
+}
+:root .welcome-tour-modern::before, :root .welcome-tour-modern::after { content: none !important; }
+:root .welcome-tour-modern .modal-glass-backdrop { background: var(--welcome-surface); }
+:root .welcome-tour-modern .dialog-titlebar { position: relative; inset: auto; height: auto; flex-shrink: 0; min-height: 64px; padding: 14px 24px; border: 0; border-bottom: 1px solid var(--welcome-line); border-radius: 0; background: transparent !important; box-shadow: none; }
+:root .welcome-tour-modern.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { padding: 0; scroll-padding-top: 0; }
+.welcome-tour-modern .welcome-brand > span:last-child { padding: 5px 9px; margin-left: 8px; border: 1px solid var(--welcome-line); border-radius: 999px; color: var(--welcome-muted); }
+.welcome-tour-modern .welcome-slide { grid-template-columns: minmax(0,.9fr) minmax(0,1.15fr); padding: 26px 32px 22px; min-height: 440px; }
+.welcome-tour-modern .welcome-copy h2 { margin: 12px 0 16px; font-size: clamp(27px, 2.8vw, 38px); font-weight: 700; color: var(--welcome-text); }
+.welcome-tour-modern .welcome-eyebrow { font-size: 10px; letter-spacing: .12em; color: var(--accent); }
+.welcome-tour-modern .welcome-description { margin-bottom: 18px; color: var(--welcome-muted); font-size: 14px; line-height: 1.6; }
+.welcome-tour-modern .welcome-points { margin-bottom: 20px; gap: 10px; color: var(--welcome-text); font-size: 12px; line-height: 1.55; }
+.welcome-tour-modern .welcome-screen { border: 1px solid var(--welcome-line); border-radius: 14px; box-shadow: 0 16px 32px #0004; }
+.welcome-tour-modern .welcome-screens { animation: welcome-float 6s ease-in-out infinite; mask-image: linear-gradient(#000 0%, #000 70%, transparent 100%); -webkit-mask-image: linear-gradient(#000 0%, #000 70%, transparent 100%); }
+.welcome-tour-modern .welcome-screens::after { background: linear-gradient(180deg, transparent 65%, color-mix(in srgb, var(--welcome-surface) 35%, transparent) 85%, var(--welcome-surface)); }
+.welcome-tour-modern .welcome-art::before { bottom: 24px; height: 22px; background: rgba(var(--accent-rgb), .15); filter: blur(22px); }
+.welcome-tour-modern .welcome-art figcaption { color: var(--welcome-muted); font-size: 10px; }
+.welcome-tour-modern .welcome-tour-footer { padding: 14px 24px; gap: 12px; border-color: var(--welcome-line); }
+:root .welcome-tour-modern .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; padding: 8px 14px; border: 1px solid var(--welcome-line) !important; border-radius: 11px; background: var(--welcome-card) !important; color: var(--welcome-text) !important; box-shadow: none !important; text-shadow: none !important; font-size: 12px; font-weight: 600; }
+:root .welcome-tour-modern .btn::before, :root .welcome-tour-modern .btn::after { content: none !important; }
+:root .welcome-tour-modern .btn.btn-primary { background: rgba(var(--accent-rgb), .18) !important; border-color: rgba(var(--accent-rgb), .35) !important; }
+:root .welcome-tour-modern .btn:hover:not(:disabled) { background: rgba(var(--accent-rgb), .25) !important; transform: none; }
+.welcome-tour-modern .welcome-skip { color: var(--welcome-muted); font-size: 12px; }
+.welcome-tour-modern .welcome-step-count { color: var(--welcome-muted); font-size: 11px; }
+.welcome-tour-modern .welcome-install { padding: 14px; border: 1px solid var(--welcome-line); border-radius: 14px; background: var(--welcome-card); font-size: 12px; }
+.welcome-tour-modern .welcome-install code { color: var(--welcome-muted); font: inherit; overflow-wrap: anywhere; }
+.welcome-tour-modern .welcome-slide-appimage { padding-top:20px; padding-bottom:20px; }
+.welcome-tour-modern .welcome-slide-appimage h2 { font-size:30px; margin:10px 0 12px; }
+.welcome-tour-modern .welcome-slide-appimage .welcome-description { font-size:13px; line-height:1.5; margin-bottom:12px; }
+.welcome-tour-modern .welcome-slide-appimage .welcome-points { gap:8px; font-size:12px; line-height:1.45; margin-bottom:12px; }
+.welcome-tour-modern .welcome-slide-appimage .welcome-install { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:5px 12px; padding:12px; margin-top:12px; }
+.welcome-tour-modern .welcome-slide-appimage .welcome-install code { grid-column:1; margin:0; font-size:11px; }
+.welcome-tour-modern .welcome-slide-appimage .welcome-install .btn { grid-column:2; grid-row:1 / span 2; align-self:center; margin:0; }
+.welcome-tour-modern .welcome-language .custom-select-trigger { border: 1px solid var(--welcome-line) !important; border-radius: 10px; background: var(--welcome-card) !important; box-shadow: none !important; }
+@keyframes welcome-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@media (max-width: 760px) {
+  .welcome-tour-modern .welcome-slide { grid-template-columns: minmax(0,1fr); min-height: 0; padding: 22px; }
+  :root .welcome-tour-modern .dialog-titlebar { padding: 12px 18px; }
+  .welcome-tour-modern .welcome-tour-footer { padding: 12px 18px; }
+}
+@media (max-height: 700px) and (min-width: 761px) { .welcome-tour-modern .welcome-slide { min-height: 340px; padding-top: 20px; padding-bottom: 18px; } }
+@media (prefers-reduced-motion: reduce) { .welcome-tour-modern .welcome-screens { animation: none; } }

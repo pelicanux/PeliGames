@@ -78,8 +78,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const effectiveAppearance = interfaceTheme === "hackerman" ? "dark" : appearance;
   useSurfaceNeonLighting(effectiveAppearance);
   useLayoutEffect(() => {
-    document.documentElement.style.setProperty("--window-blur-factor", String(glassEffects.windows / 50));
-    document.documentElement.style.setProperty("--backdrop-blur-factor", String(glassEffects.backdrop / 50));
+    const opaque = glassEffects.windows === 100;
+    document.documentElement.dataset.panelsOpaque = String(opaque);
+    document.documentElement.style.setProperty("--window-blur-factor", opaque ? "0" : String(glassEffects.windows / 50));
+    document.documentElement.style.setProperty("--backdrop-blur-factor", "1");
   }, [glassEffects]);
   useLayoutEffect(() => {
     for (const [property, value] of Object.entries({ ...accentVariables(accent, effectiveAppearance), ...(interfaceTheme === "hackerman" ? HACKERMAN_ACCENT : {}) })) {

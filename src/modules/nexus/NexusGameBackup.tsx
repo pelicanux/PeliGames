@@ -1,3 +1,4 @@
+import { ModOptionSwitch } from "../../components/ModOptionRow";
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { MenuIcon } from "../../components/MenuIcon";
@@ -77,17 +78,13 @@ export function NexusGameBackup({ gameId, disabled, onError, onSaved, onStatusTe
     <label><MenuIcon name="floppy" />{pt ? "Backup individual" : "Individual backup"}</label>
     <div className={`neural-startup-switch nexus-game-backup-box${enabled ? " enabled" : ""}`}>
       <HoverTooltip text={pt ? "Salva os pacotes e registros na pasta .peligames deste jogo. Esta escolha vale somente para este jogo." : "Saves packages and records in this game's .peligames folder. This choice applies only to this game."} anchorClassName="nexus-game-backup-tooltip">
-        <button type="button" className="nexus-game-backup-toggle" role="switch" aria-label={pt ? "Cópia de recuperação deste jogo" : "Recovery copy for this game"} aria-checked={enabled} disabled={locked} onClick={() => void toggle(!enabled)}>
-          <span className="neural-switch-track" aria-hidden="true"><span /></span>
-          <span>{pt ? enabled ? "Ativado" : "Desativado" : enabled ? "Enabled" : "Disabled"}</span>
-        </button>
+        <ModOptionSwitch label={pt ? "Cópia de recuperação deste jogo" : "Recovery copy for this game"} enabled={enabled} disabled={locked} onToggle={() => void toggle(!enabled)} />
       </HoverTooltip>
       <HoverTooltip text={pt ? "Apagar backup deste jogo" : "Delete this game's backup"}>
         <button type="button" className="nexus-game-backup-delete" aria-label={pt ? "Apagar backup deste jogo" : "Delete this game's backup"} disabled={locked} onClick={() => { setDeleteError(""); setConfirmDelete(true); }}><MenuIcon name="trash" /></button>
       </HoverTooltip>
     </div>
-    {!onStatusTextChange && line && <small className={`nexus-game-backup-status${status?.error ? " is-error" : !status?.enabled ? " is-stale" : ""}`} role={status?.error ? "alert" : "status"}>{line}</small>}
-    {!onStatusTextChange && follows && <small className="nexus-game-backup-status">{follows}</small>}
+    {!onStatusTextChange && <small className={`nexus-game-backup-status${statusReadFailed || status?.error ? " is-error" : status?.updated && !status.enabled ? " is-stale" : ""}`} role={statusReadFailed || status?.error ? "alert" : "status"}>{statusText}</small>}
     {confirmDelete && <NexusPopup className="nexus-remove-popup" title={pt ? "Apagar backup individual" : "Delete individual backup"} onClose={() => { if (!pending.current) setConfirmDelete(false); }} footer={<>
       <button type="button" className="btn btn-secondary" disabled={saving} onClick={() => setConfirmDelete(false)}>{pt ? "Cancelar" : "Cancel"}</button>
       <button type="button" className="btn btn-primary" disabled={locked} onClick={() => void removeBackup()}><MenuIcon name="trash" />{saving ? pt ? "Apagando…" : "Deleting…" : pt ? "Apagar backup" : "Delete backup"}</button>

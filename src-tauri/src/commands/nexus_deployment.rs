@@ -832,6 +832,7 @@ fn launch_with(game: &NexusGame, tool: Option<&super::nexus_modules::GameTool>) 
         command
     } else {
         let mut command = Command::new(crate::core::game_installation::find_umu()?);
+        crate::core::env_utils::host_environment(&mut command);
         command.env("WINEPREFIX", &prefix).env("PROTONPATH", &proton).env("GAMEID", "umu-default");
         command
     };

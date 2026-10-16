@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 
-type IconName = "externalLink" | "eject" | "stop" | "arrowUpDown" | "chainLinked" | "chainBroken" | "sliders" | "floppy" | "copy" | "discord" | "eye" | "language" | "image" | "tools" | "gamepad" | "gamepadSearch" | "heart" | "wine" | "search" | "info" | "home" | "plus" | "plusCircle" | "back" | "play" | "trash" | "folderSearch" | "edit" | "check" | "folder" | "calendar" | "platform" | "chip" | "graphics" | "puzzle" | "logs" | "document" | "settings" | "cube" | "keyboard" | "download" | "repair" | "bolt" | "neural" | "chevronUp" | "chevronDown";
+type IconName = "bug" | "externalLink" | "eject" | "stop" | "arrowUpDown" | "chainLinked" | "chainBroken" | "sliders" | "floppy" | "copy" | "discord" | "eye" | "language" | "image" | "tools" | "gamepad" | "gamepadSearch" | "heart" | "wine" | "search" | "info" | "home" | "plus" | "plusCircle" | "back" | "play" | "trash" | "folderSearch" | "edit" | "check" | "folder" | "calendar" | "platform" | "chip" | "graphics" | "puzzle" | "logs" | "document" | "settings" | "cube" | "keyboard" | "download" | "repair" | "bolt" | "neural" | "chevronUp" | "chevronDown";
 const drawings: Record<IconName, ReactNode> = {
+  bug: <><rect x="7" y="7" width="10" height="13" rx="5"/><path d="M12 7V4M3 13h4M17 13h4M5 7l3 2M19 7l-3 2M5 19l3-2M19 19l-3-2"/></>,
   externalLink: <><path d="M14 3h7v7M21 3l-11 11"/><path d="M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></>,
   eject: <><path d="m12 4 8 10H4L12 4Z"/><path d="M4 19h16"/></>,
   stop: <rect x="5" y="5" width="14" height="14" rx="1.5" fill="currentColor" stroke="none" />,

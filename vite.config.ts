@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { previewCovers } from "./scripts/preview-covers";
 // @ts-expect-error type error without @types/node package
 import process from "node:process";
 // @ts-expect-error type error without @types/node package
@@ -17,7 +18,7 @@ const timePart = (type: string) => buildTime.find(part => part.type === type)!.v
 const buildSuffix = `${timePart('day')}${timePart('hour')}${timePart('minute')}`;
 
 export default defineConfig(() => ({
-  plugins: [react()],
+  plugins: [react(), previewCovers()],
   build: { outDir: process.env.PELIGAMES_FRONTEND_DIST || "dist", rollupOptions: { input: { main: "index.html", logs: "logs.html", rtcProbe: "rtc-test.html" } } },
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),

@@ -17,6 +17,7 @@ export function useCoverFlight(disabled: boolean) {
     // Do not carry Framer's projection transform into the floating copy.
     portrait.style.transform = "none";
     portrait.style.willChange = "auto";
+    Object.assign(portrait.style, { width: "100%", height: "100%", margin: "0", border: "0", boxShadow: "none", visibility: "visible" });
     setFlight({ source: bounds, portrait });
   };
   const returnTo = (target: HTMLElement | undefined, onComplete: () => void) => {
@@ -38,24 +39,24 @@ export function useCoverFlight(disabled: boolean) {
     const { source } = flight;
     layer.style.width = `${source.width}px`;
     layer.style.height = `${source.height}px`;
-    layer.style.left = `${source.left}px`;
-    layer.style.top = `${source.top}px`;
+    layer.style.left = "0";
+    layer.style.top = "0";
+    layer.style.transform = `translate3d(${source.left}px, ${source.top}px, 0)`;
     let frame = 0;
     const started = performance.now();
     const tick = (now: number) => {
       const destination = flight.target ?? destinationRef.current;
       if (!destination?.isConnected) { setFlight(null); flight.onComplete?.(); return; }
       const target = destination.getBoundingClientRect();
-      const progress = Math.min((now - started) / 520, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
+      const progress = Math.min((now - started) / 360, 1);
+      // The nearby overlay needs a short flight, with a smooth takeoff and landing.
+      const eased = (1 - Math.cos(Math.PI * progress)) / 2;
       const mix = (from: number, to: number) => from + (to - from) * eased;
-      // Resize the image itself: scaling a composited thumbnail magnifies its
-      // small raster and looks blurred until the original portrait replaces it.
-      const pixels = (value: number) => `${Math.round(value * window.devicePixelRatio) / window.devicePixelRatio}px`;
-      layer.style.left = pixels(mix(source.left, target.left));
-      layer.style.top = pixels(mix(source.top, target.top));
-      layer.style.width = pixels(mix(source.width, target.width));
-      layer.style.height = pixels(mix(source.height, target.height));
+      // Keep subpixel movement on the compositor, including while the library
+      // scrolls and the details expand. Rounding makes the slow landing step.
+      layer.style.transform = `translate3d(${mix(source.left, target.left)}px, ${mix(source.top, target.top)}px, 0)`;
+      layer.style.width = `${mix(source.width, target.width)}px`;
+      layer.style.height = `${mix(source.height, target.height)}px`;
       if (progress < 1) frame = requestAnimationFrame(tick);
       else { setFlight(null); flight.onComplete?.(); }
     };
@@ -64,6 +65,6 @@ export function useCoverFlight(disabled: boolean) {
   }, [flight, disabled]);
   return {
     start, returnTo, destinationRef, flying: flight !== null, returning: Boolean(flight?.returning),
-    overlay: flight ? createPortal(<div ref={layerRef} className="cover-flight-layer" aria-hidden="true" />, document.body) : null,
+    overlay: flight ? createPortal(<div ref={layerRef} className={`cover-flight-layer cover-flight-layer--modern`} aria-hidden="true" />, document.body) : null,
   };
 }

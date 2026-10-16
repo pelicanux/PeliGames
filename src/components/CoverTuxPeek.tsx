@@ -1,16 +1,19 @@
-import { useId } from "react";
+// Tux winks: a lid in the head's colour slides down over the right eye (measured
+// from tux-color.svg: white spans x 11.86–14.22, y 3.41–5.88), the beak is drawn
+// again on top so the lid never covers it, and a closed-eye line shows while shut.
+const beak = "M9.4 6.1Q11.5 4.4 13.4 5.8L14.6 6.5Q14.1 7.4 12 8Q10.8 8.4 9.5 7.2L8.9 6.7Z";
+const beakLine = "M9.8 6.8Q11.5 7.8 13.7 6.6";
 
-// Preserve the original eye; the slightly expanded contour covers its white rim.
-const originalEye = "M13.033 3.405h.013c.213 0 .396.062.584.198.19.135.33.332.438.533.105.259.158.459.166.724 0-.02.006-.04.006-.06v.105a.086.086 0 01-.004-.021l-.004-.024a1.807 1.807 0 01-.15.706.953.953 0 01-.213.335.71.71 0 00-.088-.042c-.104-.045-.198-.064-.284-.133a1.312 1.312 0 00-.22-.066c.05-.06.146-.133.183-.198.053-.128.082-.264.088-.402v-.02a1.21 1.21 0 00-.061-.4c-.045-.134-.101-.2-.183-.333-.084-.066-.167-.132-.267-.132h-.016c-.093 0-.176.03-.262.132a.8.8 0 00-.205.334 1.18 1.18 0 00-.09.4v.019c.002.089.008.179.02.267-.193-.067-.438-.135-.607-.202a1.635 1.635 0 01-.018-.2v-.02a1.772 1.772 0 01.15-.768c.082-.22.232-.406.43-.533a.985.985 0 01.594-.2z";
-export function CoverTuxPeek() {
-  const eyeClip = `tux-eye-${useId().replace(/:/g, "")}`;
-  return <div className="cover-tux-peek" aria-hidden="true">
+/** `rise`: the head comes up from the corner while the hold charges.
+ * `wink`: already shown, it winks and then goes back down. */
+export function CoverTuxPeek({ mode }: { mode: "rise" | "wink" }) {
+  return <div className={`cover-tux-peek cover-tux-peek--${mode}`} aria-hidden="true">
     <svg className="cover-tux-head" viewBox="7 0 10 9">
-      <defs><clipPath id={eyeClip}><path d={originalEye} /><path d={originalEye} transform="translate(-1.564 -0.546) scale(1.12)" /></clipPath></defs>
       <image href="/icons/tux-color.svg" width="24" height="24" />
-      <g clipPath={`url(#${eyeClip})`}>
-        <rect className="cover-tux-winking-eye" x="11.9" y="3.3" width="2.5" height="2.8" fill="#141820" />
-      </g>
+      <ellipse className="cover-tux-lid" cx="13.04" cy="4.7" rx="1.46" ry="1.5" fill="#141820" />
+      <path className="cover-tux-lash" d="M12.02 4.86Q13.04 5.5 14.06 4.86" fill="none" stroke="#fafaf5" strokeWidth=".24" strokeLinecap="round" />
+      <path d={beak} fill="#ffc02b" stroke="#8e4d0d" strokeWidth=".25" />
+      <path d={beakLine} fill="none" stroke="#99590e" strokeWidth=".2" />
     </svg>
   </div>;
 }

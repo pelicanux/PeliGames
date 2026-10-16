@@ -32,6 +32,5 @@
 :root .custom-select-trigger:disabled, :root .custom-select-option:disabled { cursor: not-allowed; opacity: .45; }
 .selection-menu { min-width: 0; }
 .selection-options { bottom: auto; }
-.mango-control > .selection-menu { flex: 0 1 155px; max-width: 55%; }
 .gamescope-full-row > .selection-menu { margin-top: 6px; }
 .nexus-plugin-rule > .selection-menu { flex: 1 1 150px; width: auto; }
