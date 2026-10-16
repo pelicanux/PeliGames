@@ -1,3 +1,4 @@
+import { SUPPORT_PROJECT_URL } from "../services/communityLinks";
 import { ModalSurface } from "./ModalSurface";
 import { useI18n } from "../i18n/I18nContext";
 import { BrandName } from "./BrandName";
@@ -99,7 +100,7 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
           {/* Apoie o projeto */}
           <div className="credits-neon-card"
             style={{ display: "flex", alignItems: "center", gap: "1rem", background: "rgba(var(--accent-rgb), 0.1)", border: "1px solid rgba(var(--accent-rgb), 0.4)", borderRadius: "8px", padding: "0.8rem", cursor: "pointer", transition: "all 0.2s" }}
-            onClick={() => handleLink("https://livepix.gg/thepelicano")}
+            onClick={() => handleLink(SUPPORT_PROJECT_URL)}
             onMouseOver={(e) => e.currentTarget.style.background = "rgba(var(--accent-rgb), 0.2)"}
             onMouseOut={(e) => e.currentTarget.style.background = "rgba(var(--accent-rgb), 0.1)"}
           >

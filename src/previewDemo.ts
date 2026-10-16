@@ -31,6 +31,11 @@ export function demoChooseExecutable(path: string): GameInfo | undefined {
   if (chosen) demoGames[2] = { ...chosen };
   return chosen;
 }
+// Installed-game examples expose their registered prefix in the main library too.
+for (let i = 0; i < demoGames.length; i++) {
+  const game = demoGames[i];
+  if (game.launcher === "PeliGames") Object.assign(game, {prefix: `/preview/prefix-${i}`, proton: "/preview/proton/Proton-GE Latest", executable: game.path});
+}
 const workspace: { games: NexusGame[] } = { games: demoGames.map((game, i) => ({ id: `demo-${i}`, game, platform: specs[i][2] === "stardewvalley" ? "native" : "proton", adapter: specs[i][2] === "tombraider" ? "" : specs[i][2], nexus_domain: specs[i][2], running: false, compat_data: i === 0 ? "" : `/preview/prefix-${i}`, proton: i === 0 ? "" : "/preview/proton/Proton-GE Latest", mods: specs[i][2] === "tombraider" ? [] : [
   { id: "demo-installed", name: "Mod visual — exemplo ativo", version: "2.0.0", archive: "/preview/visual.zip", size: 2048000, installed: true, enabled: true },
   { id: "demo-unstructured", name: "Mod sem estrutura — exemplo", version: "1.0.0", archive: "/preview/sem-estrutura.zip", size: 1024000, installed: false, enabled: false },
@@ -40,7 +45,21 @@ const workspace: { games: NexusGame[] } = { games: demoGames.map((game, i) => ({
     {id:"demo-red4ext",name:"RED4ext",archive:"/preview/RED4ext.zip",size:575488,installed:false,enabled:false,nexus_source:{domain:"cyberpunk2077",mod_id:2380,file_id:23800,requirements:{complete:true,items:[]}}},
   ] : []),
 ] })) };
+// Optional long-list fixture to verify the complete manager's five-row viewport.
+if (new URLSearchParams(location.search).get("mods") === "many") {
+  const game = workspace.games.find(entry => entry.adapter === "cyberpunk2077");
+  if (game) game.mods.push(...["Ajustes de iluminação", "Texturas em alta definição"].map((name, i) => ({
+    ...game.mods[0], id: `demo-extra-${i}`, name, archive: `/preview/extra-${i}.zip`, version: "1.0.0", enabled: i === 0,
+  })));
+}
 demoGames.push(demoLauncher);
+// Main-library summary: a total larger than the ten visible mod entries.
+if (new URLSearchParams(location.search).get("mods") === "summary") {
+  const game = workspace.games.find(entry => entry.adapter === "cyberpunk2077");
+  if (game) game.mods = Array.from({length:20}, (_, i) => ({
+    ...game.mods[0], id:`demo-summary-${i}`, name:`Mod de exemplo ${i + 1}`, archive:`/preview/summary-${i}.zip`, installed:true, enabled:true,
+  }));
+}
 // Main-library examples; these are not included in the Nexus workspace fixture.
 demoGames.push(
   {name:"Fallout: New Vegas — Heroic",path:"/preview/heroic/new-vegas",directory:"/preview/heroic/new-vegas",launcher:"Heroic",app_id:"gog-newvegas",prefix:"/preview/heroic/prefix",proton:"/preview/proton/Proton-GE Latest",cover_url:"https://cdn.cloudflare.steamstatic.com/steam/apps/22380/library_600x900.jpg"},
@@ -69,7 +88,11 @@ demoMatrixMessages.push(
 const demoMatrixPower = {users:{"@demo-preview:matrix.org":100,"@pelicanux:matrix.org":100},users_default:0,redact:50,kick:50,ban:50};
 let demoMatrixSent: Record<string, unknown>[] = [];
 let tombRaiderAssociated = false;
-let jobs: NexusDownload[] = [];
+let jobs: NexusDownload[] = new URLSearchParams(location.search).get("downloads") === "sample" ? [
+  { id: "demo-download-done", domain: "cyberpunk2077", mod_id: 1, file_id: 1, game_id: "demo-2", name: "Interface — exemplo concluído.zip", status: "imported", received: 8388608, total: 8388608, mod_entry_id: workspace.games[2]?.mods[0]?.id },
+  { id: "demo-download-error", domain: "cyberpunk2077", mod_id: 2, file_id: 2, game_id: "demo-2", name: "Texturas — exemplo de nova tentativa.zip", status: "error", received: 0, error: "Demonstração: conexão interrompida. Tente novamente." },
+  { id: "demo-download-active", domain: "cyberpunk2077", mod_id: 3, file_id: 3, game_id: "demo-2", name: "Mod visual — exemplo em andamento.zip", status: "downloading", received: 4194304, total: 8388608 },
+] : [];
 const demoLoadOrder = {
   entries: ["Interface de exemplo", "Dados de exemplo"].map((name, i) => ({
     file: `demo-bg3-${i}.pak`, name, uuid: `demo-bg3-${i}`, locked: false,
@@ -155,6 +178,7 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "read_nexus_mod_logs": return {value:`Demonstração — registros simulados\n--- red4ext/logs/red4ext.log | modified_unix=${Math.floor(Date.now()/1000)} ---\n[RED4ext] Plugin TweakXL loaded\n[TweakXL] Loading tweaks: example.yaml`};
     case "read_nexus_logs": return {value: args.previous ? "Demonstração — execução anterior\nJogo encerrado." : "Demonstração — execução atual\nIniciando o jogo com mods."};
     case "scan_installed_protons": {
+      if (new URLSearchParams(location.search).get("protons") === "many") return { value: Array.from({ length: 10 }, (_, index) => ({ name: `GE-Proton10-${index + 1}`, path: `/preview/proton/GE-Proton10-${index + 1}` })) };
       const installed = [...demoRunnerInstalled].map(family => {
         const name = family === "ge-proton" ? "Proton-GE Latest" : "Proton-CachyOS Latest";
         return { name, path: `/preview/proton/${name}` };
@@ -229,7 +253,11 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     }
     case "translate_nexus_description": await sleep(); return { value: "Tradução simulada para português Brasil.\n\nNesta prévia, nenhuma descrição é enviada ao serviço de tradução. No programa, este botão traduz o texto original do autor e permite voltar ao original." };
     case "get_nexus_catalog_mod": await sleep(); return { value: details(domain, Number(args.modId)) };
-    case "list_nexus_modules": return { value: { definitions: specs.map(([, , domain]) => ({ domain, tools: domain === "newvegas" ? [{name:"FNVEdit"},{name:"Wrye Bash"},{name:"FNV 4GB Patcher"}] : [], activation: domain === "baldursgate3" ? { kind: "baldurs_gate3" } : null })), errors: [] } };
+    case "list_nexus_modules": return { value: { definitions: specs.map(([, , domain]) => ({ domain, tools: domain === "newvegas" ? [{name:"FNVEdit"},{name:"Wrye Bash"},{name:"FNV 4GB Patcher"}] : [], activation: domain === "baldursgate3" ? { kind: "baldurs_gate3" } : domain === "newvegas" ? {kind:"bethesda"} : null, saves: domain === "newvegas" ? {} : null })), errors: [] } };
+    case "nexus_loot_status": return {value:{supported:workspace.games.find(game => game.id === args.gameId)?.adapter === "newvegas",repository:"falloutnv",updated:null}};
+    case "nexus_game_checks": return {value: workspace.games.find(game => game.id === args.gameId)?.adapter === "newvegas" ? {
+      checks:[{kind:"unwanted_file",path:"Data/FalloutNV_lang.esp",hidden:false,url:null},{kind:"missing_extender",path:"nvse_loader.exe",hidden:false,url:"https://www.nexusmods.com/newvegas",detail:"xNVSE · 1.4.0 (GOG)"}], extender_errors:[],redirection:false,
+    } : {checks:[],extender_errors:[],redirection:null}};
     case "open_nexus_game_tool": throw new Error(`Ferramenta não instalada (demonstração): ${String(args.name)}.`); // Never launches an external tool.
     case "nexus_load_order": return { value: clone(demoLoadOrder) };
     case "set_nexus_load_order": {

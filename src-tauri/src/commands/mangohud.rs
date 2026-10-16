@@ -229,7 +229,7 @@ pub fn load_mangohud_profile() -> Result<Profile, String> {
 }
 #[tauri::command]
 pub fn save_mangohud_profile(settings: Settings) -> Result<String, String> {
-    mangohud_config::write(&settings, false)
+    mangohud_config::save(&settings)
 }
 #[tauri::command]
 pub fn update_mangohud_preview(settings: Settings) -> Result<(), String> {

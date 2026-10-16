@@ -4,8 +4,8 @@
   "family": "unity",
   "scope": "Módulos gerados por análise estática das extensões Vortex. Rotas verificadas por casos sintéticos; nenhum jogo foi executado.",
   "sources": {
-    "chemboy1": "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6",
-    "vortex": "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games"
+    "chemboy1": "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72",
+    "vortex": "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games"
   },
   "modules": [
     {
@@ -14,7 +14,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-aska/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-aska/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -55,7 +55,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-ballxpit/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-ballxpit/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -112,7 +112,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-blueprince/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-blueprince/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -169,7 +169,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-burglingnomes/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-burglingnomes/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -210,7 +210,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-cairn/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-cairn/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -267,7 +267,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-cloverpit/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-cloverpit/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -319,12 +319,53 @@
       "nexus_game_id": 8219
     },
     {
+      "domain": "dimraeth",
+      "name": "Dimraeth",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dimraeth/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "BepInExPack/BepInEx/core/BepInEx.dll",
+          "target": "BepInEx/core/BepInEx.dll"
+        },
+        {
+          "source": "BepInExPack/winhttp.dll",
+          "target": "winhttp.dll"
+        },
+        {
+          "source": "Example/plugins/Example/Example.dll",
+          "target": "BepInEx/plugins/Example/Example.dll"
+        },
+        {
+          "source": "Example/config/example.cfg",
+          "target": "BepInEx/config/example.cfg"
+        }
+      ],
+      "findings": [
+        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 10236
+    },
+    {
       "domain": "diplomacyisnotanoption",
       "name": "Diplomacy is Not an Option",
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-diplomacyisnotanoption/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-diplomacyisnotanoption/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -365,7 +406,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-discoelysium/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-discoelysium/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -401,12 +442,53 @@
       "nexus_game_id": 3027
     },
     {
+      "domain": "dressmaker",
+      "name": "Dressmaker",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dressmaker/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "BepInExPack/BepInEx/core/BepInEx.dll",
+          "target": "BepInEx/core/BepInEx.dll"
+        },
+        {
+          "source": "BepInExPack/winhttp.dll",
+          "target": "winhttp.dll"
+        },
+        {
+          "source": "Example/plugins/Example/Example.dll",
+          "target": "BepInEx/plugins/Example/Example.dll"
+        },
+        {
+          "source": "Example/config/example.cfg",
+          "target": "BepInEx/config/example.cfg"
+        }
+      ],
+      "findings": [
+        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 10325
+    },
+    {
       "domain": "escapefromduckov",
       "name": "Escape from Duckov",
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-escapefromduckov/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-escapefromduckov/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -463,7 +545,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-footballmanager26/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-footballmanager26/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -520,7 +602,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-grimshire/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-grimshire/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -561,7 +643,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-hollowknight/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-hollowknight/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -602,7 +684,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-hollowknightsilksong/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-hollowknightsilksong/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -643,7 +725,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-howtofish/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-howtofish/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -700,7 +782,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-megabonk/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-megabonk/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -757,7 +839,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-mirthwood/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-mirthwood/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -798,7 +880,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-mousepiforhire/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-mousepiforhire/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -839,7 +921,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-pcbuildingsimulator/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-pcbuildingsimulator/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -880,7 +962,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-pcbuildingsimulator2/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-pcbuildingsimulator2/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -921,7 +1003,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-peak/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-peak/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -962,7 +1044,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-prodeus/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-prodeus/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1003,7 +1085,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-starsandisland/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-starsandisland/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1044,7 +1126,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-storyofseasonsgrandbazaar/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-storyofseasonsgrandbazaar/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",

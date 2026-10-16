@@ -315,7 +315,8 @@ fn add_shortcut_to_library_at(index: &Path, path: &str, id: &str,
     let folder = item.icon.as_ref().and_then(|icon| icon.parent()).map(Path::to_path_buf);
     let (executable, arguments) = shortcut_program(&record, item)?;
     // Every game gets its own prefix, mirrored from the launcher's.
-    let profile = create(Path::new(&record.prefix), &Path::new(&record.directory).join("profiles"), record.profile_kind)?;
+    let profiles = super::installation_layout::profiles_dir(Path::new(&record.directory), Path::new(&record.prefix))?;
+    let profile = create(Path::new(&record.prefix), &profiles, record.profile_kind)?;
     let directory = folder.or_else(|| Path::new(&executable).parent().map(Path::to_path_buf)).unwrap_or_default().to_string_lossy().into_owned();
     let entry = InstalledEntry {
         discovery_source: Some("Atalho do launcher".into()), recommended: false, shortcut: Some(id.to_string()),
@@ -499,13 +500,10 @@ fn scan(record: &mut InstallationRecord) -> Result<(), String> {
     let installer = PathBuf::from(&record.installer);
     // Added entries have no installer: rescan only their explicitly chosen executable.
     if !record.installer.is_empty() {
-        walk(
-            Path::new(&record.directory),
-            &installer,
-            &mut files,
-            0,
-            &mut visited,
-        )?;
+        // In the current layout the destination is the prefix: drive_c is walked below.
+        if record.directory != record.prefix {
+            walk(Path::new(&record.directory), &installer, &mut files, 0, &mut visited)?;
+        }
         walk(
             &Path::new(&record.prefix).join("drive_c"),
             &installer,
@@ -898,12 +896,14 @@ fn add_at(
     let executable = super::game_installation::validate_executable(&request.executable)?;
     let proton = super::game_installation::validate_proton(&request.proton)?;
     let directory = super::game_installation::absolute(&request.directory)?;
+    super::installation_layout::check_new_destination(&directory)?;
     fs::create_dir_all(&directory).map_err(|e| e.to_string())?;
     let directory = directory.canonicalize().map_err(|e| e.to_string())?;
     if directory.parent().is_none() {
         return Err("Escolha uma pasta dedicada ao jogo.".into());
     }
-    let prefix = directory.join("prefix");
+    super::installation_layout::claim(&directory)?;
+    let prefix = super::installation_layout::prefix_for(&directory);
     if fs::symlink_metadata(&prefix).is_ok_and(|m| m.file_type().is_symlink() || !m.is_dir()) {
         return Err("O prefixo deve ser uma pasta real dentro do destino.".into());
     }
@@ -954,13 +954,23 @@ fn add_at(
     Ok(entry)
 }
 /// The UI supplies only a registered entry identity, never a directory to erase.
-pub fn uninstall(path: String) -> Result<(), String> {
-    uninstall_at(&library_file()?, &path)
+/// What an uninstall deletes besides the library entries and their shortcuts
+/// (like Heroic): the prefix, and this launcher's settings and logs.
+#[derive(Clone, Copy, Deserialize)]
+pub struct UninstallOptions {
+    #[serde(default = "yes")]
+    pub remove_prefix: bool,
+    #[serde(default = "yes")]
+    pub remove_settings: bool,
 }
-fn uninstall_at(index: &Path, path: &str) -> Result<(), String> {
-    uninstall_with_shortcuts_at(index, path, &super::pelinstall::shortcut_directories())
+fn yes() -> bool { true }
+impl Default for UninstallOptions {
+    fn default() -> Self { UninstallOptions { remove_prefix: true, remove_settings: true } }
 }
-fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &[PathBuf]) -> Result<(), String> {
+pub fn uninstall(path: String, options: UninstallOptions) -> Result<(), String> {
+    uninstall_with_shortcuts_at(&library_file()?, &path, &super::pelinstall::shortcut_directories(), options)
+}
+fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &[PathBuf], options: UninstallOptions) -> Result<(), String> {
     // A launcher game's profile: only the profile goes, never the launcher's prefix.
     let profile_shortcut = record_of(index, path)?.and_then(|(_, record)| record.entries.into_iter().find(|entry| entry.path == path && entry.profile.is_some()))
         .and_then(|entry| entry.shortcut.map(|shortcut| (record_owner(index, path), shortcut)));
@@ -997,6 +1007,8 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
         let mut affected = Vec::new();
         let mut shortcut_entries = BTreeSet::new();
         let mut managed = false;
+        // Games a launcher installed live in profiles of its prefix: they go with it.
+        let mut profiles = Vec::new();
         for destination in &roots {
             let other_root = Path::new(destination);
             let other_manifest = other_root.join("installation.json");
@@ -1006,14 +1018,17 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
             let mut other: InstallationRecord =
                 serde_json::from_slice(&fs::read(&other_manifest).map_err(|e| e.to_string())?)
                     .map_err(|e| e.to_string())?;
-            let same_prefix = |entry: &InstalledEntry| Path::new(&entry.prefix) == prefix;
+            let same_prefix = |entry: &InstalledEntry| Path::new(&entry.prefix) == prefix
+                || entry.profile.as_ref().is_some_and(|profile| Path::new(&profile.base) == prefix);
             let any = other.entries.iter().any(same_prefix);
             if any || (destination == &directory && other.entries.is_empty()) {
                 let other_canonical = other_root.canonicalize().map_err(|e| e.to_string())?;
                 if Path::new(&other.directory) != other_canonical {
                     return Err("Destino registrado inválido.".into());
                 }
-                managed |= prefix == other_canonical.join("prefix");
+                managed |= prefix == other_canonical.join("prefix")
+                    || (prefix == other_canonical && super::installation_layout::owned(&other_canonical));
+                profiles.extend(other.entries.iter().filter(|entry| same_prefix(entry)).filter_map(|entry| entry.profile.clone()));
                 let removed: BTreeSet<String> = other
                     .entries
                     .iter()
@@ -1040,6 +1055,7 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
             }
         }
         match fs::symlink_metadata(&prefix) {
+            Ok(_) if !options.remove_prefix => {}
             Ok(metadata) => {
                 if metadata.file_type().is_symlink() || !metadata.is_dir() {
                     return Err("Não é permitido remover um prefixo redirecionado.".into());
@@ -1059,19 +1075,35 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
                 if super::game_execution::prefix_in_use(&prefix) {
                     return Err("Encerre os programas deste prefixo antes de desinstalar.".into());
                 }
-                fs::remove_dir_all(&prefix)
-                    .map_err(|e| format!("Não foi possível remover o prefixo: {e}"))?;
+                for profile in &profiles {
+                    super::game_profiles::remove(profile).map_err(|error| format!("Não foi possível remover o perfil de um jogo do launcher: {error}"))?;
+                }
+                // Current layout: the settings and logs live inside the prefix folder.
+                if !options.remove_settings && prefix == canonical {
+                    super::installation_layout::clear_prefix_keeping_settings(&prefix)
+                } else {
+                    fs::remove_dir_all(&prefix)
+                }
+                .map_err(|e| format!("Não foi possível remover o prefixo: {e}"))?;
             }
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
             Err(error) => return Err(error.to_string()),
         }
         for entry in shortcut_entries {
             super::pelinstall::remove_shortcuts_at(shortcut_directories, &entry)
-                .map_err(|error| format!("O prefixo foi removido, mas não foi possível remover todos os atalhos. Tente desinstalar novamente: {error}"))?;
+                .map_err(|error| format!("Não foi possível remover todos os atalhos. Tente desinstalar novamente: {error}"))?;
         }
         for (destination, manifest, remaining) in affected {
             if remaining.entries.is_empty() {
-                fs::remove_file(manifest).map_err(|e| e.to_string())?;
+                // Kept settings stay in the folder; the game only leaves the library.
+                if options.remove_settings {
+                    // In the current layout the manifest may have gone with the prefix folder.
+                    match fs::remove_file(&manifest) {
+                        Err(error) if error.kind() != std::io::ErrorKind::NotFound => return Err(error.to_string()),
+                        _ => {}
+                    }
+                    super::installation_layout::remove_leftovers(Path::new(&destination), &prefix);
+                }
                 roots.remove(&destination);
             } else {
                 write_json(&manifest, &remaining)?;
@@ -1085,6 +1117,90 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn current_layout_uses_the_folder_as_prefix_and_uninstall_removes_it() {
+        use std::os::unix::fs::PermissionsExt;
+        let base = std::env::temp_dir().join(format!("peligames-layout-uninstall-{}", uuid::Uuid::new_v4()));
+        let index = base.join("installed-destinations.json");
+        let proton = base.join("Proton");
+        fs::create_dir_all(&proton).unwrap();
+        fs::write(proton.join("proton"), b"#!/bin/sh\n").unwrap();
+        fs::set_permissions(proton.join("proton"), fs::Permissions::from_mode(0o755)).unwrap();
+        let game = base.join("Loja/Jogo.exe");
+        fs::create_dir_all(game.parent().unwrap()).unwrap();
+        fs::write(&game, b"MZ\0\0\0\0\0\0").unwrap();
+        let request = |directory: &Path| super::super::game_installation::InstallationRequest {
+            name: "Jogo".into(), directory: directory.to_string_lossy().into_owned(),
+            executable: game.to_string_lossy().into_owned(), proton: proton.to_string_lossy().into_owned(), cover_url: None,
+        };
+        // A folder with other files is never taken as a prefix.
+        assert!(add_at(&index, request(&base)).err().unwrap().contains("não está vazia"));
+        let folder = base.join("Jogos/Jogo");
+        let added = add_at(&index, request(&folder)).unwrap();
+        let folder = folder.canonicalize().unwrap();
+        assert_eq!(Path::new(&added.prefix), folder, "a pasta escolhida é o prefixo");
+        assert!(folder.join("installation.json").is_file() && folder.join(".peligames-prefix").is_file());
+        fs::create_dir_all(folder.join("drive_c/windows")).unwrap();
+        uninstall_with_shortcuts_at(&index, &added.path, &[], UninstallOptions::default()).unwrap();
+        assert!(!folder.exists(), "a pasta do jogo sai inteira");
+        assert!(game.is_file(), "o executável fora do prefixo fica");
+        // The older layout: the prefix subfolder, then the logs and the empty folder.
+        let old = base.join("Jogos/Antigo");
+        fs::create_dir_all(old.join("prefix/drive_c")).unwrap();
+        fs::create_dir_all(old.join("logs")).unwrap();
+        fs::write(old.join("logs/installer.log"), b"x").unwrap();
+        let old = old.canonicalize().unwrap();
+        let mut legacy = record(&old, vec![]);
+        let mut item = entry(&game, None);
+        item.path = "peligames:antigo".into();
+        item.prefix = legacy.prefix.clone();
+        legacy.entries.push(item);
+        write_json(&old.join("installation.json"), &legacy).unwrap();
+        write_json(&index, &BTreeSet::from([old.to_string_lossy().into_owned()])).unwrap();
+        uninstall_with_shortcuts_at(&index, "peligames:antigo", &[], UninstallOptions::default()).unwrap();
+        assert!(!old.exists(), "sem sobras do formato antigo");
+        fs::remove_dir_all(base).unwrap();
+    }
+    /// Like Heroic: the prefix and the settings/logs are removed separately.
+    #[test]
+    fn uninstall_options_keep_the_prefix_or_the_settings() {
+        use std::os::unix::fs::PermissionsExt;
+        let base = std::env::temp_dir().join(format!("peligames-uninstall-options-{}", uuid::Uuid::new_v4()));
+        let index = base.join("installed-destinations.json");
+        let proton = base.join("Proton");
+        fs::create_dir_all(&proton).unwrap();
+        fs::write(proton.join("proton"), b"#!/bin/sh\n").unwrap();
+        fs::set_permissions(proton.join("proton"), fs::Permissions::from_mode(0o755)).unwrap();
+        let game = base.join("Loja/Jogo.exe");
+        fs::create_dir_all(game.parent().unwrap()).unwrap();
+        fs::write(&game, b"MZ\0\0\0\0\0\0").unwrap();
+        let add = |folder: &Path| {
+            let added = add_at(&index, super::super::game_installation::InstallationRequest {
+                name: "Jogo".into(), directory: folder.to_string_lossy().into_owned(),
+                executable: game.to_string_lossy().into_owned(), proton: proton.to_string_lossy().into_owned(), cover_url: None,
+            }).unwrap();
+            fs::create_dir_all(folder.join("drive_c/Games")).unwrap();
+            fs::create_dir_all(folder.join("logs")).unwrap();
+            added
+        };
+        let keep_settings = base.join("A");
+        let added = add(&keep_settings);
+        uninstall_with_shortcuts_at(&index, &added.path, &[], UninstallOptions { remove_prefix: true, remove_settings: false }).unwrap();
+        assert!(!keep_settings.join("drive_c").exists());
+        assert!(keep_settings.join("installation.json").is_file() && keep_settings.join("logs").is_dir());
+        assert!(list_at(&index, false).unwrap().is_empty(), "sai da biblioteca");
+        let keep_prefix = base.join("B");
+        let added = add(&keep_prefix);
+        uninstall_with_shortcuts_at(&index, &added.path, &[], UninstallOptions { remove_prefix: false, remove_settings: true }).unwrap();
+        assert!(keep_prefix.join("drive_c/Games").is_dir(), "o prefixo e o jogo ficam");
+        assert!(!keep_prefix.join("installation.json").exists() && !keep_prefix.join("logs").exists());
+        let keep_all = base.join("C");
+        let added = add(&keep_all);
+        uninstall_with_shortcuts_at(&index, &added.path, &[], UninstallOptions { remove_prefix: false, remove_settings: false }).unwrap();
+        assert!(keep_all.join("drive_c").is_dir() && keep_all.join("installation.json").is_file());
+        assert!(list_at(&index, false).unwrap().is_empty());
+        fs::remove_dir_all(base).unwrap();
+    }
     fn record(base: &Path, baseline: Vec<String>) -> InstallationRecord {
         InstallationRecord {
             name: "Jogo".into(), directory: base.to_string_lossy().into_owned(),

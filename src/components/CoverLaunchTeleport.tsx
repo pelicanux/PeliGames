@@ -7,7 +7,8 @@ import { CoverFreeze } from "./CoverFreeze";
 import { CoverTuxPeek } from "./CoverTuxPeek";
 import { CoverParticleTransport } from "./CoverParticleTransport";
 
-export interface CoverTeleport { game: GameInfo; source: DOMRect; preview: HTMLElement; effect: "shatter" | "smooth" | "aquarium" | "particles" | "penguin" | "shrink" | "freeze"; }
+/** `delay`: milliseconds from the hold until the game starts (the cancellation window). */
+export interface CoverTeleport { game: GameInfo; source: DOMRect; preview: HTMLElement; delay: number; effect: "shatter" | "smooth" | "aquarium" | "particles" | "penguin" | "shrink" | "freeze"; }
 // Shared irregular vertices keep 24 triangular fragments fitted without gaps.
 const points = Array.from({ length: 5 }, (_, row) => Array.from({ length: 4 }, (_, column) => ({
   x: column * 100 / 3 + (column > 0 && column < 3 ? ((row * 11 + column * 17) % 9) - 4 : 0),
@@ -67,7 +68,9 @@ export function CoverLaunchTeleport({ value, reducedMotion, onCancel, cancelling
     const thaw = window.setTimeout(() => setThawing(true), 450);
     return () => window.clearTimeout(thaw);
   }, [value, assembled, reducedMotion]);
-  return createPortal(<motion.div className="cover-launch-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: .18 }}>
+  return createPortal(<motion.div className={`cover-launch-overlay${assembled ? " is-landed" : ""}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: .18 }}>
+    {/* Light behind the landed cover: an accent aura and slowly turning rays. */}
+    <div className="cover-launch-stage" style={target} aria-hidden="true"><span className="cover-launch-rays" /><span className="cover-launch-aura" /></div>
     {!assembled && !reducedMotion && value.effect === "particles" && <CoverParticleTransport preview={value.preview} source={value.source} target={target} onComplete={() => setAssembled(true)} />}
     {!assembled && value.effect === "shatter" && pieces.map((piece, index) => <motion.div key={index} className="cover-launch-shard" style={{ clipPath: piece.clipPath, transformOrigin: `${piece.x}% ${piece.y}%` }}
       initial={{ left: value.source.left, top: value.source.top, width: value.source.width, height: value.source.height, rotate: 0 }}
@@ -97,17 +100,25 @@ export function CoverLaunchTeleport({ value, reducedMotion, onCancel, cancelling
       animate={{ clipPath: reducedMotion ? "inset(0% 0 0 0)" : ["inset(100% 0 0 0)", "inset(100% 0 0 0)", "inset(0% 0 0 0)"] }}
       transition={{ duration: reducedMotion ? 0 : 1.05, times: [0, .3, 1], ease: "easeOut" }}
       onAnimationComplete={() => setAssembled(true)} ref={destination} aria-hidden="true" />
-      : (value.effect === "smooth" || value.effect === "penguin") ? <motion.div className="cover-launch-remounted is-assembled"
+      : value.effect === "penguin" ? <motion.div className="cover-launch-remounted is-assembled"
+      initial={reducedMotion ? target : { left: value.source.left, top: value.source.top, width: value.source.width, height: value.source.height }}
+      animate={target} transition={{ duration: reducedMotion ? 0 : .5, ease: [.22, 1, .36, 1] }}
+      onAnimationComplete={() => setAssembled(true)} aria-hidden="true">
+        {/* Tux travels with the cover, already shown, then winks and goes back down. */}
+        <div className="cover-launch-frozen-image" ref={destination} />
+        {!reducedMotion && <div className="cover-tux-frame"><CoverTuxPeek mode="wink" /></div>}
+      </motion.div>
+      : value.effect === "smooth" ? <motion.div className="cover-launch-remounted is-assembled"
       initial={reducedMotion ? target : { left: value.source.left, top: value.source.top, width: value.source.width, height: value.source.height }}
       animate={target} transition={{ duration: reducedMotion ? 0 : .5, ease: [.22, 1, .36, 1] }}
       onAnimationComplete={() => setAssembled(true)} ref={destination} aria-hidden="true" />
       : <div className={`cover-launch-remounted cover-launch-remounted--shatter${assembled ? " is-assembled" : ""}`} style={target} ref={destination} aria-hidden="true" />}
-    {assembled && value.effect === "penguin" && !reducedMotion && <div className="cover-tux-peek-frame" style={target}><CoverTuxPeek /></div>}
     <motion.div className="cover-launch-message" style={{ top: target.top + height + 20 }} initial={{ opacity: 0 }} animate={{ opacity: assembled ? 1 : 0 }} transition={{ duration: .2 }} role="status" aria-live="polite">
       <div className="nexus-loading-emblem" aria-hidden="true"><span className="nexus-loading-ring" /><img src="/peligames.svg" alt="" /></div>
-      <div><strong>{language === "en" ? "Starting game…" : "Iniciando jogo…"}</strong><span>{value.game.name}</span></div>
+      <div><strong>{language === "en" ? "Starting game…" : "Iniciando jogo…"}</strong><span>{value.game.name}</span>
+        <span className="cover-launch-countdown" aria-hidden="true"><i style={{ animationDuration: `${value.delay}ms` }} /></span></div>
     </motion.div>
-    {assembled && <div className="cover-launch-cancel" style={{ top: target.top + height + 84 }}>
+    {assembled && <div className="cover-launch-cancel" style={{ top: target.top + height + 122 }}>
       <button type="button" className="button-secondary" disabled={cancellingDisabled} onClick={onCancel}>{language === "en" ? "Cancel" : "Cancelar"}</button>
     </div>}
   </motion.div>, document.body);

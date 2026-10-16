@@ -113,11 +113,39 @@ fn launcher_command() -> Result<Command, String> {
     }
     Ok(command)
 }
+/// Set by the updater for the new version of a loose AppImage: the file it replaced.
+pub const REPLACED_APPIMAGE: &str = "PELIGAMES_REPLACED_APPIMAGE";
+/// A PeliGames AppImage file (or its update backup) that a loose update may
+/// clean up: `PeliGames-x86_64.AppImage`, or the versioned names of older releases.
+fn loose_appimage_name(name: &str) -> bool {
+    name.starts_with("PeliGames") && (name.ends_with(".AppImage") || name.ends_with(".AppImage.previous")) && !name.contains('/')
+}
+/// The updated AppImage opened: removes the file it replaced and old
+/// `.previous` backups beside it, and points game shortcuts at the new file.
+/// Only PeliGames AppImage files in the same folder are ever deleted.
+fn finish_loose_update(image: &Path, replaced: &Path) {
+    let Some(folder) = image.parent() else { return };
+    let removable = |path: &Path| path != image && path.parent() == Some(folder)
+        && path.file_name().and_then(|name| name.to_str()).is_some_and(loose_appimage_name)
+        && fs::symlink_metadata(path).is_ok_and(|meta| meta.is_file());
+    if removable(replaced) { let _ = fs::remove_file(replaced); }
+    if let Ok(entries) = fs::read_dir(folder) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.to_string_lossy().ends_with(".AppImage.previous") && removable(&path) { let _ = fs::remove_file(&path); }
+        }
+    }
+    if replaced.extension().is_some_and(|ext| ext == "AppImage") { refresh_game_shortcuts(image); }
+}
 /// Menu entries belong to the installed copy only: an AppImage opened from
 /// Downloads never adds itself to the menu (the Install button does that).
 pub fn register_appimage() -> Result<(), String> {
     let root = install_root()?;
     if !running_installed() {
+        if let (Some(image), Some(replaced)) = (std::env::var_os("APPIMAGE"), std::env::var_os(REPLACED_APPIMAGE)) {
+            std::env::remove_var(REPLACED_APPIMAGE);
+            finish_loose_update(Path::new(&image), Path::new(&replaced));
+        }
         // Entries an earlier version created for a loose AppImage file.
         let applications = dirs::data_dir().ok_or("Pasta de aplicativos indisponível.")?.join("applications");
         remove_loose_entries(&applications, &installed_command(&root));
@@ -421,17 +449,14 @@ pub fn update_shortcuts(path: &str) -> Result<usize, String> {
     update_shortcuts_at(&shortcut_directories(), &entry.path, &entry.name, &launcher_binary()?, &icon)
 }
 pub fn create_shortcut(path: &str) -> Result<String, String> {
-    let entry = super::installed_library::list(false)?
-        .into_iter()
-        .find(|entry| entry.path == path)
-        .ok_or("Jogo não registrado na biblioteca.")?;
+    let (name, _, _, executable) = super::wine_tools::maintenance_entry(path)?;
     let desktop = dirs::desktop_dir()
         .or_else(|| dirs::home_dir().map(|home| home.join("Desktop")))
         .ok_or("Área de trabalho indisponível.")?;
-    let icon = super::executable_icon::shortcut_icon(Path::new(&entry.executable));
+    let icon = super::executable_icon::shortcut_icon(Path::new(&executable));
     let icon = icon.as_ref().map(|path| path.to_string_lossy().into_owned())
         .unwrap_or_else(|| "applications-games".into());
-    write_shortcut_at(&desktop, &entry.name, &entry.path, &launcher_binary()?, &icon)
+    write_shortcut_at(&desktop, &name, path, &launcher_binary()?, &icon)
         .map(|path| path.to_string_lossy().into_owned())
 }
 pub fn open_launcher(entry: Option<&str>) -> Result<(), String> {
@@ -453,7 +478,7 @@ pub fn open_launcher(entry: Option<&str>) -> Result<(), String> {
 }
 
 pub fn launch_entry(path: &str) -> Result<(), String> {
-    if !super::installed_library::list(false)?.iter().any(|e| e.path == path) { return Err("Executável não registrado.".into()); }
+    super::wine_tools::maintenance_entry(path)?;
     launcher_command()?.arg("--launch-game").arg(path)
         .stdin(std::process::Stdio::null()).stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null())
         .spawn().map_err(|e| format!("Não foi possível iniciar: {e}"))?;
@@ -541,6 +566,12 @@ pub fn monitor_background(entry: &str) -> Result<(), LaunchReport> {
         error,
         log,
     };
+    if let Some(id) = entry.strip_prefix("nexus:") {
+        return tauri::async_runtime::block_on(crate::commands::nexus_local::launch_nexus_game(id.into())).map(|_|()).map_err(|error|report(error,None));
+    }
+    if let Some(id) = entry.strip_prefix("external:") {
+        return tauri::async_runtime::block_on(crate::commands::external_library::launch_external_game(id.into())).map_err(|error|report(error,None));
+    }
     let started_at = SystemTime::now();
     let initial =
         super::game_execution::start(entry.into()).map_err(|error| report(error, None))?;
@@ -579,6 +610,23 @@ pub fn monitor_background(entry: &str) -> Result<(), LaunchReport> {
 #[cfg(test)]
 mod appimage_install_tests {
     use super::*;
+    #[test]
+    fn loose_update_removes_only_old_peligames_files() {
+        let folder = std::env::temp_dir().join(format!("peligames-loose-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&folder).unwrap();
+        let old = folder.join("PeliGames_0.3.7_amd64.AppImage");
+        let new = folder.join("PeliGames_0.3.8_amd64.AppImage");
+        for file in [&old, &new] { fs::write(file, b"x").unwrap(); }
+        let backup = folder.join("PeliGames_0.3.6_amd64.AppImage.previous");
+        let other = folder.join("Outro.AppImage");
+        fs::write(&backup, b"x").unwrap();
+        fs::write(&other, b"x").unwrap();
+        finish_loose_update(&new, &old);
+        assert!(!old.exists() && !backup.exists());
+        assert!(new.exists() && other.exists());
+        finish_loose_update(&new, &folder.join("../fora/PeliGames.AppImage"));
+        fs::remove_dir_all(folder).unwrap();
+    }
     #[test]
     fn loose_appimage_menu_entries_are_removed_and_installed_ones_kept() {
         let base = std::env::temp_dir().join(format!("peligames-menu-{}", uuid::Uuid::new_v4()));

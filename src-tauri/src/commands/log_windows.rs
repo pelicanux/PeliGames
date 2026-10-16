@@ -25,10 +25,84 @@ pub async fn open_game_log_window(app: tauri::AppHandle, kind: String, target: S
                 .inner_size(900., 620.).min_inner_size(480., 320.)
                 .decorations(false).resizable(true).transparent(true).shadow(false)
                 .background_color(tauri::webview::Color(0, 0, 0, 0))
+                // Shown by the page once it has drawn, so it never opens empty or see-through;
+                // shown here anyway if the page does not get that far.
+                .visible(false)
                 .build().map_err(|e| e.to_string())?;
+            let window = handle.get_webview_window(&label).ok_or("Janela de logs indisponível.")?;
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
+                let _ = window.show();
+            });
             Ok(())
         })();
         let _ = send.send(result);
     }).map_err(|e| e.to_string())?;
     receive.await.map_err(|e| e.to_string())?
+}
+
+/// Keeps a log window above the others. GTK's keep-above does nothing on
+/// Wayland, so under KDE the request goes to KWin through a one-off script.
+#[tauri::command]
+pub async fn set_log_window_on_top(window: tauri::WebviewWindow, on_top: bool) -> Result<(), String> {
+    if !window.label().starts_with("game-logs-") { return Err("Janela inválida.".into()); }
+    window.set_always_on_top(on_top).map_err(|e| e.to_string())?;
+    #[cfg(target_os = "linux")]
+    if kde_wayland() {
+        let caption = window.title().map_err(|e| e.to_string())?;
+        tauri::async_runtime::spawn_blocking(move || kwin_keep_above(&caption, std::process::id(), on_top))
+            .await.map_err(|e| e.to_string())??;
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn kde_wayland() -> bool {
+    let wayland = std::env::var_os("WAYLAND_DISPLAY").is_some() && std::env::var("GDK_BACKEND").map_or(true, |backend| !backend.starts_with("x11"));
+    wayland && std::env::var("XDG_CURRENT_DESKTOP").is_ok_and(|desktop| desktop.split(':').any(|name| name.eq_ignore_ascii_case("KDE")))
+}
+
+/// The KWin script for `kwin_keep_above`: the window of this process with this title.
+#[cfg(target_os = "linux")]
+fn keep_above_script(caption: &str, pid: u32, on_top: bool) -> String {
+    let caption = serde_json::to_string(caption).unwrap_or_else(|_| "\"\"".into());
+    format!("const caption = {caption};\n\
+        const windows = workspace.windowList ? workspace.windowList() : workspace.clientList();\n\
+        for (const window of windows) {{\n\
+        \x20   if (window.pid === {pid} && (window.caption === caption || window.caption.startsWith(caption + \" <\"))) window.keepAbove = {on_top};\n\
+        }}\n")
+}
+
+#[cfg(target_os = "linux")]
+fn kwin_keep_above(caption: &str, pid: u32, on_top: bool) -> Result<(), String> {
+    use zbus::blocking::{Connection, Proxy};
+    let failure = |error: zbus::Error| format!("O KWin não aceitou fixar a janela: {error}");
+    let file = std::env::temp_dir().join(format!("peligames-keep-above-{}.js", uuid::Uuid::new_v4()));
+    std::fs::write(&file, keep_above_script(caption, pid, on_top)).map_err(|e| e.to_string())?;
+    let name = file.file_stem().unwrap_or_default().to_string_lossy().into_owned();
+    let result = (|| {
+        let connection = Connection::session().map_err(failure)?;
+        let scripting = Proxy::new(&connection, "org.kde.KWin", "/Scripting", "org.kde.kwin.Scripting").map_err(failure)?;
+        let id: i32 = scripting.call("loadScript", &(file.to_string_lossy().as_ref(), name.as_str())).map_err(failure)?;
+        if id < 0 { return Err("O KWin não carregou o script para fixar a janela.".to_string()); }
+        let script = Proxy::new(&connection, "org.kde.KWin", format!("/Scripting/Script{id}"), "org.kde.kwin.Script").map_err(failure)?;
+        let run: Result<(), String> = script.call("run", &()).map_err(failure);
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        let _: Result<bool, _> = scripting.call("unloadScript", &(name.as_str(),));
+        run
+    })();
+    let _ = std::fs::remove_file(&file);
+    result
+}
+
+#[cfg(all(test, target_os = "linux"))]
+mod tests {
+    #[test]
+    fn keep_above_script_matches_only_this_window_and_escapes_the_title() {
+        let script = super::keep_above_script("Logs · \"Game\" </script>", 42, true);
+        assert!(script.contains(r#"const caption = "Logs · \"Game\" </script>";"#));
+        assert!(script.contains("window.pid === 42"));
+        assert!(script.contains("window.keepAbove = true"));
+        assert!(super::keep_above_script("Logs", 1, false).contains("window.keepAbove = false"));
+    }
 }

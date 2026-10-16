@@ -2,6 +2,7 @@
    content from turning into a luminous veil; it never filters foreground text. */
 /* One corner-lit surface for panels, dialogs and portal menus. */
 :root {
+  --panel-solid-color: #1b1c25;
   --glass-backdrop-brightness: 1;
   --glass-base-start: 12, 17, 32;
   --glass-base-end: 19, 13, 27;
@@ -11,7 +12,15 @@
   --glass-corner-fill: .13;
   --glass-shadow: rgba(0, 0, 0, .25);
 }
+/* Floating dialogs retain their default diffusion independently of panel blur. */
+:root :is(.modal-overlay, .preferences-overlay, .modal-content, .dialog-popover,
+  .cover-context-menu, .ui-hover-tooltip, .effects-menu, .custom-select-menu,
+  .text-context-menu, .model-source-tooltip, .launcher-update-tooltip) {
+  --window-blur-factor: 1;
+  --backdrop-blur-factor: 1;
+}
 :root[data-appearance="light"] {
+  --panel-solid-color: #f2f3f8;
   --glass-base-start: 220, 228, 238;
   --glass-base-end: 198, 211, 228;
   --glass-opacity-start: .84;
@@ -19,6 +28,14 @@
   --glass-neutral-border: 115, 134, 159;
   --glass-corner-fill: .16;
   --glass-shadow: rgba(35, 50, 75, .18);
+}
+/* The range endpoint is an opaque surface, not a stronger blur. Portals and
+   floating dialogs continue to use their fixed diffusion and transparency. */
+:root[data-panels-opaque="true"] .menu-glass-panel:not(.modal-content *):not(.dialog-popover *) {
+  --glass-opacity-start: 1;
+  --glass-opacity-end: 1;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 :root[data-appearance] :is(
   .menu-glass-panel, .modal-content, .dialog-popover, .cover-context-menu,
@@ -241,14 +258,9 @@
   -webkit-backdrop-filter: blur(calc(4px * var(--backdrop-blur-factor, 1))) brightness(.78);
 }
 /* Preferences need a stronger veil over the library so form text stays legible. */
-:root[data-appearance="dark"] .modal-content.preferences-modal,
 :root[data-appearance="dark"] .dialog-popover {
   --glass-base-start: 12, 17, 32;
   --glass-base-end: 19, 13, 27;
-}
-:root[data-appearance="dark"] .modal-content.preferences-modal {
-  --glass-opacity-start: .84;
-  --glass-opacity-end: .78;
 }
 :root[data-appearance="dark"] .dialog-popover {
   --glass-opacity-start: .99;

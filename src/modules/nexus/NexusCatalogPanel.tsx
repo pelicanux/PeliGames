@@ -1,14 +1,17 @@
+import { createPortal } from "react-dom";
+import { CatalogNavigationContext } from "../../components/modern/CatalogNavigationContext";
 import { groupNexusFiles } from "./fileGroups";
 import { NexusDownloadQueue } from "./NexusDownloadQueue";
 import { NexusPageSizeSelector } from "./NexusPageSizeSelector";
 import { nexusArchiveFormats } from "./archiveFormats";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { openBrowserUrl as openUrl } from "../../services/browser";
 import { openFilePicker } from "../../services/tauriService";
 import { HoverTooltip } from "../../components/HoverTooltip";
 import { MenuIcon } from "../../components/MenuIcon";
 import { useNexusText } from "./text";
+import { useI18n } from "../../i18n/I18nContext";
 import { NexusPopup } from "./NexusPopup";
 import { NexusRequirements, plainNexusText, type Requirements } from "./NexusRequirements";
 import type { NexusGame } from "./useNexusWorkspace";
@@ -32,11 +35,14 @@ function ModThumbnail({ mod }: { mod: Mod }) {
       : <div className="nexus-thumbnail-placeholder"><MenuIcon name="image" /><span>{text.noThumbnail}</span></div>}
   </div>;
 }
-export function NexusCatalogPanel({ game, onAssociate, onImport, onClose }: {
+export function NexusCatalogPanel({ game, onAssociate, onImport, onClose, embedded = false, onLibrary }: {
   game?: NexusGame; onAssociate: (id: string, domain: string) => Promise<boolean>;
   onImport: (id: string, source: string) => Promise<boolean>; onClose: () => void;
+  embedded?: boolean; onLibrary?: () => void;
 }) {
   const text = useNexusText();
+  const navigationHost = useContext(CatalogNavigationContext);
+  const { language, t } = useI18n();
   const identifiedDomain = game?.adapter || "";
   const domain = identifiedDomain || game?.nexus_domain || "";
   const [feed, setFeed] = useState("all");
@@ -82,7 +88,15 @@ export function NexusCatalogPanel({ game, onAssociate, onImport, onClose }: {
   const generation = useRef(0);
   const lock = useRef(false);
   const grid = useRef<HTMLDivElement>(null);
-  useEffect(() => { grid.current?.scrollTo({ top: 0 }); }, [mods]);
+  const content = useRef<HTMLElement>(null);
+  const catalogScroll = useRef(0);
+  const rememberCatalogScroll = () => {
+    if (embedded) catalogScroll.current = content.current?.closest(".modern-catalog-scroll")?.scrollTop ?? 0;
+  };
+  useEffect(() => {
+    grid.current?.scrollTo({ top: 0 });
+    if (embedded) { catalogScroll.current = 0; content.current?.closest(".modern-catalog-scroll")?.scrollTo({ top: 0 }); }
+  }, [mods, embedded]);
   const associateRef = useRef(onAssociate);
   associateRef.current = onAssociate;
   useEffect(() => { setPage(1); setTotal(0); setFilter(""); setSearch(""); setReference(""); }, [domain, game?.id]);
@@ -124,7 +138,7 @@ export function NexusCatalogPanel({ game, onAssociate, onImport, onClose }: {
     setLoadingModId(modId);
     try {
       const value = await invoke<Details>("get_nexus_catalog_mod", { gameDomain: domain, modId });
-      if (request === generation.current) { setShowRequirements(false); setDownloadOpen(false); setDetails(value); }
+      if (request === generation.current) { rememberCatalogScroll(); setShowRequirements(false); setDownloadOpen(false); setDetails(value); }
     } finally {
       if (request === generation.current) setLoadingModId(null);
     }
@@ -134,7 +148,7 @@ export function NexusCatalogPanel({ game, onAssociate, onImport, onClose }: {
   const choose = () => void run(async () => {
     const request = generation.current;
     const values = await invoke<CatalogGame[]>("list_nexus_catalog_games");
-    if (request === generation.current) { setGames(values); setGameFilter(game?.game.name || ""); setChoosing(true); }
+    if (request === generation.current) { rememberCatalogScroll(); setGames(values); setGameFilter(game?.game.name || ""); setChoosing(true); }
   });
   const lookup = () => {
     let id = Number(reference.trim());
@@ -154,7 +168,26 @@ export function NexusCatalogPanel({ game, onAssociate, onImport, onClose }: {
   const back = () => { if (choosing) setChoosing(false); else setDetails(null); };
   const associationUncertain = Boolean(game) && !identifiedDomain && (!domain || (!busy && !error && !search && feed === "all" && total === 0 && mods.length === 0));
   const viewKey = choosing ? "association" : details ? `mod-${details.info.mod_id}` : "catalog";
-  return <NexusPopup className={`nexus-catalog-popup ${viewKey === "catalog" ? "nexus-catalog-browser" : ""}`} title={choosing ? text.associateGame : details ? details.info.name : text.catalog} viewKey={viewKey} onBack={viewKey === "catalog" ? undefined : back} onClose={onClose}><section className="nexus-catalog" aria-busy={busy}>
+  useLayoutEffect(() => {
+    if (!embedded) return;
+    const scroll = content.current?.closest(".modern-catalog-scroll");
+    if (scroll) scroll.scrollTop = viewKey === "catalog" ? catalogScroll.current : 0;
+  }, [embedded, viewKey]);
+  const backButton = <button type="button" className="modern-catalog-back" onClick={viewKey === "catalog" ? onClose : back}><MenuIcon name="back" />{viewKey === "catalog" ? (language === "pt" ? "Voltar ao jogo" : "Back to game") : text.backCatalog}</button>;
+  return <NexusPopup embedded={embedded} className={embedded ? "modern-nexus-catalog" : `nexus-catalog-popup ${viewKey === "catalog" ? "nexus-catalog-browser" : ""}`} title={choosing ? text.associateGame : details ? details.info.name : text.catalog} viewKey={viewKey} onBack={viewKey === "catalog" ? undefined : back} onClose={onClose}>
+    {embedded && navigationHost && createPortal(backButton, navigationHost)}
+    {embedded && <header className="modern-catalog-header">
+      <nav className="modern-catalog-breadcrumbs" aria-label={language === "pt" ? "Navegação do catálogo" : "Catalog navigation"}>
+        <button type="button" onClick={onLibrary ?? onClose}>{t("modern", "library")}</button><span aria-hidden="true">/</span>
+        <button type="button" onClick={onClose}>{game?.game.name}</button><span aria-hidden="true">/</span>
+        <button type="button" aria-current={viewKey === "catalog" ? "page" : undefined} onClick={() => { setChoosing(false); setDetails(null); }}>{text.onlineCatalog}</button>
+        {viewKey !== "catalog" && <><span aria-hidden="true">/</span><span aria-current="page">{choosing ? text.associateGame : details?.info.name}</span></>}
+      </nav>
+      <div className="modern-catalog-title"><div><h1>{choosing ? text.associateGame : details ? details.info.name : text.onlineCatalog}</h1><p>{game?.game.name}{viewKey === "catalog" ? ` · ${text.feedHint}` : ""}</p></div>
+        {!navigationHost && backButton}
+      </div>
+    </header>}
+    <section ref={content} className="nexus-catalog" aria-busy={busy}>
     <div hidden={Boolean(details) || choosing}>
     <div className="nexus-panel-heading nexus-catalog-association"><h3><img className="nexus-icon" src="/nexus-mods.svg" alt="" />{text.catalog}</h3><button className="btn btn-secondary" disabled={!game || busy || Boolean(identifiedDomain)} onClick={choose}><MenuIcon name="gamepadSearch" />{text.associateGame}</button>{associationUncertain && <HoverTooltip text={text.associationWarning} anchorClassName="nexus-catalog-association-warning"><button type="button" className="nexus-queue-note" aria-label={text.associationWarning}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.3 4.1a2 2 0 0 1 3.4 0l7.5 13a2 2 0 0 1-1.7 3H4.5a2 2 0 0 1-1.7-3z" /><path d="M12 9v4" /><circle cx="12" cy="16.5" r=".65" fill="currentColor" stroke="none" /></svg></button></HoverTooltip>}<p className="nexus-hint">{domain ? `${game?.game.name} · nexusmods.com/${domain}` : text.associationHint}</p></div>
 

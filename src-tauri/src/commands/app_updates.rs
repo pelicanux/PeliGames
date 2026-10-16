@@ -232,6 +232,9 @@ fn apply_downloaded_update(app: tauri::AppHandle, update: DownloadedUpdate) -> R
             app.exit(0);
             return Ok(());
         } else if lower_path.ends_with(".appimage") {
+            // A loose AppImage is replaced in place and keeps its file name, so
+            // shortcuts and the user's own launchers keep working; the new
+            // version deletes the backup once it opens.
             let current = PathBuf::from(std::env::var_os("APPIMAGE").ok_or("manualInstall")?);
             use std::os::unix::fs::PermissionsExt;
             let staged = current.with_file_name(format!(".peligames-update-{}.AppImage", uuid::Uuid::new_v4()));
@@ -241,7 +244,9 @@ fn apply_downloaded_update(app: tauri::AppHandle, update: DownloadedUpdate) -> R
                 std::fs::set_permissions(&staged, std::fs::Permissions::from_mode(0o755)).map_err(|_| "apply".to_string())?;
                 std::fs::copy(&current, &backup).map_err(|_| "apply".to_string())?;
                 std::fs::rename(&staged, &current).map_err(|_| "apply".to_string())?;
-                if std::process::Command::new(&current).env("PELIGAMES_RESTART_PARENT_PID", std::process::id().to_string()).env_remove("APPIMAGE").env_remove("APPDIR").env_remove("LD_LIBRARY_PATH").env_remove("LD_PRELOAD").spawn().is_err() {
+                if std::process::Command::new(&current).env("PELIGAMES_RESTART_PARENT_PID", std::process::id().to_string())
+                    .env(crate::core::pelinstall::REPLACED_APPIMAGE, &backup)
+                    .env_remove("APPIMAGE").env_remove("APPDIR").env_remove("LD_LIBRARY_PATH").env_remove("LD_PRELOAD").spawn().is_err() {
                     let _ = std::fs::rename(&backup, &current);
                     return Err("apply".into());
                 }

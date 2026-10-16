@@ -1,13 +1,16 @@
+import { GameBannerImage } from "./GameBannerImage";
+import { CoverHoldProgress } from "./CoverHoldProgress";
 import { useAccentTheme } from "../theme/ThemeProvider";
 import { createPortal } from "react-dom";
 import { CoverFreeze } from "./CoverFreeze";
-import { CoverWalkingPenguin } from "./CoverWalkingPenguin";
+import { CoverTuxRise } from "./CoverTuxRise";
 import { CoverHoldParticles } from "./CoverHoldParticles";
 import { CoverWaterFill } from "./CoverWaterFill";
 import { CoverLaunchTeleport, coverCrackPaths, type CoverTeleport } from "./CoverLaunchTeleport";
+import { ModernLibraryFilters } from "./modern/ModernLibraryFilters";
 import { GamePlatformBadge } from "./GamePlatformBadge";
 import { NexusLibraryLoading } from "../modules/nexus/NexusLibraryLoading";
-import { useFavorites } from "../services/favorites";
+import { useFavorites, toggleFavorite } from "../services/favorites";
 import type { CoverGameAction } from "./CoverGameActions";
 import { GameCoverMenu } from "./GameCoverMenu";
 import { useRemovedLibraryGames, restoreRemovedLibraryFolder } from "../services/libraryVisibility";
@@ -24,12 +27,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import { usePerformanceMode } from "./EffectsContext";
 import { applyCustomCovers, readGameLibrary, saveGameLibrary } from "../services/gameLibraryCache";
 import { warmAmbientCover } from "../services/ambientCoverCache";
-import { GameEntryButton, GameModeSelector, type GamePanelMode } from "./GameModeSelector";
-import { HoverTooltip } from "./HoverTooltip";
+import type { GamePanelMode } from "../types/gamePanel";
 import { LauncherIcon } from "./LauncherIcon";
 import { openDirectoryPicker } from "../services/tauriService";
 import { launcherCoverFallback } from "../services/launcherInstallation";
 import { listPeliGamesEntries } from "../services/installedLibrary";
+import { activityOf, daysSince, formatPlaytime, loadGameActivity, type ActivityMap } from "../services/gameActivity";
+import { SmoothImage } from "./SmoothImage";
 
 const COVER_HOLD_FEEDBACK_DELAY = 250;
 const COVER_HOLD_ANIMATION_DURATION = 1200;
@@ -78,19 +82,21 @@ interface Props {
   coverActionsBlocked?: boolean;
   coverHoldBlocked?: boolean;
   homeRevision: number;
-  onHome: () => void;
   onSelectGame: (game: GameInfo, portrait?: HTMLElement) => void;
   selectedGameKey?: string;
   runningGamePath?: string;
   startingGamePath?: string;
   mode: GamePanelMode;
-  detailsOpen: boolean;
   libraryScope: "own" | "all";
   modeDisabled?: boolean;
   onModeChange: (mode: GamePanelMode) => void;
+  /** New interface: the side menu switches modes, and covers tilt less. */
+  /** New interface: number of games, shown on the side menu. */
+  onCountChange?: (count: number) => void;
 }
 
-export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, coverHoldBlocked, homeRevision, onHome, onSelectGame, selectedGameKey, runningGamePath, startingGamePath, mode, libraryScope, detailsOpen, onModeChange, modeDisabled, managedLibrary }) => {
+export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, coverHoldBlocked, homeRevision, onSelectGame, selectedGameKey, runningGamePath, startingGamePath, mode, libraryScope, onModeChange, modeDisabled, managedLibrary, onCountChange }) => {
+  const tilt = 6;
   const { launchEffect } = useAccentTheme();
   const [, setCoverRevision] = useState(0);
   const managed = Boolean(managedLibrary);
@@ -106,12 +112,11 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   }, [managed]);
   const favorites = useFavorites();
   const removedGames = useRemovedLibraryGames();
-  const [favoritesCollapsed, setFavoritesCollapsed] = useState(false);
   const performanceMode = usePerformanceMode();
   const [cachedGames] = useState(() => readGameLibrary());
   const [initialSnapshots] = useState(() => ({
     all: cachedGames,
-    own: readGameLibrary("own") ?? cachedGames ?? null,
+    own: readGameLibrary("own"),
     nexus: readGameLibrary("nexus"),
   }));
   const librarySnapshots = useRef(initialSnapshots);
@@ -119,7 +124,10 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const [libraryLoaded, setLibraryLoaded] = useState(cachedGames !== null);
   const startupHandled = useRef<string | null>(null);
   const scanInProgress = useRef(false);
-  const pendingScanFolders = useRef<{ folders: string[]; background: boolean } | null>(null);
+  const activeScope = useRef(libraryScope);
+  activeScope.current = libraryScope;
+  const [scanPending, setScanPending] = useState(false);
+  const pendingScanFolders = useRef<{ folders: string[]; background: boolean; scope: "own" | "all" } | null>(null);
   const ownEntries = useRef<GameInfo[]>([]);
   const ownRequest = useRef(0);
   const [ownLoaded, setOwnLoaded] = useState(false);
@@ -142,13 +150,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     return () => { ++ownRequest.current; window.removeEventListener("peligamesLibraryChanged", refresh); };
   }, [Boolean(managedLibrary)]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
-  const searchButton = useRef<HTMLButtonElement>(null);
-  const searchId = React.useId();
-  useEffect(() => {
-    if (searchExpanded) searchInput.current?.focus();
-  }, [searchExpanded]);
   const [viewMode, setViewMode] = useState<"grid" | "list">(() =>
     localStorage.getItem("game_library_view") === "list" ? "list" : "grid"
   );
@@ -161,11 +163,28 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     const saved = localStorage.getItem("custom_folders");
     return saved ? JSON.parse(saved) : [];
   });
-  const [collapsedCats, setCollapsedCats] = useState<Record<string, boolean>>({});
-  useEffect(() => { setCollapsedCats({}); }, [homeRevision]);
+  // New interface: Ctrl+K focuses the library search.
+  useEffect(() => {
+    const focusSearch = (event: KeyboardEvent) => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); searchInput.current?.focus(); } };
+    window.addEventListener("keydown", focusSearch);
+    return () => window.removeEventListener("keydown", focusSearch);
+  }, []);
+  // New interface: one grid filtered by store chips instead of collapsible categories.
+  const [storeFilter, setStoreFilter] = useState("all");
+  useEffect(() => { setStoreFilter("all"); }, [libraryScope, Boolean(managedLibrary)]);
+  // New interface: last play and playtime from each launcher's own records,
+  // refreshed when a session ends and when the window regains focus.
+  const [activity, setActivity] = useState<ActivityMap>({});
+  useEffect(() => {
+    let alive = true;
+    const refresh = () => { void loadGameActivity().then(value => { if (alive) setActivity(value); }); };
+    refresh();
+    window.addEventListener("focus", refresh);
+    return () => { alive = false; window.removeEventListener("focus", refresh); };
+  }, [runningGamePath, homeRevision]);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, game: GameInfo } | null>(null);
   const { t } = useI18n();
-  useEffect(() => { setSearchQuery(""); setSearchExpanded(false); setContextMenu(null); }, [libraryScope, homeRevision]);
+  useEffect(() => { setSearchQuery(""); setContextMenu(null); }, [libraryScope]);
 
   useEffect(() => {
     const handleClick = () => setContextMenu(null);
@@ -175,14 +194,15 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
 
   const [fallbackAttempted, setFallbackAttempted] = useState<Set<string>>(new Set());
 
-  const fetchGames = async (folders: string[] = customFolders, background = false) => {
+  const fetchGames = async (folders: string[] = customFolders, background = false, scope = libraryScope) => {
     if (managedLibrary) { managedLibrary.onRefresh(); return; }
     if (scanInProgress.current) {
       // A focus refresh must not downgrade a pending explicit scan.
-      if (!pendingScanFolders.current || !background) pendingScanFolders.current = { folders, background };
+      if (!pendingScanFolders.current || pendingScanFolders.current.scope !== scope || !background) pendingScanFolders.current = { folders, background, scope };
       return;
     }
     scanInProgress.current = true;
+    setScanPending(true);
     // Restoring the window refreshes data without unmounting the visible cards.
     if (!background) {
       setLoading(true);
@@ -190,9 +210,14 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       setFallbackAttempted(new Set());
     }
     try {
-      const result = libraryScope === "own"
-        ? await invoke<GameInfo[]>("scan_external_library")
-        : await invoke<GameInfo[]>("scan_installed_games", { apiKey: STEAMGRIDDB_API_KEY, customFolders: folders });
+      const [scanned, external] = scope === "own"
+        ? [await invoke<GameInfo[]>("scan_external_library"), [] as GameInfo[]]
+        : await Promise.all([invoke<GameInfo[]>("scan_installed_games", { apiKey: STEAMGRIDDB_API_KEY, customFolders: folders }), invoke<GameInfo[]>("scan_external_library").catch(() => [] as GameInfo[])]);
+      const result = scanned.map(game => {
+        const settings = external.find(entry => entry.launcher === game.launcher && entry.path === game.path);
+        return settings ? {...game, external_id: settings.external_id, advanced: settings.advanced, proton: settings.proton, prefix: settings.prefix, directory: settings.directory} : game;
+      });
+      if (scope !== activeScope.current) return;
       setGames(applyCustomCovers([...result.filter(game => game.launcher !== "PeliGames"), ...ownEntries.current]));
       await refreshOwnLibrary(true);
       setLibraryLoaded(true);
@@ -204,8 +229,8 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       scanInProgress.current = false;
       const pending = pendingScanFolders.current;
       pendingScanFolders.current = null;
-      if (pending) void fetchGames(pending.folders, pending.background);
-      else setLoading(false);
+      if (pending) void fetchGames(pending.folders, pending.background, pending.scope);
+      else { setLoading(false); setScanPending(false); }
     }
   };
 
@@ -289,15 +314,22 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       if (!bounds || bounds.card !== card) return;
       const { rect } = bounds;
       const x = hoverPosition.current.x - rect.left, y = hoverPosition.current.y - rect.top;
-      const rotateX = ((y - rect.height / 2) / (rect.height / 2)) * -15;
-      const rotateY = ((x - rect.width / 2) / (rect.width / 2)) * 15;
-      card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`;
+      const rotateX = ((y - rect.height / 2) / (rect.height / 2)) * -tilt;
+      const rotateY = ((x - rect.width / 2) / (rect.width / 2)) * tilt;
+      // A short transition smooths the pointer's steps without lagging behind it.
+      card.style.transition = "transform .12s ease-out, box-shadow .25s ease, border-color .25s ease";
+      card.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.04, 1.04, 1.04)`;
       card.style.zIndex = "20";
-      card.style.boxShadow = "0 0 20px rgba(var(--accent-rgb), 0.6), 0 15px 30px rgba(0,0,0,0.6)";
-      card.style.borderColor = "rgba(var(--accent-rgb), 0.8)";
+      card.style.boxShadow = "0 22px 44px rgba(0, 0, 0, .55), 0 0 26px rgba(var(--accent-rgb), .28)";
+      card.style.borderColor = "rgba(var(--accent-rgb), 0.7)";
+      // Glass reflection (see .glare in modern.css): a soft highlight under the
+      // pointer and a diagonal sheen that crosses the cover the opposite way.
       const glare = card.querySelector('.glare') as HTMLDivElement;
       if (glare) {
-        glare.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255, 255, 255, 0.4) 0%, transparent 60%)`;
+        const px = x / rect.width * 100, py = y / rect.height * 100;
+        glare.style.setProperty("--glare-x", `${px}%`);
+        glare.style.setProperty("--glare-y", `${py}%`);
+        glare.style.setProperty("--glare-sheen", `${120 - (px * .7 + py * .3) * 1.4}%`);
         glare.style.opacity = "1";
       }
     });
@@ -308,7 +340,9 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     if (hoverFrame.current !== null) cancelAnimationFrame(hoverFrame.current);
     hoverFrame.current = null;
     hoverBounds.current = null;
-    card.style.transform = (viewMode === "list" || performanceMode) ? "none" : `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+    // Settle back slowly, like glass tilting back into place.
+    card.style.transition = "transform .45s cubic-bezier(.2, .8, .2, 1), box-shadow .35s ease, border-color .35s ease";
+    card.style.transform = (viewMode === "list" || performanceMode) ? "none" : `perspective(900px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
     card.style.zIndex = "1";
     card.style.boxShadow = "none";
     card.style.borderColor = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)";
@@ -405,14 +439,15 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       setBrokenCards(previous => new Set(previous).add(key));
       const generation = ++launchGeneration.current;
       setLaunchCommitted(false);
-      setTeleport({ game, source, preview, effect: launchEffect === "freeze" ? "freeze" : launchEffect === "shrink" ? "shrink" : launchEffect === "penguin" ? "penguin" : launchEffect === "particles" ? "particles" : launchEffect === "aquarium" ? "aquarium" : launchEffect === "smooth" ? "smooth" : "shatter" });
+      const launchDelay = (launchEffect === "smooth" || launchEffect === "penguin" || launchEffect === "shrink") ? 3500 : 4050;
+      setTeleport({ game, source, preview, delay: launchDelay, effect: launchEffect === "freeze" ? "freeze" : launchEffect === "shrink" ? "shrink" : launchEffect === "penguin" ? "penguin" : launchEffect === "particles" ? "particles" : launchEffect === "aquarium" ? "aquarium" : launchEffect === "smooth" ? "smooth" : "shatter" });
       // Give the enlarged cover a cancellation window before launching, including
       // Steam games whose external startup cannot be reliably cancelled afterwards.
       const ready = new Promise<boolean>(resolve => {
         const timer = window.setTimeout(() => {
           cancelPendingLaunch.current = null;
           resolve(true);
-        }, (launchEffect === "smooth" || launchEffect === "penguin" || launchEffect === "shrink") ? 3500 : 4050);
+        }, launchDelay);
         cancelPendingLaunch.current = () => {
           window.clearTimeout(timer);
           cancelPendingLaunch.current = null;
@@ -443,6 +478,14 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     }, COVER_HOLD_FEEDBACK_DELAY);
   };
 
+  /** "Jogado hoje · 46 h" from the launcher's records; empty when unknown. */
+  const playedLabel = (game: GameInfo) => {
+    const record = activityOf(activity, game);
+    if (!record) return "";
+    const days = record.last_played > 0 ? daysSince(record.last_played) : -1;
+    const when = days < 0 ? "" : days === 0 ? t("modern", "playedToday") : days === 1 ? t("modern", "playedYesterday") : t("modern", "playedDaysAgo").replace("{n}", String(days));
+    return [when, formatPlaytime(record.minutes)].filter(Boolean).join(" · ");
+  };
   const isPreparing = (game: GameInfo) => (game.nexus_starting || game.path === startingGamePath) && !(game.nexus_running || game.path === runningGamePath);
   const runningBadge = (game: GameInfo) => (game.nexus_running || game.path === runningGamePath) && <span className="library-running-badge" role="status"><i aria-hidden="true" />{t("gameExecution", "running")}</span>;
   const renderCardContent = (game: GameInfo) => {
@@ -465,13 +508,13 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
             opacity: 0.5
           }}
         >
-          {holdingKey === gameViewKey(game) && launchEffect === "smooth" && <div className="library-hold-progress" aria-hidden="true"><span /></div>}
+          {holdingKey === gameViewKey(game) && launchEffect === "smooth" && <CoverHoldProgress />}
           {holdingKey === gameViewKey(game) && launchEffect === "freeze" && <CoverFreeze reducedMotion={performanceMode} />}
           {holdingKey === gameViewKey(game) && launchEffect === "aquarium" && <CoverWaterFill reducedMotion={performanceMode} />}
           {holdingKey === gameViewKey(game) && launchEffect === "particles" && <CoverHoldParticles reducedMotion={performanceMode} />}
-          {holdingKey === gameViewKey(game) && launchEffect === "penguin" && <CoverWalkingPenguin reducedMotion={performanceMode} />}
+          {holdingKey === gameViewKey(game) && launchEffect === "penguin" && <CoverTuxRise reducedMotion={performanceMode} />}
           {game.cover_url && !imageErrors.has(game.path) ? (
-            <img className="selected-cover-copy" src={game.cover_url} alt="" aria-hidden="true"
+            <SmoothImage className="selected-cover-copy" src={game.cover_url} alt="" aria-hidden="true"
               onError={() => setImageErrors(prev => new Set(prev).add(game.path))} />
           ) : (
             <div className="selected-cover-copy selected-cover-copy--fallback" aria-hidden="true">
@@ -480,7 +523,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
             </div>
           )}
           {runningBadge(game)}
-          {managed && <GamePlatformBadge platform={game.nexus_platform} />}
+          <GamePlatformBadge game={game} />
           {viewMode === "list" && <><span className="selected-game-placeholder-name">{game.name}</span><span className="selected-game-list-note">{t("gameGrid", "selectedGame")}</span></>}
         </div>
       );
@@ -518,26 +561,27 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
           transformStyle: "flat"
         }}
       >
-      {holdingKey === gameViewKey(game) && launchEffect === "smooth" && <div className="library-hold-progress" aria-hidden="true"><span /></div>}
+      {holdingKey === gameViewKey(game) && launchEffect === "smooth" && <CoverHoldProgress />}
           {holdingKey === gameViewKey(game) && launchEffect === "freeze" && <CoverFreeze reducedMotion={performanceMode} />}
           {holdingKey === gameViewKey(game) && launchEffect === "aquarium" && <CoverWaterFill reducedMotion={performanceMode} />}
           {holdingKey === gameViewKey(game) && launchEffect === "particles" && <CoverHoldParticles reducedMotion={performanceMode} />}
-          {holdingKey === gameViewKey(game) && launchEffect === "penguin" && <CoverWalkingPenguin reducedMotion={performanceMode} />}
+          {holdingKey === gameViewKey(game) && launchEffect === "penguin" && <CoverTuxRise reducedMotion={performanceMode} />}
       {holdingKey === gameViewKey(game) && launchEffect === "shatter" && !isRunning(game) && <div className="library-hold-launch" aria-hidden="true"><svg className="library-hold-cracks" viewBox="0 0 100 100" preserveAspectRatio="none">{coverCrackPaths.map((path, index) => <g key={path}><path className="cover-crack-shadow" d={path} pathLength={1} style={{ animationDelay: `${index / coverCrackPaths.length * .52}s` }} /><path d={path} pathLength={1} style={{ animationDelay: `${index / coverCrackPaths.length * .52}s` }} /></g>)}</svg></div>}
 
       {runningBadge(game)}
       <div className="glare" style={{
         position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-        pointerEvents: "none", opacity: 0, transition: "opacity 0.2s ease-out", zIndex: 10
+        pointerEvents: "none", opacity: 0, transition: "opacity .3s ease-out", zIndex: 10
       }} />
       {/* The same portrait owns the shared layout in both views; never the full list row. */}
       <motion.div className="library-cover-thumbnail" layout={performanceMode ? false : "preserve-aspect"} layoutDependency={viewMode}
         onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, game }); }}
         layoutId={performanceMode ? undefined : `cover-${gameViewKey(game)}`}>
       {!imageErrors.has(game.path) && game.cover_url ? (
-        <img 
-          src={game.cover_url} 
+        <SmoothImage
+          src={game.cover_url}
           alt={game.name}
+          loading="lazy"
           decoding="async"
           onLoad={event => { if (!performanceMode && game.cover_url) warmAmbientCover(game.cover_url, event.currentTarget); }}
           style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block" }} 
@@ -586,28 +630,31 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         <img src="/peligames.svg" alt="Icon" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "48px", height: "48px", opacity: 0.5 }} />
       </div>
       
-      {managed && <GamePlatformBadge platform={game.nexus_platform} />}
+      <GamePlatformBadge game={game} />
       </motion.div>
+      <>
+        <span className="modern-card-store"><LauncherIcon launcher={game.launcher} size={12} />{game.library_category === "launchers" ? "Launcher" : game.launcher}</span>
+        <button type="button" className={`modern-card-fav${favorites.has(gameViewKey(game)) ? " on" : ""}`} aria-pressed={favorites.has(gameViewKey(game))}
+          aria-label={t("gameGrid", favorites.has(gameViewKey(game)) ? "unfavorite" : "favorite")} title={t("gameGrid", favorites.has(gameViewKey(game)) ? "unfavorite" : "favorite")}
+          onPointerDown={event => event.stopPropagation()} onClick={event => { event.stopPropagation(); toggleFavorite(game); }}><MenuIcon name="heart" /></button>
+        {launchable(game) && <button type="button" className={`modern-card-play${isRunning(game) ? " running" : ""}`} disabled={!isRunning(game) && coverActionsBlocked}
+          aria-label={isRunning(game) ? t("gameExecution", "cancel") : t("gameExecution", "start")} title={isRunning(game) ? t("gameExecution", "cancel") : t("gameExecution", "start")}
+          onPointerDown={event => event.stopPropagation()} onClick={event => { event.stopPropagation(); void onCoverAction(isRunning(game) ? "stop" : "start", game); }}>
+          <MenuIcon name={isRunning(game) ? "stop" : "play"} /></button>}
+      </>
       <div className="game-list-details"><span>{game.name}</span></div>
-      <div className="game-launcher-badge" style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0.5rem", background: "linear-gradient(to top, rgba(0,0,0,0.9), transparent)" }}>
-        {game.launcher === "PeliGames" && <span className="peligames-executable-label" title={game.executable}>{game.executable?.split(/[\\/]/).pop()}</span>}
-        <div style={{ fontSize: "0.7rem", color: "var(--tone-9ca3af, #9ca3af)", display: "flex", justifyContent: "space-between" }}>
-          <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-            <LauncherIcon launcher={game.launcher} size={12} />
-            {game.launcher}
-          </span>
-        </div>
-      </div>
     </div>
   );
   };
 
-  // Project the whole cell (including its background) when the details panel resizes.
-  // The inner div remains responsible for mouse tilt; it never competes with layout transforms.
+  // Keep library cells in their grid slots. The portrait still animates into details.
   const renderCard = (game: GameInfo) => (
-    <motion.div key={gameViewKey(game)} className={`library-card-cell ${brokenCards.has(gameViewKey(game)) ? "library-card-cell--shattered" : ""}`} aria-hidden={brokenCards.has(gameViewKey(game)) || undefined} data-cover-key={gameViewKey(game)} layout={performanceMode ? false : "position"} layoutDependency={layoutRevision}
-      transition={{ layout: { duration: 0.3, ease: [0.4, 0, 0.2, 1] } }}>
+    <motion.div key={gameViewKey(game)} className={`library-card-cell ${brokenCards.has(gameViewKey(game)) ? "library-card-cell--shattered" : ""}`} aria-hidden={brokenCards.has(gameViewKey(game)) || undefined} data-cover-key={gameViewKey(game)}>
       {renderCardContent(game)}
+      {!brokenCards.has(gameViewKey(game)) && <div className="modern-card-caption">
+        <p>{game.name}</p>
+        <small>{game.nexus_running || game.path === runningGamePath ? t("gameExecution", "running") : playedLabel(game) || (game.launcher === "PeliGames" && game.executable ? game.executable.split(/[\\/]/).pop() : game.library_category === "launchers" ? "Launcher" : game.launcher)}</small>
+      </div>}
     </motion.div>
   );
 
@@ -616,15 +663,13 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const hasLibraryCache = librarySnapshots.current[cacheScope] !== null;
   const refreshingLibrary = managedLibrary
     ? !managedLibrary.loaded || Boolean(managedLibrary.scanning)
-    : loading || !libraryLoaded || !ownLoaded;
+    : scanPending || loading || !libraryLoaded || !ownLoaded;
   const liveGames = managedLibrary ? managedLibrary.games
     : libraryScope === "own" ? games.filter(game => game.launcher === "PeliGames" || Boolean(game.external_id)) : games;
-  // A pending scan must not replace the last complete library with an empty or
-  // partially discovered result. New entries can still appear during the scan.
+  // Keep the last complete snapshot while scanning; publish the next complete
+  // library together so partial discoveries do not shuffle the visible grid.
   const previousGames = librarySnapshots.current[cacheScope] ?? [];
-  const displayedGames = refreshingLibrary
-    ? [...new Map([...previousGames, ...liveGames].map(game => [gameViewKey({ ...game, library_view: cacheScope }), game])).values()]
-    : liveGames;
+  const displayedGames = refreshingLibrary && hasLibraryCache ? previousGames : liveGames;
   useEffect(() => {
     if (refreshingLibrary || libraryError || managedLibrary?.error) return;
     librarySnapshots.current[cacheScope] = liveGames;
@@ -636,12 +681,15 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   // Sort the shared presentation before splitting categories and favourites.
   // filter creates a new array, so scanner results and saved libraries stay intact.
   const filteredGames = scopedGames.filter(g => g.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    .sort((a, b) => libraryNameOrder.compare(a.name, b.name));
-  // Re-measure for actual library arrangement changes, not focus/polling renders.
-  const layoutRevision = JSON.stringify([viewMode, filteredGames.map(gameViewKey), [...favorites], favoritesCollapsed, collapsedCats]);
+    .sort((a, b) => {
+      const name = libraryNameOrder.compare(a.name, b.name);
+      if (name) return name;
+      // Equal titles (including case/accent variants) keep the same order even
+      // when different scanners return their results in a different sequence.
+      const left = gameViewKey(a), right = gameViewKey(b);
+      return left < right ? -1 : left > right ? 1 : 0;
+    });
   const favoriteGames = filteredGames.filter(game => favorites.has(gameViewKey(game)));
-  const remainingGames = filteredGames.filter(game => !favorites.has(gameViewKey(game)));
-  const otherGames = remainingGames;
   // Mod operations share the busy flag, but must not unmount the loaded covers.
   const scanning = managedLibrary
     ? !managedLibrary.loaded || (!hasLibraryCache && Boolean(managedLibrary.scanning))
@@ -660,94 +708,53 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     if (!showScanScreen) shownLibraries.current.add(cacheScope);
   }, [showScanScreen, cacheScope]);
   const scanSpinning = scanning || Boolean(managedLibrary?.scanning);
+  const categoryOf = (game: GameInfo) => {
+    if (game.launcher === "Manual") {
+      const folder = customFolders.find(f => game.path.startsWith(f));
+      return folder ? folder.split(/[\\/]/).pop() || folder : "Avulsos";
+    }
+    return game.library_category === "launchers" ? "Launchers" : game.launcher;
+  };
+  const storeChips = [...new Set(filteredGames.map(categoryOf))].sort((a, b) => libraryNameOrder.compare(a, b));
+  const modernGames = filteredGames.filter(game => storeFilter === "all" ? true : storeFilter === "favorites" ? favorites.has(gameViewKey(game)) : categoryOf(game) === storeFilter);
+  useEffect(() => { if (!managedLibrary) onCountChange?.(scopedGames.length); }, [Boolean(managedLibrary), scopedGames.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  const recentGames = storeFilter === "all" && !searchQuery
+    ? filteredGames.filter(game => (activityOf(activity, game)?.last_played ?? 0) > 0)
+      .sort((a, b) => (activityOf(activity, b)?.last_played ?? 0) - (activityOf(activity, a)?.last_played ?? 0)).slice(0, 4)
+    : [];
+  const launchable = (game: GameInfo) => managed || Boolean(game.external_id) || game.launcher === "Steam" || game.launcher === "PeliGames";
+  const chipIcon = (category: string) => category === "Launchers" ? <MenuIcon name="gamepad" /> : ["Steam", "Heroic", "PeliGames"].includes(category) ? <LauncherIcon launcher={category} size={14} /> : <MenuIcon name="folder" />;
   const showEmptyOwnLibrary = !scanning && ownLoaded && (libraryScope === "own" || mode === "mods") && !searchQuery && filteredGames.length === 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <AnimatePresence>{teleport && <CoverLaunchTeleport value={teleport} reducedMotion={performanceMode} cancellingDisabled={launchCommitted} onCancel={() => cancelPendingLaunch.current?.()} />}</AnimatePresence>
-      <div className={`grid-header`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "1rem", paddingRight: "0.5rem" }}>
-        
-        {/* Right Controls */}
-        {(libraryError || managedLibrary?.error) && <TimedFeedback>{libraryError || managedLibrary?.error}</TimedFeedback>}
-        <div className="library-toolbar-controls">
-          
-          {/* Search Bar */}
-          <div className={`library-search ${searchExpanded ? "expanded" : ""}`} onBlur={event => {
-            if (!event.currentTarget.contains(event.relatedTarget as Node)) setSearchExpanded(false);
-          }} onKeyDown={event => {
-            if (event.key === "Escape") { setSearchExpanded(false); searchButton.current?.focus(); }
-          }}>
-            <button ref={searchButton} type="button" className={`library-search-button ${searchQuery ? "has-query" : ""}`}
-              aria-label={t("gameGrid", "search")} aria-expanded={searchExpanded} aria-controls={searchId}
-              onClick={() => setSearchExpanded(value => !value)}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            </button>
-            <div id={searchId} className="library-search-field">
-            <svg style={{ position: "absolute", left: "0.5rem", top: "50%", transform: "translateY(-50%)", color: "var(--tone-94a3b8, #94a3b8)" }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input ref={searchInput} aria-label={t("gameGrid", "search")}
-              type="text" 
-              placeholder={t("gameGrid", "search")} 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ width: "100%", padding: "0.4rem 2rem 0.4rem 2rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)", borderRadius: "6px", color: "var(--tone-f8fafc, #f8fafc)", outline: "none", fontSize: "0.85rem", boxSizing: "border-box" }}
-            />
-            {searchQuery && (
-              <button
-                aria-label={t("gameGrid", "clearSearch")} onClick={() => { setSearchQuery(""); searchInput.current?.focus(); }}
-                style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", color: "var(--tone-94a3b8, #94a3b8)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
-            )}
+      <div className="modern-lib-toolbar">
+        <label className="modern-lib-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input ref={searchInput} value={searchQuery} onChange={event => setSearchQuery(event.target.value)} placeholder={t("modern", "searchLibrary")} aria-label={t("gameGrid", "search")}
+            onKeyDown={event => { if (event.key === "Escape") setSearchQuery(""); }} />
+          {searchQuery ? <button type="button" aria-label={t("gameGrid", "clearSearch")} onClick={() => { setSearchQuery(""); searchInput.current?.focus(); }}>×</button> : <kbd>Ctrl K</kbd>}
+        </label>
+        <ModernLibraryFilters>
+          <button type="button" aria-pressed={storeFilter === "all"} onClick={() => setStoreFilter("all")}>{t("modern", "all")} <b>{filteredGames.length}</b></button>
+          {favoriteGames.length > 0 && <button type="button" aria-pressed={storeFilter === "favorites"} onClick={() => setStoreFilter("favorites")}><i className="modern-chip-dot" />{t("gameGrid", "favorites")} <b>{favoriteGames.length}</b></button>}
+          {storeChips.map(category => <button type="button" key={category} aria-pressed={storeFilter === category} onClick={() => setStoreFilter(category)}>{chipIcon(category)}{category} <b>{filteredGames.filter(game => categoryOf(game) === category).length}</b></button>)}
+        </ModernLibraryFilters>
+        <div className="modern-lib-actions">
+          {managedLibrary && <button type="button" className="modern-lib-icon" onClick={managedLibrary.onAccount} title={managedLibrary.accountLabel} aria-label={managedLibrary.accountLabel}><img src="/nexus-mods.svg" alt="" /></button>}
+          {!managedLibrary && libraryScope === "all" && <button type="button" className="modern-lib-icon" onClick={() => void handleAddCustomFolder()} title={t("gameGrid", "addFolder")} aria-label={t("gameGrid", "addFolder")}><MenuIcon name="folder" /></button>}
+          <button type="button" className={`modern-lib-icon${scanSpinning ? " spinning" : ""}`} disabled={scanSpinning || managedLibrary?.busy} onClick={() => void fetchGames()} title={t("gameGrid", "scanLibrary")} aria-label={t("gameGrid", "scanLibrary")}><MenuIcon name="repair" /></button>
+          <div className="modern-lib-view" role="group" aria-label={t("gameGrid", "viewMode")}>
+            <button type="button" aria-pressed={viewMode === "grid"} aria-label={t("gameGrid", "gridView")} title={t("gameGrid", "gridView")} onClick={() => setViewMode("grid")}><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></button>
+            <button type="button" aria-pressed={viewMode === "list"} aria-label={t("gameGrid", "listView")} title={t("gameGrid", "listView")} onClick={() => setViewMode("list")}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></button>
           </div>
-            </div>
-          {managedLibrary ? <div className="library-mode-buttons"><HoverTooltip text={managedLibrary.accountLabel}><button type="button" className="library-mode-button nexus-library-title" aria-label={managedLibrary.accountLabel} onClick={managedLibrary.onAccount}><img className="nexus-icon" src="/nexus-mods.svg" alt="" /><span className="nexus-library-wordmark" aria-hidden="true"><span>NEXUS</span><strong>MODS</strong></span></button></HoverTooltip>{managedLibrary.loaded && (!managedLibrary.busy || managedLibrary.games.length > 0) && <GameEntryButton addLabel={managedLibrary.addLabel} disabled={modeDisabled || managedLibrary.busy} onClick={managedLibrary.onAdd} />}{managedLibrary.downloadsAction}</div> : <GameModeSelector modLibrary={libraryScope === "all"} onHome={onHome} mode={mode} open={detailsOpen} onChange={onModeChange} disabled={modeDisabled} />}
-          <div className="library-folder-actions" style={{ display: "flex", gap: "0.5rem" }}>
-            {!managedLibrary && libraryScope === "all" && <HoverTooltip text={t("gameGrid", "addFolder")}><button
-              className="library-mode-button"
-              onClick={handleAddCustomFolder}
-              style={{ background: "transparent", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)", color: "var(--tone-94a3b8, #94a3b8)", cursor: "pointer", padding: "0.4rem 0.6rem", borderRadius: "6px", display: "flex", alignItems: "center", gap: "0.4rem", transition: "all 0.2s" }}
-              onMouseOver={(e) => { e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)"; e.currentTarget.style.color = "var(--tone-f8fafc, #f8fafc)"; }}
-              onMouseOut={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--tone-94a3b8, #94a3b8)"; }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12a10 10 0 1 0 20 0 10 10 0 1 0-20 0Z"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
-              <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>{t("gameGrid", "folder")}</span>
-            </button></HoverTooltip>}
-            <HoverTooltip text={t("gameGrid", "scanLibrary")}><button 
-              className="library-mode-button"
-              onClick={() => void fetchGames()}
-              disabled={scanSpinning || managedLibrary?.busy}
-              style={{ background: "transparent", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)", color: loading ? "white" : "var(--tone-94a3b8, #94a3b8)", cursor: loading ? "not-allowed" : "pointer", padding: "0.4rem 0.6rem", borderRadius: "6px", display: "flex", alignItems: "center", gap: "0.4rem", transition: "all 0.2s", opacity: loading ? 0.7 : 1 }}
-              onMouseOver={(e) => { if (!loading) { e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)"; e.currentTarget.style.color = "var(--tone-f8fafc, #f8fafc)"; } }}
-              onMouseOut={(e) => { if (!loading) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--tone-94a3b8, #94a3b8)"; } }}
-            >
-              <motion.div animate={{ rotate: scanSpinning && !performanceMode ? 360 : 0 }} transition={{ repeat: scanSpinning && !performanceMode ? Infinity : 0, duration: 1, ease: "linear" }} style={{ display: "flex" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-              </motion.div>
-              <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>{t("gameGrid", "scan")}</span>
-            </button></HoverTooltip>
-          </div>
-
-          {(managedLibrary || libraryScope === "all") && <HoverTooltip text={t("gameModes", "goHome")}><button type="button" className="library-mode-button library-home-button" disabled={modeDisabled || managedLibrary?.busy} onClick={onHome}><img src="/peligames.svg" alt="" /><span>{t("gameModes", "home")}</span></button></HoverTooltip>}
-          <div style={{ width: "1px", height: "20px", background: "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)" }}></div>
-
-          <div className="library-view-toggle" role="group" aria-label={t("gameGrid", "viewMode")}>
-            <HoverTooltip text={t("gameGrid", "gridView")}><button type="button" className={viewMode === "grid" ? "active" : ""}
-              onClick={() => setViewMode("grid")} aria-pressed={viewMode === "grid"}
-              aria-label={t("gameGrid", "gridView")}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            </button></HoverTooltip>
-            <HoverTooltip text={t("gameGrid", "listView")}><button type="button" className={viewMode === "list" ? "active" : ""}
-              onClick={() => setViewMode("list")} aria-pressed={viewMode === "list"}
-              aria-label={t("gameGrid", "listView")}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-            </button></HoverTooltip>
-          </div>
-
+          <button type="button" className="modern-lib-button primary" disabled={modeDisabled || Boolean(managedLibrary?.busy)} onClick={() => onModeChange("install")} title={t("modern", "addGame")}><MenuIcon name="plusCircle" />{t("modern", "add")}</button>
         </div>
       </div>
+      {(libraryError || managedLibrary?.error) && <TimedFeedback>{libraryError || managedLibrary?.error}</TimedFeedback>}
 
-      <motion.div layoutScroll className={`game-grid-container game-library--${viewMode}`} style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: "1rem" }}>
+      <motion.div layoutScroll className={`game-grid-container game-library--${viewMode} modern-grid-container`} style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: "1rem" }}>
         {showScanScreen ? <div className="empty-library-state"><NexusLibraryLoading reducedMotion={performanceMode} /></div> : <>
         {filteredGames.length === 0 && !scanSpinning && (managedLibrary ? <div className="empty-library-state">
           {searchQuery ? <p role="status">{t("gameGrid", "noSearchResults")}</p>
@@ -780,63 +787,27 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
           </div> : <div role="status" style={{ textAlign: "center", padding: "2rem", color: "var(--tone-94a3b8, #94a3b8)" }}>
             <p>{searchQuery ? t("gameGrid", "noSearchResults") : libraryScope === "own" ? t("gameGrid", "noOwnGames") : t("app", "noGamesFound")}</p>
           </div>)}
-        {favoriteGames.length > 0 && <section className="favorites-category" style={{ marginBottom: "1.5rem" }} aria-label={t("gameGrid", "favorites")}>
-          <div className="launcher-category-header favorites-category-header" style={{ marginBottom: favoritesCollapsed ? 0 : "1rem" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: favoritesCollapsed ? "rotate(-90deg)" : "rotate(0deg)", transition: "transform .2s", marginRight: ".5rem" }} aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-            <span className="category-launcher-icon"><MenuIcon name="heart" /></span>
-            <h3><button type="button" className="launcher-category-toggle" aria-expanded={!favoritesCollapsed} onClick={() => setFavoritesCollapsed(value => !value)}>{t("gameGrid", "favorites")}</button> <span className="favorites-category-count">{favoriteGames.length}</span></h3>
-          </div>
-          {!favoritesCollapsed && <div className={`game-collection game-collection--${viewMode}`}>{favoriteGames.map(game => renderCard(game))}</div>}
+        {recentGames.length > 0 && <section className="modern-continue">
+          <div className="modern-section-title"><h2>{t("modern", "continuePlaying")}</h2><small>{t("modern", "recent")}</small></div>
+          <div key={cacheScope} className="modern-continue-row modern-library-enter">{recentGames.map(game => {
+            const cover = !imageErrors.has(game.path) ? game.cover_url : undefined;
+            return <div key={gameViewKey(game)} role="button" tabIndex={0} className="modern-continue-card"
+              onClick={() => onSelectGame(game, document.querySelector<HTMLElement>(`[data-cover-key="${CSS.escape(gameViewKey(game))}"] .library-cover-thumbnail`) ?? undefined)}
+              onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); event.currentTarget.click(); } }}>
+              <GameBannerImage game={game} cover={cover} />
+              <GamePlatformBadge game={game} />
+              {launchable(game) && <button type="button" className={`modern-continue-play${isRunning(game) ? " running" : ""}`} disabled={!isRunning(game) && coverActionsBlocked}
+                aria-label={isRunning(game) ? t("gameExecution", "cancel") : t("gameExecution", "start")} title={isRunning(game) ? t("gameExecution", "cancel") : t("gameExecution", "start")}
+                onClick={event => { event.stopPropagation(); void onCoverAction(isRunning(game) ? "stop" : "start", game); }}><MenuIcon name={isRunning(game) ? "stop" : "play"} /></button>}
+              <div className="modern-continue-text"><strong>{game.name}</strong><small><LauncherIcon launcher={game.launcher} size={12} />{isRunning(game) ? t("gameExecution", "running") : playedLabel(game)}</small></div>
+            </div>;
+          })}</div>
+        </section>}
+        {filteredGames.length > 0 && <section className="modern-all-games">
+          <div className="modern-section-title"><h2>{storeFilter === "all" ? t("modern", "allGames") : storeFilter === "favorites" ? t("gameGrid", "favorites") : storeFilter}</h2><small>{t("modern", "gamesCount").replace("{n}", String(modernGames.length))}</small></div>
+          <div key={cacheScope} className={`game-collection game-collection--${viewMode} modern-library-enter`}>{modernGames.map(game => renderCard(game))}</div>
         </section>}
 
-        {(() => {
-          const grouped: Record<string, typeof otherGames> = {};
-          otherGames.forEach(game => {
-            if (game.launcher === "Manual") {
-              const folder = customFolders.find(f => game.path.startsWith(f));
-              const catName = folder ? folder.split(/[\\/]/).pop() || folder : "Avulsos";
-              if (!grouped[catName]) grouped[catName] = [];
-              grouped[catName].push(game);
-            } else {
-              const catName = game.library_category === "launchers" ? "Launchers" : game.launcher;
-              if (!grouped[catName]) grouped[catName] = [];
-              grouped[catName].push(game);
-            }
-          });
-
-          return Object.entries(grouped).sort(([a], [b]) => libraryNameOrder.compare(a, b)).map(([catName, gms]) => (
-            <div key={catName} style={{ marginBottom: "1.5rem" }}>
-              <div 
-                className="launcher-category-header"
-                style={{ 
-                  display: "flex", alignItems: "center", 
-                  marginBottom: collapsedCats[catName] ? "0" : "1rem", userSelect: "none" 
-                }}
-              >
-                <svg 
-                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={catName === "PeliGames" ? "var(--accent-soft)" : catName === "Steam" ? "var(--tone-60a5fa, #60a5fa)" : "var(--tone-c084fc, #c084fc)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                  style={{ transform: collapsedCats[catName] ? "rotate(-90deg)" : "rotate(0deg)", transition: "transform 0.2s", marginRight: "0.5rem" }}
-                >
-                  <path d="m6 9 6 6 6-6"/>
-                </svg>
-                {gms.some(game => game.launcher === "Heroic") && <span className="category-launcher-icon" style={{ color: "var(--tone-c084fc, #c084fc)" }}><LauncherIcon launcher="Heroic" /></span>}
-                {catName === "Steam" && <span className="category-launcher-icon" style={{color:"var(--tone-60a5fa, #60a5fa)"}}><LauncherIcon launcher="Steam" /></span>}
-                {catName === "Launchers" && <span className="category-launcher-icon"><MenuIcon name="gamepad" /></span>}
-                {catName === "PeliGames" && <span className="category-launcher-icon"><LauncherIcon launcher="PeliGames" /></span>}
-                <h3 style={{ margin: 0, fontSize: "1.1rem", color: catName === "PeliGames" ? "var(--accent-soft)" : catName === "Steam" ? "var(--tone-60a5fa, #60a5fa)" : "var(--tone-c084fc, #c084fc)" }}>
-                  <button type="button" className="launcher-category-toggle" aria-expanded={!collapsedCats[catName]}
-                    onClick={() => setCollapsedCats(prev => ({ ...prev, [catName]: !prev[catName] }))}>{catName}</button> <span style={{ fontSize: "0.85rem", color: "var(--tone-6b7280, #6b7280)", fontWeight: "normal" }}>{gms.length}</span>
-                </h3>
-              </div>
-              
-              {!collapsedCats[catName] && (
-                <div className={`game-collection game-collection--${viewMode}`}>
-                  {gms.map(game => renderCard(game))}
-                </div>
-              )}
-            </div>
-          ));
-        })()}
         </>}
       </motion.div>
       {contextMenu && createPortal(<GameCoverMenu game={contextMenu.game} x={contextMenu.x} y={contextMenu.y}

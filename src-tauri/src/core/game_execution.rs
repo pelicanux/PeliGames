@@ -60,7 +60,7 @@ pub fn start_program(path: String, executable: Option<String>) -> Result<Executi
 /// Prefix of the library entry whose session is running, if any.
 pub fn running_prefix() -> Option<String> {
     let state = status().ok().flatten().filter(|state| state.active())?;
-    super::installed_library::list(false).ok()?.into_iter().find(|entry| entry.path == state.path).map(|entry| entry.prefix)
+    super::wine_tools::maintenance_entry(&state.path).ok().map(|(_, prefix, _, _)| prefix)
 }
 /// Opens another program inside a prefix that is already running (Cheat Engine
 /// beside the game): Proton joins the running Wine instead of waiting for it to
@@ -275,6 +275,7 @@ fn start_prepared_registered(path: String, mut prepared: PreparedRun, wait_for_c
         let mut published = worker.status.lock().ok().map(|s|s.clone());
         let mut tracked = BTreeSet::<(i32, u64)>::new();
         let mut responded = None;
+        let mut playing: Option<(std::time::SystemTime, Instant)> = None;
         let mut stopping = None;
         let mut exit = None;
         let mut failure = None;
@@ -338,6 +339,7 @@ fn start_prepared_registered(path: String, mut prepared: PreparedRun, wait_for_c
                     if let Ok(mut status) = worker.status.lock() {
                         if status.state == "starting" {
                             status.state = "running".into();
+                            playing.get_or_insert_with(|| (std::time::SystemTime::now(), Instant::now()));
                         }
                     }
                 }
@@ -388,6 +390,10 @@ fn start_prepared_registered(path: String, mut prepared: PreparedRun, wait_for_c
             .into();
             status.error = failure;
             if let Some(dir) = &registry { super::execution_registry::finish(dir,&status.id); }
+            // Only game sessions (registered) count as playtime, not tools.
+            if let (Some(_), Some((started, since))) = (&registry, playing) {
+                super::playtime::record(&status.path, started, since.elapsed());
+            }
         }
     });
     Ok(session)
@@ -398,3 +404,6 @@ fn start_prepared_mode(_: String, _: PreparedRun, _: bool) -> Result<Arc<Session
 fn start_prepared(_: String, _: PreparedRun) -> Result<Arc<Session>, String> {
     Err("Monitoramento de Proton disponível no Linux.".into())
 }
+
+#[cfg(target_os = "linux")]
+pub mod steam;

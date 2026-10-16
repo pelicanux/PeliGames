@@ -4,8 +4,8 @@
   "family": "unreal",
   "scope": "Módulos gerados por análise estática das extensões Vortex. Rotas verificadas por casos sintéticos; nenhum jogo foi executado.",
   "sources": {
-    "chemboy1": "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6",
-    "vortex": "https://github.com/Nexus-Mods/Vortex/blob/acb3d8621085df657c0ae07d5df5d425570964ab/extensions/games"
+    "chemboy1": "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72",
+    "vortex": "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games"
   },
   "modules": [
     {
@@ -14,7 +14,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-abioticfactor/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-abioticfactor/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -71,7 +71,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-atomicheart/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-atomicheart/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -128,7 +128,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-avowed/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-avowed/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -185,7 +185,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-beastofreincarnation/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-beastofreincarnation/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -242,7 +242,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-bellwright/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-bellwright/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -299,7 +299,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-blackmythwukong/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-blackmythwukong/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -356,7 +356,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-borderlands4/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-borderlands4/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -413,7 +413,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-clivebarkershellraiserrevival/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-clivebarkershellraiserrevival/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -470,7 +470,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-codevein2/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-codevein2/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -522,12 +522,69 @@
       "nexus_game_id": 8699
     },
     {
+      "domain": "crisoltheaterofidols",
+      "name": "Crisol: Theater of Idols",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-crisoltheaterofidols/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "CRToiPrototype/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "CRToiPrototype/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "CRToiPrototype/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "CRToiPrototype/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "CRToiPrototype/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "CRToiPrototype/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "CRToiPrototype/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "CRToiPrototype/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8790
+    },
+    {
       "domain": "cronosthenewdawn",
       "name": "Cronos: The New Dawn",
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-cronosthenewdawn/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-cronosthenewdawn/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -584,7 +641,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-deadasdisco/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-deadasdisco/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -641,7 +698,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dispatch/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dispatch/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -698,7 +755,7 @@
       "module_version": "1.1.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonballsparkingzero/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dragonballsparkingzero/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -755,7 +812,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonquest1and2hd2dremake/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dragonquest1and2hd2dremake/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -812,7 +869,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-dragonquest7reimagined/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dragonquest7reimagined/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -869,7 +926,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-fantasylifeithegirlwhostealstime/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-fantasylifeithegirlwhostealstime/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -926,7 +983,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-farfarwest/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-farfarwest/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -983,7 +1040,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-fatekeeper/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-fatekeeper/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1040,7 +1097,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-frostpunk2/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-frostpunk2/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1094,10 +1151,10 @@
     {
       "domain": "gearsofwareday",
       "name": "Gears of War: E-Day",
-      "module_version": "1.0.0",
+      "module_version": "1.0.1",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-gearsofwareday/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-gearsofwareday/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1154,7 +1211,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-halloweenthegame/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-halloweenthegame/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1211,7 +1268,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-hellisus/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-hellisus/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1268,7 +1325,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-highonlife/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-highonlife/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1325,7 +1382,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-highonlife2/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-highonlife2/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1382,7 +1439,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-humanitz/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-humanitz/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1439,7 +1496,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-inzoi/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-inzoi/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1491,12 +1548,69 @@
       "nexus_game_id": 7480
     },
     {
+      "domain": "keeper",
+      "name": "Keeper",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-keeper/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Keeper/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Keeper/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Keeper/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Keeper/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Keeper/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Keeper/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Keeper/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Keeper/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8303
+    },
+    {
       "domain": "legobatmanlegacyofthedarkknight",
       "name": "LEGO Batman: Legacy of the Dark Knight",
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-legobatmanlegacyofthedarkknight/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-legobatmanlegacyofthedarkknight/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1553,7 +1667,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-liesofp/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-liesofp/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1610,7 +1724,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-lordsofthefallen2023/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-lordsofthefallen2023/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1667,7 +1781,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-lostsoulaside/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-lostsoulaside/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1724,7 +1838,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-mandragorawhispersofthewitchtree/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-mandragorawhispersofthewitchtree/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1781,7 +1895,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-manorlords/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-manorlords/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1838,7 +1952,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-mechwarrior5clans/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-mechwarrior5clans/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1892,10 +2006,10 @@
     {
       "domain": "metaleden",
       "name": "METAL EDEN",
-      "module_version": "1.0.0",
+      "module_version": "1.0.1",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-metaleden/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-metaleden/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -1952,7 +2066,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-metalgearsoliddeltasnakeeater/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-metalgearsoliddeltasnakeeater/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2009,7 +2123,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-misery/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-misery/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2066,7 +2180,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-mortalkombat/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-mortalkombat/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2118,12 +2232,69 @@
       "nexus_game_id": 5735
     },
     {
+      "domain": "myheroacademiaallsjustice",
+      "name": "MY HERO ACADEMIA: All's Justice",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-myheroacademiaallsjustice/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "HeroGame/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "HeroGame/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "HeroGame/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "HeroGame/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "HeroGame/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "HeroGame/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "HeroGame/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "HeroGame/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8767
+    },
+    {
       "domain": "ninjagaiden2black",
       "name": "NINJA GAIDEN 2 Black",
       "module_version": "1.1.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-ninjagaiden2black/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-ninjagaiden2black/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2180,7 +2351,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-nobodywantstodie/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-nobodywantstodie/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2232,12 +2403,69 @@
       "nexus_game_id": 6617
     },
     {
+      "domain": "norse",
+      "name": "NORSE: Oath of Blood",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-norse/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Norse/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Norse/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Norse/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Norse/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Norse/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Norse/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Norse/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Norse/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8832
+    },
+    {
       "domain": "octopathtraveler0",
       "name": "OCTOPATH TRAVELER 0",
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-octopathtraveler0/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-octopathtraveler0/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2294,7 +2522,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-ofashandsteel/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-ofashandsteel/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2348,10 +2576,10 @@
     {
       "domain": "painkiller",
       "name": "Painkiller",
-      "module_version": "1.0.0",
+      "module_version": "1.0.1",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-painkiller/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-painkiller/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2408,7 +2636,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-quarantinezonethelastcheck/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-quarantinezonethelastcheck/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2460,12 +2688,69 @@
       "nexus_game_id": 8662
     },
     {
+      "domain": "reanimal",
+      "name": "REANIMAL",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-reanimal/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Everholm/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Everholm/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Everholm/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Everholm/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Everholm/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Everholm/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Everholm/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Everholm/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8281
+    },
+    {
       "domain": "robocoproguecity",
       "name": "RoboCop: Rogue City",
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-robocoproguecity/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-robocoproguecity/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2517,12 +2802,126 @@
       "nexus_game_id": 5797
     },
     {
+      "domain": "romeoisadeadman",
+      "name": "ROMEO IS A DEAD MAN",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-romeoisadeadman/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "SevGame/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "SevGame/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "SevGame/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "SevGame/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "SevGame/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "SevGame/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "SevGame/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "SevGame/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8792
+    },
+    {
+      "domain": "routine",
+      "name": "ROUTINE",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-routine/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Routine/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Routine/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Routine/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Routine/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Routine/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Routine/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Routine/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Routine/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8499
+    },
+    {
       "domain": "runescapedragonwilds",
       "name": "RuneScape: Dragonwilds",
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-runescapedragonwilds/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-runescapedragonwilds/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2579,7 +2978,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-rvthereyet/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-rvthereyet/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2636,7 +3035,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-senuassagahellblade2/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-senuassagahellblade2/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2693,7 +3092,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-sifu/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-sifu/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2750,7 +3149,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-silenthill2/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-silenthill2/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2807,7 +3206,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-silenthillf/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-silenthillf/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2864,7 +3263,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-silenthilltownfall/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-silenthilltownfall/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2921,7 +3320,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-starrupture/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-starrupture/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -2978,7 +3377,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-starwarsgalacticracer/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-starwarsgalacticracer/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3035,7 +3434,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-starwarszerocompany/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-starwarszerocompany/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3087,12 +3486,69 @@
       "nexus_game_id": 9987
     },
     {
+      "domain": "styxbladesofgreed",
+      "name": "Styx: Blades of Greed",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-styxbladesofgreed/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Styx3/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Styx3/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Styx3/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Styx3/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Styx3/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Styx3/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Styx3/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Styx3/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8659
+    },
+    {
       "domain": "subnautica2",
       "name": "Subnautica 2",
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-subnautica2/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-subnautica2/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3149,7 +3605,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-surroundead/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-surroundead/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3206,7 +3662,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-systemshock2023/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-systemshock2023/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3263,7 +3719,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-tekken8/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-tekken8/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3320,7 +3776,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-thebloodofdawnwalker/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-thebloodofdawnwalker/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3377,7 +3833,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-thelastcaretaker/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-thelastcaretaker/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3434,7 +3890,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-thelordoftheringsreturntomoria/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-thelordoftheringsreturntomoria/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3491,7 +3947,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-theouterworlds/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-theouterworlds/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3548,7 +4004,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-theouterworlds2/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-theouterworlds2/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3605,7 +4061,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-thesinkingcity2/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-thesinkingcity2/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3662,7 +4118,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-titanquest2/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-titanquest2/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3719,7 +4175,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-trepang2/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-trepang2/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3771,12 +4227,69 @@
       "nexus_game_id": 4589
     },
     {
+      "domain": "valormortis",
+      "name": "Valor Mortis",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-valormortis/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "ValorMortis/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "ValorMortis/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "ValorMortis/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "ValorMortis/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "ValorMortis/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "ValorMortis/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "ValorMortis/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "ValorMortis/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 8249
+    },
+    {
       "domain": "vein",
       "name": "VEIN",
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-vein/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-vein/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3833,7 +4346,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-voidtrain/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-voidtrain/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3890,7 +4403,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-vtmbloodlines2/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-vtmbloodlines2/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -3942,12 +4455,126 @@
       "nexus_game_id": 8298
     },
     {
+      "domain": "warhammer40000boltgun",
+      "name": "Warhammer 40,000: Boltgun",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-warhammer40000boltgun/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Boltgun/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Boltgun/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Boltgun/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Boltgun/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Boltgun/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Boltgun/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Boltgun/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Boltgun/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 5392
+    },
+    {
+      "domain": "warhammer40000boltgun2",
+      "name": "Warhammer 40,000: Boltgun 2",
+      "module_version": "1.0.0",
+      "vortex_status": "confirmed",
+      "vortex_evidence": [
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-warhammer40000boltgun2/index.js"
+      ],
+      "extension_code_compared": false,
+      "generated_by": "tools/vortex-import",
+      "framework_ids_checked": [],
+      "route_sample_kind": "synthetic_family_layout",
+      "route_cases": [
+        {
+          "source": "Example_P.pak",
+          "target": "Boltgun2/Content/Paks/~mods/Example_P.pak"
+        },
+        {
+          "source": "Example_P.utoc",
+          "target": "Boltgun2/Content/Paks/~mods/Example_P.utoc"
+        },
+        {
+          "source": "Example_P.ucas",
+          "target": "Boltgun2/Content/Paks/~mods/Example_P.ucas"
+        },
+        {
+          "source": "Release/LogicMods/ExampleLogic.pak",
+          "target": "Boltgun2/Content/Paks/LogicMods/ExampleLogic.pak"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/Scripts/main.lua",
+          "target": "Boltgun2/Binaries/Win64/ue4ss/Mods/ExampleScript/Scripts/main.lua"
+        },
+        {
+          "source": "Release/Mods/ExampleScript/enabled.txt",
+          "target": "Boltgun2/Binaries/Win64/ue4ss/Mods/ExampleScript/enabled.txt"
+        },
+        {
+          "source": "UE4SS_v3.0.1/ue4ss/UE4SS.dll",
+          "target": "Boltgun2/Binaries/Win64/ue4ss/UE4SS.dll"
+        },
+        {
+          "source": "UE4SS_v3.0.1/dwmapi.dll",
+          "target": "Boltgun2/Binaries/Win64/dwmapi.dll"
+        }
+      ],
+      "findings": [
+        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
+      ],
+      "pending_checks": [
+        "Conferir domínio Nexus e executáveis em uma instalação real.",
+        "Amostragem de pacotes reais populares e recentes.",
+        "Execução no jogo real com versão do jogo, loader e Proton registradas."
+      ],
+      "runtime_verified": false,
+      "nexus_game_id": 9447
+    },
+    {
       "domain": "whiskerwood",
       "name": "Whiskerwood",
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-whiskerwood/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-whiskerwood/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -4004,7 +4631,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-witchfire/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-witchfire/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -4061,7 +4688,7 @@
       "module_version": "1.0.0",
       "vortex_status": "confirmed",
       "vortex_evidence": [
-        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-wuchangfallenfeathers/index.js"
+        "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-wuchangfallenfeathers/index.js"
       ],
       "extension_code_compared": false,
       "generated_by": "tools/vortex-import",
@@ -4115,15 +4742,7 @@
   ],
   "skipped": [
     {
-      "domain": "",
-      "reason": "sem ID"
-    },
-    {
       "domain": "borderlands3",
-      "reason": "pasta ~mods do projeto não resolvida"
-    },
-    {
-      "domain": "crisoltheaterofidols",
       "reason": "pasta ~mods do projeto não resolvida"
     },
     {
@@ -4131,35 +4750,7 @@
       "reason": "pasta ~mods do projeto não resolvida"
     },
     {
-      "domain": "keeper",
-      "reason": "executável Shipping fora do projeto: "
-    },
-    {
-      "domain": "myheroacademiaallsjustice",
-      "reason": "pasta ~mods do projeto não resolvida"
-    },
-    {
-      "domain": "norse",
-      "reason": "pasta ~mods do projeto não resolvida"
-    },
-    {
-      "domain": "reanimal",
-      "reason": "pasta ~mods do projeto não resolvida"
-    },
-    {
-      "domain": "romeoisadeadman",
-      "reason": "pasta ~mods do projeto não resolvida"
-    },
-    {
-      "domain": "routine",
-      "reason": "pasta ~mods do projeto não resolvida"
-    },
-    {
       "domain": "stateofdecay2",
-      "reason": "pasta ~mods do projeto não resolvida"
-    },
-    {
-      "domain": "styxbladesofgreed",
       "reason": "pasta ~mods do projeto não resolvida"
     },
     {

@@ -892,14 +892,17 @@ pub(crate) fn prepare_storage(request: &Value, sys: &mut dyn System) -> Result<V
                 _ => return Err("A nova partição não foi informada pelo sistema.".into()),
             };
             stages.push("nova partição criada");
+            // UDisks may publish the partition before the requested UUID is
+            // applied, so wait for it; the path itself comes from UDisks, and
+            // table and range below are what keeps formatting on the new space.
             let mut ready = false;
             for _ in 0..40 {
                 all = sys.objects()?;
                 if disk_changed(&all, &parent) {
                     return Err("A identificação do disco mudou.".into());
                 }
-                if has(obj(&all, &created_path), P) {
-                    ready = true;
+                ready = has(obj(&all, &created_path), P);
+                if ready && str_of(iface(obj(&all, &created_path), P), "UUID").to_lowercase() == partition_uuid {
                     break;
                 }
                 sys.pause();
@@ -909,7 +912,7 @@ pub(crate) fn prepare_storage(request: &Value, sys: &mut dyn System) -> Result<V
             }
             let p = iface(obj(&all, &created_path), P);
             let (p_offset, p_size) = (p["Offset"].as_i64().unwrap_or(-1) as i128, p["Size"].as_i64().unwrap_or(0) as i128);
-            if object_of(p, "Table") != parent || str_of(p, "UUID").to_lowercase() != partition_uuid || p_offset < offset || p_offset + p_size > offset + size {
+            if object_of(p, "Table") != parent || p_size <= 0 || p_offset < offset || p_offset + p_size > offset + size {
                 return Err("A partição criada não corresponde ao espaço confirmado; formatação interrompida.".into());
             }
             if before.iter().any(|(key, value)| all.get(key) != Some(value)) {

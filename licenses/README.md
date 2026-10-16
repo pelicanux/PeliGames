@@ -12,6 +12,7 @@ O código próprio do PeliGames usa [GNU GPL 3.0](../LICENSE) (`GPL-3.0-only`). 
 | Jersey 10 — The Soft Type Project Authors | [SIL OFL 1.1 original](../public/fonts/jersey-10/OFL.txt) |
 | SVG Linux / Tux — Simple Icons contributors | [CC0-1.0 original](upstream/Simple-Icons/LICENSE.md); [SVG e origem](../public/icons/linux.svg) |
 | SVG Nexus Mods copiado do Vortex | [GPL-3.0 do repositório de origem](upstream/Vortex-Nexus-Icon/LICENSE.md); [arquivo-fonte e origem](../public/nexus-mods.svg) |
+| MyMemory — Translated S.r.l. | [Serviço externo: atribuição, dados enviados, termos e cotas](MyMemory-Service.md); o motor não é redistribuído |
 | Bibliotecas nativas presentes no AppImage 0.3.0 | [Copyrights e avisos originais dos pacotes](AppImage-Native-Notices.txt) |
 | Extração de ícones de executáveis — ico e png | [Avisos preservados](Executable-Icon-LICENSES.txt) |
 

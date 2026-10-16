@@ -1,0 +1,80 @@
+/* Scoped to the modern queue; this portal does not inherit .modern-ui tokens. */
+.nexus-downloads-popup:not(.nexus-downloads-modern) .nexus-download-browser-copy > .btn { min-height: 34px; margin: 0; padding: .45rem .65rem; font-size: .82rem; border-radius: 9px; }
+.nexus-downloads-popup:not(.nexus-downloads-modern) .nexus-download-browser-copy > .nexus-hint { margin: .45rem 0 0; font-size: .8rem; }
+:root .modal-content.nexus-downloads-modern {
+  --downloads-surface: rgba(24, 25, 34, .94);
+  --downloads-card: rgba(255, 255, 255, .045);
+  --downloads-line: rgba(255, 255, 255, .09);
+  --downloads-text: #f2f3f8;
+  --downloads-muted: #9aa1b8;
+  width: min(780px, calc(100vw - 32px)) !important;
+  border: 1px solid var(--downloads-line) !important;
+  border-radius: 22px;
+  background: var(--downloads-surface) !important;
+  box-shadow: 0 24px 80px #0005 !important;
+  color: var(--downloads-text);
+}
+:root[data-appearance="light"] .modal-content.nexus-downloads-modern {
+  --downloads-surface: rgba(248, 249, 253, .96);
+  --downloads-card: rgba(20, 24, 40, .045);
+  --downloads-line: rgba(20, 24, 40, .1);
+  --downloads-text: #141724;
+  --downloads-muted: #5d6378;
+}
+:root .nexus-downloads-modern::before,
+:root .nexus-downloads-modern::after { content: none !important; }
+:root .nexus-downloads-modern .modal-glass-backdrop { display: block; background: var(--downloads-surface); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+:root .nexus-downloads-modern .dialog-titlebar { position: relative; inset: auto; flex-shrink: 0; height: auto; min-height: 64px; padding: 16px 20px; gap: 12px; border: 0; border-bottom: 1px solid var(--downloads-line); border-radius: 0; background: transparent !important; box-shadow: none; }
+:root .nexus-downloads-modern .dialog-titlebar > .surface-close-button { position: static; display: grid; place-items: center; flex: 0 0 30px; width: 30px; height: 30px; margin: 0; padding: 0; border: 1px solid var(--downloads-line); border-radius: 50%; background: var(--downloads-card); color: var(--downloads-muted); box-shadow: none; }
+.nexus-downloads-modern .dialog-titlebar h2 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 17px; font-weight: 650; color: var(--downloads-text); }
+.nexus-downloads-modern .dialog-titlebar h2 > .menu-icon { width: 21px; height: 21px; color: var(--accent); }
+:root .modal-content.nexus-downloads-modern.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { padding: 18px 20px 20px; scroll-padding-top: 18px; }
+:root .nexus-downloads-modern .btn {
+  min-height: 34px; padding: 7px 11px; border: 1px solid var(--downloads-line) !important;
+  border-radius: 10px; background: var(--downloads-card) !important; box-shadow: none !important;
+  color: var(--downloads-text) !important; font: inherit; font-size: 12px; font-weight: 550; text-shadow: none !important;
+}
+:root .nexus-downloads-modern .btn::before,
+:root .nexus-downloads-modern .btn::after { content: none !important; }
+:root .nexus-downloads-modern .btn:hover:not(:disabled) { background: rgba(var(--accent-rgb), .12) !important; border-color: rgba(var(--accent-rgb), .35) !important; transform: none; }
+:root .nexus-downloads-modern .btn.btn-primary { background: rgba(var(--accent-rgb), .15) !important; border-color: rgba(var(--accent-rgb), .3) !important; }
+:root .nexus-downloads-modern .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.nexus-downloads-modern .btn .menu-icon { width: 16px; height: 16px; filter: none !important; }
+.nexus-downloads-modern .nexus-hint { color: var(--downloads-muted); font-size: 12px; line-height: 1.5; }
+.nexus-downloads-modern .nexus-error { margin: 9px 0; color: #f18a8a; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.nexus-downloads-modern .nexus-browser-login { display: flex; align-items: center; gap: 14px; padding: 14px; margin: 0 0 16px; border: 1px solid var(--downloads-line); border-radius: 15px; background: var(--downloads-card); }
+.nexus-downloads-modern .nexus-download-browser-emblem { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; border-radius: 13px; background: rgba(var(--accent-rgb), .12); color: var(--accent); }
+.nexus-download-browser-emblem svg { width: 30px; height: 30px; }
+.nexus-download-browser-copy { min-width: 0; }
+.nexus-downloads-modern .nexus-browser-login .nexus-hint { margin: 7px 0 0; }
+.nexus-downloads-modern .nexus-mod-list { gap: 10px; }
+.nexus-downloads-modern .nexus-download-job { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px 12px; padding: 14px; border: 1px solid var(--downloads-line); border-radius: 15px; background: var(--downloads-card); }
+.nexus-downloads-modern .nexus-download-job-copy { min-width: 0; }
+.nexus-downloads-modern .nexus-download-job-copy > strong { display: block; color: var(--downloads-text); font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.nexus-downloads-modern .nexus-download-job-copy > small { display: block; margin-top: 4px; color: var(--downloads-muted); font-size: 12px; }
+.nexus-downloads-modern .nexus-download-status-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; background: rgba(var(--accent-rgb), .1); color: var(--accent); }
+.nexus-download-status-icon .menu-icon { width: 19px; height: 19px; }
+.nexus-downloads-modern [data-status="error"] .nexus-download-status-icon { background: #ef444416; color: #ef7676; }
+.nexus-downloads-modern :is([data-status="installed"], [data-status="imported"]) .nexus-download-status-icon { background: #10b98116; color: #10b981; }
+.nexus-downloads-modern .nexus-download-job-actions { grid-column: 2; gap: 8px; }
+.nexus-downloads-modern .nexus-download-cancel { color: #ef8585 !important; }
+.nexus-downloads-modern progress { appearance: none; -webkit-appearance: none; display: block; width: 100%; height: 8px; margin: 12px 0 6px; border: 0; border-radius: 999px; overflow: hidden; background: var(--downloads-card); accent-color: var(--accent); }
+.nexus-downloads-modern progress::-webkit-progress-bar { background: var(--downloads-line); border-radius: 999px; }
+.nexus-downloads-modern progress::-webkit-progress-value { background: var(--accent); border-radius: 999px; }
+.nexus-downloads-modern progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
+.nexus-downloads-modern progress:indeterminate { background: linear-gradient(90deg, var(--downloads-line) 25%, var(--accent) 50%, var(--downloads-line) 75%); background-size: 200% 100%; animation: nexus-download-indeterminate 1.4s linear infinite; }
+.nexus-downloads-modern progress:indeterminate::-webkit-progress-bar { background: transparent; }
+@keyframes nexus-download-indeterminate { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .nexus-downloads-modern progress:indeterminate { animation: none; } }
+.nexus-downloads-modern .nexus-download-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; min-height: 180px; padding: 24px 16px; text-align: center; }
+.nexus-download-empty > span { display: grid; place-items: center; width: 62px; height: 62px; border: 1px solid var(--downloads-line); border-radius: 19px; background: var(--downloads-card); color: var(--downloads-muted); }
+.nexus-download-empty .menu-icon { width: 30px; height: 30px; }
+.nexus-download-empty p { margin: 0; color: var(--downloads-muted); font-size: 13px; }
+.nexus-downloads-modern .nexus-download-wait { margin-bottom: 12px; border: 1px solid var(--downloads-line); border-radius: 15px; background: var(--downloads-card); }
+.nexus-downloads-modern .nexus-download-wait strong { font-size: 14px; }
+@media (max-width: 560px) {
+  :root .nexus-downloads-modern .dialog-titlebar { padding: 14px; }
+  :root .modal-content.nexus-downloads-modern.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { padding: 14px; }
+  .nexus-downloads-modern .dialog-titlebar h2 { font-size: 15px; }
+  .nexus-downloads-modern .nexus-download-job-actions { grid-column: 1 / -1; }
+}

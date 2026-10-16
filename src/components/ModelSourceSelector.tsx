@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import React, { useState } from "react";
 import { ModelSource } from "../types/installer";
 import { openFilePicker } from "../services/tauriService";
 import { useI18n } from "../i18n/I18nContext";
@@ -18,8 +17,6 @@ interface Props {
 export const ModelSourceSelector: React.FC<Props> = ({ modelSource, setModelSource, dllPath, setDllPath, binPath, setBinPath, hasCachedBin }) => {
   const { t } = useI18n();
   const [picking, setPicking] = useState(false);
-  const [tooltip, setTooltip] = useState<React.CSSProperties | null>(null);
-  const infoRef = useRef<HTMLButtonElement>(null);
   const handlePickFile = async (type: ModelSource) => {
     if (picking) return;
     setPicking(true);
@@ -34,20 +31,6 @@ export const ModelSourceSelector: React.FC<Props> = ({ modelSource, setModelSour
       console.error("Failed to select model file:", error);
     } finally { setPicking(false); }
   };
-  const showInfo = () => {
-    const rect = infoRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const width = Math.min(300, window.innerWidth - 32);
-    setTooltip({ width, left: Math.max(16, Math.min(rect.right - width, window.innerWidth - width - 16)),
-      ...(window.innerHeight - rect.bottom > 180 ? { top: rect.bottom + 8 } : { bottom: window.innerHeight - rect.top + 8 }) });
-  };
-  useEffect(() => {
-    if (!tooltip) return;
-    const hide = () => setTooltip(null);
-    window.addEventListener("scroll", hide, true);
-    window.addEventListener("resize", hide);
-    return () => { window.removeEventListener("scroll", hide, true); window.removeEventListener("resize", hide); };
-  }, [tooltip]);
 
   return (
     <div className="card model-source-panel">
@@ -55,17 +38,11 @@ export const ModelSourceSelector: React.FC<Props> = ({ modelSource, setModelSour
         <MenuIcon name="cube" />
         <div className="model-source-heading-text">
           <h3>{t("modelSource", "title")}</h3>
-          <p>{t("modelSource", "desc")}</p>
         </div>
-        <button type="button" className="model-source-info" ref={infoRef} aria-label={t("modelSource", "info")}
-          aria-describedby={tooltip ? "model-source-tooltip" : undefined}
-          onMouseEnter={showInfo} onMouseLeave={() => setTooltip(null)} onFocus={showInfo} onBlur={() => setTooltip(null)}
-          onKeyDown={e => { if (e.key === "Escape") setTooltip(null); }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><circle cx="12" cy="8" r=".8" fill="currentColor" stroke="none"/></svg>
-        </button>
       </div>
+      <p className="model-source-notice">{t("modelSource", "dllNotice")}</p>
       <div className="model-source-options">
-        <button type="button" disabled={picking} aria-pressed={modelSource === "bin"}
+        <button type="button" disabled={picking} aria-pressed={modelSource === "bin" && Boolean(binPath)}
           className={`model-source-option ${binPath ? "model-source-option--ready" : ""}`}
           onClick={() => handlePickFile("bin")} title={binPath || t("modelSource", "selectBin")}>
           <span className="model-source-symbol">
@@ -77,7 +54,7 @@ export const ModelSourceSelector: React.FC<Props> = ({ modelSource, setModelSour
             {binPath && <small>{binPath}</small>}
           </span>
         </button>
-        <button type="button" disabled={picking} aria-pressed={modelSource === "dll"}
+        <button type="button" disabled={picking} aria-pressed={modelSource === "dll" && Boolean(dllPath)}
           className="model-source-option" onClick={() => handlePickFile("dll")} title={dllPath || t("modelSource", "selectDll")}>
           <span className="model-source-symbol"><MenuIcon name="document" /></span>
           <span className="model-source-option-text">
@@ -87,9 +64,6 @@ export const ModelSourceSelector: React.FC<Props> = ({ modelSource, setModelSour
           </span>
         </button>
       </div>
-      {tooltip && createPortal(<div id="model-source-tooltip" className="model-source-tooltip" role="tooltip" style={tooltip}>
-        A DLL (nvngx_dlssnr.dll) pode ser encontrada em jogos oficiais que já possuam suporte ao DLSS 5. O programa irá extrair essa DLL para gerar o arquivo dlssnr.bin necessário para o mod.
-      </div>, document.body)}
     </div>
   );
 };

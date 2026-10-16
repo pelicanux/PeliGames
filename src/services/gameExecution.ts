@@ -12,10 +12,16 @@ async function previewRequest(body?: object): Promise<ExecutionStatus | null> {
   if (!response.ok || result.error) throw new Error(result.error || "Falha no monitor de execução.");
   return result.result;
 }
+let steamPreview: { status: ExecutionStatus; started: number } | null = null;
 export function executionStatus(): Promise<ExecutionStatus | null> {
+  if ("__PELI_UI_PREVIEW__" in window && steamPreview) {
+    if (steamPreview.status.state === "starting" && Date.now() - steamPreview.started >= 3500) steamPreview.status.state = "running";
+    return Promise.resolve({ ...steamPreview.status });
+  }
   return "__PELI_UI_PREVIEW__" in window ? previewRequest() : invoke("get_peligames_execution");
 }
 export async function startGame(path: string, executable?: string): Promise<ExecutionStatus> {
+  steamPreview = null;
   return "__PELI_UI_PREVIEW__" in window ? (await previewRequest({ action: "start", path, executable }))! : invoke("start_peligames_game", { path, executable });
 }
 /** Opens a program in the entry's prefix; null when it joined the prefix of the running game. */
@@ -46,5 +52,22 @@ export function startShortcut(path: string, id: string): Promise<ExecutionStatus
   return invoke("start_peligames_shortcut", { path, id });
 }
 export async function cancelGame(id: string): Promise<ExecutionStatus> {
+  if ("__PELI_UI_PREVIEW__" in window && steamPreview?.status.id === id) {
+    steamPreview.status.state = "cancelled";
+    return { ...steamPreview.status };
+  }
   return "__PELI_UI_PREVIEW__" in window ? (await previewRequest({ action: "cancel", id }))! : invoke("cancel_peligames_game", { id });
+}
+
+export function startSteamGame(path: string, appId: string, externalId?: string): Promise<ExecutionStatus> {
+  if ("__PELI_UI_PREVIEW__" in window) {
+    steamPreview = { status: { id: `steam-preview-${Date.now()}`, path, state: "starting", log: "", error: null }, started: Date.now() };
+    return Promise.resolve({ ...steamPreview.status });
+  }
+  if (externalId) return invoke("launch_external_game", { externalId }).then(async () => {
+    const status = await invoke<ExecutionStatus | null>("get_peligames_execution");
+    if (!status || status.path !== path) throw new Error("Monitoramento da Steam indisponível.");
+    return status;
+  });
+  return invoke("start_steam_game", { path, appId });
 }

@@ -41,8 +41,10 @@ export function newLauncherGames(path: string): Promise<LauncherGame[]> {
 export function addLauncherGames(path: string, added: LauncherGame[], declined: string[]): Promise<GameInfo[]> {
   return mutateLibrary("add_peligames_launcher_games", "/__preview/peligames-launcher-add", { path, added, declined }, { path, added, declined });
 }
-export function uninstallPeliGamesEntry(path: string): Promise<void> {
-  return mutateLibrary("uninstall_peligames_entry", "/__preview/peligames-uninstall", { path }, { path });
+/** What an uninstall deletes besides the library entries and shortcuts. */
+export interface UninstallOptions { remove_prefix: boolean; remove_settings: boolean; }
+export function uninstallPeliGamesEntry(path: string, options: UninstallOptions): Promise<void> {
+  return mutateLibrary("uninstall_peligames_entry", "/__preview/peligames-uninstall", { path, options }, { path, options });
 }
 
 export async function listPeliGamesExecutableChoices(path: string): Promise<GameInfo[]> {

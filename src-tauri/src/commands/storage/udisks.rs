@@ -15,6 +15,8 @@ type Options = HashMap<&'static str, Value<'static>>;
 
 pub(crate) struct Udisks {
     connection: Connection,
+    /// Running as root (storage helper): no pkexec for the folder or reload.
+    elevated: bool,
 }
 impl Udisks {
     pub(crate) fn connect() -> Result<Self, String> {
@@ -22,7 +24,7 @@ impl Udisks {
         let connection = Builder::system()
             .and_then(|builder| builder.method_timeout(Duration::from_secs(600)).build())
             .map_err(|_| "O serviço de discos do sistema (UDisks2) não está disponível.".to_string())?;
-        Ok(Udisks { connection })
+        Ok(Udisks { connection, elevated: unsafe { libc::geteuid() } == 0 })
     }
     fn proxy<'a>(&'a self, path: &'a str, interface: &'a str) -> Result<Proxy<'a>, String> {
         Proxy::new(&self.connection, U, path, interface).map_err(|error| error.to_string())
@@ -118,6 +120,13 @@ impl System for Udisks {
         }
     }
     fn make_mount_dir(&mut self, target: &str) -> Result<(), String> {
+        if self.elevated {
+            use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
+            fs::DirBuilder::new().mode(0o755).create(target)
+                .and_then(|()| fs::set_permissions(target, fs::Permissions::from_mode(0o755)))
+                .map_err(|error| format!("Não foi possível criar {target}: {error}"))?;
+            return Ok(());
+        }
         let status = Command::new("/usr/bin/pkexec").args(["/usr/bin/mkdir", "-m", "0755", "--", target]).status()
             .map_err(|_| "pkexec não está disponível para criar a pasta de montagem.".to_string())?;
         if !status.success() {
@@ -126,7 +135,7 @@ impl System for Udisks {
         Ok(())
     }
     fn reload_systemd(&mut self) -> Result<(), String> {
-        let output = Command::new("/usr/bin/pkexec").args(["/usr/bin/systemctl", "daemon-reload"]).output()
+        let output = if self.elevated { Command::new("/usr/bin/systemctl").arg("daemon-reload").output() } else { Command::new("/usr/bin/pkexec").args(["/usr/bin/systemctl", "daemon-reload"]).output() }
             .map_err(|_| "Falha ao recarregar o systemd (daemon-reload). pkexec indisponível.".to_string())?;
         if !output.status.success() {
             let detail = String::from_utf8_lossy(&output.stderr).trim().to_string();

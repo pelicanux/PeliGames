@@ -2,7 +2,7 @@ import { useI18n } from "../../i18n/I18nContext";
 import type { MouseEvent } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
-export function dragPelinstallWindow(event: MouseEvent<HTMLDivElement>, onError: (error: string) => void) {
+export function dragPelinstallWindow(event: MouseEvent<HTMLElement>, onError: (error: string) => void) {
   if (event.button !== 0 || (event.target as Element).closest("button, input, a, select, textarea")) return;
   if ("__PELI_UI_PREVIEW__" in window) return;
   event.preventDefault();

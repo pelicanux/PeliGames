@@ -950,7 +950,7 @@ fn mark_browser_closed(info: &mut Download) {
 #[tauri::command]
 pub async fn retry_nexus_download(app: tauri::AppHandle, window: tauri::Webview, download_id: String, external: bool) -> Result<(), String> {
     if window.label() != "main" { return Err("Comando disponível somente no launcher.".into()); }
-    if external { register_nexus_handler().await?; }
+    if external { register_for_external_browser().await?; }
     let url = {
         let state = app.state::<Downloads>();
         let mut jobs = state.0.lock().map_err(|_| "Fila Nexus indisponível.")?;
@@ -1010,6 +1010,15 @@ pub fn refresh_nexus_handler(binary: &std::path::Path) -> Result<(), String> {
     let registered = dirs::data_dir().map(|data| data.join("applications/peligames-nxm.desktop")).is_some_and(|path| path.is_file());
     if registered { write_nexus_handler(binary)?; }
     Ok(())
+}
+/// Before opening a Nexus page in the system browser: links come back once
+/// PeliGames is registered. A loose AppImage cannot be registered, so the page
+/// still opens and its download is imported by hand.
+pub(super) async fn register_for_external_browser() -> Result<(), String> {
+    if crate::core::pelinstall::appimage_status().is_ok_and(|status| status.appimage) {
+        return Ok(());
+    }
+    register_nexus_handler().await
 }
 #[tauri::command]
 pub async fn register_nexus_handler() -> Result<(), String> {

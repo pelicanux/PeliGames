@@ -53,6 +53,75 @@ Support depends on the game and on the package layout. The API key is stored onl
 
 Under **Settings → Tools** you can create a ZIP backup of the games with Nexus mods installed, or restore one saved on another disk. The per-game recovery option keeps a hidden `.peligames` folder on the games' disk, so the records come back after rescanning on another distribution.
 
+## DLSS 5 Neural Rendering on AMD cards (DLSSNR)
+
+The **DLSS 5 NR** tab runs the neural rendering (NR) model of NVIDIA's DLSS 5 on AMD Radeon cards. Two independent projects do the work: they reimplement the network as Vulkan shaders that run on the game's own Vulkan device (DXVK / vkd3d-proton under Proton). PeliGames downloads the right backend for your card, runs its installer with the options chosen in the interface and keeps the model for later installs. The notes below summarise those projects' documentation and explain how PeliGames uses them.
+
+> Experimental projects (versions 0.0.x), not affiliated with NVIDIA or AMD. **Do not use them in online games with anti-cheat**: injected DLLs can get an account banned. The installer puts files into the game folder; **Remove** deletes only what it installed.
+
+### Cards and backends
+
+| Card | Backend | Tested by the authors |
+|---|---|---|
+| RX 9000 (RDNA 4) | [DLSSNR-AMD by mochizuki0323](https://github.com/mochizuki0323/DLSSNR-AMD) | RX 9070 XT, Mesa 26.2, GE-Proton |
+| RX 7000 (RDNA 3) | [DLSSNR-RDNA3 by mauri870](https://github.com/mauri870/DLSSNR-RDNA3) (a fork of the above) | RX 7900 XTX, Mesa 26.2.3, GE-Proton 11-7 |
+
+- PeliGames identifies the card series and offers the matching backend in **Settings → Mods → Manage backend**. It is downloaded from each project's GitHub releases into `~/.config/PeliGames/Mod/DLSSNR/backend-files/<rdna3|rdna4>/<32|64>`.
+- The RX 7000 lacks RDNA 4's FP8 matrix instructions. The fork reproduces the same network in FP16 with the same fidelity, at about 2.6 times the cost per frame.
+- Requirements: Mesa 26.2 or newer (RADV driver) and a recent Proton. The backend's installer uses `bash` and `python3`.
+
+### The model
+
+The weights are NVIDIA's and ship with neither PeliGames nor the backends. On the first install, point to your own `nvngx_dlssnr.dll` **version 310.8.0** (or a zip that holds only it). The backend refuses other versions and checks the 599 extracted entries against known hashes. PeliGames keeps the resulting `dlssnr.bin` in `~/.config/PeliGames/Mod/DLSSNR/` and reuses it, without asking for the DLL again.
+
+### Routes
+
+Pick the route by the game's API. PeliGames passes the name the installed backend understands: newer versions call the ReShade routes `reshade-feeder`, `reshade-feeder-vulkan` and `reshade-feeder-dx9`, while the RX 7000 fork still uses `reshade`, `vulkan` and `dx9`.
+
+| The game uses | Route | How it works | Where to adjust in game |
+|---|---|---|---|
+| DirectX 11/12 with a DLSS, FSR or XeSS option | **OptiScaler** (64-bit only) | [OptiScaler-NR](https://github.com/wilsjo2/OptiScaler-DLSSNR-PreSR-Multipass) with the backend as its DLSS-NR, using the game's motion vectors. Turn on DLSS, FSR or XeSS in the game. | **Insert**: OptiScaler menu. **End**: NR Control (RX 9000 only) |
+| DirectX 10/11/12 without an upscaler | **ReShade** | ReShade, with motion vectors estimated from the picture (VORT) | **Home** → **Add-ons** page |
+| Vulkan | **Vulkan** | ReShade loaded as a Vulkan layer | **Home** → **Add-ons** page |
+| DirectX 9 | **DX9** | DXVK turns D3D9 into Vulkan; the route sets the depth direction old games use | **Home** → **Add-ons** page |
+| OpenGL | not supported | | |
+
+- 32-bit games use the 32-bit package, without the OptiScaler route. On the RX 7000 the author has not tested the 32-bit package yet, so PeliGames offers 64-bit only.
+- The menu key chosen in PeliGames is written to the game's `ReShade.ini` or `OptiScaler.ini`.
+- Settings live in `dlssnr-amd.ini` in the game folder and apply at once. **Repair** installs from scratch: the backend uninstalls by the `dlssnr-amd-install.txt` record and `dlssnr-amd.ini` goes back to its defaults, so keep a copy of your changes.
+- Running the model below the output resolution matters most for performance. On the ReShade routes use **Model resolution**: 50% about doubles the frame rate. On the OptiScaler route use **Generate model before upscaler**.
+
+### Options
+
+| Option | RX 9000 | RX 7000 | What it does |
+|---|---|---|---|
+| **RenoDX** | every route | not available | Processes the picture before and after NR the way [RenoDX's DLSS5 add-on](https://github.com/PEQHUB/RenoDX-DLSS5-Generic) does. The network is the same. Every NR setting moves to the `[RenoDX]` section: NR Control (End) on the OptiScaler route, Home → Add-ons on the ReShade routes. Applies after a game restart. |
+| **int4 mixed** | every route | every route | A second network, 7% to 11% faster, with part of the maths in int4; the picture changes somewhat. **Needs `VK_ADD_LAYER_PATH` and `VK_INSTANCE_LAYERS` in the launch options** (see below). **Ctrl+F11** switches between int4 mixed and the default network. NR takes longer to kick in when the game starts. |
+| **NR Control** | OptiScaler route | not available | The NR's own menu on **End**: shows NR's cost and switches int4 mixed and Preprocess. Needs the Vulkan layer variables too. |
+| **Preprocess** | every route | every route | The `[Preprocess]` section of `dlssnr-amd.ini`, off by default. Adjusts exposure, curve, contrast and saturation of the picture the network sees, and fixes games that turn dark or grainy with NR (such as 007 First Light). **Ctrl+F10** compares with and without. |
+
+**Automatic launch options.** At the end of the install the backend reports the variables the game needs, for example `WINEDLLOVERRIDES="dxgi=n,b"` and, with int4 mixed or the OptiScaler route, also `VK_ADD_LAYER_PATH` and `VK_INSTANCE_LAYERS`. PeliGames writes them into the game's launch options by itself on every install or repair. Turning int4 mixed off and repairing, or removing the mod, takes out only what the mod had added; everything else you typed stays. These options apply when PeliGames starts the game. For Steam games, close Steam first so it receives them; to start from Steam instead, copy the line shown at the end of the install into **Properties → Launch options**. Without these variables the game uses the default network, and Ctrl+F11 and End do nothing (`dlssnr-amd.log` says so).
+
+### Performance measured by the authors
+
+Network time per frame, without the rest of the game:
+
+| Card | 1080p | 1440p | 4K |
+|---|---|---|---|
+| RX 9070 XT | 5.6 ms | 9.7 ms | 21.9 ms |
+| RX 9070 XT, int4 mixed | 5.0 ms | 8.7 ms | 19.6 ms |
+| RX 7900 XTX | 15 ms | 26 ms | 56 ms |
+| RX 7900 XTX, int4 mixed | 13.3 ms | 22.8 ms | 50.8 ms |
+
+On the RX 7000, native 4K does not reach a playable frame rate: use a Model resolution of 50% or less (about 16 ms at 4K).
+
+### When something does not work
+
+- The first time NR runs in a game, the network takes 10 to 20 seconds to compile (longer with int4 mixed). Until then the picture shows without NR, which is not a failure.
+- The logs are in the game folder: `dlssnr-amd.log`, plus `ReShade.log` or `OptiScaler.log` depending on the route. `dlssnr-amd.log` says whether RenoDX, int4 mixed and NR are active and what is missing.
+- End exists only on the OptiScaler route. On the ReShade routes everything is under Home → Add-ons.
+- **F6** switches NR on and off while the RenoDX style is on, to compare the picture.
+
 ## Supported games
 
 PeliGames installs Nexus Mods mods in **202 games**, with modules based on the Vortex game extensions: Fallout, Skyrim, Starfield, Cyberpunk 2077, Baldur's Gate 3, Stardew Valley, Elden Ring, the Resident Evil and Monster Hunter families, and dozens of Unreal and Unity games.

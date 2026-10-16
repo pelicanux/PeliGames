@@ -1,6 +1,6 @@
 # Jogos suportados
 
-O PeliGames instala mods do Nexus Mods em **202 jogos** com módulo próprio, no Linux (Proton ou versão nativa).
+O PeliGames instala mods do Nexus Mods em **215 jogos** com módulo próprio, no Linux (Proton ou versão nativa).
 A coluna **Concluído** mostra o quanto do suporte está pronto:
 
 | Concluído | Significado | Jogos |
@@ -8,7 +8,7 @@ A coluna **Concluído** mostra o quanto do suporte está pronto:
 | 100% | Verificado em jogo real: instalado e aberto com mods pelo PeliGames. | 5 |
 | 90% | Paridade com a extensão Vortex: módulo feito à mão, comparado com o código da extensão e testado com pacotes de exemplo, sem lacunas registradas. | 67 |
 | 80% | Módulo feito à mão e testado com pacotes de exemplo; algum recurso da extensão Vortex ainda não foi feito (descrito nas notas do módulo). | 29 |
-| 70% | Gerado do template da família (Unreal, Unity ou RE Engine) e testado com pacotes de exemplo; ainda não revisado em jogo. | 100 |
+| 70% | Gerado do template da família (Unreal, Unity ou RE Engine) e testado com pacotes de exemplo; ainda não revisado em jogo. | 113 |
 | 60% | Módulo disponível, mas sem suporte Vortex confirmado para o jogo. | 1 |
 
 Os módulos seguem as regras das extensões do Vortex (oficiais, da comunidade e templates de família). As diferenças de cada jogo estão nas notas dos módulos, em [src-tauri/resources/nexus-games](../src-tauri/resources/nexus-games). Lista gerada por `tools/vortex-import/supported-games.ts`.
@@ -41,6 +41,7 @@ Os módulos seguem as regras das extensões do Vortex (oficiais, da comunidade e
 | Conan Exiles | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão oficial do Vortex | [conanexiles](https://www.nexusmods.com/conanexiles) |
 | Crimson Desert | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão da comunidade | [crimsondesert](https://www.nexusmods.com/crimsondesert) |
 | Crisis Core Final Fantasy VII Reunion | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Regras próprias | [crisiscoreff7reunion](https://www.nexusmods.com/crisiscoreff7reunion) |
+| Crisol: Theater of Idols | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [crisoltheaterofidols](https://www.nexusmods.com/crisoltheaterofidols) |
 | Cronos: The New Dawn | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [cronosthenewdawn](https://www.nexusmods.com/cronosthenewdawn) |
 | Cyberpunk 2077 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 100% | Extensão oficial do Vortex | [cyberpunk2077](https://www.nexusmods.com/cyberpunk2077) |
 | Daggerfall Unity | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão oficial do Vortex | [daggerfallunity](https://www.nexusmods.com/daggerfallunity) |
@@ -51,6 +52,7 @@ Os módulos seguem as regras das extensões do Vortex (oficiais, da comunidade e
 | Dead As Disco | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [deadasdisco](https://www.nexusmods.com/deadasdisco) |
 | Dead Rising Deluxe Remaster | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template RE Engine (ChemBoy) | [deadrisingdeluxeremaster](https://www.nexusmods.com/deadrisingdeluxeremaster) |
 | Devil May Cry 5 | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão da comunidade | [devilmaycry5](https://www.nexusmods.com/devilmaycry5) |
+| Dimraeth | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unity (ChemBoy) | [dimraeth](https://www.nexusmods.com/dimraeth) |
 | Diplomacy is Not an Option | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unity (ChemBoy) | [diplomacyisnotanoption](https://www.nexusmods.com/diplomacyisnotanoption) |
 | Disco Elysium | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unity (ChemBoy) | [discoelysium](https://www.nexusmods.com/discoelysium) |
 | Dispatch | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [dispatch](https://www.nexusmods.com/dispatch) |
@@ -64,6 +66,7 @@ Os módulos seguem as regras das extensões do Vortex (oficiais, da comunidade e
 | DRAGON QUEST VII Reimagined | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [dragonquest7reimagined](https://www.nexusmods.com/dragonquest7reimagined) |
 | Dragon's Dogma 2 | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão da comunidade | [dragonsdogma2](https://www.nexusmods.com/dragonsdogma2) |
 | Dragon's Dogma: Dark Arisen | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão oficial do Vortex | [dragonsdogma](https://www.nexusmods.com/dragonsdogma) |
+| Dressmaker | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unity (ChemBoy) | [dressmaker](https://www.nexusmods.com/dressmaker) |
 | Elden Ring | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão da comunidade | [eldenring](https://www.nexusmods.com/eldenring) |
 | ELEX | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão oficial do Vortex | [elex](https://www.nexusmods.com/elex) |
 | Enderal | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão oficial do Vortex | [enderal](https://www.nexusmods.com/enderal) |
@@ -104,6 +107,7 @@ Os módulos seguem as regras das extensões do Vortex (oficiais, da comunidade e
 | How to Fish | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unity (ChemBoy) | [howtofish](https://www.nexusmods.com/howtofish) |
 | HumanitZ | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [humanitz](https://www.nexusmods.com/humanitz) |
 | inZOI | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [inzoi](https://www.nexusmods.com/inzoi) |
+| Keeper | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [keeper](https://www.nexusmods.com/keeper) |
 | Kenshi | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão oficial do Vortex | [kenshi](https://www.nexusmods.com/kenshi) |
 | Kingdom Come: Deliverance | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão oficial do Vortex | [kingdomcomedeliverance](https://www.nexusmods.com/kingdomcomedeliverance) |
 | Kingdom Come: Deliverance II | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão da comunidade | [kingdomcomedeliverance2](https://www.nexusmods.com/kingdomcomedeliverance2) |
@@ -131,10 +135,12 @@ Os módulos seguem as regras das extensões do Vortex (oficiais, da comunidade e
 | Mortal Kombat 1 | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [mortalkombat](https://www.nexusmods.com/mortalkombat) |
 | Mount & Blade II: Bannerlord | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão da comunidade | [mountandblade2bannerlord](https://www.nexusmods.com/mountandblade2bannerlord) |
 | MOUSE: P.I. For Hire | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unity (ChemBoy) | [mousepiforhire](https://www.nexusmods.com/mousepiforhire) |
+| MY HERO ACADEMIA: All's Justice | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [myheroacademiaallsjustice](https://www.nexusmods.com/myheroacademiaallsjustice) |
 | My Summer Car | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão da comunidade | [mysummercar](https://www.nexusmods.com/mysummercar) |
 | Neverwinter Nights 2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão oficial do Vortex | [neverwinter2](https://www.nexusmods.com/neverwinter2) |
 | NINJA GAIDEN 2 Black | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [ninjagaiden2black](https://www.nexusmods.com/ninjagaiden2black) |
 | Nobody Wants to Die | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [nobodywantstodie](https://www.nexusmods.com/nobodywantstodie) |
+| NORSE: Oath of Blood | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [norse](https://www.nexusmods.com/norse) |
 | Oblivion | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão oficial do Vortex | [oblivion](https://www.nexusmods.com/oblivion) |
 | Oblivion Remastered | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão oficial do Vortex | [oblivionremastered](https://www.nexusmods.com/oblivionremastered) |
 | OCTOPATH TRAVELER 0 | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [octopathtraveler0](https://www.nexusmods.com/octopathtraveler0) |
@@ -151,6 +157,7 @@ Os módulos seguem as regras das extensões do Vortex (oficiais, da comunidade e
 | Quarantine Zone: The Last Check | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [quarantinezonethelastcheck](https://www.nexusmods.com/quarantinezonethelastcheck) |
 | R.E.P.O. | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 100% | Extensão da comunidade | [repo](https://www.nexusmods.com/repo) |
 | Ready or Not | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Regras próprias | [readyornot](https://www.nexusmods.com/readyornot) |
+| REANIMAL | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [reanimal](https://www.nexusmods.com/reanimal) |
 | Red Dead Redemption 2 | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão da comunidade | [reddeadredemption2](https://www.nexusmods.com/reddeadredemption2) |
 | Resident Evil 2 (2019) | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão da comunidade | [residentevil22019](https://www.nexusmods.com/residentevil22019) |
 | Resident Evil 3 (2020) | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão da comunidade | [residentevil32020](https://www.nexusmods.com/residentevil32020) |
@@ -159,6 +166,8 @@ Os módulos seguem as regras das extensões do Vortex (oficiais, da comunidade e
 | Resident Evil Requiem | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão da comunidade | [residentevilrequiem](https://www.nexusmods.com/residentevilrequiem) |
 | Resident Evil Village | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão da comunidade | [residentevilvillage](https://www.nexusmods.com/residentevilvillage) |
 | RoboCop: Rogue City | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [robocoproguecity](https://www.nexusmods.com/robocoproguecity) |
+| ROMEO IS A DEAD MAN | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [romeoisadeadman](https://www.nexusmods.com/romeoisadeadman) |
+| ROUTINE | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [routine](https://www.nexusmods.com/routine) |
 | RuneScape: Dragonwilds | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [runescapedragonwilds](https://www.nexusmods.com/runescapedragonwilds) |
 | RV There Yet? | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [rvthereyet](https://www.nexusmods.com/rvthereyet) |
 | S.T.A.L.K.E.R. 2: Heart of Chornobyl | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão da comunidade | [stalker2heartofchornobyl](https://www.nexusmods.com/stalker2heartofchornobyl) |
@@ -183,6 +192,7 @@ Os módulos seguem as regras das extensões do Vortex (oficiais, da comunidade e
 | Stellar Blade | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão da comunidade | [stellarblade](https://www.nexusmods.com/stellarblade) |
 | STORY OF SEASONS: Grand Bazaar | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unity (ChemBoy) | [storyofseasonsgrandbazaar](https://www.nexusmods.com/storyofseasonsgrandbazaar) |
 | Street Fighter 6 | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão da comunidade | [streetfighter6](https://www.nexusmods.com/streetfighter6) |
+| Styx: Blades of Greed | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [styxbladesofgreed](https://www.nexusmods.com/styxbladesofgreed) |
 | Subnautica | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão da comunidade | [subnautica](https://www.nexusmods.com/subnautica) |
 | Subnautica 2 | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [subnautica2](https://www.nexusmods.com/subnautica2) |
 | Subnautica: Below Zero | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão da comunidade | [subnauticabelowzero](https://www.nexusmods.com/subnauticabelowzero) |
@@ -207,10 +217,13 @@ Os módulos seguem as regras das extensões do Vortex (oficiais, da comunidade e
 | Total War: Three Kingdoms | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão oficial do Vortex | [totalwarthreekingdoms](https://www.nexusmods.com/totalwarthreekingdoms) |
 | Trepang2 | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [trepang2](https://www.nexusmods.com/trepang2) |
 | Valheim | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão oficial do Vortex | [valheim](https://www.nexusmods.com/valheim) |
+| Valor Mortis | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [valormortis](https://www.nexusmods.com/valormortis) |
 | Vampire: The Masquerade - Bloodlines | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão oficial do Vortex | [vampirebloodlines](https://www.nexusmods.com/vampirebloodlines) |
 | Vampire: The Masquerade - Bloodlines 2 | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [vtmbloodlines2](https://www.nexusmods.com/vtmbloodlines2) |
 | VEIN | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [vein](https://www.nexusmods.com/vein) |
 | Voidtrain | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [voidtrain](https://www.nexusmods.com/voidtrain) |
+| Warhammer 40,000: Boltgun | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [warhammer40000boltgun](https://www.nexusmods.com/warhammer40000boltgun) |
+| Warhammer 40,000: Boltgun 2 | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [warhammer40000boltgun2](https://www.nexusmods.com/warhammer40000boltgun2) |
 | Whiskerwood | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [whiskerwood](https://www.nexusmods.com/whiskerwood) |
 | Witchfire | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [witchfire](https://www.nexusmods.com/witchfire) |
 | Wolcen: Lords of Mayhem | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão oficial do Vortex | [wolcenlordsofmayhem](https://www.nexusmods.com/wolcenlordsofmayhem) |

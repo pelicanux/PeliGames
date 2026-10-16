@@ -1,11 +1,10 @@
 import { TimedFeedback } from "./TimedFeedback";
 import { useI18n } from "../i18n/I18nContext";
-import { GameInfoPanel } from "./GameInfoPanel";
 import { MenuIcon } from "./MenuIcon";
 import { ProtonSelector } from "./ProtonSelector";
 import { HoverTooltip } from "./HoverTooltip";
 import type { GameInstallationResult } from "../services/gameInstallation";
-import { useId, useState, type MouseEventHandler } from "react";
+import { useId, useState, type MouseEventHandler, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import type { InstallationGameDraft } from "../hooks/useInstallationGameDraft";
 import { openDirectoryPicker, openFilePicker } from "../services/tauriService";
@@ -27,9 +26,13 @@ interface SummaryProps {
   nexusAddition?: boolean;
 }
 
-export function InstallGameSummary({ draft, onCollapse, onCoverMove, onCoverLeave, reducedMotion, mode = "install", ready, busy, onInstall, installationResult, installationError, onUninstall, nexusAddition }: SummaryProps) {
+export function InstallGameSubmit({ mode = "install", ready, busy, onInstall }: Pick<SummaryProps, "mode" | "ready" | "busy" | "onInstall">) {
   const { t } = useI18n();
-  const nexusText = useNexusText();
+  return <button type="button" disabled={mode === "mods" || !ready || busy} onClick={onInstall} className="primary installation-submit" aria-busy={busy}><MenuIcon name={mode === "add" ? "plusCircle" : "download"} />{mode === "mods" ? t("gameModes", "installMod") : busy ? t("gameModes", mode === "add" ? "adding" : "installerRunning") : mode === "add" ? t("gameModes", "add") : t("installAction", "install")}</button>;
+}
+
+export function InstallGameSummary({ draft, onCollapse, onCoverMove, onCoverLeave, reducedMotion, mode = "install", ready, busy, installationResult, installationError, onUninstall, nexusAddition }: SummaryProps) {
+  const { t } = useI18n();
   return <div className="game-summary game-install-summary">
     <div className="game-cover-column">
       <motion.div className="selected-cover installation-cover" onMouseMove={onCoverMove} onMouseLeave={onCoverLeave}
@@ -47,15 +50,13 @@ export function InstallGameSummary({ draft, onCollapse, onCoverMove, onCoverLeav
     </div>
     <div className="game-action-column">
       <h3 className="selected-game-title">{mode === "mods" ? t("gameModes", "mods") : draft.name || t("gameModes", "genericName")}</h3>
-      {mode !== "mods" && draft.coverStatus === "loading" && <TimedFeedback>{t("gameModes", "searchingCover")}</TimedFeedback>}
-      {mode !== "mods" && (draft.coverStatus === "missing" || draft.coverStatus === "error") && <TimedFeedback>{t("gameModes", draft.coverStatus === "missing" ? "coverNotFound" : "coverSearchFailed")}</TimedFeedback>}
-      <div className="game-action-stack"><div className="game-install-action">
-        <button type="button" disabled={mode === "mods" || !ready || busy} onClick={onInstall} className="primary installation-submit" aria-busy={busy}><MenuIcon name="download" />{mode === "mods" ? t("gameModes", "installMod") : busy ? t("gameModes", mode === "add" ? "adding" : "installerRunning") : mode === "add" ? t("gameModes", "add") : t("installAction", "install")}</button>
-      </div>{!nexusAddition && <button type="button" disabled={busy || !onUninstall} onClick={onUninstall} className="btn btn-secondary game-uninstall-button"><MenuIcon name="trash" />{t("gameInfo", "uninstall")}</button>}</div>
+      
+      
+      {(onUninstall) && <div className="game-action-stack">{!nexusAddition && (onUninstall) && <button type="button" disabled={busy || !onUninstall} onClick={onUninstall} className="btn btn-secondary game-uninstall-button"><MenuIcon name="trash" />{t("gameInfo", "uninstall")}</button>}</div>}
       {mode === "mods" && <TimedFeedback>{t("gameModes", "selectGameHint")}</TimedFeedback>}
       {mode !== "mods" && <TimedFeedback as="div" className="installation-process-feedback" resetKey={JSON.stringify([mode, busy, ready, installationError, installationResult])}>
         {busy && <p>{t("gameModes", mode === "add" ? "adding" : "installerWait")}</p>}
-        {!busy && !ready && !installationError && !installationResult && <p>{nexusAddition ? nexusText.addRequired : t("gameModes", mode === "add" ? "addRequired" : "installerRequired")}</p>}
+        
         {installationError && <p>{installationError}</p>}
         {installationResult && <><p>{t("gameModes", "installerClosed")}</p>
           <p>{installationResult.library_error ? `${t("gameModes", "librarySaveError")} ${installationResult.library_error}` : installationResult.registered_count ? `${installationResult.registered_count} ${t("gameModes", "libraryAdded")}` : t("gameModes", "libraryNone")}</p>
@@ -71,26 +72,16 @@ function InstallationName({ draft }: { draft: InstallationGameDraft }) {
   const { t } = useI18n();
   const id = useId();
   const text = draft.editing ? draft.draftName : draft.name;
-  const canConfirmName = Boolean(draft.draftName.trim() && draft.draftName.trim() !== draft.name);
   return <div className="installation-name-area">
-    {draft.editing ? <form onSubmit={event => { event.preventDefault(); draft.confirm(); }}>
+    <form onSubmit={event => { event.preventDefault(); }}>
       <label className="installation-name-label">
         <span>{t("gameModes", "gameName")}</span>
         <input autoFocus className="installation-input installation-name-input" value={draft.draftName}
           aria-describedby={text.trim() ? id : undefined} onChange={event => draft.setDraftName(event.target.value)}
           placeholder={t("gameModes", "namePlaceholder")} />
       </label>
-      {(canConfirmName || draft.name) && <div className="installation-name-actions">
-        {canConfirmName && <button type="submit" className="installation-name-confirm"><MenuIcon name="check" />{t("gameModes", "confirmName")}</button>}
-        {draft.name && <button type="button" className="installation-name-cancel" onClick={draft.cancelEdit}>{t("gameModes", "cancelName")}</button>}
-      </div>}
-    </form> : <div className="installation-field">
-      <span className="installation-field-label">{t("gameModes", "gameName")}</span>
-      <div className="installation-confirmed-name game-directory-value">
-        <span className="game-path-text" onClick={draft.beginEdit}>{draft.name}</span>
-        <button type="button" className="installation-name-edit" onClick={draft.beginEdit} aria-label={t("gameModes", "editName")}><MenuIcon name="edit" /></button>
-      </div>
-    </div>}
+      
+    </form>
     {text.trim() && <span role="tooltip" id={id} className="installation-name-hint">{text}</span>}
   </div>;
 }
@@ -140,6 +131,8 @@ function InstallationPath({ value, onChange, executable = false, selected = true
 }
 
 interface PanelsProps {
+  onClose?: () => void;
+  primaryAction?: ReactNode;
   mode: "install" | "add";
   draft: InstallationGameDraft;
   directory: string;
@@ -155,13 +148,14 @@ interface PanelsProps {
   nexusAddition?: { platform: "native" | "proton"; onPlatformChange: (platform: "native" | "proton") => void; prefix: string; onPrefixChange: (prefix: string) => void };
 }
 
-export function InstallGamePanels({ mode, draft, directory, directoryError, directorySelected, onDefaultDirectory, busy, onDirectoryChange, executable, onExecutableChange, proton, onProtonChange, nexusAddition }: PanelsProps) {
+export function InstallGamePanels({ mode, draft, directory, directoryError, directorySelected, onDefaultDirectory, busy, onDirectoryChange, executable, onExecutableChange, proton, onProtonChange, nexusAddition, onClose, primaryAction }: PanelsProps) {
   const { t } = useI18n();
   const nexusText = useNexusText();
   return <>
     <div className={`mod-config-panel menu-glass-panel installation-config-panel ${nexusAddition ? "installation-config-panel--nexus-add" : ""}`}>
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><MenuIcon name="settings" />
         <span style={{ color: "var(--tone-ffffff, #fff)", fontWeight: "bold", fontSize: "0.95rem" }}>{nexusAddition ? nexusText.gameSettings : t("gameModes", "installationSettings")}</span>
+        {onClose && <button type="button" className="modern-install-close" onClick={onClose} aria-label={t("modern", "closeDetails")}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button>}
       </div>
       <fieldset className="installation-fields" disabled={busy}>
       {nexusAddition ? <>
@@ -187,16 +181,8 @@ export function InstallGamePanels({ mode, draft, directory, directoryError, dire
         <InstallationPath value={executable} onChange={onExecutableChange} executable />
       </>}
       </fieldset>
+      {primaryAction && <div className="modern-install-footer">{primaryAction}</div>}
     </div>
-    {!nexusAddition && <GameInfoPanel release={t("gameInfo", "unknown")} platform="Windows (Proton / Wine)"
-      directoryRow={<div className="game-info-directory-row">
-        <span className="game-info-label"><MenuIcon name="folder" />{t("gameInfo", "directory")}</span>
-        <HoverTooltip text={directory} anchorClassName="installation-path-tooltip-anchor" tooltipClassName="installation-path-tooltip">
-        <div className="game-directory-value"><span className="game-path-text">{directory || t("gameModes", "directoryPlaceholder")}</span>
-          <button type="button" disabled={busy || !directorySelected} className="installation-path-picker" aria-label={t("gameInfo", "editDirectory")}
-            onClick={() => document.querySelector<HTMLInputElement>(".installation-path-input")?.focus()}><MenuIcon name="edit" /></button>
-        </div>
-        </HoverTooltip>
-      </div>} />}
+    
   </>;
 }

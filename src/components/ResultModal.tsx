@@ -20,7 +20,7 @@ export const ResultModal: React.FC<Props> = ({ title, message, type, logs, onClo
 
   return createPortal(
     <div className="modal-overlay">
-      <ModalSurface header={<h2>{title}</h2>} onDismiss={onClose} className={`modal-content ${type}`} style={{ maxWidth: showLogs ? '700px' : '500px' }}>
+      <ModalSurface header={<h2>{title}</h2>} onDismiss={onClose} className={`modal-content result-modal ${type}`} style={{ maxWidth: showLogs ? '800px' : '680px' }}>
         
         <div className="modal-body">
           {message.split("\n").map((line, idx) => {

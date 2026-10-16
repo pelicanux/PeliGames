@@ -34,6 +34,8 @@ pub struct ExternalSettings {
     pub advanced: AdvancedSettings,
     #[serde(default)]
     pub proton: Option<String>,
+    #[serde(default)]
+    pub directory: Option<String>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 struct SavedExternalSettings {
@@ -41,6 +43,8 @@ struct SavedExternalSettings {
     advanced: AdvancedSettings,
     #[serde(default)]
     proton: Option<String>,
+    #[serde(default)]
+    directory: Option<String>,
 }
 fn settings_file() -> Result<PathBuf, String> {
     Ok(crate::core::paths::app_root()?.join("external-game-settings.json"))
@@ -185,7 +189,12 @@ fn all() -> Result<Vec<ExternalGame>, String> {
     for game in &mut games {
         if let Some(settings) = preferences.get(&game.external_id) {
             game.advanced = settings.advanced.clone();
+            if let Some(directory) = &settings.directory { game.directory = directory.clone(); }
             if let Some(proton) = &settings.proton { game.proton = Some(proton.clone()); }
+        }
+        // Without a choice here, show the Proton the launcher last ran the prefix with.
+        if game.proton.is_none() {
+            game.proton = game.prefix.as_deref().and_then(|prefix| crate::core::game_installation::proton_from_prefix(Path::new(prefix)));
         }
     }
     Ok(games)
@@ -232,7 +241,15 @@ pub async fn configure_external_game(settings: ExternalSettings) -> Result<Exter
             },
             None => previous_proton,
         };
-        saved.insert(settings.external_id, SavedExternalSettings {advanced: settings.advanced.clone(), proton: proton.clone()});
+        let directory = match settings.directory.as_deref() {
+            Some(value) => {
+                let path = Path::new(value);
+                if !path.is_absolute() || !path.is_dir() { return Err("Escolha um diretório do jogo existente.".into()); }
+                Some(path.canonicalize().map_err(|e|e.to_string())?.to_string_lossy().into_owned())
+            },
+            None => saved.get(&settings.external_id).and_then(|saved| saved.directory.clone()),
+        };
+        saved.insert(settings.external_id, SavedExternalSettings {advanced: settings.advanced.clone(), proton: proton.clone(), directory: directory.clone()});
         let file = settings_file()?;
         let temporary = file.with_extension("json.part");
         std::fs::write(
@@ -242,6 +259,7 @@ pub async fn configure_external_game(settings: ExternalSettings) -> Result<Exter
         .map_err(|_| "Não foi possível gravar configurações.")?;
         std::fs::rename(temporary, file).map_err(|_| "Não foi possível salvar configurações.")?;
         game.advanced = settings.advanced;
+        if let Some(directory) = directory { game.directory = directory; }
         if let Some(proton) = proton { game.proton = Some(proton); }
         Ok(game)
     })
@@ -375,7 +393,7 @@ fn invocation(game: &ExternalGame) -> Result<(String, Vec<String>), String> {
             env_command.env(key, value);
         }
     }
-    crate::core::mangohud_config::apply(&mut env_command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit)?;
+    crate::core::mangohud_config::apply_with_override(&mut env_command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit, game.advanced.mangohud_enabled)?;
     for (key, value) in env_command.get_envs() {
         if let Some(value) = value {
             flatpak.push(format!(
@@ -523,7 +541,12 @@ pub async fn launch_external_game(external_id: String) -> Result<(), String> {
         let mut command=launch_command(Path::new(&program),Some(&game.advanced))?;
         command.args(args).env_remove("LD_LIBRARY_PATH").env_remove("LD_PRELOAD").stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
         for (key,value) in custom_options(&game.advanced)?.get_envs() {if let Some(value)=value {command.env(key,value);} }
-        crate::core::mangohud_config::apply(&mut command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit)?;
+        crate::core::mangohud_config::apply_with_override(&mut command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit, game.advanced.mangohud_enabled)?;
+        #[cfg(target_os = "linux")]
+        if game.launcher == "Steam" {
+            let id = game.app_id.clone().ok_or("Steam AppID indisponível.")?;
+            return crate::core::game_execution::steam::start_with(game.path.clone(), id, || command.spawn().map_err(|e| format!("Não foi possível abrir Steam: {e}"))).map(|_| ());
+        }
         let mut child=command.spawn().map_err(|_|format!("Não foi possível abrir {}. Verifique se está instalado e se os wrappers estão disponíveis.",game.launcher))?;
         for _ in 0..5 {
             if let Some(status)=child.try_wait().map_err(|_|"Não foi possível verificar a solicitação ao launcher.")? {
@@ -688,4 +711,9 @@ mod global_hud_environment_tests {
    assert!(!monitoring_environment_matches(b"MANGOHUD=1\0MANGOHUD_CONFIGFILE=/other.conf\0",path));
    assert!(!monitoring_environment_matches(b"MANGOHUD=0\0MANGOHUD_CONFIGFILE=/home/test/PeliGames/MangoHUD/MangoHud.conf\0",path));
  }
+}
+
+pub(crate) fn maintenance_entry(id: &str) -> Result<(String, String, String, String), String> {
+    let game = all()?.into_iter().find(|game|game.external_id == id).ok_or("Jogo não encontrado no launcher de origem.")?;
+    Ok((game.name, game.prefix.unwrap_or_default(), game.proton.unwrap_or_default(), game.executable.unwrap_or(game.path)))
 }

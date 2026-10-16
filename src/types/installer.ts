@@ -22,4 +22,7 @@ export interface InstallerPayload {
   binPath: string | null;
   shortcutKey?: string;
   neuralStartup?: boolean;
+  /** Optional parts on every route: faster int4 mixed network, RenoDX style. */
+  int4?: boolean;
+  renodx?: boolean;
 }

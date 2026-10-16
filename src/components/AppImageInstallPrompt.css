@@ -1,0 +1,20 @@
+.appimage-prompt { max-width: 640px; }
+.appimage-prompt-intro { margin: 0 0 14px; line-height: 1.5; }
+.appimage-prompt-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.appimage-prompt-columns section { padding: 12px 14px; border: 1px solid rgba(var(--accent-rgb), .25); border-radius: 8px; }
+.appimage-prompt-columns section.appimage-prompt-limits { border-color: rgba(239, 68, 68, .3); }
+.appimage-prompt-columns h3 { margin: 0 0 8px; font-size: .95rem; }
+.appimage-prompt-columns ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: .85rem; line-height: 1.45; }
+.appimage-prompt-target { margin: 12px 0 0; font-size: .8rem; overflow-wrap: anywhere; color: var(--tone-94a3b8, #94a3b8); }
+.appimage-prompt-remember { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: .85rem; cursor: pointer; }
+.appimage-prompt-remember input { width: 16px; height: 16px; accent-color: var(--accent); }
+@media (max-width: 640px) { .appimage-prompt-columns { grid-template-columns: 1fr; } }
+.appimage-prompt.welcome-tour-modern .modal-body { padding:20px 24px; font-size:13px; color:var(--welcome-text); }
+.appimage-prompt.welcome-tour-modern .appimage-prompt-intro { color:var(--welcome-muted); font-size:13px; line-height:1.6; }
+.appimage-prompt.welcome-tour-modern .appimage-prompt-columns section { border-color:var(--welcome-line); border-radius:14px; background:var(--welcome-card); }
+.appimage-prompt.welcome-tour-modern .appimage-prompt-columns .appimage-prompt-limits { border-color:rgba(239,68,68,.18); }
+.appimage-prompt.welcome-tour-modern .appimage-prompt-columns h3 { font-size:14px; }
+.appimage-prompt.welcome-tour-modern .appimage-prompt-columns ul { font-size:12px; line-height:1.5; }
+.appimage-prompt.welcome-tour-modern .appimage-prompt-remember { color:var(--welcome-muted); font-size:12px; line-height:1.5; }
+.appimage-prompt.welcome-tour-modern .modal-actions { padding:14px 24px; margin:0; border-top:1px solid var(--welcome-line); }
+.appimage-prompt.welcome-tour-modern .dialog-titlebar h2 { display:flex; align-items:center; gap:8px; padding-right:32px; }

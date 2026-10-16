@@ -1,0 +1,89 @@
+/* Detached log windows (logs.html): a solid window in the new interface's style.
+   It is a separate native window, so glass would show the desktop behind it. */
+html.log-monitor-window {
+  --lw-bg: #12131b;
+  --lw-surface: #1a1c26;
+  --lw-raised: #222532;
+  --lw-line: rgba(255, 255, 255, .08);
+  --lw-text: #eef0f6;
+  --lw-muted: #9aa1b8;
+  --lw-terminal: #0c0d13;
+  --lw-success: #65d98b;
+  --lw-error: #ff7a7a;
+  --lw-warning: #efc66c;
+}
+html.log-monitor-window[data-appearance="light"] {
+  --lw-bg: #f4f5f9;
+  --lw-surface: #ffffff;
+  --lw-raised: #eceef4;
+  --lw-line: rgba(20, 24, 40, .1);
+  --lw-text: #141724;
+  --lw-muted: #5d6378;
+  --lw-terminal: #ffffff;
+  --lw-success: #1b8a47;
+  --lw-error: #c8323c;
+  --lw-warning: #a46a00;
+}
+html.log-monitor-window .detached-log-page { padding: 0; }
+html.log-monitor-window .detached-log-page .modal-content.game-logs-dialog {
+  display: flex; flex-direction: column; padding: 0 !important; overflow: hidden;
+  border: 1px solid var(--lw-line) !important; border-radius: 14px !important;
+  background: var(--lw-bg) !important; color: var(--lw-text);
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: none !important;
+}
+html.log-monitor-window .detached-log-page .modal-content.game-logs-dialog::before,
+html.log-monitor-window .detached-log-page .modal-content.game-logs-dialog::after { display: none !important; }
+html.log-monitor-window .detached-log-page .dialog-titlebar {
+  margin: 0 !important; padding: 10px 12px 10px 18px !important; min-height: 52px; box-sizing: border-box;
+  border: 0 !important; border-bottom: 1px solid var(--lw-line) !important; border-radius: 0 !important;
+  background: var(--lw-surface) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: none !important;
+}
+html.log-monitor-window .detached-log-page .dialog-titlebar::before,
+html.log-monitor-window .detached-log-page .dialog-titlebar::after { display: none !important; }
+html.log-monitor-window .detached-log-page .dialog-titlebar h2 { margin: 0; color: var(--lw-text); font-size: 15px; font-weight: 800; letter-spacing: -.01em; }
+html.log-monitor-window .detached-log-page .modal-scroll-body { gap: 10px; padding: 14px 18px 18px !important; }
+html.log-monitor-window .log-window-actions { gap: 6px; }
+html.log-monitor-window .log-window-actions .window-control,
+html.log-monitor-window .log-window-actions .surface-close-button {
+  width: 32px; height: 32px; display: grid; place-items: center; padding: 0;
+  border: 1px solid var(--lw-line) !important; border-radius: 10px !important;
+  background: var(--lw-raised) !important; color: var(--lw-muted) !important; box-shadow: none !important;
+}
+html.log-monitor-window .log-window-actions .window-control svg { width: 15px; height: 15px; }
+html.log-monitor-window .log-window-actions .window-control:hover:not(:disabled),
+html.log-monitor-window .log-window-actions .surface-close-button:hover { color: var(--lw-text) !important; border-color: rgba(var(--accent-rgb), .55) !important; }
+html.log-monitor-window .log-window-actions .log-pin-button[aria-pressed="true"] { color: var(--lw-text) !important; border-color: rgba(var(--accent-rgb), .7) !important; background: rgba(var(--accent-rgb), .22) !important; }
+html.log-monitor-window .game-log-tabs,
+html.log-monitor-window .detached-log-page .nexus-tabs {
+  display: inline-flex; align-self: flex-start; gap: 4px; padding: 4px; margin: 0;
+  border: 1px solid var(--lw-line); border-radius: 999px; background: var(--lw-surface);
+}
+html.log-monitor-window .game-log-tabs button,
+html.log-monitor-window .detached-log-page .nexus-tabs button {
+  padding: 6px 16px !important; border: 0 !important; border-radius: 999px !important;
+  background: transparent !important; color: var(--lw-muted) !important; box-shadow: none !important;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+}
+html.log-monitor-window .game-log-tabs button[aria-pressed="true"],
+html.log-monitor-window .detached-log-page .nexus-tabs button[aria-pressed="true"] { background: rgba(var(--accent-rgb), .22) !important; color: var(--lw-text) !important; }
+html.log-monitor-window .game-log-hint,
+html.log-monitor-window .detached-log-page .nexus-hint { margin: 0; color: var(--lw-muted); font-size: 12px; }
+html.log-monitor-window .detached-log-page [role="alert"] { margin: 0; color: var(--lw-error); }
+html.log-monitor-window .log-output-panel { border: 1px solid var(--lw-line); border-radius: 12px; background: var(--lw-terminal); }
+html.log-monitor-window .detached-log-page .game-log-output {
+  border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important;
+  color: var(--lw-text); font: 12.5px/1.55 ui-monospace, "JetBrains Mono", "Fira Code", monospace; padding: 48px 16px 14px !important;
+}
+html.log-monitor-window .game-log-output .log-line-success { color: var(--lw-success); }
+html.log-monitor-window .game-log-output .log-line-error { color: var(--lw-error); }
+html.log-monitor-window .game-log-output .log-line-warning { color: var(--lw-warning); }
+html.log-monitor-window .log-copy-button {
+  padding: 6px 12px !important; border: 1px solid var(--lw-line) !important; border-radius: 10px !important;
+  background: var(--lw-raised) !important; color: var(--lw-text) !important; box-shadow: none !important; font-size: 12.5px; font-weight: 700;
+}
+html.log-monitor-window .log-copy-button:hover:not(:disabled) { border-color: rgba(var(--accent-rgb), .55) !important; }
+html.log-monitor-window .log-copy-feedback { color: var(--lw-success); font-size: 12px; font-weight: 700; }
+html.log-monitor-window .detached-log-page .modal-glass-backdrop { display: none !important; }
+html.log-monitor-window .detached-log-page .dialog-titlebar { position: relative !important; inset: auto !important; width: auto !important; flex-shrink: 0; }
+html.log-monitor-window .detached-log-page .dialog-titlebar h2 { background: none !important; -webkit-text-fill-color: currentColor !important; text-shadow: none !important; }
+html.log-monitor-window .detached-log-page .modal-scroll-body { position: relative; inset: auto; flex: 1; min-height: 0; margin: 0 !important; }

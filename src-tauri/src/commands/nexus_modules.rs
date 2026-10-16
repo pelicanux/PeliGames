@@ -460,6 +460,28 @@ pub(super) enum Route {
     Anchor { suffix: String, target: String, #[serde(default)] folder: bool },
     Patch { target: String },
 }
+/// Loose Lua scripts of an RE Engine mod (no `reframework`/`autorun` folder, no
+/// FOMOD): the deepest folder holding every script becomes `reframework/autorun/`
+/// and everything below it keeps its path; files outside are left out. Mirrors
+/// `installLooseLua` of the Vortex RE Engine template. `None` for other packages.
+fn re_loose_lua(source: &str, entries: &[String]) -> Option<Option<String>> {
+    let lower: Vec<String> = entries.iter().map(|entry| entry.to_ascii_lowercase()).collect();
+    let folders = |entry: &String| entry.trim_end_matches('/').split('/').rev().skip(usize::from(!entry.ends_with('/'))).map(str::to_string).collect::<Vec<_>>();
+    if !lower.iter().any(|entry| entry.ends_with(".lua"))
+        || lower.iter().any(|entry| folders(entry).iter().any(|part| part == "reframework" || part == "autorun"))
+        || lower.iter().any(|entry| entry.ends_with("fomod/moduleconfig.xml") || entry == "moduleconfig.xml") { return None; }
+    let mut shared: Option<Vec<&str>> = None;
+    for entry in entries.iter().filter(|entry| entry.to_ascii_lowercase().ends_with(".lua")) {
+        let dirs: Vec<&str> = entry.rsplit_once('/').map(|(parent, _)| parent.split('/').collect()).unwrap_or_default();
+        shared = Some(match shared {
+            None => dirs,
+            Some(current) => current.iter().zip(&dirs).take_while(|(a, b)| a == b).map(|(a, _)| *a).collect(),
+        });
+    }
+    let shared = shared.unwrap_or_default();
+    let root = if shared.is_empty() { String::new() } else { format!("{}/", shared.join("/")) };
+    Some(source.strip_prefix(&root).filter(|rest| !rest.is_empty()).map(|rest| format!("reframework/autorun/{rest}")))
+}
 fn push_new<T: PartialEq>(items: &mut Vec<T>, item: T) {
     if !items.contains(&item) { items.push(item); }
 }
@@ -550,6 +572,13 @@ impl Definition {
         let prefix = |source: &str, target: &str, search: bool| Route::Prefix { source: format!("{source}/"), target: format!("{target}/"), search };
         let mut explicit = vec![prefix(&paks, &paks, true)];
         let mut destinations = vec![paks.clone()];
+        // Content subfolders of the Vortex template besides Paks: movies and splash
+        // screens. Replacing a game's own video still needs the player's confirmation.
+        for folder in ["Movies", "Splash"] {
+            let content = format!("{project}/Content/{folder}");
+            explicit.push(prefix(&content, &content, true));
+            destinations.push(content);
+        }
         if ue4ss {
             explicit.extend([
                 prefix(&logic, &logic, true),
@@ -591,6 +620,7 @@ impl Definition {
             push_new(&mut self.dll_overrides, DllOverride { name: "dsound".into(), file: format!("{bin}/dsound.dll") });
         }
         explicit.push(prefix("~mods", &paks, true));
+        for folder in ["Movies", "Splash"] { explicit.push(prefix(folder, &format!("{project}/Content/{folder}"), true)); }
         let mut generic: Vec<Route> = [".pak", ".utoc", ".ucas"].into_iter()
             .map(|extension| Route::Extension { extension: extension.into(), target: format!("{paks}/"), root_only: false, keep_path: false }).collect();
         if sig_bypass { generic.push(Route::Extension { extension: ".asi".into(), target: format!("{bin}/plugins/"), root_only: false, keep_path: false }); }
@@ -945,8 +975,10 @@ impl Definition {
                     let indices: Vec<_> = normalized.match_indices(&prefix_match)
                         .filter(|(index, _)| *index == 0 || *search && normalized.as_bytes()[*index - 1] == b'/')
                         .map(|(index, _)| index).collect();
-                    if indices.len() > 1 { return Err(format!("Estrutura ambígua no pacote: {source}")); }
-                    indices.first().map(|index| format!("{target}{}", &source[index + prefix.len()..]))
+                    // Vortex templates root a mod at the last occurrence of its folder name
+                    // (`Wrapper/~mods/~mods/x.pak`); hand-made modules still refuse the ambiguity.
+                    if indices.len() > 1 && self.family.is_none() { return Err(format!("Estrutura ambígua no pacote: {source}")); }
+                    indices.last().map(|index| format!("{target}{}", &source[index + prefix.len()..]))
                 },
                 Route::File { source: file, target, search } => {
                     let (path, file) = if self.platform == "proton" { (source.to_ascii_lowercase(), file.to_ascii_lowercase()) } else { (source.to_string(), file.clone()) };
@@ -1035,6 +1067,12 @@ impl Definition {
         for rule in &self.routes {
             let Route::Manifest { marker, target, first: true } = rule else { continue; };
             if let Some(target) = self.manifest_target(marker, target, source, mod_id, entries)? { return Ok(Some(target)); }
+        }
+        if matches!(self.family, Some(Family::ReEngine {})) {
+            if let Some(target) = re_loose_lua(source, entries) {
+                if let Some(target) = &target { if !self.allowed(target) { return Err(format!("Destino fora das regras do módulo: {target}")); } }
+                return Ok(target);
+            }
         }
         if let Some(target) = self.route(source, mod_id)? {
             if self.domain == "masseffectlegendaryedition" && target.split("/BioGame/DLC/").nth(1).is_none_or(|rest| !rest.starts_with("DLC_MOD_")) {return Err("Somente DLC novo DLC_MOD_ com destino explícito é instalado; dados originais ficam preservados.".into());}
@@ -1818,6 +1856,30 @@ mod tests {
             assert!(game.frameworks.iter().any(|f| f.name == "REFramework" && f.required_files == ["dinput8.dll"]), "{d}");
             assert!(game.dll_overrides.iter().any(|o| o.name == "dinput8"), "{d}");
         }
+    }
+    #[test]
+    fn re_engine_loose_lua_roots_at_the_folder_shared_by_every_script() {
+        let game = builtins().into_iter().find(|m| matches!(m.family, Some(Family::ReEngine {}))).unwrap();
+        let entries: Vec<String> = ["Pack/", "Pack/Mod/", "Pack/Mod/main.lua", "Pack/Mod/lib/util.lua", "Pack/Mod/lib/data.json", "Pack/readme.txt"].map(String::from).to_vec();
+        let route = |source: &str| game.route_package(source, ID, &entries).unwrap();
+        assert_eq!(route("Pack/Mod/main.lua").as_deref(), Some("reframework/autorun/main.lua"));
+        assert_eq!(route("Pack/Mod/lib/util.lua").as_deref(), Some("reframework/autorun/lib/util.lua"));
+        assert_eq!(route("Pack/Mod/lib/data.json").as_deref(), Some("reframework/autorun/lib/data.json"));
+        assert_eq!(route("Pack/readme.txt"), None, "outside the scripts' folder");
+        // Scripts in sibling folders share their parent.
+        let siblings: Vec<String> = ["A/one.lua", "B/two.lua"].map(String::from).to_vec();
+        assert_eq!(game.route_package("B/two.lua", ID, &siblings).unwrap().as_deref(), Some("reframework/autorun/B/two.lua"));
+        // Packages that already carry the REFramework layout keep the explicit routes.
+        let layout: Vec<String> = ["Mod/reframework/autorun/x.lua".to_string()].to_vec();
+        assert_eq!(game.route_package(&layout[0], ID, &layout).unwrap().as_deref(), Some("reframework/autorun/x.lua"));
+    }
+    #[test]
+    fn unreal_family_installs_movies_splash_and_repeated_folder_names_like_vortex() {
+        let game = builtins().into_iter().find(|m| m.domain == "stellarblade").unwrap();
+        let route = |source: &str| game.route_package(source, ID, &[source.to_string()]).unwrap();
+        assert_eq!(route("Mod/Movies/Intro.bk2").as_deref(), Some("SB/Content/Movies/Intro.bk2"));
+        assert_eq!(route("SB/Content/Splash/Splash.bmp").as_deref(), Some("SB/Content/Splash/Splash.bmp"));
+        assert_eq!(route("Wrapper/~mods/~mods/Outfit_P.pak").as_deref(), Some("SB/Content/Paks/~mods/Outfit_P.pak"));
     }
     #[test]
     fn unreal_family_rejects_unsafe_folders_and_keeps_expansion_idempotent() {

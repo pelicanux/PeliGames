@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 export interface WinePackage { id: string; title: string; category: string; installed: boolean }
 export interface WineToolResult { packages: WinePackage[]; log: string }
-export async function runWineTool(path: string, action: "catalog" | "install" | "winecfg" | "winetricks-gui", packages: string[] = [], progress: (line: string) => void = () => {}): Promise<WineToolResult> {
+export async function runWineTool(path: string, action: "catalog" | "install" | "winecfg" | "winetricks-gui" | "regedit" | "explorer", packages: string[] = [], progress: (line: string) => void = () => {}): Promise<WineToolResult> {
   const request = { path, action, packages };
   if (!("__PELI_UI_PREVIEW__" in window)) {
     const requestId = crypto.randomUUID();

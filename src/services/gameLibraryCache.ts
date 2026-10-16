@@ -1,7 +1,7 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { readCustomCovers, customCoverFor } from "./customCovers";
 import type { GameInfo } from "../components/GameGrid";
-import { automaticCoverFor } from "./automaticCovers";
+import { automaticCoverFor, readAutomaticCovers } from "./automaticCovers";
 
 const CACHE_KEY = "game_library_cache_v1";
 export type LibraryCacheScope = "all" | "own" | "nexus";
@@ -9,10 +9,11 @@ const cacheKey = (scope: LibraryCacheScope) => scope === "all" ? CACHE_KEY : `${
 
 export function applyCustomCovers(games: GameInfo[]): GameInfo[] {
   const covers = readCustomCovers();
+  const automaticCovers = readAutomaticCovers();
   return games.map(game => {
     const custom = customCoverFor(game, covers);
     // Save the automatic artwork separately, including games with no automatic cover.
-    let automatic = automaticCoverFor(game) ?? (game.automatic_cover_url !== undefined ? game.automatic_cover_url
+    let automatic = automaticCoverFor(game, automaticCovers) ?? (game.automatic_cover_url !== undefined ? game.automatic_cover_url
       : game.cover_url?.startsWith("asset:") ? null : game.cover_url ?? null);
     if (automatic?.startsWith("file://")) {
       try { automatic = convertFileSrc(decodeURIComponent(new URL(automatic).pathname)); }

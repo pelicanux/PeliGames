@@ -96,7 +96,6 @@
   --surface-7-10-20: 208, 217, 230;
 }
 :root[data-appearance="light"] body { background-color: #c4d0e0; color: #1e293b; }
-:root[data-appearance="light"] body::before { opacity: .55; filter: hue-rotate(var(--background-hue)) brightness(1.25) saturate(1.15); }
 :root[data-appearance="light"] .app-wrapper { background: rgba(208,217,230,.6); }
 :root[data-appearance="light"] .app-titlebar { background: rgba(208,217,230,.64) !important; }
 :root[data-appearance="light"] .modal-content,
@@ -131,10 +130,8 @@
 :root[data-appearance="light"] .performance-mode .dialog-popover { background: #cdd7e5 !important; }
 :root[data-appearance="light"] .ui-hover-tooltip,
 :root[data-appearance="light"] .installation-name-hint { box-shadow: 0 8px 24px rgba(35,50,75,.15); }
-:root[data-appearance="light"] .library-view-toggle { background: rgba(35,50,75,.05); }
 :root[data-appearance="light"] .library-game-card { background: rgba(208,217,230,.42) !important; }
 :root[data-appearance="light"] .game-library--grid .game-launcher-badge > div { color: #d1d5db !important; }
-:root[data-appearance="light"] .info-game-logs { color: #994500; }
 :root[data-appearance="light"] .installation-cover-placeholder {
   background: linear-gradient(135deg, rgba(var(--accent-rgb),.18), rgba(208,217,230,.6));
 }

@@ -25,7 +25,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-aska/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-aska/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -85,7 +85,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-ballxpit/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-ballxpit/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -156,7 +156,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-blueprince/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-blueprince/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -226,7 +226,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-burglingnomes/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-burglingnomes/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -285,7 +285,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-cairn/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-cairn/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -356,7 +356,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-cloverpit/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-cloverpit/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -402,6 +402,65 @@
   {
     "schema": 1,
     "version": "1.0.0",
+    "domain": "dimraeth",
+    "name": "Dimraeth",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "Dimraeth_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "Dimraeth.exe",
+    "required": [
+      "Dimraeth.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dimraeth/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em Dimraeth_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "downloads": [
+      {
+        "name": "BepInEx",
+        "source": "bepinex_be",
+        "prefix": "BepInEx-Unity.IL2CPP-win-x64-",
+        "fallback": "https://builds.bepinex.dev/projects/bepinex_be/788/BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.788%2B5b766a3.zip",
+        "present": [
+          "winhttp.dll",
+          "BepInEx/core/BepInEx.Core.dll"
+        ],
+        "group": "loader",
+        "recommended": true
+      }
+    ],
+    "steam_id": "2402680",
+    "vortex_mod_types": {
+      "dimraeth-customloaderplugin": "XXX",
+      "dimraeth-assets": "Dimraeth_Data",
+      "dimraeth-bepinexmod": "BepInEx",
+      "dimraeth-bepinex-plugins": "BepInEx/plugins",
+      "dimraeth-bepinex-patchers": "BepInEx/patchers",
+      "dimraeth-bepinex-config": "BepInEx/config",
+      "dimraeth-bepcfgman": "BepInEx"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
     "domain": "diplomacyisnotanoption",
     "name": "Diplomacy is Not an Option",
     "platform": "proton",
@@ -425,7 +484,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-diplomacyisnotanoption/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-diplomacyisnotanoption/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -484,7 +543,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-discoelysium/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-discoelysium/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -520,6 +579,66 @@
   {
     "schema": 1,
     "version": "1.0.0",
+    "domain": "dressmaker",
+    "name": "Dressmaker",
+    "platform": "proton",
+    "engine": "deployment",
+    "family": {
+      "kind": "unity",
+      "data": "Dressmaker_Data",
+      "loaders": [
+        "bepinex"
+      ]
+    },
+    "executable": "Dressmaker.exe",
+    "required": [
+      "Dressmaker.exe",
+      "UnityPlayer.dll"
+    ],
+    "header": [
+      77,
+      90
+    ],
+    "destinations": [],
+    "routes": [],
+    "sources": [
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dressmaker/index.js"
+    ],
+    "credits": [
+      "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
+    ],
+    "notes": [
+      "Módulo gerado do template Unity do Vortex (BepInEx): loader, plugins e mods conforme a DLL referenciada. Substituições em Dressmaker_Data, Assembly e .assets não são aplicadas. Estrutura verificada por testes sintéticos; não validado no jogo."
+    ],
+    "downloads": [
+      {
+        "name": "BepInEx",
+        "source": "nexus",
+        "mod_id": 1,
+        "prefix": "BepInEx",
+        "present": [
+          "winhttp.dll",
+          "BepInEx/core/BepInEx.Core.dll"
+        ],
+        "group": "loader",
+        "recommended": true
+      }
+    ],
+    "steam_id": "4019220",
+    "vortex_mod_types": {
+      "dressmaker-customloaderplugin": "XXX",
+      "dressmaker-assets": "Dressmaker_Data",
+      "dressmaker-bepinexmod": "BepInEx",
+      "dressmaker-bepinex-plugins": "BepInEx/plugins",
+      "dressmaker-bepinex-patchers": "BepInEx/patchers",
+      "dressmaker-bepinex-config": "BepInEx/config",
+      "dressmaker-bepcfgman": "BepInEx",
+      "dressmaker-modpack": "Mods"
+    }
+  },
+  {
+    "schema": 1,
+    "version": "1.0.0",
     "domain": "escapefromduckov",
     "name": "Escape from Duckov",
     "platform": "proton",
@@ -544,7 +663,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-escapefromduckov/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-escapefromduckov/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -614,7 +733,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-footballmanager26/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-footballmanager26/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -684,7 +803,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-grimshire/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-grimshire/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -743,7 +862,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-hollowknight/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-hollowknight/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -801,7 +920,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-hollowknightsilksong/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-hollowknightsilksong/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -861,7 +980,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-howtofish/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-howtofish/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -936,7 +1055,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-megabonk/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-megabonk/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -1011,7 +1130,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-mirthwood/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-mirthwood/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -1070,7 +1189,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-mousepiforhire/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-mousepiforhire/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -1133,7 +1252,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-pcbuildingsimulator/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-pcbuildingsimulator/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -1191,7 +1310,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-pcbuildingsimulator2/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-pcbuildingsimulator2/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -1249,7 +1368,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-peak/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-peak/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -1307,7 +1426,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-prodeus/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-prodeus/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -1370,7 +1489,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-starsandisland/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-starsandisland/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
@@ -1429,7 +1548,7 @@
     "destinations": [],
     "routes": [],
     "sources": [
-      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/39e9ef13787900a1741e5d29165920bd4f48f7b6/game-storyofseasonsgrandbazaar/index.js"
+      "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-storyofseasonsgrandbazaar/index.js"
     ],
     "credits": [
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."

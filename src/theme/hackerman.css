@@ -101,8 +101,6 @@
   --surface-7-10-20: 8, 22, 14;
 }
 :root[data-interface-theme="hackerman"] body { background:#020905; }
-:root[data-interface-theme="hackerman"] body::before { background-image:none; filter:none; }
-:root[data-interface-theme="hackerman"] .ambient-background { visibility:hidden; }
 :root[data-interface-theme="hackerman"] .app-wrapper { background:rgba(3,12,7,.64); backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px); }
 :root[data-interface-theme="hackerman"][data-appearance="dark"] :is(.menu-glass-panel,.dialog-popover,.modal-content) {
   --glass-base-start:4,16,10; --glass-base-end:5,12,8; --glass-neutral-border:72,116,83;
@@ -126,15 +124,12 @@
 :root[data-interface-theme="hackerman"] .titlebar-title { font-size:26px !important; }
 :root[data-interface-theme="hackerman"] :is(button,input,select) { line-height:.95; }
 :root[data-interface-theme="hackerman"] :is(p,small,label,li,dt,dd,textarea) { line-height:1.2; }
-:root[data-interface-theme="hackerman"] .nexus-sidebar-action-label { line-height:1.05; }
 :root[data-interface-theme="hackerman"] .game-action-stack button:is(.nexus-sidebar-launch,.nexus-sidebar-install,.nexus-sidebar-report) {
   padding:6px !important; gap:4px !important;
 }
-:root[data-interface-theme="hackerman"] .game-action-stack button.nexus-sidebar-launch { min-height:54px; }
 :root[data-interface-theme="hackerman"] .game-action-stack button:is(.nexus-sidebar-install,.nexus-sidebar-report) {
   min-height:40px; font-size:18px !important;
 }
-:root[data-interface-theme="hackerman"] :is(.nexus-sidebar-install,.nexus-sidebar-report) > .nexus-sidebar-action-label { font-size:18px !important; white-space:nowrap; }
 :root[data-interface-theme="hackerman"] .nexus-mod-title { flex-wrap:nowrap; }
 :root[data-interface-theme="hackerman"] .nexus-mod-title strong { flex:1; font-size:18px !important; line-height:1.1; }
 :root[data-interface-theme="hackerman"] :is(.nexus-mod-position,.nexus-mod-version,.nexus-installed-mod-info small) { font-size:17px !important; }

@@ -65,9 +65,9 @@ export function LogWindowActions({ onClose }: { onClose: () => void }) {
     setPinBusy(true);
     try {
       const next = !pinned;
-      if (!("__PELI_UI_PREVIEW__" in window)) await getCurrentWindow().setAlwaysOnTop(next);
+      if (!("__PELI_UI_PREVIEW__" in window)) await invoke("set_log_window_on_top", { onTop: next });
       setPinned(next); setPinError("");
-    } catch { setPinError("Não foi possível alterar a fixação da janela."); }
+    } catch (error) { setPinError(`Não foi possível alterar a fixação da janela. ${String(error)}`); }
     finally { setPinBusy(false); }
   };
   return <div className="log-window-actions">

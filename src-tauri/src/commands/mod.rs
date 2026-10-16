@@ -8,6 +8,7 @@ pub mod covers;
 
 mod heroic_library;
 mod launcher_library;
+pub mod game_activity;
 mod store_artwork;
 
 pub mod app_updates;
@@ -29,6 +30,7 @@ pub mod nexus_reports;
 
 mod nexus_profile;
 pub mod nexus_launch_options;
+pub mod mod_launch_options;
 
 mod nexus_deployment;
 mod nexus_deploy_methods;

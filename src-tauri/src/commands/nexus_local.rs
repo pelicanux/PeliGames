@@ -1402,3 +1402,10 @@ pub(super) fn save_advanced(game_id: &str, settings: crate::core::advanced_setti
     save(&data)?;
     Ok(data)
 }
+
+/// Registered context for desktop shortcuts and Wine tools; never trusts a caller-supplied prefix.
+pub(crate) fn maintenance_entry(game_id: &str) -> Result<(String, String, String, String), String> {
+    let game = diagnostic_game(game_id)?;
+    Ok((game.game.get("name").and_then(|v|v.as_str()).unwrap_or("Jogo").into(), game.compat_data, game.proton,
+        game.game.get("path").and_then(|v|v.as_str()).unwrap_or_default().into()))
+}

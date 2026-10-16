@@ -31,6 +31,21 @@ mod tls_tests {
         let _ = rustls::ClientConfig::builder();
     }
 }
+/// WebKitGTK 2.42+ draws pages through DMABUF buffers; with the NVIDIA
+/// driver this often leaves heavy pages (Nexus sign-in, Cloudflare check)
+/// black or frozen. Fall back to its shared-memory renderer on NVIDIA. Set
+/// before GTK starts; a value the user already set is kept.
+fn webkit_graphics_workaround() {
+    #[cfg(target_os = "linux")]
+    if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() && nvidia_driver() {
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
+}
+/// The NVIDIA kernel driver (proprietary or open modules); not nouveau.
+#[cfg(target_os = "linux")]
+fn nvidia_driver() -> bool {
+    std::path::Path::new("/proc/driver/nvidia/version").exists() || std::path::Path::new("/sys/module/nvidia").exists()
+}
 fn run_mode(installer: bool) {
     // Root helper started through pkexec: nothing else of the launcher runs.
     let first = std::env::args().nth(1);
@@ -38,7 +53,12 @@ fn run_mode(installer: bool) {
         let args: Vec<String> = std::env::args().skip(2).collect();
         std::process::exit(core::mangohud_root::run(&args));
     }
+    if first.as_deref() == Some(commands::storage_automount::ROOT_FLAG) {
+        std::process::exit(commands::storage_automount::run_root());
+    }
     choose_tls_backend();
+    crate::core::env_utils::drop_bundle_python();
+    webkit_graphics_workaround();
     #[cfg(unix)]
     if let Err(error) = core::launcher_instance::wait_for_restart_parent() { eprintln!("{error}"); return; }
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -92,13 +112,17 @@ fn run_mode(installer: bool) {
             window.title = if startup.module == "launch-error" { "PeliGames — execução" } else { "Pelinstall" }.into();
             window.width = 560.; window.height = if startup.module == "pelinstall" { 340. } else { 490. };
             window.min_width = Some(480.); window.min_height = Some(if startup.module == "pelinstall" { 260. } else { 420. });
-            window.max_width = Some(560.); window.max_height = Some(490.);
+            // Pelinstall grows with its step (Proton list open, executable choice): see PELINSTALL_MAX_HEIGHT.
+            window.max_width = Some(560.); window.max_height = Some(if startup.module == "pelinstall" { 720. } else { 490. });
             window.maximizable = false;
             window.center = true;
         }
     }
     // Only the launcher window checks the build; game shortcuts and Pelinstall stay offline.
     let check_build = startup.module == "launcher";
+    // Launcher housekeeping (update cache, Nexus session logs) is not the
+    // installer's business: Pelinstall and game shortcuts skip it.
+    let launcher_window = startup.module == "launcher";
     tauri::Builder::default()
         .manage(startup)
         .manage(commands::nexus_downloads::Downloads::default())
@@ -134,17 +158,19 @@ fn run_mode(installer: bool) {
             if let Some(link) = nxm_start {
                 if let Err(error) = commands::nexus_downloads::receive(&app_handle, &link) { eprintln!("Nexus: {error}"); }
             }
-            crate::core::logger::log_launcher(
-                &app_handle,
-                "INFO",
-                &format!("PeliGames v{} iniciado", env!("CARGO_PKG_VERSION")),
-            );
-            commands::app_updates::cleanup_obsolete_updates(&app_handle);
+            if launcher_window {
+                crate::core::logger::log_launcher(
+                    &app_handle,
+                    "INFO",
+                    &format!("PeliGames v{} iniciado", env!("CARGO_PKG_VERSION")),
+                );
+                commands::app_updates::cleanup_obsolete_updates(&app_handle);
+            }
             if check_build { commands::official_build::verify_in_background(app_handle.clone()); }
             commands::nexus_progress::init(&app_handle);
             commands::mod_backup::init(&app_handle);
             // Launch logs start empty on every launcher start (disk work off the UI thread).
-            std::thread::spawn(commands::nexus_local::reset_session_logs_at_startup);
+            if launcher_window { std::thread::spawn(commands::nexus_local::reset_session_logs_at_startup); }
             Ok(())
         })
         .invoke_handler({
@@ -282,6 +308,7 @@ fn run_mode(installer: bool) {
             commands::nexus_local::install_nexus_mod,
             commands::nexus_local::set_nexus_mod_enabled,
             commands::nexus_launch_options::get_nexus_launch_options,
+            commands::mod_launch_options::apply_mod_launch_options,
             commands::nexus_launch_options::configure_nexus_advanced,
             commands::nexus_launch_options::configure_nexus_launch_options,
             commands::nexus_local::launch_nexus_game,
@@ -385,19 +412,23 @@ fn run_mode(installer: bool) {
             commands::storage_automount::prepare_empty_storage,
             commands::storage_automount::manage_storage_volume,
             commands::external_library::scan_external_library,
+            commands::game_activity::game_activity,
             commands::external_library::configure_external_game,
             commands::external_library::launch_external_game,
             commands::scanner::scan_installed_games,
             commands::scanner::fetch_steam_release_date,
             commands::scanner::launch_game,
+            commands::scanner::start_steam_game,
             commands::scanner::request_steam_uninstall,
             commands::scanner::open_folder,
             commands::scanner::collect_and_open_logs,
             commands::scanner::fetch_steamgriddb_cover_command,
+            commands::scanner::fetch_game_banners,
             commands::analyzer::analyze_game,
             commands::config::load_app_config,
             commands::config::get_launcher_log,
             commands::log_windows::open_game_log_window,
+            commands::log_windows::set_log_window_on_top,
             commands::config::save_app_config,
             commands::config::migrate_neural_preferences,
             commands::config::load_neural_preferences,

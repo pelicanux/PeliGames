@@ -32,7 +32,7 @@
 :root[data-appearance][data-interface-theme] :is(button, [role="button"]) > :is(.menu-icon, svg) {
   transition: color var(--control-fade-duration) var(--control-fade-easing), opacity var(--control-fade-duration) var(--control-fade-easing), filter var(--control-fade-duration) var(--control-fade-easing) !important;
 }
-:root :is(.titlebar-optional-actions, .launcher-update-indicator, .mod-shortcut-group, .mod-neural-startup) {
+:root :is(.titlebar-optional-actions, .launcher-update-indicator, .mod-option-row) {
   transition: opacity var(--control-fade-duration) var(--control-fade-easing);
 }
 
@@ -66,7 +66,7 @@
   :root[data-appearance][data-interface-theme] :is(button, [role="button"])::before,
   :root[data-appearance][data-interface-theme] :is(button, [role="button"])::after,
   :root[data-appearance][data-interface-theme] :is(button, [role="button"]) > :is(.menu-icon, svg),
-  :root :is(.titlebar-optional-actions, .launcher-update-indicator, .mod-shortcut-group, .mod-neural-startup) {
+  :root :is(.titlebar-optional-actions, .launcher-update-indicator, .mod-option-row) {
     transition: none !important;
   }
 }

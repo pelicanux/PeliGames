@@ -135,8 +135,9 @@ async fn catalog(
 }
 fn prepare(umu: &Path, proton: &Path, prefix: &Path, action: &str, packages: &[String]) -> Command {
     let mut cmd = Command::new(umu);
-    cmd.arg(if action == "winecfg" {
-        "winecfg"
+    super::env_utils::host_environment(&mut cmd);
+    cmd.arg(if matches!(action, "winecfg" | "regedit" | "explorer") {
+        action
     } else {
         "winetricks"
     });
@@ -169,23 +170,20 @@ pub async fn execute(request: ToolRequest, progress: Progress) -> Result<ToolRes
         return Err("Uma ferramenta Wine já está em execução.".into());
     }
     let _guard = Guard;
-    if !["catalog", "winecfg", "install", "winetricks-gui"].contains(&request.action.as_str()) {
+    if !["catalog", "winecfg", "install", "winetricks-gui", "regedit", "explorer"].contains(&request.action.as_str()) {
         return Err("Ferramenta inválida.".into());
     }
     if request.action != "install" && !request.packages.is_empty() {
         return Err("Esta ferramenta não aceita uma lista de componentes.".into());
     }
-    let entry = super::installed_library::list(false)?
-        .into_iter()
-        .find(|e| e.path == request.path)
-        .ok_or("Jogo não registrado na biblioteca.")?;
-    let prefix = PathBuf::from(&entry.prefix)
+    let (_, prefix, proton, _) = maintenance_entry(&request.path)?;
+    let prefix = PathBuf::from(&prefix)
         .canonicalize()
         .map_err(|_| "Prefixo do jogo indisponível.")?;
     if !prefix.join("drive_c").is_dir() {
         return Err("O prefixo Wine ainda não foi inicializado. Execute o jogo antes de usar as ferramentas.".into());
     }
-    let proton = super::game_installation::validate_proton(&entry.proton)?;
+    let proton = super::game_installation::validate_proton(&proton)?;
     if request.action == "catalog" {
         return Ok(ToolResult {
             packages: catalog(&proton, &prefix, &progress).await?,
@@ -212,8 +210,7 @@ pub async fn execute(request: ToolRequest, progress: Progress) -> Result<ToolRes
     }
     progress("Preparando UMU (o download automático será feito se necessário)…".into());
     let umu = tokio::task::spawn_blocking(super::game_installation::find_umu).await.map_err(|e|e.to_string())??;
-    let logs = prefix
-        .parent()
+    let logs = super::installation_layout::destination_of(&prefix)
         .ok_or("Diretório do jogo inválido.")?
         .join("logs");
     fs::create_dir_all(&logs).map_err(|e| e.to_string())?;
@@ -271,4 +268,32 @@ pub async fn execute(request: ToolRequest, progress: Progress) -> Result<ToolRes
         packages: vec![],
         log: log.to_string_lossy().into_owned(),
     })
+}
+
+/// Resolve only registered game identities for Wine tools and launcher shortcuts.
+pub fn maintenance_entry(path: &str) -> Result<(String,String,String,String),String> {
+    if let Some(id) = path.strip_prefix("nexus:") { return crate::commands::nexus_local::maintenance_entry(id); }
+    if let Some(id) = path.strip_prefix("external:") { return crate::commands::external_library::maintenance_entry(id); }
+    let entry = super::installed_library::list(false)?.into_iter().find(|entry|entry.path == path).ok_or("Jogo não registrado na biblioteca.")?;
+    Ok((entry.name, entry.prefix, entry.proton, entry.executable))
+}
+
+#[cfg(test)]
+mod maintenance_tests {
+    use super::*;
+    #[test]
+    fn tools_keep_the_registered_prefix_and_proton_without_a_shell() {
+        for action in ["winecfg", "regedit", "explorer"] {
+            let command = prepare(Path::new("/tools/umu-run"), Path::new("/protons/GE Proton"), Path::new("/games/My Prefix"), action, &[]);
+            assert_eq!(command.get_program(), "/tools/umu-run");
+            assert_eq!(command.get_args().collect::<Vec<_>>(), [std::ffi::OsStr::new(action)]);
+            assert!(command.get_envs().any(|(key,value)| key == "WINEPREFIX" && value == Some(std::ffi::OsStr::new("/games/My Prefix"))));
+            assert!(command.get_envs().any(|(key,value)| key == "PROTONPATH" && value == Some(std::ffi::OsStr::new("/protons/GE Proton"))));
+        }
+    }
+    #[test]
+    fn winetricks_opens_its_original_interface_without_installing_packages() {
+        let command = prepare(Path::new("/umu-run"), Path::new("/proton"), Path::new("/prefix"), "winetricks-gui", &[]);
+        assert_eq!(command.get_args().collect::<Vec<_>>(), [std::ffi::OsStr::new("winetricks"), std::ffi::OsStr::new("--gui")]);
+    }
 }

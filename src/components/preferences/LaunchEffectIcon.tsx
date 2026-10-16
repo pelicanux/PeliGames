@@ -3,6 +3,7 @@ import type { LaunchEffect } from "../../theme/ThemeProvider";
 export function LaunchEffectIcon({ effect }: { effect: LaunchEffect }) {
   if (effect === "penguin") return <img src="/icons/tux-color.svg" alt="" />;
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {effect === "disabled" && <><circle cx="12" cy="12" r="9" /><path d="m6 6 12 12" /></>}
     {effect === "freeze" && <><path d="M12 2v20M3.3 7l17.4 10M3.3 17l17.4-10M8 4l4 4 4-4M8 20l4-4 4 4M3 11l5-1-1-5M21 13l-5 1 1 5M3 13l5 1-1 5M21 11l-5-1 1-5" /></>}
     {effect === "shatter" && <><rect x="5" y="2" width="14" height="20" rx="2" /><path d="m13 2-3 7 5 3-5 4 2 6M5 10l5-1m5 3 4-3M5 18l5-2" /></>}
     {effect === "smooth" && <><rect x="3" y="9" width="7" height="12" rx="1.5" /><path d="m13 11 7-7m-5 0h5v5" /></>}

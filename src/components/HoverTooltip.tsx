@@ -7,10 +7,11 @@ interface Props {
   anchorClassName?: string;
   tooltipClassName?: string;
   showOnFocus?: boolean;
+  align?: "left" | "right";
 }
 
 /** Render outside the toolbar so its stacking context cannot clip the hint. */
-export function HoverTooltip({ text, children, anchorClassName = "", tooltipClassName = "", showOnFocus = true }: Props) {
+export function HoverTooltip({ text, children, anchorClassName = "", tooltipClassName = "", showOnFocus = true, align = "right" }: Props) {
   const id = useId();
   const anchor = useRef<HTMLSpanElement>(null);
   const tooltip = useRef<HTMLDivElement>(null);
@@ -40,7 +41,7 @@ export function HoverTooltip({ text, children, anchorClassName = "", tooltipClas
       }
       setPosition({
         zIndex,
-        left: Math.max(margin, Math.min(bounds.right - hint.width, window.innerWidth - hint.width - margin)),
+        left: Math.max(margin, Math.min(align === "left" ? bounds.left : bounds.right - hint.width, window.innerWidth - hint.width - margin)),
         top: Math.max(minTop, Math.min(top, window.innerHeight - hint.height - margin)),
       });
     };
@@ -54,7 +55,7 @@ export function HoverTooltip({ text, children, anchorClassName = "", tooltipClas
       window.removeEventListener("resize", place);
       window.removeEventListener("scroll", place, true);
     };
-  }, [hovered, text]);
+  }, [hovered, text, align]);
 
   const close = () => { setHovered(false); setPosition(null); };
   const activate = () => { suppressRestoredFocus.current = true; close(); };

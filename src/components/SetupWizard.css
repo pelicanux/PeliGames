@@ -1,0 +1,42 @@
+/* Preserve the wizard structure and backend-driven button animations. */
+:root .setup-wizard-modern.modal-content {
+  --wizard-line: rgba(255,255,255,.09);
+  --wizard-card: rgba(255,255,255,.045);
+  --wizard-muted: #a0a6b9;
+  border: 1px solid var(--wizard-line) !important;
+  border-radius: 22px !important;
+  color: #f2f3f8;
+  font-family: inherit;
+}
+:root .setup-wizard-modern > .modal-glass-backdrop { background: radial-gradient(ellipse at top left, rgba(var(--accent-rgb),.09), transparent 60%), #111219; backdrop-filter: none; -webkit-backdrop-filter: none; }
+:root[data-appearance] .setup-wizard-modern.modal-content.fixed-glass-frame::before,
+:root[data-appearance] .setup-wizard-modern.modal-content.fixed-glass-frame::after { content: none !important; }
+:root[data-appearance] .setup-wizard-modern .dialog-titlebar { border: 1px solid var(--wizard-line); background: rgba(14,15,24,.55); box-shadow: none; }
+:root .setup-wizard-modern .dialog-titlebar h2 { font-family: inherit; font-weight: 650; font-size: 17px; letter-spacing: -.02em; }
+:root .setup-wizard-modern .wizard-emergency-trigger { border-radius: 10px; border: 1px solid var(--wizard-line); background: var(--wizard-card); color: var(--wizard-muted); box-shadow: none; font: inherit; font-size: 12px; }
+.setup-wizard-modern .setup-wizard-subtitle { color: var(--wizard-muted); font-size: 14px; line-height: 1.5; }
+:root .setup-wizard-modern .backend-option { border: 1px solid var(--wizard-line) !important; border-radius: 14px !important; padding: 18px !important; background: var(--wizard-card) !important; box-shadow: none !important; }
+:root .setup-wizard-modern .backend-option.active { background: rgba(var(--accent-rgb),.09) !important; border-color: rgba(var(--accent-rgb),.55) !important; }
+:root .setup-wizard-modern .backend-option :is(h3,h4) { font-family: inherit !important; font-size: 15px !important; font-weight: 650; }
+.setup-wizard-modern .backend-option p { font-size: 12px !important; color: var(--wizard-muted) !important; }
+:root .setup-wizard-modern .backend-option.active h3 { color: var(--accent) !important; }
+:root .setup-wizard-modern .btn { border-radius: 11px !important; font-family: inherit !important; font-size: 13px !important; border-color: var(--wizard-line) !important; background: rgba(255,255,255,.07) !important; box-shadow: none !important; }
+:root .setup-wizard-modern .btn:hover:not(:disabled) { background: rgba(var(--accent-rgb),.12) !important; border-color: rgba(var(--accent-rgb),.45) !important; }
+:root .setup-wizard-modern .wizard-continue { background: var(--accent) !important; color: var(--accent-foreground) !important; }
+:root .setup-wizard-modern .wizard-continue:hover:not(:disabled) { background: var(--accent-deep) !important; }
+:root .setup-wizard-modern .model-source-panel { border: 1px solid var(--wizard-line); border-radius: 14px; background: var(--wizard-card); box-shadow: none; }
+.setup-wizard-modern .model-source-heading :is(h3,p) { font-family: inherit; }
+.setup-wizard-modern .model-source-heading h3 { font-size: 14px; }
+.setup-wizard-modern .model-source-heading p { color: var(--wizard-muted); font-size: 12px; }
+:root .setup-wizard-modern .model-source-option { border: 1px solid var(--wizard-line); border-radius: 12px; background: var(--wizard-card); box-shadow: none; }
+:root .setup-wizard-modern .model-source-option[aria-pressed="true"] { border-color: rgba(var(--accent-rgb),.5); background: rgba(var(--accent-rgb),.08); }
+:root .setup-wizard-modern .model-source-option:is(:hover,:focus-visible):not(:disabled) { border-color: rgba(var(--accent-rgb),.5); background: rgba(var(--accent-rgb),.1); }
+.setup-wizard-modern .model-source-option-text strong { font-size: 12px; }
+.setup-wizard-modern .model-source-option-text :is(span,small) { font-size: 11px; }
+:root .setup-wizard-modern .model-source-symbol { color: var(--wizard-muted); background: transparent; border: 0; box-shadow: none; }
+:root .setup-wizard-modern .model-source-option:is([aria-pressed="true"],:hover,:focus-visible) .model-source-symbol { color: var(--accent); }
+:root .setup-wizard-modern .setup-wizard-footer { border-color: var(--wizard-line); }
+:root[data-appearance="light"] .setup-wizard-modern.modal-content { --wizard-line: rgba(20,24,40,.12); --wizard-card: rgba(20,24,40,.04); --wizard-muted: #62677b; color: #171924; }
+:root[data-appearance="light"] .setup-wizard-modern > .modal-glass-backdrop { background: radial-gradient(ellipse at top left,rgba(var(--accent-rgb),.08),transparent 60%), #f6f7fb; }
+:root[data-appearance="light"] .setup-wizard-modern .dialog-titlebar { background: rgba(246,247,252,.8); }
+.setup-wizard-modern .model-source-notice { margin: 0 0 12px; padding: 8px 10px; border-left: 2px solid var(--accent); border-radius: 0 8px 8px 0; background: rgba(var(--accent-rgb), .07); color: var(--accent-soft); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }

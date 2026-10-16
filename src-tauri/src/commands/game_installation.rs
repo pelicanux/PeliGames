@@ -91,9 +91,10 @@ pub async fn start_peligames_game(
 /// Runs a program in the entry's prefix: inside the running prefix when its game
 /// is open (returns no session), otherwise as the library's session.
 fn run_program(path: String, executable: String, arguments: Vec<String>) -> Result<Option<crate::core::game_execution::ExecutionStatus>, String> {
-    let prefix = crate::core::installed_library::list(false)?.into_iter().find(|entry| entry.path == path).map(|entry| entry.prefix)
-        .ok_or("Executável não registrado na biblioteca PeliGames.")?;
-    if crate::core::game_execution::running_prefix().is_some_and(|running| running == prefix) {
+    let (_, prefix, _, _) = crate::core::wine_tools::maintenance_entry(&path)?;
+    let prefix_path = std::path::PathBuf::from(&prefix).canonicalize().map_err(|_| "Prefixo do jogo indisponível.")?;
+    if !prefix_path.join("drive_c").is_dir() { return Err("O prefixo Wine ainda não foi inicializado.".into()); }
+    if crate::core::game_execution::running_prefix().is_some_and(|running| std::path::Path::new(&running).canonicalize().ok().as_ref() == Some(&prefix_path)) || crate::core::game_execution::prefix_in_use(&prefix_path) {
         crate::core::game_execution::run_in_prefix(path, executable, arguments).map(|_| None)
     } else {
         crate::core::game_execution::start_program_with(path, Some(executable), arguments).map(Some)
@@ -212,7 +213,7 @@ pub async fn add_peligames_entry(
     .map_err(|e| e.to_string())?
 }
 #[tauri::command]
-pub async fn uninstall_peligames_entry(path: String) -> Result<(), String> {
+pub async fn uninstall_peligames_entry(path: String, options: Option<crate::core::installed_library::UninstallOptions>) -> Result<(), String> {
     if BUSY
         .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
         .is_err()
@@ -224,7 +225,7 @@ pub async fn uninstall_peligames_entry(path: String) -> Result<(), String> {
         if crate::core::game_execution::active() {
             return Err("Encerre a execução antes de desinstalar.".into());
         }
-        crate::core::installed_library::uninstall(path)
+        crate::core::installed_library::uninstall(path, options.unwrap_or_default())
     })
     .await
     .map_err(|e| e.to_string())?

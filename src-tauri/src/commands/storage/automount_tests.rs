@@ -33,6 +33,8 @@ struct Fake {
     /// replaced or changed meanwhile.
     before_read: Option<Hook>,
     wrong_partition: bool,
+    /// UDisks did not (yet) apply the requested partition UUID.
+    stale_partition_uuid: bool,
 }
 impl Fake {
     fn new(objects: Value) -> Self {
@@ -41,7 +43,7 @@ impl Fake {
         Fake {
             objects: objects.as_object().unwrap().clone(), calls: Vec::new(), objects_reads: 0, forbid_bus: false, fail: None,
             reload: Ok(()), reloads: 0, mount_reply: "/mnt/Games".into(), can_format: (true, String::new()),
-            fstab: String::new(), paths, before_read: None, wrong_partition: false,
+            fstab: String::new(), paths, before_read: None, wrong_partition: false, stale_partition_uuid: false,
         }
     }
     fn methods(&self) -> Vec<&'static str> {
@@ -90,6 +92,7 @@ impl System for Fake {
             }
             Call::CreatePartition { offset, size, uuid, kind, .. } => {
                 let offset = if self.wrong_partition { 0 } else { offset };
+                let uuid = if self.stale_partition_uuid { "8c2f0f3e-0000-4000-8000-000000000000".to_string() } else { uuid };
                 self.objects.insert("/created".into(), json!({
                     B: {"Device": ay("/dev/testdisk2"), "DeviceNumber": 10, "Drive": "/drive", "Size": size, "IdType": "", "IdUsage": "", "IdUUID": ""},
                     P: {"UUID": uuid, "Table": path, "Offset": offset, "Size": size, "Type": kind},
@@ -589,6 +592,15 @@ fn empty_disk_creates_gpt_partition_then_formats() {
 #[test]
 fn existing_empty_partition_formats_only_selected_device() {
     assert_eq!(run_success("partition", false), [("/org/freedesktop/UDisks2/Manager".to_string(), "CanFormat"), ("/part".to_string(), "Format")]);
+}
+
+#[test]
+fn free_space_formats_when_udisks_keeps_its_own_partition_uuid() {
+    let mut fake = disk_fake();
+    let request = free_request(&mut fake);
+    fake.stale_partition_uuid = true;
+    assert_eq!(prepare_storage(&request, &mut fake).unwrap()["formatted"], true);
+    assert!(fake.methods().contains(&"Format"));
 }
 
 #[test]

@@ -8,6 +8,7 @@
 mod compare;
 mod emit;
 mod extract;
+mod finish;
 mod js;
 mod report;
 
@@ -20,12 +21,15 @@ use extract::{extract_extension, GameFacts};
 const USAGE: &str = "Uso:
   peligames-vortex-import --source NOME=DIR [--source NOME=DIR ...] \\
       [--modules src-tauri/resources/nexus-games] [--out tools/vortex-import/generated] \\
-      [--evidence NOME=URL_BASE ...] [--emit DIR] [--nexus-index GAMES.json MANIFESTO.json]
+      [--evidence NOME=URL_BASE ...] [--emit DIR] [--nexus-index GAMES.json MANIFESTO.json] \\
+      [--overrides tools/vortex-import/overrides.json]
 
 --emit grava, por família (unreal, unity), DIR/<família>-vortex.json (módulos) e
 DIR/<família>-vortex-audit.json para os jogos sem módulo próprio. --evidence informa a URL fixada de cada fonte.
 --nexus-index valida cada domínio na lista pública de jogos do Nexus e exige uma
 extensão Vortex publicada no manifesto público (api.nexusmods.com/v3/vortex/extensions).
+--overrides aplica ajustes manuais por domínio (o que a análise estática não deduz);
+a versão de cada módulo só sobe quando o módulo gerado muda.
 
 Cada DIR pode ser uma pasta com várias extensões (subpastas `game-*`) ou uma
 única extensão (repositório próprio de um jogo).";
@@ -37,6 +41,7 @@ struct Args {
     evidence: std::collections::BTreeMap<String, String>,
     emit: Option<PathBuf>,
     nexus_index: Option<(PathBuf, PathBuf)>,
+    overrides: Option<PathBuf>,
 }
 
 /// Arquivos regravados por `--emit` (`<família>-vortex.json`).
@@ -51,6 +56,7 @@ fn parse_args() -> Result<Args, String> {
     let mut evidence = std::collections::BTreeMap::new();
     let mut emit = None;
     let mut nexus_index = None;
+    let mut overrides = None;
     let mut it = std::env::args().skip(1);
     while let Some(arg) = it.next() {
         match arg.as_str() {
@@ -72,6 +78,7 @@ fn parse_args() -> Result<Args, String> {
                 nexus_index = Some((games, manifest));
             }
             "--emit" => emit = Some(PathBuf::from(it.next().ok_or("--emit exige um diretório")?)),
+            "--overrides" => overrides = Some(PathBuf::from(it.next().ok_or("--overrides exige um arquivo")?)),
             "-h" | "--help" => return Err(USAGE.to_string()),
             other => return Err(format!("argumento desconhecido: {other}\n\n{USAGE}")),
         }
@@ -79,7 +86,7 @@ fn parse_args() -> Result<Args, String> {
     if sources.is_empty() {
         return Err(USAGE.to_string());
     }
-    Ok(Args { sources, modules, out, evidence, emit, nexus_index })
+    Ok(Args { sources, modules, out, evidence, emit, nexus_index, overrides })
 }
 
 fn extension_dirs(dir: &Path) -> Vec<PathBuf> {
@@ -142,19 +149,41 @@ fn run() -> Result<(), String> {
             let path = dir.join(name);
             fs::write(&path, serde_json::to_string_pretty(value).map_err(|e| e.to_string())? + "\n").map_err(|e| format!("{}: {e}", path.display()))
         };
-        for generated in emit::generate_all(&all, &existing, &identities, &args.evidence, index.as_ref()) {
+        let overrides = match &args.overrides { Some(path) => finish::load_overrides(path)?, None => Default::default() };
+        let mut applied = std::collections::BTreeSet::new();
+        let families = emit::generate_all(&all, &existing, &identities, &args.evidence, index.as_ref());
+        for generated in &families {
             let family = generated.family.name();
-            write(&format!("{family}-vortex.json"), &serde_json::Value::Array(generated.modules.clone()))?;
+            let previous = finish::previous_modules(&dir.join(format!("{family}-vortex.json")));
+            let mut modules = generated.modules.clone();
+            for module in &mut modules {
+                if finish::apply_override(module, &overrides)? { applied.insert(module["domain"].as_str().unwrap_or_default().to_string()); }
+                let domain = module["domain"].as_str().unwrap_or_default().to_string();
+                finish::carry_version(module, previous.get(&domain));
+            }
+            // The audit records each module's final version.
+            let versions: std::collections::BTreeMap<String, serde_json::Value> = modules.iter().filter_map(|m| Some((m["domain"].as_str()?.to_string(), m["version"].clone()))).collect();
+            let mut audits = generated.audits.clone();
+            for audit in &mut audits {
+                if let Some(version) = audit["domain"].as_str().and_then(|domain| versions.get(domain)) {
+                    if audit.get("module_version").is_some() { audit["module_version"] = version.clone(); }
+                }
+            }
+            write(&format!("{family}-vortex.json"), &serde_json::Value::Array(modules))?;
             write(&format!("{family}-vortex-audit.json"), &serde_json::json!({
                 "schema": 1,
                 "generated_by": "tools/vortex-import --emit",
                 "family": family,
                 "scope": "Módulos gerados por análise estática das extensões Vortex. Rotas verificadas por casos sintéticos; nenhum jogo foi executado.",
                 "sources": args.evidence,
-                "modules": generated.audits,
+                "modules": audits,
                 "skipped": generated.skipped.iter().map(|s| serde_json::json!({ "domain": s.game, "reason": s.reason })).collect::<Vec<_>>(),
             }))?;
             eprintln!("{family}: {} módulo(s) gerado(s), {} recusado(s)", generated.modules.len(), generated.skipped.len());
+        }
+        // A manual adjustment whose game is no longer generated must be reviewed, not silently dropped.
+        if let Some(stale) = overrides.keys().find(|domain| !applied.contains(*domain)) {
+            return Err(format!("ajuste manual sem módulo gerado: {stale} (revise tools/vortex-import/overrides.json)"));
         }
     }
 
