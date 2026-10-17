@@ -220,6 +220,7 @@ fn run_mode(installer: bool) {
             commands::matrix_screen::matrix_screen_view,
             commands::matrix_screen_audio::matrix_screen_audio_apps,
             commands::notification_sound::play_notification_sound,
+            commands::steam_launch_options::apply_steam_mod_launch_options,
             commands::matrix_chat::matrix_chat_rooms,
             commands::matrix_chat::matrix_chat_join,
             commands::matrix_chat::matrix_chat_create_channel,

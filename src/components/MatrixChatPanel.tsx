@@ -105,7 +105,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
     void refreshMatrixRoomMembers(room).catch(error => notifyError("Matrix", error));
   }, [room, chat.userId, chat.ready, current?.joined]);
   const { exclusiveEffects, benefitsChecked, benefit } = useDiscordBenefits();
-  const [premium, setPremium] = useState<{user:string; phase:"checking" | "ready" | "error"; error?:string} | null>(null);
+  const [premium, setPremium] = useState<{user:string; phase:"checking" | "ready" | "error"} | null>(null);
   const [premiumAttempt, setPremiumAttempt] = useState(0);
   const premiumSelected = room === MATRIX_PREMIUM_ROOM_ID;
   // Being a member of the private room is the real authorization: the server let
@@ -131,12 +131,12 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
       if (!grant.granted || grant.room_id !== MATRIX_PREMIUM_ROOM_ID || grant.user_id !== user) throw new Error("Autorização premium inválida.");
       await reloadMatrixRooms();
       if (active) setPremium({user,phase:"ready"});
-    }).catch(error => { if (active) setPremium({user,phase:"error",error:String(error)}); });
+    }).catch(error => { if (active) { setPremium({user,phase:"error"}); notifyError("Matrix", error); } });
     return () => { active = false; };
   }, [chat.userId, chat.ready, premiumJoined, benefitsChecked, exclusiveEffects, premiumAttempt]);
   const [avatars, setAvatars] = useState<Record<string,string | null>>({});
   const avatarLookups = useRef(new Set<string>());
-  const [text, setText] = useState(""), [error, setError] = useState(""), [busy, setBusy] = useState(false);
+  const [text, setText] = useState(""), [busy, setBusy] = useState(false);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   // Editing one of the user's own messages in the compose box.
   const [editing, setEditing] = useState<ChatMessage | null>(null);
@@ -162,7 +162,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
   const close = useRef(onClose); close.current = onClose;
   const fail = (e: unknown, fallback: string) => {
     const message = typeof e === "string" ? e : e instanceof Error ? e.message : fallback;
-    setError(message); notifyError("Matrix", message);
+    notifyError("Matrix", message);
   };
   const refreshRooms = async () => {
     if (roomRefreshLock.current) return;
@@ -191,7 +191,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
     window.addEventListener("keydown",keyboard,true);
     return () => { window.removeEventListener("keydown",keyboard,true); if (oldFocus instanceof HTMLElement && oldFocus.isConnected) oldFocus.focus(); };
   }, []);
-  useEffect(() => { if (chat.error) setError(chat.error); }, [chat.error]);
+  useEffect(() => { if (chat.error) notifyError("Matrix", chat.error); }, [chat.error]);
   // Keep the selected room valid once the community's room list arrives.
   useEffect(() => { if (rooms.length && !rooms.some(item => item.room_id === room)) setRoom(rooms[0].room_id); }, [rooms, room]);
   useEffect(() => { setReplyTo(null); setPending(null); setEditing(null); setReacting(null); atBottom.current = true; }, [room]);
@@ -219,7 +219,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
     else if (atBottom.current) element.scrollTop = element.scrollHeight;
   }, [messages.length, room]);
   const run = async (command: string, args?: Record<string, unknown>) => {
-    if (actionLock.current) return false; actionLock.current = true; setBusy(true); setError("");
+    if (actionLock.current) return false; actionLock.current = true; setBusy(true);
     try { await invoke(command,args); return true; }
     catch (e) { fail(e, pt ? "Não foi possível concluir a operação." : "Could not complete the operation."); return false; }
     finally { actionLock.current = false; setBusy(false); }
@@ -252,7 +252,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
     }
   };
   const disconnect = async () => {
-    if (actionLock.current) return; actionLock.current = true; setBusy(true); setError("");
+    if (actionLock.current) return; actionLock.current = true; setBusy(true);
     try {
       // Offline, the account still leaves this computer; the server keeps the session until it is ended in Element.
       if (!await invoke<boolean>("disconnect_matrix_chat")) fail(null, pt ? "Conta removida deste computador, mas sem conexão para encerrar a sessão no Matrix. Encerre-a no Element, em Configurações → Sessões." : "Account removed from this computer, but there was no connection to end the Matrix session. End it in Element, under Settings → Sessions.");
@@ -273,12 +273,12 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
   };
   const upload = async (file: File) => {
     if (premiumSelected && !premiumReady) return;
-    if (file.size > 5*1024*1024) { setError(pt ? "O arquivo deve ter até 5 MB." : "File must be at most 5 MB."); return; }
+    if (file.size > 5*1024*1024) { fail(null, pt ? "O arquivo deve ter até 5 MB." : "File must be at most 5 MB."); return; }
     const mime = /\.(txt|log)$/i.test(file.name) ? "text/plain" : file.type;
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
       atBottom.current = true;
-      if (actionLock.current) return; actionLock.current = true; setBusy(true); setError("");
+      if (actionLock.current) return; actionLock.current = true; setBusy(true);
       await invoke("matrix_chat_upload", bytes, { headers: { "x-matrix-room": encodeURIComponent(room), "x-matrix-name": encodeURIComponent(file.name), "x-matrix-mime": encodeURIComponent(mime) } });
     } catch (e) { fail(e, pt ? "Não foi possível enviar o arquivo." : "Could not send the file."); }
     finally { actionLock.current = false; setBusy(false); }
@@ -334,7 +334,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
         <section className="matrix-terminal-room"><header><div className="matrix-room-heading"><strong title={roomName}># {roomName}</strong>{roomTopic && <small className="matrix-room-topic" title={roomTopic}>{roomTopic}</small>}</div>{inCall && <button type="button" className="btn btn-secondary" onClick={() => setCallChat(false)}>{pt ? "Ver chamada" : "Show call"}</button>}{!premiumSelected && chat.ready && !current?.joined && <button className="btn btn-secondary" disabled={busy} onClick={() => void join(room)}>{pt ? "Entrar na sala" : "Join room"}</button>}</header>
           {premiumSelected && !premiumReady ? <div className="matrix-premium-gate" role="status">
             <h3>{roomName}</h3>
-            <p>{!benefitsChecked || premium?.phase === "checking" ? pt ? "Verificando o Discord e liberando sua conta Matrix…" : "Checking Discord and granting Matrix access…" : !exclusiveEffects ? pt ? "Exclusivo para membros do YouTube e impulsionadores do servidor no Discord. Entre com Discord em Preferências → Conexões para liberar." : "For YouTube members and Discord server boosters. Sign in with Discord in Preferences → Connections to unlock." : premium?.error || (pt ? "Confirme sua conexão para acessar esta sala." : "Confirm your connection to access this room.")}</p>
+            <p>{!benefitsChecked || premium?.phase === "checking" ? pt ? "Verificando o Discord e liberando sua conta Matrix…" : "Checking Discord and granting Matrix access…" : !exclusiveEffects ? pt ? "Exclusivo para membros do YouTube e impulsionadores do servidor no Discord. Entre com Discord em Preferências → Conexões para liberar." : "For YouTube members and Discord server boosters. Sign in with Discord in Preferences → Connections to unlock." : (pt ? "Confirme sua conexão para acessar esta sala." : "Confirm your connection to access this room.")}</p>
             {exclusiveEffects && premium?.phase !== "checking" && <button type="button" className="btn btn-secondary" onClick={() => setPremiumAttempt(value=>value+1)}>{pt ? "Tentar novamente" : "Try again"}</button>}
           </div> : <>
           <div ref={log} className="matrix-terminal-messages" role="log" aria-live="polite" aria-relevant="additions" onScroll={event => { const element = event.currentTarget; atBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 80; }}>
@@ -403,7 +403,6 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
       {channelEdit && chat.userId && <MatrixChannelSettings key={channelEdit.room} pt={pt} room={channelEdit.room} names={chat.names} initialTab={channelEdit.tab} onClose={() => setChannelEdit(null)} onError={fail} onSaved={() => void reloadMatrixRooms()}/>}
       {settingsOpen && chat.userId && <MatrixSettings pt={pt} me={chat.userId} names={chat.names} onClose={() => setSettingsOpen(false)} onError={fail}
         onDisconnect={() => { setSettingsOpen(false); void disconnect(); }} onAvatarChanged={() => { setAvatarVersion(value => value + 1); setAvatars(previous => { const next = { ...previous }; delete next[chat.userId!]; return next; }); avatarLookups.current.delete(chat.userId!); }} avatarVersion={avatarVersion}/>}
-      {error && <p className="matrix-terminal-error" role="alert">{error}</p>}
       <footer className="matrix-terminal-footer"><h2 className="matrix-terminal-brand"><MatrixIcon/><span>Matrix</span><span className="matrix-terminal-tag">// Pelicanux</span></h2></footer>
       </div>
       </div>

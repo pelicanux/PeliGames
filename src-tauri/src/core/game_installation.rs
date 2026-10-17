@@ -406,7 +406,12 @@ fn prepare_run_mode(
     let directory = absolute(&request.directory)?;
     let executable = validate_executable(&request.executable)?;
     let proton = validate_proton(&request.proton)?;
-    if let Some(settings) = advanced { settings.validate_runner(&proton)?; }
+    if let Some(settings) = advanced {
+        settings.validate_runner(&proton)?;
+        if settings.options.get("steam_client") == Some(&true) && !crate::commands::external_library::launcher_open("Steam") {
+            return Err("Abra a Steam e entre na sua conta antes de iniciar um jogo com a comunicação Steam ativada.".into());
+        }
+    }
     let extension = executable
         .extension()
         .and_then(|s| s.to_str())
@@ -455,8 +460,11 @@ fn prepare_run_mode(
         }
         command.current_dir(executable.parent().ok_or("Diretório do instalador indisponível.")?);
     }
+    let runtime_proton = if advanced.is_some_and(|settings| settings.options.get("steam_client") == Some(&true)) {
+        super::steam_client::runner(&proton)?
+    } else { proton.clone() };
     command.env("WINEPREFIX", &prefix)
-        .env("PROTONPATH", &proton)
+        .env("PROTONPATH", &runtime_proton)
         .env("GAMEID", "umu-default")
         .env("STORE", "none")
         .env("PROTON_VERB", "waitforexitandrun")

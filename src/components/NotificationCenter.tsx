@@ -10,6 +10,7 @@ import "./notifications.css";
 import { LAUNCHER_ERROR_EVENT, LAUNCHER_NOTICE_EVENT, type LauncherErrorDetail } from "../services/notifications";
 import { MATRIX_MENTION_EVENT, OPEN_MATRIX_CHAT_EVENT, type MatrixMentionDetail } from "../services/matrixChat";
 import { playNotificationSound, unlockNotificationSound } from "../services/notificationSound";
+import { useNativeVideoOverlay } from "../services/matrixScreenView";
 
 export type UpdateTarget = "launcher" | "rdna4" | "rdna3" | ProtonFamily;
 type Notice = { id: string; target: UpdateTarget | "nexus" | "error" | "info" | "matrix"; version: string; message?: string; source?: string; unread: boolean };
@@ -50,6 +51,9 @@ export function NotificationCenter({ launcherUpdate, onNavigate, nexusError = ""
   const [toastFocused, setToastFocused] = useState(false);
   const toastTime = useRef({ id: "", remaining: 6000 });
   const panelRef = useRef<HTMLElement>(null);
+  const toastRef = useRef<HTMLButtonElement>(null);
+  useNativeVideoOverlay(panelRef);
+  useNativeVideoOverlay(toastRef);
   const contentRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const [listHeight, setListHeight] = useState<number | undefined>();
@@ -274,7 +278,7 @@ export function NotificationCenter({ launcherUpdate, onNavigate, nexusError = ""
         </div>
       </motion.aside>
       </div>
-      <div className="notification-toast-region" aria-live="polite" aria-atomic="true">{toast && <button key={toast.id} className="notification-toast menu-glass-panel" style={{ animationPlayState: toastHovered || toastFocused ? "paused" : "running" }} onMouseEnter={() => setToastHovered(true)} onMouseLeave={() => setToastHovered(false)} onFocus={() => setToastFocused(true)} onBlur={() => setToastFocused(false)} disabled={navigationBusy} type="button" onClick={() => navigate(toast)}><Bell/><span><strong>{title(toast)}</strong><small>{toast.target === "nexus" || toast.target === "error" || toast.target === "info" || toast.target === "matrix" ? toast.message : `${en ? "Version" : "Versão"} ${toast.version}`}</small></span></button>}</div>
+      <div className="notification-toast-region" aria-live="polite" aria-atomic="true">{toast && <button ref={toastRef} key={toast.id} className="notification-toast menu-glass-panel" style={{ animationPlayState: toastHovered || toastFocused ? "paused" : "running" }} onMouseEnter={() => setToastHovered(true)} onMouseLeave={() => setToastHovered(false)} onFocus={() => setToastFocused(true)} onBlur={() => setToastFocused(false)} disabled={navigationBusy} type="button" onClick={() => navigate(toast)}><Bell/><span><strong>{title(toast)}</strong><small>{toast.target === "nexus" || toast.target === "error" || toast.target === "info" || toast.target === "matrix" ? toast.message : `${en ? "Version" : "Versão"} ${toast.version}`}</small></span></button>}</div>
     </>, document.body)}
   </>;
 }

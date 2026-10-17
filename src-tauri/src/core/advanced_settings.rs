@@ -197,7 +197,7 @@ impl AdvancedSettings {
         self.validate()?;
         if !catalog()
             .iter()
-            .any(|spec| spec.key.starts_with("PROTON_") && self.on(&spec.id))
+            .any(|spec| (spec.key.starts_with("PROTON_") || spec.id == "steam_client") && self.on(&spec.id))
         {
             return Ok(());
         }
@@ -205,7 +205,7 @@ impl AdvancedSettings {
             "Não foi possível verificar os recursos do Proton selecionado.".to_string()
         })?;
         for spec in catalog() {
-            if spec.key.starts_with("PROTON_") && self.on(&spec.id) && !script.contains(&spec.key) {
+            if (spec.key.starts_with("PROTON_") || spec.id == "steam_client") && self.on(&spec.id) && !script.contains(&spec.key) {
                 return Err(format!("O Proton selecionado não declara suporte a {}. Escolha um runner compatível ou desative essa opção.", spec.key));
             }
         }
@@ -461,6 +461,31 @@ fn launch_command_with_tools(
         command.env_remove("DXVK_HDR");
     }
     Ok(command)
+}
+
+#[cfg(test)]
+mod steam_bridge_tests {
+    use super::*;
+    #[test]
+    fn steam_bridge_is_opt_in_and_checks_runner_support() {
+        let mut settings = AdvancedSettings::default();
+        let env = |settings: &AdvancedSettings| {
+            launch_command_with_tools(Path::new("umu"), Some(settings), |name| Ok(PathBuf::from(name))).unwrap()
+                .get_envs().find(|(key, _)| *key == "UMU_USE_STEAM").map(|(_, value)| value.map(|v| v.to_string_lossy().into_owned()))
+        };
+        assert_eq!(env(&settings), Some(None));
+        settings.options.insert("steam_client".into(), true);
+        assert_eq!(env(&settings), Some(Some("1".into())));
+        let root = std::env::temp_dir().join(format!("peligames-steam-bridge-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(root.join("proton"), "unsupported runner").unwrap();
+        assert!(settings.validate_runner(&root).unwrap_err().contains("UMU_USE_STEAM"));
+        std::fs::write(root.join("proton"), "UMU_USE_STEAM").unwrap();
+        assert!(settings.validate_runner(&root).is_ok());
+        let restored: AdvancedSettings = serde_json::from_slice(&serde_json::to_vec(&settings).unwrap()).unwrap();
+        assert!(restored.on("steam_client"));
+        std::fs::remove_dir_all(root).unwrap();
+    }
 }
 
 #[cfg(test)]

@@ -1,4 +1,6 @@
 //! Steam owns launch options and Proton. Observe only this user's AppID processes.
+//! Other launchers (Heroic, Lutris…) have no such ID: their game is recognized
+//! by its install folder, the same way the Steam game's own processes are.
 use super::*;
 use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
@@ -50,7 +52,9 @@ fn application(command: &[u8], executable: &Path, cwd: &Path, game: &Path) -> bo
             || Path::new(normalized).starts_with(game)
             || (cwd.starts_with(game) && name.ends_with(".exe")))
 }
-fn snapshot(root: &Path, id: &str, game: &Path) -> Vec<(i32, u64, bool)> {
+/// Processes of the game: with a Steam AppID, every process carrying it (the
+/// flag tells the game's own ones); without, only the game's own processes.
+fn snapshot(root: &Path, id: Option<&str>, game: &Path) -> Vec<(i32, u64, bool)> {
     let Ok(entries) = fs::read_dir(root) else {
         return vec![];
     };
@@ -62,8 +66,10 @@ fn snapshot(root: &Path, id: &str, game: &Path) -> Vec<(i32, u64, bool)> {
             if fs::metadata(&dir).ok()?.uid() != unsafe { libc::geteuid() } {
                 return None;
             }
-            if !belongs(&fs::read(dir.join("environ")).ok()?, id) {
-                return None;
+            if let Some(id) = id {
+                if !belongs(&fs::read(dir.join("environ")).ok()?, id) {
+                    return None;
+                }
             }
             let command = fs::read(dir.join("cmdline")).ok()?;
             let first = String::from_utf8_lossy(command.split(|b| *b == 0).next()?);
@@ -79,7 +85,11 @@ fn snapshot(root: &Path, id: &str, game: &Path) -> Vec<(i32, u64, bool)> {
             let birth = fields.get(19)?.parse().ok()?;
             let executable = fs::read_link(dir.join("exe")).unwrap_or_default();
             let cwd = fs::read_link(dir.join("cwd")).unwrap_or_default();
-            Some((pid, birth, application(&command, &executable, &cwd, game)))
+            let own = application(&command, &executable, &cwd, game);
+            if id.is_none() && !own {
+                return None;
+            }
+            Some((pid, birth, own))
         })
         .collect()
 }
@@ -104,6 +114,23 @@ pub fn start_with(
         .filter(|id| *id > 0)
         .ok_or("Steam AppID inválido.")?
         .to_string();
+    watch(path, Some(id), "Steam", open)
+}
+/// A game of another launcher (Heroic, Lutris, Bottles…), followed by its install folder.
+pub fn start_external(
+    path: String,
+    launcher: &str,
+    open: impl FnOnce() -> Result<std::process::Child, String>,
+) -> Result<ExecutionStatus, String> {
+    watch(path, None, launcher, open)
+}
+fn watch(
+    path: String,
+    id: Option<String>,
+    launcher: &str,
+    open: impl FnOnce() -> Result<std::process::Child, String>,
+) -> Result<ExecutionStatus, String> {
+    let launcher = launcher.to_string();
     let game = PathBuf::from(&path)
         .canonicalize()
         .map_err(|e| format!("Pasta do jogo indisponível: {e}"))?;
@@ -156,7 +183,7 @@ pub fn start_with(
                     Ok(Some(exit)) => {
                         opener_done = true;
                         if !exit.success() && !session.cancel.load(Ordering::Acquire) {
-                            failure = Some("A Steam não aceitou a solicitação de abertura.".into());
+                            failure = Some(format!("{launcher} não aceitou a solicitação de abertura."));
                             break;
                         }
                     }
@@ -170,12 +197,12 @@ pub fn start_with(
             if super::super::execution_registry::cancellation_requested(&registry, &session_id) {
                 session.cancel.store(true, Ordering::Release);
             }
-            let processes = snapshot(Path::new("/proc"), &id, &game);
+            let processes = snapshot(Path::new("/proc"), id.as_deref(), &game);
             let cancelled = session.cancel.load(Ordering::Acquire);
             if cancelled {
                 let since = stopping.get_or_insert_with(Instant::now);
                 for (pid, birth, _) in &processes {
-                    if snapshot(Path::new("/proc"), &id, &game)
+                    if snapshot(Path::new("/proc"), id.as_deref(), &game)
                         .iter()
                         .any(|p| p.0 == *pid && p.1 == *birth)
                     {
@@ -200,7 +227,7 @@ pub fn start_with(
             } else if playing.is_some() && last_seen.elapsed() > Duration::from_secs(3) {
                 break;
             } else if playing.is_none() && began.elapsed() > Duration::from_secs(180) {
-                failure = Some("Nenhum processo do jogo foi detectado. Confira a janela da Steam e tente novamente.".into());
+                failure = Some(format!("Nenhum processo do jogo foi detectado. Confira o {launcher} e tente novamente."));
                 break;
             }
             if let Ok(mut state) = session.status.lock() {
