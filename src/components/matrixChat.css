@@ -480,8 +480,7 @@ body.is-dragging-dock, body.is-dragging-dock * { user-select:none !important; -w
 .matrix-call-fullscreen { position:absolute; inset:0; z-index:6; box-sizing:border-box; min-width:0; min-height:0; background:#000; }
 .matrix-call-fullscreen > .matrix-call-video { position:absolute; inset:0; min-width:0; min-height:0; border:0; }
 .matrix-call-fullscreen > .matrix-call-focus-bar { position:absolute; z-index:1; bottom:7%; left:7%; right:7%; flex-wrap:wrap; gap:8px 10px; padding:8px 10px; background:#080e0cf2; border-radius:6px; opacity:0; pointer-events:none; transition:opacity .18s ease; }
-.matrix-call-fullscreen:hover > .matrix-call-focus-bar,
-.matrix-call-fullscreen:focus-within > .matrix-call-focus-bar { opacity:1; pointer-events:auto; }
+.matrix-call-fullscreen.is-controls-visible > .matrix-call-focus-bar { opacity:1; pointer-events:auto; }
 @media (hover:none) { .matrix-call-fullscreen > .matrix-call-focus-bar { opacity:1; pointer-events:auto; } }
 @media (prefers-reduced-motion:reduce) { .matrix-call-fullscreen > .matrix-call-focus-bar { transition:none; } }
 .matrix-call-fullscreen .matrix-call-focus-bar b { flex:1 1 100px; }

@@ -492,6 +492,15 @@ mod layer {
         let area = gtk::DrawingArea::new();
         area.set_halign(gtk::Align::Start);
         area.set_valign(gtk::Align::Start);
+        area.connect_realize(|area| {
+            // Overlay pass-through alone does not remove DrawingArea's own
+            // GDK window from pointer hit-testing. The video must never own
+            // mouse input, including inside the transparent control opening.
+            if let Some(window) = area.window() {
+                window.set_pass_through(true);
+                window.input_shape_combine_region(&cairo::Region::create(), 0, 0);
+            }
+        });
         overlay.add_overlay(&area);
         overlay.set_overlay_pass_through(&area, true);
         area.connect_size_allocate(|area, allocation| {
