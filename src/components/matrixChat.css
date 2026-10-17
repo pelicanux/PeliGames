@@ -239,8 +239,6 @@
 .matrix-supporter-badge svg { display:block; width:18px; height:14px; }
 .matrix-terminal-activity .matrix-members-carousel .matrix-supporter-badge { color:#1b3821; }
 .matrix-terminal-message header .matrix-supporter-badge { margin-left:-6px; }
-.matrix-chat .matrix-rtc-test-link { margin-left:auto; margin-right:36px; padding:5px 8px; font:12px monospace; color:#9cb5a6; background:transparent; border:1px solid #355440; border-radius:5px; cursor:pointer; }
-.matrix-chat .matrix-rtc-test-link:hover { color:#b4ffcd; background:#14251e; }
 
 
 /* Discord-style channels, in the terminal look of the room list. */

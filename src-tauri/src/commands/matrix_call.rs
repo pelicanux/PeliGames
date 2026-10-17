@@ -1,4 +1,4 @@
-//! Native LiveKit audio for MatrixRTC rooms and the isolated loopback probe.
+//! Native LiveKit audio for MatrixRTC rooms.
 use super::matrix_screen::ScreenCommand;
 use super::matrix_voice::{CallInput, MicSettings, NoiseMode, SPEAKING_HOLD, SPEAKING_LEVEL};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
@@ -26,30 +26,12 @@ use std::{
 use tauri::{Emitter, WebviewWindow};
 use tokio_stream::StreamExt;
 
+#[cfg(test)]
 #[derive(Deserialize)]
 struct Credentials {
     url: String,
     a: String,
     b: String,
-}
-fn credentials() -> Result<(String, String), String> {
-    let path = std::env::var("PELIGAMES_RTC_TEST_CONFIG")
-        .map_err(|_| "Abra o teste pelo script de duas sessões.")?;
-    let text = std::fs::read(path).map_err(|_| "Configuração local indisponível.")?;
-    if text.len() > 16384 {
-        return Err("Configuração inválida.".into());
-    }
-    let config: Credentials =
-        serde_json::from_slice(&text).map_err(|_| "Configuração inválida.")?;
-    if config.url != "ws://127.0.0.1:17880" {
-        return Err("Este teste aceita somente o servidor local.".into());
-    }
-    let token = match std::env::var("PELIGAMES_RTC_TEST_ID").as_deref() {
-        Ok("a") => config.a,
-        Ok("b") => config.b,
-        _ => return Err("Identidade de teste ausente.".into()),
-    };
-    Ok((config.url, token))
 }
 #[derive(Clone, Deserialize)]
 pub struct MediaKey {
@@ -87,17 +69,11 @@ static CALL: OnceLock<Mutex<Option<Call>>> = OnceLock::new();
 fn state() -> &'static Mutex<Option<Call>> {
     CALL.get_or_init(|| Mutex::new(None))
 }
-pub(super) fn active() -> bool {
-    state()
-        .lock()
-        .map(|c| c.as_ref().is_some_and(|c| !c.thread.is_finished()))
-        .unwrap_or(true)
-}
 fn guard(w: &WebviewWindow) -> Result<(), String> {
-    if matches!(w.label(), "matrix-rtc-probe" | "main") {
+    if w.label() == "main" {
         Ok(())
     } else {
-        Err("Janela de teste inválida.".into())
+        Err("Janela inválida.".into())
     }
 }
 fn stop_owned(owner: Option<&str>) {
@@ -119,10 +95,6 @@ fn stop_owned(owner: Option<&str>) {
 pub fn stop() {
     stop_owned(None);
 }
-pub(super) fn stop_probe() {
-    stop_owned(Some("matrix-rtc-probe"));
-}
-
 // Independent jitter buffers prevent one participant from delaying another.
 // Packets arrive in bursts: playback starts (and resumes after running dry)
 // only with 40 ms buffered, so gaps become one short pause instead of a click
@@ -296,7 +268,7 @@ fn run(
         let (ready_tx,ready_rx)=std::sync::mpsc::sync_channel(1);
         let capture_stop=stop.clone();let capture_flag=capture_stop.clone();let window=w.clone();
         let (input_mic, local_identity) = (mic_settings.clone(), local_participant.identity().to_string());
-        let mic=std::thread::spawn(move ||super::matrix_voice::capture(&window,NoiseMode::from_code(input_mic.noise.load(Ordering::Acquire)),&capture_flag,ready_tx,Some(CallInput{source,muted,mic:input_mic})));
+        let mic=std::thread::spawn(move ||super::matrix_voice::capture(&window,NoiseMode::from_code(input_mic.noise.load(Ordering::Acquire)),&capture_flag,ready_tx,CallInput{source,muted,mic:input_mic}));
         // Chosen microphone and output: moved to them once PipeWire lists our streams.
         super::matrix_audio::route_new_streams();
         // Who spoke last and when, per remote identity ("user:device").
@@ -433,44 +405,6 @@ fn run(
         let _=tokio::time::timeout(Duration::from_secs(3),room.close()).await;
         outcome
     })
-}
-#[tauri::command]
-pub fn matrix_call_start(window: WebviewWindow, mode: NoiseMode) -> Result<(), String> {
-    if window.label() != "matrix-rtc-probe" {
-        return Err("Use o botão Entrar na voz da sala Matrix.".into());
-    }
-    let (url, token) = credentials()?;
-    let mut current = state().lock().map_err(|_| "Estado indisponível.")?;
-    if current.as_ref().is_some_and(|c| !c.thread.is_finished()) {
-        return Err("Uma chamada já está ativa.".into());
-    }
-    if let Some(old) = current.take() {
-        let _ = old.thread.join();
-    }
-    super::matrix_voice::stop();
-    let stop = Arc::new(AtomicBool::new(false));
-    let muted = Arc::new(AtomicBool::new(true));
-    let volume = Arc::new(AtomicU32::new(50));
-    let mic = Arc::new(MicSettings::new(mode));
-    let (s, m, v, n) = (stop.clone(), muted.clone(), volume.clone(), mic.clone());
-    let (screen, screen_rx) = tokio::sync::mpsc::unbounded_channel();
-    let owner = window.label().to_string();
-    let thread = std::thread::spawn(move || {
-        let result = run(&window, n, s, m, v, url, token, None, None, screen_rx);
-        let _ = window.emit("matrix-call-ended", result.err());
-    });
-    *current = Some(Call {
-        owner,
-        id: None,
-        keys: None,
-        stop,
-        muted,
-        volume,
-        mic,
-        screen,
-        thread,
-    });
-    Ok(())
 }
 #[tauri::command]
 pub async fn matrix_call_stop(window: WebviewWindow) -> Result<(), String> {

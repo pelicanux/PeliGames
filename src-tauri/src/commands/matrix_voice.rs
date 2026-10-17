@@ -1,10 +1,10 @@
-//! Native microphone pipeline. No Matrix credentials or network publishing in the probe.
+//! Native microphone pipeline for Matrix calls.
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use livekit::{
     prelude::LocalAudioTrack,
     webrtc::{
         audio_frame::AudioFrame,
-        audio_source::{native::NativeAudioSource, AudioSourceOptions, RtcAudioSource},
+        audio_source::{native::NativeAudioSource, RtcAudioSource},
         native::apm::AudioProcessingModule,
     },
 };
@@ -13,7 +13,7 @@ use std::{
     borrow::Cow,
     sync::{
         atomic::{AtomicBool, AtomicU32, AtomicU8, Ordering},
-        Arc, Mutex, OnceLock,
+        Arc,
     },
     time::{Duration, Instant},
 };
@@ -124,37 +124,6 @@ fn level(frame: &[i16]) -> f32 {
         / frame.len().max(1) as f32)
         .sqrt()
 }
-struct Worker {
-    stop: Arc<AtomicBool>,
-    thread: std::thread::JoinHandle<()>,
-}
-static WORKER: OnceLock<Mutex<Option<Worker>>> = OnceLock::new();
-fn worker() -> &'static Mutex<Option<Worker>> {
-    WORKER.get_or_init(|| Mutex::new(None))
-}
-fn guard(window: &WebviewWindow) -> Result<(), String> {
-    if window.label() != "matrix-rtc-probe" {
-        return Err("Disponível somente no teste local de voz.".into());
-    }
-    Ok(())
-}
-pub fn stop() {
-    if let Ok(mut current) = worker().lock() {
-        if let Some(w) = current.take() {
-            w.stop.store(true, Ordering::Release);
-            let _ = w.thread.join();
-        }
-    }
-}
-#[tauri::command]
-pub async fn matrix_voice_stop(window: WebviewWindow) -> Result<(), String> {
-    guard(&window)?;
-    tauri::async_runtime::spawn_blocking(stop)
-        .await
-        .map_err(|_| "Falha ao encerrar o microfone.".to_string())?;
-    Ok(())
-}
-
 #[derive(Clone, Serialize)]
 struct Meter {
     input: f32,
@@ -207,7 +176,7 @@ pub(super) fn capture(
     mode: NoiseMode,
     stop: &AtomicBool,
     ready: std::sync::mpsc::SyncSender<Result<(), String>>,
-    target: Option<CallInput>,
+    target: CallInput,
 ) -> Result<(), String> {
     let device = cpal::default_host()
         .default_input_device()
@@ -231,33 +200,21 @@ pub(super) fn capture(
         .build()
         .map_err(|_| "Falha ao preparar o áudio.")?;
     let _runtime_guard = runtime.enter();
-    let external = target.is_some();
-    let CallInput { source, muted, mic } = target.unwrap_or_else(|| {
-        let mic = MicSettings::new(mode);
-        mic.agc.store(false, Ordering::Release);
-        CallInput {
-            source: NativeAudioSource::new(AudioSourceOptions::default(), 48000, 1, 0),
-            muted: Arc::new(AtomicBool::new(false)),
-            mic: Arc::new(mic),
-        }
-    });
+    let CallInput { source, muted, mic } = target;
     let mut last_loud: Option<Instant> = None;
     let _track = LocalAudioTrack::create_audio_track(
         "peligames-microphone",
         RtcAudioSource::Native(source.clone()),
     );
     if stop.load(Ordering::Acquire) {
-        return Err("Teste cancelado.".into());
+        return Err("Captura cancelada.".into());
     }
     stream
         .play()
         .map_err(|_| "Não foi possível iniciar o microfone.")?;
     let _ = ready.send(Ok(()));
-    let start = Instant::now();
     let mut frames = 0;
-    while !stop.load(Ordering::Acquire)
-        && (external || start.elapsed() < Duration::from_secs(30))
-    {
+    while !stop.load(Ordering::Acquire) {
         if failed.load(Ordering::Acquire) {
             return Err("O dispositivo de áudio foi desconectado ou interrompido.".into());
         }
@@ -313,52 +270,10 @@ pub(super) fn capture(
     Ok(())
 }
 
-#[tauri::command]
-pub async fn matrix_voice_start(window: WebviewWindow, mode: NoiseMode) -> Result<(), String> {
-    guard(&window)?;
-    if super::matrix_call::active() {
-        return Err("Encerre a chamada antes do teste local.".into());
-    }
-    tauri::async_runtime::spawn_blocking(move || {
-        let mut current = worker()
-            .lock()
-            .map_err(|_| "Estado de áudio indisponível.")?;
-        if current.as_ref().is_some_and(|w| !w.thread.is_finished()) {
-            return Err("Encerre o teste atual antes de iniciar outro.".into());
-        }
-        if let Some(previous) = current.take() {
-            let _ = previous.thread.join();
-        }
-        let stop = Arc::new(AtomicBool::new(false));
-        let flag = stop.clone();
-        let (tx, rx) = std::sync::mpsc::sync_channel(1);
-        let thread = std::thread::spawn(move || {
-            let result = capture(&window, mode, &flag, tx.clone(), None);
-            if let Err(ref error) = result {
-                let _ = tx.try_send(Err(error.clone()));
-            }
-            let _ = window.emit("matrix-voice-ended", result.err());
-        });
-        *current = Some(Worker {
-            stop: stop.clone(),
-            thread,
-        });
-        drop(current);
-        match rx.recv_timeout(Duration::from_secs(15)) {
-            Ok(result) => result,
-            Err(_) => {
-                stop.store(true, Ordering::Release);
-                Err("O microfone não respondeu ao teste.".into())
-            }
-        }
-    })
-    .await
-    .map_err(|_| "Falha ao iniciar o teste nativo.".to_string())?
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use livekit::webrtc::audio_source::AudioSourceOptions;
     #[test]
     fn off_preserves_pcm_exactly() {
         let mut frame = std::array::from_fn(|i| (i as i16 - 240) * 100);
