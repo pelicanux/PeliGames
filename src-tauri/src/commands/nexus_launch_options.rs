@@ -244,6 +244,9 @@ pub async fn configure_nexus_advanced(
 pub(super) fn advanced_command(game: &NexusGame, original: Command) -> Result<Command, String> {
     if game.platform == "proton" {
         game.advanced.validate_runner(Path::new(&game.proton))?;
+        if game.advanced.options.get("steam_client") == Some(&true) && !super::external_library::launcher_open("Steam") {
+            return Err("Abra a Steam e entre na sua conta antes de iniciar um jogo com a comunicação Steam ativada.".into());
+        }
     }
     let mut command = crate::core::advanced_settings::launch_command(
         Path::new(original.get_program()),
@@ -282,6 +285,13 @@ pub(super) fn advanced_command(game: &NexusGame, original: Command) -> Result<Co
             );
         } else {
             command.env(key, value);
+        }
+    }
+    if game.platform == "proton" && game.advanced.options.get("steam_client") == Some(&true) {
+        // Direct Proton invocations already receive Steam's directory. UMU,
+        // however, replaces it: restore it at the compatibility-tool boundary.
+        if original.get_envs().any(|(key, _)| key == "PROTONPATH") {
+            command.env("PROTONPATH", crate::core::steam_client::runner(Path::new(&game.proton))?);
         }
     }
     crate::core::mangohud_config::apply_with_override(&mut command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit, game.advanced.mangohud_enabled)?;

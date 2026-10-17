@@ -67,6 +67,32 @@ fn key(game_dir: &str) -> String {
     fs::canonicalize(game_dir).map(|path| path.to_string_lossy().into_owned()).unwrap_or_else(|_| game_dir.trim_end_matches('/').to_string())
 }
 
+fn write_records(records: &BTreeMap<String, String>) -> Result<(), String> {
+    let path = record_file();
+    if let Some(parent) = path.parent() { fs::create_dir_all(parent).map_err(|e| e.to_string())?; }
+    let temporary = path.with_extension("json.part");
+    fs::write(&temporary, serde_json::to_vec_pretty(records).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+    fs::rename(&temporary, &path).map_err(|e| e.to_string())
+}
+/// Takes out the line the mod had put in the PeliGames launch options of
+/// `game_dir` (a Steam game now keeps it in Steam), returning it.
+pub(crate) fn take_record(game_dir: &str) -> Result<Option<String>, String> {
+    let mut records = read_records()?;
+    let taken = records.remove(&key(game_dir));
+    if taken.is_some() { write_records(&records)?; }
+    Ok(taken)
+}
+/// Lines recorded for folders inside `root` (the DLSS view uses the
+/// executable's folder, which may be below the game's own folder).
+pub(crate) fn take_records_under(root: &str) -> Result<Vec<String>, String> {
+    let root = key(root);
+    let mut records = read_records()?;
+    let inside: Vec<String> = records.keys().filter(|path| *path == &root || path.starts_with(&format!("{root}/"))).cloned().collect();
+    let taken: Vec<String> = inside.iter().filter_map(|path| records.remove(path)).collect();
+    if !taken.is_empty() { write_records(&records)?; }
+    Ok(taken)
+}
+
 /// Updates a game's launch options after the mod was installed (`line`: the
 /// options the backend printed) or removed (`line` empty) in `game_dir`.
 /// Returns the new launch options; the caller saves them in the game's settings.
@@ -77,11 +103,7 @@ pub fn apply_mod_launch_options(game_dir: String, current: Option<String>, line:
     let key = key(&game_dir);
     let merged = merge(current.as_deref(), records.get(&key).map(String::as_str), line.as_deref())?;
     match line { Some(line) => { records.insert(key, line); } None => { records.remove(&key); } }
-    let path = record_file();
-    if let Some(parent) = path.parent() { fs::create_dir_all(parent).map_err(|e| e.to_string())?; }
-    let temporary = path.with_extension("json.part");
-    fs::write(&temporary, serde_json::to_vec_pretty(&records).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
-    fs::rename(&temporary, &path).map_err(|e| e.to_string())?;
+    write_records(&records)?;
     Ok(merged)
 }
 

@@ -40,6 +40,7 @@ const COVER_HOLD_ANIMATION_DURATION = 1200;
 const libraryNameOrder = new Intl.Collator("pt-BR", { sensitivity: "base", numeric: true });
 
 export interface GameInfo {
+  native_linux?: boolean;
   nexus_platform?: "native" | "proton";
   nexus_running?: boolean;
   nexus_starting?: boolean;
@@ -220,7 +221,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         const settings = external.find(entry => entry.launcher === game.launcher && (entry.path === game.path || (game.launcher === "Steam" && Boolean(game.app_id) && entry.app_id === game.app_id) || (game.launcher !== "Steam" && inside(entry.path))));
         // Never the launcher's folder: the DLSS library finds the game folder its own
         // way (the executable that loads the graphics API) and keeps manual choices.
-        return settings ? {...game, external_id: settings.external_id, advanced: settings.advanced, proton: settings.proton, prefix: settings.prefix} : game;
+        return settings ? {...game, external_id: settings.external_id, native_linux: settings.native_linux, advanced: settings.advanced, proton: settings.proton, prefix: settings.prefix} : game;
       });
       if (scope !== activeScope.current) return;
       setGames(applyCustomCovers([...result.filter(game => game.launcher !== "PeliGames"), ...ownEntries.current]));
@@ -738,7 +739,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       .sort((a, b) => (activityOf(activity, b)?.last_played ?? 0) - (activityOf(activity, a)?.last_played ?? 0)).slice(0, 4)
     : [];
   const launchable = (game: GameInfo) => managed || Boolean(game.external_id) || game.launcher === "Steam" || game.launcher === "PeliGames";
-  const chipIcon = (category: string) => category === "Launchers" ? <MenuIcon name="gamepad" /> : ["Steam", "Heroic", "PeliGames"].includes(category) ? <LauncherIcon launcher={category} size={14} /> : <MenuIcon name="folder" />;
+  const chipIcon = (category: string) => category === "Launchers" ? <MenuIcon name="gamepad" /> : ["Steam", "Heroic", "Epic Games", "PeliGames"].includes(category) ? <LauncherIcon launcher={category} size={14} /> : <MenuIcon name="folder" />;
   const showEmptyOwnLibrary = !scanning && ownLoaded && (libraryScope === "own" || mode === "mods") && !searchQuery && filteredGames.length === 0;
 
   return (

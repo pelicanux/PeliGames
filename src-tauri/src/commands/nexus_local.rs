@@ -271,7 +271,7 @@ pub async fn scan_nexus_library(app: tauri::AppHandle) -> Result<Workspace, Stri
 }
 
 /// Launchers whose games enter the library through the automatic scan.
-const AUTOMATIC_LAUNCHERS: [&str; 6] = ["Steam", "Heroic", "Lutris", "Faugus", "Bottles", "PeliGames"];
+const AUTOMATIC_LAUNCHERS: [&str; 7] = ["Steam", "Heroic", "Epic Games", "Lutris", "Faugus", "Bottles", "PeliGames"];
 
 /// A rescan drops automatically detected games without a module and confirmed
 /// Vortex support (or whose folder is gone). Games added by hand stay. A game
@@ -1106,6 +1106,9 @@ pub async fn configure_nexus_settings(
         let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
         let mut data = load()?;
         let game = data.games.iter_mut().find(|g| g.id == game_id).ok_or("Jogo não encontrado.")?;
+        if (game.platform == "native" || game.game["native_linux"] == true) && proton != game.proton {
+            return Err("Este jogo usa a versão nativa de Linux. A troca de Proton está desabilitada.".into());
+        }
         super::nexus_deployment::idle(game)?;
         let requested = fs::canonicalize(directory.trim()).map_err(|e| format!("Pasta do jogo inválida: {e}"))?;
         if !requested.is_dir() { return Err("Selecione uma pasta do jogo válida.".into()); }
@@ -1148,6 +1151,9 @@ pub async fn configure_nexus_proton(
             .iter_mut()
             .find(|g| g.id == game_id)
             .ok_or("Jogo não encontrado.")?;
+        if game.platform == "native" || game.game["native_linux"] == true {
+            return Err("Este jogo usa a versão nativa de Linux. A troca de Proton está desabilitada.".into());
+        }
         if !super::nexus_deployment::supports(game) {
             return Err("Este jogo não possui um módulo de implantação de arquivos.".into());
         }

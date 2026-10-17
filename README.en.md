@@ -12,7 +12,7 @@ Windows game launcher for Linux with Proton, a game library, Pelinstall, Wine to
 
 ## How it works
 
-1. **Library:** PeliGames brings together games from Steam, Heroic, Lutris, Bottles and Faugus, plus the ones you install with it.
+1. **Library:** PeliGames brings together games from Steam, the native Epic Games Launcher for Linux, Heroic, Lutris, Bottles and Faugus, plus the ones you install with it.
 2. **Installing Windows games and programs:** pick the installer (`.exe` or `.msi`), a name, a folder and a Proton version. PeliGames prepares the prefix, runs the installer and finds the game's executable by itself. When several executables are possible, it asks.
 3. **Launchers (EA app, Battle.net, Ubisoft Connect, Epic):** games installed from inside a launcher appear under **Programs**, ready to open directly. When one of them is added to the library, it gets a profile of its own (separate prefix, Proton and mods) without duplicating the launcher's files.
 4. **Nexus Mods:** in **Mods → Nexus Mods**, add the game, pick mods from the catalog (or import an archive) and click **Install**. PeliGames checks the requirements, runs the FOMOD installer when there is one and deploys the files following the game's rules, the same ones the Vortex game extensions use. Enabling, disabling and removing mods never changes the game's original files. See the [supported games](docs/supported-games.md).
