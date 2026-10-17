@@ -1,4 +1,5 @@
 //! Native LiveKit audio for MatrixRTC rooms and the isolated loopback probe.
+use super::matrix_screen::ScreenCommand;
 use super::matrix_voice::{CallInput, MicSettings, NoiseMode, SPEAKING_HOLD, SPEAKING_LEVEL};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use livekit::e2ee::{
@@ -79,6 +80,7 @@ struct Call {
     muted: Arc<AtomicBool>,
     volume: Arc<AtomicU32>,
     mic: Arc<MicSettings>,
+    screen: tokio::sync::mpsc::UnboundedSender<super::matrix_screen::ScreenCommand>,
     thread: std::thread::JoinHandle<()>,
 }
 static CALL: OnceLock<Mutex<Option<Call>>> = OnceLock::new();
@@ -238,6 +240,20 @@ fn playback(
         .map_err(|_| "Falha ao iniciar saída de áudio.")?;
     Ok(stream)
 }
+/// Who shares a screen in the call, by call identity ("user:device").
+fn emit_screens(
+    w: &WebviewWindow,
+    call_id: &Option<String>,
+    screens: &HashMap<String, (String, RemoteTrackPublication)>,
+) {
+    let mut identities: Vec<&String> = screens.values().map(|(identity, _)| identity).collect();
+    identities.sort();
+    identities.dedup();
+    let _ = w.emit(
+        "matrix-screen-shares",
+        serde_json::json!({"call_id":call_id,"identities":identities}),
+    );
+}
 async fn cancelled(stop: &AtomicBool) {
     while !stop.load(Ordering::Acquire) {
         tokio::time::sleep(Duration::from_millis(50)).await;
@@ -253,6 +269,7 @@ fn run(
     token: String,
     mut secure: Option<SecureMedia>,
     call_id: Option<String>,
+    mut screen: tokio::sync::mpsc::UnboundedReceiver<super::matrix_screen::ScreenCommand>,
 ) -> Result<(), String> {
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(2)
@@ -289,9 +306,23 @@ fn run(
         let ready=tokio::task::spawn_blocking(move ||ready_rx.recv_timeout(Duration::from_secs(15))).await;
         let mut outcome=Ok(());
         let mut remote_tasks:HashMap<String,tokio::task::JoinHandle<()>>=HashMap::new();
+        let mut share: Option<super::matrix_screen::Share> = None;
+        // Remote screen shares by track: (identity, publication). Only the watched one is received.
+        let mut screens: HashMap<String,(String,RemoteTrackPublication)> = HashMap::new();
+        // Sound of those shares, heard only while watching that share.
+        let mut screen_sounds: HashMap<String,(String,RemoteTrackPublication)> = HashMap::new();
+        let hear=|sounds:&HashMap<String,(String,RemoteTrackPublication)>,who:&Option<String>,on:bool| for (identity,publication) in sounds.values() { if Some(identity)==who.as_ref() { publication.set_subscribed(on); } };
+        let (mut watched, mut viewer): (Option<String>, Option<(String,tokio::task::JoinHandle<()>)>) = (None, None);
+        for participant in room.remote_participants().values() {
+            for (sid, publication) in participant.track_publications() {
+                if publication.source()==TrackSource::ScreenshareAudio { screen_sounds.insert(sid.to_string(),(participant.identity().to_string(),publication)); }
+                else                 if publication.source()==TrackSource::Screenshare { screens.insert(sid.to_string(),(participant.identity().to_string(),publication)); }
+            }
+        }
         if !matches!(ready,Ok(Ok(Ok(())))) {outcome=Err("Não foi possível iniciar o microfone da chamada.".into());}
         else {
             let _=w.emit("matrix-call-status",serde_json::json!({"state":"connected","participants":room.remote_participants().len()+1,"call_id":call_id}));
+            emit_screens(w,&call_id,&screens);
             let mut tick=tokio::time::interval(Duration::from_millis(100));
             loop {
                 tokio::select! {
@@ -319,11 +350,29 @@ fn run(
                             speaking_now = speaking;
                         }
                     }
+                    Some(command)=screen.recv()=>match command {
+                        ScreenCommand::Share(Some(audio))=>{ if share.as_ref().is_none_or(|s| s.finished()) { share=Some(super::matrix_screen::Share::start(w.clone(),room.local_participant(),call_id.clone(),audio)); } }
+                        ScreenCommand::Share(None)=>{ if let Some(s)=share.take() { s.stop().await; } }
+                        ScreenCommand::Watch(target)=>{
+                            if let Some((sid,task))=viewer.take() { task.abort(); if let Some((_,publication))=screens.get(&sid) { publication.set_subscribed(false); } }
+                            super::matrix_screen::PREVIEW.store(false,Ordering::Release);
+                            super::matrix_screen::reset_stage();
+                            hear(&screen_sounds,&watched,false);
+                            watched=target.clone();
+                            hear(&screen_sounds,&watched,true);
+                            if target.as_deref()==Some("local") { super::matrix_screen::PREVIEW.store(true,Ordering::Release); }
+                            else if let Some((sid,(_,publication)))=screens.iter().find(|(_,(identity,_))| Some(identity)==target.as_ref()) {
+                                match publication.track() { Some(RemoteTrack::Video(video))=>viewer=Some((sid.clone(),super::matrix_screen::feed(video))), _=>publication.set_subscribed(true) }
+                            }
+                        }
+                    },
                     event=events.recv()=>match event {
                         Some(RoomEvent::TrackSubscribed{track:RemoteTrack::Audio(audio),publication,participant})=>{
                             let sid=publication.sid().to_string();
                             if remote_tasks.contains_key(&sid){continue;}
                             let identity=participant.identity().to_string();
+                            let screen_sound=publication.source()==TrackSource::ScreenshareAudio;
+                            if screen_sound && watched.as_ref()!=Some(&identity) { publication.set_subscribed(false); continue; }
                             identities.insert(sid.clone(),identity.clone());
                             let loud=loud.clone();
                             let mut stream=NativeAudioStream::new(audio.rtc_track(),48000,1);
@@ -331,11 +380,33 @@ fn run(
                             if let Ok(mut q)=queue.lock(){q.insert(sid.clone(),Speaker::default());}
                             remote_tasks.insert(sid,tokio::spawn(async move {
                                 while let Some(frame)=stream.next().await {
-                                    if frame_level(&frame.data) > SPEAKING_LEVEL { if let Ok(mut loud)=loud.lock(){loud.insert(identity.clone(),Instant::now());} }
+                                    if !screen_sound && frame_level(&frame.data) > SPEAKING_LEVEL { if let Ok(mut loud)=loud.lock(){loud.insert(identity.clone(),Instant::now());} }
                                     if let Ok(mut queues)=queue.lock(){if let Some(q)=queues.get_mut(&track_id){enqueue(q,&frame.data);}}
                                 }
                                 if let Ok(mut q)=queue.lock(){q.remove(&track_id);}
                             }));
+                        }
+                        Some(RoomEvent::TrackSubscribed{track:RemoteTrack::Video(video),publication,participant})=>{
+                            // Cameras and unwatched shares are dropped at once: nothing to download or decode.
+                            let (sid,identity)=(publication.sid().to_string(),participant.identity().to_string());
+                            if publication.source()==TrackSource::Screenshare && watched.as_ref()==Some(&identity) { if viewer.as_ref().is_none_or(|(s,_)| *s!=sid) { if let Some((_,old))=viewer.take(){old.abort();} viewer=Some((sid,super::matrix_screen::feed(video))); } }
+                            else { publication.set_subscribed(false); }
+                        }
+                        Some(RoomEvent::TrackUnsubscribed{track:RemoteTrack::Video(_),publication,..})=>{
+                            let sid=publication.sid().to_string();
+                            if viewer.as_ref().is_some_and(|(s,_)| *s==sid) { if let Some((_,task))=viewer.take(){task.abort();} super::matrix_screen::reset_stage(); }
+                        }
+                        Some(RoomEvent::TrackPublished{publication,participant})=>{
+                            if publication.source()==TrackSource::ScreenshareAudio { screen_sounds.insert(publication.sid().to_string(),(participant.identity().to_string(),publication)); continue; }
+                            if publication.source()==TrackSource::Screenshare { screens.insert(publication.sid().to_string(),(participant.identity().to_string(),publication)); emit_screens(w,&call_id,&screens); }
+                        }
+                        Some(RoomEvent::TrackUnpublished{publication,..})=>{
+                            let sid=publication.sid().to_string();
+                            screen_sounds.remove(&sid);
+                            if screens.remove(&sid).is_some() {
+                                if viewer.as_ref().is_some_and(|(s,_)| *s==sid) { if let Some((_,task))=viewer.take(){task.abort();} super::matrix_screen::reset_stage(); }
+                                emit_screens(w,&call_id,&screens);
+                            }
                         }
                         Some(RoomEvent::TrackUnsubscribed{track:RemoteTrack::Audio(_),publication,..})=>{
                             let sid=publication.sid().to_string();
@@ -352,6 +423,10 @@ fn run(
                 }
             }
         }
+        if let Some(s)=share.take(){s.stop().await;}
+        if let Some((_,task))=viewer.take(){task.abort();}
+        super::matrix_screen::PREVIEW.store(false,Ordering::Release);
+        super::matrix_screen::reset_stage();
         capture_stop.store(true,Ordering::Release);
         let _=tokio::task::spawn_blocking(move||mic.join()).await;
         for (_,task) in remote_tasks{task.abort();}
@@ -378,9 +453,10 @@ pub fn matrix_call_start(window: WebviewWindow, mode: NoiseMode) -> Result<(), S
     let volume = Arc::new(AtomicU32::new(50));
     let mic = Arc::new(MicSettings::new(mode));
     let (s, m, v, n) = (stop.clone(), muted.clone(), volume.clone(), mic.clone());
+    let (screen, screen_rx) = tokio::sync::mpsc::unbounded_channel();
     let owner = window.label().to_string();
     let thread = std::thread::spawn(move || {
-        let result = run(&window, n, s, m, v, url, token, None, None);
+        let result = run(&window, n, s, m, v, url, token, None, None, screen_rx);
         let _ = window.emit("matrix-call-ended", result.err());
     });
     *current = Some(Call {
@@ -391,6 +467,7 @@ pub fn matrix_call_start(window: WebviewWindow, mode: NoiseMode) -> Result<(), S
         muted,
         volume,
         mic,
+        screen,
         thread,
     });
     Ok(())
@@ -403,6 +480,42 @@ pub async fn matrix_call_stop(window: WebviewWindow) -> Result<(), String> {
         .await
         .map_err(|_| "Falha ao encerrar chamada.".to_string())?;
     Ok(())
+}
+#[tauri::command]
+/// Starts sharing the screen with the chosen sound, or stops when `audio` is absent and `on` false.
+pub fn matrix_screen_share(
+    window: WebviewWindow,
+    on: bool,
+    audio: Option<super::matrix_screen_audio::ShareAudio>,
+) -> Result<(), String> {
+    guard(&window)?;
+    let current = state().lock().map_err(|_| "Estado indisponível.")?;
+    let call = current
+        .as_ref()
+        .filter(|c| !c.thread.is_finished())
+        .ok_or("Nenhuma chamada ativa.")?;
+    if call.owner != window.label() {
+        return Err("Esta chamada pertence a outra janela.".into());
+    }
+    call.screen
+        .send(ScreenCommand::Share(on.then(|| audio.unwrap_or_default())))
+        .map_err(|_| "A chamada está sendo encerrada.".to_string())
+}
+/// Shows one share on the stage: a call identity, "local" for the own preview, or none.
+#[tauri::command]
+pub fn matrix_screen_watch(window: WebviewWindow, identity: Option<String>) -> Result<(), String> {
+    guard(&window)?;
+    if identity.as_ref().is_some_and(|id| id.is_empty() || id.len() > 512) {
+        return Err("Transmissão inválida.".into());
+    }
+    let current = state().lock().map_err(|_| "Estado indisponível.")?;
+    let call = current
+        .as_ref()
+        .filter(|c| !c.thread.is_finished() && c.owner == window.label())
+        .ok_or("Nenhuma chamada ativa.")?;
+    call.screen
+        .send(ScreenCommand::Watch(identity))
+        .map_err(|_| "A chamada está sendo encerrada.".to_string())
 }
 #[tauri::command]
 pub fn matrix_call_controls(
@@ -527,6 +640,7 @@ pub async fn matrix_room_call_start(
     let (s, m, v, n) = (stop.clone(), muted.clone(), volume.clone(), mic.clone());
     let owner = window.label().to_string();
     let event_id = call_id.clone();
+    let (screen, screen_rx) = tokio::sync::mpsc::unbounded_channel();
     let thread = std::thread::spawn(move || {
         let result = run(
             &window,
@@ -538,6 +652,7 @@ pub async fn matrix_room_call_start(
             token,
             secure,
             Some(event_id.clone()),
+            screen_rx,
         );
         let _ = window.emit(
             "matrix-call-ended",
@@ -552,6 +667,7 @@ pub async fn matrix_room_call_start(
         muted,
         volume,
         mic,
+        screen,
         thread,
     });
     Ok(())

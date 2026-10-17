@@ -1,10 +1,12 @@
-// Discord-style panel fixed below the channels: the voice connection, the
-// account, and microphone, sound and settings buttons, in the terminal look.
+// Account identity lives beside the members; audio controls stay below channels.
 import { useEffect, useState } from "react";
 import { SelectionMenu } from "./SelectionMenu";
-import { displayName, type RoomInfo } from "../services/matrixChat";
-import { leaveMatrixVoice, setMatrixVoiceControls, useMatrixVoice, type NoiseMode } from "../services/matrixVoice";
+import { displayName } from "../services/matrixChat";
+import { setMatrixVoiceControls, useMatrixVoice, type NoiseMode } from "../services/matrixVoice";
 import { matrixAvatar } from "../services/matrixMedia";
+import { setMatrixPresenceChoice, useMatrixPresenceChoice, type MatrixPresenceChoice } from "../services/matrixPresencePreferences";
+import { useMatrixActivityPreferences } from "../services/matrixGameActivity";
+import { MatrixPresenceBadge } from "./MatrixPresenceBadge";
 
 const icon = (paths: string[]) => <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths.map(d => <path key={d} d={d}/>)}</svg>;
 export const MicIcon = ({ off }: { off?: boolean }) => icon(["M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z", "M19 11a7 7 0 0 1-14 0M12 18v3", ...(off ? ["M4 4l16 16"] : [])]);
@@ -19,34 +21,45 @@ export const noiseOptions = (pt: boolean, short = false) => [
 ];
 
 /** The signed-in account's picture, or its initials. */
-export function MatrixOwnAvatar({ user, name, version = 0 }: { user: string; name: string; version?: number }) {
+export function MatrixOwnAvatar({ user, name, version = 0, presence, pt = true }: { user: string; name: string; version?: number; presence?: MatrixPresenceChoice; pt?: boolean }) {
   const [avatar, setAvatar] = useState<string | null>(null);
   useEffect(() => { let active = true; void matrixAvatar(user).then(value => { if (active) setAvatar(value); }).catch(() => {}); return () => { active = false; }; }, [user, version]);
-  return <span className="matrix-user-avatar" aria-hidden="true">{avatar ? <img src={avatar} alt=""/> : name.slice(0, 2).toUpperCase()}</span>;
+  return <span className="matrix-user-avatar">{avatar ? <img src={avatar} alt=""/> : <span aria-hidden="true">{name.slice(0, 2).toUpperCase()}</span>}<MatrixPresenceBadge status={presence} pt={pt}/></span>;
 }
 
-export function MatrixUserPanel({ pt, me, names, rooms, onSettings, avatarVersion }: {
-  pt: boolean; me: string; names: Record<string, string>; rooms: RoomInfo[]; onSettings: () => void; avatarVersion: number;
+export function MatrixUserProfile({ pt, me, names, avatarVersion, connected }: {
+  pt: boolean; me: string; names: Record<string, string>; avatarVersion: number; connected: boolean;
 }) {
   const voice = useMatrixVoice();
-  const busy = voice.phase === "joining" || voice.phase === "leaving";
+  const presence = useMatrixPresenceChoice(me);
+  const activity = useMatrixActivityPreferences();
   const name = displayName(me, names);
-  const activeRoom = rooms.find(item => item.room_id === voice.room);
   const speaking = voice.phase === "connected" && voice.speaking.includes(me);
-  return <section className="matrix-user-dock" aria-label={pt ? "Sua conta e voz" : "Your account and voice"}>
-    {voice.phase !== "idle" && <div className="matrix-voice-dock">
-      <strong aria-live="polite" className={voice.phase === "connected" ? "is-connected" : ""}>{voice.phase === "joining" ? (pt ? "> conectando voz…" : "> joining voice…") : voice.phase === "reconnecting" ? (pt ? "> reconectando…" : "> reconnecting…") : voice.phase === "leaving" ? (pt ? "> saindo…" : "> leaving…") : (pt ? "> voz conectada" : "> voice connected")}</strong>
-      <small>{activeRoom?.name || voice.room}</small>
-      <button type="button" className="matrix-voice-leave" disabled={voice.phase === "leaving"} onClick={() => void leaveMatrixVoice()}>{pt ? "[sair da voz]" : "[leave voice]"}</button>
-    </div>}
+  const options = [
+    { value: "online", label: "Online" },
+    { value: "idle", label: pt ? "Ausente" : "Idle" },
+    { value: "dnd", label: pt ? "Não perturbe" : "Do not disturb" },
+    { value: "invisible", label: pt ? "Invisível" : "Invisible" },
+  ];
+  return <div className={`matrix-own-profile matrix-user-identity${speaking ? " is-speaking" : ""}`} title={me}>
+    <MatrixOwnAvatar user={me} name={name} version={avatarVersion} presence={connected ? presence : undefined} pt={pt}/>
+    <div className="matrix-own-profile-info"><b>{name}</b>
+      {connected ? <SelectionMenu className="matrix-user-presence" menuClassName="matrix-select-menu matrix-presence-menu" minMenuWidth={180} label={pt ? "Alterar status" : "Change status"} value={presence} options={options}
+        onChange={value => setMatrixPresenceChoice(me, value as MatrixPresenceChoice)}/>
+        : <small>{pt ? "Desconectado" : "Disconnected"}</small>}
+      {activity.sharing && activity.name && presence !== "invisible" && <small className="matrix-own-game" title={activity.name}>{pt ? "Jogando" : "Playing"} · {activity.name}</small>}
+    </div>
+  </div>;
+}
+
+export function MatrixUserPanel({ pt, onSettings }: { pt: boolean; onSettings: () => void }) {
+  const voice = useMatrixVoice();
+  const busy = voice.phase === "joining" || voice.phase === "leaving";
+  return <section className="matrix-user-dock" aria-label={pt ? "Controles de áudio" : "Audio controls"}>
     <label className="matrix-user-noise"><span>{pt ? "> ruído" : "> noise"}</span>
       <SelectionMenu className="matrix-select" menuClassName="matrix-select-menu" label={pt ? "Redução de ruído" : "Noise suppression"} value={voice.noise} disabled={busy} onChange={value => void setMatrixVoiceControls({ noise: value as NoiseMode })} options={noiseOptions(pt, true)}/>
     </label>
     <div className="matrix-user-row">
-      <span className={speaking ? "matrix-user-identity is-speaking" : "matrix-user-identity"} title={me}>
-        <MatrixOwnAvatar user={me} name={name} version={avatarVersion}/>
-        <span><b>{name}</b><small>{voice.phase === "connected" ? (pt ? "em voz" : "in voice") : (pt ? "online" : "online")}</small></span>
-      </span>
       <span className="matrix-user-buttons">
         <button type="button" className={voice.muted ? "is-off" : ""} aria-pressed={!voice.muted} disabled={busy} title={voice.muted ? (pt ? "Ativar microfone" : "Unmute") : (pt ? "Silenciar microfone" : "Mute")} aria-label={voice.muted ? (pt ? "Ativar microfone" : "Unmute") : (pt ? "Silenciar microfone" : "Mute")}
           onClick={() => void setMatrixVoiceControls(voice.deafened ? { muted: false, deafened: false } : { muted: !voice.muted })}><MicIcon off={voice.muted || voice.deafened}/></button>

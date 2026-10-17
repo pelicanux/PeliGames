@@ -14,7 +14,7 @@ export function MatrixNotificationSoundPreferences() {
       <button type="button" className="btn btn-secondary" disabled={!preferences.enabled || preferences.volume === 0} onClick={async () => {
         await unlockNotificationSound();
         const played = await playNotificationSound(true);
-        setResult(played ? pt ? "Som de teste reproduzido." : "Test sound played." : pt ? "O áudio ainda não foi liberado. Clique novamente em Testar som." : "Audio is not unlocked yet. Click Test sound again.");
+        setResult(played ? pt ? "Som de teste reproduzido." : "Test sound played." : pt ? "Não foi possível tocar o som (saída de áudio indisponível)." : "Could not play the sound (audio output unavailable).");
       }}>{pt ? "Testar som" : "Test sound"}</button>
     </div>
     {result && <small role="status">{result}</small>}

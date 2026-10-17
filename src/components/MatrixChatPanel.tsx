@@ -1,5 +1,10 @@
 import { MatrixChannelList } from "./MatrixChannelList";
-import { MatrixUserPanel } from "./MatrixUserPanel";
+import { MatrixUserPanel, MatrixUserProfile } from "./MatrixUserPanel";
+import { MatrixCallStage } from "./MatrixCallStage";
+import { MatrixChannelSettings } from "./MatrixChannelSettings";
+import type { ChannelEditTab } from "./MatrixChannelList";
+import { useMatrixVoice } from "../services/matrixVoice";
+import { OPEN_MATRIX_CALL_EVENT, takeCallViewRequest } from "../services/matrixScreenView";
 import { MatrixSettings } from "./MatrixSettings";
 import { MatrixSupporterBadge } from "./MatrixSupporterBadge";
 import { usePerformanceMode } from "./EffectsContext";
@@ -13,16 +18,47 @@ import { MatrixGameActivities } from "./MatrixGameActivity";
 import { MenuIcon } from "./MenuIcon";
 import { useI18n } from "../i18n/I18nContext";
 import { MATRIX_COMMUNITY_ID, MATRIX_PREMIUM_ROOM_ID } from "../services/matrixCommunity";
-import { displayName, loadOlderMessages, mentionsMe, moderation, powerOf, refreshMatrixRooms, refreshMatrixStatus, reloadMatrixRooms, useMatrixChat, type ChatMessage } from "../services/matrixChat";
+import { displayName, loadOlderMessages, mentionsMe, moderation, powerOf, refreshMatrixRoomMembers, refreshMatrixRooms, refreshMatrixStatus, reloadMatrixRooms, useMatrixChat, type ChatMessage } from "../services/matrixChat";
 import { notifyError } from "../services/notifications";
-import { matrixAvatar, matrixImage } from "../services/matrixMedia";
+import { GIF_LINK, matrixAnimatedImage, matrixAvatar, matrixGifMedia, matrixImage, matrixVideo, type GifMedia } from "../services/matrixMedia";
 import { useDiscordBenefits } from "../theme/useDiscordBenefits";
 import "./matrixChat.css";
 
-function ChatImage({ mxc }: {mxc:string}) {
+/** `animated`: GIF or WebP, loaded whole so it moves (a thumbnail is a still frame). */
+function ChatImage({ mxc, animated = false }: {mxc:string; animated?: boolean}) {
   const [image,setImage] = useState<string | null>(null);
-  useEffect(()=>{let active=true;void matrixImage(mxc).then(value=>{if(active)setImage(value);}).catch(()=>{});return()=>{active=false;};},[mxc]);
+  useEffect(()=>{let active=true;void (animated ? matrixAnimatedImage(mxc).then(value => value ?? matrixImage(mxc)) : matrixImage(mxc)).then(value=>{if(active)setImage(value);}).catch(()=>{});return()=>{active=false;};},[mxc, animated]);
   return image ? <img className="matrix-message-image" src={image} alt="Matrix"/> : null;
+}
+/** A short video, played like a GIF: looping, muted, inline (Discord's GIFs through a bridge). */
+function ChatVideo({ mxc }: {mxc:string}) {
+  const [video,setVideo] = useState<string | null>(null);
+  useEffect(()=>{let active=true;void matrixVideo(mxc).then(value=>{if(active)setVideo(value);}).catch(()=>{});return()=>{active=false;};},[mxc]);
+  return video ? <video className="matrix-message-image" src={video} autoPlay loop muted playsInline aria-label="Matrix" /> : null;
+}
+/** GIF links of a message shown as the GIF itself (Discord's GIF picker sends
+ * Tenor or Giphy links through the bridge). `onlyLink` tells when the whole
+ * message is one resolved GIF link, so its address can be hidden. */
+function GifLinks({ text, onOnlyLink }: { text: string; onOnlyLink: (only: boolean) => void }) {
+  const links = (text.match(LINK) ?? []).filter(link => GIF_LINK.test(link)).slice(0, 3);
+  const [media, setMedia] = useState<(GifMedia | null)[]>([]);
+  useEffect(() => {
+    let active = true;
+    void Promise.all(links.map(matrixGifMedia)).then(found => {
+      if (!active) return;
+      setMedia(found);
+      onOnlyLink(links.length === 1 && Boolean(found[0]) && text.trim() === links[0]);
+    });
+    return () => { active = false; };
+  }, [text]); // eslint-disable-line react-hooks/exhaustive-deps
+  return <>{media.map((item, index) => item && (item.video
+    ? <video key={index} className="matrix-message-image" src={item.src} autoPlay loop muted playsInline aria-label="GIF" />
+    : <img key={index} className="matrix-message-image" src={item.src} alt="GIF" />))}</>;
+}
+/** The text of a message, plus the GIFs its links lead to. */
+function MessageText({ text, onError }: { text: string; onError: (error: unknown) => void }) {
+  const [onlyLink, setOnlyLink] = useState(false);
+  return <>{!onlyLink && <Linked text={text} onError={onError}/>}{text.includes("https://") ? <GifLinks text={text} onOnlyLink={setOnlyLink}/> : null}</>;
 }
 const REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥", "🎮", "✅"];
 /** Reactions of a message grouped by emoji, in order of first use. */
@@ -50,9 +86,24 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
   const preview = "__PELI_UI_PREVIEW__" in window;
   const chat = useMatrixChat();
   const rooms = chat.roomList;
-  const [room, setRoom] = useState(MATRIX_COMMUNITY_ID);
+  const voice = useMatrixVoice();
+  // The mini player asked for the call: the chat opens on the voice channel.
+  const [room, setRoom] = useState(() => takeCallViewRequest() && voice.room ? voice.room : MATRIX_COMMUNITY_ID);
+  // In the voice channel of the call, the call view replaces the chat until the chat is asked for.
+  const [callChat, setCallChat] = useState(false);
+  const selectRoom = (id: string) => { setRoom(id); setCallChat(false); };
+  useEffect(() => {
+    const open = () => { if (takeCallViewRequest() && voice.room) selectRoom(voice.room); };
+    window.addEventListener(OPEN_MATRIX_CALL_EVENT, open);
+    return () => window.removeEventListener(OPEN_MATRIX_CALL_EVENT, open);
+  }, [voice.room]);
+  const inCall = voice.phase !== "idle" && voice.room === room;
   const current = chat.rooms[room];
-  const memberUsers = useMemo(() => new Set(current?.joined ? current.members : []), [current?.joined, current?.members]);
+  const memberUsers = useMemo(() => new Set(current?.joined ? current.members.filter(user => user !== chat.userId) : []), [current?.joined, current?.members, chat.userId]);
+  useEffect(() => {
+    if (!chat.ready || !current?.joined) return;
+    void refreshMatrixRoomMembers(room).catch(error => notifyError("Matrix", error));
+  }, [room, chat.userId, chat.ready, current?.joined]);
   const { exclusiveEffects, benefitsChecked, benefit } = useDiscordBenefits();
   const [premium, setPremium] = useState<{user:string; phase:"checking" | "ready" | "error"; error?:string} | null>(null);
   const [premiumAttempt, setPremiumAttempt] = useState(0);
@@ -91,6 +142,8 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
   const [editing, setEditing] = useState<ChatMessage | null>(null);
   const [reacting, setReacting] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false), [avatarVersion, setAvatarVersion] = useState(0);
+  // The channel editor opened from a channel's right-click menu.
+  const [channelEdit, setChannelEdit] = useState<{ room: string; tab: ChannelEditTab } | null>(null);
   const settingsShown = useRef(false); settingsShown.current = settingsOpen;
   const editingShown = useRef(false); editingShown.current = Boolean(editing);
   const typingSent = useRef<{ room: string; at: number } | null>(null);
@@ -114,7 +167,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
   const refreshRooms = async () => {
     if (roomRefreshLock.current) return;
     roomRefreshLock.current = true; setRefreshingRooms(true);
-    try { await refreshMatrixRooms(); }
+    try { await refreshMatrixRooms(); await refreshMatrixRoomMembers(room); }
     catch (e) { fail(e, pt ? "Não foi possível atualizar as salas." : "Could not refresh rooms."); }
     finally { roomRefreshLock.current = false; setRefreshingRooms(false); }
   };
@@ -125,6 +178,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
     void refreshMatrixStatus();
     const oldFocus = document.activeElement; frame.current?.querySelector<HTMLButtonElement>("button")?.focus();
     const keyboard = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && event.target instanceof Element && event.target.closest('[role="listbox"]')) return;
       if (event.key === "Escape") { event.preventDefault(); event.stopImmediatePropagation(); if (settingsShown.current) setSettingsOpen(false); else if (editingShown.current) { setEditing(null); setText(""); } else close.current(); }
       if (event.key === "Tab") {
         const controls = frame.current?.querySelectorAll<HTMLElement>("button:not(:disabled),textarea,input:not([type=file]),a[href]");
@@ -250,32 +304,34 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
   const unreadRooms = useMemo(() => Object.fromEntries(Object.entries(chat.rooms).map(([id, value]) => [id, value.unread])), [chat.rooms]);
   const typingNames = (current?.typing ?? []).filter(user => !chat.ignored.includes(user)).map(user => displayName(user, chat.names));
   const selectedRoom = rooms.find(item=>item.room_id === room);
-  const roomName = selectedRoom?.name || room;
+  const roomName = selectedRoom?.name || (room === MATRIX_COMMUNITY_ID ? "Pelicanux" : pt ? "Sala" : "Room");
   const roomTopic = selectedRoom?.topic?.trim();
   return createPortal(<div className="modal-overlay matrix-chat-overlay" onMouseDown={event => { if (event.target === event.currentTarget) close.current(); }}>
-    <ModalSurface ref={frame} className="modal-content dialog-glass matrix-chat" role="dialog" aria-modal="true" aria-label="Matrix · PeliGames" onDismiss={() => close.current()}
-      header={<h2><MatrixIcon/>Matrix <span className="matrix-terminal-tag">// PeliGames</span></h2>}>
+    <ModalSurface ref={frame} className="modal-content dialog-glass matrix-chat" role="dialog" aria-modal="true" aria-label={`Matrix · ${roomName}`} onDismiss={() => close.current()}>
       <div className="matrix-terminal-frame" style={{clipPath:`url(#${screenClipId})`}}>
       <svg width="0" height="0" className="matrix-crt-definitions" aria-hidden="true" focusable="false"><defs><clipPath id={screenClipId} clipPathUnits="objectBoundingBox"><path d={screenShape}/></clipPath></defs></svg>
       <svg className="matrix-crt-outline" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d={screenShape} fill="none" vectorEffect="non-scaling-stroke"/></svg>
       {powerOn && !performance && <div className="matrix-crt-power-beam" aria-hidden="true" />}
       {powerOn && !performance && <div className="matrix-crt-artifacts" aria-hidden="true" onAnimationEnd={event => { if (event.animationName === "matrix-crt-artifact-burst") setPowerOn(false); }} />}
       <div className={`matrix-crt-screen${powerOn && !performance ? " matrix-crt-power-on" : ""}`}>
-      <div className="matrix-terminal-status"><span className="matrix-terminal-session"><span className="matrix-terminal-dot"/><span>{chat.userId ? displayName(chat.userId, chat.names) : pt ? "SESSÃO DESCONECTADA" : "DISCONNECTED SESSION"}</span></span><div className="matrix-terminal-activity"><MatrixGameActivities key={`${chat.userId}:${room}`} users={memberUsers} supporters={supporterUsers}/></div><small>{preview ? pt ? "DEMONSTRAÇÃO · SEM LOGIN OU ENVIO REAL" : "DEMO · NO REAL SIGN-IN OR MESSAGES" : pt ? "CHAT DA COMUNIDADE" : "COMMUNITY CHAT"}</small></div>
+      <div className="matrix-terminal-status"><div className="matrix-terminal-session">{chat.userId ? <MatrixUserProfile pt={pt} me={chat.userId} names={chat.names} avatarVersion={avatarVersion} connected={chat.ready && !chat.error}/> : <><span className="matrix-terminal-dot"/><span>{pt ? "SESSÃO DESCONECTADA" : "DISCONNECTED SESSION"}</span></>}</div><div className="matrix-terminal-activity"><MatrixGameActivities key={`${chat.userId}:${room}`} users={memberUsers} supporters={supporterUsers}/></div><small>{preview ? pt ? "DEMONSTRAÇÃO · SEM LOGIN OU ENVIO REAL" : "DEMO · NO REAL SIGN-IN OR MESSAGES" : pt ? "CHAT DA COMUNIDADE" : "COMMUNITY CHAT"}</small></div>
       {!chat.userId ? <div className="matrix-terminal-welcome"><MatrixIcon/><h3>{pt ? "Conecte-se à comunidade" : "Connect to the community"}</h3><p>{pt ? "Converse sobre jogos, mods e Linux num chat com cara de terminal. Entre com sua conta Matrix pelo navegador." : "Talk about games, mods and Linux in a terminal-style chat. Sign in with your Matrix account through the browser."}</p><button className="btn btn-primary" disabled={busy || chat.pending} onClick={() => void run("connect_matrix_chat").then(() => refreshMatrixStatus())}><MatrixIcon/>{chat.pending ? pt ? "Aguardando login…" : "Waiting for sign-in…" : pt ? "Entrar com Matrix" : "Sign in with Matrix"}</button><p>{chat.pending ? pt ? "Autorize no navegador e volte aqui. O login expira em três minutos." : "Authorize in your browser and return here. Sign-in expires in three minutes." : pt ? "Sua senha não fica salva no launcher." : "Your password is not saved in the launcher."}</p></div> : <div className="matrix-terminal-layout">
         <aside className="matrix-terminal-rooms">
           {chat.ready && !communityJoined && <button className="matrix-terminal-join" disabled={busy} onClick={() => void join(MATRIX_COMMUNITY_ID)}>{pt ? "+ Entrar na comunidade" : "+ Join the community"}</button>}
           {preview && <small className="matrix-rooms-demo">{pt ? "Lista simulada na preview" : "Simulated preview rooms"}</small>}
           <div className="matrix-rooms-scroll">
-          <MatrixChannelList pt={pt} rooms={rooms} room={room} onSelect={setRoom} me={chat.userId} names={chat.names} joined={joinedRooms} ready={chat.ready} unread={unreadRooms}
+          <MatrixChannelList pt={pt} rooms={rooms} room={room} onSelect={selectRoom} me={chat.userId} names={chat.names} joined={joinedRooms} ready={chat.ready} unread={unreadRooms}
             canCreate={canCreateChannels} locked={id => id === MATRIX_PREMIUM_ROOM_ID && !premiumReady} lockLabel={id => id === MATRIX_PREMIUM_ROOM_ID && !premiumReady ? " 🔒" : ""}
             onJoinRoom={async id => { if (!await run("matrix_chat_join", { room: id })) return false; await reloadMatrixRooms(); return true; }}
-            onError={fail} refreshing={refreshingRooms} onRefresh={() => void refreshRooms()} permanent={id => id === MATRIX_COMMUNITY_ID || id === MATRIX_PREMIUM_ROOM_ID}/>
+            onError={fail} refreshing={refreshingRooms} onRefresh={() => void refreshRooms()} permanent={id => id === MATRIX_COMMUNITY_ID || id === MATRIX_PREMIUM_ROOM_ID}
+            onOpenChat={id => { setRoom(id); setCallChat(true); }} onEdit={(id, tab) => setChannelEdit({ room: id, tab })}
+            canEdit={id => canCreateChannels || Boolean(chat.userId && chat.rooms[id]?.power && powerOf(chat.rooms[id]!.power, chat.userId) >= 50)}/>
           {chat.ignored.length > 0 && <><h3>{pt ? "# IGNORADOS" : "# IGNORED"}</h3>{chat.ignored.map(user => <button key={user} className="matrix-terminal-ignored" disabled={busy} title={pt ? "Voltar a mostrar" : "Show again"} onClick={() => void run("matrix_chat_ignore", { user, ignore: false })}>{displayName(user, chat.names)} ✕</button>)}</>}
           </div>
-          <MatrixUserPanel pt={pt} me={chat.userId} names={chat.names} rooms={rooms} onSettings={() => setSettingsOpen(true)} avatarVersion={avatarVersion}/>
+          <MatrixUserPanel pt={pt} onSettings={() => setSettingsOpen(true)}/>
         </aside>
-        <section className="matrix-terminal-room"><header><div className="matrix-room-heading"><strong title={roomName}># {roomName}</strong>{roomTopic && <small className="matrix-room-topic" title={roomTopic}>{roomTopic}</small>}</div>{!premiumSelected && chat.ready && !current?.joined && <button className="btn btn-secondary" disabled={busy} onClick={() => void join(room)}>{pt ? "Entrar na sala" : "Join room"}</button>}</header>
+        {inCall && !callChat ? <MatrixCallStage pt={pt} me={chat.userId} roomName={roomName} videoHidden={settingsOpen || Boolean(channelEdit)} onShowChat={() => setCallChat(true)}/> :
+        <section className="matrix-terminal-room"><header><div className="matrix-room-heading"><strong title={roomName}># {roomName}</strong>{roomTopic && <small className="matrix-room-topic" title={roomTopic}>{roomTopic}</small>}</div>{inCall && <button type="button" className="btn btn-secondary" onClick={() => setCallChat(false)}>{pt ? "Ver chamada" : "Show call"}</button>}{!premiumSelected && chat.ready && !current?.joined && <button className="btn btn-secondary" disabled={busy} onClick={() => void join(room)}>{pt ? "Entrar na sala" : "Join room"}</button>}</header>
           {premiumSelected && !premiumReady ? <div className="matrix-premium-gate" role="status">
             <h3>{roomName}</h3>
             <p>{!benefitsChecked || premium?.phase === "checking" ? pt ? "Verificando o Discord e liberando sua conta Matrix…" : "Checking Discord and granting Matrix access…" : !exclusiveEffects ? pt ? "Exclusivo para membros do YouTube e impulsionadores do servidor no Discord. Entre com Discord em Preferências → Conexões para liberar." : "For YouTube members and Discord server boosters. Sign in with Discord in Preferences → Connections to unlock." : premium?.error || (pt ? "Confirme sua conexão para acessar esta sala." : "Confirm your connection to access this room.")}</p>
@@ -304,8 +360,9 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
                       </span>
                     </header>
                     {message.reply_to && <p className="matrix-message-reply">↳ {replied ? <><b>{displayName(replied.sender, chat.names)}</b>: {replied.body.slice(0, 120)}</> : pt ? "resposta a uma mensagem anterior" : "reply to an earlier message"}</p>}
-                    <p>{message.msgtype === "m.emote" ? <>* <b style={{color}}>{name}</b> </> : null}{message.msgtype === "m.file" ? `[${pt ? "arquivo" : "file"}] ` : null}{message.msgtype === "m.image" ? null : <Linked text={message.body} onError={e => fail(e, pt ? "Não foi possível abrir o link." : "Could not open the link.")}/>}</p>
-                    {message.msgtype === "m.image" && message.url && <ChatImage mxc={message.url}/>}
+                    <p>{message.msgtype === "m.emote" ? <>* <b style={{color}}>{name}</b> </> : null}{message.msgtype === "m.file" ? `[${pt ? "arquivo" : "file"}] ` : null}{message.msgtype === "m.image" ? null : <MessageText text={message.body} onError={e => fail(e, pt ? "Não foi possível abrir o link." : "Could not open the link.")}/>}</p>
+                    {message.msgtype === "m.image" && message.url && <ChatImage mxc={message.url} animated={message.mimetype === "image/gif" || message.mimetype === "image/webp"}/>}
+                    {message.msgtype === "m.video" && message.url && <ChatVideo mxc={message.url}/>}
                     {reacting === message.id && <div className="matrix-reaction-picker" role="group" aria-label={pt ? "Escolher reação" : "Choose a reaction"}>{REACTIONS.map(key => <button key={key} type="button" disabled={busy} onClick={() => void react(message, key)}>{key}</button>)}</div>}
                     {(current?.reactions[message.id]?.length ?? 0) > 0 && <div className="matrix-reactions">{groupReactions(current!.reactions[message.id]).map(([key, senders]) => {
                       const mine = Boolean(chat.userId && senders.includes(chat.userId));
@@ -341,12 +398,13 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
               </button></div>
           </form>
           </>}
-        </section>
+        </section>}
       </div>}
+      {channelEdit && chat.userId && <MatrixChannelSettings key={channelEdit.room} pt={pt} room={channelEdit.room} names={chat.names} initialTab={channelEdit.tab} onClose={() => setChannelEdit(null)} onError={fail} onSaved={() => void reloadMatrixRooms()}/>}
       {settingsOpen && chat.userId && <MatrixSettings pt={pt} me={chat.userId} names={chat.names} onClose={() => setSettingsOpen(false)} onError={fail}
         onDisconnect={() => { setSettingsOpen(false); void disconnect(); }} onAvatarChanged={() => { setAvatarVersion(value => value + 1); setAvatars(previous => { const next = { ...previous }; delete next[chat.userId!]; return next; }); avatarLookups.current.delete(chat.userId!); }} avatarVersion={avatarVersion}/>}
       {error && <p className="matrix-terminal-error" role="alert">{error}</p>}
-      <footer className="matrix-terminal-footer"><span>{chat.userId ? chat.ready ? pt ? "Matrix · comunidade conectada" : "Matrix · community connected" : pt ? "Matrix · sincronizando…" : "Matrix · syncing…" : pt ? "Matrix · comunidade PeliGames" : "Matrix · PeliGames community"}</span></footer>
+      <footer className="matrix-terminal-footer"><h2 className="matrix-terminal-brand"><MatrixIcon/><span>Matrix</span><span className="matrix-terminal-tag">// Pelicanux</span></h2></footer>
       </div>
       </div>
     </ModalSurface>

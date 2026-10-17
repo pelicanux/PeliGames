@@ -1,12 +1,13 @@
-.modal-overlay.matrix-chat-overlay { z-index:2100; padding:12px; height:calc(100dvh - 50px); }
-.matrix-chat.modal-content { box-sizing:border-box; width:100%; max-width:100%; height:100%; max-height:100% !important; min-width:min(480px,calc(100vw - 24px)); min-height:min(320px,calc(100dvh - 74px)); padding:0; resize:both; container:matrix-chat / inline-size; }
+.modal-overlay.matrix-chat-overlay { z-index:2100; inset:50px 0 0; padding:8px; height:calc(100dvh - 50px); }
+.matrix-chat.modal-content { box-sizing:border-box; width:100%; max-width:100%; height:100%; max-height:100% !important; min-width:0; min-height:0; padding:0; resize:none; container:matrix-chat / inline-size; }
 .matrix-chat.modal-content::-webkit-resizer { background:linear-gradient(135deg,transparent 55%,rgba(var(--accent-rgb),.5) 56%,rgba(var(--accent-rgb),.5) 62%,transparent 63%,transparent 73%,rgba(var(--accent-rgb),.7) 74%,rgba(var(--accent-rgb),.7) 80%,transparent 81%); }
-:root .matrix-chat.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { display:flex; flex-direction:column; flex:1; min-height:0; padding:72px 10px 10px; overflow:hidden; }
+:root .matrix-chat.fixed-glass-frame > .modal-scroll-body { display:flex; flex-direction:column; flex:1; min-height:0; padding:8px; overflow:hidden; }
+:root .matrix-chat.modal-content.fixed-glass-frame > .surface-close-button { z-index:10; }
 .matrix-terminal-status,.matrix-terminal-footer,.matrix-terminal-compose,.matrix-terminal-room > header { flex-shrink:0; }
 .matrix-terminal-frame { position:relative; isolation:isolate; display:flex; flex-direction:column; flex:1; min-height:0; min-width:0; overflow:hidden; border-radius:0; border:0; background:#090e12; }
 .matrix-crt-outline { position:absolute; inset:0; width:100%; height:100%; z-index:4; pointer-events:none; stroke:rgba(var(--accent-rgb),.75); stroke-width:2px; }
 .matrix-crt-definitions { position:absolute; pointer-events:none; }
-.matrix-crt-screen { display:flex; flex-direction:column; flex:1; min-height:0; min-width:0; padding:clamp(28px,4vh,34px) 3% clamp(24px,3.8vh,30px); box-sizing:border-box; }
+.matrix-crt-screen { display:flex; flex-direction:column; flex:1; min-height:0; min-width:0; padding:clamp(22px,3vh,28px) 3% clamp(24px,3.8vh,30px); box-sizing:border-box; }
 .matrix-crt-screen > .matrix-terminal-status { padding-left:5%; padding-right:5%; }
 .matrix-crt-screen > .matrix-terminal-footer { padding-left:5%; padding-right:5%; }
 /* Small, cached noise tile; slow stepped drift rather than continuous repaint. */
@@ -28,6 +29,9 @@
 @media (prefers-reduced-motion:reduce) { .matrix-terminal-frame::before { animation:none; } }
 .performance-mode .matrix-terminal-frame::before { display:none; }
 .matrix-terminal-tag { font-family:"Jersey 10",monospace; color:var(--accent); font-size:1.2rem; margin-left:8px; }
+.matrix-terminal-brand { display:flex; align-items:center; justify-content:center; gap:8px; flex:0 0 auto; min-width:0; margin:0; color:#b4ffcd; font:20px/1.2 "Jersey 10",monospace; }
+.matrix-terminal-brand > svg { width:24px; height:24px; flex-shrink:0; }
+.matrix-terminal-brand .matrix-terminal-tag { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .matrix-terminal-status,.matrix-terminal-layout,.matrix-terminal-welcome,.matrix-terminal-footer,.matrix-terminal-error { font-family:"Jersey 10",monospace; }
 .matrix-terminal-status { display:flex; align-items:center; gap:10px; padding:6px 18px; color:#b4ffcd; background:#080d11; border-bottom:1px solid #24473b; font-size:1.1rem; }
 .matrix-terminal-status small { margin-left:auto; font:12px monospace; color:#82948c; }
@@ -137,7 +141,7 @@
 
 /* Activities share the top status strip, leaving the room list free. */
 .matrix-terminal-status { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr); min-height:64px; box-sizing:border-box; }
-.matrix-terminal-session { display:flex; align-items:center; gap:10px; min-width:0; }
+.matrix-terminal-session { display:flex; align-items:center; gap:10px; min-width:0; padding-left:16px; box-sizing:border-box; }
 .matrix-terminal-session > span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .matrix-terminal-status > small { margin-left:0; text-align:right; font-size:10px; }
 .matrix-terminal-activity { min-width:0; }
@@ -248,9 +252,10 @@
 .matrix-channel-form > div { display:flex; gap:6px; }
 .matrix-terminal-rooms .matrix-channel-form button { padding:3px 8px; border-color:#2d4a3c; font-size:16px; }
 .matrix-voice-channel { display:grid; gap:2px; }
-.matrix-voice-channel > button { display:flex; align-items:center; gap:7px; }
+.matrix-voice-channel .matrix-channel-line > button:first-child { display:flex; align-items:center; gap:7px; }
+.matrix-channel-name { min-width:0; overflow-wrap:anywhere; }
 .matrix-channel-speaker { flex-shrink:0; }
-.matrix-terminal-rooms .matrix-voice-channel > button.is-in-call { color:#b4ffcd; border-color:#4e8a6c; }
+.matrix-terminal-rooms .matrix-voice-channel .matrix-channel-line > button.is-in-call { color:#b4ffcd; border-color:#4e8a6c; }
 .matrix-voice-members { list-style:none; margin:0 0 4px; padding:0 0 0 24px; display:grid; gap:2px; }
 .matrix-voice-members li { display:flex; align-items:center; gap:7px; color:#a4b9ae; font:16px "Jersey 10",monospace; overflow-wrap:anywhere; }
 .matrix-voice-members li.is-me { color:#b4ffcd; }
@@ -264,8 +269,23 @@
 .matrix-voice-dock > small { color:#a4b9ae; font:15px "Jersey 10",monospace; overflow-wrap:anywhere; }
 .matrix-terminal-rooms .matrix-voice-dock .matrix-voice-leave { justify-self:start; padding:3px 8px; color:#ffb4bc; border-color:#8a4a56; font-size:16px; }
 .matrix-terminal-rooms .matrix-voice-dock .matrix-voice-leave:hover { color:#ffd0d6; border-color:#c06373; background:#2a1418; }
+.matrix-terminal-rooms .matrix-voice-dock .matrix-voice-screen { justify-self:start; padding:3px 8px; color:#9fe8bf; border-color:#38644f; font-size:16px; }
+.matrix-terminal-rooms .matrix-voice-dock .matrix-voice-screen:hover, .matrix-terminal-rooms .matrix-voice-dock .matrix-voice-screen[aria-pressed="true"] { color:#d4ffe6; border-color:#62d694; background:#123024; }
 .matrix-user-noise { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:8px; color:#7ba88e; font:15px "Jersey 10",monospace; }
 .matrix-user-row { display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.matrix-user-dock .matrix-user-row { justify-content:center; }
+.matrix-user-dock .matrix-user-buttons { gap:16px; }
+.matrix-own-profile { width:100%; min-width:0; }
+.matrix-own-profile-info { display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
+.matrix-own-profile-info > b { max-width:100%; }
+.matrix-own-profile-info > .matrix-own-game { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#8ba094; }
+:root .matrix-own-profile .matrix-user-presence .custom-select-trigger { display:flex; align-items:center; gap:5px; min-height:0; padding:2px 0; background:transparent; border:0; color:#92b8a1; font:14px "Jersey 10",monospace; box-shadow:none; }
+.matrix-member-avatar, .matrix-user-avatar { position:relative; }
+.matrix-game-activity .matrix-member-avatar > span { display:block; font:inherit; color:inherit; }
+.matrix-avatar-presence { position:absolute; right:1px; bottom:1px; width:9px; height:9px; box-sizing:content-box; border:2px solid #0b1410; border-radius:50%; background:#62d694; z-index:1; }
+.matrix-avatar-presence.is-idle { background:#e4bd64; }
+.matrix-avatar-presence.is-dnd { background:#ed7f87; }
+.matrix-avatar-presence.is-dnd::after { content:""; position:absolute; left:2px; right:2px; top:4px; height:1px; background:#431e23; }
 .matrix-user-identity { display:flex; align-items:center; gap:8px; min-width:0; }
 .matrix-user-identity > span:last-child { display:grid; min-width:0; }
 .matrix-user-identity b { color:#b4ffcd; font:17px "Jersey 10",monospace; font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -349,6 +369,7 @@
 :root .matrix-select-menu .custom-select-option.custom-select-option { min-height:0; padding:5px 8px; border-radius:0; color:#a4b9ae; font:16px "Jersey 10",monospace; background:transparent; }
 :root .matrix-select-menu .custom-select-option.custom-select-option:not(:disabled):not(.disabled):is(:hover,:focus-visible) { color:#b4ffcd; background:#14251e; outline:none; }
 :root .matrix-select-menu .custom-select-option.custom-select-option.selected { color:#090e12; background:#62d694; }
+:root .matrix-presence-menu .custom-select-option.custom-select-option { white-space:nowrap; word-break:normal; min-height:32px; padding:7px 10px; text-align:left; }
 
 /* Keep the bottom-left controls inside the CRT's curved glass. */
 .matrix-terminal-rooms .matrix-user-dock { padding-left:16px; padding-bottom:8px; }
@@ -365,3 +386,96 @@
   :root .matrix-chat .matrix-send-button .matrix-enter-key { width:52px; height:60px; }
   .matrix-terminal-rooms .matrix-user-dock { padding-left:10px; }
 }
+
+/* Call view of a voice channel (Discord-style): tiles, the watched screen in
+   focus and the call controls. The video is a native layer over .matrix-call-video. */
+.matrix-call-stage { background:#070b0e; }
+.matrix-call-body { flex:1; min-height:0; display:flex; flex-direction:column; gap:10px; padding:12px 16px; overflow:auto; }
+.matrix-call-focus { flex:1; min-height:160px; display:flex; flex-direction:column; gap:6px; }
+.matrix-call-video { flex:1; min-height:0; display:grid; place-items:center; background:#000; border:1px solid #24473b; color:#5f7f70; font:17px "Jersey 10",monospace; }
+.matrix-call-focus-bar { display:flex; align-items:center; gap:10px; min-width:0; font:18px "Jersey 10",monospace; color:#d6e8de; }
+.matrix-call-focus-bar b { flex:1; min-width:0; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.matrix-call-focus-bar button, .matrix-call-watch { padding:2px 8px; color:#9fe8bf; background:transparent; border:1px solid #38644f; font:16px "Jersey 10",monospace; cursor:pointer; }
+.matrix-call-focus-bar button:hover, .matrix-call-watch:hover { color:#d4ffe6; border-color:#62d694; background:#123024; }
+.matrix-call-live { flex-shrink:0; padding:0 6px; color:#fff; background:#d83c3e; font:15px "Jersey 10",monospace; letter-spacing:.04em; }
+.matrix-call-grid, .matrix-call-strip { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+.matrix-call-grid { grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); align-content:start; }
+.matrix-call-strip { grid-auto-flow:column; grid-auto-columns:minmax(150px,190px); overflow-x:auto; flex-shrink:0; }
+.matrix-call-grid li, .matrix-call-strip li { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; min-height:132px; padding:12px 8px; background:#0d1713; border:1px solid #24473b; transition:border-color .15s, box-shadow .15s; }
+.matrix-call-strip li { min-height:92px; padding:8px; gap:4px; }
+.matrix-call-grid li.is-speaking, .matrix-call-strip li.is-speaking { border-color:#62d694; box-shadow:0 0 0 1px #62d694, 0 0 12px #62d69455; }
+.matrix-call-grid li.is-watched, .matrix-call-strip li.is-watched { border-color:#d6e562; }
+.matrix-call-grid li > .matrix-call-live, .matrix-call-strip li > .matrix-call-live { position:absolute; top:6px; right:6px; }
+.matrix-call-avatar { width:56px; height:56px; border-radius:50%; display:grid; place-items:center; overflow:hidden; background:#14201b; border:1px solid #38644f; color:#9fe8bf; font:24px "Jersey 10",monospace; }
+.matrix-call-strip .matrix-call-avatar { width:38px; height:38px; font-size:18px; }
+.matrix-call-avatar img { width:100%; height:100%; object-fit:cover; }
+.matrix-call-name { max-width:100%; color:#d6e8de; font:18px "Jersey 10",monospace; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.matrix-call-name small { color:#a4b9ae; font-size:15px; }
+.matrix-call-controls { flex-shrink:0; display:flex; justify-content:center; align-items:center; gap:10px; padding:10px 16px 12px; border-top:1px solid #24473b; }
+.matrix-call-controls button { display:inline-flex; align-items:center; gap:8px; min-width:44px; height:40px; justify-content:center; padding:0 12px; color:#d6e8de; background:#14201b; border:1px solid #38644f; border-radius:20px; font:17px "Jersey 10",monospace; cursor:pointer; }
+.matrix-call-controls button:hover:not(:disabled) { border-color:#62d694; background:#173026; }
+.matrix-call-controls button.is-off { color:#ffb4bc; border-color:#8a4a56; }
+.matrix-call-controls button.matrix-call-share.is-live { color:#071009; background:#62d694; border-color:#62d694; }
+.matrix-call-controls button.matrix-call-leave { color:#fff; background:#b3343a; border-color:#d24a50; }
+.matrix-call-controls button.matrix-call-leave:hover:not(:disabled) { background:#d24a50; border-color:#ff6b71; }
+.matrix-call-controls button:disabled { opacity:.55; cursor:default; }
+
+/* Mini player: floats over the launcher while the call view is closed. */
+.matrix-stream-dock { position:fixed; z-index:2200; display:flex; flex-direction:column; background:#070b0e; border:1px solid rgba(var(--accent-rgb),.6); box-shadow:0 10px 30px #000a; }
+.matrix-stream-dock > header { display:flex; align-items:center; gap:8px; padding:4px 6px 4px 8px; cursor:grab; touch-action:none; user-select:none; font:17px "Jersey 10",monospace; color:#d6e8de; background:#0d1713; border-bottom:1px solid #24473b; }
+.matrix-stream-dock > header:active { cursor:grabbing; }
+.matrix-stream-dock > header b { flex:1; min-width:0; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.matrix-stream-dock > header button { width:26px; height:24px; display:grid; place-items:center; padding:0; color:#9fe8bf; background:transparent; border:1px solid #38644f; cursor:pointer; font-size:14px; }
+.matrix-stream-dock > header button:hover { color:#d4ffe6; border-color:#62d694; background:#123024; }
+.matrix-stream-dock-video { aspect-ratio:16/9; background:#000; cursor:pointer; }
+
+/* Sound choice before the system's screen picker. */
+.matrix-share-anchor { position:relative; }
+.matrix-share-menu { position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%); z-index:5; width:min(340px,80vw); display:grid; gap:6px; padding:12px; background:#0b1410; border:1px solid #38644f; box-shadow:0 10px 30px #000c; font:17px "Jersey 10",monospace; color:#d6e8de; }
+.matrix-share-menu > strong { color:#d6e562; font-weight:400; font-size:18px; }
+.matrix-share-menu label { display:flex; align-items:flex-start; gap:8px; padding:5px 6px; border:1px solid transparent; cursor:pointer; }
+.matrix-share-menu label:hover { background:#123024; }
+.matrix-share-menu label.is-chosen { border-color:#62d694; background:#102a1f; }
+.matrix-share-menu label input { margin-top:3px; accent-color:#62d694; }
+.matrix-share-menu label span { display:grid; min-width:0; overflow-wrap:anywhere; }
+.matrix-share-menu small { color:#a4b9ae; font-size:15px; }
+.matrix-share-apps-heading { display:flex; justify-content:space-between; align-items:center; margin-top:4px; color:#9fe8bf; }
+.matrix-share-apps-heading button { padding:0 6px; color:#9fe8bf; background:transparent; border:1px solid #38644f; font:15px "Jersey 10",monospace; cursor:pointer; }
+.matrix-share-apps { display:grid; gap:2px; max-height:160px; overflow:auto; padding-left:8px; border-left:1px solid #24473b; }
+.matrix-share-menu .matrix-share-start { margin-top:4px; padding:6px 10px; color:#071009; background:#62d694; border:1px solid #62d694; font:17px "Jersey 10",monospace; cursor:pointer; }
+.matrix-share-menu .matrix-share-start:hover { background:#86e8ae; }
+.matrix-share-note { text-align:center; }
+.matrix-call-controls .matrix-share-menu button { height:auto; min-width:0; border-radius:0; display:block; }
+
+/* Right-click menu of a channel. */
+.matrix-channel-menu-layer { position:fixed; inset:0; z-index:2300; }
+.matrix-channel-menu { position:fixed; min-width:210px; max-width:280px; display:grid; padding:6px; background:#0b1410; border:1px solid #38644f; box-shadow:0 10px 30px #000c, 0 0 18px #62d69418; font:17px "Jersey 10",monospace; }
+.matrix-channel-menu > strong { padding:2px 8px 6px; color:#d6e562; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.matrix-channel-menu-group { display:grid; padding:4px 0; border-top:1px solid #24473b; }
+.matrix-channel-menu-group button { padding:5px 8px; text-align:left; color:#d6e8de; background:transparent; border:0; font:inherit; cursor:pointer; }
+.matrix-channel-menu-group button:hover, .matrix-channel-menu-group button:focus-visible { color:#071009; background:#62d694; outline:none; }
+.matrix-channel-menu-group button.is-danger { color:#ff8f9a; }
+.matrix-channel-menu-group button.is-danger:hover, .matrix-channel-menu-group button.is-danger:focus-visible { color:#fff; background:#b3343a; }
+
+/* Channel editor: permissions and roles. */
+.matrix-channel-settings { width:min(640px,100%); }
+.matrix-channel-overview { display:grid; gap:12px; }
+.matrix-channel-overview > button { justify-self:start; }
+.matrix-channel-settings textarea { resize:vertical; min-height:60px; background:#0b1410; border:1px solid #2d4a3c; color:#d3e3db; font:17px "Jersey 10",monospace; padding:6px 8px; }
+.matrix-permission-list { display:grid; gap:2px; margin:8px 0 12px; }
+.matrix-permission-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(170px,210px); align-items:center; gap:12px; padding:6px 8px; border-bottom:1px solid #16261f; }
+.matrix-permission-row > span, .matrix-role-list li > span { display:grid; min-width:0; color:#d6e8de; font-size:18px; }
+.matrix-permission-row small, .matrix-role-list small { color:#7f988c; font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.matrix-role-list { list-style:none; margin:8px 0 12px; padding:0; display:grid; gap:2px; }
+.matrix-role-list li { display:grid; grid-template-columns:minmax(0,1fr) minmax(150px,190px); align-items:center; gap:12px; padding:6px 8px; border-bottom:1px solid #16261f; }
+.matrix-role-list li > b { color:#d6e562; font-weight:400; justify-self:start; }
+.matrix-channel-settings code { overflow-wrap:anywhere; color:#9fe8bf; }
+
+/* Dragging the mini player never selects the launcher's text. */
+body.is-dragging-dock, body.is-dragging-dock * { user-select:none !important; -webkit-user-select:none !important; cursor:grabbing !important; }
+.matrix-stream-dock { user-select:none; -webkit-user-select:none; }
+
+/* Full screen inside the Matrix frame (not the launcher). */
+.matrix-call-fullscreen { position:absolute; inset:0; z-index:6; display:flex; flex-direction:column; gap:6px; padding:clamp(28px,4vh,34px) 3% clamp(24px,3.8vh,30px); background:#000; }
+.matrix-call-fullscreen > .matrix-call-video { flex:1; min-height:0; border:0; }
+.matrix-call-fullscreen > .matrix-call-focus-bar { flex-shrink:0; padding:0 4px; }

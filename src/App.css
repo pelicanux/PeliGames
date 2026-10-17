@@ -74,11 +74,14 @@
 }
 
 
+/* The window is transparent with rounded corners. Nothing up the tree clips to
+   them: the surfaces at the corners are rounded themselves (frame, title bar,
+   side menu, overlays). Rounded clipping layers on html, body and #root made
+   WebKitGTK mask every composited layer inside (library, flying cover,
+   overlays) and it then drew them offset or skipped a frame. */
 html {
-  border-radius: 16px;
   overflow: hidden;
   background-color: transparent;
-  transform: translateZ(0);
 }
 
 body {
@@ -89,9 +92,7 @@ body {
   color: var(--tone-f8fafc, #f8fafc);
   display: flex;
   flex-direction: column;
-  border-radius: 16px;
   overflow: hidden;
-  transform: translateZ(0);
 }
 
 
@@ -118,9 +119,7 @@ body {
   padding: 0;
   box-sizing: border-box;
   width: 100%;
-  border-radius: 16px;
   overflow: clip;
-  transform: translateZ(0);
 }
 
 .app-wrapper {
@@ -136,7 +135,7 @@ body {
   position: relative;
   z-index: 10;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .container {
@@ -718,14 +717,12 @@ select option {
 
 /* Collapse the details under the library while retaining the shared cover animation. */
 .selected-game-shell { position: relative; z-index: 1; flex-shrink: 0; }
-/* Keep each library's toolbar and covers on a persistent compositor layer.
-   Removing blurred details panels must not invalidate the library surface. */
+/* Keep library stacking stable without promoting the entire (possibly very
+   tall) collection to a GPU texture. The viewport owns the scroll layer. */
 .game-library-section {
   position: relative;
   z-index: 2;
   isolation: isolate;
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 

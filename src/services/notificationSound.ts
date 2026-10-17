@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { invoke } from "@tauri-apps/api/core";
 
 const KEY = "peligames.matrix.notificationSound";
 export interface SoundPreferences { enabled: boolean; volume: number }
@@ -11,7 +12,7 @@ function read(): SoundPreferences {
 }
 let preferences = read();
 const listeners = new Set<() => void>();
-let audio: AudioContext | null = null, lastPlayed = -Infinity;
+let lastPlayed = -Infinity;
 export function setNotificationSoundPreferences(patch: Partial<SoundPreferences>) {
   preferences = normalizeSoundPreferences({ ...preferences, ...patch });
   try { localStorage.setItem(KEY, JSON.stringify(preferences)); } catch { /* Remains usable in memory. */ }
@@ -20,37 +21,15 @@ export function setNotificationSoundPreferences(patch: Partial<SoundPreferences>
 export function useNotificationSoundPreferences() {
   return useSyncExternalStore(listener => { listeners.add(listener); return () => listeners.delete(listener); }, () => preferences);
 }
-function context() {
-  if (!audio || audio.state === "closed") audio = new AudioContext();
-  return audio;
-}
-/** Unlock audio on a real interaction, so later background mentions can beep. */
+/** Kept for the callers: the native chime needs no unlocking by a user interaction. */
 export async function unlockNotificationSound(): Promise<boolean> {
-  if (!preferences.enabled || preferences.volume === 0) return false;
-  try { const value = context(); if (value.state === "suspended") await value.resume(); return value.state === "running"; }
-  catch { return false; /* Visual notifications always remain. */ }
+  return preferences.enabled && preferences.volume > 0;
 }
-/** A short two-note chiptune, synthesized locally; no audio files or downloads. */
+/** A short two-note chiptune, synthesized natively (Rust): the webview's WebAudio could crash without GStreamer. */
 export async function playNotificationSound(test = false): Promise<boolean> {
   if (!preferences.enabled || preferences.volume === 0) return false;
   if (!test && performance.now() - lastPlayed < 1500) return false;
-  try {
-    const value = context();
-    // Avoid queuing old notifications until a future interaction unlocks audio.
-    if (value.state !== "running") return false;
-    lastPlayed = performance.now();
-    const start = value.currentTime;
-    for (const [offset, frequency] of [[0, 659.25], [0.115, 987.77]]) {
-      const oscillator = value.createOscillator(), gain = value.createGain();
-      oscillator.type = "square";
-      oscillator.frequency.setValueAtTime(frequency, start + offset);
-      gain.gain.setValueAtTime(0, start + offset);
-      gain.gain.linearRampToValueAtTime(0.08 * preferences.volume / 100, start + offset + 0.006);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + offset + 0.09);
-      oscillator.connect(gain); gain.connect(value.destination);
-      oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
-      oscillator.start(start + offset); oscillator.stop(start + offset + 0.1);
-    }
-    return true;
-  } catch { return false; }
+  lastPlayed = performance.now();
+  try { return await invoke<boolean>("play_notification_sound", { volume: preferences.volume }); }
+  catch { return false; /* Visual notifications always remain. */ }
 }

@@ -18,5 +18,7 @@ export async function syncModLaunchOptions(game: GameInfo | null | undefined, ga
     ? await invoke<GameInfo>("configure_external_game", { settings: { external_id: game.external_id, advanced } })
     : await updatePeliGamesSettings({ path: game.path, name: game.name, proton: game.proton || "", executable: game.executable || game.path, prefix: game.prefix, advanced });
   window.dispatchEvent(new Event("peligamesLibraryChanged"));
-  return { ...updated, library_view: game.library_view, ...(game.external_id ? { cover_url: game.cover_url, automatic_cover_url: game.automatic_cover_url } : {}) };
+  // Only the settings change: the caller's game keeps its own folder and paths
+  // (the DLSS view uses the executable's folder, not the launcher's record).
+  return { ...game, advanced: updated.advanced ?? advanced };
 }

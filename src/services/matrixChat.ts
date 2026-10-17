@@ -2,10 +2,12 @@
 // signed in, so mentions reach the notification bell with the chat closed.
 import { useSyncExternalStore } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { startMatrixSdk, stopMatrixSdk, updateMatrixSdkRooms, retryMatrixSdk } from "./matrixSdk";
+import { startMatrixSdk, stopMatrixSdk, updateMatrixSdkRooms, retryMatrixSdk, matrixSdkClient } from "./matrixSdk";
+import { fetchMatrixDisplayNames } from "./matrixDisplayNames";
+import { matrixPresenceChoice, type MatrixMemberPresence } from "./matrixPresencePreferences";
 import { MATRIX_COMMUNITY_ID } from "./matrixCommunity";
 
-export interface ChatMessage { id: string; sender: string; ts: number; msgtype: string; body: string; url?: string | null; reply_to?: string | null; mentions?: string[]; edited?: boolean }
+export interface ChatMessage { id: string; sender: string; ts: number; msgtype: string; body: string; url?: string | null; mimetype?: string | null; reply_to?: string | null; mentions?: string[]; edited?: boolean }
 /** An emoji reaction (Matrix annotation) to a message. */
 export interface Reaction { id: string; key: string; sender: string }
 type Incoming = ChatMessage & { kind: "message" } | { kind: "edit"; id: string; target: string; body: string } | { kind: "redaction"; id: string; target: string } | Reaction & { kind: "reaction"; target: string };
@@ -15,23 +17,44 @@ export interface ChatRoom { creators: string[]; members: string[]; messages: Cha
   /** Unread messages counted by the server; who is typing; reactions by message ID. */
   unread: number; typing: string[]; reactions: Record<string, Reaction[]> }
 export interface RoomInfo { room_id: string; name?: string; room_type?: string; topic?: string }
-export interface ChatState { userId: string | null; pending: boolean; error: string; roomList: RoomInfo[]; rooms: Record<string, ChatRoom>; names: Record<string, string>; ignored: string[]; ready: boolean; presence: Record<string, string> }
+export interface ChatState { userId: string | null; pending: boolean; error: string; roomList: RoomInfo[]; rooms: Record<string, ChatRoom>; names: Record<string, string>; ignored: string[]; ready: boolean; presence: Record<string, string>; memberPresence: Record<string, MatrixMemberPresence> }
 interface SyncRoom { creators?: string[] | null; members?: Record<string, boolean>; events: Incoming[]; prev_batch: string | null; limited: boolean; encrypted: boolean | null; names: Record<string, string>; power: RoomPower | null; unread?: number | null; typing?: string[] | null }
-interface SyncResult { next_batch: string; user_id: string; join: Record<string, SyncRoom>; leave: string[]; ignored: string[] | null; presence?: Record<string, string> }
+interface SyncResult { next_batch: string; user_id: string; join: Record<string, SyncRoom>; leave: string[]; ignored: string[] | null; presence?: Record<string, string>; member_presence?: Record<string, MatrixMemberPresence> }
 
 /** A message that mentions the signed-in user (bell): opens the chat on click. */
-export interface MatrixMentionDetail { sender: string; room: string; message: string }
+export interface MatrixMentionDetail { sender: string; room: string; message: string; silent?: boolean }
 export const MATRIX_MENTION_EVENT = "peligamesMatrixMention";
 export const OPEN_MATRIX_CHAT_EVENT = "peligamesOpenMatrixChat";
 const MAX_MESSAGES = 300;
 
-let state: ChatState = { userId: null, pending: false, error: "", roomList: [], rooms: {}, names: {}, ignored: [], ready: false, presence: {} };
+let state: ChatState = { userId: null, pending: false, error: "", roomList: [], rooms: {}, names: {}, ignored: [], ready: false, presence: {}, memberPresence: {} };
 const listeners = new Set<() => void>();
 const set = (patch: Partial<ChatState>) => { state = { ...state, ...patch }; listeners.forEach(listener => listener()); };
 export function setMatrixPresence(user: string, status: string) {
   if (state.userId === user) set({ presence: { ...state.presence, [user]: status } });
 }
 let generation = 0, started = false, pendingTimer: ReturnType<typeof setTimeout> | undefined;
+let profileRun = -1;
+const profileAttempts = new Map<string, number>();
+function resolveMissingNames() {
+  if ("__PELI_UI_PREVIEW__" in window || !state.userId || profileRun === generation) return;
+  const run = generation;
+  profileRun = run;
+  void (async () => {
+    const sdk = await matrixSdkClient();
+    while (run === generation) {
+      const users = [...new Set(Object.values(state.rooms).flatMap(room => [...room.members, ...room.messages.map(message => message.sender)]))];
+      const missing = users.filter(user => !state.names[user]?.trim() && Date.now() - (profileAttempts.get(user) ?? 0) > 60000);
+      if (!missing.length) break;
+      for (const user of missing) profileAttempts.set(user, Date.now());
+      const names = await fetchMatrixDisplayNames(missing, user => sdk.getProfileInfo(user, "displayname"));
+      if (run !== generation) return;
+      // Room-specific names and updates received during the request take priority.
+      const fallback = Object.fromEntries(Object.entries(names).filter(([user]) => !state.names[user]?.trim()));
+      if (Object.keys(fallback).length) set({ names: { ...state.names, ...fallback } });
+    }
+  })().catch(() => {}).finally(() => { if (profileRun === run) profileRun = -1; });
+}
 const emptyRoom = (): ChatRoom => ({ creators: [], members: [], messages: [], prevBatch: null, encrypted: false, joined: false, loadingOlder: false, power: null, unread: 0, typing: [], reactions: {} });
 const MAX_REACTED = 600;
 /** Adds reactions and drops removed ones; a reaction may arrive before its message. */
@@ -107,10 +130,37 @@ export function updateRoomMembers(previous: string[], changes: Record<string, bo
   for (const [user, joined] of Object.entries(changes)) { if (joined === true) members.add(user); else members.delete(user); }
   return [...members];
 }
+const memberRequests = new Map<string, { run: number; changes: Record<string, boolean>; promise: Promise<void> }>();
+/** Sync can omit unchanged membership events. Hydrate the active room from the
+ * authoritative roster, then replay any joins/leaves received during the request. */
+export function refreshMatrixRoomMembers(roomId: string): Promise<void> {
+  if ("__PELI_UI_PREVIEW__" in window || !state.userId || !state.rooms[roomId]?.joined) return Promise.resolve();
+  const run = generation;
+  const pending = memberRequests.get(roomId);
+  if (pending?.run === run) return pending.promise;
+  const request = { run, changes: {} as Record<string, boolean>, promise: Promise.resolve() };
+  memberRequests.set(roomId, request);
+  request.promise = (async () => {
+    const sdk = await matrixSdkClient();
+    if (run !== generation || !state.rooms[roomId]?.joined) return;
+    const snapshot = await sdk.getJoinedRoomMembers(roomId);
+    if (run !== generation || !state.rooms[roomId]?.joined) return;
+    const room = state.rooms[roomId];
+    const names = { ...state.names };
+    for (const [user, profile] of Object.entries(snapshot.joined)) {
+      if (!names[user]?.trim() && profile.display_name?.trim()) names[user] = [...profile.display_name.trim()].slice(0, 64).join("");
+    }
+    set({ names, rooms: { ...state.rooms, [roomId]: { ...room, members: updateRoomMembers(Object.keys(snapshot.joined), request.changes) } } });
+    resolveMissingNames();
+  })().finally(() => { if (memberRequests.get(roomId) === request) memberRequests.delete(roomId); });
+  return request.promise;
+}
 function apply(data: SyncResult, initial: boolean) {
   const rooms = { ...state.rooms }, names = { ...state.names };
   for (const id of data.leave) rooms[id] = { ...(rooms[id] ?? emptyRoom()), joined: false, members: [], typing: [], unread: 0 };
   for (const [id, update] of Object.entries(data.join)) {
+    const pending = memberRequests.get(id);
+    if (pending?.run === generation) Object.assign(pending.changes, update.members);
     Object.assign(names, update.names);
     const room = rooms[id] ?? emptyRoom();
     // A gap (limited timeline) restarts the room from this batch.
@@ -122,10 +172,11 @@ function apply(data: SyncResult, initial: boolean) {
     if (!initial && data.user_id) for (const event of update.events) {
       if (event.kind !== "message" || !mentionsMe(event, data.user_id, names) || state.ignored.includes(event.sender)) continue;
       const room = state.roomList.find(item => item.room_id === id)?.name || "PeliGames";
-      window.dispatchEvent(new CustomEvent<MatrixMentionDetail>(MATRIX_MENTION_EVENT, { detail: { sender: displayName(event.sender, names), room, message: event.body.slice(0, 160) } }));
+      window.dispatchEvent(new CustomEvent<MatrixMentionDetail>(MATRIX_MENTION_EVENT, { detail: { sender: displayName(event.sender, names), room, message: event.body.slice(0, 160), silent: matrixPresenceChoice(data.user_id) === "dnd" } }));
     }
   }
-  set({ rooms, names, ignored: data.ignored ?? state.ignored, ready: true, error: "", presence: { ...state.presence, ...data.presence } });
+  set({ rooms, names, ignored: data.ignored ?? state.ignored, ready: true, error: "", presence: { ...state.presence, ...data.presence }, memberPresence: { ...state.memberPresence, ...data.member_presence } });
+  resolveMissingNames();
 }
 function syncLoop(run: number) {
   if ("__PELI_UI_PREVIEW__" in window) {
@@ -154,9 +205,10 @@ function syncLoop(run: number) {
     if (/expirada|expirou|encerrada|Entre com Matrix|M_UNKNOWN_TOKEN/.test(error)) void refreshMatrixStatus();
   });
 }
-function stop() { generation++; stopMatrixSdk(); window.dispatchEvent(new Event("peligamesMatrixSignedOut")); set({ rooms: {}, names: {}, ignored: [], roomList: [], ready: false, presence: {} }); }
+function stop() { generation++; memberRequests.clear(); profileAttempts.clear(); stopMatrixSdk(); window.dispatchEvent(new Event("peligamesMatrixSignedOut")); set({ rooms: {}, names: {}, ignored: [], roomList: [], ready: false, presence: {}, memberPresence: {} }); }
 async function begin() {
   const run = ++generation;
+  profileAttempts.clear();
   await loadRooms();
   if (run === generation) void syncLoop(run);
 }

@@ -7,6 +7,7 @@ import { gameActivityName, useMatrixActivityPreferences } from "../services/matr
 import { useMatrixChat, displayName } from "../services/matrixChat";
 import { readGameLibrary } from "../services/gameLibraryCache";
 import { useI18n } from "../i18n/I18nContext";
+import { MatrixPresenceBadge } from "./MatrixPresenceBadge";
 
 const covers = new Map<string, Promise<string | null>>();
 function Activity({ user, name, avatar, visible, supporter }: { supporter: boolean; user: string; name: string | null; avatar?: string | null; visible: boolean }) {
@@ -29,7 +30,7 @@ function Activity({ user, name, avatar, visible, supporter }: { supporter: boole
   const cover = ownCover || (found?.name === name ? found.url : undefined);
   const memberName = displayName(user, chat.names);
   return <div className="matrix-game-activity" data-member={user}>
-    <div className="matrix-member-avatar" aria-hidden="true">{avatar && !avatarFailed ? <img src={avatar} alt="" onError={() => setAvatarFailed(true)} /> : memberName.slice(0,2).toUpperCase()}</div>
+    <div className="matrix-member-avatar">{avatar && !avatarFailed ? <img src={avatar} alt="" onError={() => setAvatarFailed(true)} /> : <span aria-hidden="true">{memberName.slice(0,2).toUpperCase()}</span>}<MatrixPresenceBadge status={chat.memberPresence[user]} pt={language === "pt"}/></div>
     {name && activity.covers && cover && failed !== cover && <img src={cover} alt="" onError={() => setFailed(cover)}/>}
     <div className="matrix-member-details"><div className="matrix-member-name"><strong title={user}>{memberName}</strong>{supporter && <MatrixSupporterBadge/>}</div>{name && <span title={name}>{language === "pt" ? "Jogando" : "Playing"} · {name}</span>}</div>
   </div>;

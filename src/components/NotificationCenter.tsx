@@ -106,12 +106,12 @@ export function NotificationCenter({ launcherUpdate, onNavigate, nexusError = ""
     document.addEventListener("pointerdown", unlockNotificationSound);
     document.addEventListener("keydown", unlockNotificationSound);
     const received = (event: Event) => {
-      const { sender, room, message } = (event as CustomEvent<MatrixMentionDetail>).detail;
-      void playNotificationSound();
+      const { sender, room, message, silent } = (event as CustomEvent<MatrixMentionDetail>).detail;
+      if (!silent) void playNotificationSound();
       const previous = storeRef.current;
       const notice: Notice = { id: `matrix:${crypto.randomUUID()}`, target: "matrix", version: "", message: `${sender}: ${message}`, source: room, unread: !openRef.current };
       commit({ ...previous, items: [notice, ...previous.items].slice(0, 20) });
-      if (!openRef.current) setToasts(queue => [...queue, notice]);
+      if (!openRef.current && !silent) setToasts(queue => [...queue, notice]);
     };
     window.addEventListener(MATRIX_MENTION_EVENT, received);
     return () => {

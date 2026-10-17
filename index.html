@@ -19,13 +19,17 @@
       .boot-splash i { display: block; width: 132px; height: 3px; border-radius: 999px; background: linear-gradient(90deg, transparent, #3b9bff, transparent) no-repeat; background-size: 45% 100%; animation: boot-splash-bar 1.15s ease-in-out infinite; }
       @keyframes boot-splash-breathe { 0%, 100% { opacity: .82; transform: scale(.96); } 50% { opacity: 1; transform: scale(1); } }
       @keyframes boot-splash-bar { from { background-position: -60% 0; } to { background-position: 160% 0; } }
+      /* index.html's copy stays above the interface and fades out once it has drawn. */
+      #boot-splash { transition: opacity .28s ease, visibility .28s; }
+      #boot-splash.is-done { opacity: 0; visibility: hidden; }
       .boot-splash-message { max-width: 70%; margin: 0; color: #ff8a8a; font: 500 14px system-ui, sans-serif; text-align: center; }
       @media (prefers-reduced-motion: reduce) { .boot-splash img, .boot-splash i { animation: none; } }
     </style>
   </head>
 
   <body>
-    <div id="root"><div class="boot-splash" role="status" aria-label="PeliGames"><img src="/peligames.svg" alt="" /><i></i></div></div>
+    <div id="boot-splash" class="boot-splash" role="status" aria-label="PeliGames"><img src="/peligames.svg" alt="" /><i></i></div>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -2,6 +2,8 @@ import { useEffect, useSyncExternalStore } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { setMatrixPresence, useMatrixChat } from "./matrixChat";
 import type { RunningGameSummary } from "../components/RunningGamesIndicator";
+import { useMatrixPresenceChoice } from "./matrixPresencePreferences";
+import { notifyError } from "./notifications";
 
 const KEY = "peligames.matrix.gameActivity";
 function preferences() {
@@ -30,24 +32,27 @@ export function sharedRunningGame(games: RunningGameSummary[], sharing: boolean)
 /** Only actual running sessions are shared; prefix/runtime preparation is private. */
 export function useMatrixGameActivity(games: RunningGameSummary[]) {
   const { userId } = useMatrixChat();
+  const presence = useMatrixPresenceChoice(userId);
   const { sharing } = useMatrixActivityPreferences();
   const { name, cover } = sharedRunningGame(games, sharing);
   useEffect(() => { set({ name, cover }); }, [name, cover]);
   useEffect(() => {
     if (!userId) { set({ error: "" }); return; }
-    let stopped = false, timer: ReturnType<typeof setTimeout>;
+    let stopped = false, reported = false, timer: ReturnType<typeof setTimeout>;
     const publish = async () => {
       try {
-        await invoke("matrix_chat_game_activity", { gameName: name || null, userId });
+        const sharedName = presence === "invisible" ? "" : name;
+        await invoke("matrix_chat_game_activity", { gameName: sharedName || null, userId, presence });
         if (!stopped) {
+          reported = false;
           set({ error: "" });
-          setMatrixPresence(userId, name ? `Jogando ${name} · PeliGames` : "");
+          setMatrixPresence(userId, sharedName ? `Jogando ${sharedName} · PeliGames` : "");
         }
       } catch (error) {
-        if (!stopped) { set({ error: String(error) }); timer = setTimeout(() => void publish(), 30000); }
+        if (!stopped) { set({ error: String(error) }); if (!reported) notifyError("Matrix", error); reported = true; timer = setTimeout(() => void publish(), 30000); }
       }
     };
     timer = setTimeout(() => void publish(), 500);
     return () => { stopped = true; clearTimeout(timer); };
-  }, [userId, name]);
+  }, [userId, name, presence]);
 }

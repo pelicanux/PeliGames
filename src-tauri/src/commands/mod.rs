@@ -31,6 +31,7 @@ pub mod nexus_reports;
 mod nexus_profile;
 pub mod nexus_launch_options;
 pub mod mod_launch_options;
+pub mod matrix_gifs;
 
 mod nexus_deployment;
 mod nexus_deploy_methods;
@@ -105,5 +106,8 @@ pub mod matrix_voice;
 
 pub mod matrix_audio;
 pub mod matrix_call;
+pub mod matrix_screen;
+pub mod matrix_screen_audio;
+pub mod notification_sound;
 
 pub mod matrix_rtc;

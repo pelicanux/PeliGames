@@ -214,8 +214,13 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         ? [await invoke<GameInfo[]>("scan_external_library"), [] as GameInfo[]]
         : await Promise.all([invoke<GameInfo[]>("scan_installed_games", { apiKey: STEAMGRIDDB_API_KEY, customFolders: folders }), invoke<GameInfo[]>("scan_external_library").catch(() => [] as GameInfo[])]);
       const result = scanned.map(game => {
-        const settings = external.find(entry => entry.launcher === game.launcher && entry.path === game.path);
-        return settings ? {...game, external_id: settings.external_id, advanced: settings.advanced, proton: settings.proton, prefix: settings.prefix, directory: settings.directory} : game;
+        // The DLSS scan points at the executable's folder, often below the game's
+        // root (bin/x64_dx12…): match Steam games by their ID, others by containment.
+        const inside = (root: string) => { const base = root.replace(/\/+$/, ""); return game.path === base || game.path.startsWith(base + "/"); };
+        const settings = external.find(entry => entry.launcher === game.launcher && (entry.path === game.path || (game.launcher === "Steam" && Boolean(game.app_id) && entry.app_id === game.app_id) || (game.launcher !== "Steam" && inside(entry.path))));
+        // Never the launcher's folder: the DLSS library finds the game folder its own
+        // way (the executable that loads the graphics API) and keeps manual choices.
+        return settings ? {...game, external_id: settings.external_id, advanced: settings.advanced, proton: settings.proton, prefix: settings.prefix} : game;
       });
       if (scope !== activeScope.current) return;
       setGames(applyCustomCovers([...result.filter(game => game.launcher !== "PeliGames"), ...ownEntries.current]));
@@ -298,11 +303,11 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
 
 
   const handleMouseEnter = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (viewMode === "list" || performanceMode) return;
+    if (viewMode === "list" || performanceMode || event.currentTarget.classList.contains("is-away")) return;
     hoverBounds.current = { card: event.currentTarget, rect: event.currentTarget.getBoundingClientRect() };
   };
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (viewMode === "list" || performanceMode) return;
+    if (viewMode === "list" || performanceMode || event.currentTarget.classList.contains("is-away")) return;
     const card = event.currentTarget;
     if (hoverBounds.current?.card !== card) handleMouseEnter(event);
     hoverPosition.current = { x: event.clientX, y: event.clientY };
@@ -490,7 +495,9 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const runningBadge = (game: GameInfo) => (game.nexus_running || game.path === runningGamePath) && <span className="library-running-badge" role="status"><i aria-hidden="true" />{t("gameExecution", "running")}</span>;
   const renderCardContent = (game: GameInfo) => {
     if (brokenCards.has(gameViewKey(game))) return null;
-    if (gameViewKey(game) === selectedGameKey) {
+    // List view: a separate "selected" row. Grid view keeps the same card and image
+    // (only a class turns it grey), so returning from the details swaps nothing.
+    if (gameViewKey(game) === selectedGameKey && viewMode === "list") {
       return (
         <div 
           key={gameViewKey(game)}
@@ -519,7 +526,6 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
           ) : (
             <div className="selected-cover-copy selected-cover-copy--fallback" aria-hidden="true">
               <img src="/peligames.svg" alt="" />
-              {viewMode === "grid" && <span>{game.name}</span>}
             </div>
           )}
           {runningBadge(game)}
@@ -531,7 +537,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
 
     return (
       <div
-        className={`library-game-card ${isPreparing(game) ? "is-preparing-game" : ""} ${viewMode === "list" ? "library-game-card--list" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shatter" ? "is-holding-launch" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "particles" ? "is-holding-particles" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shrink" ? "is-holding-shrink" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "freeze" ? "is-holding-freeze" : ""}`}
+        className={`library-game-card${gameViewKey(game) === selectedGameKey ? " is-away" : ""} ${isPreparing(game) ? "is-preparing-game" : ""} ${viewMode === "list" ? "library-game-card--list" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shatter" ? "is-holding-launch" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "particles" ? "is-holding-particles" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shrink" ? "is-holding-shrink" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "freeze" ? "is-holding-freeze" : ""}`}
         key={`${gameViewKey(game)}-${viewMode}-${performanceMode ? "performance" : "elegant"}`} 
         onPointerDown={event => startHold(event, game)}
         onPointerMove={event => {
@@ -550,6 +556,14 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onTransitionEnd={event => {
+          const card = event.currentTarget;
+          if (event.target !== card || event.propertyName !== "transform" || card.matches(":hover")) return;
+          // An identity perspective/scale3d still retains a GPU surface. Release
+          // it once the tilt settles, rather than accumulating one per visited card.
+          card.style.transition = "box-shadow .35s ease, border-color .35s ease";
+          card.style.transform = "none";
+        }}
         style={{ 
           background: "rgba(0,0,0,0.3)", 
           borderRadius: "8px", 
@@ -573,10 +587,11 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
         pointerEvents: "none", opacity: 0, transition: "opacity .3s ease-out", zIndex: 10
       }} />
-      {/* The same portrait owns the shared layout in both views; never the full list row. */}
+      {/* The portrait animates between grid and list views; never the full list row.
+          No layoutId: a shared id made the cover, remounted after the details
+          closed, animate in from where it was left (tilted, mid-hover) and blink. */}
       <motion.div className="library-cover-thumbnail" layout={performanceMode ? false : "preserve-aspect"} layoutDependency={viewMode}
-        onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, game }); }}
-        layoutId={performanceMode ? undefined : `cover-${gameViewKey(game)}`}>
+        onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, game }); }}>
       {!imageErrors.has(game.path) && game.cover_url ? (
         <SmoothImage
           src={game.cover_url}
