@@ -68,7 +68,7 @@ fn yaml_update(path: &Path, changes: &[(&[&str], String)]) -> Result<(), String>
 
 // Valve KeyValues text subset, including comments and escaped quotes. Reject
 // unsupported/ambiguous input instead of rewriting a partially parsed config.
-fn vdf(text: &str) -> Result<Value,String> {
+pub(super) fn vdf(text: &str) -> Result<Value,String> {
     let bytes = text.as_bytes(); let mut i = 0; let mut tokens = Vec::new();
     while i < bytes.len() {
         if bytes[i].is_ascii_whitespace() { i += 1; continue; }
@@ -118,10 +118,15 @@ fn vdf_dump(value:&Value)->Result<String,String> {
     let mut out=String::new();emit(value,0,&mut out)?;Ok(out)
 }
 
+pub(super) fn steam_config(game: &ExternalGame) -> Result<std::path::PathBuf, String> {
+    let home = dirs::home_dir().ok_or("Pasta pessoal indisponível.")?;
+    let roots = super::super::steam_installation::roots(&home, game.flatpak);
+    roots.into_iter().map(|p| p.join("config/config.vdf")).find(|p| p.is_file()).ok_or("Configuração Steam indisponível.".into())
+}
 fn steam(home:&Path,game:&ExternalGame,proton:&Path)->Result<(),String> {
     let id=game.app_id.as_deref().ok_or("Steam AppID ausente.")?;
     if id.parse::<u32>().ok().filter(|n|*n>0).is_none() {return Err("Steam AppID inválido.".into());}
-    let roots=if game.flatpak {vec![home.join(".var/app/com.valvesoftware.Steam/.local/share/Steam"),home.join(".var/app/com.valvesoftware.Steam/data/Steam")]} else {vec![home.join(".local/share/Steam"),home.join(".steam/steam"),home.join(".steam/root")]};
+    let roots=super::super::steam_installation::roots(home, game.flatpak);
     let root=roots.into_iter().find(|p|p.join("config/config.vdf").is_file()).ok_or("Configuração Steam indisponível.")?;
     let path=root.join("config/config.vdf"); let before=read(&path)?; let mut data=vdf(&before)?;
     let directory=root.join("compatibilitytools.d");fs::create_dir_all(&directory).map_err(|e|e.to_string())?;

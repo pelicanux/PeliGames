@@ -12,13 +12,15 @@ interface Props {
   binPath: string;
   setBinPath: (path: string) => void;
   hasCachedBin: boolean;
+  cachedPaths?: string[];
+  disabled?: boolean;
 }
 
-export const ModelSourceSelector: React.FC<Props> = ({ modelSource, setModelSource, dllPath, setDllPath, binPath, setBinPath, hasCachedBin }) => {
+export const ModelSourceSelector: React.FC<Props> = ({ modelSource, setModelSource, dllPath, setDllPath, binPath, setBinPath, hasCachedBin, cachedPaths = [], disabled = false }) => {
   const { t } = useI18n();
   const [picking, setPicking] = useState(false);
   const handlePickFile = async (type: ModelSource) => {
-    if (picking) return;
+    if (picking || disabled) return;
     setPicking(true);
     try {
       const path = await openFilePicker(type === "dll" ? "DLL/ZIP" : "Model Bin", type === "dll" ? ["dll", "zip"] : ["bin"]);
@@ -42,7 +44,7 @@ export const ModelSourceSelector: React.FC<Props> = ({ modelSource, setModelSour
       </div>
       <p className="model-source-notice">{t("modelSource", "dllNotice")}</p>
       <div className="model-source-options">
-        <button type="button" disabled={picking} aria-pressed={modelSource === "bin" && Boolean(binPath)}
+        <button type="button" disabled={picking || disabled} aria-pressed={modelSource === "bin" && Boolean(binPath)}
           className={`model-source-option ${binPath ? "model-source-option--ready" : ""}`}
           onClick={() => handlePickFile("bin")} title={binPath || t("modelSource", "selectBin")}>
           <span className="model-source-symbol">
@@ -51,10 +53,10 @@ export const ModelSourceSelector: React.FC<Props> = ({ modelSource, setModelSour
           <span className="model-source-option-text">
             <strong>{t("modelSource", "useExisting")}</strong>
             <span>{binPath ? t("modelSource", hasCachedBin ? "binCached" : "fileSelected") : t("modelSource", "selectBin")}</span>
-            {binPath && <small>{binPath}</small>}
+            {hasCachedBin && cachedPaths.length ? cachedPaths.map(path => <small key={path}>{path}</small>) : binPath && <small>{binPath}</small>}
           </span>
         </button>
-        <button type="button" disabled={picking} aria-pressed={modelSource === "dll" && Boolean(dllPath)}
+        <button type="button" disabled={picking || disabled} aria-pressed={modelSource === "dll" && Boolean(dllPath)}
           className="model-source-option" onClick={() => handlePickFile("dll")} title={dllPath || t("modelSource", "selectDll")}>
           <span className="model-source-symbol"><MenuIcon name="document" /></span>
           <span className="model-source-option-text">

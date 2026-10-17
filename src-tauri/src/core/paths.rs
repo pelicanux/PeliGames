@@ -8,6 +8,12 @@ use std::{
 pub const APP_DIRECTORY: &str = "PeliGames";
 pub const APP_IDENTIFIER: &str = "com.pelicano.peligames";
 static MIGRATION: OnceLock<Result<(), String>> = OnceLock::new();
+static MIGRATIONS_PAUSED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+// During reset recovery, even a normal migration could merge a folder that was
+// not renamed yet into a newly created profile. Keep both sets untouched.
+pub fn pause_migrations(paused: bool) {
+    MIGRATIONS_PAUSED.store(paused, std::sync::atomic::Ordering::Release);
+}
 
 fn directory(path: &Path) -> Result<(), String> {
     match fs::symlink_metadata(path) {
@@ -101,6 +107,7 @@ pub fn migrate_config_root(config: &Path) -> Result<(), String> {
 }
 
 pub fn initialize() -> Result<(), String> {
+    if MIGRATIONS_PAUSED.load(std::sync::atomic::Ordering::Acquire) { return Ok(()); }
     MIGRATION
         .get_or_init(|| {
             let config = dirs::config_dir().ok_or("Pasta de configuração indisponível.")?;
@@ -125,6 +132,7 @@ pub fn initialize() -> Result<(), String> {
 /// in `~/.cache/PeliGames`; move them in before any webview opens. Failures keep
 /// the old files where they are and never stop the launcher.
 pub fn migrate_scattered_data() -> Vec<String> {
+    if MIGRATIONS_PAUSED.load(std::sync::atomic::Ordering::Acquire) { return Vec::new(); }
     let Ok(root) = app_root() else { return Vec::new(); };
     migrate_scattered_data_at(&root, dirs::data_local_dir().as_deref(), dirs::cache_dir().as_deref())
 }

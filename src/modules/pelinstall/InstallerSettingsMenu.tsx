@@ -23,7 +23,7 @@ export function InstallerSettingsMenu() {
       const rect = trigger.current?.getBoundingClientRect();
       if (!rect) return;
       const margin = 8;
-      const width = Math.max(0, Math.min(240, window.innerWidth - margin * 2));
+      const width = Math.max(0, Math.min(260 * scale, window.innerWidth - margin * 2));
       const maxHeight = Math.max(0, window.innerHeight - margin * 2);
       const height = Math.min(menu.current?.offsetHeight ?? 0, maxHeight);
       // Keep the recovery controls inside the window, even after scaling or resizing.

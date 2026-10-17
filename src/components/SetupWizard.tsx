@@ -10,7 +10,6 @@ import { ModelSourceSelector } from "./ModelSourceSelector";
 import { ModelSource } from "../types/installer";
 
 import { useI18n } from "../i18n/I18nContext";
-import { EmergencyResetFlow } from "./EmergencyResetFlow";
 import { hasDlssnrConfiguration } from "../services/modConfiguration";
 
 export interface AppConfig {
@@ -71,8 +70,9 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
   const [dllPath, setDllPath] = useState("");
   const [binPath, setBinPath] = useState("");
   const [hasCachedBin, setHasCachedBin] = useState(false);
+  const [cachedPaths, setCachedPaths] = useState<string[]>([]);
+  const [backendPath, setBackendPath] = useState("");
   const [loading, setLoading] = useState(false);
-  const [emergencyStage, setEmergencyStage] = useState(0);
 
   // Download state
   const [isDownloading, setIsDownloading] = useState(false);
@@ -84,59 +84,38 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [extractingDll, setExtractingDll] = useState(false);
 
+  const readBackend = async () => {
+    const state = await invoke<{path:string;ready:boolean;cached:string[]}>("get_backend_setup_status", {gpuArch});
+    setBackendPath(state.ready ? state.path : "");
+    setDownloadComplete(state.ready);
+    setCachedPaths(state.cached); setHasCachedBin(state.cached.length > 0);
+    setBinPath(state.cached[0] || "");
+    return state;
+  };
   useEffect(() => {
     let active = true;
-    setHasCachedBin(false);
-    setBinPath("");
+    setVersionStatus(null); setDownloadComplete(false); setBackendPath("");
+    setHasCachedBin(false); setCachedPaths([]); setBinPath(""); setDllPath("");
     if (!gpuCompatible) return;
-    invoke<string | null>("check_cached_bin", { bitness: "64", gpuArch })
-      .then(path => { if (active && path) { setHasCachedBin(true); setBinPath(path); } })
-      .catch(() => {});
-    return () => { active = false; };
-  }, [gpuArch, gpuCompatible]);
-
-  useEffect(() => {
-    let active = true;
-    setVersionStatus(null);
-    setDownloadComplete(false);
-    if (!gpuCompatible) return;
-    const checkVersion = async () => {
-      setCheckingVersion(true);
-      setDownloadComplete(false);
+    setCheckingVersion(true);
+    const check = async () => {
       try {
-        const status = await invoke<BackendVersionStatus>("check_backend_version", { gpuArch });
+        const state = await invoke<{path:string;ready:boolean;cached:string[]}>("get_backend_setup_status", {gpuArch});
         if (!active) return;
-        setVersionStatus(status);
-        if (status.current && !status.needs_update) {
-          setDownloadComplete(true);
-        } else {
-          setDownloadComplete(false);
-        }
-      } catch (err) {
-        console.error("Failed to check version:", err);
-      } finally {
-        if (active) setCheckingVersion(false);
-      }
+        setBackendPath(state.ready ? state.path : ""); setDownloadComplete(state.ready);
+        setCachedPaths(state.cached); setHasCachedBin(state.cached.length > 0); setBinPath(state.cached[0] || "");
+        const status = await invoke<BackendVersionStatus>("check_backend_version", {gpuArch}).catch(() => null);
+        if (active) setVersionStatus(status);
+      } catch (error) { if (active) setErrorMsg(String(error)); }
+      finally { if (active) setCheckingVersion(false); }
     };
-    checkVersion();
-
-    const unlisten = listen<ProgressPayload>("download-progress", (event) => {
-      const payload = event.payload;
-      if (payload.total > 0) {
-        const pct = (payload.downloaded / payload.total) * 100;
-        setProgressPct(pct > 100 ? 100 : pct);
-      }
-      
-      if (payload.speed_bytes_per_sec > 0) {
-        const speedMb = payload.speed_bytes_per_sec / (1024 * 1024);
-        setSpeedStr(`${speedMb.toFixed(1)} MB/s`);
-      }
+    void check();
+    const unlisten = listen<ProgressPayload>("download-progress", ({payload}) => {
+      if (!active) return;
+      if (payload.total > 0) setProgressPct(Math.min(100, payload.downloaded / payload.total * 100));
+      if (payload.speed_bytes_per_sec > 0) setSpeedStr(`${(payload.speed_bytes_per_sec / (1024 * 1024)).toFixed(1)} MB/s`);
     });
-
-    return () => {
-      active = false;
-      unlisten.then(f => f()).catch(() => {});
-    };
+    return () => { active = false; unlisten.then(f => f()).catch(() => {}); };
   }, [gpuArch, gpuCompatible]);
 
   const handleDownload = async () => {
@@ -150,13 +129,13 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
     
     try {
       await invoke<string>("update_backend", { gpuArch });
-      setDownloadComplete(true);
+      const installed = await readBackend();
+      if (!installed.ready) throw new Error(language === "pt" ? "Backend incompleto. Confira os arquivos baixados." : "Backend incomplete. Check the downloaded files.");
       const vStatus = await invoke<BackendVersionStatus>("check_backend_version", { gpuArch }).catch(() => null);
       if (vStatus) setVersionStatus(vStatus);
     } catch (err: any) {
       if (err === "Download cancelado pelo usuário.") {
-        invoke("delete_backend", { gpuArch }).catch(console.error);
-        console.log("Download cancelado.");
+        await readBackend().catch(() => {});
       } else {
         console.error(err);
         setErrorMsg(t("setupWizard", "downloadError") + err);
@@ -169,7 +148,6 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
   const handleCancelDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
     await invoke("cancel_update");
-    setIsDownloading(false);
   };
 
   const handleLocalFolder = async () => {
@@ -181,12 +159,13 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
     setErrorMsg(null);
     try {
       await invoke<string>("copy_local_backend", { sourcePath: path, gpuArch });
-      setDownloadComplete(true);
+      const installed = await readBackend();
+      if (!installed.ready) throw new Error(language === "pt" ? "Backend incompleto. Confira os arquivos baixados." : "Backend incomplete. Check the downloaded files.");
       const vStatus = await invoke<BackendVersionStatus>("check_backend_version", { gpuArch }).catch(() => null);
       if (vStatus) setVersionStatus(vStatus);
     } catch (err) {
       console.error(err);
-      setErrorMsg(t("setupWizard", "copyError"));
+      setErrorMsg(`${t("setupWizard", "copyError")} ${String(err)}`);
     } finally {
       setLoading(false);
     }
@@ -227,6 +206,8 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
         setExtractingDll(false);
       }
       
+      if (modelSource === "bin") selectedPath = await invoke<string>("import_model_bins", {gpuArch, binPath:selectedPath});
+      await readBackend();
       const config: AppConfig = {
         backend: gpuArch === "rdna4" ? "AMDNR" : "OptiScaler",
         dll_version: selectedPath,
@@ -239,7 +220,7 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
       onComplete(saved!);
     } catch (err) {
       console.error("Failed to save config:", err);
-      setErrorMsg(t("setupWizard", "saveError"));
+      setErrorMsg(`${t("setupWizard", "saveError")} ${String(err)}`)
     } finally {
       setLoading(false);
     }
@@ -250,18 +231,12 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
       <ModalSurface className="modal-content dialog-glass setup-wizard setup-wizard-modern" role="dialog" aria-modal="true" aria-labelledby="setup-wizard-title"
         hideClose={!allowCancel || !onCancel} onDismiss={onCancel} closeDisabled={isDownloading || loading || extractingDll}
         header={<><h2 id="setup-wizard-title">{onBack ? <button type="button" className="wizard-titlebar-back" aria-label={t("welcome", "back")} disabled={isDownloading || loading || extractingDll} onClick={onBack}><MenuIcon name="back" /></button> : <MenuIcon name="sliders" />}{t("setupWizard", "title")}</h2></>}
-        headerActions={        <div className="setup-wizard-header-actions">
-          <button className="wizard-emergency-trigger" disabled={isDownloading || loading || extractingDll}
-            aria-expanded={emergencyStage > 0} onClick={() => setEmergencyStage(value => value ? 0 : 1)}>
-            <span aria-hidden="true">⚠</span> {language === "en" ? "Emergency" : "Emergência"}
-          </button>
-
-        </div>}
         footer={        <footer className="setup-wizard-footer">
           <button
             onClick={handleSave}
-            disabled={!gpuCompatible || loading || extractingDll || !downloadComplete}
-            className="btn wizard-continue"
+            disabled={!gpuCompatible || loading || extractingDll || isDownloading || checkingVersion || !downloadComplete}
+            className={`btn wizard-continue${loading || extractingDll ? " wizard-continue--busy" : ""}`}
+            aria-busy={loading || extractingDll}
             style={{
               width: "100%", padding: "1rem", borderRadius: "8px", fontSize: "1.1rem",
               fontFamily: "'Rajdhani', sans-serif",
@@ -279,7 +254,7 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
                 position: "absolute", left: 0, top: 0, bottom: 0,
                 background: "rgba(var(--surface-255-255-255, 255, 255, 255), 0.2)",
                 zIndex: 0,
-                animation: "fillUpFake 15s cubic-bezier(0.1, 0.7, 0.1, 1) forwards"
+                animation: "wizardModelProgress 60s linear forwards"
               }} />
             )}
             <div style={{ zIndex: 1, display: "flex", alignItems: "center", gap: "0.5rem", pointerEvents: "none" }}>
@@ -303,70 +278,38 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
           {t("setupWizard", "subtitle")}
         </p>
         
-        <EmergencyResetFlow stage={emergencyStage} onStage={setEmergencyStage} />
-        <div role="status" aria-live="polite" style={{ padding: "1rem", marginBottom: "1.2rem", borderRadius: "10px", border: `1px solid ${gpuCompatible ? "#10b98166" : "#f8717166"}`, background: "rgba(var(--surface-255-255-255, 255, 255, 255), 0.03)", color: gpuCompatible ? "var(--tone-6ee7b7, #6ee7b7)" : "var(--accent-light)" }}>
-          {detectingGpu ? t("setupWizard", "gpuChecking") : <>
-            {gpus.length > 0 && <div>{t("setupWizard", "gpuDetected")}: {gpus.map(gpu => gpu.model).join(" · ")}</div>}
-            <div style={{ marginTop: "0.4rem" }}>{gpuCompatible
-              ? `${t("setupWizard", "gpuRecommendation")}: ${recommendedGpu?.backend === "rdna4" ? "DLSSNR-AMD (RDNA 4 / RX 9000)" : "DLSSNR-RDNA3 (RDNA 3 / RX 7000)"}`
-              : t("setupWizard", gpus.length ? "gpuIncompatible" : "gpuUnknown")}</div>
-            {!gpuCompatible && <button className="btn btn-secondary" style={{ marginTop: "0.7rem" }} onClick={() => setGpuRevision(value => value + 1)}>{t("setupWizard", "gpuRetry")}</button>}
-          </>}
+        <div className={`wizard-gpu-status${gpuCompatible ? " compatible" : ""}`} role="status" aria-live="polite">
+          <MenuIcon name="chip" />
+          <div>{detectingGpu ? t("setupWizard", "gpuChecking") : <>
+            {gpus.length > 0 && <span><strong>{t("setupWizard", "gpuDetected")}:</strong> {gpus.map(gpu => gpu.model).join(" · ")}</span>}
+            {!gpuCompatible && <span>{t("setupWizard", gpus.length ? "gpuIncompatible" : "gpuUnknown")}</span>}
+          </>}</div>
+          {!detectingGpu && !gpuCompatible && <button className="btn btn-secondary" onClick={() => setGpuRevision(value => value + 1)}>{t("setupWizard", "gpuRetry")}</button>}
         </div>
         <fieldset disabled={!gpuCompatible} style={{ border: 0, margin: 0, padding: 0, minWidth: 0, opacity: gpuCompatible ? 1 : 0.45 }}>
-        <div className="backend-options" style={{ display: "flex", gap: "1.5rem", marginBottom: "1.5rem" }}>
-          <div className={`backend-option ${gpuArch === "rdna4" ? "active" : ""}`}
-            style={{ 
-              flex: 1, padding: "1.5rem", borderRadius: "12px", cursor: "pointer",
-              border: gpuArch === "rdna4" ? "2px solid var(--accent)" : "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)",
-              background: gpuArch === "rdna4" ? "rgba(var(--accent-rgb), 0.05)" : "transparent",
-              transition: "all 0.2s"
-            }}
-            aria-disabled={!gpuCompatible || isDownloading || loading}
-            onClick={() => { if (gpuCompatible && !isDownloading && !loading) setGpuArch("rdna4"); }}
-          >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-              <h3 style={{ margin: 0, color: gpuArch === "rdna4" ? "var(--accent)" : "var(--tone-e2e8f0, #e2e8f0)", fontSize: "1.4rem", fontFamily: "'Rajdhani', sans-serif" }}>DLSSNR-AMD</h3>
-              <span style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "4px", background: "rgba(var(--accent-rgb), 0.15)", color: "var(--tone-f87171, #f87171)", fontWeight: "bold", border: "1px solid rgba(var(--accent-rgb), 0.3)" }}>RDNA 4 / RX 9000</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <button onClick={(e) => { e.stopPropagation(); openUrl("https://github.com/mochizuki0323/DLSSNR-AMD"); }} style={{ background: "transparent", border: "none", cursor: "pointer", padding: "0.2rem", fontSize: "0.8rem", color: "var(--tone-60a5fa, #60a5fa)", display: "flex", alignItems: "center", gap: "0.4rem", textDecoration: "none", borderRadius: "4px" }} title={t("setupWizard", "viewOnGithub")}>
-                <span style={{ fontSize: "0.8rem", color: "var(--tone-f87171, #f87171)", fontWeight: 600 }}>by mochizuki0323</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-              </button>
-            </div>
-            <p style={{ fontSize: "0.85rem", color: "var(--tone-cbd5e1, #cbd5e1)", marginTop: "1rem", lineHeight: "1.5" }}>
-              {t("setupWizard", "rdna4Desc")}
-              {recommendedGpu?.backend === "rdna4" && <span style={{ display: "block", color: "var(--tone-6ee7b7, #6ee7b7)", fontWeight: 600, marginTop: "0.5rem" }}>✓ {t("setupWizard", "recommended")}</span>}
-            </p>
-          </div>
-
-          <div className={`backend-option ${gpuArch === "rdna3" ? "active" : ""}`}
-            style={{ 
-              flex: 1, padding: "1.5rem", borderRadius: "12px", cursor: "pointer",
-              border: gpuArch === "rdna3" ? "2px solid var(--accent)" : "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)",
-              background: gpuArch === "rdna3" ? "rgba(var(--accent-rgb), 0.05)" : "transparent",
-              transition: "all 0.2s"
-            }}
-            aria-disabled={!gpuCompatible || isDownloading || loading}
-            onClick={() => { if (gpuCompatible && !isDownloading && !loading) setGpuArch("rdna3"); }}
-          >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-              <h3 style={{ margin: 0, color: gpuArch === "rdna3" ? "var(--accent)" : "var(--tone-e2e8f0, #e2e8f0)", fontSize: "1.4rem", fontFamily: "'Rajdhani', sans-serif" }}>DLSSNR-RDNA3</h3>
-              <span style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "4px", background: "rgba(var(--accent-rgb), 0.15)", color: "var(--tone-f87171, #f87171)", fontWeight: "bold", border: "1px solid rgba(var(--accent-rgb), 0.3)" }}>RDNA 3 / RX 7000</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <button onClick={(e) => { e.stopPropagation(); openUrl("https://github.com/mauri870/DLSSNR-RDNA3"); }} style={{ background: "transparent", border: "none", cursor: "pointer", padding: "0.2rem", fontSize: "0.8rem", color: "var(--tone-60a5fa, #60a5fa)", display: "flex", alignItems: "center", gap: "0.4rem", textDecoration: "none", borderRadius: "4px" }} title={t("setupWizard", "viewOnGithub")}>
-                <span style={{ fontSize: "0.8rem", color: "var(--tone-f87171, #f87171)", fontWeight: 600 }}>by mauri870</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-              </button>
-            </div>
-            <p style={{ fontSize: "0.85rem", color: "var(--tone-cbd5e1, #cbd5e1)", marginTop: "1rem", lineHeight: "1.5" }}>
-              {t("setupWizard", "rdna3Desc")}
-              {recommendedGpu?.backend === "rdna3" && <span style={{ display: "block", color: "var(--tone-6ee7b7, #6ee7b7)", fontWeight: 600, marginTop: "0.5rem" }}>✓ {t("setupWizard", "recommended")}</span>}
-            </p>
-          </div>
+        <div className="backend-options wizard-backend-options">
+          {([
+            {arch:"rdna4", name:"DLSSNR-AMD", hardware:"RDNA 4 / RX 9000", author:"mochizuki0323", repo:"DLSSNR-AMD", description:"rdna4Desc"},
+            {arch:"rdna3", name:"DLSSNR-RDNA3", hardware:"RDNA 3 / RX 7000", author:"mauri870", repo:"DLSSNR-RDNA3", description:"rdna3Desc"},
+          ] as const).map(backend => <div key={backend.arch} className={`backend-option wizard-backend-card${gpuArch === backend.arch ? " active" : ""}`}>
+            <button type="button" className="wizard-backend-select" aria-pressed={gpuArch === backend.arch}
+              disabled={!gpuCompatible || isDownloading || loading} onClick={() => setGpuArch(backend.arch)}>
+              <div className="wizard-backend-heading"><h3>{backend.name}</h3>
+                <div className="wizard-backend-hardware"><span>{backend.hardware}</span>
+                  {recommendedGpu?.backend === backend.arch && <small>✓ {t("setupWizard", "recommended")}</small>}
+                </div>
+              </div>
+              <p>{t("setupWizard", backend.description)}</p>
+            </button>
+            <button type="button" className="wizard-maintainer-link" title={t("setupWizard", "viewOnGithub")}
+              onClick={() => { void openUrl(`https://github.com/${backend.author}/${backend.repo}`); }}>
+              {backend.author}<MenuIcon name="externalLink" />
+            </button>
+          </div>)}
         </div>
+        <p className="wizard-backend-explanation">{language === "pt"
+          ? "Este download inclui o backend DLSS NR e as ferramentas de extração e instalação. Não inclui a DLL da NVIDIA nem os modelos de IA: obtenha a nvngx_dlssnr.dll separadamente e extraia os modelos na etapa abaixo."
+          : "This download includes the DLSS NR backend and extraction and installation tools. It does not include NVIDIA’s DLL or AI models: obtain nvngx_dlssnr.dll separately and extract the models below."}</p>
 
         {errorMsg && (
           <div style={{ fontSize: "0.85rem", color: "var(--tone-f87171, #f87171)", background: "rgba(248, 113, 113, 0.1)", padding: "0.8rem", borderRadius: "8px", border: "1px solid rgba(248, 113, 113, 0.2)", display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
@@ -375,7 +318,7 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
           </div>
         )}
 
-        <div style={{ marginBottom: "2rem", display: "flex", gap: "1rem" }}>
+        <div className="wizard-backend-download-actions">
           <button 
             className="btn wizard-download"
             style={{ 
@@ -386,7 +329,7 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
               fontWeight: "bold", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem",
               overflow: "hidden"
             }}
-            disabled={checkingVersion || isDownloading || downloadComplete}
+            disabled={checkingVersion || isDownloading || loading || (downloadComplete && !versionStatus?.needs_update)}
             onClick={handleDownload}
           >
             {isDownloading && (
@@ -398,7 +341,7 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
             <span style={{ zIndex: 1, pointerEvents: "none", display: "flex", alignItems: "center", gap: "0.5rem" }}>
               {checkingVersion ? t("setupWizard", "verifying") :
                 isDownloading ? `${t("setupWizard", "downloading")} ${Math.round(progressPct)}% ${speedStr ? `(${speedStr})` : ""}` :
-                downloadComplete ? (
+                downloadComplete && !versionStatus?.needs_update ? (
                   <>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     {t("setupWizard", "backendUpdated")} ({versionStatus?.current})
@@ -434,6 +377,8 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
           )}
         </div>
 
+        {backendPath && downloadComplete && !isDownloading && <button type="button" className="wizard-backend-path"
+          title={backendPath} onClick={() => { void invoke("open_backend_folder", {gpuArch}).catch(error => setErrorMsg(String(error))); }}>{backendPath}</button>}
         <ModelSourceSelector 
           modelSource={modelSource}
           setModelSource={setModelSource}
@@ -442,6 +387,8 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
           binPath={binPath}
           setBinPath={setBinPath}
           hasCachedBin={hasCachedBin}
+          cachedPaths={cachedPaths}
+          disabled={!gpuCompatible || !downloadComplete || isDownloading || loading || extractingDll || checkingVersion}
         />
 
         </fieldset>

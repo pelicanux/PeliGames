@@ -2,7 +2,15 @@ use crate::core::config_manager::{preserve_saved_preferences, save_config, AppCo
 
 #[tauri::command]
 pub fn load_app_config(app: tauri::AppHandle) -> Result<Option<AppConfig>, String> {
-    let config = crate::core::config_manager::load_config_result()?;
+    let mut config = crate::core::config_manager::load_config_result()?;
+    if let Some(ref mut current) = config {
+        let root = crate::core::paths::mod_root()?;
+        if std::path::Path::new(&current.dll_version).parent() == Some(root.as_path()) && current.dll_version.ends_with(".bin") {
+            let gpu = if current.backend == "AMDNR" { "rdna4" } else { "rdna3" };
+            let canonical = ["64", "32"].into_iter().map(|bits| root.join("backend-files").join(gpu).join(bits).join("dlssnr-amd/dlssnr.bin")).find(|file| file.is_file());
+            if let Some(file) = canonical { current.dll_version = file.to_string_lossy().to_string(); save_config(current)?; }
+        }
+    }
     crate::core::logger::log_launcher(&app, "INFO", if config.is_some() { "Configuração carregada" } else { "Sem configuração válida; abrindo wizard inicial" });
     Ok(config)
 }
@@ -37,67 +45,6 @@ pub async fn clear_game_caches(app: tauri::AppHandle) -> Result<(), String> {
     crate::core::logger::log_result(&app, "Limpeza das informações em cache", &result);
     result
 }
-
-// The frontend cannot provide a deletion path. Never follow a redirected app folder.
-fn remove_launcher_directory(config_root: &std::path::Path) -> Result<(), String> {
-    let target = config_root.join(crate::core::paths::APP_DIRECTORY);
-    match std::fs::symlink_metadata(&target) {
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-        Err(error) => return Err(error.to_string()),
-        Ok(metadata) if metadata.file_type().is_symlink() || !metadata.is_dir() =>
-            return Err("The launcher configuration folder is not a regular directory".to_string()),
-        Ok(_) => {},
-    }
-    // Reset settings and mod data; preserve the installed library and runners.
-    for file in ["config.json", "launcher.log", "launcher.previous.log"] {
-        let path = target.join(file);
-        match std::fs::remove_file(path) {
-            Ok(()) => {},
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {},
-            Err(error) => return Err(error.to_string()),
-        }
-    }
-    let mods = target.join("Mod");
-    if let Ok(meta) = std::fs::symlink_metadata(&mods) {
-        if meta.file_type().is_symlink() || !meta.is_dir() { return Err("A pasta Mod não é um diretório regular.".into()); }
-        let mod_data = mods.join("DLSSNR");
-        match std::fs::symlink_metadata(&mod_data) {
-            Ok(meta) if meta.is_dir() && !meta.file_type().is_symlink() => std::fs::remove_dir_all(mod_data).map_err(|e| e.to_string())?,
-            Ok(_) => return Err("A pasta do mod não é um diretório regular.".into()),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {},
-            Err(error) => return Err(error.to_string()),
-        }
-    }
-    Ok(())
-}
-
-#[tauri::command]
-pub async fn emergency_reset_launcher() -> Result<(), String> {
-    let config_root = dirs::config_dir().ok_or("Configuration directory unavailable")?;
-    let cache_dir = crate::core::paths::app_root()?;
-    tauri::async_runtime::spawn_blocking(move || {
-        crate::core::game_info_cache::clear_files(&cache_dir)?;
-        remove_launcher_directory(&config_root)
-    }).await.map_err(|error| error.to_string())?
-}
-
-#[tauri::command]
-pub fn restart_after_emergency_reset(app: tauri::AppHandle) -> Result<(), String> {
-    use tauri::Manager;
-    let executable = tauri::process::current_binary(&app.env()).map_err(|error| error.to_string())?;
-    let mut command = std::process::Command::new(executable);
-    // AppImage must mount its own fresh runtime instead of reusing the old mount.
-    if std::env::var_os("APPIMAGE").is_some() {
-        command.env_remove("APPIMAGE").env_remove("APPDIR")
-            .env_remove("LD_LIBRARY_PATH").env_remove("LD_PRELOAD");
-    }
-    command.env("PELIGAMES_RESTART_PARENT_PID", std::process::id().to_string());
-    command.spawn().map_err(|error| format!("Failed to restart launcher: {error}"))?;
-    crate::core::logger::log_launcher(&app, "INFO", "Redefinição de emergência concluída; reiniciando para o wizard");
-    app.exit(0);
-    Ok(())
-}
-
 
 #[tauri::command]
 pub fn log_cached_library(app: tauri::AppHandle, count: usize) {

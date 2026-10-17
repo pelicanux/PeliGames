@@ -104,3 +104,56 @@ export function wrapperArgumentsError(value: string): string | undefined {
   }
   if (quote || escape) return "Feche as aspas dos argumentos do wrapper.";
 }
+
+export function buildSteamLaunchOptions(settings: AdvancedSettings): string {
+  const envs: string[] = [];
+  const wrappers: string[] = [];
+
+  for (const option of catalog) {
+    if (option.id === "steam_client") continue;
+    if (!settings.options[option.id]) continue;
+    if (option.kind === "wrapper") {
+      wrappers.push(option.key);
+    } else if (option.kind === "env") {
+      if (option.id === "dll_overrides") {
+        const dlls = settings.dll_overrides.trim() || option.value;
+        if (dlls) envs.push(`WINEDLLOVERRIDES="${dlls}"`);
+      } else if (option.id === "hdr") {
+        envs.push("PROTON_ENABLE_HDR=1");
+        envs.push("DXVK_HDR=1");
+      } else {
+        envs.push(`${option.key}=${option.value}`);
+      }
+    }
+  }
+
+  if (settings.mangohud_fps_limit && settings.mangohud_fps_limit > 0) {
+    envs.push(`MANGOHUD_CONFIG="fps_limit=${settings.mangohud_fps_limit}"`);
+  }
+
+  if (settings.wrappers?.length) {
+    for (const w of settings.wrappers) {
+      if (w.enabled && w.program.trim()) {
+        wrappers.push(w.arguments.trim() ? `${w.program.trim()} ${w.arguments.trim()}` : w.program.trim());
+      }
+    }
+  }
+
+  if (settings.gamescope && gamescopeEnabled(settings.gamescope)) {
+    const g = settings.gamescope;
+    const gArgs: string[] = ["gamescope"];
+    if (g.width && g.height) gArgs.push(`-w ${g.width} -h ${g.height}`);
+    if (g.output_width && g.output_height) gArgs.push(`-W ${g.output_width} -H ${g.output_height}`);
+    if (g.fps > 0) gArgs.push(`-r ${g.fps}`);
+    if (g.filter && g.filter !== "stretch") gArgs.push(`-F ${g.filter}`);
+    if (g.window_type === "fullscreen") gArgs.push("-f");
+    else if (g.window_type === "borderless") gArgs.push("-b");
+    if (g.additional_options?.trim()) gArgs.push(g.additional_options.trim());
+    gArgs.push("--");
+    wrappers.unshift(gArgs.join(" "));
+  }
+
+  const prefix = [...envs, ...wrappers].join(" ").trim();
+  if (!prefix) return "";
+  return `${prefix} %command%`;
+}

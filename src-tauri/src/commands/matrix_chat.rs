@@ -181,11 +181,16 @@ pub async fn connect_matrix_chat(app: tauri::AppHandle) -> Result<(), String> {
 pub async fn disconnect_matrix_chat() -> Result<bool, String> {
     let _ = tauri::async_runtime::spawn_blocking(super::matrix_call::stop).await;
     if *AUTH.lock().await { return Err("Aguarde o login atual concluir ou expirar.".into()); }
-    let data = session().await?;
-    let _ = matrix_chat_game_activity(None, data.user_id.clone(), None).await;
-    let response = client()?.post(format!("{API}/_matrix/client/v3/logout")).bearer_auth(&data.access_token).send().await;
-    // A token the server no longer accepts is already signed out.
-    let revoked = response.is_ok_and(|response| response.status().is_success() || response.status() == reqwest::StatusCode::UNAUTHORIZED);
+    // Cleanup must remain available with an invalid stored session or offline.
+    let data = current().await.ok().flatten();
+    let revoked = if let Some(data) = data {
+        let _ = matrix_chat_game_activity(None, data.user_id.clone(), None).await;
+        match client() {
+            Ok(client) => client.post(format!("{API}/_matrix/client/v3/logout")).bearer_auth(&data.access_token).send().await
+                .is_ok_and(|response| response.status().is_success() || response.status() == reqwest::StatusCode::UNAUTHORIZED),
+            Err(_) => false,
+        }
+    } else { false };
     forget().await?;
     *GAME_ACTIVITY.lock().await = None;
     *AUTH_ERROR.lock().await = None;

@@ -1,0 +1,16 @@
+.reset-recovery.modal-content {
+  width: min(680px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+}
+.reset-recovery .maintenance-paths {
+  max-height: 150px;
+  overflow: auto;
+  padding: 12px 12px 12px 28px;
+  border: 1px solid rgba(var(--accent-rgb), .2);
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+  font-size: .8rem;
+}
+.reset-recovery p { line-height: 1.55; }
+.reset-recovery [role="alert"] { color: var(--accent); }
+.reset-recovery .nexus-popup-footer { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }

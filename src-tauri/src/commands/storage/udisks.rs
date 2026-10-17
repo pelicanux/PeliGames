@@ -146,6 +146,9 @@ impl System for Udisks {
     fn fstab(&mut self) -> Result<String, String> {
         fs::read_to_string("/etc/fstab").map_err(|_| "Não foi possível ler /etc/fstab.".to_string())
     }
+    fn sync_fstab_headers(&mut self) -> Result<(), String> {
+        super::fstab::sync_headers()
+    }
     fn path(&mut self, path: &str) -> PathState {
         let link = fs::symlink_metadata(path);
         let dir = fs::metadata(path).is_ok_and(|meta| meta.is_dir());

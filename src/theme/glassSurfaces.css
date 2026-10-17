@@ -139,7 +139,6 @@
 @media (max-width: 600px) {
   .dialog-glass > .modal-scroll-body { padding: 1.2rem; }
   .setup-wizard > .modal-scroll-body { padding: 20px; }
-  .emergency-dialog > .modal-scroll-body { padding: 22px; }
 }
 
 /* Reserve the close-control row even when compact dialog padding is applied. */
@@ -330,4 +329,26 @@
   --glass-opacity-start: .90;
   --glass-opacity-end: .86;
   --glass-backdrop-brightness: .72;
+}
+
+/* Notifications sit over games and streams: use dark glass rather than a pale veil. */
+:root[data-appearance] :is(.notification-panel, .notification-toast).menu-glass-panel {
+  --glass-base-start: 7, 11, 18;
+  --glass-base-end: 5, 8, 14;
+  --glass-opacity-start: .94;
+  --glass-opacity-end: .91;
+  --glass-corner-fill: .035;
+  --glass-backdrop-brightness: .65;
+  --window-blur-factor: 1;
+  color: #edf1fa;
+}
+:root[data-appearance] :is(.notification-panel, .notification-toast) small,
+:root[data-appearance] .notification-list > p { color: #b7c2d5; }
+:root[data-appearance]:not([data-panels-opaque="true"]) :is(.notification-panel, .notification-toast).menu-glass-panel {
+  backdrop-filter: blur(24px) brightness(.65) !important;
+  -webkit-backdrop-filter: blur(24px) brightness(.65) !important;
+}
+:root[data-appearance] .performance-mode :is(.notification-panel, .notification-toast).menu-glass-panel {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }

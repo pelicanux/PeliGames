@@ -114,6 +114,10 @@ impl System for Fake {
     fn fstab(&mut self) -> Result<String, String> {
         Ok(self.fstab.clone())
     }
+    fn sync_fstab_headers(&mut self) -> Result<(), String> {
+        self.fstab = super::super::fstab::headers(&self.fstab);
+        Ok(())
+    }
     fn path(&mut self, path: &str) -> PathState {
         self.paths.get(path).copied().unwrap_or_default()
     }
@@ -301,7 +305,8 @@ fn existing_entry_is_updated_keeping_its_own_options() {
     let Some((_, Call::UpdateConfiguration(old, new))) = fake.calls.iter().find(|(_, call)| call.method() == "UpdateConfigurationItem") else { panic!("expected UpdateConfigurationItem") };
     assert!(old.1.iter().any(|(key, value)| key == "dir" && *value == EntryValue::Bytes(b"/mnt/Old\0".to_vec())));
     let EntryValue::Bytes(opts) = &new.1.iter().find(|(key, _)| key == "opts").unwrap().1 else { panic!() };
-    assert_eq!(String::from_utf8_lossy(opts), "defaults,noatime,nofail,x-systemd.device-timeout=10s\0");
+    assert_eq!(String::from_utf8_lossy(opts), "defaults,noatime,nofail,x-systemd.device-timeout=10s,x-peligames\0");
+    assert!(!fake.methods().contains(&"AddConfigurationItem"), "renaming updates rather than adding another entry");
 }
 
 #[test]

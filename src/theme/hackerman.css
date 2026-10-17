@@ -1,6 +1,6 @@
 /* Hackerman is a complete skin; the standard palette remains untouched. */
 :root[data-interface-theme="hackerman"] {
-  font-size:16px;
+  font-size:1rem;
   color-scheme: dark;
   color: #c2ddc9;
   --input-bg:#07120c;
@@ -113,14 +113,14 @@
 :root[data-interface-theme="hackerman"] :is(h1,h2,h3,h4,strong,button) { font-weight:400; }
 /* Keep rem/em spacing on the standard scale; enlarge glyphs locally with
    compact line boxes so controls do not grow along with the typography. */
-:root[data-interface-theme="hackerman"] body { font-size:16px; }
+:root[data-interface-theme="hackerman"] body { font-size:1rem; }
 :root[data-interface-theme="hackerman"] :is(button,input,textarea,select,label,p,a,li,dt,dd,pre,code) {
-  font-size:max(20px,1em) !important;
+  font-size:max(1.25rem,1em) !important;
 }
 :root[data-interface-theme="hackerman"] :is(span,small,strong) {
-  font-size:max(18px,1em) !important;
+  font-size:max(1.125rem,1em) !important;
 }
-:root[data-interface-theme="hackerman"] :is(h1,h2,h3,h4) { font-size:max(22px,1em) !important; }
+:root[data-interface-theme="hackerman"] :is(h1,h2,h3,h4) { font-size:max(1.375rem,1em) !important; }
 :root[data-interface-theme="hackerman"] .titlebar-title { font-size:26px !important; }
 :root[data-interface-theme="hackerman"] :is(button,input,select) { line-height:.95; }
 :root[data-interface-theme="hackerman"] :is(p,small,label,li,dt,dd,textarea) { line-height:1.2; }
@@ -128,21 +128,21 @@
   padding:6px !important; gap:4px !important;
 }
 :root[data-interface-theme="hackerman"] .game-action-stack button:is(.nexus-sidebar-install,.nexus-sidebar-report) {
-  min-height:40px; font-size:18px !important;
+  min-height:40px; font-size:1.125rem !important;
 }
 :root[data-interface-theme="hackerman"] .nexus-mod-title { flex-wrap:nowrap; }
-:root[data-interface-theme="hackerman"] .nexus-mod-title strong { flex:1; font-size:18px !important; line-height:1.1; }
-:root[data-interface-theme="hackerman"] :is(.nexus-mod-position,.nexus-mod-version,.nexus-installed-mod-info small) { font-size:17px !important; }
-:root[data-interface-theme="hackerman"] .preferences-categories strong { font-size:18px !important; line-height:1; }
-:root[data-interface-theme="hackerman"] :is(.preferences-categories,.preference-choice) small { font-size:17px !important; line-height:1.1; margin-top:2px; }
+:root[data-interface-theme="hackerman"] .nexus-mod-title strong { flex:1; font-size:1.125rem !important; line-height:1.1; }
+:root[data-interface-theme="hackerman"] :is(.nexus-mod-position,.nexus-mod-version,.nexus-installed-mod-info small) { font-size:1.0625rem !important; }
+:root[data-interface-theme="hackerman"] .preferences-categories strong { font-size:1.125rem !important; line-height:1; }
+:root[data-interface-theme="hackerman"] :is(.preferences-categories,.preference-choice) small { font-size:1.0625rem !important; line-height:1.1; margin-top:2px; }
 :root[data-interface-theme="hackerman"] .preference-choice:not(.interface-theme-card):not(.preference-launch-effect) { padding:6px 14px; }
-:root[data-interface-theme="hackerman"] .game-cover-column .game-back-button { font-size:16px !important; }
-:root[data-interface-theme="hackerman"] .game-action-stack .game-folder-link { font-size:16px !important; margin-top:-4px !important; line-height:1.2; }
+:root[data-interface-theme="hackerman"] .game-cover-column .game-back-button { font-size:1rem !important; }
+:root[data-interface-theme="hackerman"] .game-action-stack .game-folder-link { font-size:1rem !important; margin-top:-4px !important; line-height:1.2; }
 /* Small, targeted readability adjustments; no change to the global scale. */
-:root[data-interface-theme="hackerman"] :is([role="tooltip"],.info-tooltip,.model-source-tooltip,.launcher-update-tooltip,.installation-name-hint) { font-size:16px !important; line-height:1.35; }
-:root[data-interface-theme="hackerman"] .modal-body { font-size:18px !important; line-height:1.45 !important; }
-:root[data-interface-theme="hackerman"] .nexus-mod-description { font-size:17px !important; line-height:1.4; }
-:root[data-interface-theme="hackerman"] .nexus-old-files-toggle { font-size:16px !important; line-height:1.3; }
+:root[data-interface-theme="hackerman"] :is([role="tooltip"],.info-tooltip,.model-source-tooltip,.launcher-update-tooltip,.installation-name-hint) { font-size:1rem !important; line-height:1.35; }
+:root[data-interface-theme="hackerman"] .modal-body { font-size:1.125rem !important; line-height:1.45 !important; }
+:root[data-interface-theme="hackerman"] .nexus-mod-description { font-size:1.0625rem !important; line-height:1.4; }
+:root[data-interface-theme="hackerman"] .nexus-old-files-toggle { font-size:1rem !important; line-height:1.3; }
 :root[data-interface-theme="hackerman"] :is(input,textarea,select) { caret-color:#77bd8d; }
 :root[data-interface-theme="hackerman"] :is(.custom-select-trigger,.neural-startup-switch) { background:rgba(6,21,12,.8); border-color:rgba(var(--accent-rgb),.25); }
 :root[data-interface-theme="hackerman"] .neural-startup-switch.enabled { background:rgba(var(--accent-rgb),.1); color:var(--accent-soft); }
@@ -159,8 +159,8 @@
 body:has(.matrix-chat-overlay) .hackerman-crt {
   background:radial-gradient(ellipse at center,transparent 65%,rgba(0,0,0,.24) 100%);
 }
-.theme-transition-status { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2147483601; pointer-events:none; width:max-content; max-width:calc(100vw - 40px); box-sizing:border-box; padding:14px 20px; border:1px solid rgba(var(--accent-rgb),.5); border-radius:7px; background:linear-gradient(125deg,rgba(var(--glass-base-start),.96),rgba(var(--glass-base-end),.96)); color:var(--accent-soft); font:17px/1.3 Inter,system-ui,sans-serif; text-align:center; view-transition-name:theme-status; }
-:root[data-interface-theme="hackerman"] .theme-transition-status { font-family:"Jersey 10",monospace; font-size:22px; line-height:1.2; }
+.theme-transition-status { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2147483601; pointer-events:none; width:max-content; max-width:calc(100vw - 40px); box-sizing:border-box; padding:14px 20px; border:1px solid rgba(var(--accent-rgb),.5); border-radius:7px; background:linear-gradient(125deg,rgba(var(--glass-base-start),.96),rgba(var(--glass-base-end),.96)); color:var(--accent-soft); font:1.0625rem/1.3 Inter,system-ui,sans-serif; text-align:center; view-transition-name:theme-status; }
+:root[data-interface-theme="hackerman"] .theme-transition-status { font-family:"Jersey 10",monospace; font-size:1.375rem; line-height:1.2; }
 .interface-theme-reveal::view-transition-group(theme-status) { animation:none; z-index:1; }
 .interface-theme-reveal::view-transition-old(theme-status) { animation:none; opacity:0; }
 .interface-theme-reveal::view-transition-new(theme-status) { animation:none; }
@@ -170,11 +170,11 @@ body:has(.matrix-chat-overlay) .hackerman-crt {
 .interface-theme-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr)); gap:12px; margin-bottom:24px; }
 .interface-theme-cards .interface-theme-card { display:flex; flex-direction:column; align-items:stretch; gap:8px; text-align:left; }
 .interface-theme-card small { line-height:1.45; }
-.interface-theme-sample { height:72px; display:flex; align-items:center; justify-content:center; border-radius:7px; border:1px solid #477b5660; background:linear-gradient(125deg,#040d08,#12291b); color:#81b993; font:24px "Jersey 10",monospace; letter-spacing:3px; overflow:hidden; }
-.interface-theme-sample.standard { background:linear-gradient(125deg,#0b101e,#182b48); color:#a6c4e8; font-family:system-ui; font-size:15px; letter-spacing:1px; }
+.interface-theme-sample { height:72px; display:flex; align-items:center; justify-content:center; border-radius:7px; border:1px solid #477b5660; background:linear-gradient(125deg,#040d08,#12291b); color:#81b993; font:1.5rem "Jersey 10",monospace; letter-spacing:3px; overflow:hidden; }
+.interface-theme-sample.standard { background:linear-gradient(125deg,#0b101e,#182b48); color:#a6c4e8; font-family:system-ui; font-size:0.9375rem; letter-spacing:1px; }
 @media(prefers-reduced-motion:reduce) { .interface-theme-reveal::view-transition-new(root) { animation:none; } }
 
 /* About links need a readable pixel size without scaling their cards. */
-:root[data-interface-theme="hackerman"] .credits-neon-card .credits-card-title { font-size:20px !important; line-height:1.1; }
-:root[data-interface-theme="hackerman"] .credits-neon-card .credits-card-detail { font-size:17px !important; line-height:1.15; }
-:root[data-interface-theme="hackerman"] .credits-dialog .credits-neon-copy { font-size:18px !important; line-height:1.2; }
+:root[data-interface-theme="hackerman"] .credits-neon-card .credits-card-title { font-size:1.25rem !important; line-height:1.1; }
+:root[data-interface-theme="hackerman"] .credits-neon-card .credits-card-detail { font-size:1.0625rem !important; line-height:1.15; }
+:root[data-interface-theme="hackerman"] .credits-dialog .credits-neon-copy { font-size:1.125rem !important; line-height:1.2; }

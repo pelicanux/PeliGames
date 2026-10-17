@@ -30,7 +30,28 @@ fn backend_route(script: &str, route: &str) -> String {
 pub struct InstallExtras {
     pub int4: Option<bool>,
     pub renodx: Option<bool>,
+    pub model: Option<NeuralModel>,
 }
+#[derive(Clone, Copy, Debug, PartialEq, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum NeuralModel { Auto, Small, Original }
+
+fn model_arguments(script: &str, extras: InstallExtras, has_small: bool, has_original: bool) -> Result<Vec<&'static str>, String> {
+    if extras.model == Some(NeuralModel::Small) && extras.int4 == Some(true) {
+        return Err("int4 misto só funciona com o modelo original (310.8.0).".into());
+    }
+    let selectable = script.contains("--new-model)") && script.contains("--old-model)");
+    if extras.model == Some(NeuralModel::Small) && (!selectable || !has_small) {
+        return Err("Modelo novo indisponível. Atualize o backend e extraia a DLL 310.9.16 no assistente.".into());
+    }
+    if (extras.model == Some(NeuralModel::Original) || extras.int4 == Some(true)) && !has_original {
+        return Err("Modelo original indisponível. Extraia novamente uma DLL compatível no assistente.".into());
+    }
+    if !selectable { return Ok(vec![]); }
+    let old = extras.model == Some(NeuralModel::Original) || extras.int4 == Some(true) || !has_small;
+    Ok(vec![if old { "--old-model" } else { "--new-model" }])
+}
+
 /// The install.sh arguments for `extras`, or why this backend cannot do them.
 /// Older backends know RenoDX only as the route optiscaler-renodx.
 fn extra_arguments(script: &str, route: &str, extras: InstallExtras) -> Result<(String, Vec<&'static str>), String> {
@@ -88,15 +109,11 @@ pub fn execute_standalone_install(
         return Err("Failed to execute cp command for extraction".to_string());
     }
 
-    // 3. Prepare the `.bin` model if provided
-    if let Some(bin) = bin_path {
-        let target_bin = temp_dir.join("dlssnr-amd/dlssnr.bin");
-        if let Some(parent) = target_bin.parent() {
-            let _ = fs::create_dir_all(parent);
-        }
-        if let Err(e) = fs::copy(bin, &target_bin) {
+    // Stage both model identities; keep the same pair for every game architecture.
+    if let Some(bin) = bin_path.filter(|_| route != "remove") {
+        if let Err(error) = super::neural_models::stage(Path::new(bin), &temp_dir.join("dlssnr-amd")) {
             let _ = fs::remove_dir_all(&temp_dir);
-            return Err(format!("Failed to copy bin file: {}", e));
+            return Err(error);
         }
     }
 
@@ -136,6 +153,13 @@ pub fn execute_standalone_install(
     cmd.arg(game_dir);
     cmd.arg(&route);
     cmd.args(extra);
+    if route != "remove" {
+        let has_small = temp_dir.join("dlssnr-amd/dlssnr-small.bin").is_file() || dll_path.is_some();
+        match model_arguments(&script, extras, has_small, temp_dir.join("dlssnr-amd/dlssnr.bin").is_file() || dll_path.is_some()) {
+            Ok(arguments) => { cmd.args(arguments); }
+            Err(error) => { let _ = fs::remove_dir_all(&temp_dir); return Err(error); }
+        }
+    }
     
     if let Some(dll) = dll_path {
         cmd.arg("--dll");
@@ -158,15 +182,11 @@ pub fn execute_standalone_install(
                combined_lower.contains("incompatible") {
                 Err(format!("Aviso do Backend (Instalação Incompatível):\nO mod detectou um problema de compatibilidade (provavelmente você selecionou 64 bits para um jogo 32 bits, ou a rota selecionada não é suportada por este jogo).\n\nLog completo:\n{}", combined))
             } else if out.status.success() {
-                // Success: If we used a DLL, copy the generated bin back to resource_path to cache it
+                // Persist both validated models before deleting the temporary package.
                 if dll_path.is_some() {
-                    let generated_bin = temp_dir.join("dlssnr-amd/dlssnr.bin");
-                    if generated_bin.exists() {
-                        let target_bin = resource_path.join("dlssnr-amd/dlssnr.bin");
-                        if let Some(parent) = target_bin.parent() {
-                            let _ = fs::create_dir_all(parent);
-                        }
-                        let _ = fs::copy(&generated_bin, &target_bin);
+                    if let Err(error) = super::neural_models::cache(&temp_dir.join("dlssnr-amd"), &resource_path.join("dlssnr-amd")) {
+                        let _ = fs::remove_dir_all(&temp_dir);
+                        return Err(error);
                     }
                 }
                 Ok(format!("Success:\n{}", combined))
@@ -297,17 +317,33 @@ mod tests {
     #[test]
     fn int4_and_renodx_follow_what_the_backend_knows() {
         let current = "--int4) int4=1;;\n--no-int4) int4=0;;\n--renodx) renodx=1;;\n--no-renodx) renodx=0;;\n";
-        let both = InstallExtras { int4: Some(true), renodx: Some(true) };
+        let both = InstallExtras { int4: Some(true), renodx: Some(true), ..Default::default() };
         assert_eq!(extra_arguments(current, "reshade-feeder", both).unwrap(), ("reshade-feeder".into(), vec!["--int4", "--renodx"]));
-        let off = InstallExtras { int4: Some(false), renodx: Some(false) };
+        let off = InstallExtras { int4: Some(false), renodx: Some(false), ..Default::default() };
         assert_eq!(extra_arguments(current, "optiscaler", off).unwrap().1, vec!["--no-int4", "--no-renodx"]);
         assert!(extra_arguments(current, "remove", InstallExtras::default()).unwrap().1.is_empty());
         // Older backend: RenoDX only as the optiscaler-renodx route, no int4 flag.
         let older = "optiscaler|optiscaler-renodx) kind=optiscaler;;\n";
-        let renodx = InstallExtras { int4: None, renodx: Some(true) };
+        let renodx = InstallExtras { int4: None, renodx: Some(true), ..Default::default() };
         assert_eq!(extra_arguments(older, "optiscaler", renodx).unwrap(), ("optiscaler-renodx".into(), vec![]));
         assert!(extra_arguments(older, "reshade", renodx).is_err());
-        assert!(extra_arguments(older, "optiscaler", InstallExtras { int4: Some(true), renodx: None }).is_err());
+        assert!(extra_arguments(older, "optiscaler", InstallExtras { int4: Some(true), renodx: None, ..Default::default() }).is_err());
         assert!(extra_arguments(older, "optiscaler", off).unwrap().1.is_empty(), "desligado num backend antigo não muda nada");
     }
+    #[test]
+    fn neural_model_selection_respects_cache_and_int4() {
+        use super::{model_arguments, NeuralModel};
+        let script = "--new-model) newmodel=1;;\n--old-model) newmodel=0;;";
+        let select = |model, int4, small, original| model_arguments(script, InstallExtras {model:Some(model),int4:Some(int4),..Default::default()}, small, original);
+        assert_eq!(select(NeuralModel::Auto, false, true, true).unwrap(), vec!["--new-model"]);
+        assert_eq!(select(NeuralModel::Auto, false, false, true).unwrap(), vec!["--old-model"]);
+        assert_eq!(select(NeuralModel::Auto, true, true, true).unwrap(), vec!["--old-model"]);
+        assert_eq!(select(NeuralModel::Original, false, true, true).unwrap(), vec!["--old-model"]);
+        assert!(select(NeuralModel::Small, true, true, true).is_err());
+        assert!(select(NeuralModel::Small, false, false, true).is_err());
+        assert!(select(NeuralModel::Original, false, true, false).is_err());
+        assert!(model_arguments("old backend", InstallExtras {model:Some(NeuralModel::Small),..Default::default()}, true, true).is_err());
+        assert!(model_arguments("old backend", InstallExtras::default(), false, true).unwrap().is_empty());
+    }
+
 }
