@@ -1,7 +1,7 @@
 // The call view of a voice channel, as in Discord: who is in the call, the
 // screen being watched in focus, and the call controls. The video itself is a
 // native layer placed over the focus area (see matrixScreenView).
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { leaveMatrixVoice, setMatrixVoiceControls, useMatrixVoice, watchMatrixScreen } from "../services/matrixVoice";
 import { MatrixShareButton } from "./MatrixShareButton";
@@ -30,6 +30,19 @@ export function MatrixCallStage({ pt, me, roomName, videoHidden, onShowChat }: {
   const fullscreen = useCallFullscreen();
   const fit = useMatrixScreenFit();
   const fullControls = useRef<HTMLDivElement>(null);
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const controlsHovered = useRef(false);
+  const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wakeControls = useCallback(() => {
+    setControlsVisible(true);
+    if (controlsTimer.current !== null) clearTimeout(controlsTimer.current);
+    controlsTimer.current = setTimeout(() => {
+      controlsTimer.current = null;
+      const focused = document.activeElement;
+      const keyboardFocus = focused?.matches(":focus-visible") && fullControls.current?.contains(focused);
+      if (!controlsHovered.current && !keyboardFocus) setControlsVisible(false);
+    }, 3000);
+  }, []);
   // Full screen covers the Matrix frame only; it ends with the stage (another room, chat closed).
   const [frame, setFrame] = useState<HTMLElement | null>(null);
   useEffect(() => { setFrame(stage.current?.closest<HTMLElement>(".matrix-terminal-frame") ?? null); }, []);
@@ -38,6 +51,14 @@ export function MatrixCallStage({ pt, me, roomName, videoHidden, onShowChat }: {
   const focused = voice.watching;
   useEffect(() => { setCallStageShown(Boolean(focused)); return () => setCallStageShown(false); }, [focused]);
   const full = fullscreen && Boolean(focused) && Boolean(frame);
+  useEffect(() => {
+    controlsHovered.current = false;
+    if (full) wakeControls();
+    return () => {
+      if (controlsTimer.current !== null) clearTimeout(controlsTimer.current);
+      controlsTimer.current = null;
+    };
+  }, [full, wakeControls]);
   useEffect(() => { if (!focused) setCallFullscreen(false); }, [focused]);
   useNativeVideo(full ? fullVideo : video, Boolean(focused) && !videoHidden, full ? { crt: true, fill: fit === "fill", controls: fullControls } : undefined);
   // Esc leaves full screen first, before it can close the Matrix window.
@@ -89,9 +110,13 @@ export function MatrixCallStage({ pt, me, roomName, videoHidden, onShowChat }: {
       <MatrixShareButton pt={pt} icon={<ScreenIcon off={voice.screen === "live"}/>}/>
       <button type="button" className="matrix-call-leave" disabled={voice.phase === "leaving"} title={pt ? "Sair da chamada" : "Leave call"} aria-label={pt ? "Sair da chamada" : "Leave call"} onClick={() => void leaveMatrixVoice()}><LeaveIcon/></button>
     </div>
-    {full && frame && createPortal(<div className="matrix-call-fullscreen" role="dialog" aria-label={pt ? `Transmissão de ${focusedName} em tela cheia` : `${focusedName}'s stream in full screen`}>
+    {full && frame && createPortal(<div className={`matrix-call-fullscreen${controlsVisible ? " is-controls-visible" : ""}`} role="dialog" aria-label={pt ? `Transmissão de ${focusedName} em tela cheia` : `${focusedName}'s stream in full screen`}
+      onPointerEnter={wakeControls} onPointerMove={wakeControls} onPointerDown={wakeControls} onKeyDown={wakeControls}>
       <div ref={fullVideo} className="matrix-call-video" onDoubleClick={() => setCallFullscreen(false)}><span>{pt ? "> carregando transmissão…" : "> loading stream…"}</span></div>
-      <div ref={fullControls} className="matrix-call-focus-bar"><span className="matrix-call-live">{pt ? "AO VIVO" : "LIVE"}</span><b>{focusedName}</b>
+      <div ref={fullControls} className="matrix-call-focus-bar"
+        onPointerEnter={() => { controlsHovered.current = true; wakeControls(); }}
+        onPointerLeave={() => { controlsHovered.current = false; wakeControls(); }}
+        onFocus={wakeControls} onBlur={wakeControls}><span className="matrix-call-live">{pt ? "AO VIVO" : "LIVE"}</span><b>{focusedName}</b>
         <div className="matrix-call-fullscreen-actions">
           <select className="matrix-call-fit" aria-label={pt ? "Enquadramento da transmissão" : "Stream framing"} value={fit} onChange={event => setMatrixScreenFit(event.target.value as ScreenFit)}>
             <option value="fill">{pt ? "Preencher a moldura" : "Fill the frame"}</option>
