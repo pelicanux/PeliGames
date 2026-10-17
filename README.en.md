@@ -24,6 +24,7 @@ Download the AppImage, RPM or DEB from [Releases](https://github.com/pelicanux/P
 
 - RPM and DEB install the `peligames` and `pelinstall` binaries in `/opt/PeliGames`, with commands in `/usr/bin` and shortcuts in the system application folders. From a terminal, use `peligames` or `pelinstall /path/to/program.exe`.
 - The AppImage contains both modules. Make it executable and open it. It runs as is, but it can also be installed for your user, as Gear Lever and AppManager do.
+- The AppImage carries its own WebKitGTK (2.52) and needs glibc 2.39 or newer: Ubuntu 24.04, Linux Mint 22, Debian 13, Fedora 40 and later, Arch, CachyOS, Nobara and Bazzite. The DEB and RPM packages have the same requirement.
 - To open a Windows executable in the installer: `./PeliGames.AppImage --install /path/to/program.exe` (once installed, `peligames --install /path/to/program.exe`).
 
 ### Installing the AppImage

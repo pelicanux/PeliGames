@@ -2,6 +2,7 @@ import { OPEN_DISCORD_PANEL_EVENT } from "../services/communityLinks";
 import React, { useEffect, useState } from 'react';
 import { DiscordPanel } from './DiscordPanel';
 import { MatrixChatPanel } from './MatrixChatPanel';
+import { MatrixStreamDock } from './MatrixStreamDock';
 import { OPEN_MATRIX_CHAT_EVENT, startMatrixChat } from '../services/matrixChat';
 import { BrandName } from './BrandName';
 import { RunningGamesIndicator, type RunningGameSummary } from './RunningGamesIndicator';
@@ -41,8 +42,12 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
     <>
     {showDiscord && <DiscordPanel onClose={() => setShowDiscord(false)} />}
     {showMatrix && <MatrixChatPanel onClose={() => setShowMatrix(false)} />}
-    <div className="app-titlebar" inert={disabled}
-      data-tauri-drag-region={disabled ? "false" : "true"}
+    <MatrixStreamDock />
+    {/* With a dialog over the launcher, the window can still be dragged, and the
+        notifications and running games stay usable; the window controls, home,
+        credits, settings and update are off so a dialog is not closed by mistake. */}
+    <div className="app-titlebar"
+      data-tauri-drag-region="true"
       style={{
         height: '50px',
         background: 'rgba(var(--surface-26-26-26, 26, 26, 26), 0.4)',
@@ -61,7 +66,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
       }}
     >
       {/* Left section: Icon and Title */}
-      <div data-tauri-drag-region={disabled ? "false" : "true"} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', height: '100%' }}>
+      <div data-tauri-drag-region="true" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', height: '100%' }}>
         <img src="/peligames.svg" alt="Icon" style={{ width: '24px', height: '24px', objectFit: 'contain', pointerEvents: 'none' }} />
         <button type="button" className="titlebar-title titlebar-home" data-tauri-drag-region="false" onClick={onHome} disabled={disabled || homeDisabled} aria-label={t("gameModes", "goHome")} title={t("gameModes", "goHome")} style={{ 
           margin: 0, 

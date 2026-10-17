@@ -3,10 +3,11 @@ import { createPortal } from "react-dom";
 import { useBoundedDropdown } from "../hooks/useBoundedDropdown";
 
 // Shared choice menu, using the language/performance selector material.
-export function SelectionMenu({ label, value, options, onChange, disabled = false, className = "", menuClassName = "", leadingIcon }: {
+export function SelectionMenu({ label, value, options, onChange, disabled = false, className = "", menuClassName = "", leadingIcon, minMenuWidth = 0 }: {
   label: string; value: string; options: { value: string; label: string; disabled?: boolean }[];
   onChange: (value: string) => void; disabled?: boolean; className?: string;
   leadingIcon?: ReactNode;
+  minMenuWidth?: number;
   /** Extra class of the option list, which opens in document.body. */
   menuClassName?: string;
 }) {
@@ -15,7 +16,7 @@ export function SelectionMenu({ label, value, options, onChange, disabled = fals
   const anchor = useRef<HTMLDivElement>(null), menu = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const id = useId();
-  const position = useBoundedDropdown(open, anchor, menu, setOpen);
+  const position = useBoundedDropdown(open, anchor, menu, setOpen, minMenuWidth);
   const blocked = disabled || fieldsetDisabled;
   useEffect(() => {
     const fieldsets: HTMLFieldSetElement[] = [];

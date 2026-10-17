@@ -182,7 +182,7 @@ pub async fn disconnect_matrix_chat() -> Result<bool, String> {
     let _ = tauri::async_runtime::spawn_blocking(super::matrix_call::stop).await;
     if *AUTH.lock().await { return Err("Aguarde o login atual concluir ou expirar.".into()); }
     let data = session().await?;
-    let _ = matrix_chat_game_activity(None, data.user_id.clone()).await;
+    let _ = matrix_chat_game_activity(None, data.user_id.clone(), None).await;
     let response = client()?.post(format!("{API}/_matrix/client/v3/logout")).bearer_auth(&data.access_token).send().await;
     // A token the server no longer accepts is already signed out.
     let revoked = response.is_ok_and(|response| response.status().is_success() || response.status() == reqwest::StatusCode::UNAUTHORIZED);
@@ -393,7 +393,7 @@ fn chat_event(event: &Value) -> Option<Value> {
             if reply.is_some() { body = strip_reply_fallback(&body); }
             let mentions: Vec<&str> = content["m.mentions"]["user_ids"].as_array().map(|users| users.iter().filter_map(Value::as_str).collect()).unwrap_or_default();
             Some(json!({"kind":"message","id":id,"sender":sender,"ts":ts,"msgtype":content["msgtype"].as_str().unwrap_or("m.text"),"body":body,
-                "url":content["url"].as_str(),"reply_to":reply,"mentions":mentions}))
+                "url":content["url"].as_str(),"mimetype":content["info"]["mimetype"].as_str(),"reply_to":reply,"mentions":mentions}))
         }
         _ => None,
     }
@@ -510,7 +510,7 @@ pub(super) fn normalize_sync(value: &Value, user_id: &str) -> Value {
     let left: Vec<&String> = value["rooms"]["leave"].as_object().map(|rooms| rooms.keys().collect()).unwrap_or_default();
     let ignored = list(&value["account_data"]["events"]).iter().find(|event| event["type"] == "m.ignored_user_list")
         .map(|event| event["content"]["ignored_users"].as_object().map(|users| users.keys().cloned().collect::<Vec<_>>()).unwrap_or_default());
-    json!({"next_batch": value["next_batch"], "user_id": user_id, "join": joined, "leave": left, "ignored": ignored, "presence": presence_statuses(list(&value["presence"]["events"]))})
+    json!({"next_batch": value["next_batch"], "user_id": user_id, "join": joined, "leave": left, "ignored": ignored, "presence": presence_statuses(list(&value["presence"]["events"])), "member_presence": member_presence_states(list(&value["presence"]["events"]))})
 }
 /// Older messages of a room, before `from` (a `prev_batch`/`end` token).
 #[tauri::command]
@@ -705,10 +705,35 @@ pub async fn matrix_chat_upload(request: tauri::ipc::Request<'_>) -> Result<(), 
     Ok(())
 }
 
+/// `animated`: the whole file (a thumbnail of a GIF is only its first frame).
 #[tauri::command]
-pub async fn matrix_chat_image(mxc: String) -> Result<Option<String>,String> {
+pub async fn matrix_chat_image(mxc: String, animated: Option<bool>) -> Result<Option<String>,String> {
     let data = session().await?;
+    if animated == Some(true) { return download(&mxc, &data.access_token, &["image/gif", "image/webp"], 8 * 1024 * 1024).await; }
     thumbnail(&mxc,&data.access_token,480).await
+}
+/// Short videos, such as the looping GIFs Discord sends as MP4 through a bridge.
+#[tauri::command]
+pub async fn matrix_chat_video(mxc: String) -> Result<Option<String>,String> {
+    let data = session().await?;
+    download(&mxc, &data.access_token, &["video/mp4", "video/webm"], 12 * 1024 * 1024).await
+}
+/// A media file of the room, through the authenticated download endpoint, as a
+/// data URL; only the listed types and up to `limit` bytes.
+async fn download(mxc: &str, token: &str, types: &[&str], limit: usize) -> Result<Option<String>,String> {
+    use base64::Engine;
+    let Some(path) = mxc.strip_prefix("mxc://") else { return Ok(None); };
+    let Some((server, media)) = path.split_once('/') else { return Ok(None); };
+    if server.is_empty() || media.is_empty() || media.contains('/') || path.len() > 1024 { return Ok(None); }
+    let url = format!("{API}/_matrix/client/v1/media/download/{}/{}",urlencoding::encode(server),urlencoding::encode(media));
+    let mut response = client()?.get(url).timeout(Duration::from_secs(120)).bearer_auth(token).send().await.map_err(|_| "Mídia indisponível.")?;
+    if !response.status().is_success() { return Ok(None); }
+    let mime = response.headers().get(reqwest::header::CONTENT_TYPE).and_then(|v|v.to_str().ok()).unwrap_or("").split(';').next().unwrap_or("").trim().to_ascii_lowercase();
+    if !types.contains(&mime.as_str()) { return Ok(None); }
+    if response.content_length().is_some_and(|size| size as usize > limit) { return Ok(None); }
+    let mut bytes = Vec::new();
+    while let Some(chunk) = response.chunk().await.map_err(|_| "Mídia indisponível.")? { if bytes.len()+chunk.len() > limit { return Ok(None); } bytes.extend_from_slice(&chunk); }
+    Ok(Some(format!("data:{mime};base64,{}",base64::engine::general_purpose::STANDARD.encode(bytes))))
 }
 
 #[cfg(test)]
@@ -883,31 +908,56 @@ fn game_status(name: &str) -> Result<String, String> {
 fn published_game_status(status: &str) -> bool {
     status.starts_with("Jogando ") && status.ends_with(" · PeliGames")
 }
+const DND_STATUS: &str = "Não perturbe · PeliGames";
+fn strip_dnd_status(status: &str) -> &str {
+    if status == DND_STATUS { "" } else { status.strip_suffix("\nNão perturbe · PeliGames").unwrap_or(status) }
+}
+fn member_presence_state(wire: &str, status: &str) -> Option<&'static str> {
+    match wire {
+        "offline" => Some("offline"),
+        "online" => Some("online"),
+        "unavailable" if strip_dnd_status(status) != status => Some("dnd"),
+        "unavailable" => Some("idle"),
+        _ => None,
+    }
+}
 /// A standard status message, visible in clients/homeservers supporting presence.
 /// Clearing only restores our own message, preserving changes made elsewhere.
 #[tauri::command]
-pub async fn matrix_chat_game_activity(game_name: Option<String>, user_id: String) -> Result<(), String> {
-    let message = game_name.as_deref().map(game_status).transpose()?;
+pub async fn matrix_chat_game_activity(game_name: Option<String>, user_id: String, presence: Option<String>) -> Result<(), String> {
+    let wire_presence = match presence.as_deref() {
+        None => None,
+        Some("online") => Some("online"),
+        Some("idle" | "dnd") => Some("unavailable"),
+        Some("invisible") => Some("offline"),
+        _ => return Err("Status Matrix inválido.".into()),
+    };
+    let message = if wire_presence == Some("offline") { None } else { game_name.as_deref().map(game_status).transpose()? };
     let mut published = GAME_ACTIVITY.lock().await;
     let data = session().await?;
     if data.user_id != user_id { return Err("A conta Matrix mudou. Atualize a conexão.".into()); }
     let path = format!("/_matrix/client/v3/presence/{}/status", urlencoding::encode(&user_id));
     let status = match get(&path, &data.access_token).await? {
         Some(status) => status,
-        None if message.is_none() => return Ok(()),
+        None if message.is_none() && presence.is_none() => return Ok(()),
         None => return Err("Este servidor não disponibiliza atividade Matrix.".into()),
     };
-    let existing = status["status_msg"].as_str().unwrap_or("");
+    let raw_existing = status["status_msg"].as_str().unwrap_or("");
+    let existing = strip_dnd_status(raw_existing);
     let previous = published.as_ref().filter(|p| p.user == user_id && p.message == existing)
         .map(|p| p.previous.clone()).unwrap_or_else(|| if published_game_status(existing) { String::new() } else { existing.into() });
-    if message.is_none() && !published.as_ref().is_some_and(|p| p.user == user_id && p.message == existing)
+    if presence.is_none() && message.is_none() && !published.as_ref().is_some_and(|p| p.user == user_id && p.message == existing)
         && !published_game_status(existing) {
         *published = None;
         return Ok(());
     }
     let next = message.as_deref().unwrap_or(&previous);
+    // Matrix has no native DND state. Share a readable status alongside
+    // unavailable so other PeliGames clients can distinguish it from idle.
+    let dnd = presence.as_deref() == Some("dnd") || (presence.is_none() && existing != raw_existing);
+    let next = if dnd { if next.is_empty() { DND_STATUS.to_string() } else { format!("{next}\n{DND_STATUS}") } } else { next.to_string() };
     let response = checked(client()?.put(format!("{API}{path}")).bearer_auth(&data.access_token)
-        .json(&json!({"presence":"online","status_msg":next})).send().await
+        .json(&json!({"presence":wire_presence.unwrap_or_else(|| status["presence"].as_str().unwrap_or("online")),"status_msg":next})).send().await
         .map_err(|_| "Sem conexão para atualizar a atividade Matrix.")?).await?;
     if !response.status().is_success() { return Err("Não foi possível compartilhar a atividade. O servidor pode não oferecer presença Matrix.".into()); }
     *published = message.map(|message| PublishedGameActivity { user: user_id, previous, message });
@@ -920,15 +970,40 @@ fn presence_statuses(events: &[Value]) -> serde_json::Map<String, Value> {
         let Some(user) = event["sender"].as_str().filter(|user| user_valid(user)) else { continue; };
         if event["type"] != "m.presence" { continue; }
         let content = &event["content"];
-        let status = if content["presence"] == "offline" { "" } else { content["status_msg"].as_str().unwrap_or("") };
+        let status = if content["presence"] == "offline" { "" } else { strip_dnd_status(content["status_msg"].as_str().unwrap_or("")) };
         statuses.insert(user.into(), status.chars().take(300).collect::<String>().into());
     }
     statuses
+}
+fn member_presence_states(events: &[Value]) -> serde_json::Map<String, Value> {
+    let mut states = serde_json::Map::new();
+    for event in events.iter().take(500) {
+        if event["type"] != "m.presence" { continue; }
+        let Some(user) = event["sender"].as_str().filter(|user| user_valid(user)) else { continue; };
+        let content = &event["content"];
+        if let Some(state) = member_presence_state(content["presence"].as_str().unwrap_or(""), content["status_msg"].as_str().unwrap_or("")) {
+            states.insert(user.into(), json!(state));
+        }
+    }
+    states
 }
 
 #[cfg(test)]
 mod game_activity_tests {
     use super::*;
+    #[test]
+    fn separates_idle_dnd_and_offline_without_exposing_status_tags_in_activity() {
+        assert_eq!(member_presence_state("online", ""), Some("online"));
+        assert_eq!(member_presence_state("unavailable", ""), Some("idle"));
+        assert_eq!(member_presence_state("unavailable", DND_STATUS), Some("dnd"));
+        assert_eq!(member_presence_state("offline", DND_STATUS), Some("offline"));
+        assert_eq!(member_presence_state("", "Jogando Cars · PeliGames"), None);
+        let status = format!("Jogando Cars · PeliGames\n{DND_STATUS}");
+        assert_eq!(strip_dnd_status(&status), "Jogando Cars · PeliGames");
+        let events = vec![json!({"type":"m.presence","sender":"@player:matrix.org","content":{"presence":"unavailable","status_msg":status}})];
+        assert_eq!(member_presence_states(&events)["@player:matrix.org"], "dnd");
+        assert_eq!(presence_statuses(&events)["@player:matrix.org"], "Jogando Cars · PeliGames");
+    }
     #[test]
     fn validates_activity_and_keeps_plain_text() {
         assert_eq!(game_status("Clair Obscur").unwrap(), "Jogando Clair Obscur · PeliGames");
@@ -969,3 +1044,7 @@ mod membership_tests {
         assert!(!members.contains_key("@invalid:matrix.org")); assert!(membership_updates(&[], &[]).is_empty());
     }
 }
+
+// Channel settings (name, topic, entry, permissions), with the helpers above.
+#[path = "matrix_channel_settings.rs"]
+pub mod channel_settings;

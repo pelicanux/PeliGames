@@ -24,6 +24,7 @@ Baixe AppImage, RPM ou DEB em [Releases](https://github.com/pelicanux/PeliGames/
 
 - RPM e DEB instalam os binários `peligames` e `pelinstall` em `/opt/PeliGames`, com comandos em `/usr/bin` e atalhos nos diretórios de aplicativos do sistema. Pelo terminal, use `peligames` ou `pelinstall /caminho/programa.exe`.
 - AppImage reúne os dois módulos. Dê permissão de execução e abra o arquivo. Ele funciona direto, mas também pode ser instalado no seu usuário, como fazem o Gear Lever e o AppManager.
+- O AppImage leva o próprio WebKitGTK (2.52) e precisa de glibc 2.39 ou mais nova: Ubuntu 24.04, Linux Mint 22, Debian 13, Fedora 40 e posteriores, Arch, CachyOS, Nobara e Bazzite. Os pacotes DEB e RPM têm o mesmo requisito.
 - Para abrir um executável Windows no instalador: `./PeliGames.AppImage --install /caminho/programa.exe` (depois de instalado, `peligames --install /caminho/programa.exe`).
 
 ### Instalar o AppImage

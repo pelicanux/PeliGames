@@ -2,6 +2,7 @@
 // The native bridge inserts credentials; SDK requests carry a placeholder only.
 import { invoke } from "@tauri-apps/api/core";
 import type { MatrixClient } from "matrix-js-sdk";
+import { matrixPresenceChoice, matrixWirePresence } from "./matrixPresencePreferences";
 
 let client: MatrixClient | null = null;
 let ready: Promise<MatrixClient> | null = null;
@@ -53,6 +54,7 @@ export function startMatrixSdk<T>(user: string, onSync: (data: T, initial: boole
         const url = new URL(request.url);
         let roomsSignature = "";
         if (url.pathname.endsWith("/sync")) {
+          url.searchParams.set("set_presence", matrixWirePresence(matrixPresenceChoice(user)));
           roomsSignature = JSON.stringify([...new Set([...communityRooms, ...(voiceRoom ? [voiceRoom] : [])])].sort());
           if (roomsSignature !== lastRooms) url.searchParams.set("full_state", "true");
           url.searchParams.set("filter", JSON.stringify({ room: {

@@ -1164,7 +1164,7 @@
 .smooth-image { transition: opacity .22s ease; }
 .smooth-image:not(.is-shown) { opacity: 0 !important; }
 /* A library opened from the menu settles in instead of replacing the previous one at once. */
-.modern-library-enter { animation: modern-library-enter .26s cubic-bezier(.2, .8, .2, 1) both; }
+.modern-library-enter { animation: modern-library-enter .26s cubic-bezier(.2, .8, .2, 1) backwards; }
 @keyframes modern-library-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .performance-mode .smooth-image { transition: none; }
 .performance-mode .modern-library-enter { animation: none; }
@@ -1173,7 +1173,9 @@
 /* Cover glass reflection on hover (GameGrid sets --glare-x/-y/-sheen per frame):
    a diagonal sheen that sweeps against the pointer, a wide soft highlight under it,
    and a thin light along the top edge, like light on a glass card. */
-.modern-grid-container .library-game-card .glare {
+.modern-grid-container .library-game-card .glare,
+.modern-ui .selected-cover .glare,
+.modern-ui .installation-cover .glare {
   border-radius: inherit;
   background:
     linear-gradient(115deg,
@@ -1192,20 +1194,53 @@
 /* The title bar stays on its own layer above the library: a tilted cover
    (z-index 20) can never be painted over it. Outer boxes cannot scroll. */
 .modern-ui .app-titlebar { position: relative; z-index: 30; isolation: isolate; }
-html, body, #root, .app-wrapper { overflow: clip !important; }
+html, body, #root { overflow: clip !important; }
 
 /* The row scrolls sideways, which also clips its top edge: room above for the
    card lifting on hover (and its border), taken back by the margin so the
    layout does not move. */
 .modern-continue-row { padding-top: 10px; margin-top: -8px; }
 
-/* WebKitGTK: each cover keeps its own layer from the start, so hovering (tilt,
-   lift) only moves an existing layer. Creating one on hover rebuilt the layer
-   tree; in a library too short to scroll the rebuilt tree was offset by the
-   title bar's height, hiding it and shifting the library. */
-.modern-grid-container .library-game-card, .modern-continue-card { will-change: transform; }
-.performance-mode .modern-grid-container .library-game-card, .performance-mode .modern-continue-card { will-change: auto; }
+/* WebKitGTK: the library's scroll areas are permanent layers. A tilted or
+   lifted cover is then composited inside them. When a library was too short
+   to scroll, there was no scroll layer and the cover was composited against
+   the body instead; WebKitGTK offset that by the title bar's height, hiding it
+   and shifting the library (seen with the PeliGames and Heroic filters, not
+   with Steam's longer list). Menus, tooltips and dialogs are portals to the
+   body, so this layer is not their containing block. */
+.modern-ui .modern-scroll, .modern-continue-row { will-change: transform; }
 /* The details dialog is solid from its first frame, even before its content
    has laid out, so the library never shows through it. */
 .game-details-dialog { background: #0e1018; }
 :root[data-appearance="light"] .game-details-dialog { background: #f2f3f8; }
+/* Overlays that fade in and out keep their opacity layer: when the fade ends,
+   WebKitGTK no longer drops the layer and repaints the overlay and the covers
+   behind it in one blinking frame. */
+.game-details-overlay, .cover-launch-overlay { will-change: opacity; }
+
+/* Rounded window corners without clipping (see html in App.css): each surface
+   that reaches a corner rounds itself. */
+.modern-ui .app-titlebar { border-radius: 16px 16px 0 0; }
+.modern-ui .modern-sidebar { border-bottom-left-radius: 15px; }
+:is(.modal-overlay, .preferences-overlay, .preferences-overlay > .dialog-backdrop, .game-details-overlay, .cover-launch-overlay) { border-radius: 0 0 16px 16px; }
+.emergency-fracture { border-radius: 16px; }
+/* The selected cover's grey copy keeps the exact size of a normal cover (its
+   border inside the 2:3 box), so the grid does not move when details open. */
+.modern-grid-container .game-card-placeholder:not(.game-card-placeholder--list) { box-sizing: border-box; }
+/* The frame is the window's edge: an outer shadow would only paint the corners
+   outside its curve, now that nothing clips them (see html in App.css). */
+.app-wrapper { box-shadow: none !important; }
+/* The open side menu keeps the window's bottom-left curve; squaring it painted
+   its blurred background as a dark square in the window corner. */
+.modern-menu-rail .modern-sidebar:is(:hover, :has(:focus-visible)), .modern-menu-rail.modern-drawer-open .modern-sidebar { border-radius: 0 18px 18px 15px; }
+/* Full-window overlays clip their own content (the dialog's wide shadow) to
+   the window's bottom corners; it is one layer, no mask between layers. */
+.game-details-overlay, .cover-launch-overlay { overflow: hidden; }
+/* The selected game's card while its details are open: the same card and image,
+   grey and faded, so closing the details only removes a class (no new image or
+   layer for WebKitGTK to draw, hence no blink). */
+.modern-grid-container .library-game-card.is-away .library-cover-thumbnail { filter: grayscale(1); opacity: .45; }
+.modern-grid-container .library-game-card .library-cover-thumbnail { transition: filter .25s ease, opacity .25s ease; }
+.modern-grid-container .library-game-card.is-away { box-shadow: none !important; border-color: rgba(255, 255, 255, .12) !important; }
+.modern-grid-container .library-game-card.is-away :is(.modern-card-fav, .modern-card-play, .modern-card-store, .glare) { visibility: hidden; }
+.modern-grid-container .library-card-cell[data-cover-landing] .library-cover-thumbnail { transition: none; filter: none; opacity: 1; }

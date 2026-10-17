@@ -17,6 +17,12 @@ export type VoiceSettings = {
 };
 type VoiceState = VoiceSettings & {
   phase: "idle" | "joining" | "connected" | "reconnecting" | "leaving";
+  /** Native screen share of this account: picking a source in the portal, or live. */
+  screen: "off" | "choosing" | "live";
+  /** Call identities ("user:device") sharing a screen, other than this launcher. */
+  shares: string[];
+  /** The share shown on the stage or the mini player: an identity, "local" for the own preview. */
+  watching: string | null;
   room: string | null; error: string;
   participants: { id: string; name: string }[];
   /** Matrix users speaking now in the call (including this account). */
@@ -43,7 +49,7 @@ function loadSettings(): VoiceSettings {
   } catch { return { ...DEFAULTS }; }
 }
 const settingsOf = (value: VoiceState): VoiceSettings => ({ muted: value.muted, deafened: value.deafened, volume: value.volume, micVolume: value.micVolume, noise: value.noise, agc: value.agc, input: value.input, output: value.output });
-let state: VoiceState = { ...loadSettings(), phase: "idle", room: null, error: "", participants: [], speaking: [] };
+let state: VoiceState = { ...loadSettings(), screen: "off", shares: [], watching: null, phase: "idle", room: null, error: "", participants: [], speaking: [] };
 const subscribers = new Set<() => void>();
 const set = (patch: Partial<VoiceState>) => { state = { ...state, ...patch }; subscribers.forEach(fn => fn()); };
 let session: MatrixRTCSession | null = null;
@@ -65,6 +71,18 @@ function attachNative() {
       if (payload.call_id !== currentCallId) return;
       // Identities are "user:device"; Matrix user IDs contain one ":" themselves.
       set({ speaking: [...new Set(payload.identities.map(identity => identity.split(":").slice(0, 2).join(":")))] });
+    }),
+    listen<{ state: "choosing" | "live" | "off"; call_id?: string; error?: string | null }>("matrix-screen-status", ({ payload }) => {
+      if (payload.call_id !== currentCallId) return;
+      set({ screen: payload.state, ...(payload.error ? { error: payload.error } : {}) });
+      // As in Discord: going live shows the own stream; stopping takes it away.
+      if (payload.state === "live" && !state.watching) void watchMatrixScreen("local");
+      if (payload.state === "off" && state.watching === "local") void watchMatrixScreen(null);
+    }),
+    listen<{ call_id?: string; identities: string[] }>("matrix-screen-shares", ({ payload }) => {
+      if (payload.call_id !== currentCallId) return;
+      set({ shares: payload.identities });
+      if (state.watching && state.watching !== "local" && !payload.identities.includes(state.watching)) set({ watching: null });
     }),
     listen<{ call_id?: string; error?: string } | string | null>("matrix-call-ended", ({ payload }) => {
       if (payload && typeof payload === "object" && payload.call_id === currentCallId && state.phase !== "idle" && state.phase !== "leaving") void leaveMatrixVoice(payload.error || "");
@@ -88,7 +106,7 @@ export function leaveMatrixVoice(error = ""): Promise<void> {
     if (previous) await previous.leave(4000).catch(() => {});
     currentCallId = null;
     setMatrixSdkVoiceRoom(null);
-    set({ phase: "idle", room: null, participants: [], speaking: [], error });
+    set({ phase: "idle", room: null, participants: [], speaking: [], screen: "off", shares: [], watching: null, error });
   })().finally(() => { leaving = null; });
   return leaving;
 }
@@ -190,6 +208,23 @@ export async function setMatrixVoiceControls(patch: Partial<VoiceSettings>) {
   try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settingsOf(state))); } catch { /* Kept for this session only. */ }
   if (devicesChanged) await invoke("matrix_audio_route", { input: state.input, output: state.output });
   await pushControls();
+}
+/** Starts or stops sharing the screen in the current call (the system picks the source). */
+/** Sound sent with a screen share: none, the whole PC except the call, or one application. */
+export type ShareAudio = { kind: "none" } | { kind: "all" } | { kind: "app"; key: string };
+/** Starts sharing the screen (the system then asks which screen or window), or stops with `null`. */
+export async function shareMatrixScreen(audio: ShareAudio | null) {
+  if (!nativeStarted || state.phase !== "connected") return;
+  set({ screen: audio ? "choosing" : "off", error: "" });
+  try { await invoke("matrix_screen_share", { on: Boolean(audio), audio }); }
+  catch (error) { set({ screen: "off", error: String(error).replace(/^Error: /, "") }); }
+}
+/** Shows a share on the stage (or the mini player), the own preview with "local", or nothing. */
+export async function watchMatrixScreen(identity: string | null) {
+  if (!nativeStarted) { set({ watching: null }); return; }
+  set({ watching: identity });
+  try { await invoke("matrix_screen_watch", { identity }); }
+  catch { set({ watching: null }); }
 }
 /** The call this launcher is in (or joining), if any; read outside React. */
 export function matrixVoiceRoom() { return state.phase === "idle" ? null : state.room; }

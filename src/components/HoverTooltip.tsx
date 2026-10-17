@@ -8,16 +8,22 @@ interface Props {
   tooltipClassName?: string;
   showOnFocus?: boolean;
   align?: "left" | "right";
+  hoverDelay?: number;
 }
 
 /** Render outside the toolbar so its stacking context cannot clip the hint. */
-export function HoverTooltip({ text, children, anchorClassName = "", tooltipClassName = "", showOnFocus = true, align = "right" }: Props) {
+export function HoverTooltip({ text, children, anchorClassName = "", tooltipClassName = "", showOnFocus = true, align = "right", hoverDelay = 0 }: Props) {
   const id = useId();
   const anchor = useRef<HTMLSpanElement>(null);
   const tooltip = useRef<HTMLDivElement>(null);
   const suppressRestoredFocus = useRef(false);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hovered, setHovered] = useState(false);
   const [position, setPosition] = useState<{ left: number; top: number; zIndex: number } | null>(null);
+
+  useLayoutEffect(() => {
+    return () => { if (hoverTimer.current !== null) clearTimeout(hoverTimer.current); };
+  }, [text, hoverDelay]);
 
   useLayoutEffect(() => {
     if (!text.trim()) { setHovered(false); setPosition(null); }
@@ -57,10 +63,17 @@ export function HoverTooltip({ text, children, anchorClassName = "", tooltipClas
     };
   }, [hovered, text, align]);
 
-  const close = () => { setHovered(false); setPosition(null); };
+  const cancelHover = () => { if (hoverTimer.current !== null) clearTimeout(hoverTimer.current); hoverTimer.current = null; };
+  const close = () => { cancelHover(); setHovered(false); setPosition(null); };
   const activate = () => { suppressRestoredFocus.current = true; close(); };
   return <span ref={anchor} className={`hover-tooltip-anchor ${anchorClassName}`}
-    onMouseEnter={() => { suppressRestoredFocus.current = false; if (text.trim()) setHovered(true); }}
+    onMouseEnter={() => {
+      suppressRestoredFocus.current = false;
+      cancelHover();
+      if (!text.trim()) return;
+      if (hoverDelay <= 0) setHovered(true);
+      else hoverTimer.current = setTimeout(() => { hoverTimer.current = null; setHovered(true); }, hoverDelay);
+    }}
     onMouseLeave={close}
     onFocus={event => {
       // Closing a dialog restores focus to its trigger; that must not reopen its hint.

@@ -84,6 +84,7 @@ import "./theme/controlStability.css";
 import { ModManagerModal } from "./components/ModManagerModal";
 import { WelcomeModal } from "./components/WelcomeModal";
 import { AppImageInstallPrompt, APPIMAGE_PROMPT_KEY } from "./components/AppImageInstallPrompt";
+import { bootSplashGone } from "./components/BootSplash";
 import { hasDlssnrConfiguration } from "./services/modConfiguration";
 import { GameGrid, GameInfo } from "./components/GameGrid";
 import { InstructionsModal } from "./components/InstructionsModal";
@@ -230,7 +231,8 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     }
     let active = true;
     void invoke<{ appimage: boolean; installed: boolean; target: string }>("appimage_install_status")
-      .then(status => { if (active && status.appimage && !status.installed) setAppImageTarget(status.target); }).catch(() => {});
+      // Asked over the drawn library, after the start screen has gone.
+      .then(async status => { if (!active || !status.appimage || status.installed) return; await bootSplashGone(); if (active) setAppImageTarget(status.target); }).catch(() => {});
     return () => { active = false; };
   }, []);
   const [settingsSection, setSettingsSection] = useState<"general" | "covers" | "protons" | "backendUpdate" | "monitoring" | "diskAutomount" | "interface" | "connections" | "nexusAccount" | "appimageInstall">("general");
@@ -360,7 +362,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       const launchOptions = printed ?? steamLaunchOptionsForRoute(route);
       const layersNote = launchOptions.includes("VK_INSTANCE_LAYERS") ? `\n\n${t("routeSelector", "layersNote")}` : "";
       // The options the mod needs go into the game's own launch options by themselves.
-      const target = selectedGame?.path === gameDir ? selectedGame : null;
+      const target = selectedGame && (selectedGameDirectory === gameDir || selectedGame.path === gameDir) ? selectedGame : null;
       const synced = await syncModLaunchOptions(target, gameDir, launchOptions).catch(error => { notifyError(selectedGame?.name || "DLSS 5 NR", error); return undefined; });
       if (synced) setSelectedGame(previous => previous && previous.path === synced.path ? synced : previous);
       const intro = isRepair ? t("app", "repairSuccessMsg") : t("app", "installSuccessMsg").split("\n\n")[0];
@@ -387,7 +389,8 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       setModalType("error");
       setShowModal(true);
     } finally {
-      if (selectedGame?.path === gameDir) {
+      // The DLSS view checks the executable's folder, which can differ from the game's path.
+      if (selectedGame && (selectedGameDirectory === gameDir || selectedGame.path === gameDir)) {
         await refreshInstallationDetails(gameDir);
         setGameInfoRevision(value => value + 1);
       }
@@ -417,7 +420,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       });
       setLogs((prev) => prev + "\n" + localizeInstallationMessage(response, language));
 
-      const target = selectedGame?.path === path ? selectedGame : null;
+      const target = selectedGame && (selectedGameDirectory === path || selectedGame.path === path) ? selectedGame : null;
       const synced = await syncModLaunchOptions(target, path, null).catch(error => { notifyError(selectedGame?.name || "DLSS 5 NR", error); return null; });
       if (synced) setSelectedGame(previous => previous && previous.path === synced.path ? synced : previous);
       setModalTitle(t("app", "uninstallSuccessTitle"));
@@ -443,7 +446,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       setLoading(false);
       setLoadingMessage("");
       // Refresh status if selected game was uninstalled
-      if (selectedGame && selectedGame.path === path) {
+      if (selectedGame && (selectedGameDirectory === path || selectedGame.path === path)) {
         await refreshInstallationDetails(path);
         setGameInfoRevision(value => value + 1);
       }
@@ -865,31 +868,49 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     finally { libraryMutationLock.current = false; setLibraryMutationBusy(false); }
   };
 
+  const detailHoverFrame = useRef<number | null>(null);
+  const detailHoverBounds = useRef<{ card: HTMLDivElement; rect: DOMRect } | null>(null);
+  const detailHoverPoint = useRef({ x: 0, y: 0 });
+  useEffect(() => () => {
+    if (detailHoverFrame.current !== null) cancelAnimationFrame(detailHoverFrame.current);
+    detailHoverFrame.current = null;
+    detailHoverBounds.current = null;
+  }, [performanceMode, selectedGame?.path]);
   const handleCoverMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const card = e.currentTarget;
     if (performanceMode) return;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const rotateX = ((y - centerY) / centerY) * -15;
-    const rotateY = ((x - centerX) / centerX) * 15;
-    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-    const glare = card.querySelector('.glare') as HTMLDivElement;
-    if (glare) {
-      glare.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255, 255, 255, 0.3) 0%, transparent 60%)`;
-      glare.style.opacity = "1";
-    }
+    const card = e.currentTarget;
+    if (detailHoverBounds.current?.card !== card) detailHoverBounds.current = { card, rect: card.getBoundingClientRect() };
+    detailHoverPoint.current = { x: e.clientX, y: e.clientY };
+    if (detailHoverFrame.current !== null) return;
+    detailHoverFrame.current = requestAnimationFrame(() => {
+      detailHoverFrame.current = null;
+      const bounds = detailHoverBounds.current;
+      if (!bounds || bounds.card !== card || !card.isConnected) return;
+      const { rect } = bounds;
+      if (!rect.width || !rect.height) return;
+      const px = Math.max(0, Math.min(1, (detailHoverPoint.current.x - rect.left) / rect.width));
+      const py = Math.max(0, Math.min(1, (detailHoverPoint.current.y - rect.top) / rect.height));
+      card.style.transition = "transform .12s ease-out, box-shadow .25s ease";
+      card.style.transform = `perspective(900px) rotateX(${(py * 2 - 1) * -6}deg) rotateY(${(px * 2 - 1) * 6}deg) scale3d(1.04, 1.04, 1.04)`;
+      const glare = card.querySelector<HTMLElement>('.glare');
+      if (glare) {
+        glare.style.setProperty("--glare-x", `${px * 100}%`);
+        glare.style.setProperty("--glare-y", `${py * 100}%`);
+        glare.style.setProperty("--glare-sheen", `${120 - (px * 70 + py * 30) * 1.4}%`);
+        glare.style.opacity = "1";
+      }
+    });
   };
 
   const handleCoverMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (detailHoverFrame.current !== null) cancelAnimationFrame(detailHoverFrame.current);
+    detailHoverFrame.current = null;
+    detailHoverBounds.current = null;
     const card = e.currentTarget;
-    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
-    const glare = card.querySelector('.glare') as HTMLDivElement;
-    if (glare) {
-      glare.style.opacity = "0";
-    }
+    card.style.transition = "transform .45s cubic-bezier(.2, .8, .2, 1), box-shadow .35s ease";
+    card.style.transform = "none";
+    const glare = card.querySelector<HTMLElement>('.glare');
+    if (glare) glare.style.opacity = "0";
   };
 
   const handleChooseCustomPath = async () => {
@@ -980,8 +1001,8 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
                     transition: "box-shadow 0.1s ease-out",
                     boxShadow: "0 0 20px rgba(var(--accent-rgb), 0.6)",
                     border: "2px solid rgba(var(--accent-rgb), 0.8)",
-                    transformStyle: "preserve-3d",
-                    willChange: "transform",
+                    transformStyle: "flat",
+                    willChange: "auto",
                     cursor: "pointer",
                     height: "max-content",
                     display: "inline-block"
@@ -1102,7 +1123,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     void coverAction(selectedActive ? "stop" : "start", selectedView);
   };
   const quick = (icon: Parameters<typeof MenuIcon>[0]["name"], label: string, onClick: () => void, options: { pressed?: boolean; disabled?: boolean; danger?: boolean } = {}) =>
-    <HoverTooltip key={label} text={label} anchorClassName="modern-quick-anchor"><button type="button" className={`modern-quick-btn${options.danger ? " danger" : ""}`} aria-label={label} aria-pressed={options.pressed} disabled={options.disabled} onClick={onClick}><ModernQuickIcon name={icon} /></button></HoverTooltip>;
+    <HoverTooltip key={label} text={label} hoverDelay={300} anchorClassName="modern-quick-anchor"><button type="button" className={`modern-quick-btn${options.danger ? " danger" : ""}`} aria-label={label} aria-pressed={options.pressed} disabled={options.disabled} onClick={onClick}><ModernQuickIcon name={icon} /></button></HoverTooltip>;
   const modernActions = selectedGame && selectedView ? <>
     <button type="button" className={`btn btn-play game-play-button modern-play${selectedActive ? " running" : ""}${selectedPreparing ? " modern-play-preparing" : ""}`} disabled={!selectedLaunchable || playBlocked} aria-busy={selectedPreparing}
       title={selectedLaunchable ? undefined : "Adicione ao PeliGames para iniciar por aqui."} onClick={playSelected}>
@@ -1178,7 +1199,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       { id: "options", label: t("modern", "options"), content: executionPanel("options") },
       { id: "advanced", label: language === "pt" ? "Avançado" : "Advanced", content: executionPanel("advanced") },
     ];
-  const gameGrid = <GameGrid key={(gamePanelMode === "nexus" || addingNexusGame) ? "nexus" : "launcher"} managedLibrary={(gamePanelMode === "nexus" || addingNexusGame) ? { games: nexus.visibleGames.map(item => ({ ...item.game, nexus_platform: item.platform, nexus_id: item.id, nexus_running: item.running, nexus_starting: nexus.launching === item.id && nexus.stopping !== item.id })), busy: nexus.busy, loaded: nexus.loaded, scanning: nexus.scanning, error: nexus.error, title: nexusText.title, downloadsAction: null, accountLabel: nexusText.account, onAccount: () => { setSettingsSection("nexusAccount"); setSettingsPage("connections"); setShowSettingsModal(true); }, empty: nexusText.empty, hint: nexusText.emptyHint, addLabel: nexusText.add, onAdd: openNexusAddition, onRefresh: () => { void nexus.refresh(); }, onCoverFallback: nexus.recoverCover } : undefined} onCoverAction={coverAction} coverHoldBlocked={gameInstaller.busy || libraryMutationBusy || nexus.busy || Boolean(gameExecution.pendingPath)} coverActionsBlocked={gameInstaller.busy || libraryMutationBusy || nexus.busy || gameExecution.active || Boolean(gameExecution.pendingPath)} homeRevision={homeRevision} onSelectGame={handleSelectGame} startingGamePath={gameExecution.pendingPath || (gameExecution.session?.state === "starting" ? gameExecution.session.path : undefined)} runningGamePath={gameExecution.session?.state === "running" ? gameExecution.session.path : undefined} selectedGameKey={gameDetailsOverlay ? undefined : selectedGame ? gameViewKey(selectedGame) : undefined} mode={gamePanelMode} libraryScope={libraryScope} modeDisabled={gameInstaller.busy || libraryMutationBusy || nexus.busy} onModeChange={changeGamePanelMode} onCountChange={setLibraryCount} />;
+  const gameGrid = <GameGrid key={(gamePanelMode === "nexus" || addingNexusGame) ? "nexus" : "launcher"} managedLibrary={(gamePanelMode === "nexus" || addingNexusGame) ? { games: nexus.visibleGames.map(item => ({ ...item.game, nexus_platform: item.platform, nexus_id: item.id, nexus_running: item.running, nexus_starting: nexus.launching === item.id && nexus.stopping !== item.id })), busy: nexus.busy, loaded: nexus.loaded, scanning: nexus.scanning, error: nexus.error, title: nexusText.title, downloadsAction: null, accountLabel: nexusText.account, onAccount: () => { setSettingsSection("nexusAccount"); setSettingsPage("connections"); setShowSettingsModal(true); }, empty: nexusText.empty, hint: nexusText.emptyHint, addLabel: nexusText.add, onAdd: openNexusAddition, onRefresh: () => { void nexus.refresh(); }, onCoverFallback: nexus.recoverCover } : undefined} onCoverAction={coverAction} coverHoldBlocked={gameInstaller.busy || libraryMutationBusy || nexus.busy || Boolean(gameExecution.pendingPath)} coverActionsBlocked={gameInstaller.busy || libraryMutationBusy || nexus.busy || gameExecution.active || Boolean(gameExecution.pendingPath)} homeRevision={homeRevision} onSelectGame={handleSelectGame} startingGamePath={gameExecution.pendingPath || (gameExecution.session?.state === "starting" ? gameExecution.session.path : undefined)} runningGamePath={gameExecution.session?.state === "running" ? gameExecution.session.path : undefined} selectedGameKey={selectedGame ? gameViewKey(selectedGame) : undefined} mode={gamePanelMode} libraryScope={libraryScope} modeDisabled={gameInstaller.busy || libraryMutationBusy || nexus.busy} onModeChange={changeGamePanelMode} onCountChange={setLibraryCount} />;
 
   const selectedBanner = useGameBanner(selectedGame || undefined, !["install", "add"].includes(gamePanelMode));
   const installingGame = gamePanelMode === "install" || gamePanelMode === "add";

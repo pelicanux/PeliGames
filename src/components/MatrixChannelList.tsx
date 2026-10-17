@@ -5,6 +5,10 @@ import { displayName, refreshMatrixRooms, type RoomInfo } from "../services/matr
 import { joinMatrixVoice, leaveMatrixVoice, useMatrixVoice } from "../services/matrixVoice";
 import { matrixSdkClient } from "../services/matrixSdk";
 import { isVoiceRoom, useVoiceChannelMembers } from "../services/matrixVoiceChannels";
+import { MatrixChannelMenu, channelLink, copyText } from "./MatrixChannelMenu";
+
+/** Tabs of the channel editor that the right-click menu opens directly. */
+export type ChannelEditTab = "overview" | "permissions" | "roles" | "invite";
 
 const Speaker = () => <svg className="matrix-channel-speaker" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>;
 /** Waits until the SDK sees the joined room (after joining it for a call). */
@@ -17,7 +21,11 @@ async function sdkRoomJoined(id: string) {
 }
 
 /** Discord-style channel list in the Matrix terminal: text and voice channels of the community. */
-export function MatrixChannelList({ pt, rooms, room, onSelect, me, names, joined, ready, canCreate, locked, onJoinRoom, onError, refreshing, onRefresh, lockLabel, permanent, unread }: {
+export function MatrixChannelList({ pt, rooms, room, onSelect, me, names, joined, ready, canCreate, locked, onJoinRoom, onError, refreshing, onRefresh, lockLabel, permanent, unread, onOpenChat, onEdit, canEdit }: {
+  /** The text chat of a channel (for a voice channel, instead of its call view). */
+  onOpenChat: (id: string) => void;
+  /** Opens the channel editor; `canEdit` says whether this account may change anything there. */
+  onEdit: (id: string, tab: ChannelEditTab) => void; canEdit: (id: string) => boolean;
   pt: boolean; rooms: RoomInfo[]; room: string; onSelect: (id: string) => void; me: string; names: Record<string, string>;
   /** Unread messages per room, from the server. */
   unread: Record<string, number>;
@@ -32,6 +40,8 @@ export function MatrixChannelList({ pt, rooms, room, onSelect, me, names, joined
   const [creating, setCreating] = useState<"text" | "voice" | null>(null), [name, setName] = useState(""), [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null), [removing, setRemoving] = useState(false);
   const switching = useRef(false);
+  const [menu, setMenu] = useState<{ item: RoomInfo; x: number; y: number } | null>(null);
+  const openMenu = (item: RoomInfo) => (event: React.MouseEvent) => { event.preventDefault(); event.stopPropagation(); setMenu({ item, x: event.clientX, y: event.clientY }); };
   const lastError = useRef("");
   useEffect(() => {
     // Call failures also reach the notification bell, once each.
@@ -93,7 +103,7 @@ export function MatrixChannelList({ pt, rooms, room, onSelect, me, names, joined
     <div className="matrix-rooms-heading"><h3>{pt ? "# CANAIS DE TEXTO" : "# TEXT CHANNELS"}</h3><span className="matrix-channel-heading-actions">{add("text")}<button type="button" className={refreshing ? "matrix-rooms-refresh is-refreshing" : "matrix-rooms-refresh"} disabled={refreshing} aria-busy={refreshing} onClick={onRefresh} aria-label={refreshing ? pt ? "Atualizando salas…" : "Refreshing rooms…" : pt ? "Atualizar salas" : "Refresh rooms"} title={refreshing ? pt ? "Atualizando salas…" : "Refreshing rooms…" : pt ? "Atualizar salas" : "Refresh rooms"}><MenuIcon name="repair"/></button></span></div>
     {form("text")}
     {textRooms.map(item => <div key={item.room_id} className="matrix-channel-row">
-      <div className="matrix-channel-line"><button type="button" aria-current={room === item.room_id ? "page" : undefined} onClick={() => onSelect(item.room_id)} className={badge(item.room_id) ? "has-unread" : undefined}># {item.name || item.room_id}{lockLabel(item.room_id)}{badge(item.room_id)}</button>{trash(item)}</div>
+      <div className="matrix-channel-line"><button type="button" aria-current={room === item.room_id ? "page" : undefined} onContextMenu={openMenu(item)} onClick={() => onSelect(item.room_id)} className={badge(item.room_id) ? "has-unread" : undefined}># {item.name || item.room_id}{lockLabel(item.room_id)}{badge(item.room_id)}</button>{trash(item)}</div>
       {confirmDelete(item)}
     </div>)}
     {(voiceRooms.length > 0 || canCreate) && <div className="matrix-rooms-heading matrix-voice-heading"><h3>{pt ? "# CANAIS DE VOZ" : "# VOICE CHANNELS"}</h3><span className="matrix-channel-heading-actions">{add("voice")}</span></div>}
@@ -102,12 +112,32 @@ export function MatrixChannelList({ pt, rooms, room, onSelect, me, names, joined
       const inCall = voice.phase !== "idle" && voice.room === item.room_id;
       const people = members[item.room_id] ?? [];
       return <div key={item.room_id} className="matrix-voice-channel matrix-channel-row">
-        <div className="matrix-channel-line"><button type="button" className={inCall ? "is-in-call" : ""} aria-current={room === item.room_id ? "page" : undefined} disabled={callBusy && !inCall} title={inCall ? (pt ? "Você está neste canal de voz" : "You are in this voice channel") : (pt ? "Entrar no canal de voz" : "Join voice channel")} onClick={() => void enterVoice(item.room_id)}><Speaker/>{item.name || item.room_id}{lockLabel(item.room_id)}</button>{trash(item)}</div>
+        <div className="matrix-channel-line"><button type="button" className={inCall ? "is-in-call" : ""} aria-current={room === item.room_id ? "page" : undefined} onContextMenu={openMenu(item)} disabled={callBusy && !inCall} title={inCall ? (pt ? "Você está neste canal de voz" : "You are in this voice channel") : (pt ? "Entrar no canal de voz" : "Join voice channel")} onClick={() => void enterVoice(item.room_id)}><Speaker/><span className="matrix-channel-name">{item.name || item.room_id}{lockLabel(item.room_id)}</span></button>{trash(item)}</div>
         {confirmDelete(item)}
         {people.length > 0 && <ul className="matrix-voice-members" aria-label={pt ? `Na chamada de ${item.name}` : `In ${item.name}'s call`}>
           {people.map(person => <li key={person.userId} className={[person.userId === me ? "is-me" : "", inCall && voice.speaking.includes(person.userId) ? "is-speaking" : ""].join(" ").trim() || undefined}><span className="matrix-voice-member-dot" aria-hidden="true"/>{displayName(person.userId, names)}{person.userId === me && inCall && (voice.muted || voice.deafened) ? <small>{voice.deafened ? (pt ? " (sem áudio)" : " (deafened)") : (pt ? " (mudo)" : " (muted)")}</small> : null}</li>)}
         </ul>}
       </div>;
     })}
+    {menu && (() => {
+      const { item } = menu, id = item.room_id, isVoice = isVoiceRoom(item);
+      const inThisCall = voice.phase !== "idle" && voice.room === id;
+      const copy = (text: string) => void copyText(text).catch(error => onError(error, pt ? "Não foi possível copiar." : "Could not copy."));
+      return <MatrixChannelMenu x={menu.x} y={menu.y} title={`${isVoice ? "🔊 " : "# "}${item.name || id}`} onClose={() => setMenu(null)} groups={[
+        [
+          { label: inThisCall ? (pt ? "Sair da voz" : "Leave voice") : (pt ? "Entrar na voz" : "Join voice"), hidden: !isVoice || locked(id), action: () => void (inThisCall ? leaveMatrixVoice() : enterVoice(id)) },
+          { label: pt ? "Abrir chat" : "Open chat", hidden: locked(id), action: () => onOpenChat(id) },
+        ],
+        [
+          { label: pt ? "Convidar pessoas" : "Invite people", hidden: locked(id), action: () => onEdit(id, "invite") },
+          { label: pt ? "Copiar link" : "Copy link", action: () => copy(channelLink(id)) },
+          { label: pt ? "Copiar ID do canal" : "Copy channel ID", action: () => copy(id) },
+        ],
+        [
+          { label: pt ? "Editar canal" : "Edit channel", hidden: !canEdit(id) || !joined.has(id), action: () => onEdit(id, "overview") },
+          { label: pt ? "Apagar canal" : "Delete channel", danger: true, hidden: !canCreate || permanent(id), action: () => setDeleting(id) },
+        ],
+      ]}/>;
+    })()}
   </>;
 }

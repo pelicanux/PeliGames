@@ -8,7 +8,7 @@ import "./theme/selectionMenus.css";
 import "./modules/nexus/nexus.css";
 const StartupRouter = React.lazy(() => import("./modules/startup/StartupRouter").then(module => ({ default: module.StartupRouter })));
 import { TextContextMenu } from "./components/TextContextMenu";
-import { BootSplash } from "./components/BootSplash";
+import { BootSplash, finishBootSplash } from "./components/BootSplash";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { I18nProvider } from "./i18n/I18nContext";
 import { ThemeProvider } from "./theme/ThemeProvider";
@@ -26,6 +26,10 @@ window.addEventListener("scroll", event => {
   if (!target || !(target === document.scrollingElement || target === document.body || target.id === "root" || target.classList.contains("app-wrapper"))) return;
   if (target.scrollTop || target.scrollLeft) { target.scrollTop = 0; target.scrollLeft = 0; }
 }, { capture: true, passive: true });
+
+// The start screen leaves once a module has drawn; if one fails to load, it still
+// leaves so the error is visible.
+window.setTimeout(() => { void finishBootSplash(); }, 8000);
 
 // Suppress the webview menu, including dialogs rendered outside the root.
 // Cover handlers still receive the event and open the application's own menu.
