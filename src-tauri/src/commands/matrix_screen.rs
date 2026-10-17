@@ -367,11 +367,24 @@ pub(super) fn feed(track: RemoteVideoTrack) -> tokio::task::JoinHandle<()> {
 
 /// Where the interface wants the video, in CSS pixels of the main window.
 #[derive(Clone, Copy, Deserialize)]
+struct ControlRect {
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+}
+#[derive(Clone, Copy, Deserialize)]
 pub struct ViewRect {
     x: f64,
     y: f64,
     width: f64,
     height: f64,
+    #[serde(default)]
+    crt: bool,
+    #[serde(default)]
+    fill: bool,
+    #[serde(default)]
+    controls: Option<ControlRect>,
 }
 
 #[tauri::command]
@@ -380,7 +393,11 @@ pub fn matrix_screen_view(window: WebviewWindow, rect: Option<ViewRect>) -> Resu
         return Err("Janela inválida.".into());
     }
     let valid = |value: f64| value.is_finite() && (-16384.0..=16384.0).contains(&value);
-    if rect.is_some_and(|r| !(valid(r.x) && valid(r.y) && valid(r.width) && valid(r.height))) {
+    if rect.is_some_and(|r| {
+        !(valid(r.x) && valid(r.y) && valid(r.width) && valid(r.height))
+            || r.controls
+                .is_some_and(|c| !(valid(c.x) && valid(c.y) && valid(c.width) && valid(c.height)))
+    }) {
         return Err("Área de vídeo inválida.".into());
     }
     if rect.is_none() {
@@ -406,9 +423,47 @@ mod layer {
         area: gtk::DrawingArea,
         surface: Rc<RefCell<Option<cairo::ImageSurface>>>,
         timer: Option<glib::SourceId>,
+        view: Rc<RefCell<Option<ViewRect>>>,
     }
     thread_local! {
         static LAYER: RefCell<Option<Layer>> = const { RefCell::new(None) };
+    }
+
+    fn clip_video(context: &cairo::Context, width: f64, height: f64, view: Option<ViewRect>) {
+        if view.is_some_and(|v| v.crt) {
+            // Same normalized Bezier contour as MatrixChatPanel's SVG.
+            // GTK is above WebKit, so CSS clip-path cannot clip this layer.
+            context.move_to(0.10 * width, 0.04 * height);
+            for [x1, y1, x2, y2, x3, y3] in [
+                [0.30, 0.013333, 0.70, 0.013333, 0.90, 0.04],
+                [0.953333, 0.047111, 0.965333, 0.08, 0.972, 0.14],
+                [0.992, 0.32, 0.992, 0.68, 0.972, 0.86],
+                [0.965333, 0.92, 0.953333, 0.952889, 0.90, 0.96],
+                [0.70, 0.986667, 0.30, 0.986667, 0.10, 0.96],
+                [0.046667, 0.952889, 0.034667, 0.92, 0.028, 0.86],
+                [0.008, 0.68, 0.008, 0.32, 0.028, 0.14],
+                [0.034667, 0.08, 0.046667, 0.047111, 0.10, 0.04],
+            ] {
+                context.curve_to(
+                    x1 * width,
+                    y1 * height,
+                    x2 * width,
+                    y2 * height,
+                    x3 * width,
+                    y3 * height,
+                );
+            }
+            context.close_path();
+            context.clip();
+        }
+        if let Some(controls) = view.and_then(|v| v.controls) {
+            // A transparent opening lets the original WebKit buttons float
+            // above the picture while GTK input still passes through.
+            context.rectangle(0.0, 0.0, width, height);
+            context.rectangle(controls.x, controls.y, controls.width, controls.height);
+            context.set_fill_rule(cairo::FillRule::EvenOdd);
+            context.clip();
+        }
     }
 
     /// The launcher webview inside a GTK Overlay (shared with the Nexus
@@ -446,22 +501,42 @@ mod layer {
             let scale = area.scale_factor().max(1) as u64;
             let width = allocation.width().max(0) as u64 * scale;
             let height = allocation.height().max(0) as u64 * scale;
-            stage().target.store(width << 32 | height, Ordering::Release);
+            stage()
+                .target
+                .store(width << 32 | height, Ordering::Release);
         });
         let surface: Rc<RefCell<Option<cairo::ImageSurface>>> = Rc::default();
         let image = surface.clone();
+        let view: Rc<RefCell<Option<ViewRect>>> = Rc::default();
+        let draw_view = view.clone();
         area.connect_draw(move |area, context| {
+            let (width, height) = (
+                area.allocated_width() as f64,
+                area.allocated_height() as f64,
+            );
+            let view = *draw_view.borrow();
+            clip_video(context, width, height, view);
             context.set_source_rgb(0.0, 0.0, 0.0);
             let _ = context.paint();
             if let Some(image) = image.borrow().as_ref() {
                 let scale = area.scale_factor().max(1) as f64;
-                let (width, height) =
-                    (area.allocated_width() as f64, area.allocated_height() as f64);
                 let (image_width, image_height) =
                     (image.width() as f64 / scale, image.height() as f64 / scale);
                 // Pictures arrive at the area's size; only a resize in
                 // progress needs cairo to scale the last one.
-                let fit = (width / image_width).min(height / image_height).min(1.0);
+                let fill = view.is_some_and(|v| v.fill);
+                // Contain leaves a safe rectangle inside the curved CRT, so
+                // the source's corners remain visible too.
+                let margin = if view.is_some_and(|v| v.crt) && !fill {
+                    0.86
+                } else {
+                    1.0
+                };
+                let fit = if fill {
+                    (width / image_width).max(height / image_height)
+                } else {
+                    (width * margin / image_width).min(height * margin / image_height)
+                };
                 context.translate(
                     ((width - image_width * fit) / 2.0).round(),
                     ((height - image_height * fit) / 2.0).round(),
@@ -472,11 +547,19 @@ mod layer {
             }
             glib::Propagation::Stop
         });
-        Some(Layer { area, surface, timer: None })
+        Some(Layer {
+            area,
+            surface,
+            timer: None,
+            view,
+        })
     }
 
     /// Copies the newest picture into the area, about 60 times a second while shown.
-    fn ticker(area: gtk::DrawingArea, surface: Rc<RefCell<Option<cairo::ImageSurface>>>) -> glib::SourceId {
+    fn ticker(
+        area: gtk::DrawingArea,
+        surface: Rc<RefCell<Option<cairo::ImageSurface>>>,
+    ) -> glib::SourceId {
         glib::timeout_add_local(Duration::from_millis(16), move || {
             let slot = stage();
             if slot.clear.swap(false, Ordering::AcqRel) {
@@ -491,9 +574,12 @@ mod layer {
                 .as_ref()
                 .is_some_and(|s| s.width() == picture.width && s.height() == picture.height);
             if !reuse {
-                *current =
-                    cairo::ImageSurface::create(cairo::Format::Rgb24, picture.width, picture.height)
-                        .ok();
+                *current = cairo::ImageSurface::create(
+                    cairo::Format::Rgb24,
+                    picture.width,
+                    picture.height,
+                )
+                .ok();
             }
             if let Some(image) = current.as_mut() {
                 let stride = image.stride() as usize;
@@ -510,6 +596,40 @@ mod layer {
         })
     }
 
+    #[cfg(test)]
+    mod clip_tests {
+        use super::*;
+        #[test]
+        fn crt_corners_are_transparent_and_controls_have_an_opening() {
+            let surface = cairo::ImageSurface::create(cairo::Format::ARgb32, 1000, 600).unwrap();
+            let context = cairo::Context::new(&surface).unwrap();
+            clip_video(
+                &context,
+                1000.0,
+                600.0,
+                Some(ViewRect {
+                    x: 0.0,
+                    y: 0.0,
+                    width: 1000.0,
+                    height: 600.0,
+                    crt: true,
+                    fill: true,
+                    controls: Some(super::super::ControlRect {
+                        x: 70.0,
+                        y: 500.0,
+                        width: 860.0,
+                        height: 50.0,
+                    }),
+                }),
+            );
+            assert!(!context.in_clip(5.0, 5.0).unwrap());
+            assert!(context.in_clip(500.0, 25.0).unwrap());
+            assert!(context.in_clip(500.0, 300.0).unwrap());
+            assert!(!context.in_clip(500.0, 525.0).unwrap());
+            assert!(context.in_clip(500.0, 480.0).unwrap());
+        }
+    }
+
     pub(super) fn place(webview: &gtk::Widget, rect: Option<ViewRect>) {
         LAYER.with(|cell| {
             let mut cell = cell.borrow_mut();
@@ -524,6 +644,7 @@ mod layer {
             };
             match rect {
                 Some(rect) => {
+                    *layer.view.borrow_mut() = Some(rect);
                     // Margins cannot be negative: a rectangle past the top or
                     // left edge loses that part instead.
                     let (x, y) = (rect.x.round() as i32, rect.y.round() as i32);
@@ -532,6 +653,7 @@ mod layer {
                     layer.area.set_margin_start(x.max(0));
                     layer.area.set_margin_top(y.max(0));
                     layer.area.set_size_request(width, height);
+                    layer.area.queue_draw();
                     if !layer.area.is_visible() {
                         layer.area.show();
                     }
@@ -540,6 +662,7 @@ mod layer {
                     }
                 }
                 None => {
+                    *layer.view.borrow_mut() = None;
                     layer.area.hide();
                     if let Some(timer) = layer.timer.take() {
                         timer.remove();

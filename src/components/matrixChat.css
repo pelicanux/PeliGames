@@ -322,7 +322,7 @@
 .matrix-settings button:not(.custom-select-trigger):hover:not(:disabled) { color:#b4ffcd; border-color:#4e8a6c; background:#14251e; }
 .matrix-settings button:disabled { opacity:.5; cursor:default; }
 .matrix-settings button.matrix-settings-close:not(.custom-select-trigger) { border-color:transparent; color:#ff8f9c; }
-.matrix-settings > nav { display:flex; gap:4px; padding:8px 14px 0; border-bottom:1px solid #24473b; }
+.matrix-settings > nav { display:flex; flex-wrap:wrap; gap:4px; padding:8px 14px 0; border-bottom:1px solid #24473b; }
 .matrix-settings > nav button:not(.custom-select-trigger) { border-bottom-color:transparent; }
 .matrix-settings > nav button[aria-selected=true]:not(.custom-select-trigger) { color:#b4ffcd; border-color:#38644f; border-bottom-color:#090e12; background:#0b1712; margin-bottom:-1px; }
 .matrix-settings-body { display:grid; gap:12px; padding:14px; overflow:auto; }
@@ -476,6 +476,15 @@ body.is-dragging-dock, body.is-dragging-dock * { user-select:none !important; -w
 .matrix-stream-dock { user-select:none; -webkit-user-select:none; }
 
 /* Full screen inside the Matrix frame (not the launcher). */
-.matrix-call-fullscreen { position:absolute; inset:0; z-index:6; display:flex; flex-direction:column; gap:6px; padding:clamp(28px,4vh,34px) 3% clamp(24px,3.8vh,30px); background:#000; }
-.matrix-call-fullscreen > .matrix-call-video { flex:1; min-height:0; border:0; }
-.matrix-call-fullscreen > .matrix-call-focus-bar { flex-shrink:0; padding:0 4px; }
+/* The native layer repeats the CRT clip and leaves the floating controls clear. */
+.matrix-call-fullscreen { position:absolute; inset:0; z-index:6; box-sizing:border-box; min-width:0; min-height:0; background:#000; }
+.matrix-call-fullscreen > .matrix-call-video { position:absolute; inset:0; min-width:0; min-height:0; border:0; }
+.matrix-call-fullscreen > .matrix-call-focus-bar { position:absolute; z-index:1; bottom:7%; left:7%; right:7%; flex-wrap:wrap; gap:8px 10px; padding:8px 10px; background:#080e0cf2; border-radius:6px; opacity:0; pointer-events:none; transition:opacity .18s ease; }
+.matrix-call-fullscreen:hover > .matrix-call-focus-bar,
+.matrix-call-fullscreen:focus-within > .matrix-call-focus-bar { opacity:1; pointer-events:auto; }
+@media (hover:none) { .matrix-call-fullscreen > .matrix-call-focus-bar { opacity:1; pointer-events:auto; } }
+@media (prefers-reduced-motion:reduce) { .matrix-call-fullscreen > .matrix-call-focus-bar { transition:none; } }
+.matrix-call-fullscreen .matrix-call-focus-bar b { flex:1 1 100px; }
+.matrix-call-fullscreen-actions { display:flex; flex-wrap:wrap; gap:8px; margin-left:auto; max-width:100%; }
+.matrix-call-fit { max-width:100%; min-width:0; padding:2px 8px; color:#9fe8bf; background:#080e0c; border:1px solid #38644f; font:16px "Jersey 10",monospace; cursor:pointer; }
+.matrix-call-fit:hover, .matrix-call-fit:focus-visible { color:#d4ffe6; border-color:#62d694; }
