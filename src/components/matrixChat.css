@@ -485,3 +485,9 @@ body.is-dragging-dock, body.is-dragging-dock * { user-select:none !important; -w
 .matrix-call-fullscreen-actions { display:flex; flex-wrap:wrap; gap:8px; margin-left:auto; max-width:100%; }
 .matrix-call-fit { max-width:100%; min-width:0; padding:2px 8px; color:#9fe8bf; background:#080e0c; border:1px solid #38644f; font:16px "Jersey 10",monospace; cursor:pointer; }
 .matrix-call-fit:hover, .matrix-call-fit:focus-visible { color:#d4ffe6; border-color:#62d694; }
+
+/* Resolution and frame rate of a share. */
+.matrix-share-menu .matrix-share-quality { display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:4px; }
+.matrix-call-controls .matrix-share-menu .matrix-share-quality button { padding:4px 6px; text-align:center; color:#d6e8de; background:transparent; border:1px solid #2d4a3c; font:16px "Jersey 10",monospace; cursor:pointer; }
+.matrix-call-controls .matrix-share-menu .matrix-share-quality button.is-chosen { color:#071009; background:#62d694; border-color:#62d694; }
+.matrix-call-controls .matrix-share-menu .matrix-share-quality button:disabled { opacity:.4; cursor:default; }
