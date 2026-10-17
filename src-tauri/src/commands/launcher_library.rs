@@ -9,6 +9,7 @@ use std::{fs, path::{Path, PathBuf}};
 #[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct LauncherGame {
     pub name: String,
+    pub native_linux: bool,
     pub path: String,
     pub app_id: Option<String>,
     pub cover_url: Option<String>,
@@ -81,7 +82,7 @@ pub(super) fn heroic(home: &Path) -> Vec<LauncherGame> {
                 .and_then(|bin| Path::new(bin).parent().and_then(proton_dir));
             let store = match game.store { "legendary" => Some("epic"), "gog" => Some("gog"), "nile" => Some("amazon"), _ => None };
             games.push(LauncherGame {
-                name: game.name, path: game.path, app_id: None, cover_url: game.cover, launcher: "Heroic".into(),
+                native_linux: game.native_linux, name: game.name, path: game.path, app_id: None, cover_url: game.cover, launcher: "Heroic".into(),
                 prefix, proton, store: store.map(str::to_string),
                 external_id: Some(game.id), external_store: Some(game.store.into()), flatpak: base.starts_with(home.join(".var")), executable: None,
             });
@@ -130,7 +131,7 @@ pub(super) fn lutris(home: &Path) -> Vec<LauncherGame> {
                 });
                 let stem = path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
                 games.push(LauncherGame {
-                    name: title_from_slug(&stem), path: directory.to_string_lossy().into_owned(), app_id: None, cover_url: None,
+                    native_linux: text(&config, &["runner"]) == Some("linux"), name: title_from_slug(&stem), path: directory.to_string_lossy().into_owned(), app_id: None, cover_url: None,
                     launcher: "Lutris".into(), prefix, proton, store: None,
                     external_id: Some(stem), external_store: None, flatpak: data.starts_with(&flatpak), executable: Some(exe.to_string_lossy().into_owned()),
                 });
@@ -151,7 +152,7 @@ pub(super) fn faugus(home: &Path) -> Vec<LauncherGame> {
             let runner = item["runner"].as_str().unwrap_or_default();
             let native = matches!(runner, "Linux-Native" | "Steam");
             games.push(LauncherGame {
-                name: title.to_string(), path: directory.to_string_lossy().into_owned(), app_id: None, cover_url: None,
+                native_linux: runner == "Linux-Native", name: title.to_string(), path: directory.to_string_lossy().into_owned(), app_id: None, cover_url: None,
                 launcher: "Faugus".into(),
                 prefix: (!native).then(|| item["prefix"].as_str().and_then(existing_dir)).flatten(),
                 proton: (!native).then(|| named_proton(home, &[], runner)).flatten(),
@@ -190,7 +191,7 @@ pub(super) fn bottles(home: &Path) -> Vec<LauncherGame> {
                 let name = text(program, &["name"]).map(str::to_string)
                     .unwrap_or_else(|| exe.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default());
                 games.push(LauncherGame {
-                    name, path: directory.to_string_lossy().into_owned(), app_id: None, cover_url: None, launcher: "Bottles".into(),
+                    native_linux: false, name, path: directory.to_string_lossy().into_owned(), app_id: None, cover_url: None, launcher: "Bottles".into(),
                     prefix: existing_dir(&bottle.to_string_lossy()), proton: proton.clone(), store: None,
                     external_id: program_id.as_str().map(str::to_string), external_store: text(&config, &["Name"]).map(str::to_string), flatpak: data.starts_with(home.join(".var")), executable: Some(exe.to_string_lossy().into_owned()),
                 });
@@ -203,7 +204,7 @@ pub(super) fn bottles(home: &Path) -> Vec<LauncherGame> {
 /// All launchers; the first record of an installation folder wins.
 pub(super) fn all(home: &Path) -> Vec<LauncherGame> {
     let mut games: Vec<LauncherGame> = Vec::new();
-    for game in heroic(home).into_iter().chain(lutris(home)).chain(faugus(home)).chain(bottles(home)) {
+    for game in heroic(home).into_iter().chain(super::epic_library::scan(home)).chain(lutris(home)).chain(faugus(home)).chain(bottles(home)) {
         if !games.iter().any(|known| known.path == game.path) { games.push(game); }
     }
     games

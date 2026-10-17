@@ -190,7 +190,7 @@ fn scan_heroic(home: &Path) -> Vec<GameInfo> {
 /// Store manifests already identify installation roots; do not apply DLSS executable heuristics.
 pub(super) fn nexus_store_games(home: &Path) -> Vec<super::launcher_library::LauncherGame> {
     let mut games: Vec<_> = scan_steam(home).into_iter().map(|game| super::launcher_library::LauncherGame {
-        name: game.name, path: game.path, app_id: game.app_id, cover_url: game.cover_url, launcher: game.launcher,
+        native_linux: super::native_games::steam_native(Path::new(&game.path), game.app_id.as_deref().unwrap_or("")), name: game.name, path: game.path, app_id: game.app_id, cover_url: game.cover_url, launcher: game.launcher,
         prefix: None, proton: None, store: None, external_id: None, external_store: None, flatpak: false, executable: None,
     }).collect();
     // Heroic, Lutris, Faugus and Bottles report their own prefix and Proton runner.
@@ -313,6 +313,9 @@ pub async fn scan_installed_games(app: AppHandle, api_key: String, custom_folder
     
     // 2. Scan Heroic
     all_games.extend(scan_heroic(&home));
+    all_games.extend(super::epic_library::scan(&home).into_iter().map(|game| GameInfo {
+        name: game.name, path: game.path, app_id: game.external_id, cover_url: game.cover_url, launcher: game.launcher,
+    }));
 
     // 3. Scan Custom
     if let Some(folders) = custom_folders {

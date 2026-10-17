@@ -29,7 +29,6 @@ import { useNeuralStartup } from "./hooks/useNeuralStartup";
 import { isInstalledMod } from "./services/installationStatus";
 import { GameCoverMenu } from "./components/GameCoverMenu";
 import { canRemoveFromLibrary, setLibraryGameRemoved } from "./services/libraryVisibility";
-import { reportCoverError } from "./services/customCovers";
 import { cloneElement, useState, useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { GameDetailsOverlay } from "./components/modern/GameDetailsOverlay";
@@ -366,7 +365,10 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       const synced = await syncModLaunchOptions(target, gameDir, launchOptions).catch(error => { notifyError(selectedGame?.name || "DLSS 5 NR", error); return undefined; });
       if (synced) setSelectedGame(previous => previous && previous.path === synced.path ? synced : previous);
       const intro = isRepair ? t("app", "repairSuccessMsg") : t("app", "installSuccessMsg").split("\n\n")[0];
-      setModalMessage(synced ? `${intro}\n\n${t("app", "launchOptionsApplied").replace("{launchOptions}", launchOptions)}`
+      const appliedKey = synced?.steamModOptions === "written" ? "launchOptionsSteam" : synced?.steamModOptions === "waiting" ? "launchOptionsSteamWaiting" : "launchOptionsApplied";
+      // With Steam open, pasting into its launch options applies at once: the line goes to the clipboard.
+      if (synced?.steamModOptions === "waiting") void invoke("plugin:clipboard-manager|write_text", { text: launchOptions }).catch(() => {});
+      setModalMessage(synced ? `${intro}\n\n${t("app", appliedKey).replace("{launchOptions}", launchOptions)}`
         : synced === undefined ? `${intro}\n\n${t("app", "launchOptionsError").replace("{launchOptions}", launchOptions)}`
         : isRepair ? t("app", "repairSuccessMsg") + (printed ? `\n\n${launchOptions}${layersNote}` : "") : t("app", "installSuccessMsg").replace("{launchOptions}", launchOptions) + layersNote);
       setModalType("success");
@@ -424,7 +426,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       const synced = await syncModLaunchOptions(target, path, null).catch(error => { notifyError(selectedGame?.name || "DLSS 5 NR", error); return null; });
       if (synced) setSelectedGame(previous => previous && previous.path === synced.path ? synced : previous);
       setModalTitle(t("app", "uninstallSuccessTitle"));
-      setModalMessage(t("app", "uninstallSuccessMsg") + path + (synced && synced.advanced?.launch_options !== target?.advanced?.launch_options ? `\n\n${t("app", "launchOptionsRemoved")}` : ""));
+      setModalMessage(t("app", "uninstallSuccessMsg") + path + (synced?.steamModOptions ? `\n\n${t("app", "launchOptionsRemovedSteam")}` : synced && synced.advanced?.launch_options !== target?.advanced?.launch_options ? `\n\n${t("app", "launchOptionsRemoved")}` : ""));
       setModalType("success");
       setShowModal(true);
     } catch (err) {
@@ -768,7 +770,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     if (action === "scan") { if (game.library_view === "nexus") void nexus.refresh(); else window.dispatchEvent(new Event("rescanGames")); return; }
     if (action === "remove") { if (!gameInstaller.busy && !libraryMutationBusy && !nexus.busy && canRemoveFromLibrary(game)) setRemoveLibraryTarget(game); return; }
     if (action === "details") { handleSelectGame(game, undefined, true); return; }
-    if (action === "logs") { if (game.library_view === "nexus") { const entry = nexus.workspace.games.find(item => item.game.path === game.path && item.game.launcher === game.launcher); if (entry) setNexusLogTarget(entry.id); } else if (game.library_view === "all") void invoke("collect_and_open_logs", { gameName: game.name, gameDir: game.directory || game.path }).catch(reportCoverError); else setGameLogsTarget(game); return; }
+    if (action === "logs") { if (game.library_view === "nexus") { const entry = nexus.workspace.games.find(item => item.game.path === game.path && item.game.launcher === game.launcher); if (entry) setNexusLogTarget(entry.id); } else if (game.library_view === "all") void invoke("collect_and_open_logs", { gameName: game.name, gameDir: game.directory || game.path }).catch(error => notifyError("Logs", error)); else setGameLogsTarget(game); return; }
     if (action === "stop") {
       if (gameInstaller.busy || libraryMutationBusy) return;
       if (game.library_view === "nexus") {
@@ -782,11 +784,15 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       if (game.library_view === "nexus") {
         const entry = nexus.workspace.games.find(item => item.game.path === game.path && item.game.launcher === game.launcher);
         if (entry) return entry.running ? nexus.stop(entry.id) : nexus.start(entry.id);
-      } else if (game.launcher === "PeliGames") return gameExecution.start(game.path);
-      else if (game.launcher === "Steam") return game.app_id ? gameExecution.startSteam(game.path, game.app_id, game.external_id || undefined).catch(reportCoverError) : reportCoverError("Steam AppID indisponível.");
-      else if (game.external_id) return invoke("launch_external_game", {externalId: game.external_id}).catch(reportCoverError);
+        return;
+      }
+      if (game.launcher === "PeliGames") return gameExecution.start(game.path);
+      // Launch errors go to the bell only: the execution state already reports a Steam failure there.
+      const execution = language === "en" ? "Game execution" : "Execução do jogo";
+      if (game.launcher === "Steam") return game.app_id ? gameExecution.startSteam(game.path, game.app_id, game.external_id || undefined).catch(() => {}) : notifyError(execution, language === "en" ? "Steam AppID unavailable." : "Steam AppID indisponível.");
+      else if (game.external_id) return gameExecution.startExternal(game.path, game.external_id).catch(() => {});
     } else if (game.launcher === "PeliGames") setUninstallTarget({path: game.path, name: game.name, prefix: game.prefix || ""});
-    else if (game.launcher === "Steam") void invoke("request_steam_uninstall", { appId: game.app_id }).catch(reportCoverError);
+    else if (game.launcher === "Steam") void invoke("request_steam_uninstall", { appId: game.app_id }).catch(error => notifyError(language === "en" ? "Uninstall" : "Desinstalação", error));
   };
 
   const changeSelectedExecutable = () => {

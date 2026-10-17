@@ -411,7 +411,7 @@ struct ControlRect {
     width: f64,
     height: f64,
 }
-#[derive(Clone, Copy, Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct ViewRect {
     x: f64,
     y: f64,
@@ -423,6 +423,8 @@ pub struct ViewRect {
     fill: bool,
     #[serde(default)]
     controls: Option<ControlRect>,
+    #[serde(default)]
+    overlays: Vec<ControlRect>,
 }
 
 #[tauri::command]
@@ -431,10 +433,12 @@ pub fn matrix_screen_view(window: WebviewWindow, rect: Option<ViewRect>) -> Resu
         return Err("Janela inválida.".into());
     }
     let valid = |value: f64| value.is_finite() && (-16384.0..=16384.0).contains(&value);
-    if rect.is_some_and(|r| {
+    if rect.as_ref().is_some_and(|r| {
         !(valid(r.x) && valid(r.y) && valid(r.width) && valid(r.height))
             || r.controls
                 .is_some_and(|c| !(valid(c.x) && valid(c.y) && valid(c.width) && valid(c.height)))
+            || r.overlays.len() > 32
+            || r.overlays.iter().any(|c| !(valid(c.x) && valid(c.y) && valid(c.width) && valid(c.height)))
     }) {
         return Err("Área de vídeo inválida.".into());
     }
@@ -467,7 +471,7 @@ mod layer {
         static LAYER: RefCell<Option<Layer>> = const { RefCell::new(None) };
     }
 
-    fn clip_video(context: &cairo::Context, width: f64, height: f64, view: Option<ViewRect>) {
+    fn clip_video(context: &cairo::Context, width: f64, height: f64, view: Option<&ViewRect>) {
         if view.is_some_and(|v| v.crt) {
             // Same normalized Bezier contour as MatrixChatPanel's SVG.
             // GTK is above WebKit, so CSS clip-path cannot clip this layer.
@@ -494,7 +498,7 @@ mod layer {
             context.close_path();
             context.clip();
         }
-        if let Some(controls) = view.and_then(|v| v.controls) {
+        for controls in view.into_iter().flat_map(|v| v.controls.iter().chain(v.overlays.iter())) {
             // A transparent opening lets the original WebKit buttons float
             // above the picture while GTK input still passes through.
             context.rectangle(0.0, 0.0, width, height);
@@ -561,7 +565,8 @@ mod layer {
                 area.allocated_width() as f64,
                 area.allocated_height() as f64,
             );
-            let view = *draw_view.borrow();
+            let borrowed_view = draw_view.borrow();
+            let view = borrowed_view.as_ref();
             clip_video(context, width, height, view);
             context.set_source_rgb(0.0, 0.0, 0.0);
             let _ = context.paint();
@@ -654,7 +659,7 @@ mod layer {
                 &context,
                 1000.0,
                 600.0,
-                Some(ViewRect {
+                Some(&ViewRect {
                     x: 0.0,
                     y: 0.0,
                     width: 1000.0,
@@ -667,6 +672,7 @@ mod layer {
                         width: 860.0,
                         height: 50.0,
                     }),
+                    overlays: vec![super::super::ControlRect { x: 750.0, y: 60.0, width: 200.0, height: 150.0 }],
                 }),
             );
             assert!(!context.in_clip(5.0, 5.0).unwrap());
@@ -674,6 +680,8 @@ mod layer {
             assert!(context.in_clip(500.0, 300.0).unwrap());
             assert!(!context.in_clip(500.0, 525.0).unwrap());
             assert!(context.in_clip(500.0, 480.0).unwrap());
+            assert!(!context.in_clip(850.0, 120.0).unwrap());
+            assert!(context.in_clip(850.0, 300.0).unwrap());
         }
     }
 
@@ -691,7 +699,7 @@ mod layer {
             };
             match rect {
                 Some(rect) => {
-                    *layer.view.borrow_mut() = Some(rect);
+                    *layer.view.borrow_mut() = Some(rect.clone());
                     // Margins cannot be negative: a rectangle past the top or
                     // left edge loses that part instead.
                     let (x, y) = (rect.x.round() as i32, rect.y.round() as i32);

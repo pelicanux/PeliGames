@@ -19,6 +19,7 @@ pub mod advanced_settings;
 pub mod wine_tools;
 
 pub mod umu_manager;
+pub(crate) mod steam_client;
 pub mod pelinstall;
 
 pub mod executable_icon;

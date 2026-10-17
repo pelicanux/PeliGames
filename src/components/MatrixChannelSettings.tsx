@@ -23,7 +23,8 @@ export function MatrixChannelSettings({ pt, room, names, initialTab, onClose, on
 }) {
   const [tab, setTab] = useState<ChannelEditTab>(initialTab);
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [failed, setFailed] = useState("");
+  const [failed, setFailed] = useState(false), [attempt, setAttempt] = useState(0);
+  const reportError = useRef(onError); reportError.current = onError;
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
   const [name, setName] = useState(""), [topic, setTopic] = useState(""), [joinRule, setJoinRule] = useState("");
@@ -35,10 +36,11 @@ export function MatrixChannelSettings({ pt, room, names, initialTab, onClose, on
   };
   useEffect(() => {
     let active = true;
+    setFailed(false);
     void invoke<Settings>("matrix_channel_settings", { room }).then(value => { if (active) load(value); })
-      .catch(error => { if (active) setFailed(String(error).replace(/^Error: /, "")); });
+      .catch(error => { if (active) { setFailed(true); reportError.current(error, pt ? "Não foi possível carregar o canal." : "Could not load the channel."); } });
     return () => { active = false; };
-  }, [room]);
+  }, [room, attempt, pt]);
   useEffect(() => { frame.current?.querySelector<HTMLButtonElement>("nav button")?.focus(); }, []);
   const save = async (change: Record<string, unknown>, done: string) => {
     if (saving) return;
@@ -81,7 +83,7 @@ export function MatrixChannelSettings({ pt, room, names, initialTab, onClose, on
       <header><strong>{pt ? `> editar ${settings?.voice ? "🔊 " : "#"}${settings?.name || ""}` : `> edit ${settings?.voice ? "🔊 " : "#"}${settings?.name || ""}`}</strong><button type="button" className="matrix-settings-close" onClick={onClose} aria-label={pt ? "Fechar" : "Close"}>[x]</button></header>
       <nav role="tablist">{tabs.map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => { setTab(id); setNotice(""); }}>{label}</button>)}</nav>
       <div className="matrix-settings-body" role="tabpanel">
-        {failed ? <p className="matrix-settings-hint">{failed}</p> : !settings ? <p className="matrix-settings-hint">{pt ? "> lendo o canal no Matrix…" : "> reading the channel from Matrix…"}</p> : <>
+        {failed ? <button type="button" onClick={() => setAttempt(value => value + 1)}>{pt ? "Tentar novamente" : "Try again"}</button> : !settings ? <p className="matrix-settings-hint">{pt ? "> lendo o canal no Matrix…" : "> reading the channel from Matrix…"}</p> : <>
           {tab === "overview" && <form className="matrix-channel-overview" onSubmit={event => {
             event.preventDefault();
             const change: Record<string, unknown> = {};

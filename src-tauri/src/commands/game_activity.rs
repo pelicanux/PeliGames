@@ -139,12 +139,58 @@ fn lutris(home: &Path, activity: &mut Activity) {
     }
 }
 
+fn epic_records(journal: &serde_json::Value, last: &serde_json::Value) -> BTreeMap<String, Record> {
+    let mut records = BTreeMap::<String, Record>::new();
+    for user in journal.as_object().into_iter().flat_map(|users| users.values()) {
+        for (id, sessions) in user.as_object().into_iter().flat_map(|games| games.iter()) {
+            let mut intervals = Vec::new();
+            let mut last_played = 0;
+            for session in sessions.as_array().into_iter().flatten() {
+                let Some(start) = session["start"].as_str().and_then(iso_seconds) else { continue };
+                last_played = last_played.max(start);
+                // An unfinished session is not extrapolated while the launcher is closed.
+                if let Some(end) = session["end"].as_str().and_then(iso_seconds).filter(|end| *end >= start) { intervals.push((start, end)); }
+            }
+            intervals.sort_unstable();
+            let mut seconds: u64 = 0; let mut previous_end = 0;
+            for (start, end) in intervals {
+                seconds = seconds.saturating_add(end.saturating_sub(start.max(previous_end)));
+                previous_end = previous_end.max(end);
+            }
+            // Different Epic accounts are kept separate: report the largest local total.
+            let record = records.entry(id.clone()).or_default();
+            record.minutes = record.minutes.max(seconds / 60);
+            record.last_played = record.last_played.max(last_played);
+        }
+    }
+    for user in last.as_object().into_iter().flat_map(|users| users.values()) {
+        for (id, value) in user.as_object().into_iter().flat_map(|games| games.iter()) {
+            if let Some(at) = value.as_str().and_then(iso_seconds) { let record = records.entry(id.clone()).or_default(); record.last_played = record.last_played.max(at); }
+        }
+    }
+    records
+}
+fn epic(home: &Path, activity: &mut Activity) {
+    let games = super::epic_library::scan(home);
+    for root in super::epic_library::roots(home) {
+        let journal = super::epic_library::read_json(&root.join("playtime/journal.json")).unwrap_or_default();
+        let last = super::epic_library::read_json(&root.join("last-played.json")).unwrap_or_default();
+        let records = epic_records(&journal, &last);
+        for game in &games {
+            let Some(id) = game.external_id.as_deref() else { continue };
+            let Ok((_, _, artifact)) = super::epic_library::parts(id) else { continue };
+            if let Some(record) = records.get(artifact) { merge(activity, format!("Epic Games:native:{id}"), *record); }
+        }
+    }
+}
+
 fn collect() -> Activity {
     let mut activity = Activity::new();
     if let Some(home) = dirs::home_dir() {
         steam(&home, &mut activity);
         heroic(&home, &mut activity);
         lutris(&home, &mut activity);
+        epic(&home, &mut activity);
     }
     for (path, record) in crate::core::playtime::read() { merge(&mut activity, format!("PeliGames:{path}"), record); }
     activity
@@ -158,6 +204,19 @@ pub async fn game_activity() -> Result<Activity, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn epic_does_not_duplicate_intervals_or_extrapolate_unfinished_sessions() {
+        let journal = serde_json::json!({"accountA":{"game":[
+            {"start":"2026-10-16T10:00:00Z","end":"2026-10-16T10:02:00Z"},
+            {"start":"2026-10-16T10:01:00Z","end":"2026-10-16T10:03:00Z"},
+            {"start":"2026-10-16T10:05:00Z"},
+            {"start":"2026-10-16T10:08:00Z","end":"2026-10-16T10:07:00Z"}
+        ]},"accountB":{"game":[{"start":"2026-10-16T10:00:00Z","end":"2026-10-16T10:01:00Z"}]}});
+        let last = serde_json::json!({"accountA":{"game":"2026-10-16T11:00:00.123Z"}});
+        let records = epic_records(&journal, &last);
+        assert_eq!(records["game"].minutes, 3);
+        assert_eq!(records["game"].last_played, iso_seconds("2026-10-16T11:00:00Z").unwrap());
+    }
     #[test]
     fn steam_reads_apps_blocks_only() {
         let text = r#""UserLocalConfigStore" { "Software" { "Valve" { "Steam" { "apps" {

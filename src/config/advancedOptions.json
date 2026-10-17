@@ -101,6 +101,16 @@
   },
   {
     "group": "compatibility",
+    "id": "steam_client",
+    "title": "Comunicação com a Steam",
+    "key": "UMU_USE_STEAM",
+    "value": "1",
+    "enabled": false,
+    "description": "Habilita a ponte com o cliente Steam em versões compatíveis do Proton-GE ou Proton-CachyOS. Requer a Steam aberta; não cria atalhos nem garante compatibilidade com todos os jogos.",
+    "kind": "env"
+  },
+  {
+    "group": "compatibility",
     "id": "discord",
     "title": "Integrar presença no Discord",
     "key": "PROTON_DISCORD_BRIDGE",

@@ -8,6 +8,7 @@ pub mod covers;
 
 mod heroic_library;
 mod launcher_library;
+mod native_games;
 pub mod game_activity;
 mod store_artwork;
 
@@ -31,6 +32,7 @@ pub mod nexus_reports;
 mod nexus_profile;
 pub mod nexus_launch_options;
 pub mod mod_launch_options;
+pub mod steam_launch_options;
 pub mod matrix_gifs;
 
 mod nexus_deployment;
@@ -110,3 +112,5 @@ pub mod matrix_screen_audio;
 pub mod notification_sound;
 
 pub mod matrix_rtc;
+
+mod epic_library;

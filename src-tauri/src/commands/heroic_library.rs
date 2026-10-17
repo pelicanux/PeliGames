@@ -5,6 +5,7 @@ use std::{collections::HashMap, fs, path::Path};
 #[derive(Debug)]
 pub(super) struct StoreGame {
     pub name: String,
+    pub native_linux: bool,
     pub path: String,
     pub cover: Option<String>,
     /// Heroic app name (key of `GamesConfig/<id>.json`) and its store.
@@ -93,6 +94,7 @@ fn installed_game(item: &Value, metadata: Option<&Value>) -> Option<StoreGame> {
         .or_else(|| metadata.and_then(|value| value["app_title"].as_str()))
         .or_else(|| item["appName"].as_str())?;
     Some(StoreGame {
+        native_linux: item["platform"].as_str().or_else(|| item.pointer("/install/platform").and_then(Value::as_str)).is_some_and(|p| p.eq_ignore_ascii_case("linux")),
         name: name.to_string(),
         path: path.to_string(),
         cover: artwork(item).or_else(|| metadata.and_then(artwork)),

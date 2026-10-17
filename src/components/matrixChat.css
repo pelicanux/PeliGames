@@ -32,7 +32,7 @@
 .matrix-terminal-brand { display:flex; align-items:center; justify-content:center; gap:8px; flex:0 0 auto; min-width:0; margin:0; color:#b4ffcd; font:20px/1.2 "Jersey 10",monospace; }
 .matrix-terminal-brand > svg { width:24px; height:24px; flex-shrink:0; }
 .matrix-terminal-brand .matrix-terminal-tag { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.matrix-terminal-status,.matrix-terminal-layout,.matrix-terminal-welcome,.matrix-terminal-footer,.matrix-terminal-error { font-family:"Jersey 10",monospace; }
+.matrix-terminal-status,.matrix-terminal-layout,.matrix-terminal-welcome,.matrix-terminal-footer { font-family:"Jersey 10",monospace; }
 .matrix-terminal-status { display:flex; align-items:center; gap:10px; padding:6px 18px; color:#b4ffcd; background:#080d11; border-bottom:1px solid #24473b; font-size:1.1rem; }
 .matrix-terminal-status small { margin-left:auto; font:12px monospace; color:#82948c; }
 .matrix-terminal-dot { width:7px; height:7px; background:#62d694; box-shadow:0 0 8px #62d69470; flex-shrink:0; }
@@ -106,7 +106,6 @@
 .matrix-terminal-welcome > .menu-icon { width:48px; height:48px; }
 .matrix-terminal-welcome h3 { font:30px "Jersey 10",monospace; }
 .matrix-terminal-welcome p { max-width:560px; font:21px/1.4 "Jersey 10",monospace; color:#9db5a7; }
-.matrix-chat .matrix-terminal-error { padding:10px 18px; margin:0; color:#ffb4bc; background:#351a22; font-size:18px; }
 @media(max-width:700px) { .matrix-terminal-layout { grid-template-columns:170px minmax(0,1fr); } .matrix-terminal-status small { display:none; } .matrix-terminal-rooms { padding:8px; } }
 .matrix-terminal-avatar img { width:100%; height:100%; object-fit:cover; image-rendering:auto; }
 .matrix-message-image { display:block; max-width:min(100%,480px); max-height:320px; object-fit:contain; margin-top:8px; border:1px solid #355440; }
