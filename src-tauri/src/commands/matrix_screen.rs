@@ -6,7 +6,7 @@
 //! scaled to the stage size before conversion and drawn by a native GTK
 //! layer above the webview, placed by the interface (call view or mini player).
 use super::matrix_screen_audio::{self, ShareAudio};
-use livekit::options::{AudioEncoding, TrackPublishOptions, VideoCodec, VideoEncoderBackend, VideoEncoding};
+use livekit::options::{AudioEncoding, DegradationPreference, TrackPublishOptions, VideoCodec, VideoEncoderBackend, VideoEncoding, VideoPreset};
 use livekit::prelude::*;
 use livekit::webrtc::{
     audio_source::{native::NativeAudioSource, AudioSourceOptions, RtcAudioSource},
@@ -30,10 +30,42 @@ use serde::Deserialize;
 use tauri::{Emitter, WebviewWindow};
 use tokio_stream::StreamExt;
 
-const MAX_WIDTH: i32 = 1920;
-const MAX_HEIGHT: i32 = 1080;
-const FRAME_INTERVAL: Duration = Duration::from_micros(33_333);
-const BITRATE: u64 = 3_000_000;
+/// Resolution and frame rate chosen for a share: 720p or 1080p, 30 or 60 fps.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+pub struct ShareQuality {
+    height: u32,
+    fps: u32,
+    /// Automatic: layers for every connection (1080p, 720p, 360p); each
+    /// viewer gets the one their network carries, switched on the fly.
+    #[serde(default)]
+    auto: bool,
+}
+impl Default for ShareQuality {
+    fn default() -> Self {
+        Self { height: 1080, fps: 30, auto: false }
+    }
+}
+impl ShareQuality {
+    /// Only the offered choices; anything else falls back to 1080p30.
+    pub(super) fn checked(self) -> Self {
+        if self.auto { Self { height: 1080, fps: 30, auto: true } }
+        else if matches!(self.height, 720 | 1080) && matches!(self.fps, 30 | 60) { self } else { Self::default() }
+    }
+    fn size(self) -> (i32, i32) {
+        if self.height == 720 { (1280, 720) } else { (1920, 1080) }
+    }
+    fn interval(self) -> Duration {
+        Duration::from_micros(1_000_000 / self.fps as u64)
+    }
+    /// H.264 bits per second: text stays sharp without loading the network.
+    fn bitrate(self) -> u64 {
+        match (self.height, self.fps) {
+            (720, 30) => 2_000_000,
+            (720, _) | (_, 30) => 3_500_000,
+            _ => 6_000_000,
+        }
+    }
+}
 const AUDIO_BITRATE: u64 = 128_000;
 /// Time to answer the portal's screen or window picker.
 const CHOICE_TIMEOUT: Duration = Duration::from_secs(180);
@@ -47,7 +79,7 @@ fn fit(width: i32, height: i32, max_width: i32, max_height: i32) -> (i32, i32) {
     (even(width as f64 * scale), even(height as f64 * scale))
 }
 
-fn convert(frame: &DesktopFrame) -> Option<I420Buffer> {
+fn convert(frame: &DesktopFrame, (max_width, max_height): (i32, i32)) -> Option<I420Buffer> {
     let (width, height) = (frame.width() & !1, frame.height() & !1);
     if width < 2 || height < 2 || frame.stride() < width as u32 * 4 {
         return None;
@@ -68,7 +100,7 @@ fn convert(frame: &DesktopFrame) -> Option<I420Buffer> {
         width,
         height,
     );
-    let (fit_width, fit_height) = fit(width, height, MAX_WIDTH, MAX_HEIGHT);
+    let (fit_width, fit_height) = fit(width, height, max_width, max_height);
     Some(if (fit_width, fit_height) == (width, height) {
         buffer
     } else {
@@ -93,6 +125,7 @@ fn capture(
     source: NativeVideoSource,
     stop: &AtomicBool,
     ready: mpsc::SyncSender<()>,
+    quality: ShareQuality,
 ) -> Result<(), String> {
     let mut capturer = capturer().ok_or("Captura de tela indisponível neste sistema.")?;
     let failed = Arc::new(AtomicBool::new(false));
@@ -101,7 +134,7 @@ fn capture(
     let mut count = 0u32;
     capturer.start_capture(None, move |result| match result {
         Ok(frame) => {
-            if let Some(buffer) = convert(&frame) {
+            if let Some(buffer) = convert(&frame, quality.size()) {
                 let frame = VideoFrame {
                     rotation: VideoRotation::VideoRotation0,
                     timestamp_us: 0,
@@ -112,9 +145,9 @@ fn capture(
                 if let Some(ready) = ready.take() {
                     let _ = ready.send(());
                 }
-                // The own preview, when shown, at half the rate: it is only a check.
+                // The own preview, when shown, at about 15 fps: it is only a check.
                 count = count.wrapping_add(1);
-                if PREVIEW.load(Ordering::Acquire) && count % 2 == 0 {
+                if PREVIEW.load(Ordering::Acquire) && count % (quality.fps / 15).max(1) == 0 {
                     stage().show(&frame.buffer);
                 }
             }
@@ -128,7 +161,7 @@ fn capture(
         if failed.load(Ordering::Acquire) {
             return Err("O compartilhamento foi cancelado ou a tela deixou de existir.".into());
         }
-        next += FRAME_INTERVAL;
+        next += quality.interval();
         let now = Instant::now();
         if next > now {
             std::thread::sleep(next - now);
@@ -145,15 +178,17 @@ async fn share(
     stop: &Arc<AtomicBool>,
     call_id: &Option<String>,
     audio: ShareAudio,
+    quality: ShareQuality,
 ) -> Result<(), String> {
+    let (width, height) = quality.size();
     let source = NativeVideoSource::new(
-        VideoResolution { width: MAX_WIDTH as u32, height: MAX_HEIGHT as u32 },
+        VideoResolution { width: width as u32, height: height as u32 },
         true,
     );
     let (ready_tx, ready_rx) = mpsc::sync_channel(1);
     let thread = {
         let (source, stop) = (source.clone(), stop.clone());
-        std::thread::spawn(move || capture(source, &stop, ready_tx))
+        std::thread::spawn(move || capture(source, &stop, ready_tx, quality))
     };
     let finish = |thread: std::thread::JoinHandle<Result<(), String>>| async move {
         tokio::task::spawn_blocking(move || thread.join())
@@ -184,8 +219,10 @@ async fn share(
         source: TrackSource::Screenshare,
         video_codec: VideoCodec::H264,
         video_encoder: VideoEncoderBackend::Hardware,
-        video_encoding: Some(VideoEncoding { max_bitrate: BITRATE, max_framerate: 30.0 }),
-        simulcast: false,
+        video_encoding: Some(VideoEncoding { max_bitrate: quality.bitrate(), max_framerate: quality.fps as f64 }),
+        simulcast: quality.auto,
+        simulcast_layers: quality.auto.then(|| vec![VideoPreset::new(640, 360, 600_000, 15.0), VideoPreset::new(1280, 720, 1_500_000, 30.0)]),
+        degradation_preference: quality.auto.then_some(DegradationPreference::Balanced),
         ..Default::default()
     };
     let publication = tokio::time::timeout(
@@ -250,11 +287,12 @@ impl Share {
         participant: LocalParticipant,
         call_id: Option<String>,
         audio: ShareAudio,
+        quality: ShareQuality,
     ) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
         let flag = stop.clone();
         let task = tokio::spawn(async move {
-            let result = share(&w, participant, &flag, &call_id, audio).await;
+            let result = share(&w, participant, &flag, &call_id, audio, quality.checked()).await;
             let _ = w.emit(
                 "matrix-screen-status",
                 serde_json::json!({"state":"off","call_id":call_id,"error":result.err()}),
@@ -274,7 +312,7 @@ impl Share {
 /// Requests from the interface, handled by the call's event loop.
 pub(super) enum ScreenCommand {
     /// Starts sharing this account's screen with the chosen sound, or stops (`None`).
-    Share(Option<ShareAudio>),
+    Share(Option<(ShareAudio, ShareQuality)>),
     /// Shows the share of this call identity on the stage (the own one is a
     /// local preview), or nothing. Only the watched share is received.
     Watch(Option<String>),
@@ -685,7 +723,24 @@ mod layer {
 
 #[cfg(test)]
 mod tests {
-    use super::fit;
+    use super::{fit, ShareQuality};
+
+    #[test]
+    fn quality_choices_and_fallback() {
+        let q = |height, fps| ShareQuality { height, fps, auto: false };
+        assert_eq!((q(720, 30).size(), q(720, 30).bitrate()), ((1280, 720), 2_000_000));
+        assert_eq!(q(720, 60).bitrate(), 3_500_000);
+        assert_eq!(q(1080, 30).bitrate(), 3_500_000);
+        assert_eq!((q(1080, 60).size(), q(1080, 60).bitrate()), ((1920, 1080), 6_000_000));
+        assert_eq!(q(1080, 60).interval().as_micros(), 16_666);
+        // Values the interface never offers become the default.
+        assert_eq!(q(2160, 144).checked(), ShareQuality::default());
+        assert_eq!(q(720, 60).checked(), q(720, 60));
+        let auto = ShareQuality { height: 720, fps: 60, auto: true }.checked();
+        assert_eq!((auto.size(), auto.fps, auto.bitrate()), ((1920, 1080), 30, 3_500_000));
+        assert!(serde_json::from_str::<ShareQuality>(r#"{"height":1080,"fps":30,"auto":true}"#).unwrap().auto);
+        assert_eq!(serde_json::from_str::<ShareQuality>(r#"{"height":720,"fps":60}"#).unwrap(), q(720, 60));
+    }
 
     #[test]
     fn fit_keeps_aspect_and_even_sizes() {

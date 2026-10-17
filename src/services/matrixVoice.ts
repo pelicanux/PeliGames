@@ -213,10 +213,12 @@ export async function setMatrixVoiceControls(patch: Partial<VoiceSettings>) {
 /** Sound sent with a screen share: none, the whole PC except the call, or one application. */
 export type ShareAudio = { kind: "none" } | { kind: "all" } | { kind: "app"; key: string };
 /** Starts sharing the screen (the system then asks which screen or window), or stops with `null`. */
-export async function shareMatrixScreen(audio: ShareAudio | null) {
+/** Picture of a share: 720p or 1080p at 30 or 60 fps, or automatic (layers that follow each viewer's network). */
+export type ShareQuality = { height: 720 | 1080; fps: 30 | 60; auto: boolean };
+export async function shareMatrixScreen(audio: ShareAudio | null, quality?: ShareQuality) {
   if (!nativeStarted || state.phase !== "connected") return;
   set({ screen: audio ? "choosing" : "off", error: "" });
-  try { await invoke("matrix_screen_share", { on: Boolean(audio), audio }); }
+  try { await invoke("matrix_screen_share", { on: Boolean(audio), audio, quality: quality ?? null }); }
   catch (error) { set({ screen: "off", error: String(error).replace(/^Error: /, "") }); }
 }
 /** Shows a share on the stage (or the mini player), the own preview with "local", or nothing. */
