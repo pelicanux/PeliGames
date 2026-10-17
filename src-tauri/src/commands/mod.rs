@@ -100,7 +100,6 @@ pub mod mangohud;
 
 pub mod mangohud_install;
 
-pub mod matrix_rtc_probe;
 
 pub mod matrix_voice;
 

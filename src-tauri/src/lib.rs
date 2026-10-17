@@ -62,7 +62,6 @@ fn run_mode(installer: bool) {
     #[cfg(unix)]
     if let Err(error) = core::launcher_instance::wait_for_restart_parent() { eprintln!("{error}"); return; }
     let args: Vec<String> = std::env::args().skip(1).collect();
-    if args == ["--matrix-rtc-test"] { commands::matrix_rtc_probe::run_standalone(); return; }
     if args == ["--verify-ui"] {
         let context = app_context();
         let assets: Vec<String> = context.assets().iter().map(|(name, _)| name.to_string()).collect();
@@ -207,11 +206,6 @@ fn run_mode(installer: bool) {
             commands::matrix_chat::connect_matrix_chat,
             commands::matrix_chat::disconnect_matrix_chat,
             commands::matrix_chat::matrix_chat_status,
-            commands::matrix_rtc_probe::open_matrix_rtc_probe,
-            commands::matrix_rtc_probe::matrix_rtc_probe_environment,
-            commands::matrix_rtc_probe::matrix_rtc_probe_report,
-            commands::matrix_voice::matrix_voice_start,
-            commands::matrix_voice::matrix_voice_stop,
             commands::matrix_rtc::matrix_rtc_identity,
             commands::matrix_rtc::matrix_rtc_request,
             commands::matrix_rtc::matrix_room_call_prepare,
@@ -219,7 +213,6 @@ fn run_mode(installer: bool) {
             commands::matrix_audio::matrix_audio_route,
             commands::matrix_call::matrix_room_call_start,
             commands::matrix_call::matrix_room_call_key,
-            commands::matrix_call::matrix_call_start,
             commands::matrix_call::matrix_call_stop,
             commands::matrix_call::matrix_call_controls,
             commands::matrix_call::matrix_screen_share,
@@ -459,6 +452,6 @@ fn run_mode(installer: bool) {
         .build(context)
         .expect("error while building tauri application")
         .run(|_, event| {
-            if matches!(event, tauri::RunEvent::Exit) { commands::mangohud::stop_preview(); commands::matrix_call::stop(); commands::matrix_voice::stop(); }
+            if matches!(event, tauri::RunEvent::Exit) { commands::mangohud::stop_preview(); commands::matrix_call::stop(); }
         });
 }
