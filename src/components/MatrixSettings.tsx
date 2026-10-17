@@ -8,8 +8,9 @@ import { MatrixOwnAvatar, noiseOptions } from "./MatrixUserPanel";
 import { displayName } from "../services/matrixChat";
 import { forgetMatrixAvatar } from "../services/matrixMedia";
 import { setMatrixVoiceControls, useMatrixVoice, type NoiseMode } from "../services/matrixVoice";
+import { setMatrixScreenFit, useMatrixScreenFit, type ScreenFit } from "../services/matrixScreenView";
 
-type Tab = "profile" | "audio" | "account";
+type Tab = "profile" | "audio" | "screen" | "account";
 type Device = { id: string; name: string };
 const SYSTEM = "__system__";
 
@@ -19,6 +20,7 @@ export function MatrixSettings({ pt, me, names, onClose, onError, onDisconnect, 
   onAvatarChanged: () => void; avatarVersion: number;
 }) {
   const voice = useMatrixVoice();
+  const screenFit = useMatrixScreenFit();
   const [tab, setTab] = useState<Tab>("profile");
   const [name, setName] = useState(displayName(me, names));
   const [saving, setSaving] = useState<"" | "name" | "avatar">("");
@@ -68,7 +70,7 @@ export function MatrixSettings({ pt, me, names, onClose, onError, onDisconnect, 
     <span>{label}<b>{value}%</b></span>
     <input type="range" min="0" max="200" step="5" value={value} onChange={event => void change(Number(event.target.value))}/>
   </label>;
-  const tabs: [Tab, string][] = [["profile", pt ? "# perfil" : "# profile"], ["audio", pt ? "# voz e áudio" : "# voice & audio"], ["account", pt ? "# conta" : "# account"]];
+  const tabs: [Tab, string][] = [["profile", pt ? "# perfil" : "# profile"], ["audio", pt ? "# voz e áudio" : "# voice & audio"], ["screen", pt ? "# transmissão" : "# screen"], ["account", pt ? "# conta" : "# account"]];
   return <div className="matrix-settings-overlay" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}
     onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onClose(); } }}>
     <div ref={frame} className="matrix-settings" role="dialog" aria-modal="true" aria-label={pt ? "Configurações" : "Settings"}>
@@ -108,6 +110,13 @@ export function MatrixSettings({ pt, me, names, onClose, onError, onDisconnect, 
           <label className="matrix-settings-check"><input type="checkbox" checked={voice.agc} onChange={event => void setMatrixVoiceControls({ agc: event.target.checked })}/>
             <span>{pt ? "Ganho automático do microfone" : "Automatic microphone gain"}<small>{pt ? "Iguala o volume da sua voz quando você fala baixo ou se afasta do microfone." : "Evens out your voice when you speak softly or move away from the microphone."}</small></span></label>
         </>}
+        {tab === "screen" && <div className="matrix-settings-field">
+          <span>{pt ? "> imagem em tela cheia" : "> full screen picture"}</span>
+          <SelectionMenu className="matrix-select" menuClassName="matrix-select-menu" label={pt ? "Enquadramento da transmissão" : "Stream framing"} value={screenFit}
+            options={[{ value: "fill", label: pt ? "Preencher a moldura" : "Fill the frame" }, { value: "contain", label: pt ? "Enquadrar imagem inteira" : "Fit the entire picture" }]}
+            onChange={value => setMatrixScreenFit(value as ScreenFit)}/>
+          <small>{screenFit === "fill" ? (pt ? "Preenche a tela curva sem distorcer a imagem; as bordas podem ser cortadas." : "Fills the curved screen without stretching; edges may be cropped.") : (pt ? "Mostra a imagem inteira dentro da moldura, com margens quando necessário." : "Shows the entire picture inside the frame, with margins when needed.")}</small>
+        </div>}
         {tab === "account" && <>
           <div className="matrix-settings-field"><span>{pt ? "> conta Matrix" : "> Matrix account"}</span><code>{me}</code></div>
           <small className="matrix-settings-hint">{pt ? "Desconectar encerra esta sessão do launcher no Matrix. Suas salas e mensagens continuam na conta." : "Disconnecting ends this launcher session on Matrix. Your rooms and messages stay in the account."}</small>

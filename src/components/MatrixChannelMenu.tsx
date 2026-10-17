@@ -1,6 +1,7 @@
 // Right-click menu of a channel, as in Discord, with what Matrix offers.
 import { useLayoutEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useNativeVideoOverlay } from "../services/matrixScreenView";
 
 export type ChannelMenuItem = { label: string; action: () => void; danger?: boolean; hidden?: boolean };
 
@@ -15,6 +16,7 @@ export function MatrixChannelMenu({ x, y, title, groups, onClose }: {
   onClose: () => void;
 }) {
   const menu = useRef<HTMLDivElement>(null);
+  useNativeVideoOverlay(menu);
   const [place, setPlace] = useState({ left: x, top: y });
   // Kept inside the window, as a system menu.
   useLayoutEffect(() => {

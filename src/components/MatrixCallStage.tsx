@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { leaveMatrixVoice, setMatrixVoiceControls, useMatrixVoice, watchMatrixScreen } from "../services/matrixVoice";
 import { MatrixShareButton } from "./MatrixShareButton";
-import { setCallFullscreen, setCallStageShown, useCallFullscreen, useNativeVideo } from "../services/matrixScreenView";
+import { setCallFullscreen, setCallStageShown, useCallFullscreen, useNativeVideo, useMatrixScreenFit, setMatrixScreenFit, type ScreenFit } from "../services/matrixScreenView";
 import { matrixAvatar } from "../services/matrixMedia";
 import { HeadphonesIcon, MicIcon } from "./MatrixUserPanel";
 
@@ -28,6 +28,8 @@ export function MatrixCallStage({ pt, me, roomName, videoHidden, onShowChat }: {
   const voice = useMatrixVoice();
   const video = useRef<HTMLDivElement>(null), fullVideo = useRef<HTMLDivElement>(null), stage = useRef<HTMLElement>(null);
   const fullscreen = useCallFullscreen();
+  const fit = useMatrixScreenFit();
+  const fullControls = useRef<HTMLDivElement>(null);
   // Full screen covers the Matrix frame only; it ends with the stage (another room, chat closed).
   const [frame, setFrame] = useState<HTMLElement | null>(null);
   useEffect(() => { setFrame(stage.current?.closest<HTMLElement>(".matrix-terminal-frame") ?? null); }, []);
@@ -37,7 +39,7 @@ export function MatrixCallStage({ pt, me, roomName, videoHidden, onShowChat }: {
   useEffect(() => { setCallStageShown(Boolean(focused)); return () => setCallStageShown(false); }, [focused]);
   const full = fullscreen && Boolean(focused) && Boolean(frame);
   useEffect(() => { if (!focused) setCallFullscreen(false); }, [focused]);
-  useNativeVideo(full ? fullVideo : video, Boolean(focused) && !videoHidden);
+  useNativeVideo(full ? fullVideo : video, Boolean(focused) && !videoHidden, full ? { crt: true, fill: fit === "fill", controls: fullControls } : undefined);
   // Esc leaves full screen first, before it can close the Matrix window.
   useEffect(() => {
     if (!full) return;
@@ -89,9 +91,15 @@ export function MatrixCallStage({ pt, me, roomName, videoHidden, onShowChat }: {
     </div>
     {full && frame && createPortal(<div className="matrix-call-fullscreen" role="dialog" aria-label={pt ? `Transmissão de ${focusedName} em tela cheia` : `${focusedName}'s stream in full screen`}>
       <div ref={fullVideo} className="matrix-call-video" onDoubleClick={() => setCallFullscreen(false)}><span>{pt ? "> carregando transmissão…" : "> loading stream…"}</span></div>
-      <div className="matrix-call-focus-bar"><span className="matrix-call-live">{pt ? "AO VIVO" : "LIVE"}</span><b>{focusedName}</b>
-        <button type="button" autoFocus onClick={() => setCallFullscreen(false)}>{pt ? "[sair da tela cheia · Esc]" : "[exit full screen · Esc]"}</button>
-        <button type="button" onClick={() => void watchMatrixScreen(null)}>{focused === "local" ? (pt ? "[fechar prévia]" : "[close preview]") : (pt ? "[parar de assistir]" : "[stop watching]")}</button></div>
+      <div ref={fullControls} className="matrix-call-focus-bar"><span className="matrix-call-live">{pt ? "AO VIVO" : "LIVE"}</span><b>{focusedName}</b>
+        <div className="matrix-call-fullscreen-actions">
+          <select className="matrix-call-fit" aria-label={pt ? "Enquadramento da transmissão" : "Stream framing"} value={fit} onChange={event => setMatrixScreenFit(event.target.value as ScreenFit)}>
+            <option value="fill">{pt ? "Preencher a moldura" : "Fill the frame"}</option>
+            <option value="contain">{pt ? "Enquadrar imagem inteira" : "Fit the entire picture"}</option>
+          </select>
+          <button type="button" onClick={() => setCallFullscreen(false)}>{pt ? "[sair da tela cheia · Esc]" : "[exit full screen · Esc]"}</button>
+          <button type="button" onClick={() => void watchMatrixScreen(null)}>{focused === "local" ? (pt ? "[fechar prévia]" : "[close preview]") : (pt ? "[parar de assistir]" : "[stop watching]")}</button>
+        </div></div>
     </div>, frame)}
   </section>;
 }
