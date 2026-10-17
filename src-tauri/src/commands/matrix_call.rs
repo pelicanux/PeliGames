@@ -323,7 +323,7 @@ fn run(
                         }
                     }
                     Some(command)=screen.recv()=>match command {
-                        ScreenCommand::Share(Some(audio))=>{ if share.as_ref().is_none_or(|s| s.finished()) { share=Some(super::matrix_screen::Share::start(w.clone(),room.local_participant(),call_id.clone(),audio)); } }
+                        ScreenCommand::Share(Some((audio,quality)))=>{ if share.as_ref().is_none_or(|s| s.finished()) { share=Some(super::matrix_screen::Share::start(w.clone(),room.local_participant(),call_id.clone(),audio,quality)); } }
                         ScreenCommand::Share(None)=>{ if let Some(s)=share.take() { s.stop().await; } }
                         ScreenCommand::Watch(target)=>{
                             if let Some((sid,task))=viewer.take() { task.abort(); if let Some((_,publication))=screens.get(&sid) { publication.set_subscribed(false); } }
@@ -421,6 +421,7 @@ pub fn matrix_screen_share(
     window: WebviewWindow,
     on: bool,
     audio: Option<super::matrix_screen_audio::ShareAudio>,
+    quality: Option<super::matrix_screen::ShareQuality>,
 ) -> Result<(), String> {
     guard(&window)?;
     let current = state().lock().map_err(|_| "Estado indisponível.")?;
@@ -432,7 +433,7 @@ pub fn matrix_screen_share(
         return Err("Esta chamada pertence a outra janela.".into());
     }
     call.screen
-        .send(ScreenCommand::Share(on.then(|| audio.unwrap_or_default())))
+        .send(ScreenCommand::Share(on.then(|| (audio.unwrap_or_default(), quality.unwrap_or_default().checked()))))
         .map_err(|_| "A chamada está sendo encerrada.".to_string())
 }
 /// Shows one share on the stage: a call identity, "local" for the own preview, or none.
