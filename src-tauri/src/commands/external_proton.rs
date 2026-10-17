@@ -169,6 +169,44 @@ pub(super) fn apply(game:&ExternalGame,proton:&Path)->Result<(),String> {
     let home=dirs::home_dir().ok_or("Pasta pessoal indisponível.")?;
     apply_in(&home,game,proton)
 }
+/// Keep Epic responsible for authentication, launch arguments and playtime.
+/// Its supported per-game command template wraps only Proton's entry point.
+pub(super) fn epic(home: &Path, game: &ExternalGame, proton: Option<&Path>, launcher_running: bool) -> Result<(), String> {
+    use sha2::{Digest, Sha256};
+    let id = game.app_id.as_deref().ok_or("Identificação Epic ausente.")?;
+    let root = super::super::epic_library::root_for(home, id).ok_or("Instalação Epic indisponível.")?;
+    let path = root.join("settings/game-settings.json");
+    let before = match read(&path) { Ok(text) => text, Err(_) if proton.is_none() => return Ok(()), Err(error) => return Err(error) };
+    let mut config: Value = serde_json::from_str(&before).map_err(|_| "Configurações Epic inválidas.")?;
+    let digest = format!("{:x}", Sha256::digest(id.as_bytes()));
+    let folder = root.join(".peligames-proton");
+    let wrapper = folder.join(format!("{digest}.sh"));
+    let quote = |value: &str| format!("'{}'", value.replace('\'', "'\\''"));
+    let marker = format!("{} ", quote(&wrapper.to_string_lossy()));
+    let old_line = config["games"][id]["additionalCommands"].as_str().unwrap_or("");
+    if proton.is_none() && !old_line.contains(&marker) { return Ok(()); }
+    if launcher_running { return Err("Feche Epic Games antes de alterar a versão do Proton.".into()); }
+    let line = if let Some(proton) = proton {
+        if folder.is_symlink() { return Err("Diretório do adaptador Epic não pode ser um link simbólico.".into()); }
+        fs::create_dir_all(&folder).map_err(|e| e.to_string())?;
+        #[cfg(unix)] { use std::os::unix::fs::PermissionsExt; fs::set_permissions(&folder, fs::Permissions::from_mode(0o700)).map_err(|e| e.to_string())?; }
+        let script = format!("#!/bin/sh\ncase \"${{1##*/}}\" in proton) shift;; *) printf '%s\\n' 'PeliGames: comando Proton da Epic não reconhecido.' >&2; exit 64;; esac\nexec {} \"$@\"\n", quote(&proton.join("proton").to_string_lossy()));
+        let temporary = folder.join(format!("{}.part", uuid::Uuid::new_v4()));
+        fs::write(&temporary, script).map_err(|e| e.to_string())?;
+        #[cfg(unix)] { use std::os::unix::fs::PermissionsExt; fs::set_permissions(&temporary, fs::Permissions::from_mode(0o700)).map_err(|e| e.to_string())?; }
+        fs::rename(&temporary, &wrapper).map_err(|e| e.to_string())?;
+        let original = if config["games"][id]["additionalCommandsEnabled"] == true { old_line } else { "" };
+        if original.contains(&marker) { original.to_string() }
+        else if original.contains("%command%") { original.replace("%command%", &format!("{marker}%command%")) }
+        else { format!("{original} {marker}%command%").trim().to_string() }
+    } else { old_line.replace(&marker, "") };
+    if !config["games"].is_object() { return Err("Mapa de jogos Epic inválido.".into()); }
+    if config["games"].get(id).is_none() { config["games"][id] = json!({}); }
+    let settings = config["games"][id].as_object_mut().ok_or("Configuração Epic do jogo inválida.")?;
+    settings.insert("additionalCommandsEnabled".into(), Value::Bool(line.trim() != "%command%"));
+    settings.insert("additionalCommands".into(), Value::String(line));
+    save(&path, &before, &serde_json::to_string_pretty(&config).map_err(|e| e.to_string())?)
+}
 fn apply_in(home:&Path,game:&ExternalGame,proton:&Path)->Result<(),String> {
     let id=safe_id(game.app_id.as_deref().ok_or("Identificação do jogo ausente.")?)?;
     match game.launcher.as_str() {
@@ -215,6 +253,36 @@ fn apply_in(home:&Path,game:&ExternalGame,proton:&Path)->Result<(),String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn epic_runner_preserves_native_settings_and_restores_the_original_command() {
+        let home = std::env::temp_dir().join(format!("peligames-epic-runner-{}", uuid::Uuid::new_v4()));
+        let base = home.join(".local/share/com.epicgames.eglv2");
+        let directory = home.join("Game"); fs::create_dir_all(&directory).unwrap();
+        fs::create_dir_all(base.join("settings")).unwrap();
+        fs::write(base.join("installations.jsonl"), json!({"installationId":"test","complete":true,"namespace":"ns","itemId":"item","artifactId":"game","dir":directory}).to_string()).unwrap();
+        let path = base.join("settings/game-settings.json");
+        fs::write(&path, r#"{"games":{"ns:item:game":{"additionalCommandsEnabled":true,"additionalCommands":"mangohud %command%","autoUpdate":false},"other":{"keep":true}},"cloudSaves":{"keep":true}}"#).unwrap();
+        let game = super::super::tests::game("Epic Games", "ns:item:game");
+        let runner = home.join("Proton with ' quote"); fs::create_dir_all(&runner).unwrap();
+        fs::write(runner.join("proton"), "#!/bin/sh\nprintf '%s\\n' \"$@\"\n").unwrap();
+        #[cfg(unix)] { use std::os::unix::fs::PermissionsExt; fs::set_permissions(runner.join("proton"), fs::Permissions::from_mode(0o700)).unwrap(); }
+        assert!(epic(&home, &game, Some(&runner), true).is_err());
+        epic(&home, &game, Some(&runner), false).unwrap();
+        let updated: Value = serde_json::from_str(&read(&path).unwrap()).unwrap();
+        assert_eq!(updated["games"]["other"]["keep"], true);
+        assert_eq!(updated["games"]["ns:item:game"]["autoUpdate"], false);
+        assert_eq!(updated["cloudSaves"]["keep"], true);
+        assert!(updated["games"]["ns:item:game"]["additionalCommands"].as_str().unwrap().starts_with("mangohud "));
+        let wrapper = fs::read_dir(base.join(".peligames-proton")).unwrap().flatten().next().unwrap().path();
+        let result = std::process::Command::new(&wrapper).args(["/native/proton", "waitforexitandrun", "game with spaces.exe"]).output().unwrap();
+        assert!(result.status.success());
+        assert_eq!(String::from_utf8_lossy(&result.stdout), "waitforexitandrun\ngame with spaces.exe\n");
+        assert_eq!(std::process::Command::new(&wrapper).arg("unexpected-command").output().unwrap().status.code(), Some(64));
+        epic(&home, &game, None, false).unwrap();
+        let restored: Value = serde_json::from_str(&read(&path).unwrap()).unwrap();
+        assert_eq!(restored["games"]["ns:item:game"]["additionalCommands"], "mangohud %command%");
+        fs::remove_dir_all(home).unwrap();
+    }
     #[test]
     fn vdf_preserves_other_games_and_global_mapping() {
         let original=r#"// comment

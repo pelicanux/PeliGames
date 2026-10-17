@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { startSteamGame, startGame, cancelGame, executionStatus, isExecutionActive, runProgram as runInPrefix, startShortcut as openShortcut, type ExecutionStatus } from "../services/gameExecution";
+import { startSteamGame, startExternalGame, startGame, cancelGame, executionStatus, isExecutionActive, runProgram as runInPrefix, startShortcut as openShortcut, type ExecutionStatus } from "../services/gameExecution";
 export function useGameExecution() {
   const [session, setSession] = useState<ExecutionStatus | null>(null);
   const [pendingPath, setPendingPath] = useState("");
@@ -64,6 +64,7 @@ export function useGameExecution() {
     finally { locked.current = false; cancelRequested.current = false; setPendingPath(""); setCancellingPath(""); }
   };
   const startSteam = (path: string, appId: string, externalId?: string) => launch(path, () => startSteamGame(path, appId, externalId));
+  const startExternal = (path: string, externalId: string) => launch(path, () => startExternalGame(path, externalId));
   const runProgram = (path: string, executable: string) => launch(path, () => runInPrefix(path, executable));
   const startShortcut = (path: string, id: string) => launch(path, () => openShortcut(path, id));
   const cancel = async () => {
@@ -74,5 +75,5 @@ export function useGameExecution() {
     catch (error) { setError(String(error)); }
     finally { locked.current = false; setCancellingPath(""); }
   };
-  return { session, pendingPath, cancellingPath, error, start, startSteam, runProgram, startShortcut, cancel, active: isExecutionActive(session) };
+  return { session, pendingPath, cancellingPath, error, start, startSteam, startExternal, runProgram, startShortcut, cancel, active: isExecutionActive(session) };
 }

@@ -24,11 +24,11 @@ export function ModernGameOptions({name="",value, proton, onProton, onAdvanced, 
   const runnerPosition=useBoundedDropdown(other,runnerAnchor,runnerMenu,setOther,320,"right");
   const filteredRunners=runners.filter(r=>r.name.toLocaleLowerCase().includes(runnerSearch.trim().toLocaleLowerCase()));
   const closeRunners=()=>{setOther(false);runnerAnchor.current?.querySelector<HTMLButtonElement>("[data-dropdown-trigger]")?.focus();};
-  useEffect(()=>{if(disabled||protonDisabled)setOther(false);},[disabled,protonDisabled]);
+  useEffect(()=>{if(disabled||protonDisabled||native)setOther(false);},[disabled,protonDisabled,native]);
   const [winetricks,setWinetricks]=useState(false);
   const [busy,setBusy]=useState(false), [activeTool,setActiveTool]=useState<string | null>(null);
   const lock=useRef(false), alive=useRef(true);
-  useEffect(()=>{alive.current=true;const scan=()=>{void invoke<InstalledProton[]>("scan_installed_protons").then(data=>{if(alive.current){setRunners(data);setRunnerError("");}}).catch(e=>{if(alive.current)setRunnerError(String(e));});};scan();window.addEventListener("protonRunnersChanged",scan);return()=>{alive.current=false;window.removeEventListener("protonRunnersChanged",scan);};},[]);
+  useEffect(()=>{alive.current=true;if(native)return()=>{alive.current=false;};const scan=()=>{void invoke<InstalledProton[]>("scan_installed_protons").then(data=>{if(alive.current){setRunners(data);setRunnerError("");}}).catch(e=>{if(alive.current)setRunnerError(String(e));});};scan();window.addEventListener("protonRunnersChanged",scan);return()=>{alive.current=false;window.removeEventListener("protonRunnersChanged",scan);};},[native]);
   const run=async(action:()=>Promise<unknown>,message?:string,source=pt?"Opções do jogo":"Game options",tool?:string)=>{
     if(disabled||lock.current)return;
     lock.current=true;setBusy(true);setActiveTool(tool??null);
@@ -36,12 +36,13 @@ export function ModernGameOptions({name="",value, proton, onProton, onAdvanced, 
     catch(e){notifyError(source,e);}
     finally{lock.current=false;if(alive.current){setBusy(false);setActiveTool(null);}}
   };
-  const choose=(path:string)=>void run(async()=>{if(await onProton(path))closeRunners();else throw new Error(pt?"Não foi possível salvar o Proton.":"Could not save Proton.");});
+  const choose=(path:string)=>{if(native||protonDisabled)return;void run(async()=>{if(await onProton(path))closeRunners();else throw new Error(pt?"Não foi possível salvar o Proton.":"Could not save Proton.");});};
   const active=runners.find(r=>r.path===proton);
   const shortcuts=Array.from(new Map([...(proton?[{path:proton,name:active?.name||proton.split('/').pop()||proton}]:[]),...runners].map(r=>[r.path,r])).values()).slice(0,2);
   const blocked=disabled||busy;
   return <div className="modern-game-options">
     <section className="modern-performance-card modern-execution-options"><h3>{pt?"Execução":"Execution"}</h3>
+      {native&&<div className="modern-option-row"><span>{pt?"Versão do Proton":"Proton version"}<small className="modern-performance-hint">{pt?"Jogo nativo de Linux; não utiliza Proton.":"Native Linux game; Proton is not used."}</small></span><button type="button" className="modern-mini-btn" disabled>{pt?"Linux nativo":"Native Linux"}</button></div>}
       {!native&&<><div className="modern-option-row"><span>{pt?"Versão do Proton":"Proton version"}</span><div ref={runnerAnchor} className="modern-dlss-segments modern-proton-segments" role="group" aria-label={pt?"Versão do Proton":"Proton version"}>{shortcuts.map(r=><button key={r.path} type="button" title={r.name} aria-pressed={proton===r.path} disabled={blocked||protonDisabled} onClick={()=>choose(r.path)}>{r.name}</button>)}<button type="button" data-dropdown-trigger disabled={blocked||protonDisabled} aria-haspopup="dialog" aria-controls={other?runnerMenuId:undefined} aria-expanded={other} onClick={()=>{setRunnerSearch("");setOther(v=>!v);}}>{pt?"Outra…":"Other…"}</button></div></div>
       {other&&createPortal(<div ref={runnerMenu} id={runnerMenuId} className="modern-proton-picker" role="dialog" aria-label={pt?"Outras versões do Proton":"Other Proton versions"} style={runnerPosition} onKeyDown={event=>{
         if(event.key==="Escape"){event.stopPropagation();closeRunners();}
@@ -61,6 +62,7 @@ export function ModernGameOptions({name="",value, proton, onProton, onAdvanced, 
         <button type="button" className="modern-proton-manage" onClick={()=>{closeRunners();window.dispatchEvent(new Event("openProtonPreferences"));}}>{pt?"Gerenciar versões":"Manage versions"}</button>
       </div>,document.body)}</>}
 
+      {!native&&!maintenancePath.startsWith("external:")&&<div className="modern-option-row"><span>{pt?"Comunicação com a Steam":"Steam client communication"}<small className="modern-performance-hint">{pt?"Requer a Steam aberta e um Proton compatível. Não adiciona o jogo à Steam.":"Requires Steam to be running and a compatible Proton. Does not add the game to Steam."}</small></span><button type="button" role="switch" aria-label={pt?"Comunicação com a Steam":"Steam client communication"} aria-checked={Boolean(value?.options.steam_client)} className={`advanced-toggle ${value?.options.steam_client?"enabled":""}`} disabled={blocked} onClick={()=>void run(async()=>{const current=normalizeAdvanced(value);if(!await onAdvanced({...current,options:{...current.options,steam_client:!current.options.steam_client}}))throw new Error(pt?"Não foi possível salvar a comunicação com a Steam.":"Could not save Steam client communication.");})}><span/></button></div>}
       {launchOptions}
       {!native&&<WineDllPriorities compact settings={normalizeAdvanced(value)} disabled={blocked} automatic={automaticDlls} detectionError={dllError} onReset={onResetDlls} onChange={next=>{const problem=advancedError(next);if(problem){notifyError(pt?"Prioridade das DLLs do Wine":"Wine DLL priorities",problem);return false;}void run(async()=>{if(!await onAdvanced(next))throw new Error(pt?"Não foi possível salvar as DLLs.":"Could not save DLL priorities.");});return true;}}/>}
       {configuration}

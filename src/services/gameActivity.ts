@@ -10,7 +10,7 @@ export function activityKey(game: GameInfo): string | null {
   if (game.launcher === "PeliGames") return `PeliGames:${game.path}`;
   if (!game.app_id) return null;
   if (game.launcher === "Steam") return `Steam:${game.app_id}`;
-  if (game.launcher === "Heroic" || game.launcher === "Lutris") return `${game.launcher}:${game.flatpak ? "flatpak" : "native"}:${game.app_id}`;
+  if (game.launcher === "Heroic" || game.launcher === "Lutris" || game.launcher === "Epic Games") return `${game.launcher}:${game.flatpak ? "flatpak" : "native"}:${game.app_id}`;
   return null;
 }
 

@@ -12,7 +12,7 @@ Launcher de jogos Windows para Linux com Proton, biblioteca de jogos, Pelinstall
 
 ## Como funciona
 
-1. **Biblioteca:** o PeliGames reúne num só lugar os jogos da Steam, do Heroic, do Lutris, do Bottles e do Faugus, além dos que você instala por ele.
+1. **Biblioteca:** o PeliGames reúne num só lugar os jogos da Steam, da Epic Games nativa para Linux, do Heroic, do Lutris, do Bottles e do Faugus, além dos que você instala por ele.
 2. **Instalar jogos e programas do Windows:** escolha o instalador (`.exe` ou `.msi`), o nome, a pasta e a versão do Proton. O PeliGames prepara o prefixo, roda o instalador e encontra sozinho o executável do jogo. Se houver dúvida entre executáveis, ele pergunta.
 3. **Launchers (EA app, Battle.net, Ubisoft Connect, Epic):** os jogos que você instala por dentro do launcher aparecem em **Programas**, para abrir direto. Ao adicionar um deles à biblioteca, ele ganha um perfil próprio, com prefixo, Proton e mods separados, sem duplicar os arquivos do launcher.
 4. **Mods do Nexus Mods:** em **Mods → Nexus Mods**, adicione o jogo, escolha os mods no catálogo (ou importe um arquivo) e clique em **Instalar**. O PeliGames confere os requisitos, aplica o instalador FOMOD quando existe e implanta os arquivos de acordo com as regras do jogo, as mesmas usadas pelo Vortex. Ativar, desativar e remover mods não altera os arquivos originais do jogo. Veja os [jogos suportados](docs/supported-games.md).

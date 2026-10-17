@@ -24,6 +24,36 @@ export function normalizeAdvanced(value?: AdvancedSettings): AdvancedSettings {
 export function toggleAdvanced(settings: AdvancedSettings, id: string): AdvancedSettings {
   return { ...settings, options: { ...settings.options, [id]: !settings.options[id] } };
 }
+function optionTitle(id: string): string { return catalog.find(option => option.id === id)?.title ?? id; }
+function relatedOptions(id: string, dependents = false): string[] {
+  const visited = new Set([id]), result: string[] = [];
+  const visit = (current: string) => {
+    for (const [child, parent] of rules.dependencies) {
+      const next = dependents ? child : parent;
+      if ((dependents ? parent : child) !== current || visited.has(next)) continue;
+      visited.add(next); visit(next); result.push(next);
+    }
+  };
+  visit(id); return result;
+}
+/** Explain the attempted action, including the order of transitive prerequisites. */
+export function advancedToggleError(settings: AdvancedSettings, id: string): string | undefined {
+  const turningOff = Boolean(settings.options[id]);
+  const required = relatedOptions(id, turningOff).filter(other => turningOff ? settings.options[other] : !settings.options[other]);
+  const names = (ids: string[]) => ids.map(other => `“${optionTitle(other)}”`).join(" → ");
+  if (!turningOff) {
+    const conflicts = rules.conflicts.flatMap(([a, b]) => a === id ? [b] : b === id ? [a] : []).filter(other => settings.options[other]);
+    if (conflicts.length) return `Para ativar “${optionTitle(id)}”, desative ${names(conflicts)}. Essas opções são incompatíveis.`;
+    if (["mangohud", "mangohud_env"].includes(id) && gamescopeEnabled(settings.gamescope ?? defaultGamescope)) return `Desative os recursos do Gamescope antes de ativar “${optionTitle(id)}”.`;
+  }
+  if (required.length) return `${turningOff ? "Desative" : "Ative"} primeiro ${names(required)} para ${turningOff ? "desativar" : "ativar"} “${optionTitle(id)}”.`;
+}
+export function advancedOptionHint(settings: AdvancedSettings, id: string): string | undefined {
+  const issue = advancedToggleError(settings, id);
+  if (issue) return issue;
+  const required = relatedOptions(id);
+  if (required.length) return `Requer: ${required.map(optionTitle).join(" → ")}.`;
+}
 export function advancedError(settings: AdvancedSettings): string | undefined {
   const limit = settings.mangohud_fps_limit;
   if (limit != null && (!Number.isInteger(limit) || limit < 0 || limit > 1000)) return "Informe um limite de FPS entre 0 e 1000.";

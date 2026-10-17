@@ -1328,7 +1328,10 @@ button.advanced-toggle.enabled { background: rgba(var(--accent-rgb), .4); border
 .gamescope-help .menu-icon { width: 14px; height: 14px; }
 .gamescope-extra-label { display: block; padding: 12px 8px; color: var(--tone-e2e8f0); font-size: .8rem; }
 .gamescope-extra-label input { display: block; box-sizing: border-box; width: 100%; margin-top: 8px; padding: 8px; border: 1px solid rgba(var(--accent-rgb), .25); border-radius: 6px; color: var(--tone-e2e8f0); background: rgba(var(--surface-20-20-25, 20,20,25), .8); }
-.installed-advanced-heading { flex-wrap: wrap; }
+.installed-advanced-heading { flex-wrap: wrap; position: relative; padding-bottom: 22px; }
+.advanced-heading-feedback { position: absolute; right: 0; bottom: 0; height: 18px; max-width: 100%; pointer-events: none; text-align: right; color: var(--accent-soft); font-size: .75rem; font-weight: normal; }
+.advanced-saved-feedback { margin: 0; padding: 0; font: inherit; color: inherit; }
+.advanced-option-requirement { display: block; margin: 6px 0; color: var(--accent-soft); font-size: .75rem; line-height: 1.4; }
 .installed-advanced-heading > span { flex: 1; }
 .advanced-search { display: flex; align-items: center; gap: 5px; flex: 0 1 126px; min-width: 90px; padding: 5px 7px; border: 1px solid rgba(var(--accent-rgb), .25); border-radius: 7px; background: rgba(var(--surface-20-20-25, 20,20,25), .65); color: var(--accent-soft); }
 .advanced-search:focus-within { border-color: var(--accent); box-shadow: 0 0 8px rgba(var(--accent-rgb), .12); }

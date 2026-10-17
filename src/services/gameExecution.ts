@@ -71,3 +71,11 @@ export function startSteamGame(path: string, appId: string, externalId?: string)
   });
   return invoke("start_steam_game", { path, appId });
 }
+/** A game of another launcher (Heroic, Lutris…): followed by its install folder
+ * when known (the button shows it opening and running), otherwise only opened. */
+export async function startExternalGame(path: string, externalId: string): Promise<ExecutionStatus | null> {
+  if ("__PELI_UI_PREVIEW__" in window) return startSteamGame(path, "", undefined);
+  await invoke("launch_external_game", { externalId });
+  const status = await invoke<ExecutionStatus | null>("get_peligames_execution");
+  return status && status.path === path ? status : null;
+}
