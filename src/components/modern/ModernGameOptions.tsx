@@ -11,8 +11,8 @@ import { MenuIcon } from "../MenuIcon";
 import { notifyError, notifyInfo } from "../../services/notifications";
 import { WinetricksModal } from "../WinetricksModal";
 
-export function ModernGameOptions({name="",value, proton, onProton, onAdvanced, launchOptions, disabled, native, maintenancePath, onUninstall, onChangeExecutable, automaticDlls, dllError, onResetDlls, children, protonDisabled, configuration, prefixPrograms}: {
-  name?: string; configuration?: ReactNode; prefixPrograms?: ReactNode; protonDisabled?: boolean; value?: AdvancedSettings; proton: string; onProton: (path: string)=>Promise<boolean>; onAdvanced: (settings:AdvancedSettings)=>Promise<boolean>;
+export function ModernGameOptions({name="",value, proton, protonLabel, onProton, onAdvanced, launchOptions, disabled, native, maintenancePath, onUninstall, onChangeExecutable, automaticDlls, dllError, onResetDlls, children, protonDisabled, protonDisabledHint, protonDisabledLabel, configuration, prefixPrograms}: {
+  name?: string; protonLabel?: string; configuration?: ReactNode; prefixPrograms?: ReactNode; protonDisabled?: boolean; protonDisabledHint?: string; protonDisabledLabel?: string; value?: AdvancedSettings; proton: string; onProton: (path: string)=>Promise<boolean>; onAdvanced: (settings:AdvancedSettings)=>Promise<boolean>;
   launchOptions: ReactNode; disabled?: boolean; native?: boolean; maintenancePath: string; onUninstall?: ()=>void; onChangeExecutable?: ()=>void;
   automaticDlls?: string; dllError?: string; onResetDlls?: ()=>void; children?: ReactNode;
 }) {
@@ -38,12 +38,14 @@ export function ModernGameOptions({name="",value, proton, onProton, onAdvanced, 
   };
   const choose=(path:string)=>{if(native||protonDisabled)return;void run(async()=>{if(await onProton(path))closeRunners();else throw new Error(pt?"Não foi possível salvar o Proton.":"Could not save Proton.");});};
   const active=runners.find(r=>r.path===proton);
-  const shortcuts=Array.from(new Map([...(proton?[{path:proton,name:active?.name||proton.split('/').pop()||proton}]:[]),...runners].map(r=>[r.path,r])).values()).slice(0,2);
+  const shortcuts=Array.from(new Map([...(proton?[{path:proton,name:protonLabel||active?.name||proton.split('/').pop()||proton}]:[]),...runners.filter(r=>r.path!==proton)].map(r=>[r.path,r])).values()).slice(0,2);
   const blocked=disabled||busy;
   return <div className="modern-game-options">
     <section className="modern-performance-card modern-execution-options"><h3>{pt?"Execução":"Execution"}</h3>
+      {!native && !proton && protonLabel && <p className="modern-performance-hint">{pt ? "Selecionado na Steam: " : "Selected in Steam: "}{protonLabel}</p>}
       {native&&<div className="modern-option-row"><span>{pt?"Versão do Proton":"Proton version"}<small className="modern-performance-hint">{pt?"Jogo nativo de Linux; não utiliza Proton.":"Native Linux game; Proton is not used."}</small></span><button type="button" className="modern-mini-btn" disabled>{pt?"Linux nativo":"Native Linux"}</button></div>}
-      {!native&&<><div className="modern-option-row"><span>{pt?"Versão do Proton":"Proton version"}</span><div ref={runnerAnchor} className="modern-dlss-segments modern-proton-segments" role="group" aria-label={pt?"Versão do Proton":"Proton version"}>{shortcuts.map(r=><button key={r.path} type="button" title={r.name} aria-pressed={proton===r.path} disabled={blocked||protonDisabled} onClick={()=>choose(r.path)}>{r.name}</button>)}<button type="button" data-dropdown-trigger disabled={blocked||protonDisabled} aria-haspopup="dialog" aria-controls={other?runnerMenuId:undefined} aria-expanded={other} onClick={()=>{setRunnerSearch("");setOther(v=>!v);}}>{pt?"Outra…":"Other…"}</button></div></div>
+      {!native&&protonDisabled&&<div className="modern-option-row"><span>{pt?"Versão do Proton":"Proton version"}{protonDisabledHint&&<small className="modern-performance-hint">{protonDisabledHint}</small>}</span><button type="button" className="modern-mini-btn" disabled>{protonDisabledLabel||(pt?"Gerenciado externamente":"Managed externally")}</button></div>}
+      {!native&&!protonDisabled&&<><div className="modern-option-row"><span>{pt?"Versão do Proton":"Proton version"}</span><div ref={runnerAnchor} className="modern-dlss-segments modern-proton-segments" role="group" aria-label={pt?"Versão do Proton":"Proton version"}>{shortcuts.map(r=><button key={r.path} type="button" title={r.name} aria-pressed={proton===r.path} disabled={blocked} onClick={()=>choose(r.path)}>{r.name}</button>)}<button type="button" data-dropdown-trigger disabled={blocked} aria-haspopup="dialog" aria-controls={other?runnerMenuId:undefined} aria-expanded={other} onClick={()=>{setRunnerSearch("");setOther(v=>!v);}}>{pt?"Outra…":"Other…"}</button></div></div>
       {other&&createPortal(<div ref={runnerMenu} id={runnerMenuId} className="modern-proton-picker" role="dialog" aria-label={pt?"Outras versões do Proton":"Other Proton versions"} style={runnerPosition} onKeyDown={event=>{
         if(event.key==="Escape"){event.stopPropagation();closeRunners();}
         if(event.key==="Tab")setOther(false);

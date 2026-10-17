@@ -23,7 +23,8 @@ import { forgetAutomaticCover, rememberAutomaticCover } from "../services/automa
 import React, { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "../i18n/I18nContext";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { useVisibleCoverLayers } from "../hooks/useVisibleCoverLayers";
 import { usePerformanceMode } from "./EffectsContext";
 import { applyCustomCovers, readGameLibrary, saveGameLibrary } from "../services/gameLibraryCache";
 import { warmAmbientCover } from "../services/ambientCoverCache";
@@ -40,6 +41,8 @@ const COVER_HOLD_ANIMATION_DURATION = 1200;
 const libraryNameOrder = new Intl.Collator("pt-BR", { sensitivity: "base", numeric: true });
 
 export interface GameInfo {
+  steam_pending?: boolean;
+  steam_proton_name?: string | null;
   native_linux?: boolean;
   nexus_platform?: "native" | "proton";
   nexus_running?: boolean;
@@ -114,6 +117,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const favorites = useFavorites();
   const removedGames = useRemovedLibraryGames();
   const performanceMode = usePerformanceMode();
+  const gridRoot = useRef<HTMLDivElement>(null);
   const [cachedGames] = useState(() => readGameLibrary());
   const [initialSnapshots] = useState(() => ({
     all: cachedGames,
@@ -155,6 +159,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const [viewMode, setViewMode] = useState<"grid" | "list">(() =>
     localStorage.getItem("game_library_view") === "list" ? "list" : "grid"
   );
+  useVisibleCoverLayers(gridRoot, !performanceMode && viewMode === "grid");
   useEffect(() => {
     localStorage.setItem("game_library_view", viewMode);
   }, [viewMode]);
@@ -539,7 +544,6 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     return (
       <div
         className={`library-game-card${gameViewKey(game) === selectedGameKey ? " is-away" : ""} ${isPreparing(game) ? "is-preparing-game" : ""} ${viewMode === "list" ? "library-game-card--list" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shatter" ? "is-holding-launch" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "particles" ? "is-holding-particles" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shrink" ? "is-holding-shrink" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "freeze" ? "is-holding-freeze" : ""}`}
-        key={`${gameViewKey(game)}-${viewMode}-${performanceMode ? "performance" : "elegant"}`} 
         onPointerDown={event => startHold(event, game)}
         onPointerMove={event => {
           const active = hold.current;
@@ -553,6 +557,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         onClick={event => {
           if (suppressHoldClick.current === gameViewKey(game)) { suppressHoldClick.current = null; event.preventDefault(); return; }
           onSelectGame(game, event.currentTarget.querySelector<HTMLElement>(".library-cover-thumbnail") ?? undefined);
+          handleMouseLeave(event);
         }}
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
@@ -560,10 +565,10 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         onTransitionEnd={event => {
           const card = event.currentTarget;
           if (event.target !== card || event.propertyName !== "transform" || card.matches(":hover")) return;
-          // An identity perspective/scale3d still retains a GPU surface. Release
-          // it once the tilt settles, rather than accumulating one per visited card.
+          // Visible covers retain their compositor surface. Only offscreen
+          // covers release it; dropping it on every hover caused repaint flashes.
           card.style.transition = "box-shadow .35s ease, border-color .35s ease";
-          card.style.transform = "none";
+          card.style.removeProperty("transform");
         }}
         style={{ 
           background: "rgba(0,0,0,0.3)", 
@@ -588,10 +593,9 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
         pointerEvents: "none", opacity: 0, transition: "opacity .3s ease-out", zIndex: 10
       }} />
-      {/* The portrait animates between grid and list views; never the full list row.
-          No layoutId: a shared id made the cover, remounted after the details
-          closed, animate in from where it was left (tilted, mid-hover) and blink. */}
-      <motion.div className="library-cover-thumbnail" layout={performanceMode ? false : "preserve-aspect"} layoutDependency={viewMode}
+      {/* Grid slots and portraits are static. Hover and the explicit flight own
+          their transforms; Framer projection must not reposition other cards. */}
+      <div className="library-cover-thumbnail"
         onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, game }); }}>
       {!imageErrors.has(game.path) && game.cover_url ? (
         <SmoothImage
@@ -647,7 +651,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       </div>
       
       <GamePlatformBadge game={game} />
-      </motion.div>
+      </div>
       <>
         <span className="modern-card-store"><LauncherIcon launcher={game.launcher} size={12} />{game.library_category === "launchers" ? "Launcher" : game.launcher}</span>
         <button type="button" className={`modern-card-fav${favorites.has(gameViewKey(game)) ? " on" : ""}`} aria-pressed={favorites.has(gameViewKey(game))}
@@ -665,13 +669,13 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
 
   // Keep library cells in their grid slots. The portrait still animates into details.
   const renderCard = (game: GameInfo) => (
-    <motion.div key={gameViewKey(game)} className={`library-card-cell ${brokenCards.has(gameViewKey(game)) ? "library-card-cell--shattered" : ""}`} aria-hidden={brokenCards.has(gameViewKey(game)) || undefined} data-cover-key={gameViewKey(game)}>
+    <div key={gameViewKey(game)} className={`library-card-cell ${brokenCards.has(gameViewKey(game)) ? "library-card-cell--shattered" : ""}`} aria-hidden={brokenCards.has(gameViewKey(game)) || undefined} data-cover-key={gameViewKey(game)}>
       {renderCardContent(game)}
       {!brokenCards.has(gameViewKey(game)) && <div className="modern-card-caption">
         <p>{game.name}</p>
         <small>{game.nexus_running || game.path === runningGamePath ? t("gameExecution", "running") : playedLabel(game) || (game.launcher === "PeliGames" && game.executable ? game.executable.split(/[\\/]/).pop() : game.library_category === "launchers" ? "Launcher" : game.launcher)}</small>
       </div>}
-    </motion.div>
+    </div>
   );
 
   const cacheScope = managedLibrary ? "nexus" : libraryScope;
@@ -743,7 +747,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const showEmptyOwnLibrary = !scanning && ownLoaded && (libraryScope === "own" || mode === "mods") && !searchQuery && filteredGames.length === 0;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <div ref={gridRoot} style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <AnimatePresence>{teleport && <CoverLaunchTeleport value={teleport} reducedMotion={performanceMode} cancellingDisabled={launchCommitted} onCancel={() => cancelPendingLaunch.current?.()} />}</AnimatePresence>
       <div className="modern-lib-toolbar">
         <label className="modern-lib-search">
@@ -770,7 +774,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       </div>
       {(libraryError || managedLibrary?.error) && <TimedFeedback>{libraryError || managedLibrary?.error}</TimedFeedback>}
 
-      <motion.div layoutScroll className={`game-grid-container game-library--${viewMode} modern-grid-container`} style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: "1rem" }}>
+      <div className={`game-grid-container game-library--${viewMode} modern-grid-container`} style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: "1rem" }}>
         {showScanScreen ? <div className="empty-library-state"><NexusLibraryLoading reducedMotion={performanceMode} /></div> : <>
         {filteredGames.length === 0 && !scanSpinning && (managedLibrary ? <div className="empty-library-state">
           {searchQuery ? <p role="status">{t("gameGrid", "noSearchResults")}</p>
@@ -805,7 +809,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
           </div>)}
         {recentGames.length > 0 && <section className="modern-continue">
           <div className="modern-section-title"><h2>{t("modern", "continuePlaying")}</h2><small>{t("modern", "recent")}</small></div>
-          <div key={cacheScope} className="modern-continue-row modern-library-enter">{recentGames.map(game => {
+          <div key={cacheScope} className="modern-continue-row">{recentGames.map(game => {
             const cover = !imageErrors.has(game.path) ? game.cover_url : undefined;
             return <div key={gameViewKey(game)} role="button" tabIndex={0} className="modern-continue-card"
               onClick={() => onSelectGame(game, document.querySelector<HTMLElement>(`[data-cover-key="${CSS.escape(gameViewKey(game))}"] .library-cover-thumbnail`) ?? undefined)}
@@ -821,11 +825,11 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         </section>}
         {filteredGames.length > 0 && <section className="modern-all-games">
           <div className="modern-section-title"><h2>{storeFilter === "all" ? t("modern", "allGames") : storeFilter === "favorites" ? t("gameGrid", "favorites") : storeFilter}</h2><small>{t("modern", "gamesCount").replace("{n}", String(modernGames.length))}</small></div>
-          <div key={cacheScope} className={`game-collection game-collection--${viewMode} modern-library-enter`}>{modernGames.map(game => renderCard(game))}</div>
+          <div key={cacheScope} className={`game-collection game-collection--${viewMode}`}>{modernGames.map(game => renderCard(game))}</div>
         </section>}
 
         </>}
-      </motion.div>
+      </div>
       {contextMenu && createPortal(<GameCoverMenu game={contextMenu.game} x={contextMenu.x} y={contextMenu.y}
         running={contextMenu.game.path === runningGamePath || Boolean(managedLibrary?.games.find(game => game.nexus_id && game.nexus_id === contextMenu.game.nexus_id)?.nexus_running)}
         preparing={contextMenu.game.path === startingGamePath || Boolean(managedLibrary?.games.find(game => game.nexus_id && game.nexus_id === contextMenu.game.nexus_id)?.nexus_starting)}

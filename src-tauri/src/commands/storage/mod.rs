@@ -2,3 +2,4 @@
 //! system they run against (`udisks`).
 pub(crate) mod automount;
 pub(crate) mod udisks;
+pub(crate) mod fstab;

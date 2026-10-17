@@ -11,8 +11,8 @@
 .modern-ui .settings-page :is(.preference-panel,.preference-section,.preference-glass-settings,.preference-connection,.menu-glass-panel)::after,
 .modern-ui .settings-page :is(.preference-panel,.preference-section,.menu-glass-panel)::before { content: none !important; }
 .modern-ui .settings-page .preferences-page :is(h2,h3,h4) { color: var(--modern-text); }
-.modern-ui .settings-page .preferences-page h3 { font-size: 16px; font-weight: 650; margin-bottom: 9px; }
-.modern-ui .settings-page .preferences-page p { font-size: 13px; line-height: 1.55; color: var(--modern-muted); }
+.modern-ui .settings-page .preferences-page h3 { font-size: 1rem; font-weight: 650; margin-bottom: 9px; }
+.modern-ui .settings-page .preferences-page p { font-size: 0.8125rem; line-height: 1.55; color: var(--modern-muted); }
 .modern-ui .settings-page :is(.preference-outline,.preference-tool-buttons button,.steamgrid-key-controls button,.btn) { border-radius: 11px !important; background: var(--modern-card-2) !important; border: 1px solid var(--modern-line) !important; color: var(--modern-text); box-shadow: none !important; }
 .modern-ui .settings-page :is(.preference-outline,.preference-tool-buttons button,.steamgrid-key-controls button,.btn)::before,
 .modern-ui .settings-page :is(.preference-outline,.preference-tool-buttons button,.steamgrid-key-controls button,.btn)::after { content: none !important; }
@@ -23,7 +23,7 @@
 .modern-ui .settings-page .settings-page-search { position: relative; display: flex; align-items: center; gap: 6px; flex: 0 0 132px; width: 132px; height: 36px; padding: 0 9px; box-sizing: border-box; border-radius: 12px; background: var(--modern-card); border: 1px solid var(--modern-line); }
 .settings-page-search > button { display: grid; place-items: center; width: 22px; height: 28px; flex-shrink: 0; padding: 0; background: transparent; border: 0; color: var(--modern-muted); cursor: pointer; }
 .settings-page-search > button:hover { background: transparent; color: var(--accent); }
-.modern-ui .settings-page-search input { width: 100%; min-width: 0; border: 0; border-radius: 0; padding: 0; background: transparent; font-size: 12px; outline: none; }
+.modern-ui .settings-page-search input { width: 100%; min-width: 0; border: 0; border-radius: 0; padding: 0; background: transparent; font-size: 0.75rem; outline: none; }
 .settings-page-search:focus-within { border-color: rgba(var(--accent-rgb),.6) !important; }
 @container settings-page (max-width: 1120px) {
   .modern-ui .settings-page .settings-page-search { width: 36px; flex-basis: 36px; padding: 0 6px; }

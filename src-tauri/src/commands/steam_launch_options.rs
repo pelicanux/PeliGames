@@ -204,7 +204,7 @@ fn indentation(text: &str, at: usize) -> String {
     text[line..at].chars().take_while(|c| *c == '\t' || *c == ' ').collect()
 }
 /// Reads the launch options of `app_id` from a localconfig.vdf text.
-fn read_launch_options(text: &str, app_id: &str) -> Result<String, String> {
+pub(crate) fn read_launch_options(text: &str, app_id: &str) -> Result<String, String> {
     let list = tokens(text)?;
     let apps = apps_block(&list)?;
     let Some(app) = child(&list, apps.first, apps.end, app_id) else { return Ok(String::new()) };
@@ -233,7 +233,7 @@ fn apps_block(list: &[Token]) -> Result<Block, String> {
     unreachable!()
 }
 /// `text` with the launch options of `app_id` set to `value`.
-fn write_launch_options(text: &str, app_id: &str, value: &str) -> Result<String, String> {
+pub(crate) fn write_launch_options(text: &str, app_id: &str, value: &str) -> Result<String, String> {
     let list = tokens(text)?;
     let apps = apps_block(&list)?;
     let quoted = format!("\"{}\"", escape(value));
@@ -277,7 +277,23 @@ fn local_configs() -> Vec<PathBuf> {
     }
     seen
 }
-fn write_file(path: &Path, text: &str) -> Result<(), String> {
+pub(crate) fn settings_files(flatpak: bool) -> Vec<PathBuf> {
+    let Some(home) = dirs::home_dir() else { return Vec::new() };
+    settings_files_in(&home, flatpak)
+}
+fn settings_files_in(home: &Path, flatpak: bool) -> Vec<PathBuf> {
+    let mut files = Vec::new();
+    for root in super::steam_installation::roots(home, flatpak) {
+        let Ok(users) = fs::read_dir(root.join("userdata")) else { continue };
+        for user in users.flatten() {
+            if let Ok(file) = fs::canonicalize(user.path().join("config/localconfig.vdf")) {
+                if !files.contains(&file) { files.push(file); }
+            }
+        }
+    }
+    files
+}
+pub(crate) fn write_file(path: &Path, text: &str) -> Result<(), String> {
     // One copy of the file as Steam left it, before PeliGames' first change.
     let backup = path.with_extension("vdf.peligames-backup");
     if !backup.exists() {
@@ -373,6 +389,25 @@ mod tests {
 
     const CONFIG: &str = "\"UserLocalConfigStore\"\n{\n\t\"Software\"\n\t{\n\t\t\"Valve\"\n\t\t{\n\t\t\t\"Steam\"\n\t\t\t{\n\t\t\t\t\"apps\"\n\t\t\t\t{\n\t\t\t\t\t\"203160\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"LastPlayed\"\t\t\"1760000000\"\n\t\t\t\t\t\t\"LaunchOptions\"\t\t\"PROTON_LOG=1 %command% -dx11\"\n\t\t\t\t\t}\n\t\t\t\t\t\"70\"\n\t\t\t\t\t{\n\t\t\t\t\t\t\"Playtime\"\t\t\"5\"\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n}\n";
 
+    #[test]
+    fn account_files_do_not_mix_native_and_flatpak_even_with_symlinks() {
+        let root = std::env::temp_dir().join(format!("peligames-steam-files-{}", uuid::Uuid::new_v4()));
+        let home = root.join("home");
+        let native = super::super::steam_installation::roots(&home, false).remove(0);
+        let flatpak = super::super::steam_installation::roots(&home, true).remove(0);
+        let outside = root.join("outside-config");
+        fs::create_dir_all(native.join("userdata/1/config")).unwrap();
+        fs::create_dir_all(flatpak.join("userdata/1")).unwrap();
+        fs::create_dir_all(&outside).unwrap();
+        fs::write(native.join("userdata/1/config/localconfig.vdf"), CONFIG).unwrap();
+        fs::write(outside.join("localconfig.vdf"), CONFIG).unwrap();
+        std::os::unix::fs::symlink(&outside, flatpak.join("userdata/1/config")).unwrap();
+        let a = settings_files_in(&home, false);
+        let b = settings_files_in(&home, true);
+        assert_eq!(a, [native.join("userdata/1/config/localconfig.vdf")]);
+        assert_eq!(b, [outside.join("localconfig.vdf")]);
+        fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn reads_and_replaces_launch_options_keeping_the_rest() {
         assert_eq!(read_launch_options(CONFIG, "203160").unwrap(), "PROTON_LOG=1 %command% -dx11");

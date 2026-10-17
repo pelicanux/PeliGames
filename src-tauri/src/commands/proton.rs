@@ -109,6 +109,7 @@ use tauri::Emitter;
 
 #[derive(Default)]
 pub struct ProtonDownloadState(Mutex<Option<Arc<AtomicBool>>>);
+pub(super) fn download_active(state: &ProtonDownloadState) -> bool { state.0.lock().map(|slot| slot.is_some()).unwrap_or(true) }
 struct DownloadGuard<'a>(&'a ProtonDownloadState);
 impl Drop for DownloadGuard<'_> {
     fn drop(&mut self) {

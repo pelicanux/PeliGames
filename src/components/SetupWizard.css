@@ -12,31 +12,86 @@
 :root[data-appearance] .setup-wizard-modern.modal-content.fixed-glass-frame::before,
 :root[data-appearance] .setup-wizard-modern.modal-content.fixed-glass-frame::after { content: none !important; }
 :root[data-appearance] .setup-wizard-modern .dialog-titlebar { border: 1px solid var(--wizard-line); background: rgba(14,15,24,.55); box-shadow: none; }
-:root .setup-wizard-modern .dialog-titlebar h2 { font-family: inherit; font-weight: 650; font-size: 17px; letter-spacing: -.02em; }
-:root .setup-wizard-modern .wizard-emergency-trigger { border-radius: 10px; border: 1px solid var(--wizard-line); background: var(--wizard-card); color: var(--wizard-muted); box-shadow: none; font: inherit; font-size: 12px; }
-.setup-wizard-modern .setup-wizard-subtitle { color: var(--wizard-muted); font-size: 14px; line-height: 1.5; }
+:root .setup-wizard-modern .dialog-titlebar h2 { font-family: inherit; font-weight: 650; font-size: 1.0625rem; letter-spacing: -.02em; }
+.setup-wizard-modern .setup-wizard-subtitle { color: var(--wizard-muted); font-size: 0.875rem; line-height: 1.5; }
 :root .setup-wizard-modern .backend-option { border: 1px solid var(--wizard-line) !important; border-radius: 14px !important; padding: 18px !important; background: var(--wizard-card) !important; box-shadow: none !important; }
 :root .setup-wizard-modern .backend-option.active { background: rgba(var(--accent-rgb),.09) !important; border-color: rgba(var(--accent-rgb),.55) !important; }
-:root .setup-wizard-modern .backend-option :is(h3,h4) { font-family: inherit !important; font-size: 15px !important; font-weight: 650; }
-.setup-wizard-modern .backend-option p { font-size: 12px !important; color: var(--wizard-muted) !important; }
+:root .setup-wizard-modern .backend-option :is(h3,h4) { font-family: inherit !important; font-size: 0.9375rem !important; font-weight: 650; }
+.setup-wizard-modern .backend-option p { font-size: 0.75rem !important; color: var(--wizard-muted) !important; }
 :root .setup-wizard-modern .backend-option.active h3 { color: var(--accent) !important; }
-:root .setup-wizard-modern .btn { border-radius: 11px !important; font-family: inherit !important; font-size: 13px !important; border-color: var(--wizard-line) !important; background: rgba(255,255,255,.07) !important; box-shadow: none !important; }
+:root .setup-wizard-modern .btn { border-radius: 11px !important; font-family: inherit !important; font-size: 0.8125rem !important; border-color: var(--wizard-line) !important; background: rgba(255,255,255,.07) !important; box-shadow: none !important; }
 :root .setup-wizard-modern .btn:hover:not(:disabled) { background: rgba(var(--accent-rgb),.12) !important; border-color: rgba(var(--accent-rgb),.45) !important; }
 :root .setup-wizard-modern .wizard-continue { background: var(--accent) !important; color: var(--accent-foreground) !important; }
 :root .setup-wizard-modern .wizard-continue:hover:not(:disabled) { background: var(--accent-deep) !important; }
 :root .setup-wizard-modern .model-source-panel { border: 1px solid var(--wizard-line); border-radius: 14px; background: var(--wizard-card); box-shadow: none; }
 .setup-wizard-modern .model-source-heading :is(h3,p) { font-family: inherit; }
-.setup-wizard-modern .model-source-heading h3 { font-size: 14px; }
-.setup-wizard-modern .model-source-heading p { color: var(--wizard-muted); font-size: 12px; }
+.setup-wizard-modern .model-source-heading h3 { font-size: 0.875rem; }
+.setup-wizard-modern .model-source-heading p { color: var(--wizard-muted); font-size: 0.75rem; }
 :root .setup-wizard-modern .model-source-option { border: 1px solid var(--wizard-line); border-radius: 12px; background: var(--wizard-card); box-shadow: none; }
 :root .setup-wizard-modern .model-source-option[aria-pressed="true"] { border-color: rgba(var(--accent-rgb),.5); background: rgba(var(--accent-rgb),.08); }
 :root .setup-wizard-modern .model-source-option:is(:hover,:focus-visible):not(:disabled) { border-color: rgba(var(--accent-rgb),.5); background: rgba(var(--accent-rgb),.1); }
-.setup-wizard-modern .model-source-option-text strong { font-size: 12px; }
-.setup-wizard-modern .model-source-option-text :is(span,small) { font-size: 11px; }
+.setup-wizard-modern .model-source-option-text strong { font-size: 0.75rem; }
+.setup-wizard-modern .model-source-option-text :is(span,small) { font-size: 0.75rem; }
 :root .setup-wizard-modern .model-source-symbol { color: var(--wizard-muted); background: transparent; border: 0; box-shadow: none; }
 :root .setup-wizard-modern .model-source-option:is([aria-pressed="true"],:hover,:focus-visible) .model-source-symbol { color: var(--accent); }
 :root .setup-wizard-modern .setup-wizard-footer { border-color: var(--wizard-line); }
 :root[data-appearance="light"] .setup-wizard-modern.modal-content { --wizard-line: rgba(20,24,40,.12); --wizard-card: rgba(20,24,40,.04); --wizard-muted: #62677b; color: #171924; }
 :root[data-appearance="light"] .setup-wizard-modern > .modal-glass-backdrop { background: radial-gradient(ellipse at top left,rgba(var(--accent-rgb),.08),transparent 60%), #f6f7fb; }
 :root[data-appearance="light"] .setup-wizard-modern .dialog-titlebar { background: rgba(246,247,252,.8); }
-.setup-wizard-modern .model-source-notice { margin: 0 0 12px; padding: 8px 10px; border-left: 2px solid var(--accent); border-radius: 0 8px 8px 0; background: rgba(var(--accent-rgb), .07); color: var(--accent-soft); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.setup-wizard-modern .model-source-notice { margin: 0 0 12px; padding: 8px 10px; border-left: 2px solid var(--accent); border-radius: 0 8px 8px 0; background: rgba(var(--accent-rgb), .07); color: var(--accent-soft); font-size: 0.75rem; line-height: 1.5; overflow-wrap: anywhere; }
+
+:root .setup-wizard-modern .wizard-backend-path { display:block; box-sizing:border-box; width:100%; padding:0 0 0 10px; margin:0 0 14px; border:0; border-radius:0; background:transparent; color:var(--accent-soft); text-align:left; text-decoration:underline; text-underline-offset:3px; font:inherit; font-size:.78rem; line-height:1.5; overflow-wrap:anywhere; cursor:pointer; }
+:root .setup-wizard-modern .wizard-continue.wizard-continue--busy:disabled { opacity:1 !important; filter:none !important; background:var(--accent-button,var(--accent)) !important; color:var(--accent-foreground) !important; box-shadow:0 0 18px rgba(var(--accent-rgb),.25) !important; cursor:progress !important; }
+.setup-wizard-modern .wizard-continue--busy .spin { width:22px; height:22px; opacity:1; }
+@keyframes wizardModelProgress { 0% { width:0%; } 25% { width:30%; } 65% { width:65%; } 100% { width:94%; } }
+
+/* Compact setup header: integrated with the surface, using modern dialog controls. */
+:root .setup-wizard-modern.modal-content > .dialog-titlebar { inset:0 0 auto; height:54px; padding:12px 62px 12px 22px; border:0; border-bottom:1px solid var(--wizard-line); border-radius:21px 21px 0 0; background:transparent; box-shadow:none; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
+:root .setup-wizard-modern.modal-content > .dialog-titlebar h2 { font-size:1rem !important; }
+:root .setup-wizard-modern.modal-content > .dialog-titlebar > .surface-close-button { top:12px; right:16px; width:30px; height:30px; min-width:30px; aspect-ratio:1; flex-shrink:0; border:1px solid var(--wizard-line); background:var(--wizard-card); color:inherit; }
+:root .setup-wizard-modern.has-dialog-titlebar > .modal-scroll-body { padding:68px 22px 16px; }
+.setup-wizard-modern .setup-wizard-subtitle { margin:0 0 12px; font-size:.8rem; }
+.setup-wizard-modern .wizard-gpu-status { display:flex; align-items:center; gap:9px; padding:9px 11px; margin-bottom:12px; border:1px solid var(--wizard-line); border-radius:10px; background:var(--wizard-card); color:var(--wizard-muted); font-size:.76rem; line-height:1.45; }
+.setup-wizard-modern .wizard-gpu-status.compatible { color:var(--accent-soft); border-color:rgba(var(--accent-rgb),.24); }
+.wizard-gpu-status > .menu-icon { width:17px; height:17px; flex-shrink:0; }
+.wizard-gpu-status > div { min-width:0; overflow-wrap:anywhere; }
+.wizard-gpu-status span { display:block; }
+.setup-wizard-modern .wizard-backend-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-bottom:12px; }
+:root .setup-wizard-modern .wizard-backend-card.backend-option { padding:12px !important; min-width:0; }
+:root .setup-wizard-modern .wizard-backend-select { width:100%; padding:0; border:0; background:none; box-shadow:none; color:inherit; text-align:left; font:inherit; cursor:pointer; }
+.wizard-backend-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+:root .setup-wizard-modern .wizard-backend-heading h3 { margin:2px 0 0; font-size:.875rem !important; }
+.wizard-backend-hardware { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+.wizard-backend-hardware > span { padding:3px 6px; border:1px solid rgba(var(--accent-rgb),.24); border-radius:6px; font-size:.72rem; color:var(--accent-soft); background:rgba(var(--accent-rgb),.07); }
+.wizard-backend-hardware small { font-size:.72rem; color:var(--accent-soft); }
+:root .setup-wizard-modern .wizard-backend-select p { margin:8px 0 10px; font-size:.78rem !important; line-height:1.4; }
+:root .setup-wizard-modern .wizard-maintainer-link { display:inline-flex; align-items:center; gap:6px; padding:5px 8px; border:1px solid var(--wizard-line); border-radius:7px; background:var(--wizard-card); box-shadow:none; color:var(--accent-soft); font:inherit; font-size:.76rem; cursor:pointer; }
+.wizard-maintainer-link .menu-icon { width:13px; height:13px; }
+:root .setup-wizard-modern .wizard-maintainer-link:is(:hover,:focus-visible) { border-color:var(--accent); background:rgba(var(--accent-rgb),.12); }
+.setup-wizard-modern .wizard-backend-explanation { margin:0 0 12px; padding:8px 10px; border-left:2px solid var(--accent); background:rgba(var(--accent-rgb),.06); border-radius:0 8px 8px 0; color:var(--accent-soft); font-size:.75rem; line-height:1.5; }
+.setup-wizard-modern .wizard-backend-download-actions { display:flex; gap:12px; margin-bottom:22px; }
+:root .setup-wizard-modern .model-source-panel { padding:12px 14px; }
+:root .setup-wizard-modern .setup-wizard-footer { padding:12px 22px; }
+@media (max-width:600px) {
+  .setup-wizard-modern .wizard-backend-options { grid-template-columns:1fr; }
+  .setup-wizard-modern .wizard-backend-download-actions { flex-wrap:wrap; }
+}
+:root .setup-wizard-modern .wizard-backend-heading { min-height:36px; }
+:root .setup-wizard-modern .wizard-backend-select p { margin:5px 0 7px; }
+:root .setup-wizard-modern .wizard-backend-card.backend-option { padding:10px 12px !important; }
+:root .setup-wizard-modern .model-source-panel { gap:8px; }
+:root .setup-wizard-modern .model-source-heading > .menu-icon { width:20px; height:20px; margin-top:0; }
+:root .setup-wizard-modern .model-source-notice { margin:0; padding:6px 8px; font-size:.76rem; }
+:root .setup-wizard-modern .model-source-option { padding:10px; gap:9px; }
+:root .setup-wizard-modern .model-source-symbol { padding:0; width:26px; height:30px; min-width:26px; }
+:root .setup-wizard-modern .wizard-backend-download-actions { margin-bottom:14px; }
+:root .setup-wizard-modern .wizard-backend-explanation { font-size:.78rem; padding:7px 9px; }
+
+/* Anchor both maintainer links to the same card baseline, independent of badges. */
+:root .setup-wizard-modern .wizard-backend-card { display:flex; flex-direction:column; }
+:root .setup-wizard-modern .wizard-backend-select { flex:1; }
+:root .setup-wizard-modern .wizard-maintainer-link { align-self:flex-start; margin-top:7px; }
+/* Keep descriptions aligned even when only one card has a recommendation. */
+:root .setup-wizard-modern .wizard-backend-select { display:flex; flex-direction:column; justify-content:flex-start; }
+:root .setup-wizard-modern .wizard-backend-heading { width:100%; min-height:44px; box-sizing:border-box; }
+:root .setup-wizard-modern .wizard-backend-heading { flex:0 0 auto; min-height:3.25rem; }

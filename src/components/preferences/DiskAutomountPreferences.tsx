@@ -6,11 +6,13 @@ import { useI18n } from "../../i18n/I18nContext";
 import { MenuIcon } from "../MenuIcon";
 import { ConfirmModal } from "../ConfirmModal";
 import { ResultModal } from "../ResultModal";
+import { notifyError, notifyInfo } from "../../services/notifications";
 
 import { storageNameInput } from "./storageName";
 import { NtfsMigrationWizard } from "./NtfsMigrationWizard";
 
 type StorageOperation = "mount" | "unmount" | "remount";
+type FstabEntry = { key: string; source: string; mount_path: string; line: string; managed: boolean; automatic: boolean };
 export type Volume = { id: string; uuid: string; device: string; label: string; partition_name: string; filesystem: string; size: number; mounts: string[]; mount_at_startup: boolean; configured_path: string; blocked_reason: string; format_blocked_reason?: string; operations_blocked_reason?: string; preparation_kind?: "disk" | "partition" | "free_space"; preparation_identity?: Record<string, unknown>; parent_id?: string; offset?: number; extent_size?: number; shared_between_systems?: boolean };
 export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (busy: boolean) => void; onDialogChange: (open: boolean) => void }) {
   const { language } = useI18n(); const pt = language === "pt";
@@ -19,8 +21,10 @@ export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (
   const [loading, setLoading] = useState(true), [saving, setSaving] = useState(false);
   const [error, setError] = useState(""), [success, setSuccess] = useState("");
   const [confirm, setConfirm] = useState<"save" | null>(null);
+  const [fstabEntries, setFstabEntries] = useState<FstabEntry[]>([]);
+  const [removeEntry, setRemoveEntry] = useState<FstabEntry | null>(null);
   const [operationFailure, setOperationFailure] = useState<{ title: string; message: string } | null>(null);
-  const confirmationOpen = confirm !== null || operationFailure !== null;
+  const confirmationOpen = confirm !== null || operationFailure !== null || removeEntry !== null;
   const operationLock = useRef(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -41,20 +45,24 @@ export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (
         if (event.shiftKey && (document.activeElement === first || document.activeElement === editorRef.current)) { event.preventDefault(); last.focus(); }
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
       }
-      if (event.key === "Escape") { event.stopImmediatePropagation(); if (!saving) { if (operationFailure) setOperationFailure(null); else if (confirm) setConfirm(null); else closeEditor(); } }
+      if (event.key === "Escape") { event.stopImmediatePropagation(); if (!saving) { if (removeEntry) setRemoveEntry(null); else if (operationFailure) setOperationFailure(null); else if (confirm) setConfirm(null); else closeEditor(); } }
     };
     window.addEventListener("keydown", escape, true);
     return () => window.removeEventListener("keydown", escape, true);
-  }, [volume, saving, confirm, operationFailure]);
+  }, [volume, saving, confirm, operationFailure, removeEntry]);
   const refresh = async () => {
     setLoading(true); setError("");
-    try { const next = await invoke<Volume[]>("list_storage_volumes"); setVolumes(next); setSelected(""); setName(""); }
-    catch (e) { setError(String(e)); } finally { setLoading(false); }
+    const [disks, entries] = await Promise.allSettled([invoke<Volume[]>("list_storage_volumes"), invoke<FstabEntry[]>("list_storage_fstab_entries")]);
+    if (disks.status === "fulfilled") { setVolumes(disks.value); setSelected(""); setName(""); }
+    else setError(String(disks.reason));
+    if (entries.status === "fulfilled") setFstabEntries(entries.value);
+    else { setFstabEntries([]); notifyError("fstab", entries.reason); }
+    setLoading(false);
   };
   useEffect(() => { void refresh(); }, []);
   const choose = (item: Volume) => {
     setSelected(item.id); setName(storageNameInput(item.label || item.partition_name || ""));
-    setStartup(item.configured_path ? item.mount_at_startup : true); setShared(Boolean(item.shared_between_systems)); setSuccess(""); setError("");
+    setStartup(item.mount_at_startup); setShared(Boolean(item.shared_between_systems)); setSuccess(""); setError("");
 
   };
   const save = async () => {
@@ -67,6 +75,19 @@ export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (
     } catch (e) { setError(String(e)); } finally { setSaving(false); setConfirm(null); }
   };
   const operationNames = { mount: pt ? "Montar" : "Mount", unmount: pt ? "Ejetar" : "Eject", remount: pt ? "Remontar" : "Remount" };
+  const entryName = (entry: FstabEntry) => {
+    const disk = volumes.find(item => entry.source === `UUID=${item.uuid}` || entry.source === `/dev/disk/by-uuid/${item.uuid}` || entry.source === `LABEL=${item.label}` || entry.source === item.device);
+    return { name: disk?.label || disk?.partition_name || entry.mount_path.split("/").filter(Boolean).pop() || entry.mount_path, connected: Boolean(disk) };
+  };
+  const removeFstab = async () => {
+    if (!removeEntry || operationLock.current || saving) return;
+    operationLock.current = true; setSaving(true);
+    try {
+      await invoke("remove_storage_fstab_entry", { key: removeEntry.key });
+      notifyInfo(pt ? "Montagem automática" : "Automatic mounting", pt ? "Entrada removida do fstab. O disco não será montado por essa configuração na próxima inicialização. A montagem atual e os arquivos foram preservados." : "Entry removed from fstab. This configuration will no longer mount the drive on startup. Its current mount and files were preserved.");
+    } catch (error) { notifyError(pt ? "Remover montagem automática" : "Remove automatic mounting", error); }
+    finally { await refresh(); setSaving(false); operationLock.current = false; setRemoveEntry(null); triggerRef.current?.focus(); }
+  };
   const requestOperation = async (item: Volume, operation: StorageOperation) => {
     if (operationLock.current || saving || confirmationOpen) return;
     operationLock.current = true;
@@ -101,6 +122,18 @@ export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (
       </div>
       {!loading && !error && !volumes.length && <p>{pt ? "Nenhuma partição de armazenamento encontrada." : "No storage partitions found."}</p>}
     </section>
+    <div className="storage-fstab" aria-label={pt ? "Entradas de montagem no fstab" : "fstab mount entries"}>
+      <h3>{pt ? "Entradas em /etc/fstab" : "Entries in /etc/fstab"}</h3>
+      <p>{pt ? "Montagens de dados em /mnt. O X remove somente a configuração dessa linha; não ejeta o disco nem apaga seus arquivos." : "Data mounts under /mnt. The X removes only that line's configuration; it does not eject the drive or delete its files."}</p>
+      {fstabEntries.map(entry => {
+        const disk = entryName(entry);
+        return <div className="storage-fstab-entry" key={entry.key}>
+          <div><div className="storage-fstab-entry-heading"><strong>{disk.name}</strong><small>{entry.managed ? (pt ? "Gerenciado pelo PeliGames" : "Managed by PeliGames") : (pt ? "Entrada existente" : "Existing entry")} · {entry.automatic ? (pt ? "Montagem na inicialização" : "Mount at startup") : (pt ? "Inicialização desativada (noauto)" : "Startup disabled (noauto)")}{!disk.connected && (pt ? " · Disco não detectado" : " · Drive not detected")}</small></div><code>{entry.line}</code></div>
+          <button type="button" className="storage-fstab-remove" disabled={saving || loading || confirmationOpen || Boolean(volume)} title={pt ? `Remover entrada de ${disk.name}` : `Remove ${disk.name} entry`} aria-label={pt ? `Remover entrada de ${disk.name}` : `Remove ${disk.name} entry`} onClick={event => { triggerRef.current = event.currentTarget; setRemoveEntry(entry); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+        </div>;
+      })}
+      {!loading && !fstabEntries.length && <p>{pt ? "Nenhuma entrada de dados compatível em /mnt." : "No supported data entries under /mnt."}</p>}
+    </div>
     {volume && createPortal(<div className="modal-overlay storage-editor-overlay">
       <ModalSurface ref={editorRef} tabIndex={-1} className="modal-content dialog-glass storage-editor-modal" role="dialog" aria-modal="true" aria-label={pt ? "Editar armazenamento" : "Edit storage"} onDismiss={closeEditor} closeDisabled={saving || confirmationOpen} header={<h2><MenuIcon name="eject"/>{pt ? "Editar armazenamento" : "Edit storage"}</h2>}>
       <div className="storage-editor-content"><p className="storage-editor-device"><strong>{volume.label || volume.partition_name || volume.device}</strong> · {volume.device} · {volume.filesystem || (pt ? "Sem sistema de arquivos" : "No filesystem")}</p>
@@ -124,5 +157,8 @@ export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (
     {error && !volume && <div className="preferences-error" role="alert">{error}</div>}
     {success && <p role="status">{success}</p>}
     {confirm === "save" && volume && <ConfirmModal title={pt ? "Aplicar automontagem?" : "Apply automatic mounting?"} message={pt ? `Dispositivo: ${volume.device}. O volume será desmontado sem forçar, receberá o nome e label “${name}”, e sua configuração em /etc/fstab será atualizada para /mnt/${name}. Montagem na inicialização: ${startup ? "ativada" : "desativada"}.${shared && !volume.shared_between_systems ? " Todos os arquivos e pastas do volume passarão a poder ser alterados por qualquer conta de qualquer sistema Linux." : ""} A configuração do systemd será recarregada e o volume será montado nesse caminho, sem reiniciar o computador. Feche jogos e arquivos abertos nesse disco. O sistema pedirá a senha de administrador. Não haverá formatação nem exclusão de arquivos. Se uma etapa falhar, a mensagem informará o que já foi concluído.` : `Device: ${volume.device}. The volume will be unmounted without force, renamed to “${name}” (partition and label), configured in /etc/fstab at /mnt/${name}, then systemd will reload its configuration and the volume will be mounted there, without rebooting. Startup mounting: ${startup ? "enabled" : "disabled"}.${shared && !volume.shared_between_systems ? " Every file and folder on the volume becomes changeable by any account on any Linux system." : ""} Close games and files on this drive. The system will ask for the administrator password. No formatting or file deletion. Any failure will report completed steps.`} confirmText={pt ? "Autorizar e salvar" : "Authorize and save"} cancelText={pt ? "Cancelar" : "Cancel"} busy={saving} onConfirm={() => void save()} onCancel={() => { if (!saving) setConfirm(null); }}/>}
+    {removeEntry && <ConfirmModal title={pt ? "Remover entrada do fstab?" : "Remove fstab entry?"}
+      message={pt ? `${entryName(removeEntry).name} — ${removeEntry.mount_path}\n\n${removeEntry.line}\n\n${removeEntry.automatic ? "Essa linha deixará de montar o disco automaticamente ao iniciar o sistema." : "Essa linha já usa noauto. Sua configuração de montagem manual será removida."} O disco continuará montado agora, caso já esteja em uso. Nenhum arquivo, partição ou pasta será apagado. A alteração remove somente essa linha de /etc/fstab, mantém as outras entradas e recarrega o systemd. O comentário do PeliGames será removido se não restar nenhuma entrada gerenciada. ${!removeEntry.managed ? "Esta entrada não está identificada como gerenciada pelo PeliGames. " : ""}O sistema pedirá autorização de administrador.` : `${entryName(removeEntry).name} — ${removeEntry.mount_path}\n\n${removeEntry.line}\n\n${removeEntry.automatic ? "This line will no longer mount the drive automatically at startup." : "This line already uses noauto. Its manual mount configuration will be removed."} The current mount stays active. No files, partitions or folders are deleted. Only this line is removed from /etc/fstab; other entries are preserved and systemd is reloaded. The PeliGames comment is removed after its last managed entry. ${!removeEntry.managed ? "This entry is not marked as managed by PeliGames. " : ""}Administrator authorization is required.`}
+      confirmText={pt ? "Autorizar e remover" : "Authorize and remove"} cancelText={pt ? "Cancelar" : "Cancel"} busy={saving} onConfirm={() => void removeFstab()} onCancel={() => { if (!saving) { setRemoveEntry(null); triggerRef.current?.focus(); } }}/>}
     {operationFailure && <ResultModal title={operationFailure.title} message={operationFailure.message} type="error" logs="" showLogButton={false} onClose={() => setOperationFailure(null)}/>}</>;
 }

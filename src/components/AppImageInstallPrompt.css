@@ -9,12 +9,12 @@
 .appimage-prompt-remember { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: .85rem; cursor: pointer; }
 .appimage-prompt-remember input { width: 16px; height: 16px; accent-color: var(--accent); }
 @media (max-width: 640px) { .appimage-prompt-columns { grid-template-columns: 1fr; } }
-.appimage-prompt.welcome-tour-modern .modal-body { padding:20px 24px; font-size:13px; color:var(--welcome-text); }
-.appimage-prompt.welcome-tour-modern .appimage-prompt-intro { color:var(--welcome-muted); font-size:13px; line-height:1.6; }
+.appimage-prompt.welcome-tour-modern .modal-body { padding:20px 24px; font-size:0.8125rem; color:var(--welcome-text); }
+.appimage-prompt.welcome-tour-modern .appimage-prompt-intro { color:var(--welcome-muted); font-size:0.8125rem; line-height:1.6; }
 .appimage-prompt.welcome-tour-modern .appimage-prompt-columns section { border-color:var(--welcome-line); border-radius:14px; background:var(--welcome-card); }
 .appimage-prompt.welcome-tour-modern .appimage-prompt-columns .appimage-prompt-limits { border-color:rgba(239,68,68,.18); }
-.appimage-prompt.welcome-tour-modern .appimage-prompt-columns h3 { font-size:14px; }
-.appimage-prompt.welcome-tour-modern .appimage-prompt-columns ul { font-size:12px; line-height:1.5; }
-.appimage-prompt.welcome-tour-modern .appimage-prompt-remember { color:var(--welcome-muted); font-size:12px; line-height:1.5; }
+.appimage-prompt.welcome-tour-modern .appimage-prompt-columns h3 { font-size:0.875rem; }
+.appimage-prompt.welcome-tour-modern .appimage-prompt-columns ul { font-size:0.75rem; line-height:1.5; }
+.appimage-prompt.welcome-tour-modern .appimage-prompt-remember { color:var(--welcome-muted); font-size:0.75rem; line-height:1.5; }
 .appimage-prompt.welcome-tour-modern .modal-actions { padding:14px 24px; margin:0; border-top:1px solid var(--welcome-line); }
 .appimage-prompt.welcome-tour-modern .dialog-titlebar h2 { display:flex; align-items:center; gap:8px; padding-right:32px; }

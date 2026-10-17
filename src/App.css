@@ -728,12 +728,15 @@ select option {
 
 /* Keep the travelling portrait above both library and details panels. */
 .cover-flight-layer { position: fixed; top: 0; left: 0; z-index: 900; pointer-events: none; overflow: hidden; box-sizing: border-box; border: 2px solid rgba(var(--accent-rgb), .8); border-radius: 12px; box-shadow: 0 0 20px rgba(var(--accent-rgb), .6); }
-.cover-flight-layer--modern { border: 0; border-radius: 14px; box-shadow: 0 24px 50px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.12); will-change: transform; }
+.cover-flight-layer--modern { border: 0; border-radius: 14px; overflow: visible; box-shadow: none; transform-origin: 0 0; will-change: transform, opacity; }
+.cover-flight-portrait { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
+.cover-flight-shadow { position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 24px 50px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.12); will-change: opacity; }
+.cover-flight-portrait > * { border-radius: inherit; }
 .cover-flight-layer--modern > * { border-radius: inherit; }
-.cover-flight-layer > .library-cover-thumbnail { width: 100%; height: 100%; border-radius: inherit; }
+.cover-flight-portrait > .library-cover-thumbnail { width: 100%; height: 100%; border-radius: inherit; }
 .cover-flight-layer .library-cover-thumbnail > img, .cover-flight-layer .fallback-cover { width: 100% !important; height: 100% !important; object-fit: cover; }
 .cover-flight-active .selected-cover { visibility: hidden; }
-.cover-flight-layer > .selected-cover > img, .cover-flight-layer > .selected-cover > div:not(.glare):not(.game-platform-badge) { width: 100% !important; height: 100% !important; aspect-ratio: auto !important; }
+.cover-flight-portrait > .selected-cover > img, .cover-flight-portrait > .selected-cover > div:not(.glare):not(.game-platform-badge) { width: 100% !important; height: 100% !important; aspect-ratio: auto !important; }
 
 .route-select-menu { box-sizing: border-box; background: rgba(var(--surface-15-18-32, 15, 18, 32), .97); border-color: rgba(var(--accent-rgb), .3); }
 
@@ -1041,7 +1044,7 @@ img[src="/peligames.svg"] { filter: hue-rotate(var(--brand-hue, 0deg)); }
 .download-progress-ring { display: block; }
 .download-progress-track { opacity: .18; }
 .download-progress-fill { transition: stroke-dashoffset .25s linear; }
-.launcher-download-speed { position: absolute; top: calc(100% - 1px); left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 8px; line-height: 10px; color: var(--tone-cbd5e1, #cbd5e1); font-variant-numeric: tabular-nums; pointer-events: none; }
+.launcher-download-speed { position: absolute; top: calc(100% - 1px); left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 0.5rem; line-height: 10px; color: var(--tone-cbd5e1, #cbd5e1); font-variant-numeric: tabular-nums; pointer-events: none; }
 .app-update-download-status { display: flex; align-items: center; gap: 16px; margin: 18px 0; color: var(--tone-f1f5f9, #f1f5f9); }
 .app-update-download-ring { position: relative; width: 56px; height: 56px; flex-shrink: 0; }
 .app-update-download-ring span { position: absolute; inset: 0; display: grid; place-items: center; font-size: .8rem; font-variant-numeric: tabular-nums; }
@@ -1068,31 +1071,7 @@ img[src="/peligames.svg"] { filter: hue-rotate(var(--brand-hue, 0deg)); }
 .app-update-package-format { padding: 6px 8px; border-radius: 6px; background: rgba(var(--accent-rgb), .12); border: 1px solid rgba(var(--accent-rgb), .25); color: var(--accent-soft); font-size: .7rem; font-weight: 700; }
 .app-update-package-check { color: #24deb0; }
 
-.wizard-emergency-trigger { display: flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px solid #c93445; border-radius: 6px; color: #ff8991; background: var(--tone-40131c, #40131c); cursor: pointer; font-weight: 600; }
-.wizard-emergency-trigger:hover:not(:disabled) { background: #751927; box-shadow: 0 0 16px #ef273433; }
-.wizard-emergency-trigger:disabled { opacity: .4; cursor: default; }
-.emergency-step-row { margin: 0 0 18px; text-align: right; }
-.emergency-step { width: 100%; min-height: 56px; border: 1px solid #f13d48; border-radius: 9px; font-size: 18px; font-weight: 700; color: var(--tone-ffffff, #fff); cursor: pointer; transition: background .35s, box-shadow .35s; }
-.emergency-step-1 { background: linear-gradient(110deg, #a91428, #ed2633); }
-.emergency-step-2 { background: linear-gradient(110deg, var(--tone-160b12, #160b12), #57120d, var(--tone-170a12, #170a12)); border-color: #fa632d; color: #ffbf99; box-shadow: inset 0 -3px 18px #ff450044, 0 0 18px #b8201622; text-shadow: 0 0 9px #e65030; }
-.emergency-cancel-link { border: 0; background: none; color: var(--tone-aab0c0, #aab0c0); padding: 7px 0; cursor: pointer; }
-.emergency-overlay { z-index: 9999; background: #070309c9; }
-.emergency-dialog.modal-content { max-width: 580px; padding: 32px; border: 1px solid #bd492b !important; background: linear-gradient(#100a1377, #100a13bb), url('/images/emergency-inferno.svg') center / cover !important; box-shadow: 0 0 65px #d3351b33, inset 0 0 50px #f44a1322 !important; }
-.emergency-eyebrow { color: #ff9c65; letter-spacing: 3px; font-size: 11px; }
-.emergency-dialog h2 { font-size: clamp(24px, 4vw, 34px); line-height: 1.2; margin: 18px 0 24px; color: var(--tone-ffe1cf, #ffe1cf); text-shadow: 0 2px 14px #d33818; }
-.emergency-dialog p { color: var(--tone-ded1ce, #ded1ce); line-height: 1.6; }
-.emergency-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 26px; }
-.emergency-confirm { border: 1px solid #ff8949; border-radius: 7px; padding: 11px 27px; color: var(--tone-ffe2c0, #ffe2c0); font-weight: 700; cursor: pointer; background: linear-gradient(#5f1711, var(--tone-250c10, #250c10)); box-shadow: inset 0 -3px 12px #e743194d, 0 0 17px #ef4b192b; text-shadow: 0 0 6px #ff742f; }
-.emergency-confirm:hover:not(:disabled) { background: linear-gradient(#a33219, var(--tone-451111, #451111)); box-shadow: 0 0 24px #ec4b1955; }
-.emergency-confirm:disabled { opacity: .6; cursor: default; }
-.emergency-error { color: #ff8e8e !important; }
-.emergency-fracture { position: fixed; inset: 0; z-index: 10001; background: radial-gradient(ellipse at 52% 47%, transparent, #160307aa); animation: emergency-cracks 1.5s ease-in forwards; }
-.emergency-fracture svg { width: 100%; height: 100%; fill: none; stroke: #ffbda4; stroke-width: 1.4; filter: drop-shadow(0 0 5px #ff3d16); }
-.emergency-melting #root, .emergency-melting .emergency-overlay { animation: emergency-melt 1.5s ease-in forwards; pointer-events: none; }
-@keyframes emergency-melt { 0% { filter: none; transform: none; opacity: 1; } 40% { filter: sepia(.5) saturate(2); transform: skewX(-1deg); opacity: 1; } 100% { filter: blur(7px) sepia(1); transform: translateY(85px) scaleY(.8) skewX(4deg); opacity: .08; } }
-@keyframes emergency-cracks { 0% { opacity: 0; } 25% { opacity: .7; } 65% { opacity: 1; } 100% { opacity: 1; background-color: var(--tone-0c0207, #0c0207); } }
-@media (prefers-reduced-motion: reduce) { .emergency-melting #root, .emergency-melting .emergency-overlay { animation: none; opacity: .3; } .emergency-fracture { animation: none; } }
-@media (max-width: 600px) { .setup-wizard { padding: 20px !important; } .emergency-dialog.modal-content { padding: 22px; } }
+@media (max-width: 600px) { .setup-wizard { padding: 20px !important; } }
 .neural-startup-switch { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 47px; width: 100%; padding: 8px; border: 1px solid #69708755; border-radius: 8px; background: #14121e88; color: var(--tone-a9aec0, #a9aec0); cursor: pointer; font-size: .75rem; }
 .neural-startup-switch.enabled { color: var(--tone-6ee7b7, #6ee7b7); border-color: #10b98166; background: #10b9810d; }
 .neural-startup-switch:disabled { opacity: .45; cursor: default; }
@@ -1342,6 +1321,63 @@ button.advanced-toggle.enabled { background: rgba(var(--accent-rgb), .4); border
 .advanced-search-empty { padding: 12px 8px; font-size: .8rem; color: var(--tone-94a3b8); }
 .advanced-search-gamescope { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px; text-align: left; font-size: .8rem; }
 .advanced-search-gamescope > span:nth-child(2) { flex: 1; }
+.steam-advanced-launch-banner {
+  margin: 4px 0 14px;
+  padding: 10px 12px;
+  background: rgba(var(--accent-rgb), .08);
+  border: 1px solid rgba(var(--accent-rgb), .25);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.steam-advanced-launch-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.steam-advanced-launch-input {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: 1px solid rgba(var(--accent-rgb), .3);
+  background: rgba(var(--surface-20-20-25, 20, 20, 25), .85);
+  color: var(--tone-e2e8f0, #e2e8f0);
+  font-family: monospace;
+  font-size: .8rem;
+}
+.steam-advanced-launch-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), .2);
+}
+.steam-advanced-copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: 1px solid rgba(var(--accent-rgb), .3);
+  background: rgba(var(--accent-rgb), .14);
+  color: var(--accent-light, #fff);
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.steam-advanced-copy-btn:hover {
+  background: rgba(var(--accent-rgb), .25);
+  border-color: var(--accent);
+}
+.steam-advanced-restart-btn {
+  white-space: nowrap;
+}
+.steam-advanced-launch-help {
+  margin: 0;
+  font-size: .73rem;
+  line-height: 1.45;
+  color: var(--tone-94a3b8, #94a3b8);
+}
 .launcher-programs { width: 100%; box-sizing: border-box; }
 .launcher-programs-hint { margin: 0; line-height: 1.45; }
 .launcher-programs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
@@ -1404,7 +1440,7 @@ button.advanced-toggle.enabled { background: rgba(var(--accent-rgb), .4); border
 
 .launcher-logs-overlay { z-index: 12000; }
 .launcher-log-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-.launcher-log-toolbar code { flex: 1; min-width: 0; overflow-wrap: anywhere; color: var(--text-secondary); font-size: 12px; }
+.launcher-log-toolbar code { flex: 1; min-width: 0; overflow-wrap: anywhere; color: var(--text-secondary); font-size: 0.75rem; }
 .launcher-log-toolbar button { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
 .launcher-build-label { position: fixed; bottom: .5rem; right: 1.5rem; z-index: 5; font: .75rem monospace; opacity: .6; pointer-events: none; }
@@ -1480,7 +1516,7 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
 .advanced-dll-pills { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
 .advanced-dll-tags-editor > .advanced-dll-pills { padding: 8px; border: 1px solid rgba(var(--accent-rgb), .35); border-radius: 8px; background: rgba(0,0,0,.18); }
 .advanced-dll-pill { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; overflow-wrap: anywhere; padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(var(--accent-rgb), .25); background: rgba(var(--accent-rgb), .1); color: var(--accent-soft); font-size: .75rem; }
-.advanced-dll-pill > button { padding: 0; width: 18px; height: 18px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; color: inherit; background: transparent; border: 0; font-size: 18px; }
+.advanced-dll-pill > button { padding: 0; width: 18px; height: 18px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; color: inherit; background: transparent; border: 0; font-size: 1.125rem; }
 .advanced-dll-pill > small { opacity: .65; font-size: .65rem; }
 .advanced-dll-pill.detected { border-style: dashed; }
 .advanced-dll-tags-editor input { flex: 1; width: 100%; min-width: 100px; padding: 5px 2px; color: var(--text-primary); background: transparent; border: 0; outline: 0; font: inherit; font-size: .8rem; }
@@ -1500,7 +1536,6 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
 /* Setup uses the shared fixed titlebar, glass frame and scrolling body. */
 .setup-wizard-overlay { z-index:1000; }
 .setup-wizard.modal-content { box-sizing:border-box; width:min(900px, calc(100vw - 32px)); max-width:900px !important; max-height:calc(100dvh - 82px); --modal-content-padding:24px; }
-.setup-wizard-header-actions { display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0; }
 .setup-wizard .dialog-titlebar h2 { display:flex; align-items:center; gap:8px; min-width:0; font-size:1.1rem; }
 .setup-wizard .dialog-titlebar h2 > svg { flex-shrink:0; color:var(--accent-light); }
 .setup-wizard .backend-options { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -1513,8 +1548,6 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
 @media(max-width:640px) {
   .setup-wizard .backend-options { grid-template-columns:minmax(0,1fr); }
   .setup-wizard .dialog-titlebar { flex-wrap:wrap; }
-  .setup-wizard-header-actions { gap:5px; }
-  .setup-wizard .wizard-emergency-trigger { font-size:.7rem; }
   .setup-wizard-footer { padding:12px 20px; }
 }
 
@@ -1917,3 +1950,111 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
 .mod-option-switches .mod-option-label > span { overflow-wrap: normal; }
 .mod-option-switches .mod-option-label > .menu-icon { display: none; }
 .mod-option-switches .installation-type-info { width: 18px; height: 18px; flex-basis: 18px; }
+
+/* Reserve Steam's action column before edits; pending content never resizes the header. */
+.steam-action-slot { position: relative; min-width: min(290px, 100%); height: 56px; flex: 1 0 auto; }
+.modern-ui .steam-action-slot > .modern-play { position: absolute; bottom: 0; right: 0; width: 210px; }
+.steam-pending-actions { position: absolute; inset: auto 0 0; display: flex; flex-direction: column; gap: 6px; animation: steam-pending-reveal 160ms ease-out; }
+.steam-pending-label { margin: 0; color: var(--text-secondary, #b6bdcf); font-size: 0.75rem; line-height: 1.4; }
+.steam-pending-label strong { display: block; color: var(--text-primary, #e8eaf2); font-size: 0.75rem; margin-bottom: 3px; }
+.steam-pending-primary { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.modern-ui .steam-pending-actions .modern-play { width: 100%; min-width: 0; height: 36px; min-height: 36px; padding: 0 8px !important; gap: 5px; font-size: 0.75rem !important; line-height: 1.2; border-radius: 11px !important; }
+.steam-pending-actions .modern-mini-btn { min-width: 0; min-height: 32px; padding: 6px 8px; justify-content: center; font-size: 0.75rem; line-height: 1.2; }
+.steam-pending-actions .menu-icon { width: 15px; height: 15px; flex-shrink: 0; }
+.steam-manual-open { width: 100%; gap: 7px; }
+@media (min-width: 981px) {
+  .modern-ui .modern-details-top:has(.steam-action-slot) { grid-template-columns: 150px minmax(0, 1fr) 290px; }
+}
+@media (max-width: 980px) {
+  .steam-action-slot { height: 142px; }
+}
+@keyframes steam-pending-reveal { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .steam-pending-actions { animation: none; } }
+:root .modal-content.nexus-popup.steam-manual-popup { width: min(760px, calc(100vw - 32px)) !important; }
+.steam-manual-intro, .steam-manual-help { color: var(--text-secondary, #b6bdcf); font-size: 0.8125rem; line-height: 1.6; }
+.steam-manual-field { display: flex; flex-direction: column; gap: 10px; margin: 20px 0 16px; font-size: 0.8125rem; }
+.steam-manual-field textarea { box-sizing: border-box; width: 100%; min-height: 110px; padding: 14px 16px; resize: vertical; border: 1px solid var(--border-color, #ffffff26); border-radius: 14px; background: #080b1280; color: var(--text-primary, #edf0f8); font: 0.75rem/1.7 ui-monospace, monospace; }
+.steam-manual-field textarea:focus { outline: 2px solid var(--accent-color, #159fff); outline-offset: 2px; }
+.steam-manual-proton { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 12px; background: color-mix(in srgb, var(--accent-color, #159fff) 12%, transparent); }
+.steam-manual-proton > svg { flex-shrink: 0; margin-top: 3px; color: var(--accent-color, #159fff); }
+.steam-manual-proton p { margin: 0; font-size: 0.8125rem; line-height: 1.6; color: var(--text-primary, #edf0f8); }
+
+/* Manual Steam setup follows the current rounded, restrained dialog design. */
+:root[data-appearance] .steam-manual-popup.fixed-glass-frame {
+  border-radius: 22px !important;
+  --glass-corner-fill: .035;
+  --glass-base-start: 12, 16, 24;
+  --glass-base-end: 9, 12, 19;
+  --glass-opacity-start: .96;
+  --glass-opacity-end: .94;
+}
+:root[data-appearance] .steam-manual-popup::after { content: none !important; }
+:root .steam-manual-popup > .dialog-titlebar {
+  position: relative; inset: auto; flex-shrink: 0; height: auto; min-height: 68px;
+  padding: 20px 68px 16px 24px; border: 0; border-radius: 0;
+  background: none; box-shadow: none; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+:root .steam-manual-popup .dialog-titlebar h2 { font-family: inherit !important; font-size: 1.125rem !important; font-weight: 650; letter-spacing: -.02em; }
+:root .steam-manual-popup .dialog-titlebar h2 > svg { color: var(--accent-color, var(--accent)); width: 21px; height: 21px; }
+:root .steam-manual-popup.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { padding: 0 24px 22px; }
+.steam-manual-popup .steam-manual-intro { margin: 0 0 18px; }
+.steam-manual-popup .steam-manual-field { gap: 8px; margin: 0 0 16px; font-weight: 600; }
+.steam-manual-popup .steam-manual-field textarea { border-radius: 12px; background: rgba(0, 0, 0, .24); border-color: rgba(160, 177, 204, .2); }
+.steam-manual-popup .steam-manual-proton { border: 1px solid rgba(var(--accent-rgb), .18); background: rgba(var(--accent-rgb), .07); }
+.steam-manual-popup .steam-manual-help { margin: 16px 0 0; font-size: 0.75rem; }
+:root .steam-manual-popup .nexus-popup-footer { padding: 14px 24px; border-color: rgba(160, 177, 204, .12); background: rgba(0, 0, 0, .12); gap: 8px; }
+:root .steam-manual-popup .nexus-popup-footer button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 38px; padding: 9px 14px; border-radius: 12px !important;
+  border: 1px solid rgba(160, 177, 204, .2); background: rgba(160, 177, 204, .08) !important;
+  color: var(--text-primary, #edf0f8); box-shadow: none !important; font-family: inherit; font-weight: 600; font-size: 0.8125rem; line-height: 1.3;
+}
+:root .steam-manual-popup .nexus-popup-footer .btn-primary { background: rgba(var(--accent-rgb), .18) !important; border-color: rgba(var(--accent-rgb), .4); }
+:root .steam-manual-popup .nexus-popup-footer button:hover:not(:disabled) { background: rgba(var(--accent-rgb), .25) !important; }
+:root[data-appearance="light"] .steam-manual-popup { --glass-base-start: 240, 244, 250; --glass-base-end: 225, 232, 243; }
+@media (max-width: 600px) {
+  :root .steam-manual-popup .nexus-popup-footer button { flex: 1 1 200px; }
+}
+
+/* Compact launcher controls use the same dark, rounded surfaces as the new UI. */
+:root[data-appearance] .launcher-settings-menu.dialog-popover {
+  position: absolute; top: 100%; right: 0; margin-top: 10px; z-index: 100;
+  width: min(280px, calc(100vw - 24px)); padding: 8px; box-sizing: border-box;
+  border-radius: 18px; text-align: left; color: var(--text-primary, #edf0f8);
+  --glass-base-start: 12, 16, 24; --glass-base-end: 9, 12, 19;
+  --glass-opacity-start: .97; --glass-opacity-end: .95; --glass-corner-fill: .025;
+}
+:root .launcher-settings-menu::after { content: none !important; }
+.launcher-settings-items { display: flex; flex-direction: column; gap: 4px; }
+.launcher-settings-menu .launcher-settings-preferences {
+  display: flex; align-items: center; width: 100%; min-height: 42px; padding: 10px 12px;
+  border: 0; border-radius: 11px; background: transparent; color: inherit;
+  font-family: inherit; font-size: 0.8125rem; font-weight: 600; text-align: left; cursor: pointer;
+}
+.launcher-settings-preferences svg { width: 18px; height: 18px; color: var(--accent); }
+.launcher-settings-menu .effects-preference { flex-direction: row; flex-wrap: nowrap; justify-content: space-between; align-items: center; padding: 8px 12px; gap: 10px; min-height: 42px; box-sizing: border-box; }
+.launcher-settings-menu .effects-preference-label { font-size: 0.8125rem; gap: 8px; }
+.launcher-settings-menu .effects-preference-label > svg { width: 18px; height: 18px; color: var(--accent); }
+.launcher-settings-menu .effects-menu-anchor { width: auto; min-width: 96px; }
+.launcher-settings-menu .effects-menu-trigger { min-height: 32px; padding: 6px 9px; border-radius: 9px; font-size: 0.75rem; }
+:root[data-appearance] .launcher-settings-menu .effects-menu { width: max-content; min-width: 100%; border-radius: 12px; padding: 4px; --glass-corner-fill: .025; --glass-opacity-start: .98; --glass-opacity-end: .98; }
+.launcher-settings-menu .effects-menu button { border-radius: 8px; padding: 8px 10px; font-family: inherit; }
+.launcher-settings-menu .launcher-settings-scale { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px 6px; margin-top: 4px; border-top: 1px solid rgba(160, 177, 204, .13); font-size: 0.8125rem; }
+.launcher-settings-scale svg { width: 18px; height: 18px; color: var(--accent); }
+.launcher-settings-scale-controls { display: flex; align-items: center; gap: 8px; }
+.launcher-settings-scale-controls > span { min-width: 36px; text-align: center; font-variant-numeric: tabular-nums; font-size: 0.75rem !important; }
+.launcher-settings-scale-button { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 1px solid rgba(160, 177, 204, .18); border-radius: 9px; background: rgba(160, 177, 204, .08); color: inherit; font-family: inherit; font-size: 1.125rem; cursor: pointer; }
+.launcher-settings-menu :is(.launcher-settings-preferences, .launcher-settings-scale-button):hover:not(:disabled) { background: rgba(var(--accent-rgb), .13); }
+.launcher-settings-menu button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.launcher-settings-scale-button:disabled { opacity: .4; cursor: default; }
+:root[data-appearance="light"] .launcher-settings-menu { --glass-base-start: 240, 244, 250; --glass-base-end: 225, 232, 243; }
+:root .launcher-settings-menu button::before,
+:root .launcher-settings-menu button::after { content: none !important; }
+:root .launcher-settings-menu :is(.launcher-settings-preferences, .launcher-settings-scale-button, .effects-menu-trigger, .effects-menu button) { background-image: none !important; box-shadow: none !important; }
+:root .launcher-settings-menu .launcher-settings-preferences { background: transparent !important; border: 0 !important; }
+:root .launcher-settings-menu .effects-menu-trigger,
+:root .launcher-settings-menu .launcher-settings-scale-button { background: rgba(160, 177, 204, .08) !important; border: 1px solid rgba(160, 177, 204, .18) !important; }
+:root .launcher-settings-menu :is(.launcher-settings-preferences, .launcher-settings-scale-button, .effects-menu-trigger):hover:not(:disabled) { background: rgba(var(--accent-rgb), .13) !important; }
+.launcher-settings-menu .effects-preference-label { min-width: 0; flex: 1; }
+.launcher-settings-menu .effects-preference-label > svg { flex-shrink: 0; }
+.launcher-settings-menu .launcher-settings-scale > div:first-child { min-width: 0; }

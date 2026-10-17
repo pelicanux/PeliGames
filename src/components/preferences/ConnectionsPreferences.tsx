@@ -2,11 +2,14 @@ import { useI18n } from "../../i18n/I18nContext";
 import { NexusAccountPanel } from "../../modules/nexus/NexusAccountPanel";
 import { usePreferencesText } from "./labels";
 import { DiscordConnection } from "./DiscordConnection";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { MenuIcon } from "../MenuIcon";
+import { notifyError, notifyInfo } from "../../services/notifications";
 import { MatrixChatPanel } from "../MatrixChatPanel";
 import { MatrixIcon } from "../MatrixIcon";
 import { MatrixNotificationSoundPreferences } from "./MatrixNotificationSoundPreferences";
-import { displayName, useMatrixChat } from "../../services/matrixChat";
+import { displayName, refreshMatrixStatus, useMatrixChat } from "../../services/matrixChat";
 import { setMatrixActivityPreferences, useMatrixActivityPreferences } from "../../services/matrixGameActivity";
 
 export function ConnectionsPreferences() {
@@ -16,10 +19,25 @@ export function ConnectionsPreferences() {
   const matrix = useMatrixChat();
   const activity = useMatrixActivityPreferences();
   const [matrixOpen, setMatrixOpen] = useState(false);
+  const [removingMatrix, setRemovingMatrix] = useState(false);
+  const removalLock = useRef(false);
+  const removeMatrix = async () => {
+    if (removalLock.current) return;
+    removalLock.current = true; setRemovingMatrix(true);
+    try {
+      const revoked = await invoke<boolean>("disconnect_matrix_chat");
+      await refreshMatrixStatus();
+      notifyInfo("Matrix", revoked
+        ? (pt ? "Conexão removida e credenciais apagadas deste dispositivo." : "Connection removed and credentials deleted from this device.")
+        : (pt ? "Credenciais removidas deste dispositivo. Sem confirmação do servidor; encerre esta sessão também no Element, em Configurações → Sessões." : "Credentials removed from this device. The server could not confirm sign-out; also end this session in Element under Settings → Sessions."));
+    } catch (error) { notifyError("Matrix", String(error)); }
+    finally { removalLock.current = false; setRemovingMatrix(false); }
+  };
   return <>
     {matrixOpen && <MatrixChatPanel onClose={() => setMatrixOpen(false)}/>}
     <h2>{text.connections}</h2>
     <p>{pt ? "Gerencie suas contas e integrações com a comunidade." : "Manage your accounts and community integrations."}</p>
+    <p>{pt ? "As credenciais ficam no chaveiro do sistema e permanecem ao apagar a pasta de configurações. Use os botões de desconexão para removê-las deste dispositivo. Isso preserva suas contas nos serviços." : "Credentials are kept in the system keyring and survive deleting the settings folder. Use the disconnect buttons to remove them from this device. Your service accounts are preserved."}</p>
     <div className="preference-connections">
       <section className="preference-connection" data-preference-id="connection-nexus">
         <header><img src="/nexus-mods.svg" alt=""/><h3>Nexus Mods</h3></header>
@@ -34,7 +52,10 @@ export function ConnectionsPreferences() {
         <label className="preference-switch"><input type="checkbox" checked={activity.covers} onChange={event => setMatrixActivityPreferences({ covers: event.target.checked })}/><span className="preference-switch-track"/><span>{pt ? "Mostrar capas nas atividades" : "Show covers in activities"}<small>{pt ? "Exibe uma capa pequena no chat do PeliGames. Desative para mostrar apenas o texto." : "Displays a small cover in PeliGames chat. Disable for text only."}</small></span></label>
         {activity.error && <p role="status">{activity.error}</p>}
         <MatrixNotificationSoundPreferences/>
-        <button type="button" className="btn btn-primary" onClick={() => setMatrixOpen(true)}><MatrixIcon/>{pt ? "Abrir chat Matrix" : "Open Matrix chat"}</button>
+        <div className="nexus-account-actions">
+          <button type="button" className="btn btn-primary" disabled={removingMatrix} onClick={() => setMatrixOpen(true)}><MatrixIcon/>{pt ? "Abrir chat Matrix" : "Open Matrix chat"}</button>
+          <button type="button" className="btn btn-secondary" disabled={removingMatrix || matrix.pending} aria-busy={removingMatrix} onClick={() => void removeMatrix()}><MenuIcon name="chainBroken"/>{removingMatrix ? (pt ? "Removendo…" : "Removing…") : (pt ? "Desconectar e remover credenciais" : "Disconnect and remove credentials")}</button>
+        </div>
       </section>
     </div>
   </>;

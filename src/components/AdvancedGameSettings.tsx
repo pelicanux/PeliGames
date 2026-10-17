@@ -21,6 +21,7 @@ export function AdvancedGameSettings({ value, disabled, reducedMotion, saved, on
   onResetDlls?: () => void; automaticDllOverrides?: string; dllOverridesError?: string;
   hideExecutionEditors?: boolean; embedded?: boolean; onBack?: () => void; launchOptions?: ReactNode;
   value?: AdvancedSettings; disabled?: boolean; reducedMotion: boolean; saved?: boolean; onChange: (settings: AdvancedSettings) => void;
+  isSteam?: boolean; appId?: string;
 }) {
   const { t } = useI18n();
   const settings = normalizeAdvanced(value);

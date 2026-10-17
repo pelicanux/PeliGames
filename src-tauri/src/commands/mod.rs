@@ -2,6 +2,7 @@ pub mod installer;
 pub mod updater;
 pub mod scanner;
 mod steam_readiness;
+mod steam_installation;
 pub mod analyzer;
 pub mod config;
 pub mod covers;
@@ -114,3 +115,5 @@ pub mod notification_sound;
 pub mod matrix_rtc;
 
 mod epic_library;
+
+pub mod maintenance;

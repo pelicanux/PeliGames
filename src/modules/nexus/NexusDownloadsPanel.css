@@ -25,14 +25,14 @@
 :root .nexus-downloads-modern::after { content: none !important; }
 :root .nexus-downloads-modern .modal-glass-backdrop { display: block; background: var(--downloads-surface); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
 :root .nexus-downloads-modern .dialog-titlebar { position: relative; inset: auto; flex-shrink: 0; height: auto; min-height: 64px; padding: 16px 20px; gap: 12px; border: 0; border-bottom: 1px solid var(--downloads-line); border-radius: 0; background: transparent !important; box-shadow: none; }
-:root .nexus-downloads-modern .dialog-titlebar > .surface-close-button { position: static; display: grid; place-items: center; flex: 0 0 30px; width: 30px; height: 30px; margin: 0; padding: 0; border: 1px solid var(--downloads-line); border-radius: 50%; background: var(--downloads-card); color: var(--downloads-muted); box-shadow: none; }
-.nexus-downloads-modern .dialog-titlebar h2 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 17px; font-weight: 650; color: var(--downloads-text); }
+:root .nexus-downloads-modern .dialog-titlebar > .surface-close-button { position: static; display: grid; place-items: center; flex: 0 0 30px; box-sizing: border-box; width: 30px !important; height: 30px !important; min-width: 30px; max-width: 30px; min-height: 30px; max-height: 30px; aspect-ratio: 1; margin: 0; padding: 0; border: 1px solid var(--downloads-line); border-radius: 50%; background: var(--downloads-card); color: var(--downloads-muted); box-shadow: none; }
+.nexus-downloads-modern .dialog-titlebar h2 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 1.0625rem; font-weight: 650; color: var(--downloads-text); }
 .nexus-downloads-modern .dialog-titlebar h2 > .menu-icon { width: 21px; height: 21px; color: var(--accent); }
 :root .modal-content.nexus-downloads-modern.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { padding: 18px 20px 20px; scroll-padding-top: 18px; }
 :root .nexus-downloads-modern .btn {
   min-height: 34px; padding: 7px 11px; border: 1px solid var(--downloads-line) !important;
   border-radius: 10px; background: var(--downloads-card) !important; box-shadow: none !important;
-  color: var(--downloads-text) !important; font: inherit; font-size: 12px; font-weight: 550; text-shadow: none !important;
+  color: var(--downloads-text) !important; font: inherit; font-size: 0.75rem; font-weight: 550; text-shadow: none !important;
 }
 :root .nexus-downloads-modern .btn::before,
 :root .nexus-downloads-modern .btn::after { content: none !important; }
@@ -40,8 +40,8 @@
 :root .nexus-downloads-modern .btn.btn-primary { background: rgba(var(--accent-rgb), .15) !important; border-color: rgba(var(--accent-rgb), .3) !important; }
 :root .nexus-downloads-modern .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .nexus-downloads-modern .btn .menu-icon { width: 16px; height: 16px; filter: none !important; }
-.nexus-downloads-modern .nexus-hint { color: var(--downloads-muted); font-size: 12px; line-height: 1.5; }
-.nexus-downloads-modern .nexus-error { margin: 9px 0; color: #f18a8a; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.nexus-downloads-modern .nexus-hint { color: var(--downloads-muted); font-size: 0.75rem; line-height: 1.5; }
+.nexus-downloads-modern .nexus-error { margin: 9px 0; color: #f18a8a; font-size: 0.75rem; line-height: 1.5; overflow-wrap: anywhere; }
 .nexus-downloads-modern .nexus-browser-login { display: flex; align-items: center; gap: 14px; padding: 14px; margin: 0 0 16px; border: 1px solid var(--downloads-line); border-radius: 15px; background: var(--downloads-card); }
 .nexus-downloads-modern .nexus-download-browser-emblem { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; border-radius: 13px; background: rgba(var(--accent-rgb), .12); color: var(--accent); }
 .nexus-download-browser-emblem svg { width: 30px; height: 30px; }
@@ -50,8 +50,8 @@
 .nexus-downloads-modern .nexus-mod-list { gap: 10px; }
 .nexus-downloads-modern .nexus-download-job { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px 12px; padding: 14px; border: 1px solid var(--downloads-line); border-radius: 15px; background: var(--downloads-card); }
 .nexus-downloads-modern .nexus-download-job-copy { min-width: 0; }
-.nexus-downloads-modern .nexus-download-job-copy > strong { display: block; color: var(--downloads-text); font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
-.nexus-downloads-modern .nexus-download-job-copy > small { display: block; margin-top: 4px; color: var(--downloads-muted); font-size: 12px; }
+.nexus-downloads-modern .nexus-download-job-copy > strong { display: block; color: var(--downloads-text); font-size: 0.875rem; line-height: 1.4; overflow-wrap: anywhere; }
+.nexus-downloads-modern .nexus-download-job-copy > small { display: block; margin-top: 4px; color: var(--downloads-muted); font-size: 0.75rem; }
 .nexus-downloads-modern .nexus-download-status-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; background: rgba(var(--accent-rgb), .1); color: var(--accent); }
 .nexus-download-status-icon .menu-icon { width: 19px; height: 19px; }
 .nexus-downloads-modern [data-status="error"] .nexus-download-status-icon { background: #ef444416; color: #ef7676; }
@@ -69,12 +69,12 @@
 .nexus-downloads-modern .nexus-download-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; min-height: 180px; padding: 24px 16px; text-align: center; }
 .nexus-download-empty > span { display: grid; place-items: center; width: 62px; height: 62px; border: 1px solid var(--downloads-line); border-radius: 19px; background: var(--downloads-card); color: var(--downloads-muted); }
 .nexus-download-empty .menu-icon { width: 30px; height: 30px; }
-.nexus-download-empty p { margin: 0; color: var(--downloads-muted); font-size: 13px; }
+.nexus-download-empty p { margin: 0; color: var(--downloads-muted); font-size: 0.8125rem; }
 .nexus-downloads-modern .nexus-download-wait { margin-bottom: 12px; border: 1px solid var(--downloads-line); border-radius: 15px; background: var(--downloads-card); }
-.nexus-downloads-modern .nexus-download-wait strong { font-size: 14px; }
+.nexus-downloads-modern .nexus-download-wait strong { font-size: 0.875rem; }
 @media (max-width: 560px) {
   :root .nexus-downloads-modern .dialog-titlebar { padding: 14px; }
   :root .modal-content.nexus-downloads-modern.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { padding: 14px; }
-  .nexus-downloads-modern .dialog-titlebar h2 { font-size: 15px; }
+  .nexus-downloads-modern .dialog-titlebar h2 { font-size: 0.9375rem; }
   .nexus-downloads-modern .nexus-download-job-actions { grid-column: 1 / -1; }
 }

@@ -40,7 +40,7 @@ html.log-monitor-window .detached-log-page .dialog-titlebar {
 }
 html.log-monitor-window .detached-log-page .dialog-titlebar::before,
 html.log-monitor-window .detached-log-page .dialog-titlebar::after { display: none !important; }
-html.log-monitor-window .detached-log-page .dialog-titlebar h2 { margin: 0; color: var(--lw-text); font-size: 15px; font-weight: 800; letter-spacing: -.01em; }
+html.log-monitor-window .detached-log-page .dialog-titlebar h2 { margin: 0; color: var(--lw-text); font-size: 0.9375rem; font-weight: 800; letter-spacing: -.01em; }
 html.log-monitor-window .detached-log-page .modal-scroll-body { gap: 10px; padding: 14px 18px 18px !important; }
 html.log-monitor-window .log-window-actions { gap: 6px; }
 html.log-monitor-window .log-window-actions .window-control,
@@ -62,27 +62,27 @@ html.log-monitor-window .game-log-tabs button,
 html.log-monitor-window .detached-log-page .nexus-tabs button {
   padding: 6px 16px !important; border: 0 !important; border-radius: 999px !important;
   background: transparent !important; color: var(--lw-muted) !important; box-shadow: none !important;
-  font-size: 13px; font-weight: 700; cursor: pointer;
+  font-size: 0.8125rem; font-weight: 700; cursor: pointer;
 }
 html.log-monitor-window .game-log-tabs button[aria-pressed="true"],
 html.log-monitor-window .detached-log-page .nexus-tabs button[aria-pressed="true"] { background: rgba(var(--accent-rgb), .22) !important; color: var(--lw-text) !important; }
 html.log-monitor-window .game-log-hint,
-html.log-monitor-window .detached-log-page .nexus-hint { margin: 0; color: var(--lw-muted); font-size: 12px; }
+html.log-monitor-window .detached-log-page .nexus-hint { margin: 0; color: var(--lw-muted); font-size: 0.75rem; }
 html.log-monitor-window .detached-log-page [role="alert"] { margin: 0; color: var(--lw-error); }
 html.log-monitor-window .log-output-panel { border: 1px solid var(--lw-line); border-radius: 12px; background: var(--lw-terminal); }
 html.log-monitor-window .detached-log-page .game-log-output {
   border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important;
-  color: var(--lw-text); font: 12.5px/1.55 ui-monospace, "JetBrains Mono", "Fira Code", monospace; padding: 48px 16px 14px !important;
+  color: var(--lw-text); font: 0.78125rem/1.55 ui-monospace, "JetBrains Mono", "Fira Code", monospace; padding: 48px 16px 14px !important;
 }
 html.log-monitor-window .game-log-output .log-line-success { color: var(--lw-success); }
 html.log-monitor-window .game-log-output .log-line-error { color: var(--lw-error); }
 html.log-monitor-window .game-log-output .log-line-warning { color: var(--lw-warning); }
 html.log-monitor-window .log-copy-button {
   padding: 6px 12px !important; border: 1px solid var(--lw-line) !important; border-radius: 10px !important;
-  background: var(--lw-raised) !important; color: var(--lw-text) !important; box-shadow: none !important; font-size: 12.5px; font-weight: 700;
+  background: var(--lw-raised) !important; color: var(--lw-text) !important; box-shadow: none !important; font-size: 0.78125rem; font-weight: 700;
 }
 html.log-monitor-window .log-copy-button:hover:not(:disabled) { border-color: rgba(var(--accent-rgb), .55) !important; }
-html.log-monitor-window .log-copy-feedback { color: var(--lw-success); font-size: 12px; font-weight: 700; }
+html.log-monitor-window .log-copy-feedback { color: var(--lw-success); font-size: 0.75rem; font-weight: 700; }
 html.log-monitor-window .detached-log-page .modal-glass-backdrop { display: none !important; }
 html.log-monitor-window .detached-log-page .dialog-titlebar { position: relative !important; inset: auto !important; width: auto !important; flex-shrink: 0; }
 html.log-monitor-window .detached-log-page .dialog-titlebar h2 { background: none !important; -webkit-text-fill-color: currentColor !important; text-shadow: none !important; }

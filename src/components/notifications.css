@@ -16,7 +16,7 @@
 .notification-panel footer { display: flex; justify-content: flex-end; border-top: 1px solid rgba(var(--accent-rgb), .15); padding-top: 12px; margin-top: 8px; }
 .notification-panel footer button { display: inline-flex; align-items: center; gap: 7px; font-size: .78rem; }
 .notification-toast-region { position: fixed; z-index: 6100; top: 58px; right: 12px; width: max-content; max-width: min(370px, calc(100vw - 24px)); pointer-events: none; }
-.notification-toast.menu-glass-panel { min-height: 0; height: auto; padding: 12px 14px; pointer-events: auto; width: 100%; display: flex; align-items: center; text-align: left; gap: 12px; color: var(--tone-e2e8f0, #e2e8f0); border: 1px solid rgba(var(--accent-rgb), .5); border-radius: 12px; box-shadow: 0 8px 24px #0004; cursor: pointer; animation: notification-toast-slide 6s both; }
+.notification-toast.menu-glass-panel { min-height: 0; height: auto; padding: 12px 14px; pointer-events: auto; width: 100%; display: flex; align-items: center; text-align: left; gap: 12px; color: var(--tone-e2e8f0, #e2e8f0); border: 1px solid rgba(var(--accent-rgb), .5); border-radius: 12px; box-shadow: 0 8px 24px #0004; cursor: pointer; animation: notification-toast-slide 3s both; }
 .notification-toast > svg { color: var(--accent); flex-shrink: 0; }
 @keyframes notification-toast-slide { 0% { opacity: 0; transform: translateX(calc(100% + 20px)); } 9%, 91% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(calc(100% + 20px)); } }
 @media (prefers-reduced-motion: reduce) { .notification-panel.menu-glass-panel { transition: opacity .1s; transform: none; } .notification-toast.menu-glass-panel { animation-name: notification-toast-fade; } }

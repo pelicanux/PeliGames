@@ -81,7 +81,7 @@ export function DiscordConnection() {
     <div className="nexus-account-actions">
       {!account && !status?.pending && <button type="button" className="btn btn-primary" disabled={busy || !status?.configured} onClick={() => void run("connect")}><MenuIcon name="discord"/>{pt ? "Entrar com Discord" : "Sign in with Discord"}</button>}
       {account && <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void run("refresh")}><MenuIcon name="repair"/>{pt ? "Verificar novamente" : "Check again"}</button>}
-      {(account || status?.pending) && <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void run("disconnect")}><MenuIcon name="chainBroken"/>{status.pending ? pt ? "Cancelar login" : "Cancel sign-in" : pt ? "Desconectar" : "Disconnect"}</button>}
+      {(account || status?.pending || error) && <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void run("disconnect")}><MenuIcon name="chainBroken"/>{status?.pending ? pt ? "Cancelar login" : "Cancel sign-in" : pt ? "Desconectar e remover credenciais" : "Disconnect and remove credentials"}</button>}
       {error && <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void run("refresh")}><MenuIcon name="repair"/>{pt ? "Tentar novamente" : "Retry"}</button>}
     </div>
     {error && <p className="preferences-error" role="alert">{error}</p>}

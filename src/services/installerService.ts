@@ -17,6 +17,7 @@ export const runInstallation = async (payload: InstallerPayload): Promise<string
     binPath: payload.binPath,
     shortcutKey: payload.shortcutKey || "Insert",
     neuralStartup: payload.neuralStartup ?? null,
+    model: payload.model ?? "auto",
     int4: payload.int4 ?? null,
     renodx: payload.renodx ?? null,
   });

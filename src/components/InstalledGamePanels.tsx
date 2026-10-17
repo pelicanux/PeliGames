@@ -31,7 +31,8 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
   onRunProgram: (path: string, executable: string) => Promise<void>;
   onStartShortcut: (path: string, id: string) => Promise<void>;
 }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const pt = language === "pt";
   const reducedMotion = usePerformanceMode();
   const [panel, setPanel] = useState<"information" | "advanced" | "programs">("information");
   // App mounts a fresh panel for each selected game. Its first frame must already
@@ -47,6 +48,9 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
   const [saved, setSaved] = useState<false | "settings" | "advanced">(false);
   const id = useId();
   const saving = useRef(false);
+  useEffect(() => {
+    if (section === "options" && game?.launcher === "Steam") window.dispatchEvent(new Event("steamGameOptionsOpened"));
+  }, [section, game?.external_id, game?.launcher]);
   const currentGame = useRef(game);
   currentGame.current = game;
   // Saving one field must not discard unconfirmed edits in another field.
@@ -168,10 +172,19 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
           </form>
             </fieldset>;
   const programsPanel = game && <LauncherProgramsPanel path={game.path} disabled={programsBlocked} onStart={id => onStartShortcut(game.path, id)} />;
-  const advancedPanel = <AdvancedGameSettings hideExecutionEditors key={game?.path} value={game?.advanced} disabled={blocked} reducedMotion={reducedMotion} saved={saved === "advanced"} onChange={value => void save({ advanced: value })} />;
+  const advancedPanel = <AdvancedGameSettings hideExecutionEditors key={game?.path} value={game?.advanced} disabled={blocked} reducedMotion={reducedMotion} saved={saved === "advanced"} onChange={value => void save({ advanced: value })} isSteam={game?.launcher === "Steam"} appId={game?.app_id} />;
   if (section === "advanced") return <div className="modern-advanced-tab">{advancedPanel}{error && <TimedFeedback>{error}</TimedFeedback>}</div>;
   if (section === "performance") return <GamePerformancePanel key={game?.path} value={game?.advanced} disabled={blocked} onChange={value => save({advanced: value})} />;
-  if (section === "options") return game ? <><ModernGameOptions name={game.name} protonDisabled={external && game.launcher === "Bottles"} value={game.advanced} proton={proton} onProton={value=>save({proton:value})} onAdvanced={value=>save({advanced:value})} disabled={blocked} native={game.native_linux || game.nexus_platform === "native"} maintenancePath={game.external_id ? `external:${game.external_id}` : game.path} onUninstall={onUninstall} onChangeExecutable={onChangeExecutable}
+  const isBottles = external && game?.launcher === "Bottles";
+  const protonDisabled = isBottles;
+  const protonDisabledHint = isBottles
+    ? (pt ? "O Bottles compartilha o runner na mesma bottle. Altere no Bottles." : "Bottles shares the runner in the same bottle. Change in Bottles.")
+    : undefined;
+  const protonDisabledLabel = isBottles
+    ? (pt ? "Gerenciado no Bottles" : "Managed in Bottles")
+    : undefined;
+
+  if (section === "options") return game ? <><ModernGameOptions name={game.name} protonLabel={game.steam_proton_name || undefined} protonDisabled={protonDisabled} protonDisabledHint={protonDisabledHint} protonDisabledLabel={protonDisabledLabel} value={game.advanced} proton={proton} onProton={value=>save({proton:value})} onAdvanced={value=>save({advanced:value})} disabled={blocked} native={game.native_linux || game.nexus_platform === "native"} maintenancePath={game.external_id ? `external:${game.external_id}` : game.path} onUninstall={onUninstall} onChangeExecutable={onChangeExecutable}
     launchOptions={<InstalledLaunchOptions inline game={game} disabled={blocked} errorMessage={error} onSave={options=>save({advanced:{...normalizeAdvanced(currentGame.current?.advanced),launch_options:options}})}/>} configuration={
       <section className="modern-game-fields modern-options-section"><h4>{t("installedSettings", "title")}</h4><fieldset className="installation-fields" disabled={blocked}>{nameField}</fieldset>{gameDirectoryField}{directoryFields}
         {error && <TimedFeedback>{error}</TimedFeedback>}{saved === "settings" && <TimedFeedback>{t("installedSettings", "saved")}</TimedFeedback>}

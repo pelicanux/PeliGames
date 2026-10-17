@@ -42,3 +42,5 @@ pub mod mangohud_config;
 pub mod mangohud_root;
 pub mod pe_imports;
 pub mod game_executable;
+
+pub mod neural_models;

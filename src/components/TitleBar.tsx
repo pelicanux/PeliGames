@@ -56,7 +56,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '0 1rem',
+        padding: '0 16px',
         borderBottom: '1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)',
         userSelect: 'none',
         borderTopLeftRadius: '12px',
@@ -66,7 +66,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
       }}
     >
       {/* Left section: Icon and Title */}
-      <div data-tauri-drag-region="true" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', height: '100%' }}>
+      <div data-tauri-drag-region="true" style={{ display: 'flex', alignItems: 'center', gap: '12.8px', height: '100%' }}>
         <img src="/peligames.svg" alt="Icon" style={{ width: '24px', height: '24px', objectFit: 'contain', pointerEvents: 'none' }} />
         <button type="button" className="titlebar-title titlebar-home" data-tauri-drag-region="false" onClick={onHome} disabled={disabled || homeDisabled} aria-label={t("gameModes", "goHome")} title={t("gameModes", "goHome")} style={{ 
           margin: 0, 
@@ -78,8 +78,8 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
       </div>
 
       {/* Right section: Links and Window Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', height: '100%' }}>
-        <div className="titlebar-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '100%' }}>
+        <div className="titlebar-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         
         {updateIndicator}
         <div className="titlebar-optional-actions" inert={disabled} style={{ display: "flex", alignItems: "center", opacity: disabled ? 0.3 : 1, pointerEvents: disabled ? "none" : "auto" }}>
@@ -102,7 +102,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
         {notificationIndicator}
         </div>
 
-        <div className="titlebar-separator" style={{ width: '1px', height: '20px', background: 'rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)', marginRight: '0.5rem' }}></div>
+        <div className="titlebar-separator" style={{ width: '1px', height: '20px', background: 'rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)', marginRight: '8px' }}></div>
 
         <button 
           data-tauri-drag-region="false"

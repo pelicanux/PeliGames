@@ -116,7 +116,8 @@ pub async fn connect_discord_account(app: tauri::AppHandle) -> Result<(), String
 #[tauri::command]
 pub async fn disconnect_discord_account() -> Result<(), String> {
     let _guard = LOCK.lock().await;
-    if let Some(stored) = session().await? { revoke(&stored).await?; }
+    // Local removal must work even with a malformed session or unavailable relay.
+    if let Ok(Some(stored)) = session().await { let _ = revoke(&stored).await; }
     credential("clear", None).await?;
     Ok(())
 }

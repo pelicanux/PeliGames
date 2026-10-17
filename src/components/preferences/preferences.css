@@ -14,7 +14,7 @@
 .preferences-categories > button:hover .preferences-category-icon { color:var(--accent); background:rgba(var(--accent-rgb),.1); }
 .preferences-categories strong { font-size:.9rem; font-weight:600; }
 .preferences-categories small,.preference-choice small { display:block; color:var(--tone-94a3b8,#94a3b8); margin-top:4px; font-size:.75rem; }
-.preferences-chevron { margin-left:auto; font-size:23px; color:var(--tone-94a3b8,#94a3b8); }
+.preferences-chevron { margin-left:auto; font-size:1.4375rem; color:var(--tone-94a3b8,#94a3b8); }
 .preference-choice-list { display:grid; gap:7px; }
 .preference-launch-effects { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
 .preference-choice.preference-launch-effect { display:flex; flex-direction:column; align-items:stretch; gap:5px; min-height:105px; padding:12px; box-sizing:border-box; }
@@ -83,7 +83,7 @@
 .preference-personalization,
 .modern-ui .settings-page .preference-panel.preference-personalization { padding:14px 18px !important; }
 .preference-personalization > h3 { margin:0 0 8px !important; }
-.preference-accent-blur .preference-blur-hint { margin:2px 0 3px; font-size:12px; line-height:1.4; }
+.preference-accent-blur .preference-blur-hint { margin:2px 0 3px; font-size:0.75rem; line-height:1.4; }
 .preference-accent-blur input[type="range"] { appearance:none; -webkit-appearance:none; box-sizing:border-box; height:28px; padding:0; margin:2px 0; border:0 !important; background:transparent !important; box-shadow:none !important; }
 .preference-accent-blur input[type="range"]::-webkit-slider-runnable-track { height:14px; border:0; border-radius:999px; background:linear-gradient(90deg, var(--accent) 0%, var(--accent) var(--blur-progress), var(--modern-chip, #ffffff20) var(--blur-progress), var(--modern-chip, #ffffff20) 100%); }
 .preference-accent-blur input[type="range"]::-webkit-slider-thumb { appearance:none; -webkit-appearance:none; width:26px; height:26px; margin-top:-6px; border:3px solid var(--accent); border-radius:50%; background:#fff; box-shadow:0 2px 6px #0003; transition:box-shadow .15s; }
@@ -105,7 +105,7 @@
 .proton-card-actions { display: flex; gap: 8px; padding: 12px; flex-shrink: 0; }
 .proton-card-actions button { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 32px; height: 32px; min-width: 32px; min-height: 32px; border-radius: 50%; padding: 0; line-height: 0; border: 1px solid rgba(var(--accent-rgb),.5); background: rgba(var(--accent-rgb),.1); color: var(--accent); }
 .proton-card-actions button:hover:not(:disabled) { background: rgba(var(--accent-rgb),.25); box-shadow: 0 0 10px rgba(var(--accent-rgb),.2); }
-.proton-card-actions .proton-card-cancel { background: #ef4444; color: white; border-color: #ef4444; font-size: 23px; line-height: 1; }
+.proton-card-actions .proton-card-cancel { background: #ef4444; color: white; border-color: #ef4444; font-size: 1.4375rem; line-height: 1; }
 .proton-card-progress { position: absolute; inset: 0; width: 100%; z-index: 0; pointer-events: none; background: rgba(var(--accent-rgb),.35); transform-origin: left center; transition: transform .25s linear; }
 .proton-distribution-card.is-downloading { border-color: var(--accent); }
 .proton-distribution-card.is-downloading small { color: var(--tone-e2e8f0,#e2e8f0); font-variant-numeric: tabular-nums; }
@@ -226,12 +226,22 @@
 :root .interface-theme-sample.standard { gap:10px; }
 :root .interface-theme-sample.standard .interface-theme-brand-logo { width:34px; height:34px; object-fit:contain; flex-shrink:0; }
 :root .interface-theme-sample.standard .interface-theme-brand-name,
-:root .interface-theme-sample.standard .interface-theme-brand-name .titlebar-games { font-family:"Jersey 10",monospace; font-size:30px !important; font-weight:400; font-synthesis:none; letter-spacing:0; line-height:1.3; white-space:nowrap; }
+:root .interface-theme-sample.standard .interface-theme-brand-name .titlebar-games { font-family:"Jersey 10",monospace; font-size:1.875rem !important; font-weight:400; font-synthesis:none; letter-spacing:0; line-height:1.3; white-space:nowrap; }
 :root .interface-theme-sample.standard .interface-theme-brand-name { color:var(--tone-edf4ff,#edf4ff); }
 
 .storage-volume-list .storage-volume-capacity { white-space:nowrap; }
 
 .storage-volume-card { position:relative; min-width:0; }
+.storage-fstab { margin-top:16px; }
+.storage-fstab-entry { display:flex; align-items:flex-end; gap:10px; padding:8px 0; border-bottom:1px solid rgba(var(--accent-rgb),.12); }
+.storage-fstab-entry > div { flex:1; min-width:0; }
+.storage-fstab-entry-heading { display:flex; align-items:baseline; flex-wrap:wrap; column-gap:8px; row-gap:2px; margin-bottom:4px; }
+.storage-fstab-entry strong { font-size:.88rem; }
+.storage-fstab-entry small { margin:0; color:var(--tone-94a3b8,#94a3b8); font-size:.76rem; }
+.storage-fstab-entry code { display:block; white-space:pre-wrap; overflow-wrap:anywhere; font-size:.78rem; line-height:1.55; }
+.storage-fstab-remove { flex:0 0 30px; width:30px; height:30px; min-width:30px; padding:0; display:grid; place-items:center; border:1px solid transparent; border-radius:50%; background:transparent; color:var(--tone-94a3b8,#94a3b8); cursor:pointer; }
+.storage-fstab-remove:is(:hover,:focus-visible):not(:disabled) { color:#fb7185; background:rgba(244,63,94,.12); border-color:rgba(244,63,94,.3); }
+.storage-fstab-remove:disabled { opacity:.4; cursor:default; }
 .storage-volume-list .storage-volume-select { height:100%; min-height:112px; padding-right:52px; }
 .storage-volume-card-actions { position:absolute; top:10px; right:10px; display:flex; flex-direction:column; gap:8px; }
 .storage-volume-card-actions .preference-outline { width:30px; height:30px; min-width:30px; padding:5px; border-radius:6px; }
@@ -277,3 +287,9 @@
 @media(prefers-reduced-motion:reduce) { .mango-install-working { animation:none; } }
 
 /* Settings → Interface → layout: miniature of each layout. */
+.maintenance-paths { max-height: 220px; overflow: auto; padding: 12px 12px 12px 30px; border: 1px solid rgba(var(--accent-rgb), .2); border-radius: 12px; background: rgba(0,0,0,.16); font-size: .8125rem; line-height: 1.7; }
+.maintenance-paths code { overflow-wrap: anywhere; }
+.maintenance-confirm { display: flex; align-items: flex-start; gap: 10px; font-size: .875rem; line-height: 1.5; }
+.maintenance-confirm input { flex-shrink: 0; margin-top: 4px; accent-color: var(--accent); }
+/* Reset cannot return to a session whose accounts have already been removed. */
+.maintenance-restart-required > .dialog-titlebar > .surface-close-button { display: none !important; }

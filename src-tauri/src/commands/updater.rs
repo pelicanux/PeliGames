@@ -37,7 +37,7 @@ impl GitHubRelease {
         self.assets.iter().filter_map(|asset| backend_release::linux_bitness(&asset.name, windows).map(|bits| (asset, bits))).collect()
     }
     fn compatible(&self) -> bool {
-        !self.draft && !self.prerelease && !self.linux_assets().is_empty()
+        !self.draft && !self.linux_assets().is_empty()
     }
 }
 
@@ -49,11 +49,8 @@ async fn linux_release(client: &Client, gpu_arch: &str) -> Result<GitHubRelease,
         _ => return Err("Arquitetura de backend inválida.".into()),
     };
     let base = format!("https://api.github.com/repos/{repo}/releases");
-    let latest: GitHubRelease = client.get(format!("{base}/latest")).send().await
-        .map_err(|e| e.to_string())?.error_for_status().map_err(|e| e.to_string())?
-        .json().await.map_err(|e| e.to_string())?;
-    if latest.compatible() { return Ok(latest); }
-    // GitHub's latest may be a stable release containing Windows assets only.
+    // Linux updates currently ship as previews. Read newest releases first;
+    // /latest excludes previews and can leave the launcher on an older backend.
     for page in 1..=5 {
         let releases: Vec<GitHubRelease> = client.get(format!("{base}?per_page=30&page={page}")).send().await
             .map_err(|e| e.to_string())?.error_for_status().map_err(|e| e.to_string())?
@@ -274,6 +271,7 @@ async fn delete_backend_inner(app: AppHandle, gpu_arch: String) -> Result<String
 
 #[tauri::command]
 pub async fn copy_local_backend(app: AppHandle, gpu_arch: String, source_path: String) -> Result<String, String> {
+    if !matches!(gpu_arch.as_str(), "rdna3" | "rdna4") { return Err("Arquitetura de backend inválida.".into()); }
     let backend_dir = get_backend_dir(&app)?.join(&gpu_arch);
     
     // Copy source_path to backend_dir
@@ -309,7 +307,10 @@ pub async fn copy_local_backend(app: AppHandle, gpu_arch: String, source_path: S
                 let path = entry.path();
                 if path.is_file() {
                     if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                        if name.ends_with(".tar.gz") && (name.contains("i686") || name.contains("x86_64")) {
+                        if backend_release::linux_bitness(name, false).is_some() {
+                            if (gpu_arch == "rdna4" && name.to_ascii_lowercase().contains("rdna3")) || (gpu_arch == "rdna3" && !name.to_ascii_lowercase().contains("rdna3")) {
+                                return Err(format!("O pacote {name} não corresponde à GPU selecionada."));
+                            }
                             found_tars.push(path.clone());
                             // DLSSNR-AMD-Vulkan-Linux-0.0.3-x86_64.tar.gz -> "v0.0.3"
                             if let Some(start) = name.find("Linux-") {
@@ -325,24 +326,36 @@ pub async fn copy_local_backend(app: AppHandle, gpu_arch: String, source_path: S
         }
 
         if found_tars.is_empty() {
-            return Err("A pasta selecionada deve conter as subpastas '32' e/ou '64', ou os arquivos compactados .tar.gz do mod.".into());
+            return Err("A pasta selecionada deve conter as subpastas '32' e/ou '64', ou os pacotes Linux .tar.gz/.zip do mod.".into());
         }
 
+        // One archive per architecture: never overlay multiple releases.
+        for bits in ["32", "64"] {
+            if found_tars.iter().filter(|path| path.file_name().and_then(|name| name.to_str()).and_then(|name| backend_release::linux_bitness(name, false)) == Some(bits)).count() > 1 {
+                return Err(format!("Há mais de um pacote de {bits} bits. Deixe apenas a versão que deseja importar na pasta selecionada."));
+            }
+        }
         for tar_path in found_tars {
             let name = tar_path.file_name().unwrap().to_str().unwrap();
             let bitness = if name.contains("i686") { "32" } else { "64" };
             let target_dir = backend_dir.join(bitness);
             fs::create_dir_all(&target_dir).map_err(|e| e.to_string())?;
 
-            let tar_file = fs::File::open(&tar_path).map_err(|e| e.to_string())?;
-            let tar = GzDecoder::new(tar_file);
-            let mut archive = Archive::new(tar);
-            archive.unpack(&target_dir).map_err(|e| format!("Failed unpacking tar: {}", e))?;
+            let file = fs::File::open(&tar_path).map_err(|e| e.to_string())?;
+            if name.to_ascii_lowercase().ends_with(".zip") {
+                let mut archive = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
+                archive.extract(&target_dir).map_err(|e| e.to_string())?;
+            } else {
+                let mut archive = Archive::new(GzDecoder::new(file));
+                archive.unpack(&target_dir).map_err(|e| format!("Failed unpacking tar: {e}"))?;
+            }
         }
         used_tar = true;
     }
 
-    // Write a dummy version so it doesn't immediately ask to update
+    let ready = [&dest64, &dest32].iter().any(|directory| directory.join("install.sh").is_file() && directory.join("model-tools/extract_model.sh").is_file() && directory.join("dlssnr-amd").is_dir());
+    if !ready { return Err("Backend incompleto: faltam install.sh, model-tools/extract_model.sh ou dlssnr-amd. Selecione a pasta ou os pacotes Linux completos.".into()); }
+    // Keep version metadata beside the imported packages.
     let version_to_write = format!("{}-{}", detected_version, gpu_arch);
     let _ = fs::write(backend_dir.join("version.txt"), version_to_write);
 
@@ -365,4 +378,20 @@ fn copy_dir_all(src: impl AsRef<std::path::Path>, dst: impl AsRef<std::path::Pat
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod linux_release_tests {
+    use super::*;
+    fn release(name: &str, prerelease: bool, draft: bool) -> GitHubRelease {
+        GitHubRelease { tag_name:"v0.0.6-linux-preview".into(), name:None, body:None, prerelease, draft,
+            assets:vec![GitHubAsset {name:name.into(), browser_download_url:String::new()}] }
+    }
+    #[test]
+    fn linux_previews_are_updates_but_windows_and_drafts_are_not() {
+        assert!(release("DLSSNR-AMD-Vulkan-Linux-0.0.6-x86_64.tar.gz", true, false).compatible());
+        assert!(release("DLSSNR-AMD-Vulkan-Linux-0.0.6-x86_64-rdna3.tar.gz", true, false).compatible());
+        assert!(!release("DLSSNR-AMD-Vulkan-Windows-0.0.6-x86_64.zip", true, false).compatible());
+        assert!(!release("DLSSNR-AMD-Vulkan-Linux-0.0.6-x86_64.tar.gz", true, true).compatible());
+    }
 }

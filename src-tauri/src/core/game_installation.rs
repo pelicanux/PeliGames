@@ -16,6 +16,8 @@ struct InstallationGuard;
 impl Drop for InstallationGuard {
     fn drop(&mut self) { if let Ok(mut slot) = INSTALLATION.lock() { *slot = None; } }
 }
+pub fn installation_active() -> bool { INSTALLATION.lock().map(|slot| slot.is_some()).unwrap_or(true) }
+
 pub fn cancel_installation() -> Result<(), String> {
     let slot = INSTALLATION.lock().map_err(|e| e.to_string())?;
     let session = slot.as_ref().ok_or("Nenhuma instalação ativa para cancelar.")?;

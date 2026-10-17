@@ -69,7 +69,7 @@ impl Default for GamescopeSettings {
     }
 }
 impl GamescopeSettings {
-    fn enabled(&self) -> bool {
+    pub fn enabled(&self) -> bool {
         self.enable_upscaling
             || self.enable_limiter
             || self.force_grab_cursor
@@ -391,7 +391,7 @@ pub fn launch_command(umu: &Path, settings: Option<&AdvancedSettings>) -> Result
     super::env_utils::host_environment(&mut command);
     Ok(command)
 }
-fn configured_launch_command(umu: &Path, settings: Option<&AdvancedSettings>) -> Result<Command, String> {
+pub(crate) fn configured_launch_command(umu: &Path, settings: Option<&AdvancedSettings>) -> Result<Command, String> {
     let global = super::mangohud_config::global_enabled()?;
     if settings.is_none() && !global { return Ok(Command::new(umu)); }
     let effective = with_global_monitoring(settings, global);

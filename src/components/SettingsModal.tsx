@@ -71,7 +71,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
   }, [preferences.ready, initialSection, page]);
   useEffect(() => {
     const escape = (event: KeyboardEvent) => {
-      if (document.querySelector(".modern-drawer-open")) return;
+      if (document.querySelector(".modern-drawer-open, .maintenance-popup")) return;
       // A portaled choice menu consumes Escape before navigating out of preferences.
       if (event.target instanceof Element && (event.target.closest('.custom-select-menu[role="listbox"]') || (event.target.getAttribute("aria-haspopup") === "listbox" && event.target.getAttribute("aria-expanded") === "true"))) return;
       if (event.key === "Escape" && !storageDialogOpen && !cacheDialog && !showLauncherLogs && !protonConfirmationOpen) { event.stopImmediatePropagation(); if (search) { setSearch(""); return; } if (!busy && !preferences.isPending()) { if (parent === "home") onClose(); else setPage(parent); } }

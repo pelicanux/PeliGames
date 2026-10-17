@@ -194,6 +194,20 @@ pub async fn list_storage_volumes() -> Result<Value, String> {
     tauri::async_runtime::spawn_blocking(|| run(json!({"action":"list"}))).await.map_err(|e| e.to_string())?
 }
 #[tauri::command]
+pub async fn list_storage_fstab_entries() -> Result<Value, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let text = super::storage::fstab::read()?;
+        serde_json::to_value(super::storage::fstab::rows(&text)).map_err(|e| e.to_string())
+    }).await.map_err(|e| e.to_string())?
+}
+#[tauri::command]
+pub async fn remove_storage_fstab_entry(key: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let _guard = SAVE_LOCK.try_lock().map_err(|_| "Já existe uma alteração de montagem em andamento.".to_string())?;
+        super::storage::fstab::remove(&key)
+    }).await.map_err(|e| e.to_string())?
+}
+#[tauri::command]
 pub async fn save_storage_automount(id: String, uuid: String, name: String, mount_at_startup: bool, shared_between_systems: Option<bool>) -> Result<Value, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let _guard = SAVE_LOCK.try_lock().map_err(|_| "Já existe uma alteração de montagem em andamento.".to_string())?;

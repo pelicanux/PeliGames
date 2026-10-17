@@ -95,6 +95,7 @@ pub(crate) trait System {
     /// `pkexec systemctl daemon-reload`.
     fn reload_systemd(&mut self) -> Result<(), String>;
     fn fstab(&mut self) -> Result<String, String>;
+    fn sync_fstab_headers(&mut self) -> Result<(), String>;
     fn path(&mut self, path: &str) -> PathState;
     /// Waits briefly for udev/UDisks2 to publish new metadata.
     fn pause(&mut self);
@@ -413,8 +414,9 @@ pub(crate) fn save(request: &Value, sys: &mut dyn System) -> Result<Value, Strin
         }
         let entries = fstab_items(&b);
         let old: Vec<String> = entries.first().map(|entry| entry_text(entry, "opts").split(',').map(str::to_string).collect()).unwrap_or_else(|| vec!["defaults".into()]);
-        let mut opts: Vec<String> = old.into_iter().filter(|x| !x.is_empty() && !matches!(x.as_str(), "auto" | "noauto" | "nofail") && !x.starts_with("x-systemd.device-timeout=")).collect();
+        let mut opts: Vec<String> = old.into_iter().filter(|x| !x.is_empty() && !matches!(x.as_str(), "auto" | "noauto" | "nofail") && x != super::fstab::MARKER && !x.starts_with("x-systemd.device-timeout=")).collect();
         opts.extend(["nofail".to_string(), "x-systemd.device-timeout=10s".to_string()]);
+        opts.push(super::fstab::MARKER.into());
         if !request["mount_at_startup"].as_bool().unwrap_or(false) {
             opts.push("noauto".into());
         }
@@ -432,6 +434,7 @@ pub(crate) fn save(request: &Value, sys: &mut dyn System) -> Result<Value, Strin
             None => sys.call(&path, Call::AddConfiguration(new))?,
         };
         stages.push("automontagem salva");
+        sys.sync_fstab_headers()?;
         // Reload generated mount units before mounting with the new fstab configuration.
         // Fixed argv and polkit authorization; no service restart and no mount -a.
         sys.reload_systemd()?;
@@ -497,6 +500,7 @@ pub(crate) fn storage_operation(request: &Value, sys: &mut dyn System) -> Result
             }
             sys.call(&path, Call::RemoveConfiguration(entry_of(&entries[0])))?;
             stages.push("entrada de automontagem removida");
+            sys.sync_fstab_headers()?;
             sys.reload_systemd()?;
             stages.push("configuração do systemd recarregada");
             return Ok(json!({"operation": action}));
@@ -600,6 +604,7 @@ pub(crate) fn format_ntfs(request: &Value, sys: &mut dyn System) -> Result<Value
         for entry in fstab_items(iface(&current, B)) {
             sys.call(&path, Call::RemoveConfiguration(entry_of(entry)))?;
             stages.push("entrada antiga de automontagem removida");
+            sys.sync_fstab_headers()?;
         }
         let current = preflight(request, true, sys)?.obj;
         if identity(&current) != original || !mounts(&current).is_empty() {

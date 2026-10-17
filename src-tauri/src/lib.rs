@@ -49,6 +49,11 @@ fn nvidia_driver() -> bool {
 fn run_mode(installer: bool) {
     // Root helper started through pkexec: nothing else of the launcher runs.
     let first = std::env::args().nth(1);
+    if first.as_deref() == Some(commands::maintenance::reset::HELPER_FLAG) {
+        let args: Vec<String> = std::env::args().skip(2).collect();
+        if let Err(error) = commands::maintenance::reset::run_helper(&args) { eprintln!("Redefinição: {error}"); std::process::exit(1); }
+        return;
+    }
     if first.as_deref() == Some(core::mangohud_root::FLAG) {
         let args: Vec<String> = std::env::args().skip(2).collect();
         std::process::exit(core::mangohud_root::run(&args));
@@ -74,6 +79,7 @@ fn run_mode(installer: bool) {
         if !embedded { std::process::exit(1); }
         return;
     }
+    if let Err(error) = commands::maintenance::reset::begin_startup() { core::paths::pause_migrations(true); eprintln!("Recuperação PeliGames: {error}"); }
     if let Err(error) = core::paths::initialize() { eprintln!("Migração PeliGames: {error}"); }
     let nxm_start = if args.len() == 1 && args[0].get(..4).is_some_and(|s| s.eq_ignore_ascii_case("nxm:")) { Some(args[0].clone()) } else { None };
     let launcher_args = if nxm_start.is_some() { Vec::new() } else { args };
@@ -221,6 +227,9 @@ fn run_mode(installer: bool) {
             commands::matrix_screen_audio::matrix_screen_audio_apps,
             commands::notification_sound::play_notification_sound,
             commands::steam_launch_options::apply_steam_mod_launch_options,
+            commands::external_library::steam_game_settings_action,
+            commands::external_library::steam_game_launch_preview,
+            commands::external_library::steam_game_proton_status,
             commands::matrix_chat::matrix_chat_rooms,
             commands::matrix_chat::matrix_chat_join,
             commands::matrix_chat::matrix_chat_create_channel,
@@ -386,6 +395,9 @@ fn run_mode(installer: bool) {
             commands::installer::extract_dll,
             commands::installer::extract_dll_wizard,
             commands::installer::check_cached_bin,
+            commands::installer::get_backend_setup_status,
+            commands::installer::import_model_bins,
+            commands::installer::get_neural_model_status,
             commands::installer::check_game_installation,
             commands::installer::get_installed_dll,
             commands::installer::get_game_installation_details,
@@ -411,6 +423,8 @@ fn run_mode(installer: bool) {
             commands::mangohud::mangohud_status,
             commands::mangohud::mangohud_latest_release,
             commands::storage_automount::list_storage_volumes,
+            commands::storage_automount::list_storage_fstab_entries,
+            commands::storage_automount::remove_storage_fstab_entry,
             commands::storage_automount::save_storage_automount,
             commands::storage_automount::format_ntfs_storage,
             commands::storage_automount::prepare_empty_storage,
@@ -440,8 +454,13 @@ fn run_mode(installer: bool) {
             commands::config::save_custom_game_path,
             commands::config::clear_game_caches,
             commands::config::log_cached_library,
-            commands::config::emergency_reset_launcher,
-            commands::config::restart_after_emergency_reset
+            commands::maintenance::launcher_maintenance_plan,
+            commands::maintenance::launcher_maintenance_apply,
+            commands::maintenance::launcher_maintenance_restart,
+            commands::maintenance::reset::launcher_reset_status,
+            commands::maintenance::reset::launcher_reset_confirm_health,
+            commands::maintenance::reset::launcher_reset_continue,
+            commands::maintenance::reset::launcher_reset_restore,
         ]);
             move |invoke: tauri::ipc::Invoke<tauri::Wry>| {
                 if invoke.message.webview().label().starts_with("nexus-browser-") {

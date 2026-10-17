@@ -25,26 +25,26 @@ html.pelinstall-mode, html.pelinstall-mode body { background: transparent !impor
 .pelinstall-entry-menu button.custom-select-option.selected { background: rgba(var(--accent-rgb), .15); color: var(--accent-soft); }
 .pelinstall-entry-menu button.custom-select-option:hover, .pelinstall-entry-menu button.custom-select-option:focus-visible { background: rgba(var(--accent-rgb), .22); outline: none; }
 
-.pelinstall-surface .pelinstall-brand { font-family: "Jersey 10", monospace; font-size: 30px; font-weight: 400; font-synthesis: none; letter-spacing: 0; line-height: 1.3; }
+.pelinstall-surface .pelinstall-brand { font-family: "Jersey 10", monospace; font-size: 1.875rem; font-weight: 400; font-synthesis: none; letter-spacing: 0; line-height: 1.3; }
 .pelinstall-surface .dialog-titlebar h2 { max-width: calc(100% - 168px); flex-shrink: 0; }
-.pelinstall-launcher-button.titlebar-title { position: absolute; right: 92px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; min-height: 32px; height: 32px; width: 120px; padding: 0 12px; border: 1px solid rgba(var(--accent-rgb), .4); border-radius: 8px; background: rgba(var(--accent-rgb), .06); color: var(--tone-edf4ff, #edf4ff); font-size: 28px; font-weight: 400; cursor: pointer; box-shadow: none; }
+.pelinstall-launcher-button.titlebar-title { position: absolute; right: 92px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; min-height: 32px; height: 32px; width: 120px; padding: 0 12px; border: 1px solid rgba(var(--accent-rgb), .4); border-radius: 8px; background: rgba(var(--accent-rgb), .06); color: var(--tone-edf4ff, #edf4ff); font-size: 1.75rem; font-weight: 400; cursor: pointer; box-shadow: none; }
 .pelinstall-launcher-button.titlebar-title:hover { background: rgba(var(--accent-rgb), .12); border-color: var(--accent); }
 .pelinstall-launcher-button.titlebar-title:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 2px; }
 .pelinstall-launcher-button.titlebar-title:disabled { opacity: .5; cursor: default; }
-@media (max-width: 420px) { .pelinstall-surface .pelinstall-brand { font-size: 26px; } .pelinstall-launcher-button.titlebar-title { width: 98px; font-size: 24px; right: 86px; } .pelinstall-surface .dialog-titlebar h2 { max-width: calc(100% - 142px); gap: 6px; } }
+@media (max-width: 420px) { .pelinstall-surface .pelinstall-brand { font-size: 1.625rem; } .pelinstall-launcher-button.titlebar-title { width: 98px; font-size: 1.5rem; right: 86px; } .pelinstall-surface .dialog-titlebar h2 { max-width: calc(100% - 142px); gap: 6px; } }
 
 .pelinstall-surface .dialog-titlebar h2 { max-width: calc(100% - 246px); }
 .pelinstall-settings-button { position: absolute; right: 222px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; padding: 5px; display: grid; place-items: center; border: 0; border-radius: 5px; background: transparent; color: var(--tone-94a3b8, #94a3b8); cursor: pointer; }
 .pelinstall-settings-button:hover, .pelinstall-settings-button[aria-expanded=true] { background: rgba(var(--surface-255-255-255,255,255,255), .1); color: var(--accent-soft); }
 .pelinstall-settings-button .menu-icon { width: 16px; height: 16px; }
-.pelinstall-settings-menu { position: fixed; z-index: 1200; box-sizing: border-box; padding: 10px; border: 1px solid rgba(var(--accent-rgb), .3); border-radius: 12px; backdrop-filter: blur(16px); overflow-y: auto; color: var(--tone-e2e8f0, #e2e8f0); font-size: 14px; line-height: 1.4; }
+.pelinstall-settings-menu { position: fixed; z-index: 1200; box-sizing: border-box; padding: 10px; border: 1px solid rgba(var(--accent-rgb), .3); border-radius: 12px; backdrop-filter: blur(16px); overflow-y: auto; color: var(--tone-e2e8f0, #e2e8f0); font-size: 0.875rem; line-height: 1.4; }
 .pelinstall-settings-menu .effects-preference { font-size: inherit; padding: 8px 12px; gap: 8px; }
 .pelinstall-settings-menu .effects-preference-label { gap: 8px; }
 .pelinstall-settings-menu select { box-sizing: border-box; min-width: 0; max-width: 100%; padding: 8px 10px; font: inherit; background: var(--tone-292936, #292936); color: inherit; }
 .pelinstall-settings-menu select option { color: var(--tone-e2e8f0, #e2e8f0); }
 .pelinstall-scale-preference { padding: 10px 12px; display: grid; gap: 10px; }
 .pelinstall-scale-preference > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.pelinstall-scale-preference button { flex: 0 0 32px; width: 32px; min-height: 32px; font-size: 16px; line-height: 1; padding: 3px; border: 1px solid rgba(var(--surface-255-255-255,255,255,255), .15); border-radius: 5px; background: rgba(var(--surface-255-255-255,255,255,255), .08); color: inherit; cursor: pointer; }
+.pelinstall-scale-preference button { flex: 0 0 32px; width: 32px; min-height: 32px; font-size: 1rem; line-height: 1; padding: 3px; border: 1px solid rgba(var(--surface-255-255-255,255,255,255), .15); border-radius: 5px; background: rgba(var(--surface-255-255-255,255,255,255), .08); color: inherit; cursor: pointer; }
 .pelinstall-scale-preference button:disabled { opacity: .4; cursor: default; }
 .pelinstall-settings-menu :is(button,select):focus-visible, .pelinstall-settings-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media(max-width:420px) { .pelinstall-settings-button { right: 194px; } .pelinstall-surface .dialog-titlebar h2 { max-width: calc(100% - 218px); } }
@@ -52,26 +52,26 @@ html.pelinstall-mode, html.pelinstall-mode body { background: transparent !impor
 .pelinstall-settings-menu .pelinstall-language-trigger { width: 100%; min-width: 0; min-height: 36px; padding: 8px 10px; gap: 8px; font: inherit; background: var(--tone-292936, #292936); color: inherit; }
 .pelinstall-language-trigger > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pelinstall-language-trigger .select-arrow { flex-shrink: 0; }
-.pelinstall-language-menu button.custom-select-option { min-height: 36px; padding: 8px 10px; font-size: 14px; line-height: 1.4; }
+.pelinstall-language-menu button.custom-select-option { min-height: 36px; padding: 8px 10px; font-size: 0.875rem; line-height: 1.4; }
 
 /* =====================  New design (approved prototype)  ===================== */
 .pi-window {
   --pi-accent-hi: color-mix(in srgb, var(--accent) 70%, #fff); --pi-accent-lo: color-mix(in srgb, var(--accent) 78%, #000);
-  --pi-win: rgba(18, 19, 28, .94); --pi-card: rgba(255, 255, 255, .045); --pi-card-2: rgba(255, 255, 255, .08); --pi-line: rgba(255, 255, 255, .09);
+  --pi-win: #12131c; --pi-card: rgba(255, 255, 255, .045); --pi-card-2: rgba(255, 255, 255, .08); --pi-line: rgba(255, 255, 255, .09);
   --pi-text: #f2f3f8; --pi-muted: #9a9fb3; --pi-faint: #6b7088; --pi-play-rgb: 31, 211, 154; --pi-danger: #ff6b7a;
   flex-direction: column; justify-content: flex-start; overflow: hidden; border-radius: 16px; border: 1px solid var(--pi-line);
-  background: var(--pi-win); color: var(--pi-text); font-family: Inter, system-ui, sans-serif; font-size: 14px;
+  background: var(--pi-win); color: var(--pi-text); font-family: Inter, system-ui, sans-serif; font-size: 0.875rem;
 }
-:root[data-appearance="light"] .pi-window { --pi-win: rgba(250, 250, 255, .97); --pi-card: rgba(20, 24, 40, .04); --pi-card-2: #fff; --pi-line: rgba(20, 24, 40, .1); --pi-text: #141724; --pi-muted: #5d6378; --pi-faint: #8b90a3; }
+:root[data-appearance="light"] .pi-window { --pi-win: #fafaff; --pi-card: rgba(20, 24, 40, .04); --pi-card-2: #fff; --pi-line: rgba(20, 24, 40, .1); --pi-text: #141724; --pi-muted: #5d6378; --pi-faint: #8b90a3; }
 .pi-window button { font: inherit; }
 /* Title bar: pixel logo, settings, PeliGames, round window buttons. */
 .pi-titlebar { flex: 0 0 50px; display: flex; align-items: center; gap: 8px; padding: 0 10px 0 14px; border-bottom: 1px solid var(--pi-line); user-select: none; cursor: default; }
 .pi-brand { display: flex; align-items: center; gap: 9px; margin: 0; font-size: inherit; font-weight: 400; }
 .pi-brand img { width: 24px; height: 24px; }
-.pi-window .pi-brand .pelinstall-brand { font-size: 28px; line-height: 1; color: var(--pi-text); }
+.pi-window .pi-brand .pelinstall-brand { font-family: "Jersey 10", monospace; font-weight: 400; font-synthesis: none; letter-spacing: 0; font-size: 28px; line-height: 1; color: var(--pi-text); }
 .pi-spacer { flex: 1; }
 .pi-titlebar .pelinstall-settings-button { position: static; transform: none; width: 32px; height: 32px; border-radius: 10px; }
-.pi-titlebar .pelinstall-launcher-button.titlebar-title { position: static; transform: none; width: auto; height: 32px; min-height: 32px; padding: 0 11px; border-radius: 10px; font-size: 24px; border-color: var(--pi-line); background: var(--pi-card); }
+.pi-titlebar .pelinstall-launcher-button.titlebar-title { font-family: "Jersey 10", monospace; font-weight: 400; font-synthesis: none; letter-spacing: 0; position: static; transform: none; width: auto; height: 32px; min-height: 32px; padding: 0 11px; border-radius: 10px; font-size: 24px; border-color: var(--pi-line); background: var(--pi-card); }
 .pi-titlebar .pelinstall-launcher-button.titlebar-title:hover { border-color: rgba(var(--accent-rgb), .6); }
 .pi-titlebar .pelinstall-minimize, .pi-titlebar .pi-close { position: static; transform: none; width: 32px; height: 32px; min-width: 32px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--pi-line); background: var(--pi-card); color: var(--pi-muted); cursor: pointer; }
 .pi-titlebar .pelinstall-minimize:hover { background: var(--pi-card-2); color: var(--pi-text); border-color: var(--pi-line); }
@@ -79,18 +79,18 @@ html.pelinstall-mode, html.pelinstall-mode body { background: transparent !impor
 .pi-titlebar .pi-close:disabled { opacity: .45; cursor: default; }
 /* Body: one question per step. */
 .pi-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 18px 20px 20px; scrollbar-width: thin; }
-.pi-body h2 { margin: 0; font-size: 19px; letter-spacing: -.02em; color: var(--pi-text); }
-.pi-hint { margin: -4px 0 0; color: var(--pi-muted); font-size: 13.5px; line-height: 1.45; overflow-wrap: anywhere; }
-.pi-label { margin-bottom: -6px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--pi-faint); }
+.pi-body h2 { margin: 0; font-size: 1.1875rem; letter-spacing: -.02em; color: var(--pi-text); }
+.pi-hint { margin: -4px 0 0; color: var(--pi-muted); font-size: 0.84375rem; line-height: 1.45; overflow-wrap: anywhere; }
+.pi-label { margin-bottom: -6px; font-size: 0.75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--pi-faint); }
 /* File being installed. */
 .pi-file, .pi-game { display: flex; align-items: center; gap: 14px; min-width: 0; padding: 12px 14px; border-radius: 16px; background: var(--pi-card); border: 1px solid var(--pi-line); }
 .pi-file-icon { flex: 0 0 48px; width: 48px; height: 48px; display: grid; place-items: center; border-radius: 13px; color: #fff; background: linear-gradient(150deg, #5aa9ff, #2058d8); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 6px 16px -6px #2058d8; overflow: hidden; }
 .pi-file-icon img { width: 40px; height: 40px; object-fit: contain; }
 .pi-file-icon .menu-icon { width: 24px; height: 24px; }
 .pi-file-text { flex: 1; min-width: 0; }
-.pi-file-text strong { display: block; font-size: 15px; letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pi-file-text small { display: block; margin-top: 2px; color: var(--pi-muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pi-chip { flex: 0 0 auto; padding: 4px 9px; border-radius: 999px; background: var(--pi-card-2); border: 1px solid var(--pi-line); color: var(--pi-muted); font-size: 11.5px; font-weight: 700; }
+.pi-file-text strong { display: block; font-size: 0.9375rem; letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pi-file-text small { display: block; margin-top: 2px; color: var(--pi-muted); font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pi-chip { flex: 0 0 auto; padding: 4px 9px; border-radius: 999px; background: var(--pi-card-2); border: 1px solid var(--pi-line); color: var(--pi-muted); font-size: 0.71875rem; font-weight: 700; }
 .pi-chip.ok { color: rgb(var(--pi-play-rgb)); border-color: rgba(var(--pi-play-rgb), .35); }
 .pi-game-cover { flex: 0 0 42px; width: 42px; height: 56px; border-radius: 8px; background: var(--pi-card-2) center / cover; display: grid; place-items: center; color: var(--pi-muted); }
 /* Step progress. */
@@ -99,7 +99,7 @@ html.pelinstall-mode, html.pelinstall-mode body { background: transparent !impor
 .pi-steps i { flex: 1; height: 4px; border-radius: 999px; background: var(--pi-card-2); }
 .pi-steps i.done { background: var(--accent); }
 .pi-steps i.now { background: linear-gradient(90deg, var(--accent) 50%, var(--pi-card-2) 50%); }
-.pi-step-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--pi-muted); }
+.pi-step-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--pi-muted); }
 .pi-step-labels .now { color: var(--pi-text); font-weight: 700; }
 /* Choice cards with squircle icons. */
 .pi-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -107,8 +107,8 @@ html.pelinstall-mode, html.pelinstall-mode body { background: transparent !impor
 .pi-card:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(var(--accent-rgb), .55); background: var(--pi-card-2); }
 .pi-card[aria-pressed="true"] { border-color: var(--accent); background: rgba(var(--accent-rgb), .12); }
 .pi-card:disabled { opacity: .5; cursor: not-allowed; }
-.pi-card strong { font-size: 15px; }
-.pi-card small { color: var(--pi-muted); font-size: 12.5px; line-height: 1.4; }
+.pi-card strong { font-size: 0.9375rem; }
+.pi-card small { color: var(--pi-muted); font-size: 0.78125rem; line-height: 1.4; }
 .pi-card.danger strong { color: var(--pi-danger); }
 .pi-ico { position: relative; overflow: hidden; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 11px; color: #fff; background: linear-gradient(150deg, var(--c1), var(--c2)); box-shadow: inset 0 1px 0 rgba(255,255,255,.38), inset 0 -1px 0 rgba(0,0,0,.22), 0 4px 10px -3px var(--c2); }
 .pi-ico::before { content: ""; position: absolute; inset: 0 0 50% 0; background: linear-gradient(180deg, rgba(255,255,255,.28), transparent); }
@@ -116,7 +116,7 @@ html.pelinstall-mode, html.pelinstall-mode body { background: transparent !impor
 /* Fields. */
 .pi-field { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 6px 0 14px; border-radius: 13px; background: var(--pi-card-2); border: 1px solid var(--pi-line); color: var(--pi-muted); }
 .pi-field:focus-within { border-color: rgba(var(--accent-rgb), .7); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), .18); }
-.pi-field input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--pi-text); font: inherit; font-size: 14px; }
+.pi-field input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--pi-text); font: inherit; font-size: 0.875rem; }
 .pi-field.small { height: 38px; }
 .pi-mini { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; border: 1px solid var(--pi-line); background: var(--pi-card); color: var(--pi-text); cursor: pointer; }
 .pi-mini .menu-icon { width: 16px; height: 16px; }
@@ -130,19 +130,19 @@ html.pelinstall-mode, html.pelinstall-mode body { background: transparent !impor
 .pi-option[aria-checked="true"] .pi-radio { border-color: var(--accent); }
 .pi-option[aria-checked="true"] .pi-radio::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
 .pi-option-text { flex: 1; min-width: 0; }
-.pi-option-text strong { display: block; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pi-option-text small { display: block; margin-top: 2px; color: var(--pi-muted); font-size: 12px; overflow-wrap: anywhere; }
-.pi-tag { flex: 0 0 auto; padding: 3px 8px; border-radius: 999px; background: rgba(var(--pi-play-rgb), .14); color: rgb(var(--pi-play-rgb)); font-size: 11px; font-weight: 700; white-space: nowrap; }
-.pi-link { align-self: flex-start; border: 0; background: none; padding: 0; color: var(--pi-accent-hi); font-size: 13px; font-weight: 600; cursor: pointer; }
+.pi-option-text strong { display: block; font-size: 0.875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pi-option-text small { display: block; margin-top: 2px; color: var(--pi-muted); font-size: 0.75rem; overflow-wrap: anywhere; }
+.pi-tag { flex: 0 0 auto; padding: 3px 8px; border-radius: 999px; background: rgba(var(--pi-play-rgb), .14); color: rgb(var(--pi-play-rgb)); font-size: 0.6875rem; font-weight: 700; white-space: nowrap; }
+.pi-link { align-self: flex-start; border: 0; background: none; padding: 0; color: var(--pi-accent-hi); font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
 .pi-more { border: 1px solid var(--pi-line); border-radius: 14px; background: var(--pi-card); }
-.pi-more > summary { list-style: none; display: flex; align-items: center; gap: 8px; padding: 11px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.pi-more > summary { list-style: none; display: flex; align-items: center; gap: 8px; padding: 11px 14px; font-size: 0.84375rem; font-weight: 600; cursor: pointer; }
 .pi-more > summary::-webkit-details-marker { display: none; }
-.pi-more > summary b { padding: 1px 7px; border-radius: 999px; background: var(--pi-card-2); color: var(--pi-muted); font-size: 11px; }
+.pi-more > summary b { padding: 1px 7px; border-radius: 999px; background: var(--pi-card-2); color: var(--pi-muted); font-size: 0.6875rem; }
 .pi-more > summary svg { margin-left: auto; color: var(--pi-muted); transition: transform .2s; }
 .pi-more[open] > summary svg { transform: rotate(90deg); }
 .pi-more-body { display: grid; gap: 10px; padding: 0 12px 12px; }
 .pi-family { display: flex; flex-wrap: wrap; gap: 6px; }
-.pi-family button { padding: 5px 11px; border-radius: 999px; border: 1px solid var(--pi-line); background: var(--pi-card); color: var(--pi-muted); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.pi-family button { padding: 5px 11px; border-radius: 999px; border: 1px solid var(--pi-line); background: var(--pi-card); color: var(--pi-muted); font-size: 0.78125rem; font-weight: 600; cursor: pointer; }
 .pi-family button[aria-pressed="true"] { color: var(--pi-text); background: rgba(var(--accent-rgb), .18); border-color: rgba(var(--accent-rgb), .55); }
 /* Three rows visible, then the list scrolls. */
 .pi-scroll3 { max-height: 178px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; }
@@ -150,18 +150,18 @@ html.pelinstall-mode, html.pelinstall-mode body { background: transparent !impor
 /* Switch rows and summary. */
 .pi-toggle { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: var(--pi-card); border: 1px solid var(--pi-line); }
 .pi-toggle > span { flex: 1; min-width: 0; }
-.pi-toggle small { display: block; margin-top: 2px; color: var(--pi-muted); font-size: 12px; }
+.pi-toggle small { display: block; margin-top: 2px; color: var(--pi-muted); font-size: 0.75rem; }
 .pi-switch { position: relative; flex: 0 0 44px; width: 44px; height: 26px; padding: 0; border: 0; border-radius: 999px; background: rgba(120, 120, 140, .38); cursor: pointer; transition: background .2s; }
 .pi-switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); transition: transform .22s cubic-bezier(.3, 1.4, .5, 1); }
 .pi-switch[aria-checked="true"] { background: var(--accent); }
 .pi-switch[aria-checked="true"]::after { transform: translateX(18px); }
 .pi-switch:disabled { opacity: .5; cursor: not-allowed; }
-.pi-summary { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--pi-card); border: 1px solid var(--pi-line); font-size: 13px; }
+.pi-summary { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--pi-card); border: 1px solid var(--pi-line); font-size: 0.8125rem; }
 .pi-summary dt { color: var(--pi-muted); }
 .pi-summary dd { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Buttons: the primary one keeps the facet texture of the launcher. */
 .pi-actions { display: flex; gap: 10px; margin-top: 2px; }
-.pi-btn { height: 44px; padding: 0 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 13px; border: 1px solid var(--pi-line); background: var(--pi-card-2); color: var(--pi-text); font-size: 14px; font-weight: 700; cursor: pointer; }
+.pi-btn { height: 44px; padding: 0 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 13px; border: 1px solid var(--pi-line); background: var(--pi-card-2); color: var(--pi-text); font-size: 0.875rem; font-weight: 700; cursor: pointer; }
 .pi-btn:hover:not(:disabled) { border-color: rgba(var(--accent-rgb), .6); }
 .pi-btn:disabled { opacity: .5; cursor: not-allowed; }
 .pi-btn.grow { flex: 1; }
@@ -169,7 +169,7 @@ html.pelinstall-mode, html.pelinstall-mode body { background: transparent !impor
 .pi-btn .menu-icon { width: 17px; height: 17px; }
 .pi-btn.primary { position: relative; isolation: isolate; overflow: hidden; border-color: transparent; color: #fff; background: radial-gradient(ellipse at center, rgba(0,0,0,.25), rgba(0,0,0,.08)), linear-gradient(120deg, var(--pi-accent-hi), var(--pi-accent-lo)); box-shadow: 0 10px 26px rgba(var(--accent-rgb), .35), inset 0 1px 0 rgba(255,255,255,.25); }
 .pi-btn.primary::before { content: ""; position: absolute; inset: 0; z-index: -1; background: url("/images/button-facets.svg") 0 0 / 192px 96px repeat; opacity: .35; -webkit-mask-image: radial-gradient(ellipse at center, transparent 15%, #000 85%); mask-image: radial-gradient(ellipse at center, transparent 15%, #000 85%); pointer-events: none; }
-.pi-window .pi-play { width: 100%; height: 54px; min-height: 54px; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 15px !important; font-size: 17px !important; font-weight: 800 !important; }
+.pi-window .pi-play { width: 100%; height: 54px; min-height: 54px; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 15px !important; font-size: 1.0625rem !important; font-weight: 800 !important; }
 .pi-window .pi-play .menu-icon { width: 20px; height: 20px; }
 /* Installing. */
 .pi-working { display: grid; justify-items: center; gap: 12px; padding: 8px 0 2px; text-align: center; }
@@ -186,12 +186,12 @@ html.pelinstall-mode, html.pelinstall-mode body { background: transparent !impor
 .pi-check .menu-icon { width: 24px; height: 24px; }
 .pi-notes { display: grid; gap: 6px; }
 .pi-notes:empty { display: none; }
-.pi-notes p { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--pi-muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pi-notes p { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--pi-muted); font-size: 0.78125rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pi-notes .menu-icon { flex: 0 0 auto; width: 15px; height: 15px; color: rgb(var(--pi-play-rgb)); }
-.pi-error { margin: 0; padding: 12px 14px; border-radius: 14px; background: rgba(239, 68, 68, .1); border: 1px solid rgba(239, 68, 68, .3); color: #ffb4bc; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+.pi-error { margin: 0; padding: 12px 14px; border-radius: 14px; background: rgba(239, 68, 68, .1); border: 1px solid rgba(239, 68, 68, .3); color: #ffb4bc; font-size: 0.8125rem; line-height: 1.45; overflow-wrap: anywhere; }
 :root[data-appearance="light"] .pi-error { color: #b42335; }
 .pi-window .pelinstall-entry-selector .custom-select-trigger { min-height: 44px; border-radius: 13px; background: var(--pi-card-2); border-color: var(--pi-line); }
-@media (max-width: 420px) { .pi-cards { grid-template-columns: minmax(0, 1fr); } .pi-titlebar .pelinstall-launcher-button.titlebar-title { font-size: 20px; } }
+@media (max-width: 420px) { .pi-cards { grid-template-columns: minmax(0, 1fr); } .pi-titlebar .pelinstall-launcher-button.titlebar-title { font-size: 1.25rem; } }
 .pi-window .installation-path-tooltip-anchor { display: block; flex: 0 0 auto; width: 100%; }
 .pi-window :is(h1, h2, strong) { text-shadow: none; }
 /* Play: the launcher's green action with the facet texture. */
@@ -201,3 +201,31 @@ html.pelinstall-mode, html.pelinstall-mode body { background: transparent !impor
 .pi-window .pi-play .menu-icon { fill: currentColor; }
 :root[data-appearance="light"] .pi-window :is(.pi-steps i:not(.done):not(.now), .pi-indeterminate) { background: rgba(20, 24, 40, .1); }
 :root[data-appearance="light"] .pi-window .pi-steps i.now { background: linear-gradient(90deg, var(--accent) 50%, rgba(20, 24, 40, .1) 50%); }
+
+/* Installer surfaces are opaque even when the launcher's panels use glass. */
+:root[data-appearance] .pi-window { background: var(--pi-win) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+:root[data-appearance] .pelinstall-settings-menu.dialog-popover { background: #12131c !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+:root[data-appearance="light"] .pelinstall-settings-menu.dialog-popover { background: #fafaff !important; }
+
+/* Match the launcher's compact settings controls, including at larger text sizes. */
+:root .pelinstall-settings-menu { padding: .5rem; border-radius: 18px; }
+.pelinstall-settings-menu .effects-preference { flex-direction: row; flex-wrap: nowrap; align-items: center; justify-content: space-between; padding: .5rem .625rem; }
+.pelinstall-settings-menu .effects-preference-label { flex: 0 0 auto; font-size: .8125rem; }
+.pelinstall-settings-menu .custom-select-wrapper { width: auto; min-width: 0; }
+:root .pelinstall-settings-menu .pelinstall-language-trigger { min-height: 2rem; padding: .375rem .5rem; border-radius: 10px; font-size: .75rem; background: rgba(160, 177, 204, .08) !important; border: 1px solid rgba(160, 177, 204, .18) !important; box-shadow: none; }
+.pelinstall-settings-menu .pelinstall-scale-preference { padding: .625rem; margin-top: .25rem; border-top: 1px solid rgba(160, 177, 204, .13); font-size: .8125rem; }
+.pelinstall-settings-menu .pelinstall-scale-preference > div { gap: .5rem; }
+:root .pelinstall-settings-menu .pelinstall-scale-preference button { flex: 0 0 2rem; width: 2rem; height: 2rem; border-radius: 10px; background: rgba(160, 177, 204, .08) !important; border: 1px solid rgba(160, 177, 204, .18) !important; box-shadow: none; }
+:root .pelinstall-settings-menu button::before,
+:root .pelinstall-settings-menu button::after { content: none !important; }
+:root .pelinstall-settings-menu button:hover:not(:disabled) { background: rgba(var(--accent-rgb), .13) !important; }
+.pelinstall-settings-menu output { font-variant-numeric: tabular-nums; }
+/* Window chrome stays fixed; interface scaling applies to the content. */
+.pi-titlebar { box-sizing: border-box; flex-basis: 50px; min-height: 50px; }
+.pi-titlebar .pelinstall-launcher-button.titlebar-title { height: 32px; min-height: 32px; line-height: 1; }
+:root .pelinstall-settings-menu::before,
+:root .pelinstall-settings-menu::after { content: none !important; }
+:root .pelinstall-settings-menu button { background-image: none !important; text-shadow: none !important; }
+.pelinstall-settings-menu .effects-preference-label .menu-icon { width: 1.125rem; height: 1.125rem; color: var(--accent); }
+.pi-titlebar .pi-brand { min-width: 0; }
+.pi-titlebar .pelinstall-brand { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -13,6 +13,7 @@ import { LaunchEffectIcon } from "./LaunchEffectIcon";
 import { usePreferencesText } from "./labels";
 import { notifyError } from "../../services/notifications";
 import { ConfirmModal } from "../ConfirmModal";
+import { MaintenancePreferences } from "./MaintenancePreferences";
 
 type ConfigProps = { config: AppConfig; disabled: boolean; save: (patch: Partial<AppConfig>) => void };
 export function ThemePreferences({ onApplied, onOpenConnections }: { onApplied: () => void; onOpenConnections: () => void }) {
@@ -153,10 +154,11 @@ function UpdateChannelPreferences({ onError }: { onError: (error: string) => voi
 function AppImageInstallPreferences({ onError }: { onError: (error: string) => void }) {
   const { t } = useI18n();
   const [target, setTarget] = useState(""), [installing, setInstalling] = useState(false);
+  const [appimage, setAppimage] = useState(false);
   useEffect(() => {
-    void invoke<{ appimage: boolean; installed: boolean; target: string }>("appimage_install_status").then(status => setTarget(status.appimage && !status.installed ? status.target : "")).catch(() => setTarget(""));
+    void invoke<{ appimage: boolean; installed: boolean; target: string }>("appimage_install_status").then(status => { setAppimage(status.appimage || status.installed); setTarget(status.appimage && !status.installed ? status.target : ""); }).catch(() => setTarget(""));
   }, []);
-  if (!target) return null;
+  if (!target) return appimage ? <MaintenancePreferences uninstall/> : null;
   // The installed copy opens and this one closes.
   const install = async () => {
     setInstalling(true);
@@ -164,7 +166,7 @@ function AppImageInstallPreferences({ onError }: { onError: (error: string) => v
     catch (error) { onError(String(error)); notifyError(t("welcome", "installTitle"), error); setInstalling(false); }
   };
   return <section data-preference-id="appimage-install" className="preference-section"><h3>{t("welcome", "installTitle")}</h3><p>{t("welcome", "installHint")}</p><p><code>{target}</code></p>
-    <button type="button" className="preference-outline" disabled={installing} onClick={() => void install()}><MenuIcon name="download"/>{installing ? t("welcome", "installing") : t("welcome", "installButton")}</button></section>;
+    <button type="button" className="preference-outline" disabled={installing} onClick={() => void install()}><MenuIcon name="download"/>{installing ? t("welcome", "installing") : t("welcome", "installButton")}</button><MaintenancePreferences uninstall/></section>;
 }
 export function ToolsPreferences({ onError, onLogs, onWelcome }: { onWelcome: () => void; onError: (error: string) => void; onLogs: () => void }) {
   const text = usePreferencesText(), { t, language } = useI18n();
@@ -174,6 +176,7 @@ export function ToolsPreferences({ onError, onLogs, onWelcome }: { onWelcome: ()
     <section data-preference-id="welcome-tour" className="preference-section first"><h3>{language === "pt" ? "Boas-vindas ao PeliGames" : "Welcome to PeliGames"}</h3><p>{language === "pt" ? "Reveja a apresentação dos recursos do launcher e seus atalhos, quando quiser." : "Revisit the launcher's features and shortcuts whenever you like."}</p><button type="button" className="preference-outline" onClick={onWelcome}><MenuIcon name="info"/>{language === "pt" ? "Rever apresentação" : "View the tour"}</button></section>
     <section data-preference-id="launcher-logs" className="preference-section"><h3>{text.openLogs}</h3><p>{text.logsHint}</p><button type="button" className="preference-outline" onClick={onLogs}><MenuIcon name="logs"/>{text.openLogs}</button></section>
     <UpdateChannelPreferences onError={onError}/>
+    <MaintenancePreferences/>
     <AppImageInstallPreferences onError={onError}/>
     <section data-preference-id="manual-folders" className="preference-section"><h3>{t("settings", "manualDirs")}</h3><p>{t("settings", "manualDirsDesc")}</p>{folders.length ? <div className="preference-folders">{folders.map(folder => <div key={folder}><span>{folder}</span><button type="button" aria-label={`${t("settings", "removeDir")}: ${folder}`} onClick={() => remove(folder)}><MenuIcon name="trash"/></button></div>)}</div> : <p>{text.noFolders}</p>}</section>
   </>;

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { ModalSurface } from "../../components/ModalSurface";
 import { BootSplash, SplashDone } from "../../components/BootSplash";
+import { ResetStartupGate } from "./ResetStartupGate";
 // Loaded only when the launcher opens: Pelinstall never downloads the library,
 // Matrix, Nexus or Settings code.
 const App = lazy(() => import("../../App"));
@@ -24,5 +25,5 @@ export function StartupRouter() {
   // Shortcut that failed while the launcher was opened with it: reported over the library.
   const report = <ModalSurface className="modal-content dialog-glass pelinstall-surface" header={<h2>Falha ao executar</h2>} onDismiss={() => setReportOpen(false)}><p>O executável não foi iniciado corretamente. Abra o PeliGames para verificar a configuração.</p><p className="pelinstall-error" role="alert">{error || startup.error}</p>{startup.log && <p className="pelinstall-note">Log: {startup.log}</p>}</ModalSurface>;
   // The report waits for the launcher (and its styles) to load.
-  return <Suspense fallback={<BootSplash />}><App initialGamePath={startup.entry || undefined} /><SplashDone />{startup.error && reportOpen && <div className="modal-overlay">{report}</div>}</Suspense>;
+  return <ResetStartupGate>{health => <Suspense fallback={<BootSplash />}><App initialGamePath={startup.entry || undefined} /><SplashDone />{health}{startup.error && reportOpen && <div className="modal-overlay">{report}</div>}</Suspense>}</ResetStartupGate>;
 }

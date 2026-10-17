@@ -103,8 +103,8 @@ pub(super) fn steam_libraries(home: &Path) -> Vec<PathBuf> {
     libraries
 }
 
-pub(super) fn scan_steam(home: &Path) -> Vec<GameInfo> { scan_steam_inner(home, true) }
-pub(super) fn scan_steam_main(home: &Path) -> Vec<GameInfo> { scan_steam_inner(home, false) }
+pub(super) fn scan_steam(home: &Path) -> Vec<GameInfo> { scan_steam_inner(home, true, None) }
+pub(super) fn scan_steam_main(home: &Path, flatpak: bool) -> Vec<GameInfo> { scan_steam_inner(home, false, Some(flatpak)) }
 // Steam also installs support packages as app manifests. These belong to runner
 // discovery, not the main game library. Match narrow families, never words like
 // "legacy", "soldier" or "runtime" anywhere in a game's title.
@@ -122,15 +122,13 @@ fn steam_support_package(appid: &str, name: &str, installdir: &str) -> bool {
         || folder == "legacysteamruntime" || folder.starts_with("legacysteamruntime_")
 }
 
-fn scan_steam_inner(home: &Path, mod_library: bool) -> Vec<GameInfo> {
+fn scan_steam_inner(home: &Path, mod_library: bool, source: Option<bool>) -> Vec<GameInfo> {
     let mut games = Vec::new();
     
-    let steam_paths = vec![
-        home.join(".local/share/Steam"),
-        home.join(".steam/steam"),
-        home.join(".var/app/com.valvesoftware.Steam/.local/share/Steam"),
-        home.join(".var/app/com.valvesoftware.Steam/data/Steam"),
-    ];
+    let steam_paths = match source {
+        Some(flatpak) => super::steam_installation::roots(home, flatpak),
+        None => super::steam_installation::roots(home, false).into_iter().chain(super::steam_installation::roots(home, true)).collect(),
+    };
 
     let mut libraries = Vec::new();
 
@@ -622,6 +620,25 @@ pub fn request_steam_uninstall(app_id: String) -> Result<(), String> {
 mod steam_main_filter_tests {
     use super::*;
     #[test]
+    fn flatpak_library_on_another_disk_keeps_its_source() {
+        let root = std::env::temp_dir().join(format!("peligames-steam-source-{}", uuid::Uuid::new_v4()));
+        let home = root.join("home");
+        let disk = root.join("another-disk");
+        let apps = disk.join("steamapps");
+        fs::create_dir_all(apps.join("common/TestGame")).unwrap();
+        fs::write(apps.join("appmanifest_42.acf"), "\"AppState\"\n{\n\"appid\" \"42\"\n\"name\" \"TestGame\"\n\"installdir\" \"TestGame\"\n}").unwrap();
+        let flatpak = super::super::steam_installation::roots(&home, true).remove(0);
+        let native = super::super::steam_installation::roots(&home, false).remove(0);
+        fs::create_dir_all(flatpak.join("config")).unwrap();
+        fs::create_dir_all(native.join("steamapps")).unwrap();
+        fs::write(flatpak.join("config/libraryfolders.vdf"), format!("\"libraryfolders\"\n{{\n\"0\"\n{{\n\"path\" \"{}\"\n}}\n}}", disk.display())).unwrap();
+        assert!(scan_steam_main(&home, false).is_empty());
+        let games = scan_steam_main(&home, true);
+        assert_eq!(games.len(), 1);
+        assert_eq!(Path::new(&games[0].path), apps.join("common/TestGame"));
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
     fn filters_runtime_families_and_renamed_ids() {
         assert!(steam_support_package("4690330", "Legacy Steam Runtime", "LegacySteamRuntime"));
         assert!(steam_support_package("4690330", "Renamed support package", "Renamed"));
@@ -648,7 +665,7 @@ mod steam_main_filter_tests {
         let runtime=apps.join("appmanifest_4690330.acf");
         fs::write(&runtime,"\"AppState\"\n{\n\"appid\" \"4690330\"\n\"name\" \"Legacy Steam Runtime\"\n\"installdir\" \"LegacySteamRuntime\"\n}").unwrap();
         fs::write(apps.join("appmanifest_990000.acf"),"\"AppState\"\n{\n\"appid\" \"990000\"\n\"name\" \"Hogwarts Legacy\"\n\"installdir\" \"HogwartsLegacy\"\n}").unwrap();
-        let games=scan_steam_main(&root);
+        let games=scan_steam_main(&root, false);
         assert_eq!(games.len(),1); assert_eq!(games[0].name,"Hogwarts Legacy");
         assert!(runtime.is_file());
         fs::remove_dir_all(root).unwrap();

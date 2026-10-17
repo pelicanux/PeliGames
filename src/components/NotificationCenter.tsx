@@ -7,7 +7,7 @@ import { MenuIcon } from "./MenuIcon";
 import type { LauncherUpdateInfo } from "../services/launcherUpdates";
 import { checkRunner, type ProtonFamily } from "../services/protonService";
 import "./notifications.css";
-import { LAUNCHER_ERROR_EVENT, LAUNCHER_NOTICE_EVENT, type LauncherErrorDetail } from "../services/notifications";
+import { LAUNCHER_ERROR_EVENT, LAUNCHER_NOTICE_EVENT, repeatNotification, type LauncherErrorDetail } from "../services/notifications";
 import { MATRIX_MENTION_EVENT, OPEN_MATRIX_CHAT_EVENT, type MatrixMentionDetail } from "../services/matrixChat";
 import { playNotificationSound, unlockNotificationSound } from "../services/notificationSound";
 import { useNativeVideoOverlay } from "../services/matrixScreenView";
@@ -49,7 +49,7 @@ export function NotificationCenter({ launcherUpdate, onNavigate, nexusError = ""
   const [toasts, setToasts] = useState<Notice[]>([]);
   const [toastHovered, setToastHovered] = useState(false);
   const [toastFocused, setToastFocused] = useState(false);
-  const toastTime = useRef({ id: "", remaining: 6000 });
+  const toastTime = useRef({ id: "", remaining: 3000 });
   const panelRef = useRef<HTMLElement>(null);
   const toastRef = useRef<HTMLButtonElement>(null);
   useNativeVideoOverlay(panelRef);
@@ -80,13 +80,16 @@ export function NotificationCenter({ launcherUpdate, onNavigate, nexusError = ""
     commit({ items: existing ? previous.items.map(n => n.id === id ? notice : n).filter(n => n.target !== target || n.id === id) : [notice, ...other], seen: seen ? previous.seen : [...previous.seen, id].slice(-100) });
     if (!seen && !openRef.current) setToasts(queue => [...queue.filter(n => n.target !== target), notice]);
   };
+  const showFeedback = (notice: Notice) => {
+    commit({ ...storeRef.current, items: repeatNotification(storeRef.current.items, notice).slice(0, 20) });
+    // A fresh action must show its result even after the bell was opened.
+    openRef.current = false;
+    setOpen(false);
+    setToasts(queue => repeatNotification(queue, notice));
+  };
   const notifyNexusError = (message: string) => {
     if (!message.trim()) return;
-    const previous = storeRef.current;
-    const sameMessage = (n: Notice) => n.target === "nexus" && n.message === message;
-    const notice: Notice = { id: `nexus:${crypto.randomUUID()}`, target: "nexus", version: "", message, unread: !openRef.current };
-    commit({ ...previous, items: [notice, ...previous.items.filter(n => !sameMessage(n))].slice(0, 20) });
-    if (!openRef.current) setToasts(queue => [...queue.filter(n => !sameMessage(n)), notice]);
+    showFeedback({ id: `nexus:${crypto.randomUUID()}`, target: "nexus", version: "", message, unread: true });
   };
   useEffect(() => { notifyNexusError(nexusError); }, [nexusError]);
   // Any launcher error (notifyError): kept like the Nexus ones, one entry per message.
@@ -94,12 +97,8 @@ export function NotificationCenter({ launcherUpdate, onNavigate, nexusError = ""
     const received = (event: Event) => {
       const { source, message } = (event as CustomEvent<LauncherErrorDetail>).detail;
       if (!message?.trim()) return;
-      const previous = storeRef.current;
       const target = event.type === LAUNCHER_NOTICE_EVENT ? "info" : "error";
-      const sameMessage = (n: Notice) => n.target === target && n.message === message && n.source === source;
-      const notice: Notice = { id: `${target}:${crypto.randomUUID()}`, target, version: "", message, source, unread: !openRef.current };
-      commit({ ...previous, items: [notice, ...previous.items.filter(n => !sameMessage(n))].slice(0, 20) });
-      if (!openRef.current) setToasts(queue => [...queue.filter(n => !sameMessage(n)), notice]);
+      showFeedback({ id: `${target}:${crypto.randomUUID()}`, target, version: "", message, source, unread: true });
     };
     window.addEventListener(LAUNCHER_ERROR_EVENT, received);
     window.addEventListener(LAUNCHER_NOTICE_EVENT, received);
@@ -214,9 +213,13 @@ export function NotificationCenter({ launcherUpdate, onNavigate, nexusError = ""
     return () => { resize.disconnect(); children.disconnect(); };
   }, [store.items, language]);
   const toast = toasts[0];
+  useLayoutEffect(() => {
+    setToastHovered(toastRef.current?.matches(":hover") ?? false);
+    setToastFocused(Boolean(toastRef.current && document.activeElement === toastRef.current));
+  }, [toast?.id]);
   useEffect(() => {
     if (!toast) return;
-    if (toastTime.current.id !== toast.id) toastTime.current = { id: toast.id, remaining: 6000 };
+    if (toastTime.current.id !== toast.id) toastTime.current = { id: toast.id, remaining: 3000 };
     if (toastHovered || toastFocused) return;
     const started = performance.now();
     const timer = window.setTimeout(() => setToasts(queue => queue.slice(1)), toastTime.current.remaining);
