@@ -75,6 +75,7 @@ dist-ssr
 /src/mangohudPreview.ts
 /scripts/preview-*.ts
 /scripts/*.test.*
+/scripts/test-*
 /src/**/*.test.*
 !/src/services/matrixRtc.integration.test.ts
 /vite.preview.config.ts
