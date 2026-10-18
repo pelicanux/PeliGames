@@ -244,7 +244,7 @@ pub(crate) fn prepare_launch_program(
     let arguments = if registered_program { entry.launch_arguments.clone() } else { extra_arguments };
     let mut prepared = prepare_run_in_prefix(
         InstallationRequest {
-            name: entry.name,
+            name: entry.name.clone(),
             directory: Path::new(&entry.prefix)
                 .parent()
                 .ok_or("Prefixo inválido.")?
@@ -267,6 +267,7 @@ pub(crate) fn prepare_launch_program(
         prepared.command.args(arguments);
     }
     super::mangohud_config::apply_with_override(&mut prepared.command, entry.advanced.options.get("mangohud") == Some(&true) || entry.advanced.options.get("mangohud_env") == Some(&true), entry.advanced.mangohud_fps_limit, entry.advanced.mangohud_enabled)?;
+    super::mangohud_config::apply_game_logs(&mut prepared.command, &entry.name)?;
     Ok(prepared)
 }
 pub fn launch(path: String) -> Result<(), String> {

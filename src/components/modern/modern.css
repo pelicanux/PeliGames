@@ -1248,3 +1248,48 @@ html, body, #root { overflow: clip !important; }
 
 /* Keep scaled pixel lettering inside the native title bar's fixed height. */
 .modern-ui .app-titlebar .titlebar-title { line-height: 1; }
+
+.nexus-library-empty-actions { max-width:560px; }
+.nexus-library-empty-buttons { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px; }
+.nexus-library-empty-buttons > button { display:inline-flex; align-items:center; gap:8px; }
+
+.modern-dlss-model-label { min-width: 0; }
+.modern-dlss-model-label > small { display: block; margin-top: 4px; color: var(--modern-muted, var(--text-secondary)); font-size: 0.75rem; line-height: 1.4; }
+
+.modern-performance-actions { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; }
+.modern-details-secondary > .modern-details-art { display: none; }
+.modern-details-secondary::before { display: none; }
+
+/* Without backdrop blur, the navigation must supply its own opaque surface. */
+:root .performance-mode .modern-sidebar {
+  background: rgb(var(--glass-base-end, 18, 20, 30)) !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  transition-property: width, transform, border-radius;
+}
+
+/* Performance mode keeps library controls solid even without compositing blur. */
+:root .performance-mode .modern-ui .modern-lib-toolbar {
+  --library-control-glass: rgb(var(--glass-base-end, 18, 20, 30));
+}
+:root .performance-mode .modern-lib-toolbar :is(.modern-lib-search, .modern-lib-view, button),
+:root .performance-mode .app-titlebar,
+:root .performance-mode .app-titlebar .btn-titlebar {
+  background: rgb(var(--glass-base-end, 18, 20, 30)) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition-property: color, border-color, transform;
+}
+:root .performance-mode .modern-lib-toolbar button { opacity: 1; }
+:root .performance-mode .modern-lib-toolbar button:disabled { color: var(--modern-faint); }
+:root .performance-mode .modern-lib-toolbar button:is([aria-pressed="true"], .primary),
+:root .performance-mode .app-titlebar .btn-titlebar[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 22%, rgb(var(--glass-base-end, 18, 20, 30))) !important;
+}
+:root .performance-mode .modern-lib-toolbar button:hover:not(:disabled),
+:root .performance-mode .app-titlebar .btn-titlebar:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 16%, rgb(var(--glass-base-end, 18, 20, 30))) !important;
+}
+:root .performance-mode .app-titlebar .window-control.close:hover:not(:disabled) { background: #dc2626 !important; }

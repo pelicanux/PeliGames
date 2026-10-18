@@ -139,12 +139,41 @@ fn excluded_file(name: &str) -> bool {
         "dxsetup",
         "crashreport",
         "unitycrashhandler",
+        "ueprereqsetup",
+        "ue4prereqsetup",
+        "ue5prereqsetup",
+        "redistributable",
     ]
     .iter()
     .any(|prefix| name.starts_with(prefix))
         // Crash reporters, embedded browser helpers and anti-cheat or runtime installers.
-        || ["crashpad", "crashreport", "cefsubprocess", "webhelper", "qtwebengine", "anticheat_setup", "anticheat_eos_setup", "dxwebsetup", "dotnetfx", "oalinst", "physx"]
+        || (name.starts_with("ndp") && name.as_bytes().get(3).is_some_and(u8::is_ascii_digit))
+        || ["webview2runtimeinstaller", "crashpad", "crashreport", "cefsubprocess", "webhelper", "qtwebengine", "anticheat_setup", "anticheat_eos_setup", "dxwebsetup", "dotnetfx", "oalinst", "physx"]
             .iter().any(|part| name.contains(part))
+}
+/// Shared exclusions for installed-game discovery and folders dropped into the launcher.
+pub(crate) fn excluded_directory(name: &str) -> bool {
+    [".peligames", "prefix", "logs", "windows", "$recycle.bin", "system volume information", "_commonredist", "commonredist", "_redist", "redist", "redistributables", "prerequisites", "package cache"]
+        .contains(&name.to_ascii_lowercase().as_str())
+}
+pub(crate) fn excluded_game_executable(path: &Path) -> bool {
+    {
+        let stem = path.file_stem().unwrap_or_default().to_string_lossy().to_ascii_lowercase();
+        let configuration_tool = ["_gamesetting", "_gamesettings", "_config", "_configuration"].iter().any(|suffix| stem.ends_with(suffix));
+        excluded_file(&path.file_name().unwrap_or_default().to_string_lossy()) || configuration_tool || proton_steam(path)
+    }
+}
+/// Reuse the installed library's ranking without creating or modifying a library entry.
+pub(crate) fn rank_dropped_executables(files: Vec<String>, game: &str) -> (Vec<String>, Option<String>) {
+    let mut entries: Vec<InstalledEntry> = files.into_iter().map(|executable| InstalledEntry {
+        discovery_source: None, recommended: false, shortcut: None, profile: None,
+        launch_arguments: vec![], advanced: Default::default(), name: game.into(), path: executable.clone(),
+        directory: Path::new(&executable).parent().unwrap_or(Path::new("")).to_string_lossy().into_owned(),
+        executable, prefix: String::new(), proton: String::new(), cover_url: None, launcher: "PeliGames".into(),
+    }).collect();
+    rank(&mut entries, game);
+    let recommended = entries.iter().find(|entry| entry.recommended).map(|entry| entry.executable.clone());
+    (entries.into_iter().map(|entry| entry.executable).collect(), recommended)
 }
 /// Proton's stand-in Steam client, present in every prefix it creates.
 fn proton_steam(path: &Path) -> bool {
@@ -158,58 +187,44 @@ pub fn prefix_executables(prefix: &Path) -> Result<Vec<String>, String> {
     walk(&prefix.join("drive_c"), Path::new(""), &mut files, 0, &mut visited)?;
     Ok(files.into_iter().map(|file| file.to_string_lossy().into_owned()).collect())
 }
-fn walk(
-    root: &Path,
-    installer: &Path,
-    files: &mut BTreeSet<PathBuf>,
-    depth: usize,
-    visited: &mut usize,
-) -> Result<(), String> {
-    if depth > 24 {
-        return Err("A instalação excede o limite de profundidade da varredura.".into());
-    }
-    let entries = match fs::read_dir(root) {
-        Ok(entries) => entries,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-        Err(e) => return Err(format!("Não foi possível examinar {}: {e}", root.display())),
-    };
-    for entry in entries {
-        let entry = entry.map_err(|e| e.to_string())?;
-        *visited += 1;
-        if *visited > 100_000 {
-            return Err("A instalação excede o limite de arquivos da varredura.".into());
-        }
-        let kind = entry.file_type().map_err(|e| e.to_string())?;
-        let path = entry.path();
-        let name = entry.file_name().to_string_lossy().to_ascii_lowercase();
-        // Never follow prefix links to home, mounts or another installation.
-        if kind.is_symlink() {
-            continue;
-        }
-        if kind.is_dir() {
-            if [
-                ".peligames",
-                "prefix",
-                "logs",
-                "windows",
-                "$recycle.bin",
-                "system volume information",
-                "_commonredist",
-                "redist",
-                "redistributables",
-            ]
-            .contains(&name.as_str())
-            {
-                continue;
-            }
-            walk(&path, installer, files, depth + 1, visited)?;
-        } else if kind.is_file() && name.ends_with(".exe") && !excluded_file(&name) && !proton_steam(&path) {
-            let canonical = path.canonicalize().map_err(|e| e.to_string())?;
-            if canonical != installer {
-                files.insert(canonical);
+pub(crate) struct GameExecutableSearch {
+    pub files: BTreeSet<PathBuf>, pub limited: bool, pub excluded: usize, visited: usize,
+}
+/// Read-only folder discovery shared by adding a game and post-install scanning.
+/// It never creates, prepares or examines another prefix implicitly.
+pub(crate) fn discover_game_executables(root: &Path, max_depth: usize, max_entries: usize, max_candidates: usize) -> Result<GameExecutableSearch, String> {
+    use std::collections::VecDeque;
+    let mut result = GameExecutableSearch {files: BTreeSet::new(), limited: false, excluded: 0, visited: 0};
+    let mut queue = VecDeque::from([(root.to_path_buf(), 0usize)]);
+    while let Some((directory, depth)) = queue.pop_front() {
+        let entries = match fs::read_dir(&directory) {
+            Ok(entries) => entries,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(error) => return Err(format!("Não foi possível examinar {}: {error}", directory.display())),
+        };
+        for entry in entries {
+            result.visited += 1;
+            if result.visited > max_entries || result.files.len() >= max_candidates { result.limited = true; return Ok(result); }
+            let entry = entry.map_err(|error|error.to_string())?;
+            let kind = entry.file_type().map_err(|error|error.to_string())?;
+            if kind.is_symlink() { continue; }
+            let path=entry.path();
+            if kind.is_dir() {
+                if excluded_directory(&entry.file_name().to_string_lossy()) { continue; }
+                if depth < max_depth { queue.push_back((path, depth+1)); } else { result.limited=true; }
+            } else if kind.is_file() && path.extension().is_some_and(|ext|ext.eq_ignore_ascii_case("exe")) {
+                if excluded_game_executable(&path) { result.excluded+=1; continue; }
+                result.files.insert(path.canonicalize().map_err(|error|error.to_string())?);
             }
         }
     }
+    Ok(result)
+}
+fn walk(root: &Path, installer: &Path, files: &mut BTreeSet<PathBuf>, depth: usize, visited: &mut usize) -> Result<(), String> {
+    let result=discover_game_executables(root, 24usize.saturating_sub(depth), 100_000usize.saturating_sub(*visited), usize::MAX)?;
+    *visited+=result.visited;
+    if result.limited { return Err("A instalação excede o limite de arquivos ou profundidade da varredura.".into()); }
+    files.extend(result.files.into_iter().filter(|file|file!=installer));
     Ok(())
 }
 /// Executables the prefix's Windows shortcuts point to, with the shortcut name.
@@ -475,10 +490,19 @@ fn score(entry: &InstalledEntry, game: &str, largest: u64) -> i32 {
     points
 }
 /// Orders the discovered executables, most likely game first, and marks the
-/// first one as recommended when it clearly wins (then no question is asked).
+/// first one as recommended when it clearly wins; the user still confirms it.
 fn rank(entries: &mut [InstalledEntry], game: &str) {
     let largest = entries.iter().filter_map(|entry| fs::metadata(&entry.executable).ok()).map(|meta| meta.len()).max().unwrap_or(0);
-    let mut scored: Vec<(i32, InstalledEntry)> = entries.iter().map(|entry| (score(entry, game, largest), entry.clone())).collect();
+    let mut scored: Vec<(i32, InstalledEntry)> = entries.iter().map(|entry| {
+        let path=Path::new(&entry.executable);
+        let parent=path.parent().unwrap_or(Path::new(""));
+        // Additional evidence: an actual Shipping binary below this Unreal bootstrap.
+        let bootstrap = parent.join("Engine").is_dir() && entries.iter().any(|other| {
+            let other_path=Path::new(&other.executable);
+            other_path!=path && other_path.starts_with(parent) && other_path.file_stem().is_some_and(|stem|stem.to_string_lossy().to_ascii_lowercase().ends_with("-shipping"))
+        });
+        (score(entry, game, largest) + if bootstrap {15} else {0}, entry.clone())
+    }).collect();
     scored.sort_by_key(|(points, _)| std::cmp::Reverse(*points));
     let clear = match scored.as_slice() {
         [_] => true,

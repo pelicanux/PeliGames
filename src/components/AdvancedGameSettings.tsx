@@ -1,4 +1,4 @@
-import { getMangoHudStatus } from "../services/mangohud";
+import { getMangoHudStatus, notifyMangoHudMissing } from "../services/mangohud";
 import { WineDllPriorities } from "./WineDllPriorities";
 import { LaunchWrappersEditor } from "./LaunchWrappersEditor";
 import { TimedFeedback } from "./TimedFeedback";
@@ -42,7 +42,7 @@ export function AdvancedGameSettings({ value, disabled, reducedMotion, saved, on
       const result = await getMangoHudStatus();
       if (!mounted.current || latest.current.disabled || latest.current.value !== initialValue) return false;
       if (result.installed) { latest.current.onChange(next); return true; }
-      reportError("MangoHUD não foi detectado. Instale-o em Preferências → Monitoramento.");
+      notifyMangoHudMissing();
       return false;
     } catch { if (mounted.current) reportError("Não foi possível verificar o MangoHUD. Tente novamente."); return false; }
     finally { checkingRef.current = false; if (mounted.current) setCheckingMonitoring(false); }

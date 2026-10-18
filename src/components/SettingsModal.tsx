@@ -71,6 +71,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
   }, [preferences.ready, initialSection, page]);
   useEffect(() => {
     const escape = (event: KeyboardEvent) => {
+      if (document.querySelector("[data-shortcut-recording]")) return;
       if (document.querySelector(".modern-drawer-open, .maintenance-popup")) return;
       // A portaled choice menu consumes Escape before navigating out of preferences.
       if (event.target instanceof Element && (event.target.closest('.custom-select-menu[role="listbox"]') || (event.target.getAttribute("aria-haspopup") === "listbox" && event.target.getAttribute("aria-expanded") === "true"))) return;
@@ -86,14 +87,13 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
     finally { setClearingCache(false); }
   };
   const categoryNames = { home: text.home, interface: text.interface, mods: text.mods, protons: text.protons, covers: text.covers, tools: text.tools, diskAutomount: text.diskAutomount, monitoring: text.monitoring, connections: text.connections, backendUpdate: t("app", "updateBackend") };
-  const categories = [
-    { page: "interface", icon: "platform", hint: text.interfaceHint },
-    { page: "mods", icon: "puzzle", hint: text.modsHint },
-    { page: "protons", icon: "cube", hint: text.protonsHint },
-    { page: "covers", icon: "image", hint: text.coversHint },
-    { page: "connections", icon: "chainLinked", hint: text.connectionsHint },
-    { page: "tools", icon: "tools", hint: text.toolsHint },
-  ] as const;
+  // Search also reaches nested pages that are absent from the main categories.
+  // Requiring every Page here makes new destinations a type-checked addition.
+  const pageIcons = {
+    home: "home", interface: "platform", mods: "puzzle", protons: "cube",
+    covers: "image", connections: "chainLinked", tools: "tools",
+    diskAutomount: "folder", monitoring: "graphics", backendUpdate: "download",
+  } as const satisfies Record<Page, React.ComponentProps<typeof MenuIcon>["name"]>;
   const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const query = normalize(search.trim());
   // Index each real control separately; category names provide context.
@@ -145,7 +145,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
   </div>;
   const pageBody = <>
         {query ? <><h2>{text.searchResults}</h2><div className="preferences-categories">
-          {searchResults.map(option => <button type="button" key={option.id} data-page={option.page} disabled={busy} onClick={() => { if (!preferences.isPending()) { setPage(option.page); setSearch(""); setSearchTarget(option.id); setActionError(""); } }}><span className="preferences-category-icon"><MenuIcon name={categories.find(category => category.page === option.page)!.icon}/></span><span><strong>{option.title}</strong><small>{categoryNames[option.page]}</small></span><span className="preferences-chevron">›</span></button>)}
+          {searchResults.map(option => <button type="button" key={option.id} data-page={option.page} disabled={busy} onClick={() => { if (!preferences.isPending()) { setPage(option.page); setSearch(""); setSearchTarget(option.id); setActionError(""); } }}><span className="preferences-category-icon"><MenuIcon name={pageIcons[option.page]}/></span><span><strong>{option.title}</strong><small>{categoryNames[option.page]}</small></span><span className="preferences-chevron">›</span></button>)}
           {!searchResults.length && <p role="status">{text.searchEmpty}</p>}
         </div></> : <>
         {displayedPage === "interface" && <ThemePreferences onApplied={() => setNotice(text.applied)} onOpenConnections={() => { if (!busy && !preferences.isPending()) { setPage("connections"); setSearch(""); setSearchTarget(null); setActionError(""); } }}/>}

@@ -7,6 +7,26 @@ pub struct NexusBrowser(pub Mutex<Option<Session>>);
 pub struct Session {
     label: String,
     job: Option<String>,
+    api_keys_pending: bool,
+}
+
+const API_KEYS_URL: &str = "https://www.nexusmods.com/users/myaccount?tab=api";
+const SIGN_IN_URL: &str = "https://users.nexusmods.com/auth/sign_in";
+
+fn requests_api_keys(url: &reqwest::Url) -> bool {
+    matches!(url.host_str(), Some("www.nexusmods.com" | "nexusmods.com"))
+        && url.path() == "/users/myaccount"
+        && url.query_pairs().any(|(key, value)| key == "tab" && value == "api")
+}
+
+// Nexus sends completed sign-ins (including existing sessions) to the account
+// page or site home. Never interrupt password recovery, registration or MFA.
+fn login_landing(url: &reqwest::Url) -> bool {
+    match url.host_str() {
+        Some("users.nexusmods.com") => matches!(url.path(), "/" | "/account" | "/account/" | "/account/security" | "/account/security/"),
+        Some("www.nexusmods.com" | "nexusmods.com") => matches!(url.path(), "/" | "/users/myaccount"),
+        _ => false,
+    }
 }
 
 fn nexus_url(value: &str) -> Result<reqwest::Url, String> {
@@ -79,6 +99,8 @@ pub async fn open(app: tauri::AppHandle, value: String, job: Option<String>) -> 
 }
 
 fn build(app: &tauri::AppHandle, url: reqwest::Url, job: Option<String>) -> Result<(), String> {
+    let api_keys_pending = job.is_none() && requests_api_keys(&url);
+    let url = if api_keys_pending { reqwest::Url::parse(SIGN_IN_URL).expect("valid Nexus login URL") } else { url };
     if job.is_none() {
         let label = app
             .state::<NexusBrowser>()
@@ -88,6 +110,9 @@ fn build(app: &tauri::AppHandle, url: reqwest::Url, job: Option<String>) -> Resu
             .as_ref()
             .map(|s| s.label.clone());
         if let Some(window) = label.and_then(|label| app.get_webview(&label)) {
+            if let Some(session) = app.state::<NexusBrowser>().0.lock().map_err(|_| "Sessão Nexus indisponível.")?.as_mut() {
+                session.api_keys_pending = api_keys_pending;
+            }
             window.navigate(url).map_err(|e| e.to_string())?;
             let _ = window.show();
             let _ = app.emit_to(
@@ -112,6 +137,7 @@ fn build(app: &tauri::AppHandle, url: reqwest::Url, job: Option<String>) -> Resu
     }
     let label = format!("nexus-browser-{}", uuid::Uuid::new_v4());
     let navigation = app.clone();
+    let navigation_label = label.clone();
     let popup = app.clone();
     let popup_label = label.clone();
     // Configure session storage before requesting the login page.
@@ -130,6 +156,25 @@ fn build(app: &tauri::AppHandle, url: reqwest::Url, job: Option<String>) -> Resu
         if url.scheme() == "nxm" {
             capture(&navigation, url);
             return false;
+        }
+        if login_landing(url) {
+            let redirect = navigation.state::<NexusBrowser>().0.lock().ok()
+                .and_then(|mut state| state.as_mut().map(|session| {
+                    if session.label == navigation_label && session.api_keys_pending {
+                        session.api_keys_pending = false;
+                        true
+                    } else { false }
+                })).unwrap_or(false);
+            if redirect {
+                let app = navigation.clone();
+                let label = navigation_label.clone();
+                let _ = navigation.run_on_main_thread(move || {
+                    if let Some(view) = app.get_webview(&label) {
+                        let _ = view.navigate(reqwest::Url::parse(API_KEYS_URL).expect("valid Nexus API URL"));
+                    }
+                });
+                return false;
+            }
         }
         navigation_allowed(url)
     })
@@ -156,6 +201,7 @@ fn build(app: &tauri::AppHandle, url: reqwest::Url, job: Option<String>) -> Resu
         .map_err(|_| "Sessão Nexus indisponível.")? = Some(Session {
         label: label.clone(),
         job,
+        api_keys_pending,
     });
     let _ = window.hide();
     #[cfg(target_os = "linux")]
@@ -423,6 +469,20 @@ pub async fn open_nexus_browser(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn api_key_login_flow_only_handles_the_requested_account_destination() {
+        let parse = |value: &str| reqwest::Url::parse(value).unwrap();
+        assert!(requests_api_keys(&parse(API_KEYS_URL)));
+        assert!(!requests_api_keys(&parse("https://www.nexusmods.com/skyrimspecialedition/mods/1")));
+        assert!(!requests_api_keys(&parse("https://www.nexusmods.com/users/myaccount?tab=security")));
+        assert!(!requests_api_keys(&parse("https://example.com/users/myaccount?tab=api")));
+        for url in ["https://users.nexusmods.com/account/security", "https://users.nexusmods.com/account", "https://www.nexusmods.com/", "https://www.nexusmods.com/users/myaccount"] {
+            assert!(login_landing(&parse(url)), "{url}");
+        }
+        for url in [SIGN_IN_URL, "https://users.nexusmods.com/auth/sign_up", "https://users.nexusmods.com/auth/password/new", "https://users.nexusmods.com/auth/two_factor", "https://challenges.cloudflare.com/", "https://example.com/account/security"] {
+            assert!(!login_landing(&parse(url)), "{url}");
+        }
+    }
     #[test]
     fn native_view_stays_inside_the_launcher_content_area() {
         let size = LogicalSize::new(1200., 850.);

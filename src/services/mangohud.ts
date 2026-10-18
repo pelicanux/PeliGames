@@ -1,3 +1,4 @@
+import { notifyInfo } from "./notifications";
 import { invoke } from "@tauri-apps/api/core";
 export interface MangoHudStatus { installed: boolean; executable: string | null; }
 export interface MangoHudRelease { version: string; release_url: string; download_url: string; asset_name: string; size: number; }
@@ -39,3 +40,16 @@ export async function installMangoHud(progress:(p:MangoHudProgress)=>void):Promi
   try{await invoke("install_mangohud");}finally{stop();}
 }
 export const mangoHudDemoInstalled = () => demo() && (demoInstalled || localStorage.getItem("peligames.preview.mangohudInstalled") === "true");
+
+let installationRequested = false;
+export function consumeMangoHudInstallationRequest() {
+  const requested = installationRequested; installationRequested = false; return requested;
+}
+export function openMangoHudInstallation() {
+  installationRequested = true;
+  openMonitoringPreferences();
+  window.dispatchEvent(new Event("showMangoHudInstallation"));
+}
+export function notifyMangoHudMissing() {
+  notifyInfo("MangoHUD", "MangoHUD não foi detectado no sistema. Clique aqui para instalar em Configurações → Monitoramento.", "mangohud-install");
+}

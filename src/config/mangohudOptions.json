@@ -185,7 +185,7 @@
     "label": "Deslocamento horizontal",
     "kind": "number",
     "default": 0,
-    "min": 0,
+    "min": -1000,
     "max": 1000,
     "step": 1
   },
@@ -195,7 +195,7 @@
     "label": "Deslocamento vertical",
     "kind": "number",
     "default": 0,
-    "min": 0,
+    "min": -1000,
     "max": 1000,
     "step": 1
   },
@@ -287,14 +287,8 @@
     "section": "visual",
     "key": "toggle_hud",
     "label": "Atalho para mostrar ou ocultar",
-    "kind": "select",
-    "default": "Shift_R+F12",
-    "values": [
-      "Shift_R+F12",
-      "Shift_L+F12",
-      "Shift_L+F11",
-      "F12"
-    ]
+    "kind": "shortcut",
+    "default": "Shift_R+F12"
   },
   {
     "section": "gpu",
@@ -658,13 +652,15 @@
     "section": "logs",
     "key": "toggle_logging",
     "label": "Atalho para registrar",
-    "kind": "select",
-    "default": "Shift_L+F2",
-    "values": [
-      "Shift_L+F2",
-      "Shift_R+F2",
-      "Shift_L+F10"
-    ]
+    "kind": "shortcut",
+    "default": "Shift_L+F2"
+  },
+  {
+    "section": "fps",
+    "key": "reset_fps_metrics",
+    "label": "Atalho para redefinir médias",
+    "kind": "shortcut",
+    "default": "Shift_R+F9"
   },
   {
     "section": "fps",
@@ -703,5 +699,61 @@
     "label": "Aplicar também ao MangoHUD do sistema",
     "kind": "toggle",
     "default": false
+  },
+  {
+    "section": "visual",
+    "key": "launcher_hud_order",
+    "label": "Ordem das informações",
+    "kind": "select",
+    "default": "fps-first",
+    "values": [
+      "fps-first",
+      "hardware-first"
+    ]
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_load_change",
+    "label": "Cor pelo uso da GPU",
+    "kind": "toggle",
+    "default": false
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_load_value",
+    "label": "Faixas de uso da GPU",
+    "kind": "select",
+    "default": "60,90",
+    "values": [
+      "50,80",
+      "60,90",
+      "70,95"
+    ]
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_load_color",
+    "label": "Cores por uso da GPU",
+    "kind": "select",
+    "default": "4ADE80,FBBF24,F87171",
+    "values": [
+      "4ADE80,FBBF24,F87171",
+      "64B5F6,CE93D8,F472B6",
+      "80DEEA,FDE68A,FB923C"
+    ]
+  },
+  {
+    "key": "launcher_fps_limits",
+    "section": "launcher",
+    "label": "Lista de limites de FPS",
+    "kind": "fpslimits",
+    "default": ""
+  },
+  {
+    "key": "toggle_fps_limit",
+    "section": "fps",
+    "label": "Atalho para alternar limites de FPS",
+    "kind": "shortcut",
+    "default": "Shift_L+F1"
   }
 ]

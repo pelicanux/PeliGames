@@ -69,6 +69,7 @@ dist-ssr
 !/docs/supported-games.md
 !/docs/matrix-community.md
 !/docs/nexus-oauth.md
+!/docs/interface-navigation.md
 /preview.html
 /src/preview.ts
 /mangohud-preview.html

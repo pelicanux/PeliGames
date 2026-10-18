@@ -77,7 +77,7 @@ export interface ManagedGameLibrary {
   /** A library scan is running (also after the first load). */
   scanning?: boolean;
   onAdd: () => void; onRefresh: () => void;
-  downloadsAction: React.ReactNode; accountLabel: string; onAccount: () => void;
+  downloadsAction: React.ReactNode; accountLabel: string; connectLabel?: string; onAccount: () => void;
   onCoverFallback?: (game: GameInfo) => Promise<void>;
 }
 interface Props {
@@ -778,8 +778,14 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         {showScanScreen ? <div className="empty-library-state"><NexusLibraryLoading reducedMotion={performanceMode} /></div> : <>
         {filteredGames.length === 0 && !scanSpinning && (managedLibrary ? <div className="empty-library-state">
           {searchQuery ? <p role="status">{t("gameGrid", "noSearchResults")}</p>
-            : managedLibrary.error ? <button className="btn btn-secondary" onClick={managedLibrary.onRefresh}>{t("gameGrid", "scan")}</button>
-            : <div className="empty-library-action"><button type="button" className="empty-library-add" onClick={managedLibrary.onAdd} aria-label={managedLibrary.addLabel}><MenuIcon name="plus" /></button><div className="empty-library-message" role="status"><h3>{managedLibrary.empty}</h3><p>{managedLibrary.hint}</p></div></div>}
+            : <div className="empty-library-actions nexus-library-empty-actions">
+              <div className="empty-library-action"><button type="button" className="empty-library-add" onClick={managedLibrary.onAdd} aria-label={managedLibrary.addLabel}><MenuIcon name="plus" /></button><div className="empty-library-message" role="status"><h3>{managedLibrary.empty}</h3><p>{managedLibrary.hint}</p></div></div>
+              <div className="nexus-library-empty-buttons">
+                <button type="button" className="btn btn-primary" onClick={managedLibrary.onAccount}><img src="/nexus-mods.svg" width="18" height="18" alt="" />{managedLibrary.connectLabel || managedLibrary.accountLabel}</button>
+                <button type="button" className="btn btn-secondary" onClick={managedLibrary.onRefresh}>{t("gameGrid", "scan")}</button>
+              </div>
+            </div>}
+
         </div> : showEmptyOwnLibrary ?
           <div className="empty-library-state">
             <div className="empty-library-actions">
