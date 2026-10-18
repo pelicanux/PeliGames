@@ -73,7 +73,22 @@ A aba **DLSS 5 NR** roda o modelo de Neural Rendering (NR) do DLSS 5 da NVIDIA e
 
 ### O modelo
 
-Os pesos são da NVIDIA e não acompanham o PeliGames nem os backends. Na primeira instalação, aponte o seu `nvngx_dlssnr.dll` **versão 310.8.0** (ou um zip que contenha só ele). O backend recusa outras versões e confere as 599 entradas extraídas contra hashes conhecidos. O PeliGames guarda o `dlssnr.bin` resultante em `~/.config/PeliGames/Mod/DLSSNR/` e o reaproveita nas instalações seguintes, sem pedir a DLL de novo.
+A `nvngx_dlssnr.dll` e os pesos pertencem à NVIDIA e **não acompanham o PeliGames nem o download do backend**. Esse download fornece o instalador, as ferramentas de extração e os componentes do mod. Obtenha uma DLL compatível por fora do launcher, a partir de um jogo que a forneça.
+
+1. Na **Configuração inicial**, escolha RDNA 4 / RX 9000 ou RDNA 3 / RX 7000 e baixe o backend. Em **Arquivos locais**, selecione a pasta com os pacotes do backend baixados manualmente das releases dos mantenedores. Essa opção importa o backend, não substitui a seleção do modelo de IA.
+2. Espere o download e a verificação terminarem. **Extrair de uma DLL** e **Usar arquivo existente** só ficam disponíveis com o backend pronto; arquivos em cache podem ser reutilizados. O caminho sublinhado abaixo do download abre a pasta onde ele foi salvo.
+3. Escolha **Extrair de uma DLL** e indique a sua `nvngx_dlssnr.dll` compatível, ou use **Usar arquivo existente** para importar um modelo `.bin` válido. Os modelos são conferidos por SHA-256.
+
+| DLL usada na extração | Arquivos gerados pelo backend compatível |
+|---|---|
+| **310.8.0** | `dlssnr.bin` — modelo antigo |
+| **310.9.16** | `dlssnr.bin` e `dlssnr-small.bin` — modelos antigo e novo, em arquivos separados |
+
+Os arquivos permanecem no diretório padrão do backend: `~/.config/PeliGames/Mod/DLSSNR/backend-files/<rdna3|rdna4>/<32|64>/dlssnr-amd/`, conforme as arquiteturas disponíveis. Não é necessário mover o `.bin` para a raiz `Mod/DLSSNR`. Ao importar o modelo novo já extraído, mantenha `dlssnr-small.bin` ao lado de `dlssnr.bin`; o launcher importa os dois.
+
+Nos detalhes do jogo, **Modelo NR → Novo / Antigo** aparece quando os dois modelos estão disponíveis e o backend permite a escolha. Com apenas o antigo, não aparece um seletor desnecessário. **Após trocar o modelo de um mod já instalado, clique em Reparar para aplicar ao jogo**. O **int4 misto funciona apenas com o modelo antigo (310.8.0)**.
+
+Quem atualiza o PeliGames não precisa apagar o backend anterior. Para habilitar o modelo novo, atualize também o backend em **Configurações → Mods → Gerenciar backend** e extraia a DLL **310.9.16** na configuração inicial. Atualizar somente o launcher não fornece a DLL nem gera os modelos novos.
 
 ### Rotas
 
@@ -97,7 +112,7 @@ Escolha a rota pela API do jogo. O PeliGames converte o nome para o que o backen
 | Opção | RX 9000 | RX 7000 | O que faz |
 |---|---|---|---|
 | **RenoDX** | todas as rotas | não disponível | Processa a imagem antes e depois do NR como o [add-on DLSS5 do RenoDX](https://github.com/PEQHUB/RenoDX-DLSS5-Generic). A rede é a mesma. Todos os ajustes do NR passam para a seção `[RenoDX]`: no NR Control (End) na rota OptiScaler, ou em Home → Add-ons nas rotas do ReShade. Vale depois de reiniciar o jogo. |
-| **int4 misto** | todas as rotas | todas as rotas | Segunda rede, de 7% a 11% mais rápida, com parte das contas em int4; a imagem muda um pouco. **Precisa das variáveis `VK_ADD_LAYER_PATH` e `VK_INSTANCE_LAYERS` nas opções de inicialização** (veja abaixo). **Ctrl+F11** alterna entre o int4 e a rede padrão. Com ele, o NR demora mais para entrar quando o jogo abre. |
+| **int4 misto** | todas as rotas | todas as rotas | Disponível com o modelo antigo (310.8.0). Segunda rede, de 7% a 11% mais rápida, com parte das contas em int4; a imagem muda um pouco. **Precisa das variáveis `VK_ADD_LAYER_PATH` e `VK_INSTANCE_LAYERS` nas opções de inicialização** (veja abaixo). **Ctrl+F11** alterna entre o int4 e a rede padrão. Com ele, o NR demora mais para entrar quando o jogo abre. |
 | **NR Control** | rota OptiScaler | não disponível | Menu próprio do NR na tecla **End**: mostra o custo do NR e liga o int4 e o Preprocess. Também precisa das variáveis de camada Vulkan. |
 | **Preprocess** | todas as rotas | todas as rotas | Seção `[Preprocess]` do `dlssnr-amd.ini`, desligada por padrão. Ajusta exposição, curva, contraste e saturação da imagem que a rede recebe e corrige jogos que escurecem ou ficam granulados com o NR (como 007 First Light). **Ctrl+F10** compara com e sem. |
 
