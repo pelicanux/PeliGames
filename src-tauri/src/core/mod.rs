@@ -39,6 +39,7 @@ pub mod launcher_instance;
 pub mod nxm;
 
 pub mod mangohud_config;
+pub mod mangohud_benchmarks;
 pub mod mangohud_root;
 pub mod pe_imports;
 pub mod game_executable;

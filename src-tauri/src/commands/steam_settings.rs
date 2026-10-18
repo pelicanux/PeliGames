@@ -100,10 +100,15 @@ fn quote(value: &str) -> String {
     format!("'{}'", value.replace('\'', "'\"'\"'"))
 }
 /// A per-game wrapper applies settings to the game, never to the Steam client.
+#[cfg(test)]
 fn script(settings: &AdvancedSettings) -> Result<String, String> {
+    script_for_game(settings, None)
+}
+fn script_for_game(settings: &AdvancedSettings, game: Option<&str>) -> Result<String, String> {
     let marker = Path::new("__PELIGAMES_STEAM_COMMAND__");
-    let command =
+    let mut command =
         crate::core::advanced_settings::configured_launch_command(marker, Some(settings))?;
+    if let Some(name) = game { crate::core::mangohud_config::apply_game_logs(&mut command, name)?; }
     let custom = custom_options(settings)?;
     let mut env = BTreeMap::new();
     for (key, value) in command.get_envs().chain(custom.get_envs()) {
@@ -199,7 +204,7 @@ fn apply(game: &ExternalGame) -> Result<(), String> {
         return Ok(());
     };
     let app = game.app_id.as_deref().ok_or("Steam AppID ausente.")?;
-    let script_text = script(&edit.after.advanced)?;
+    let script_text = script_for_game(&edit.after.advanced, Some(&game.name))?;
     let proton_file = external_proton::steam_config(game)?;
     let script_dir = proton_file
         .parent()

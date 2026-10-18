@@ -1,0 +1,7 @@
+.drop-import-overlay { z-index: 2200; }
+.drop-import-dialog { width: min(660px, calc(100vw - 40px)); max-height: calc(100dvh - 90px); min-height: 0; }
+.drop-import-dialog .pi-embedded { height: auto; width: 100%; max-height: calc(100dvh - 90px); }
+.drop-import-dialog.is-assistant { height: min(720px, calc(100dvh - 90px)); }
+.drop-import-dialog.is-assistant .pi-embedded { height: 100%; }
+.launcher-file-drop-hint { position: fixed; inset: 60px 16px 16px; z-index: 6200; pointer-events: none; display: grid; place-content: center; gap: 12px; text-align: center; border: 2px dashed var(--accent); border-radius: 20px; background: color-mix(in srgb, var(--background, #10121a) 94%, transparent); color: var(--accent-soft); }
+.launcher-file-drop-hint strong { font-size: 1.5rem; }

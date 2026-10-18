@@ -21,6 +21,7 @@ interface Props {
   onRenodx: () => void;
   model: "small" | "original";
   modelAvailable: boolean;
+  installed?: boolean;
   modelStatus: "checking" | "error" | "backend" | "missing" | "ready";
   onModel: (model: "small" | "original") => void;
   int4: boolean;
@@ -63,7 +64,9 @@ export function ModernDlssPanel(props: Props) {
             onClick={() => props.onBitness(value)}>{value} bits</button></HoverTooltip>)}
         </div>{props.recommendedBitness && <small className="modern-dlss-recommendation">{props.recommendedBitness} bits {pt ? "recomendado" : "recommended"}</small>}</div>
       </div>
-      {props.modelAvailable && <div className="modern-dlss-setting"><span>{pt ? "Modelo NR" : "NR model"}</span>
+      {props.modelAvailable && <div className="modern-dlss-setting"><div className="modern-dlss-model-label"><span>{pt ? "Modelo NR" : "NR model"}</span>
+        {props.installed && <small>{pt ? "Após trocar, repare o mod." : "Repair the mod after switching."}</small>}
+      </div>
         <div className="modern-dlss-choice"><div className="modern-dlss-segments" role="group" aria-label={pt ? "Modelo neural" : "Neural model"}>
           {(["small", "original"] as const).map(value => <button key={value} type="button" aria-pressed={props.model === value}
             disabled={props.busy || (value === "small" && !props.modelAvailable)} onClick={() => props.onModel(value)}>

@@ -13,6 +13,7 @@ static FILE_LOCK: Mutex<()> = Mutex::new(());
 #[derive(Deserialize)]
 struct OptionSpec {
     key: String,
+    section: String,
     kind: String,
     default: Value,
     min: Option<f64>,
@@ -27,6 +28,30 @@ fn catalog() -> Vec<OptionSpec> {
 pub fn defaults() -> Settings {
     catalog().into_iter().map(|o| (o.key, o.default)).collect()
 }
+fn valid_shortcut(value: &str) -> bool {
+    let keys: Vec<_> = value.split('+').collect();
+    if keys.is_empty() || keys.len() > 5 || value.len() > 100 { return false; }
+    let modifiers = ["Control_L", "Control_R", "Alt_L", "Alt_R", "Shift_L", "Shift_R", "Super_L", "Super_R"];
+    let (key, prefix) = keys.split_last().unwrap();
+    if !prefix.iter().enumerate().all(|(i, modifier)| modifiers.contains(modifier) && !prefix[..i].contains(modifier)) { return false; }
+    if key.len() == 1 && key.bytes().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit()) { return true; }
+    if let Some(number) = key.strip_prefix('F').and_then(|v| v.parse::<u8>().ok()) {
+        return (1..=24).contains(&number) && *key == format!("F{number}");
+    }
+    matches!(*key, "Return" | "KP_Enter" | "space" | "BackSpace" | "Tab" | "Insert" | "Delete" | "Home" | "End"
+        | "Page_Up" | "Page_Down" | "Up" | "Down" | "Left" | "Right" | "Pause" | "Caps_Lock" | "Scroll_Lock" | "Print"
+        | "minus" | "equal" | "bracketleft" | "bracketright" | "backslash" | "semicolon" | "apostrophe" | "grave"
+        | "comma" | "period" | "slash" | "KP_Add" | "KP_Subtract" | "KP_Multiply" | "KP_Divide" | "KP_Decimal"
+        | "KP_0" | "KP_1" | "KP_2" | "KP_3" | "KP_4" | "KP_5" | "KP_6" | "KP_7" | "KP_8" | "KP_9")
+}
+fn valid_fps_limits(value: &str) -> bool {
+    if value.is_empty() { return true; }
+    let values: Vec<_> = value.split(',').collect();
+    (2..=8).contains(&values.len()) && values.iter().enumerate().all(|(i, part)| {
+        !part.is_empty() && part.bytes().all(|c| c.is_ascii_digit())
+            && part.parse::<u32>().is_ok_and(|v| v <= 1000 && !values[..i].iter().any(|p| p.parse::<u32>().ok() == Some(v)))
+    })
+}
 pub fn validate(settings: &Settings) -> Result<(), String> {
     let specs = catalog();
     if settings.len() != specs.len() {
@@ -35,6 +60,8 @@ pub fn validate(settings: &Settings) -> Result<(), String> {
     for spec in specs {
         let value = settings.get(&spec.key).ok_or("Opção MangoHUD ausente.")?;
         let valid = match spec.kind.as_str() {
+            "fpslimits" => value.as_str().is_some_and(valid_fps_limits),
+            "shortcut" => value.as_str().is_some_and(valid_shortcut),
             "toggle" => value.is_boolean(),
             "number" => value.as_f64().is_some_and(|n| {
                 n.is_finite()
@@ -96,11 +123,33 @@ fn atomic_write(path: &Path, data: &[u8]) -> Result<(), String> {
 pub fn render(settings: &Settings, logs: &Path) -> Result<String, String> {
     validate(settings)?;
     let mut text = String::from("# PeliGames · perfil exclusivo do launcher\nlegacy_layout=0\n");
-    for spec in catalog() {
+    let mut specs = catalog();
+    if settings.get("launcher_hud_order").and_then(Value::as_str) == Some("hardware-first") {
+        // legacy_layout=0 draws metrics in configuration order. Keep related
+        // sensors together, followed by FPS, its graph and percentile metrics.
+        specs.sort_by_key(|spec| match spec.key.as_str() {
+            "vram" => 1,
+            "ram" | "swap" | "procmem" | "procmem_shared" | "procmem_virt" => 3,
+            "engine_version" => 4,
+            "frame_timing" => 6,
+            "fps_metrics" => 7,
+            _ if spec.section == "gpu" => 0,
+            _ if spec.section == "cpu" => 2,
+            _ if spec.section == "fps" => 5,
+            _ => 8,
+        });
+    }
+    for spec in specs {
         if spec.key.starts_with("launcher_") {
             continue;
         }
         let value = &settings[&spec.key];
+        if spec.key == "fps_limit" {
+            if let Some(limits) = settings.get("launcher_fps_limits").and_then(Value::as_str).filter(|s| !s.is_empty()) {
+                text.push_str(&format!("fps_limit={limits}\n"));
+                continue;
+            }
+        }
         // Network takes interface names, not a boolean value. An empty selection monitors all.
         if spec.key == "network" {
             if value == &Value::Bool(true) {
@@ -253,9 +302,138 @@ pub fn apply_with_override(command: &mut Command, enabled: bool, limit: Option<u
     }
     Ok(())
 }
+/// Keep global appearance and shortcuts; only the output destination is per game.
+pub fn game_folder(name: &str) -> String {
+    let clean: String = name.chars().take(100).map(|c| if c.is_control() || matches!(c, '/' | '\\' | ':' | ',' | '=' ) { '_' } else { c }).collect();
+    let mut clean = clean.as_str();
+    while clean.len() > 180 { clean = &clean[..clean.char_indices().last().map(|(i,_)|i).unwrap_or(0)]; }
+    let clean = clean.trim().trim_matches('.').trim();
+    if clean.is_empty() { "Jogo".into() } else { clean.into() }
+}
+pub fn apply_game_logs(command: &mut Command, name: &str) -> Result<(), String> {
+    if !command.get_envs().any(|(key,value)| key == "MANGOHUD_CONFIGFILE" && value.is_some()) { return Ok(()); }
+    apply_game_logs_in(command, &directory()?, name, &load()?.settings)
+}
+fn apply_game_logs_in(command: &mut Command, root: &Path, name: &str, settings: &Settings) -> Result<(), String> {
+    let folder = game_folder(name);
+    let logs = root.join("logs");
+    safe_directory(&logs)?;
+    let destination = logs.join(&folder);
+    safe_directory(&destination)?;
+    let configs = root.join("game-configs");
+    safe_directory(&configs)?;
+    let config = configs.join(format!("{folder}.conf"));
+    atomic_write(&config, render(settings, &destination)?.as_bytes())?;
+    command.env("MANGOHUD_CONFIGFILE", config);
+    Ok(())
+}
+pub(super) fn safe_directory(path: &Path) -> Result<(), String> {
+    match fs::symlink_metadata(path) {
+        Ok(meta) if meta.is_dir() && !meta.file_type().is_symlink() => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => fs::create_dir(path).map_err(|e| e.to_string()),
+        _ => Err("Pasta de benchmarks inválida.".into()),
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn game_logs_keep_global_style_and_invocation_fps_override() {
+        let root = std::env::temp_dir().join(format!("peligames-game-hud-{}",uuid::Uuid::new_v4()));
+        fs::create_dir(&root).unwrap();
+        let mut command = Command::new("game");
+        command.env("MANGOHUD_CONFIG", "read_cfg,fps_limit=60");
+        apply_game_logs_in(&mut command, &root, "Cyberpunk 2077", &defaults()).unwrap();
+        let config = fs::read_to_string(root.join("game-configs/Cyberpunk 2077.conf")).unwrap();
+        assert!(config.contains(&format!("output_folder={}/logs/Cyberpunk 2077\n",root.display())));
+        assert!(command.get_envs().any(|(key,value)|key=="MANGOHUD_CONFIG" && value==Some(std::ffi::OsStr::new("read_cfg,fps_limit=60"))));
+        assert!(root.join("logs/Cyberpunk 2077").is_dir());
+        #[cfg(unix)] {
+            std::os::unix::fs::symlink(root.join("logs/Cyberpunk 2077"),root.join("logs/Linked game")).unwrap();
+            assert!(apply_game_logs_in(&mut command, &root, "Linked game", &defaults()).is_err());
+        }
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn reset_metrics_shortcut_defaults_to_right_shift_and_accepts_left_shift() {
+        let mut settings=defaults();
+        assert_eq!(settings.get("reset_fps_metrics").and_then(Value::as_str),Some("Shift_R+F9"));
+        settings.insert("reset_fps_metrics".into(),serde_json::json!("Shift_L+F9"));
+        let config=render(&settings,Path::new("/tmp/logs")).unwrap();
+        assert!(config.contains("reset_fps_metrics=Shift_L+F9\n"));
+        settings.insert("reset_fps_metrics".into(),serde_json::json!("Shift_L+F9\nexec=bad"));
+        assert!(validate(&settings).is_err());
+    }
+    #[test]
+    fn fps_cycle_exports_all_limits_and_its_recorded_shortcut() {
+        let mut settings = defaults();
+        settings.insert("launcher_fps_limits".into(), serde_json::json!("30,60,120,0"));
+        settings.insert("toggle_fps_limit".into(), serde_json::json!("Control_L+F8"));
+        let config = render(&settings, Path::new("/tmp/logs")).unwrap();
+        assert_eq!(config.lines().filter(|line| line.starts_with("fps_limit=")).collect::<Vec<_>>(), vec!["fps_limit=30,60,120,0"]);
+        assert!(config.contains("toggle_fps_limit=Control_L+F8\n"));
+        assert!(!config.contains("launcher_fps_limits="));
+        for invalid in ["60", "30,30", "0,00", "60,1001", "60,-1", "60,NaN", "60,120\nexec=bad"] { assert!(!valid_fps_limits(invalid), "{invalid}"); }
+        settings.insert("launcher_fps_limits".into(), serde_json::json!(""));
+        assert!(render(&settings, Path::new("/tmp/logs")).unwrap().contains("fps_limit=0\n"));
+    }
+    #[test]
+    fn native_offsets_support_inward_spacing_on_right_and_bottom_edges() {
+        let mut settings = defaults();
+        settings.insert("position".into(), serde_json::json!("bottom-right"));
+        settings.insert("offset_x".into(), serde_json::json!(-20));
+        settings.insert("offset_y".into(), serde_json::json!(-20));
+        let config = render(&settings, Path::new("/tmp/logs")).unwrap();
+        assert!(config.contains("offset_x=-20\n"));
+        assert!(config.contains("offset_y=-20\n"));
+        settings.insert("offset_x".into(), serde_json::json!(-1001));
+        assert!(render(&settings, Path::new("/tmp/logs")).is_err());
+    }
+    #[test]
+    fn recorded_shortcuts_accept_keys_and_combinations_without_config_injection() {
+        for shortcut in ["F8", "Control_L+Shift_R+k", "Alt_R+Return", "Super_L+KP_5", "Shift_R+F12"] {
+            assert!(valid_shortcut(shortcut), "{shortcut}");
+        }
+        for shortcut in ["", "Shift_L", "Control_L+", "F25", "F01", "Control_L+Control_L+k", "F8\nexec=bad", "a,b", "Control_L+unknown"] {
+            assert!(!valid_shortcut(shortcut), "{shortcut}");
+        }
+        let mut settings = defaults();
+        settings.insert("toggle_hud".into(), serde_json::json!("Control_L+Shift_R+k"));
+        settings.insert("toggle_logging".into(), serde_json::json!("F8"));
+        let config = render(&settings, Path::new("/tmp/logs")).unwrap();
+        assert!(config.contains("toggle_hud=Control_L+Shift_R+k\n"));
+        assert!(config.contains("toggle_logging=F8\n"));
+    }
+    #[test]
+    fn gpu_load_colors_are_exported_with_validated_thresholds() {
+        let mut settings = defaults();
+        settings.insert("gpu_load_change".into(), serde_json::json!(true));
+        settings.insert("gpu_load_value".into(), serde_json::json!("50,80"));
+        settings.insert("gpu_load_color".into(), serde_json::json!("64B5F6,CE93D8,F472B6"));
+        let config = render(&settings, Path::new("/tmp/logs")).unwrap();
+        assert!(config.contains("gpu_load_change=1\n"));
+        assert!(config.contains("gpu_load_value=50,80\n"));
+        assert!(config.contains("gpu_load_color=64B5F6,CE93D8,F472B6\n"));
+        settings.insert("gpu_load_value".into(), serde_json::json!("90,20"));
+        assert!(render(&settings, Path::new("/tmp/logs")).is_err());
+    }
+    #[test]
+    fn hardware_order_keeps_sensors_before_fps_graph_and_metrics() {
+        let mut settings = defaults();
+        settings.insert("launcher_hud_order".into(), serde_json::json!("hardware-first"));
+        let config = render(&settings, Path::new("/tmp/logs")).unwrap();
+        let keys: Vec<&str> = config.lines().filter_map(|line| line.split_once('=').map(|(key, _)| key)).collect();
+        let order = ["gpu_stats", "vram", "cpu_stats", "ram", "engine_version", "fps", "frame_timing", "fps_metrics"];
+        for pair in order.windows(2) {
+            assert!(keys.iter().position(|key| key == &pair[0]).unwrap() < keys.iter().position(|key| key == &pair[1]).unwrap(), "{} before {}", pair[0], pair[1]);
+        }
+        assert!(!config.contains("launcher_hud_order="));
+        settings.insert("launcher_hud_order".into(), serde_json::json!("fps-first"));
+        let config = render(&settings, Path::new("/tmp/logs")).unwrap();
+        assert!(config.find("\nfps=").unwrap() < config.find("\ngpu_stats=").unwrap());
+        settings.insert("launcher_hud_order".into(), serde_json::json!("invalid"));
+        assert!(render(&settings, Path::new("/tmp/logs")).is_err());
+    }
     #[test]
     fn renders_explicit_metrics_and_isolated_logs() {
         let mut s = defaults();

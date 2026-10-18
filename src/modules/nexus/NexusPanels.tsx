@@ -1,3 +1,5 @@
+import { requireNexusAccount } from "./requireNexusAccount";
+import { useI18n } from "../../i18n/I18nContext";
 import { ModOptionSwitch } from "../../components/ModOptionRow";
 import { AdvancedGameSettings } from "../../components/AdvancedGameSettings";
 import type { AdvancedSettings } from "../../services/advancedSettings";
@@ -54,6 +56,7 @@ export function NexusPanels({ section, toolState, tab, onTabChange, highlightedM
   onRemove: (gameId: string, modId: string) => Promise<boolean>; onError: (error: string) => void;
 }) {
   const text = useNexusText();
+  const { language } = useI18n();
   const [selectingMods, setSelectingMods] = useState(false);
   const [reordering, setReordering] = useState(false);
   const reorderLock = useRef(false);
@@ -177,10 +180,12 @@ export function NexusPanels({ section, toolState, tab, onTabChange, highlightedM
     void listen<string>("nexus-collection-request", event => {
       // Only a link for this game opens here; other games keep their own page.
       const domain = /^nxm:\/\/([a-z0-9]+)\//.exec(event.payload)?.[1];
-      if (active && game && domain === game.nexus_domain) setCollectionReference(event.payload);
+      if (active && game && domain === game.nexus_domain) {
+        void requireNexusAccount(language).then(connected => { if (active && connected) setCollectionReference(event.payload); });
+      }
     }).then(unlisten => { if (active) stop = unlisten; else unlisten(); }).catch(() => undefined);
     return () => { active = false; stop?.(); };
-  }, [game]);
+  }, [game, language]);
   const [requirementsMod, setRequirementsMod] = useState<string | null>(null);
   const [choosing, setChoosing] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
@@ -329,7 +334,7 @@ export function NexusPanels({ section, toolState, tab, onTabChange, highlightedM
             <button type="button" className="nexus-empty-square nexus-manager-square" disabled={locked || settingsBusy} onClick={() => setProfilesOpen(true)}><span>{text.profile}</span><MenuIcon name="sliders" /></button>
             <button type="button" className="nexus-empty-square nexus-manager-square" disabled={busy || !game?.mods.length} onClick={() => { if (game?.mods[0]) void invoke("open_folder", {path: game.mods[0].archive.replace(/\/[^/]+$/, "")}).catch(e => onError(String(e))); }}><span>{text.modFolder}</span><MenuIcon name="folder" /></button>
             <button type="button" className="nexus-empty-square nexus-manager-square" disabled={!game} onClick={() => { if (game) onLogs(game.id); }}><span>{text.logs}</span><MenuIcon name="logs" /></button>
-            <button type="button" className="nexus-empty-square nexus-manager-square" disabled={locked} onClick={() => setCollectionReference("")}><span>{text.collection}</span><MenuIcon name="puzzle" /></button>
+            <button type="button" className="nexus-empty-square nexus-manager-square" disabled={locked} onClick={() => { void requireNexusAccount(language).then(connected => { if (connected) setCollectionReference(""); }); }}><span>{text.collection}</span><MenuIcon name="puzzle" /></button>
           </div>
 
         </div>

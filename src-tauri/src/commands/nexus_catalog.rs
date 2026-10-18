@@ -152,10 +152,11 @@ pub async fn list_nexus_catalog_games() -> Result<Vec<CatalogGame>, String> {
     let cache_file = super::nexus_local::root()?.join("catalog-games.json");
     let (value, fresh) = match query("games.json".into()).await {
         Ok(value) => (value, true),
-        Err(error) => {
-            let bytes = std::fs::read(&cache_file).map_err(|_| error)?;
-            (serde_json::from_slice(&bytes).map_err(|_| "Cache de jogos Nexus inválido.")?, false)
-        }
+        // Discovery and local mod installation do not require a Nexus account
+        // or a catalog downloaded during an earlier signed-in session.
+        Err(_) => (std::fs::read(&cache_file).ok()
+            .and_then(|bytes| serde_json::from_slice(&bytes).ok())
+            .unwrap_or_else(|| serde_json::json!([])), false),
     };
     let mut games: Vec<CatalogGame> = serde_json::from_value(value)
         .map_err(|_| "Lista de jogos Nexus inválida.")?;
@@ -167,6 +168,7 @@ pub async fn list_nexus_catalog_games() -> Result<Vec<CatalogGame>, String> {
         game.vortex_supported = domains.contains(&game.domain_name)
             || (game.id > 0 && ids.contains(&game.id));
     }
+    merge_local_catalog(&mut games);
     games.sort_by_key(|g| g.name.to_lowercase());
     if fresh {
         // Public catalog metadata only; never persist the API key in this cache.
@@ -177,6 +179,41 @@ pub async fn list_nexus_catalog_games() -> Result<Vec<CatalogGame>, String> {
         }
     }
     Ok(games)
+}
+
+fn merge_local_catalog(games: &mut Vec<CatalogGame>) {
+    for definition in super::nexus_modules::registry().definitions.into_iter()
+        .filter(|definition| definition.vortex_supported)
+    {
+        if !games.iter().any(|game| game.domain_name == definition.domain) {
+            games.push(CatalogGame {
+                name: definition.name,
+                domain_name: definition.domain,
+                id: 0,
+                vortex_supported: true,
+            });
+        }
+    }
+}
+
+#[cfg(test)]
+mod offline_catalog_tests {
+    use super::*;
+
+    #[test]
+    fn supported_local_games_are_available_without_account_or_cache() {
+        let mut games = Vec::new();
+        merge_local_catalog(&mut games);
+        assert!(games.iter().any(|game| game.domain_name == "cyberpunk2077"));
+        for definition in super::super::nexus_modules::registry().definitions.into_iter()
+            .filter(|definition| definition.vortex_supported)
+        {
+            assert!(games.iter().any(|game| game.domain_name == definition.domain && game.vortex_supported));
+        }
+        let count = games.len();
+        merge_local_catalog(&mut games);
+        assert_eq!(games.len(), count);
+    }
 }
 #[tauri::command]
 pub async fn list_nexus_catalog_mods(

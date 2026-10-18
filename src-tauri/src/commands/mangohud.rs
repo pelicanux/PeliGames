@@ -283,3 +283,65 @@ pub async fn mangohud_preview(
         }
     }).await.map_err(|e|e.to_string())?
 }
+
+#[tauri::command]
+pub async fn list_mangohud_benchmarks(game_name: Option<String>, executable: Option<String>, game_directory: Option<String>) -> Result<Vec<crate::core::mangohud_benchmarks::BenchmarkFile>, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::core::mangohud_benchmarks::list(game_name.as_deref(), executable.as_deref(), game_directory.as_deref())).await.map_err(|e| e.to_string())?
+}
+#[tauri::command]
+pub async fn read_mangohud_benchmark(name: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::core::mangohud_benchmarks::read(&name)).await.map_err(|e| e.to_string())?
+}
+
+/// Only the native Save dialog chooses the destination; no arbitrary path IPC.
+#[tauri::command]
+pub async fn save_mangohud_comparison(app: tauri::AppHandle, png: String, filename: String) -> Result<bool,String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        use base64::Engine;
+        use tauri_plugin_dialog::DialogExt;
+        use std::io::Write;
+        if png.len() > 12 * 1024 * 1024 { return Err("Imagem da comparação muito grande.".into()); }
+        let bytes=base64::engine::general_purpose::STANDARD.decode(png).map_err(|_| "Imagem da comparação inválida.")?;
+        validate_comparison_png(&bytes)?;
+        if filename.contains(['/', '\\']) || filename.chars().any(|c| c.is_control()) || filename.len()>240 || !filename.ends_with(".png") {
+            return Err("Nome da imagem inválido.".into());
+        }
+        let Some(selected)=app.dialog().file().set_title("Salvar comparação de benchmarks").add_filter("Imagem PNG", &["png"]).set_file_name(filename).blocking_save_file() else {return Ok(false);};
+        let path=selected.into_path().map_err(|_| "Escolha uma pasta local para salvar a imagem.")?;
+        let temporary=path.with_extension(format!("{}.png.part",uuid::Uuid::new_v4()));
+        let result=(|| {
+            let mut file=std::fs::OpenOptions::new().write(true).create_new(true).open(&temporary).map_err(|e|e.to_string())?;
+            file.write_all(&bytes).and_then(|_|file.sync_all()).map_err(|e|e.to_string())?;
+            std::fs::rename(&temporary,&path).map_err(|e|e.to_string())?;
+            Ok(true)
+        })();
+        if result.is_err() {let _=std::fs::remove_file(temporary);}
+        result
+    }).await.map_err(|e|e.to_string())?
+}
+fn validate_comparison_png(bytes: &[u8]) -> Result<(),String> {
+    if bytes.len()<33 || bytes.len()>8*1024*1024 || &bytes[..8]!=b"\x89PNG\r\n\x1a\n" || &bytes[12..16]!=b"IHDR" {return Err("Imagem PNG inválida.".into());}
+    let width=u32::from_be_bytes(bytes[16..20].try_into().unwrap());
+    let height=u32::from_be_bytes(bytes[20..24].try_into().unwrap());
+    if width==0 || height==0 || width>8192 || height>8192 || u64::from(width)*u64::from(height)>32_000_000 {return Err("Dimensões da imagem inválidas.".into());}
+    Ok(())
+}
+#[cfg(test)] mod comparison_export_tests {
+    #[test] fn mangohud_comparison_refuses_non_png_or_excessive_dimensions() {
+        assert!(super::validate_comparison_png(b"not a PNG").is_err());
+        let mut bytes=vec![0;33]; bytes[..8].copy_from_slice(b"\x89PNG\r\n\x1a\n"); bytes[12..16].copy_from_slice(b"IHDR");
+        bytes[16..20].copy_from_slice(&2560u32.to_be_bytes());bytes[20..24].copy_from_slice(&2600u32.to_be_bytes());
+        assert!(super::validate_comparison_png(&bytes).is_ok());
+        bytes[16..20].copy_from_slice(&u32::MAX.to_be_bytes());assert!(super::validate_comparison_png(&bytes).is_err());
+    }
+}
+
+#[tauri::command]
+pub async fn select_mangohud_benchmark(app: tauri::AppHandle) -> Result<Option<crate::core::mangohud_benchmarks::SelectedBenchmark>,String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        use tauri_plugin_dialog::DialogExt;
+        let Some(selected)=app.dialog().file().set_title("Selecionar registro do MangoHUD").add_filter("Registro CSV do MangoHUD", &["csv"]).blocking_pick_file() else {return Ok(None);};
+        let path=selected.into_path().map_err(|_| "Selecione um arquivo local.")?;
+        crate::core::mangohud_benchmarks::selected(&path).map(Some)
+    }).await.map_err(|e|e.to_string())?
+}

@@ -28,17 +28,19 @@ import { dragPelinstallWindow, PelinstallMinimizeButton } from "./WindowControls
 const preview = "__PELI_UI_PREVIEW__" in window;
 /** Tallest the assistant grows to (the Proton list open); must match lib.rs. */
 const PELINSTALL_MAX_HEIGHT = 720;
-export function Pelinstall({ startup }: { startup: StartupInfo }) {
+export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedded?: {
+  mode: "install" | "add"; name: string; onClose: () => void; onBusyChange: (busy: boolean) => void;
+} }) {
   const tr = useInstallerText();
   const { t } = useI18n();
-  const completionPreview = preview && new URLSearchParams(window.location.search).get("stage") === "complete";
+  const completionPreview = !embedded && preview && new URLSearchParams(window.location.search).get("stage") === "complete";
   const sampleEntries: GameInfo[] = completionPreview ? ["7zFM", "7zG", "7z"].map(exe => ({ name: `7-Zip · ${exe}`, path: `/preview/${exe}.exe`, executable: `/preview/${exe}.exe`, launcher: "PeliGames", discovery_source: exe === "7zFM" ? "Atalho do Windows" : null })) : [];
   const panel = useRef<HTMLElement>(null);
-  const [step, setStep] = useState(completionPreview ? 4 : -1);
-  const [mode, setMode] = useState<"install" | "add" | "repair" | null>(completionPreview ? "install" : null);
+  const [step, setStep] = useState(completionPreview ? 4 : embedded ? 0 : -1);
+  const [mode, setMode] = useState<"install" | "add" | "repair" | null>(completionPreview ? "install" : embedded?.mode ?? null);
   const [file, setFile] = useState(startup.error ? "" : startup.executable || "");
   const [matches, setMatches] = useState<ExecutableMatch[]>([]);
-  const [checking, setChecking] = useState(Boolean(startup.executable && !startup.error));
+  const [checking, setChecking] = useState(Boolean(!embedded && startup.executable && !startup.error));
   const [targetPath, setTargetPath] = useState("");
   const [repairExecutables, setRepairExecutables] = useState<GameInfo[]>([]);
   const [repairPrefix, setRepairPrefix] = useState("");
@@ -47,7 +49,7 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
   const [executableIcon, setExecutableIcon] = useState("");
   const coverRequests = useRef(new Map<string, Promise<string | null>>());
   const target = matches.find(match => match.entry.path === targetPath) ?? matches[0];
-  const [name, setName] = useState(completionPreview ? "7-Zip" : "");
+  const [name, setName] = useState(completionPreview ? "7-Zip" : embedded?.name ?? "");
   const [proton, setProton] = useState("");
   const [protonPreferencesOpen, setProtonPreferencesOpen] = useState(false);
   const [protonPreferencesBusy, setProtonPreferencesBusy] = useState(false);
@@ -64,9 +66,8 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
   const [error, setError] = useState(startup.error || "");
   const [result, setResult] = useState<GameInstallationResult | null>(completionPreview ? { prefix: "/preview/prefix", log: "/preview/prefix/logs/installation.log", registered_count: 3 } : null);
   const [entries, setEntries] = useState<GameInfo[]>(sampleEntries);
-  const [chosen, setChosen] = useState(sampleEntries[0]?.path || "");
-  // Same rule as the launcher: several executables and no clear favourite →
-  // the player confirms the game's one (or keeps them all).
+  const [chosen, setChosen] = useState("");
+  // Discovery only recommends: even a single candidate requires confirmation.
   const [choosingExecutable, setChoosingExecutable] = useState(completionPreview);
   const [shortcut, setShortcut] = useState("");
   const [exitConfirmation, setExitConfirmation] = useState(false);
@@ -81,6 +82,7 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
   const closing = useRef(false);
   stateRef.current = { busy: busy || protonPreferencesBusy, dirty: !result && Boolean(directorySelected || proton || name.trim()), installing: busy && step === 3 };
   const close = async () => {
+    if (embedded) { window.dispatchEvent(new Event("peligamesLibraryChanged")); embedded.onClose(); return; }
     if (preview) return;
     closing.current = true;
     try { await getCurrentWindow().destroy(); }
@@ -92,13 +94,14 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
     if (stateRef.current.dirty) setExitConfirmation(true);
     else void close();
   };
+  useEffect(() => { embedded?.onBusyChange(busy || protonPreferencesBusy); }, [busy, protonPreferencesBusy, embedded?.onBusyChange]);
   const cancelInstallation = async () => {
     setCancelPending(true); setCancelConfirmation(false); setError("");
     try { await invoke("cancel_game_installer"); }
     catch (error) { closeAfterCancel.current = false; setCancelPending(false); setError(String(error)); }
   };
   useEffect(() => {
-    if (preview) return;
+    if (preview || embedded) return;
     let disposed = false; let remove: (() => void) | undefined;
     getCurrentWindow().onCloseRequested(event => {
       if (closing.current) return;
@@ -107,7 +110,7 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
     return () => { disposed = true; remove?.(); };
   }, []);
   useEffect(() => {
-    if (!startup.executable || startup.error || (preview && startup.executable === "/preview/instalador.exe")) { setChecking(false); return; }
+    if (embedded || !startup.executable || startup.error || (preview && startup.executable === "/preview/instalador.exe")) { setChecking(false); return; }
     let active = true;
     findPelinstallMatches(startup.executable).then(found => {
       if (active) { setMatches(found); setTargetPath(found[0]?.entry.path || ""); }
@@ -238,14 +241,10 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
         catch (error) { setError(`Reparação concluída, mas a capa não foi salva: ${String(error)}`); }
       }
       const found = (await listPeliGamesEntries()).filter(entry => entry.prefix === installation.prefix);
-      let registered = mode === "repair" ? found.filter(entry => entry.path === targetPath) : found;
-      if (mode !== "repair" && !installation.library_error && registered.length > 1) {
-        const favourite = registered.filter(entry => entry.recommended);
-        // One clear favourite (installer shortcut, engine layout, name): no question.
-        if (favourite.length === 1) registered = [await choosePeliGamesEntry(favourite[0].path).catch(() => favourite[0])];
-        else setChoosingExecutable(true);
-      }
-      setEntries(registered); setChosen(registered.length === 1 ? registered[0].path : (registered.find(entry => entry.recommended) || registered.find(entry => entry.discovery_source) || registered[0])?.path || "");
+      const registered = mode === "repair" ? found.filter(entry => entry.path === targetPath) : found;
+      const needsExecutableChoice = mode !== "repair" && !installation.library_error && registered.length > 0;
+      setChoosingExecutable(needsExecutableChoice);
+      setEntries(registered); setChosen(needsExecutableChoice ? "" : registered[0]?.path || "");
       if (installation.library_error) setError(installation.library_error);
       else if (!registered.length) setError("Nenhum executável foi encontrado. Abra o PeliGames para verificar a instalação e adicionar o executável.");
       setStep(4);
@@ -255,9 +254,10 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
       if (mode === "repair" && !installation.library_error && updateExistingShortcuts && !removeExistingShortcuts) {
         setUpdatedShortcutCount(await invoke<number>("update_peligames_shortcuts", { path: targetPath }));
       }
-      if (!installation.library_error && desktop && registered.length === 1) setShortcut(await invoke<string>("create_peligames_shortcut", { path: registered[0].path }));
+      if (!needsExecutableChoice && !installation.library_error && desktop && registered.length === 1) setShortcut(await invoke<string>("create_peligames_shortcut", { path: registered[0].path }));
     } catch (error) { setError(String(error)); setStep(installed ? 4 : 2); }
     finally {
+      if (installed) window.dispatchEvent(new Event("peligamesLibraryChanged"));
       setBusy(false); setCancelPending(false);
       if (closeAfterCancel.current) { closeAfterCancel.current = false; await close(); }
     }
@@ -287,13 +287,14 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
     finally { setLauncherOpening(false); }
   };
   const openLauncher = async () => {
+    if (embedded) { await close(); return; }
     setError("");
     try { await invoke("open_peligames_launcher", { path: chosen || null }); stateRef.current.dirty = false; await close(); }
     catch (error) { setError(String(error)); }
   };
   // The window grows with its content (up to the tallest step) and shrinks back.
   useEffect(() => {
-    if (preview || !panel.current) return;
+    if (preview || embedded || !panel.current) return;
     const scroller = panel.current.querySelector(".pi-body");
     if (!scroller) return;
     let frame = 0;
@@ -314,7 +315,7 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
   // Which of the two location cards produced the current folder.
   const [placeKind, setPlaceKind] = useState<"default" | "custom" | null>(null);
   useEffect(() => { if (!location.selected) setPlaceKind(null); }, [location.selected]);
-  const backToStart = () => { setMode(null); setName(""); setProton(""); location.reset(); setRepairPrefix(""); setFile(startup.executable || ""); setError(""); setStep(-1); };
+  const backToStart = () => { if (embedded) { requestClose(); return; } setMode(null); setName(""); setProton(""); location.reset(); setRepairPrefix(""); setFile(startup.executable || ""); setError(""); setStep(-1); };
   const back = () => { setError(""); if (step === 0 || (mode === "repair" && step === 1)) backToStart(); else setStep(step - 1); };
   const fileName = file.split(/[\\/]/).pop() || "";
   const shownName = name.trim() || (step === -1 && target ? target.entry.name : fileName) || tr("Nenhum executável selecionado");
@@ -339,13 +340,13 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
   const launchChosen = () => { if (preview) { setError("Execute o binário Pelinstall para iniciar o programa."); return; } setBusy(true); setError(""); void invoke("launch_pelinstall_entry", { path: chosen }).then(() => close()).catch(error => setError(String(error))).finally(() => setBusy(false)); };
   const shownInPrefix = (path?: string | null) => (result?.prefix && path?.startsWith(result.prefix) ? path.slice(result.prefix.length).replace(/^\/drive_c\//, "C:/") : path) ?? "";
 
-  return <main ref={panel} className="pelinstall-window pi-window">
-    <header className="pi-titlebar" onMouseDown={event => dragPelinstallWindow(event, setError)}>
+  return <main ref={panel} className={`pelinstall-window pi-window${embedded ? " pi-embedded" : ""}`}>
+    <header className="pi-titlebar" onMouseDown={event => { if (!embedded) dragPelinstallWindow(event, setError); }}>
       <h1 className="pi-brand"><img src="/peligames.svg" alt="" /><span className="pelinstall-brand">Pel<span className="titlebar-games">install</span></span></h1>
       <span className="pi-spacer" />
-      <InstallerSettingsMenu />
-      <button type="button" className="titlebar-title pelinstall-launcher-button" aria-label={tr("Abrir PeliGames")} title={tr("Abrir PeliGames")} disabled={launcherOpening} onClick={() => void openLauncherFromTitle()}><BrandName /></button>
-      <PelinstallMinimizeButton onError={setError} />
+      {!embedded && <InstallerSettingsMenu />}
+      {!embedded && <button type="button" className="titlebar-title pelinstall-launcher-button" aria-label={tr("Abrir PeliGames")} title={tr("Abrir PeliGames")} disabled={launcherOpening} onClick={() => void openLauncherFromTitle()}><BrandName /></button>}
+      {!embedded && <PelinstallMinimizeButton onError={setError} />}
       <button type="button" className="btn-titlebar window-control pi-close" aria-label={tr("Fechar")} title={tr("Fechar")} disabled={(busy && step !== 3) || cancelPending} onClick={requestClose}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
       </button>
@@ -400,7 +401,7 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
       </>}
 
       {step === 2 && <>
-        <h2>{tr("Como o jogo vai aparecer?")}</h2>
+        <h2>{tr(embedded ? "Confira antes de continuar" : "Como o jogo vai aparecer?")}</h2>
         <div className="pi-field"><input aria-label={tr("Nome")} placeholder={tr("Digite o nome")} value={name} onChange={event => setName(event.target.value)} disabled={busy} /></div>
         {mode === "repair" && <><div className="pi-label">{tr("Executável")}</div><EntrySelector label={tr("Executável para reparar")} value={file} onChange={setFile} disabled={busy} options={Array.from(new Map([...(target ? [target.entry] : []), ...repairExecutables].map(entry => [entry.executable || "", { value: entry.executable || "", label: entry.executable?.split(/[\\/]/).pop() || entry.name }])).values()).filter(option => option.value)} /></>}
         <div className="pi-toggle">
@@ -431,7 +432,7 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
         <div className="pi-list pi-scroll4" role="radiogroup" aria-label={t("gameModes", "chooseExecutableTitle")}>
           {entries.map(entry => <button type="button" key={entry.path} className="pi-option" role="radio" aria-checked={chosen === entry.path} disabled={busy} onClick={() => setChosen(entry.path)}>
             <span className="pi-radio" /><span className="pi-option-text"><strong>{(entry.executable ?? entry.path).split("/").pop()}</strong><small>{shownInPrefix(entry.executable)}</small></span>
-            {(entry.recommended || entry.discovery_source) && <span className="pi-tag" title={entry.discovery_source ?? undefined}>{t("gameModes", "chooseExecutableRecommended")}</span>}
+            {(entry.recommended || entry.discovery_source) && <span className="pi-tag" title={entry.discovery_source ?? undefined}>{entry.recommended ? t("gameModes", "chooseExecutableRecommended") : entry.discovery_source}</span>}
           </button>)}
         </div>
         <div className="pi-actions">
@@ -475,6 +476,6 @@ export function Pelinstall({ startup }: { startup: StartupInfo }) {
     {uninstallConfirmation && target && <PrefixUninstallModal name={target.entry.name} prefix={target.entry.prefix || ""} busy={busy} onConfirm={options => void uninstall(options)} onCancel={() => setUninstallConfirmation(false)} />}
     {cancelConfirmation && <ConfirmModal title={mode === "repair" ? tr("Cancelar reparação?") : tr("Cancelar instalação?")} message={mode === "repair" ? tr("Deseja encerrar a atualização do prefixo? Os arquivos e logs serão preservados, mas a preparação pode ficar incompleta. As alterações do registro não serão salvas.") : tr("Deseja encerrar o instalador e os processos deste prefixo? A instalação pode ficar incompleta. O prefixo e os logs serão preservados e nenhum jogo será registrado por esta tentativa.")} confirmText={tr("Encerrar instalação")} onConfirm={() => void cancelInstallation()} onCancel={() => { closeAfterCancel.current = false; setCancelConfirmation(false); }} />}
     {exitConfirmation && <ConfirmModal title={tr("Configuração incompleta")} message={tr("Deseja sair e descartar a configuração iniciada?")} onConfirm={() => { stateRef.current.dirty = false; setExitConfirmation(false); void close(); }} onCancel={() => setExitConfirmation(false)} />}
-    {protonPreferencesOpen && <Suspense fallback={null}><ProtonPreferencesDialog onClose={() => setProtonPreferencesOpen(false)} onBusyChange={setProtonPreferencesBusy} /></Suspense>}
+    {protonPreferencesOpen && <Suspense fallback={null}><ProtonPreferencesDialog overlayLayer={embedded ? 2300 : undefined} onClose={() => setProtonPreferencesOpen(false)} onBusyChange={setProtonPreferencesBusy} /></Suspense>}
   </main>;
 }

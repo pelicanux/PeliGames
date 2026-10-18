@@ -1,3 +1,4 @@
+import { openMangoHudInstallation } from "../services/mangohud";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { createPortal } from "react-dom";
@@ -13,7 +14,7 @@ import { playNotificationSound, unlockNotificationSound } from "../services/noti
 import { useNativeVideoOverlay } from "../services/matrixScreenView";
 
 export type UpdateTarget = "launcher" | "rdna4" | "rdna3" | ProtonFamily;
-type Notice = { id: string; target: UpdateTarget | "nexus" | "error" | "info" | "matrix"; version: string; message?: string; source?: string; unread: boolean };
+type Notice = { id: string; target: UpdateTarget | "nexus" | "error" | "info" | "matrix"; version: string; message?: string; source?: string; action?: LauncherErrorDetail["action"]; unread: boolean };
 type Store = { items: Notice[]; seen: string[] };
 type BackendStatus = { latest: string; current: string | null; needs_update: boolean };
 const storageKey = "peligames_update_notifications_v1";
@@ -37,7 +38,7 @@ function checkComponents() {
 }
 const Bell = () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>;
 
-export function NotificationCenter({ launcherUpdate, onNavigate, nexusError = "", navigationBusy = false }: { nexusError?: string; navigationBusy?: boolean; launcherUpdate: LauncherUpdateInfo | null; onNavigate: (target: UpdateTarget) => void }) {
+export function NotificationCenter({ launcherUpdate, onNavigate, onNexusAccount, nexusError = "", navigationBusy = false }: { nexusError?: string; navigationBusy?: boolean; launcherUpdate: LauncherUpdateInfo | null; onNavigate: (target: UpdateTarget) => void; onNexusAccount: () => void }) {
   const { language } = useI18n();
   const en = language === "en";
   const reducedMotion = useReducedMotion();
@@ -95,10 +96,10 @@ export function NotificationCenter({ launcherUpdate, onNavigate, nexusError = ""
   // Any launcher error (notifyError): kept like the Nexus ones, one entry per message.
   useEffect(() => {
     const received = (event: Event) => {
-      const { source, message } = (event as CustomEvent<LauncherErrorDetail>).detail;
+      const { source, message, action } = (event as CustomEvent<LauncherErrorDetail>).detail;
       if (!message?.trim()) return;
       const target = event.type === LAUNCHER_NOTICE_EVENT ? "info" : "error";
-      showFeedback({ id: `${target}:${crypto.randomUUID()}`, target, version: "", message, source, unread: true });
+      showFeedback({ id: `${target}:${crypto.randomUUID()}`, target, version: "", message, source, action, unread: true });
     };
     window.addEventListener(LAUNCHER_ERROR_EVENT, received);
     window.addEventListener(LAUNCHER_NOTICE_EVENT, received);
@@ -264,7 +265,7 @@ export function NotificationCenter({ launcherUpdate, onNavigate, nexusError = ""
     if (navigationBusy) return;
     commit({ ...storeRef.current, items: storeRef.current.items.map(n => n.id === notice.id ? { ...n, unread: false } : n) });
     setToasts(queue => queue.filter(n => n.id !== notice.id));
-    close(); if (notice.target === "matrix") window.dispatchEvent(new Event(OPEN_MATRIX_CHAT_EVENT)); else if (notice.target !== "nexus" && notice.target !== "error" && notice.target !== "info") onNavigate(notice.target);
+    close(); if (notice.action === "nexus-account") onNexusAccount(); else if (notice.action === "mangohud-install") openMangoHudInstallation(); else if (notice.target === "matrix") window.dispatchEvent(new Event(OPEN_MATRIX_CHAT_EVENT)); else if (notice.target !== "nexus" && notice.target !== "error" && notice.target !== "info") onNavigate(notice.target);
   };
   return <>
     <button ref={bellRef} type="button" data-tauri-drag-region="false" className="btn-titlebar notification-bell" title={en ? "Notifications" : "Notificações"} aria-label={en ? "Notifications" : "Notificações"} aria-expanded={open} aria-controls="update-notifications" onClick={() => {

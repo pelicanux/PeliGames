@@ -8,7 +8,7 @@ import { usePreferencesConfig } from "./preferences/usePreferencesConfig";
 import "./preferences/preferences.css";
 
 // The standalone installer uses the same Proton controls as launcher preferences.
-export function ProtonPreferencesDialog({ onClose, onBusyChange }: { onClose: () => void; onBusyChange: (busy: boolean) => void }) {
+export function ProtonPreferencesDialog({ onClose, onBusyChange, overlayLayer }: { onClose: () => void; onBusyChange: (busy: boolean) => void; overlayLayer?: number }) {
   const { t } = useI18n();
   const preferences = usePreferencesConfig(() => {});
   const [downloadBusy, setDownloadBusy] = useState(false);
@@ -26,7 +26,7 @@ export function ProtonPreferencesDialog({ onClose, onBusyChange }: { onClose: ()
     window.addEventListener("keydown", key, true);
     return () => { window.removeEventListener("keydown", key, true); if (previous instanceof HTMLElement && previous.isConnected) previous.focus(); };
   }, [busy, confirmationOpen, onClose]);
-  return createPortal(<div className="modal-overlay proton-preferences-overlay" onClick={event => { if (event.target === event.currentTarget) close(); }}>
+  return createPortal(<div className="modal-overlay proton-preferences-overlay" style={overlayLayer ? {zIndex:overlayLayer} : undefined} onClick={event => { if (event.target === event.currentTarget) close(); }}>
     <ModalSurface className="modal-content dialog-glass proton-preferences-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId}
       header={<h2 id={titleId}><MenuIcon name="download" />{t("runners", "title")}</h2>} onDismiss={close} closeDisabled={busy}>
       {preferences.error && <p role="alert">{preferences.error}</p>}
