@@ -14,23 +14,20 @@ export const InstructionsModal: React.FC<Props> = ({ onClose }) => {
       <ModalSurface header={<h2 style={{ margin: "0 0 1.5rem 0", color: "#c4b5fd", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
           Instruções de Uso
-        </h2>} onDismiss={onClose} className="modal-content dialog-glass" style={{ background: "var(--tone-1e1b4b, #1e1b4b)", padding: "2rem", borderRadius: "12px", width: "90%", maxWidth: "600px", zIndex: 1, border: "1px solid rgba(139, 92, 246, 0.3)", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)" }}>
+        </h2>} onDismiss={onClose} className="modal-content dialog-glass" style={{ background: "var(--tone-1e1b4b, #1e1b4b)", padding: "2rem", borderRadius: "12px", width: "90%", maxWidth: "600px", maxHeight: "calc(100dvh - 100px)", overflowY: "auto", zIndex: 1, border: "1px solid rgba(139, 92, 246, 0.3)", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)" }}>
         
         
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem", color: "var(--tone-e2e8f0, #e2e8f0)", lineHeight: "1.6" }}>
           <p style={{ margin: 0 }}>Siga estes passos simples para instalar o mod:</p>
           
           <ol style={{ margin: 0, paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <li><strong>Atualizar Backend:</strong> Clique no botão <code style={{ background: "rgba(0,0,0,0.3)", padding: "0.2rem 0.4rem", borderRadius: "4px" }}>Atualizar Backend</code>, selecione a arquitetura da sua placa de vídeo (ex: RDNA4 para RX 9000 ou RDNA3 para RX 7000) e baixe ou selecione a pasta com os arquivos corretos.</li>
-            <li><strong>Selecione o Jogo:</strong> Escolha um jogo na grade ou selecione manualmente a pasta onde fica o arquivo executável (.exe) do jogo.</li>
-            <li><strong>Forneça o Modelo IA:</strong> O mod requer o modelo da NVIDIA. Você pode fornecê-lo de duas formas:
-              <ul style={{ marginTop: "0.25rem", paddingLeft: "1.5rem" }}>
-                <li>Se você já tem o arquivo <code style={{ background: "rgba(0,0,0,0.3)", padding: "0.2rem 0.4rem", borderRadius: "4px" }}>dlssnr.bin</code>, basta selecioná-lo.</li>
-                <li>Se você não tem, pode selecionar o arquivo <code style={{ background: "rgba(0,0,0,0.3)", padding: "0.2rem 0.4rem", borderRadius: "4px" }}>nvngx_dlssnr.dll</code> (encontrado em jogos oficiais com suporte a DLSS 5). O programa irá extrair o modelo e gerar o <code style={{ background: "rgba(0,0,0,0.3)", padding: "0.2rem 0.4rem", borderRadius: "4px" }}>dlssnr.bin</code> para você.</li>
-              </ul>
-            </li>
-            <li><strong>Modo de Instalação:</strong> Escolha entre OptiScaler (recomendado para a maioria dos jogos 64-bits com suporte nativo a FSR/DLSS) ou ReShade (para jogos mais antigos ou sem suporte nativo a upscaling).</li>
-            <li><strong>Clique em Instalar:</strong> Confirme a arquitetura e clique em Instalar para aplicar o mod no jogo selecionado.</li>
+            <li><strong>Preparar o backend:</strong> Na Configuração inicial ou em Configurações → Mods → Gerenciar backend, escolha RDNA 4 / RX 9000 ou RDNA 3 / RX 7000. Baixe o backend ou importe, em Arquivos locais, a pasta com os pacotes baixados das releases dos mantenedores. O download inclui o instalador, as ferramentas de extração e os componentes do mod; <strong>não inclui a DLL da NVIDIA nem os pesos do modelo</strong>.</li>
+            <li><strong>Aguardar a verificação:</strong> Extrair de uma DLL e Usar arquivo existente ficam disponíveis quando o backend estiver pronto. O caminho sublinhado abaixo do download abre a pasta salva. Modelos em cache podem ser reutilizados.</li>
+            <li><strong>Fornecer o modelo:</strong> Obtenha a sua <code>nvngx_dlssnr.dll</code> por fora do launcher, em um jogo que a forneça, e escolha Extrair de uma DLL. A versão <strong>310.8.0</strong> gera <code>dlssnr.bin</code> (antigo); a <strong>310.9.16</strong>, com backend compatível, gera também <code>dlssnr-small.bin</code> (novo). São dois arquivos separados. Você também pode usar Usar arquivo existente; para importar o novo, mantenha os dois arquivos na mesma pasta.</li>
+            <li><strong>Local dos modelos:</strong> Os arquivos ficam em <code>backend-files/&lt;rdna3|rdna4&gt;/&lt;32|64&gt;/dlssnr-amd/</code>, dentro de <code>~/.config/PeliGames/Mod/DLSSNR/</code>, nas arquiteturas disponíveis. Não mova os modelos para a raiz do mod.</li>
+            <li><strong>Instalar no jogo:</strong> Escolha o jogo, a rota e a arquitetura. Use OptiScaler em jogos 64 bits com suporte a upscaling, ou a rota ReShade, Vulkan ou DX9 correspondente à API do jogo. Clique em Instalar.</li>
+            <li><strong>Escolher o Modelo NR:</strong> Novo / Antigo aparece quando o backend e os dois arquivos permitem a escolha. <strong>Após trocar, clique em Reparar</strong> para aplicar ao jogo. O int4 misto funciona apenas com o modelo antigo.</li>
+            <li><strong>Atualizar uma instalação anterior:</strong> Não é necessário apagar o backend. Atualize-o e extraia a DLL 310.9.16 para habilitar o novo modelo. Atualizar apenas o PeliGames não fornece essa DLL nem gera novos modelos.</li>
           </ol>
 
           <div style={{ marginTop: "1rem", padding: "1rem", background: "rgba(0,0,0,0.2)", borderRadius: "8px", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)" }}>
