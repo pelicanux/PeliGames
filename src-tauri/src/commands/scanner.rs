@@ -270,7 +270,7 @@ fn has_executable(dir: &Path, depth: u8) -> bool {
     false
 }
 
-fn scan_custom(folders: Vec<String>) -> Vec<GameInfo> {
+pub(super) fn scan_custom(folders: Vec<String>) -> Vec<GameInfo> {
     let mut games = Vec::new();
     for folder in folders {
         let path = Path::new(&folder);
@@ -297,6 +297,11 @@ fn scan_custom(folders: Vec<String>) -> Vec<GameInfo> {
         }
     }
     games
+}
+
+#[tauri::command]
+pub async fn scan_manual_game_folders(custom_folders: Vec<String>) -> Result<Vec<GameInfo>, String> {
+    tauri::async_runtime::spawn_blocking(move || scan_custom(custom_folders)).await.map_err(|e|e.to_string())
 }
 
 #[tauri::command]

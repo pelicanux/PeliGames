@@ -1,0 +1,21 @@
+.fg-overlay-settings { margin-top:18px; padding-top:14px; border-top:1px solid rgba(255,255,255,.1); }
+.fg-overlay-settings p,.fg-overlay-settings small { font-size:.8125rem; line-height:1.45; }
+.fg-overlay-shortcut-row { display:flex; align-items:center; flex-wrap:wrap; gap:10px 16px; margin:12px 0; padding:12px 0; }
+.fg-overlay-shortcut-row > div:first-child { flex:1; min-width:150px; display:grid; gap:4px; }
+.fg-overlay-shortcut-row .mm-shortcut-recorder { flex:0 1 auto; }
+.fg-overlay-settings { --mm-line:var(--border-color,rgba(255,255,255,.1)); --mm-card:rgba(255,255,255,.045); --mm-card-2:rgba(255,255,255,.08); --mm-muted:var(--text-secondary); }
+.fg-overlay-settings .fg-overlay-shortcut-actions { display:grid; grid-template-columns:minmax(0,1fr) max-content; align-items:start; justify-content:end; gap:5px 8px; margin-left:auto; }
+.fg-overlay-shortcut-actions .mm-shortcut-recorder { display:contents; }
+.fg-overlay-shortcut-actions .mm-shortcut-recorder > button { grid-column:1; grid-row:1; justify-self:end; width:max-content; }
+.fg-overlay-shortcut-actions > button { grid-column:2; grid-row:1; justify-self:end; align-self:start; width:max-content; }
+.fg-overlay-shortcut-actions .mm-shortcut-recorder > small { grid-column:1 / -1; grid-row:2; text-align:right; justify-self:end; max-width:290px; }
+.fg-overlay-shortcut-actions button { color:inherit; font-family:inherit; cursor:pointer; }
+.fg-overlay-shortcut-actions button:disabled { opacity:.6; cursor:not-allowed; }
+.fg-overlay-shortcut-actions .mm-ghost { border:1px solid var(--mm-line); background:var(--mm-card); padding:8px 12px; border-radius:10px; font-size:.8125rem; font-weight:600; }
+.fg-overlay-shortcut-actions .mm-ghost:hover:not(:disabled) { background:var(--mm-card-2); }
+:root[data-appearance="light"] .fg-overlay-settings { --mm-line:rgba(20,24,40,.1); --mm-card:rgba(255,255,255,.75); --mm-card-2:#fff; }
+.fg-overlay-shortcut-row .fg-overlay-shortcut-feedback { flex-basis:100%; }
+
+.fg-overlay-shortcut-actions { border:0; padding:0; min-width:0; }
+
+.fg-overlay-support-note { margin:6px 0; color:var(--text-secondary); font-size:.8125rem; line-height:1.45; }

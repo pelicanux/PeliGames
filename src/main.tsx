@@ -19,6 +19,7 @@ if (["game", "nexus"].includes(new URLSearchParams(window.location.search).get("
   document.documentElement.classList.add("log-monitor-window");
 }
 
+
 // The window's outer boxes never scroll; WebKitGTK may still scroll them (a focus,
 // an overflowing transform), which slides the title bar out of view. Put them back.
 window.addEventListener("scroll", event => {

@@ -44,7 +44,7 @@
   {
     "section": "fps",
     "key": "fps_metrics",
-    "label": "Média e mínimos de FPS",
+    "label": "Média, 1% Low e 0.1% Low",
     "kind": "select",
     "default": "avg,0.01",
     "values": [

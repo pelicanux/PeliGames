@@ -1,0 +1,78 @@
+/* Quiet, flat module settings. Cards are siblings directly on the page. */
+.mod-workspace { --mod-line:var(--modern-line,rgba(140,150,170,.18)); --mod-muted:var(--modern-muted,var(--text-secondary)); --mod-text:var(--modern-text,var(--text-primary)); color:var(--mod-text); min-width:0; }
+.modern-ui .settings-page .mod-intro { margin:2px 0 20px; max-width:760px; }
+.modern-ui .settings-page .mod-intro h3 { margin:0 0 6px; font-size:1.0625rem; font-weight:600; line-height:1.4; }
+.modern-ui .settings-page .mod-intro p { margin:0; font-size:.875rem; line-height:1.55; }
+.mod-install-surface,.mod-backend-card { background:var(--modern-card,#171a22); border:1px solid var(--modern-line,rgba(140,150,170,.18)); border-radius:16px; padding:18px; min-width:0; box-sizing:border-box; }
+.mod-step-heading { display:flex; align-items:center; gap:12px; min-width:0; }
+.mod-step-heading > div { flex:1; min-width:0; }
+.modern-ui .settings-page :is(.mod-step-heading,.mod-backend-heading,.mod-row-copy) h4 { margin:0; font-size:.9375rem; font-weight:600; line-height:1.4; }
+.modern-ui .settings-page .mod-step-heading p { margin:3px 0 0; font-size:.8125rem; }
+.mod-step-number { display:grid; place-items:center; width:30px; height:30px; flex-shrink:0; border:1px solid var(--mod-line); border-radius:50%; background:var(--modern-card-2,#222631); color:var(--mod-text); font-weight:600; font-size:.8125rem; }
+.mod-step-number[data-complete=true] { color:#84c8ac; }
+.mod-step-number .menu-icon { width:16px; height:16px; }
+.mod-status-badge { display:inline-flex; align-items:center; flex-shrink:0; border:1px solid var(--mod-line); border-radius:6px; padding:3px 7px; color:var(--mod-muted); font-size:.75rem; line-height:1.4; font-weight:500; }
+.mod-status-badge[data-ready=true] { color:#84c8ac; border-color:rgba(132,200,172,.18); }
+.mod-workspace .menu-icon { width:17px; height:17px; flex-shrink:0; }
+.mod-step-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:16px 0 16px 42px; }
+.modern-ui .settings-page .mod-workspace button:is(.mod-action-primary,.mod-action-secondary,.mod-action-quiet) { display:inline-flex; align-items:center; justify-content:center; gap:7px; width:auto; min-height:32px; padding:6px 11px; margin:0; border:1px solid var(--mod-line); border-radius:8px; font:inherit; font-size:.8125rem; line-height:1.3; font-weight:500; color:var(--mod-text); background:transparent; box-shadow:none; text-shadow:none; cursor:pointer; transition:background .15s,border-color .15s; }
+.modern-ui .settings-page .mod-workspace button.mod-action-primary { color:var(--modern-bg,#11141b); background:var(--mod-text,#e7eaf0); border-color:transparent; font-weight:600; }
+.modern-ui .settings-page .mod-workspace button.mod-action-quiet { border-color:transparent; padding-left:6px; padding-right:6px; color:var(--mod-muted); }
+.modern-ui .settings-page .mod-workspace button.danger { color:#e7a1a1; }
+.modern-ui .settings-page .mod-workspace button:is(.mod-action-primary,.mod-action-secondary,.mod-action-quiet)::before,.modern-ui .settings-page .mod-workspace button:is(.mod-action-primary,.mod-action-secondary,.mod-action-quiet)::after { content:none; }
+.modern-ui .settings-page .mod-workspace button:is(.mod-action-primary,.mod-action-secondary,.mod-action-quiet):hover:not(:disabled) { background:var(--modern-card-2,#292d38); border-color:var(--mod-muted); color:var(--mod-text); }
+.modern-ui .settings-page .mod-workspace button:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+.modern-ui .settings-page .mod-workspace button:disabled { cursor:default; opacity:.5; }
+.mod-destination { display:flex; align-items:flex-start; gap:10px; padding-top:13px; border-top:1px solid var(--mod-line); color:var(--mod-muted); }
+.mod-destination > .menu-icon { margin-top:2px; }
+.mod-destination > div { display:grid; gap:5px; min-width:0; }
+.mod-destination span { font-size:.75rem; font-weight:500; }
+.modern-ui .settings-page .mod-workspace .mod-destination button { width:auto; max-width:100%; min-height:0; display:block; background:none; border:0; padding:0; color:var(--mod-muted); text-align:left; font:inherit; font-size:.75rem; line-height:1.5; overflow-wrap:anywhere; text-decoration:underline; text-underline-offset:3px; box-shadow:none; }
+.modern-ui .settings-page .mod-workspace .mod-destination button:disabled { text-decoration:none; opacity:1; }
+.mod-next-step { padding:22px 0 0; }
+.modern-ui .settings-page .mod-next-step .mod-step-note { margin:10px 0 0 42px; font-size:.8125rem; max-width:650px; }
+.mod-requirement { display:flex; align-items:flex-start; gap:9px; margin:16px 0 0 42px; color:var(--mod-muted); }
+.mod-requirement .menu-icon { margin-top:2px; }
+.modern-ui .settings-page .mod-requirement p { font-size:.8125rem; margin:0; }
+.modern-ui .settings-page .mod-workspace .mod-feedback-error { color:#e7a1a1; }
+.mod-install-surface .component-download-progress { margin:0 0 14px 42px; }
+.mod-workspace.fg-runtime-management { gap:0; max-width:920px; }
+.mod-workspace.fg-runtime-management > .fg-version-history { margin-top:22px; padding-top:14px; border-top:1px solid var(--mod-line); }
+.mod-workspace.fg-runtime-management .fg-version-row small { font-size:.75rem; }
+.mod-backend-workspace .preference-backend-projects { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr)); gap:16px; }
+.mod-backend-heading { display:flex; align-items:center; gap:10px; padding-bottom:15px; }
+.mod-component-icon { display:grid; place-items:center; width:36px; height:36px; flex-shrink:0; border-radius:10px; background:var(--modern-card-2,#242833); color:var(--modern-text); }
+.mod-backend-heading > div > span { display:block; margin-top:3px; font-size:.75rem; color:var(--modern-muted); }
+.mod-component-state { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:0 0 6px; min-height:25px; }
+.mod-version-label { color:var(--mod-muted); font-size:.75rem; overflow-wrap:anywhere; }
+.mod-setting-row { display:flex; gap:14px; align-items:center; justify-content:space-between; min-width:0; padding:12px 0; border-bottom:1px solid var(--mod-line); }
+.mod-setting-row:last-of-type { border-bottom:0; padding-bottom:0; }
+.mod-row-copy { min-width:0; flex:1; }
+.mod-row-copy > strong { display:block; font-size:.8125rem; font-weight:500; line-height:1.4; }
+.mod-row-copy > small { display:block; color:var(--mod-muted); font-size:.75rem; line-height:1.45; margin-top:3px; }
+.mod-setting-row > button,.mod-setting-row > .hover-tooltip-anchor { flex-shrink:0; }
+.mod-destructive-row { margin-top:0; }
+.mod-destructive-row .mod-row-copy > strong { color:var(--mod-muted); }
+.mod-inline-progress { padding:4px 0 8px; font-size:.75rem; color:var(--mod-muted); }
+.mod-inline-progress progress { display:block; width:100%; margin-top:7px; height:4px; accent-color:var(--accent); }
+.mod-backend-tools { display:flex; align-items:center; flex-wrap:wrap; gap:14px; margin-top:22px; padding-top:18px; border-top:1px solid var(--mod-line); }
+.modern-ui .settings-page .mod-backend-tools p { margin:4px 0 0; font-size:.8125rem; }
+.mod-tool-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.mod-backup-actions { margin-top:18px; }
+.mod-backup-actions .mod-setting-row { padding:14px 0; }
+.mod-backup-actions .mod-row-copy { display:flex; align-items:center; gap:12px; }
+.mod-backup-policy { margin-top:24px; padding-top:18px; border-top:1px solid var(--mod-line); }
+@container settings-page (max-width:600px) { .mod-step-heading { flex-wrap:wrap; }.mod-step-heading .mod-status-badge { margin-left:42px; }.mod-backend-tools > .mod-row-copy { flex-basis:100%; }.mod-install-surface,.mod-backend-card { padding:14px; }.mod-step-actions { padding-left:0; }.mod-next-step .mod-step-note,.mod-next-step .mod-requirement { margin-left:0; }.mod-install-surface .component-download-progress { margin-left:0; } }
+@media(prefers-reduced-motion:reduce){.mod-workspace button{transition:none!important}}
+.mod-backup-actions .mod-row-copy > div { min-width:0; }
+.mod-backup-actions .mod-row-copy strong { display:block; font-size:.875rem; font-weight:500; }
+.mod-backup-actions .mod-row-copy small { display:block; margin-top:4px; color:var(--mod-muted); font-size:.8125rem; line-height:1.5; }
+.modern-ui .settings-page .mod-backup-policy h4 { margin:0; font-size:.9375rem; font-weight:600; }
+.mod-backup-workspace { max-width:960px; }
+.mod-backup-card { padding:18px; box-sizing:border-box; background:var(--modern-card,#171a22); border:1px solid var(--mod-line); border-radius:16px; }
+@container settings-page (max-width:540px){.mod-backup-card{padding:14px}}
+@container settings-page (max-width:540px){.mod-backup-actions .mod-setting-row{flex-wrap:wrap;gap:10px}.mod-backup-actions .mod-row-copy{flex-basis:100%}.mod-backup-actions .mod-setting-row>button{margin-left:48px!important}}
+:root[data-appearance=light] .mod-workspace { --mod-line:rgba(35,45,60,.14); }
+:root[data-appearance=light] .mod-status-badge[data-ready=true],:root[data-appearance=light] .mod-step-number[data-complete=true] { color:#287251; }
+:root[data-appearance=light] .mod-workspace button.danger,:root[data-appearance=light] .mod-workspace .mod-feedback-error { color:#a53636; }
+.mod-component-state .backend-check-update { margin-left:auto!important; font-size:.75rem!important; }

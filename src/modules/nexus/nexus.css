@@ -40,9 +40,6 @@
 .nexus-platform label { display: flex; gap: .5rem; align-items: center; }
 .game-detail-panels > .nexus-panel { grid-column: 1 / -1; }
 
-.nexus-account-summary { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; margin: 1rem 0; }
-.nexus-account-summary .nexus-status { margin-top: 0; }
-.nexus-account-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: 1rem; }
 
 .nexus-catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: .65rem; margin-top: .8rem; max-height: clamp(180px, calc(100dvh - 400px), 720px); overflow: auto; }
 .nexus-catalog-grid article { display: flex; flex-direction: column; border: 1px solid rgba(var(--surface-255-255-255,255,255,255),.13); border-radius: 10px; padding: .6rem; min-width: 0; overflow-wrap: anywhere; }
@@ -720,22 +717,16 @@
 .nexus-game-backup-status.is-stale { color:var(--accent-soft,var(--accent)); }
 .nexus-game-backup-status.is-error { color:#ffb4bc; }
 
-/* Account buttons also appear in Connections, outside the Nexus panel wrappers. */
-:root .nexus-account .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; vertical-align:middle; }
-:root .nexus-account .btn .nexus-icon { display:block; width:20px; height:20px; margin:0; align-self:center; }
-:root .nexus-account .btn .nexus-icon-button-label { display:block; min-width:0; line-height:1.25; text-align:center; }
-:root .nexus-account .nexus-account-actions .btn.nexus-account-login:not(:disabled):not([aria-disabled="true"]) {
-  background:linear-gradient(120deg,rgba(var(--accent-rgb),.14),rgba(var(--accent-rgb),.045)),linear-gradient(125deg,rgba(var(--glass-base-start),.55),rgba(var(--glass-base-end),.45));
-  border:1px solid rgba(var(--accent-rgb),.4);
-  color:var(--tone-edf0fd,#edf0fd);
-}
-:root .nexus-account .nexus-account-actions .btn.nexus-account-login:is(:hover,:focus-visible):not(:disabled) {
-  border-color:rgba(var(--accent-rgb),.65);
-  box-shadow:inset 0 1px 0 rgba(var(--accent-rgb),.18),0 0 9px rgba(var(--accent-rgb),.14);
-}
-:root .nexus-account .nexus-account-actions .btn.nexus-account-login:disabled {
-  background:linear-gradient(125deg,rgba(var(--glass-base-start),.4),rgba(var(--glass-base-end),.35));
-  border:1px solid rgba(var(--accent-rgb),.15);
-  color:var(--tone-94a3b8,#94a3b8);
-  box-shadow:none; cursor:not-allowed;
-}
+/* Reserve the actual action width, including translated/scaled button labels. */
+.nexus-mods-content .nexus-mod-header { display:flex; align-items:center; gap:8px; width:100%; min-width:0; flex:none; }
+.nexus-mod-header .nexus-mod-summary,
+.modern-ui .nexus-modern-workspace .nexus-mod-header .nexus-mod-summary { flex:1 1 0; min-width:0; width:0; padding-right:0; }
+.nexus-mod-header .nexus-mod-visible-toggle,
+.modern-ui .nexus-modern-workspace .nexus-installed-mod-row .nexus-mod-header .nexus-mod-visible-toggle { position:static; display:flex; align-items:center; flex:0 0 auto; gap:8px; transform:none; }
+.nexus-mod-header .nexus-mod-title,
+.modern-ui .nexus-modern-workspace .nexus-mod-header .nexus-mod-title { display:flex; flex-wrap:nowrap; align-items:center; min-width:0; }
+.nexus-mod-header .nexus-mod-name-anchor { display:block; flex:1 1 0; min-width:0; overflow:hidden; }
+.nexus-mod-header .nexus-mod-name,
+.modern-ui .nexus-modern-workspace .nexus-mod-header .nexus-mod-name { display:block; max-width:100%; overflow:hidden; white-space:nowrap; overflow-wrap:normal; }
+.nexus-mod-name.is-overflowing { mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent); -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent); }
+.nexus-mod-name:focus-visible { outline:1px solid var(--accent); outline-offset:-1px; }

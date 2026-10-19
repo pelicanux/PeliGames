@@ -1,3 +1,4 @@
+import { sameGameInstallation } from "../services/integrationGameIdentity";
 import { GameBannerImage } from "./GameBannerImage";
 import { CoverHoldProgress } from "./CoverHoldProgress";
 import { useAccentTheme } from "../theme/ThemeProvider";
@@ -82,6 +83,7 @@ export interface ManagedGameLibrary {
 }
 interface Props {
   managedLibrary?: ManagedGameLibrary;
+  supplementalGames?: GameInfo[];
   onCoverAction: (action: CoverGameAction, game: GameInfo) => void | Promise<unknown>;
   coverActionsBlocked?: boolean;
   coverHoldBlocked?: boolean;
@@ -99,7 +101,7 @@ interface Props {
   onCountChange?: (count: number) => void;
 }
 
-export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, coverHoldBlocked, homeRevision, onSelectGame, selectedGameKey, runningGamePath, startingGamePath, mode, libraryScope, onModeChange, modeDisabled, managedLibrary, onCountChange }) => {
+export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, coverHoldBlocked, homeRevision, onSelectGame, selectedGameKey, runningGamePath, startingGamePath, mode, libraryScope, onModeChange, modeDisabled, managedLibrary, supplementalGames = [], onCountChange }) => {
   const tilt = 6;
   const { launchEffect } = useAccentTheme();
   const [, setCoverRevision] = useState(0);
@@ -217,7 +219,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     }
     try {
       const [scanned, external] = scope === "own"
-        ? [await invoke<GameInfo[]>("scan_external_library"), [] as GameInfo[]]
+        ? [await invoke<GameInfo[]>("scan_external_library").then(async external => { const manual = folders.length ? await invoke<GameInfo[]>("scan_manual_game_folders", { customFolders: folders }) : []; return [...external, ...manual.filter(game => !external.some(other => (other.directory || other.path) === game.path))]; }), [] as GameInfo[]]
         : await Promise.all([invoke<GameInfo[]>("scan_installed_games", { apiKey: STEAMGRIDDB_API_KEY, customFolders: folders }), invoke<GameInfo[]>("scan_external_library").catch(() => [] as GameInfo[])]);
       const result = scanned.map(game => {
         // The DLSS scan points at the executable's folder, often below the game's
@@ -684,8 +686,10 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const refreshingLibrary = managedLibrary
     ? !managedLibrary.loaded || Boolean(managedLibrary.scanning)
     : scanPending || loading || !libraryLoaded || !ownLoaded;
-  const liveGames = managedLibrary ? managedLibrary.games
-    : libraryScope === "own" ? games.filter(game => game.launcher === "PeliGames" || Boolean(game.external_id)) : games;
+  const primaryGames = managedLibrary ? managedLibrary.games
+    : libraryScope === "own" ? games.filter(game => game.launcher === "PeliGames" || game.launcher === "Custom" || Boolean(game.external_id)) : games;
+  const liveGames = [...primaryGames, ...supplementalGames.filter(game => !primaryGames.some(item =>
+    sameGameInstallation(item,game)))];
   // Keep the last complete snapshot while scanning; publish the next complete
   // library together so partial discoveries do not shuffle the visible grid.
   const previousGames = librarySnapshots.current[cacheScope] ?? [];
@@ -763,7 +767,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         </ModernLibraryFilters>
         <div className="modern-lib-actions">
           {managedLibrary && <button type="button" className="modern-lib-icon" onClick={managedLibrary.onAccount} title={managedLibrary.accountLabel} aria-label={managedLibrary.accountLabel}><img src="/nexus-mods.svg" alt="" /></button>}
-          {!managedLibrary && libraryScope === "all" && <button type="button" className="modern-lib-icon" onClick={() => void handleAddCustomFolder()} title={t("gameGrid", "addFolder")} aria-label={t("gameGrid", "addFolder")}><MenuIcon name="folder" /></button>}
+          {!managedLibrary && <button type="button" className="modern-lib-icon" onClick={() => void handleAddCustomFolder()} title={t("gameGrid", "addFolder")} aria-label={t("gameGrid", "addFolder")}><MenuIcon name="folder" /></button>}
           <button type="button" className={`modern-lib-icon${scanSpinning ? " spinning" : ""}`} disabled={scanSpinning || managedLibrary?.busy} onClick={() => void fetchGames()} title={t("gameGrid", "scanLibrary")} aria-label={t("gameGrid", "scanLibrary")}><MenuIcon name="repair" /></button>
           <div className="modern-lib-view" role="group" aria-label={t("gameGrid", "viewMode")}>
             <button type="button" aria-pressed={viewMode === "grid"} aria-label={t("gameGrid", "gridView")} title={t("gameGrid", "gridView")} onClick={() => setViewMode("grid")}><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></button>

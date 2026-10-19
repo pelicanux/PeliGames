@@ -243,3 +243,12 @@ pub async fn run_wine_tool(app: tauri::AppHandle, request: crate::core::wine_too
 pub async fn get_peligames_game_logs(path: String) -> Result<crate::core::game_logs::GameLogs, String> {
     tauri::async_runtime::spawn_blocking(move || crate::core::game_logs::read(&path)).await.map_err(|e|e.to_string())?
 }
+
+#[tauri::command]
+pub async fn remove_peligames_library_entry(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    use tauri::Emitter;
+    let _guard = acquire_installer_busy()?;
+    tauri::async_runtime::spawn_blocking(move || crate::core::installed_library::remove_entry(&path)).await.map_err(|e| e.to_string())??;
+    let _ = app.emit("peligames-library-changed", ());
+    Ok(())
+}

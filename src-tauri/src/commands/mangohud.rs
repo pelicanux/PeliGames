@@ -229,7 +229,12 @@ pub fn load_mangohud_profile() -> Result<Profile, String> {
 }
 #[tauri::command]
 pub fn save_mangohud_profile(settings: Settings) -> Result<String, String> {
-    mangohud_config::save(&settings)
+    super::frame_overlay_shortcut::check_mangohud_shortcuts(&settings)?;
+    let path = mangohud_config::save(&settings)?;
+    // save() releases the MangoHUD file lock before profile generation, which
+    // itself renders per-game HUD configurations. Never nest those locks.
+    super::steam_runtime::refresh_monitoring().map_err(|error| format!("MangoHUD salvo, mas não foi possível atualizar os perfis da Steam: {error}"))?;
+    Ok(path)
 }
 #[tauri::command]
 pub fn update_mangohud_preview(settings: Settings) -> Result<(), String> {

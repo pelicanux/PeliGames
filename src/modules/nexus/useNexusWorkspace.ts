@@ -17,7 +17,7 @@ export interface NexusGame { advanced?: import("../../services/advancedSettings"
 export interface NexusWorkspace { games: NexusGame[] }
 /** Deployment progress reported by the backend: extracting into the profile, then placing in the game. */
 export interface DeployProgress { phase: "extract" | "copy" | "link"; detail: string; done: number; total: number }
-export function useNexusWorkspace() {
+export function useNexusWorkspace(polling = true) {
   const text = useNexusText();
   const [workspace, setWorkspace] = useState<NexusWorkspace>({ games: [] });
   const [busy, setBusy] = useState(false);
@@ -86,8 +86,12 @@ export function useNexusWorkspace() {
       }
     }
   };
+  // The unified library needs existing mod registrations before a game tab is
+  // opened. Load metadata only; discovery remains an explicit operation.
+  useEffect(() => { void run("load_nexus_workspace", undefined, true); }, []);
+  const runningInBackground = workspace.games.some(game=>game.running) || Boolean(launching || stopping);
   useEffect(() => {
-    if (!loaded) return;
+    if (!loaded || (!polling && !runningInBackground)) return;
     let timer: number | undefined, stopped = false, last = "";
     // Every 2.5 s while the launcher is visible, every 10 s while it is hidden
     // (minimized during a game). Only a real change re-renders the launcher.
@@ -108,7 +112,7 @@ export function useNexusWorkspace() {
     timer = window.setTimeout(refresh, 2500);
     document.addEventListener("visibilitychange", visible);
     return () => { stopped = true; window.clearTimeout(timer); document.removeEventListener("visibilitychange", visible); };
-  }, [loaded]);
+  }, [loaded,polling,runningInBackground]);
   const visibleGames = workspace.games.filter(entry => hasNexusCatalog(catalogGames, entry));
   const refreshCover = async (entry: NexusGame) => {
     const key = `${entry.id}:${entry.game.name}:${entry.game.cover_url || ""}`;

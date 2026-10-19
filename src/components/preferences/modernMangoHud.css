@@ -13,7 +13,7 @@
 .mango-modern button { font: inherit; color: inherit; cursor: pointer; }
 .mango-modern button:disabled { cursor: not-allowed; opacity: .6; }
 .mm-head { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px 16px; margin-bottom: 18px; }
-.mm-head h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.02em; }
+.monitoring-navigation > .settings-page-head h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.02em; }
 .mm-head p { margin: 6px 0 0; color: var(--mm-muted); }
 .mm-spacer { flex: 1; }
 .mm-saved { display: inline-flex; align-items: center; gap: 7px; font-size: 0.8125rem; color: var(--mm-muted); padding: 7px 12px; border-radius: 999px; background: var(--mm-card); border: 1px solid var(--mm-line); }
@@ -73,12 +73,6 @@
 .mm-palette[aria-pressed="true"] { border-color: var(--accent); }
 .mm-limit { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .mm-limit-input { width: 80px; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--mm-line); background: var(--mm-card-2); color: var(--mm-text); text-align: center; }
-.mm-advanced { border: 1px solid var(--mm-line); border-radius: 18px; background: var(--mm-card); }
-.mm-advanced > summary { list-style: none; cursor: pointer; padding: 16px 20px; display: flex; align-items: center; gap: 12px; font-weight: 600; }
-.mm-advanced > summary::-webkit-details-marker { display: none; }
-.mm-advanced > summary small { color: var(--mm-muted); font-weight: 400; }
-.mm-chevron { margin-left: auto; transition: transform .2s; color: var(--mm-muted); flex: 0 0 auto; }
-.mm-advanced[open] .mm-chevron { transform: rotate(90deg); }
 .mm-advanced-body { padding: 0 20px 20px; }
 .mm-search { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: var(--mm-card-2); border: 1px solid var(--mm-line); margin-bottom: 8px; color: var(--mm-muted); }
 .mm-search input { border: 0; background: transparent; outline: 0; flex: 1; color: var(--mm-text); font: inherit; }
@@ -92,7 +86,6 @@
 .mm-empty { color: var(--mm-muted); font-size: 0.8125rem; padding: 10px 2px; }
 .mm-preview-column { position: sticky; top: 0; min-width: 0; }
 .mm-preview { padding: 14px; }
-.mm-preview-column .mango-installation { margin-top: 14px; }
 .mm-preview-column .monitoring-actions { flex-wrap: wrap; }
 .mm-preview-column code { overflow-wrap: anywhere; }
 .mm-preview-head { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 2px 4px 12px; }
@@ -125,7 +118,7 @@
 @container mango-page (max-width: 640px) { .mm-presets { grid-template-columns: repeat(2, 1fr); } .mm-row { flex-wrap: wrap; } .mango-modern input[type=range] { width: 100%; } }
 
 .mm-head-copy { flex: 1 1 360px; min-width: 0; }
-.mm-head h1 { font-size: 1.75rem; }
+.monitoring-navigation > .settings-page-head h1 { font-size: 1.75rem; }
 .mm-head-controls { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-left: auto; flex-shrink: 0; }
 .mm-head-controls .mm-saved { white-space: nowrap; }
 @container mango-page (max-width: 540px) { .mm-head-controls { gap: 8px; flex-wrap: wrap; justify-content: flex-start; margin-left: 0; } .mm-head-controls .mm-saved { font-size: 0.6875rem; padding: 7px 9px; } }
@@ -225,3 +218,21 @@
 .mm-setting-options .custom-select-option { overflow-wrap: anywhere; text-align: left; }
 .mm-advanced-row > .mm-setting-select { width: min(240px, 100%); }
 .mm-row > .mm-setting-select, .mm-advanced-row > .mm-setting-select { flex: 0 1 220px; width: 220px; max-width: 60%; }
+
+/* Installation, HUD settings and comparisons share one compact navigation. */
+.monitoring-workspace .monitoring-tabs { grid-template-columns:repeat(3,minmax(0,1fr)); margin-bottom:20px; }
+.monitoring-workspace .monitoring-tabs::before { width:calc((100% - 14px)/3); background:rgba(var(--accent-rgb),.18); box-shadow:none; }
+.monitoring-tabs[data-active=installation]::before { transform:translateX(0); }
+.monitoring-tabs[data-active=monitoring]::before { transform:translateX(calc(100% + 3px)); }
+.monitoring-tabs[data-active=benchmark]::before { transform:translateX(calc(200% + 6px)); }
+.monitoring-editor-screen[hidden], .monitoring-benchmark-screen[hidden], .monitoring-tab-panel[hidden] { display:none!important; }
+.mango-installation-view { max-width:920px; }
+.mango-installation-view .mod-destination { margin-top:16px; }
+.mango-installation-view .mod-destination code { font-size:.75rem; overflow-wrap:anywhere; }
+.modern-ui .settings-page .monitoring-install-note { margin:12px 0; font-size:.8125rem; }
+.mm-head-copy { flex:1; }
+.mm-head-copy h2 { margin:0; font-size:1.0625rem; font-weight:600; }
+.mm-head-controls .mm-segmented [aria-selected=true] { background:var(--mm-card-2); color:var(--mm-text); }
+.mm-advanced-screen .mm-advanced-body { padding:0; }
+.mm-advanced-screen .mm-search { margin-top:15px; }
+@container settings-page (max-width:540px){.monitoring-workspace .monitoring-tabs{display:grid;width:100%}.monitoring-tabs button{padding:7px 8px;font-size:.75rem}.mango-installation-view .mod-setting-row{flex-wrap:wrap}.mango-installation-view .mod-row-copy{flex-basis:100%}}

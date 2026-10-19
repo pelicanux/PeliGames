@@ -11,6 +11,7 @@ use std::{
 };
 
 static OPERATIONS: Mutex<()> = Mutex::new(());
+pub(super) fn migration_lock() -> Result<std::sync::MutexGuard<'static, ()>, String> { OPERATIONS.lock().map_err(|e|e.to_string()) }
 static PENDING: Mutex<Option<Vec<NexusGame>>> = Mutex::new(None);
 static WORKER: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 // Background copies report failures to the launcher (notification bell) through it.
@@ -550,7 +551,7 @@ fn rebase(value: &mut serde_json::Value, old: &Path, new: &Path) {
 }
 // Relink only a link still pointing to its recorded, unchanged old profile. Regular or
 // externally edited game files are never replaced by recovery.
-fn repair_links(
+pub(super) fn repair_links(
     game: &NexusGame,
     data: &Path,
     old_storage: &Path,

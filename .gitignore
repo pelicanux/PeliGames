@@ -60,6 +60,9 @@ dist-ssr
 /docs/*
 # Exceções versionadas: importador Vortex e documentação das famílias de módulos.
 !/tools/vortex-import/
+!/tools/game-overlay/
+!/docs/in-game-overlay.md
+!/docs/steam-launch-runtime.md
 !/docs/nexus-unreal-family.md
 !/docs/nexus-unity-family.md
 !/docs/nexus-collections.md

@@ -14,6 +14,19 @@ fn regular_directory(path: &Path) -> Result<(),String> {
     }
 }
 pub(super) fn directory(game: &super::nexus_local::NexusGame) -> Result<PathBuf,String> {
+    let target=super::nexus_durable::portable(game)?;
+    if !Path::new(game.game["directory"].as_str().unwrap_or("")).is_dir() {
+        if let Some(storage)=super::nexus_durable::offline_storage(game)? {return Ok(storage);}
+    }
+    let old=legacy_directory(game)?;
+    if target.join("game.json").is_file() || (!old.exists() && Path::new(game.game["directory"].as_str().unwrap_or("")).is_dir()) {
+        regular_directory(target.parent().unwrap().parent().unwrap())?;
+        regular_directory(target.parent().unwrap())?;
+        return Ok(target);
+    }
+    Ok(old)
+}
+pub(super) fn legacy_directory(game:&super::nexus_local::NexusGame)->Result<PathBuf,String>{
     directory_at(&super::nexus_local::root()?,&game.id,game.game["name"].as_str().unwrap_or("jogo"))
 }
 fn directory_at(base: &Path,id: &str,name: &str) -> Result<PathBuf,String> {

@@ -76,9 +76,6 @@ export function ModernShell({ active, disabled = false, onNavigate, activeDownlo
           <h6><span>{t("modern", "play")}</span></h6>
           {item("library", "library", t("modern", "library"), t("modern", "libraryHint"), libraryCount)}
           {item("install", "install", t("modern", "install"), t("modern", "installHint"))}
-          <h6><span>{t("modern", "modsGroup")}</span></h6>
-          {item("nexus", "nexus", t("modern", "nexus"), t("modern", "nexusHint"))}
-          {item("dlss", "dlss", t("modern", "dlss"), t("modern", "dlssHint"))}
           {item("downloads", "downloads", t("modern", "downloads"), t("modern", "downloadsHint"), activeDownloads)}
         </>}
         <h6><span>{t("modern", "community")}</span></h6>

@@ -1,3 +1,4 @@
+import {openFrameGenerationPreferences} from "../services/frameGenerationNavigation";
 import { openMangoHudInstallation } from "../services/mangohud";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -265,7 +266,7 @@ export function NotificationCenter({ launcherUpdate, onNavigate, onNexusAccount,
     if (navigationBusy) return;
     commit({ ...storeRef.current, items: storeRef.current.items.map(n => n.id === notice.id ? { ...n, unread: false } : n) });
     setToasts(queue => queue.filter(n => n.id !== notice.id));
-    close(); if (notice.action === "nexus-account") onNexusAccount(); else if (notice.action === "mangohud-install") openMangoHudInstallation(); else if (notice.target === "matrix") window.dispatchEvent(new Event(OPEN_MATRIX_CHAT_EVENT)); else if (notice.target !== "nexus" && notice.target !== "error" && notice.target !== "info") onNavigate(notice.target);
+    close(); if (notice.action === "nexus-account") onNexusAccount(); else if (notice.action === "mangohud-install") openMangoHudInstallation(); else if (notice.action === "frame-mako") openFrameGenerationPreferences("mako"); else if (notice.target === "matrix") window.dispatchEvent(new Event(OPEN_MATRIX_CHAT_EVENT)); else if (notice.target !== "nexus" && notice.target !== "error" && notice.target !== "info") onNavigate(notice.target);
   };
   return <>
     <button ref={bellRef} type="button" data-tauri-drag-region="false" className="btn-titlebar notification-bell" title={en ? "Notifications" : "Notificações"} aria-label={en ? "Notifications" : "Notificações"} aria-expanded={open} aria-controls="update-notifications" onClick={() => {

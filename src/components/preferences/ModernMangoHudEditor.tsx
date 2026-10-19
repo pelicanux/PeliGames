@@ -1,3 +1,4 @@
+import {mangoSearchOptions} from "./preferenceSearch";
 import { SelectionMenu } from "../SelectionMenu";
 import { shortcutConflict } from "./shortcutConflicts";
 import { notifyError } from "../../services/notifications";
@@ -5,7 +6,7 @@ import { MangoHudBenchmarkComparison } from "./MangoHudBenchmarkComparison";
 import { MangoHudFpsCycle } from "./MangoHudFpsCycle";
 import { MangoHudShortcutRecorder } from "./MangoHudShortcutRecorder";
 import { shortcutLabel } from "./mangoHudShortcut";
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { gpuLoadColor } from "./gpuLoadColor";
 import catalog from "../../config/mangohudOptions.json";
 import { loadMangoHudProfile, saveMangoHudProfile, updateMangoHudPreview, mangoHudPreview, getMangoHudStatus, notifyMangoHudMissing, type MangoHudSettings } from "../../services/mangohud";
@@ -49,7 +50,7 @@ const presetOf = (settings: MangoHudSettings) => PRESETS.find(preset => {
 
 // Plain-language metrics; the native keys stay underneath.
 const GROUPS: { title: string; color: string; items: [string, string, string?][] }[] = [
-  { title: "Desempenho", color: "#34c77b", items: [["fps", "FPS"], ["frametime", "Tempo de quadro"], ["frame_timing", "Gráfico de quadros"], ["fps_metrics", "Média e 1% mínimo", "avg,0.01"]] },
+  { title: "Desempenho", color: "#34c77b", items: [["fps", "FPS"], ["frametime", "Tempo de quadro"], ["frame_timing", "Gráfico de quadros"], ["fps_metrics", "Média e 1% Low", "avg,0.01"]] },
   { title: "Placa de vídeo", color: "#55b9f3", items: [["gpu_stats", "Uso"], ["gpu_temp", "Temperatura"], ["vram", "Memória (VRAM)"], ["gpu_core_clock", "Frequência"], ["gpu_power", "Consumo"], ["gpu_fan", "Ventoinha"]] },
   { title: "Processador", color: "#b793ef", items: [["cpu_stats", "Uso"], ["cpu_temp", "Temperatura"], ["cpu_mhz", "Frequência"], ["core_load", "Por núcleo"], ["cpu_power", "Consumo"]] },
   { title: "Memória", color: "#dca0d5", items: [["ram", "RAM"], ["swap", "Swap"]] },
@@ -66,7 +67,7 @@ const PALETTES = [
 const POSITIONS: [string, string][] = [["top-left", "Superior esquerdo"], ["top-center", "Topo, centro"], ["top-right", "Superior direito"], ["middle-left", "Meio, esquerda"], ["", ""], ["middle-right", "Meio, direita"], ["bottom-left", "Inferior esquerdo"], ["bottom-center", "Base, centro"], ["bottom-right", "Inferior direito"]];
 const LIMITS: [number, string][] = [[0, "Sem limite"], [30, "30"], [60, "60"], [120, "120"], [144, "144"]];
 const SECTION_NAMES: Record<string, string> = { fps: "FPS e quadros", visual: "Aparência", gpu: "Placa de vídeo", cpu: "Processador e memória", extras: "Sistema e extras", logs: "Registro de desempenho" };
-const SELECT_LABELS: Record<string, Record<string, string>> = { gpu_load_value: { "50,80": "50% / 80%", "60,90": "60% / 90%", "70,95": "70% / 95%" }, gpu_load_color: { "4ADE80,FBBF24,F87171": "Verde, amarelo e vermelho", "64B5F6,CE93D8,F472B6": "Azul, lilás e rosa", "80DEEA,FDE68A,FB923C": "Ciano, amarelo e laranja" }, launcher_hud_order: { "fps-first": "FPS primeiro", "hardware-first": "Hardware primeiro" }, fps_color: { "E06C75,E5C07B,98C379": "Suave", "F87171,FBBF24,4ADE80": "Vermelho, âmbar e verde", "FF5555,FFCC55,55CCFF": "Vermelho, âmbar e azul" }, position: { "top-left": "Superior esquerdo", "top-center": "Superior central", "top-right": "Superior direito", "middle-left": "Centro esquerdo", "middle-right": "Centro direito", "bottom-left": "Inferior esquerdo", "bottom-center": "Inferior central", "bottom-right": "Inferior direito" }, fps_metrics: { "": "Desativado", avg: "Média", "avg,0.01": "Média e 1% mínimo", "avg,0.01,0.001": "Média, 1% e 0,1% mínimo" }, vsync: { "-1": "Padrão do jogo", "0": "Adaptativo", "1": "Desativado", "2": "Mailbox", "3": "Ativado" }, gl_vsync: { "-2": "Padrão do jogo", "0": "Desativado", "1": "A cada quadro", "2": "A cada 2 quadros", "3": "A cada 3 quadros", "4": "A cada 4 quadros" }, gpu_list: { "": "Seleção automática", "0": "GPU 0", "1": "GPU 1", "0,1": "GPU 0 e GPU 1" }, fps_limit_method: { late: "Após apresentar o quadro", early: "Antes de apresentar o quadro" } };
+const SELECT_LABELS: Record<string, Record<string, string>> = { gpu_load_value: { "50,80": "50% / 80%", "60,90": "60% / 90%", "70,95": "70% / 95%" }, gpu_load_color: { "4ADE80,FBBF24,F87171": "Verde, amarelo e vermelho", "64B5F6,CE93D8,F472B6": "Azul, lilás e rosa", "80DEEA,FDE68A,FB923C": "Ciano, amarelo e laranja" }, launcher_hud_order: { "fps-first": "FPS primeiro", "hardware-first": "Hardware primeiro" }, fps_color: { "E06C75,E5C07B,98C379": "Suave", "F87171,FBBF24,4ADE80": "Vermelho, âmbar e verde", "FF5555,FFCC55,55CCFF": "Vermelho, âmbar e azul" }, position: { "top-left": "Superior esquerdo", "top-center": "Superior central", "top-right": "Superior direito", "middle-left": "Centro esquerdo", "middle-right": "Centro direito", "bottom-left": "Inferior esquerdo", "bottom-center": "Inferior central", "bottom-right": "Inferior direito" }, fps_metrics: { "": "Desativado", avg: "Média", "avg,0.01": "Média e 1% Low", "avg,0.01,0.001": "Média, 1% Low e 0.1% Low" }, vsync: { "-1": "Padrão do jogo", "0": "Adaptativo", "1": "Desativado", "2": "Mailbox", "3": "Ativado" }, gl_vsync: { "-2": "Padrão do jogo", "0": "Desativado", "1": "A cada quadro", "2": "A cada 2 quadros", "3": "A cada 3 quadros", "4": "A cada 4 quadros" }, gpu_list: { "": "Seleção automática", "0": "GPU 0", "1": "GPU 1", "0,1": "GPU 0 e GPU 1" }, fps_limit_method: { late: "Após apresentar o quadro", early: "Antes de apresentar o quadro" } };
 const keyLabel = shortcutLabel;
 
 /** Simulated overlay drawn from the settings, so every change shows at once. */
@@ -83,7 +84,10 @@ export function Hud({ settings, tick, size, graph }: { settings: MangoHudSetting
   if (s.engine_version) performanceRows.push(row("VULKAN", color("engine_color"), []));
   if (s.fps) performanceRows.push(row("FPS", color("text_color"), [<span style={{ fontSize: "1.25em" }}>{fps}</span>, Boolean(s.frametime) && <>{(1000 / fps).toFixed(1)}{unit("ms")}</>]));
   if (s.frame_timing) performanceRows.push(<svg className="graph" key="graph" viewBox="0 0 100 40" preserveAspectRatio="none"><polyline points={graph.map((y, i) => `${(i / (graph.length - 1)) * 100},${40 - (y - 10) * 3}`).join(" ")} fill="none" stroke={color("frametime_color")} strokeWidth="2.2" vectorEffect="non-scaling-stroke" /></svg>);
-  if (s.fps_metrics) performanceRows.push(row("AVG / 1%", color("text_color"), [<>{Math.round(fps * .93)} / {Math.round(fps * .71)}{unit("FPS")}</>]));
+  const metrics = String(s.fps_metrics || "").split(",");
+  for (const [key, label, factor] of [["avg", "AVG", .93], ["0.01", "1% Low", .71], ["0.001", "0.1% Low", .59]] as const) {
+    if (metrics.includes(key)) performanceRows.push(row(label, color("text_color"), [<>{Math.round(fps * factor)}{unit("FPS")}</>]));
+  }
   if (s.custom_text_center) performanceRows.push(<div className="title" key="title">{String(s.custom_text_center)}</div>);
   if (s.gpu_stats || s.gpu_temp || s.gpu_core_clock || s.gpu_power || s.gpu_fan) rows.push(row(String(s.gpu_text || "GPU"), color("gpu_color"), [Boolean(s.gpu_stats) && <span style={s.gpu_load_change ? { color: gpuLoadColor(gpuUsage, String(s.gpu_load_value), String(s.gpu_load_color)) } : undefined}>{gpuUsage}{unit("%")}</span>, Boolean(s.gpu_temp) && <>{Math.round(64 + wave(3) * 4)}{unit("°C")}</>, Boolean(s.gpu_core_clock) && <>{Math.round(2410 + wave(4) * 90)}{unit("MHz")}</>, Boolean(s.gpu_power) && <>{Math.round(212 + wave(5) * 18)}{unit("W")}</>, Boolean(s.gpu_fan) && <>{Math.round(1450 + wave(6) * 120)}{unit("RPM")}</>]));
   if (s.vram) rows.push(row("VRAM", color("vram_color"), [<>{(9.2 + wave(10) * .4).toFixed(1)}{unit("GiB")}</>]));
@@ -118,7 +122,8 @@ const Check = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 /** New interface: the MangoHUD profile in three plain steps beside a live
  *  preview, with every native option still reachable in "Todas as opções".
  *  Loads and saves the same profile as the classic editor. */
-export function ModernMangoHudEditor({ onDirtyChange, searchControl, installation }: { onDirtyChange: (dirty: boolean) => void; searchControl?: ReactNode; installation?: ReactNode }) {
+export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=true, benchmarkOnly=false }: { onDirtyChange: (dirty: boolean) => void; searchQuery?:string; visible?:boolean; benchmarkOnly?:boolean }) {
+  const searching=Boolean(searchQuery.trim());
   const [settings, setSettings] = useState<MangoHudSettings>(mangoHudDefaults), [saved, setSaved] = useState("");
   const [ready, setReady] = useState(false), [saving, setSaving] = useState(false), [error, setError] = useState(""), [saveError, setSaveError] = useState("");
   const [previewBusy, setPreviewBusy] = useState(false), [running, setRunning] = useState(false);
@@ -126,7 +131,7 @@ export function ModernMangoHudEditor({ onDirtyChange, searchControl, installatio
   const [advancedOpen, setAdvancedOpen] = useState(false), [query, setQuery] = useState("");
   const [tick, setTick] = useState(0), [graph, setGraph] = useState(() => Array.from({ length: 48 }, () => 16 + Math.random() * 3));
   const [screenWidth, setScreenWidth] = useState(480);
-  const screen = useRef<HTMLDivElement>(null), advanced = useRef<HTMLDetailsElement>(null);
+  const screen = useRef<HTMLDivElement>(null);
   const mounted = useRef(false), saveLock = useRef(false), previewLock = useRef(false), globalLock = useRef(false), previewQueue = useRef(Promise.resolve());
   const readyRef = useRef(ready), savedRef = useRef(saved), latest = useRef(settings);
   readyRef.current = ready; savedRef.current = saved; latest.current = settings;
@@ -171,17 +176,17 @@ export function ModernMangoHudEditor({ onDirtyChange, searchControl, installatio
   }, [running]);
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) return;
+    if (reduced || searching || !visible) return;
     const timer = setInterval(() => { setTick(value => value + 1); setGraph(points => [...points.slice(1), 16 + Math.random() * 3 + (Math.random() < .06 ? 6 : 0)]); }, 450);
     return () => clearInterval(timer);
-  }, []);
+  }, [searching,visible]);
   useEffect(() => {
     const element = screen.current;
     if (!element) return;
     const observer = new ResizeObserver(([entry]) => setScreenWidth(entry.contentRect.width));
     observer.observe(element);
     return () => observer.disconnect();
-  }, [ready]);
+  }, [ready,searching,visible]);
   const update = (patch: MangoHudSettings) => {
     const next = { ...latest.current, ...patch };
     for (const option of options) {
@@ -210,7 +215,6 @@ export function ModernMangoHudEditor({ onDirtyChange, searchControl, installatio
     catch (e) { if (mounted.current) setError(String(e)); }
     finally { previewLock.current = false; if (mounted.current) setPreviewBusy(false); }
   };
-  const showAdvanced = (open: boolean) => { setAdvancedOpen(open); if (open) requestAnimationFrame(() => advanced.current?.scrollIntoView({ block: "start", behavior: "smooth" })); };
   const current = presetOf(settings);
   const limit = Number(settings.fps_limit) || 0;
   const customLimit = limit > 0 && !LIMITS.some(([value]) => value === limit);
@@ -223,26 +227,38 @@ export function ModernMangoHudEditor({ onDirtyChange, searchControl, installatio
   const sections = [...new Set(filtered.map(option => option.section))];
   const advancedControl = (option: Spec) => {
     const value = settings[option.key];
+    if(option.key==="launcher_enabled")return <button type="button" className="mango-switch sm" role="switch" aria-label={option.label} aria-checked={Boolean(value)} disabled={checkingGlobal} onClick={()=>void toggleGlobal()}/>;
+    if(option.kind==="fpslimits")return <MangoHudFpsCycle value={String(value||"")} onChange={value=>set(option.key,value)}/>;
     if (option.kind === "toggle") return <button type="button" className="mango-switch sm" role="switch" aria-checked={Boolean(value)} aria-label={option.label} onClick={() => set(option.key, !value)} />;
     if (option.kind === "shortcut") return <MangoHudShortcutRecorder label={option.label} value={String(value)} onChange={shortcut => set(option.key, shortcut)} />;
     if (option.kind === "select") return <SelectionMenu label={option.label} className="mm-setting-select" menuClassName="mm-setting-options" value={String(value)} onChange={value => set(option.key, value)} options={(option.values ?? []).map(item => ({value:item,label:SELECT_LABELS[option.key]?.[item] ?? (item === "" ? "(desligado)" : item)}))} />;
     if (option.kind === "color") return <input type="color" aria-label={option.label} value={`#${String(value)}`} onChange={event => set(option.key, event.target.value.slice(1).toUpperCase())} />;
     if (option.kind === "text") return <input type="text" aria-label={option.label} maxLength={64} value={String(value ?? "")} onChange={event => set(option.key, event.target.value.replace(/[\x00-\x1f\x7f]/g, ""))} />;
-    return <input type="number" aria-label={option.label} min={option.min} max={option.max} step={option.step} value={Number(value)} onChange={event => { const number = event.target.valueAsNumber; if (Number.isFinite(number)) set(option.key, Math.min(option.max ?? 1000, Math.max(option.min ?? 0, number))); }} />;
+    return <input type="number" aria-label={option.label} min={option.min} max={option.max} step={option.step} value={Number(value)} onChange={event => { const number = event.target.valueAsNumber; if (Number.isFinite(number)) { const clamped=Math.min(option.max ?? 1000, Math.max(option.min ?? 0, number)); if(option.key==="fps_limit")update({fps_limit:clamped,launcher_fps_limits:""});else set(option.key,clamped); } }} />;
   };
   const status = saveError ? "Falha ao salvar" : saving ? "Salvando…" : dirty ? "Aguardando salvamento…" : "Salvo automaticamente";
 
-  if (!ready) return <div className="mango-modern"><div className="mm-head-controls">{searchControl}</div><section className="mm-card"><p>{error || "Carregando configuração…"}</p>{error && <button type="button" className="mm-ghost" onClick={() => void load()}>Tentar novamente</button>}</section>{installation}</div>;
+  if(searching){
+    const matches=mangoSearchOptions(searchQuery);if(!matches.length)return null;const groups=[...new Set(matches.map(option=>option.section))];
+    return <section className="preference-search-group mango-modern mango-search-results" aria-label="MangoHUD"><header><h2>MangoHUD</h2><span className="mm-saved" role="status">{ready?status:"Carregando configuração…"}</span></header>
+      {error&&<p role="alert" className="preferences-error">{error}<button type="button" onClick={()=>void load()}>Tentar novamente</button></p>}
+      {saveError&&<div role="alert" className="preferences-error"><p>{saveError}</p><button type="button" disabled={saving} onClick={()=>setSaveError("")}>Tentar novamente</button><button type="button" onClick={()=>{setSettings(JSON.parse(saved));setSaveError("")}}>Desfazer alterações</button></div>}
+      {ready&&groups.map(section=><div key={section} className="mm-advanced-section"><h3>{SECTION_NAMES[section]||"Integração com o launcher"}</h3>{matches.filter(option=>option.section===section).map(option=><div key={option.key} className="mm-advanced-row"><span>{option.label}{option.key==="fps_limit"&&<small>0 = sem limite. Alterar este campo substitui a lista de limites.</small>}</span>{advancedControl(option)}</div>)}</div>)}
+    </section>;
+  }
+  if (!ready) return <div className="mango-modern"><section className="mm-card"><p>{error || "Carregando configuração…"}</p>{error && <button type="button" className="mm-ghost" onClick={() => void load()}>Tentar novamente</button>}</section></div>;
   return <div className="mango-modern">
+    <div className="monitoring-benchmark-screen" hidden={!benchmarkOnly}><MangoHudBenchmarkComparison shortcut={keyLabel(String(settings.toggle_logging))} fullPage /></div>
+    <div className="monitoring-editor-screen" hidden={benchmarkOnly}>
     <div className="mm-head">
-      <div className="mm-head-copy"><h1>Monitoramento no jogo</h1><p>Mostre FPS, temperatura e uso de hardware por cima do jogo, com o MangoHUD.</p></div>
-      <div className="mm-head-controls"><div className="mm-segmented" role="group" aria-label="Modo"><button type="button" aria-pressed={!advancedOpen} onClick={() => showAdvanced(false)}>Simples</button><button type="button" aria-pressed={advancedOpen} onClick={() => showAdvanced(true)}>Avançado</button></div>
-      <span className={`mm-saved${saveError ? " failed" : dirty || saving ? " pending" : ""}`} role="status"><i />{status}</span>{searchControl}</div>
+      <div className="mm-head-copy"><h2>{advancedOpen?"Configuração avançada":"Configuração simples"}</h2><p>{advancedOpen?"Todas as opções do MangoHUD, organizadas por categoria.":"Estilos prontos e ajustes essenciais para o seu painel."}</p></div>
+      <div className="mm-head-controls"><div className="mm-segmented" role="tablist" aria-label="Modo de configuração" onKeyDown={event=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;event.preventDefault();const next=event.key==="Home"?false:event.key==="End"?true:!advancedOpen;setAdvancedOpen(next);requestAnimationFrame(()=>document.getElementById(next?"mango-mode-advanced":"mango-mode-simple")?.focus())}}><button type="button" role="tab" id="mango-mode-simple" aria-controls="mango-mode-panel" aria-selected={!advancedOpen} tabIndex={advancedOpen?-1:0} onClick={() => setAdvancedOpen(false)}>Simples</button><button type="button" role="tab" id="mango-mode-advanced" aria-controls="mango-mode-panel" aria-selected={advancedOpen} tabIndex={advancedOpen?0:-1} onClick={() => setAdvancedOpen(true)}>Avançado</button></div>
+      <span className={`mm-saved${saveError ? " failed" : dirty || saving ? " pending" : ""}`} role="status"><i />{status}</span></div>
     </div>
     {saveError && <div role="alert" className="preferences-error"><p>Não foi possível salvar automaticamente: {saveError}</p><div className="monitoring-actions"><button type="button" disabled={saving} onClick={() => setSaveError("")}>Tentar novamente</button><button type="button" disabled={saving} onClick={() => { setSettings(JSON.parse(saved)); setSaveError(""); }}>Desfazer alterações</button></div></div>}
     {error && <p role="alert" className="preferences-error">{error}</p>}
     <div className="mm-grid">
-      <div className="mm-stack">
+      <div className="mm-stack" id="mango-mode-panel" role="tabpanel" aria-labelledby={advancedOpen?"mango-mode-advanced":"mango-mode-simple"}>
         <section className="mm-card mm-master">
           <div className="mm-big-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M3 12h4l3-8 4 16 3-8h4" /></svg></div>
           <div><strong>Mostrar nos jogos</strong><small>Em todos os jogos abertos pelo PeliGames. No jogo, <kbd>{keyLabel(String(settings.toggle_hud || "Shift_R+F12"))}</kbd> mostra ou esconde.</small>
@@ -257,6 +273,14 @@ export function ModernMangoHudEditor({ onDirtyChange, searchControl, installatio
           <button type="button" className="mango-switch" role="switch" aria-label="Aplicar também ao MangoHUD do sistema" aria-checked={Boolean(settings.launcher_sync_system)} onClick={()=>set("launcher_sync_system",!settings.launcher_sync_system)} />
         </section>
 
+        {advancedOpen?<section className="mm-card mm-advanced-screen" aria-label="Todas as opções do MangoHUD"><h2>Todas as opções</h2><p className="mm-hint">Ajustes completos. Use a busca para localizar uma opção específica.</p>          <div className="mm-advanced-body">
+            <label className="mm-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Buscar opção (ex.: vsync, bateria, ventoinha)" /></label>
+            {sections.map(section => <div key={section} className="mm-advanced-section"><h4>{SECTION_NAMES[section] ?? section}</h4>
+              {filtered.filter(option => option.section === section).map(option => <div key={option.key} className="mm-advanced-row"><span>{option.label}</span>{advancedControl(option)}</div>)}
+            </div>)}
+            {!sections.length && <p className="mm-empty">Nenhuma opção com “{query}”.</p>}
+          </div>
+</section>:<>
         <section className="mm-card">
           <h2><span className="mm-step">1</span>Escolha um estilo</h2>
           <p className="mm-hint">Um ponto de partida pronto. Depois ajuste o que quiser nos passos abaixo.</p>
@@ -275,7 +299,7 @@ export function ModernMangoHudEditor({ onDirtyChange, searchControl, installatio
           <div className="mm-groups">{GROUPS.map(group => <div key={group.title} className="mm-group">
             <h3><i style={{ background: group.color }} />{group.title}</h3>
             <div className="mm-chips">{group.items.filter(([key]) => key in settings).map(([key, label, on]) => {
-              const active = on ? settings[key] === on : Boolean(settings[key]);
+              const active = key === "fps_metrics" ? String(settings[key] || "").split(",").includes("0.01") : on ? settings[key] === on : Boolean(settings[key]);
               return <button type="button" key={key} className="mm-chip" aria-pressed={active} onClick={() => set(key, on ? (active ? "" : on) : !settings[key])}><Check />{label}</button>;
             })}</div>
           </div>)}</div>
@@ -335,18 +359,9 @@ export function ModernMangoHudEditor({ onDirtyChange, searchControl, installatio
           </div>)}</div>
         </section>
 
-        <MangoHudBenchmarkComparison shortcut={keyLabel(String(settings.toggle_logging))} />
 
-        <details ref={advanced} className="mm-advanced" open={advancedOpen} onToggle={event => setAdvancedOpen(event.currentTarget.open)}>
-          <summary><span className="mm-step">⚙</span>Todas as opções <small>· {options.length - 1} opções do MangoHUD, para quem quer tudo</small><svg className="mm-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="m9 6 6 6-6 6" /></svg></summary>
-          <div className="mm-advanced-body">
-            <label className="mm-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Buscar opção (ex.: vsync, bateria, ventoinha)" /></label>
-            {sections.map(section => <div key={section} className="mm-advanced-section"><h4>{SECTION_NAMES[section] ?? section}</h4>
-              {filtered.filter(option => option.section === section).map(option => <div key={option.key} className="mm-advanced-row"><span>{option.label}</span>{advancedControl(option)}</div>)}
-            </div>)}
-            {!sections.length && <p className="mm-empty">Nenhuma opção com “{query}”.</p>}
-          </div>
-        </details>
+
+        </>}
       </div>
 
       <div className="mm-preview-column">
@@ -364,8 +379,8 @@ export function ModernMangoHudEditor({ onDirtyChange, searchControl, installatio
         </div>
         {running && <small className="mm-running">Janela de teste aberta · atualização ao vivo</small>}
       </aside>
-      {installation}
       </div>
+    </div>
     </div>
   </div>;
 }

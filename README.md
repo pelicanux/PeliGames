@@ -1,4 +1,6 @@
 <p align="center">
+
+> **Publicação 0.4.4:** geração de quadros MAKO, overlay PeliGames e seu atalho estão em desenvolvimento e indisponíveis nesta versão. A aba permanece visível e desabilitada. DLSSNR-AMD e monitoramento continuam disponíveis.
   <img src="public/images/readme-header.svg" alt="PeliGames" width="900" />
 </p>
 
@@ -15,7 +17,7 @@ Launcher de jogos Windows para Linux com Proton, biblioteca de jogos, Pelinstall
 1. **Biblioteca:** o PeliGames reúne num só lugar os jogos da Steam, da Epic Games nativa para Linux, do Heroic, do Lutris, do Bottles e do Faugus, além dos que você instala por ele.
 2. **Instalar jogos e programas do Windows:** escolha o instalador (`.exe` ou `.msi`), o nome, a pasta e a versão do Proton. O PeliGames prepara o prefixo, roda o instalador e encontra sozinho o executável do jogo. Se houver dúvida entre executáveis, ele pergunta.
 3. **Launchers (EA app, Battle.net, Ubisoft Connect, Epic):** os jogos que você instala por dentro do launcher aparecem em **Programas**, para abrir direto. Ao adicionar um deles à biblioteca, ele ganha um perfil próprio, com prefixo, Proton e mods separados, sem duplicar os arquivos do launcher.
-4. **Mods do Nexus Mods:** em **Mods → Nexus Mods**, adicione o jogo, escolha os mods no catálogo (ou importe um arquivo) e clique em **Instalar**. O PeliGames confere os requisitos, aplica o instalador FOMOD quando existe e implanta os arquivos de acordo com as regras do jogo, as mesmas usadas pelo Vortex. Ativar, desativar e remover mods não altera os arquivos originais do jogo. Veja os [jogos suportados](docs/supported-games.md).
+4. **Mods do Nexus Mods:** abra o jogo na **Biblioteca → Mods**, escolha os mods no catálogo (ou importe um arquivo) e clique em **Instalar**. O PeliGames confere os requisitos, aplica o instalador FOMOD quando existe e implanta os arquivos de acordo com as regras do jogo, as mesmas usadas pelo Vortex. Os arquivos originais substituídos com autorização são preservados para restauração pelo gerenciador. Veja os [jogos suportados](docs/supported-games.md).
 5. **Problemas:** **Reportar erro** gera um relatório do jogo e pode enviá-lo direto ao fórum de suporte do Discord do PeliGames. Os erros do launcher também aparecem no sininho de notificações.
 
 ## Instalação
@@ -40,11 +42,11 @@ As atualizações baixam o AppImage novo, extraem ao lado e trocam a pasta `app`
 
 Para desinstalar, apague `~/.local/share/PeliGames`, o link `~/.local/bin/peligames` e os atalhos `peligames-*.desktop` e `pelinstall-appimage.desktop` em `~/.local/share/applications`. Os dados do launcher ficam à parte, em `~/.config/PeliGames`.
 
-Proton, UMU e Winetricks são baixados conforme necessário. Configurações, ferramentas, mods e dados da interface ficam em `~/.config/PeliGames`; para começar do zero, basta apagar essa pasta. O backend e os arquivos do mod ficam em `~/.config/PeliGames/Mod/DLSSNR`. O setup do mod, as teclas por jogo e os diretórios personalizados ficam em `~/.config/PeliGames/Mod/DLSSNR/config.json`; as preferências de inicialização do Neural Rendering ficam em `neural-startup.json` nessa mesma pasta. As preferências de capas e Proton permanecem em `~/.config/PeliGames/config.json`. Prefixos e jogos permanecem nos diretórios escolhidos pelo usuário. Capas do SteamGridDB exigem uma chave pessoal opcional, configurada em Preferências.
+Proton, UMU e Winetricks são baixados conforme necessário. Configurações, ferramentas, mods e dados da interface ficam em `~/.config/PeliGames`; para começar do zero, use **Configurações → Ferramentas → Redefinir PeliGames**, revisando as opções de preservar contas, jogos do Pelinstall e mods. O backend e os arquivos do mod ficam em `~/.config/PeliGames/Mod/DLSSNR`. O setup do mod, as teclas por jogo e os diretórios personalizados ficam em `~/.config/PeliGames/Mod/DLSSNR/config.json`; as preferências de inicialização do Neural Rendering ficam em `neural-startup.json` nessa mesma pasta. As preferências de capas e Proton permanecem em `~/.config/PeliGames/config.json`. Prefixos e jogos permanecem nos diretórios escolhidos pelo usuário. Capas do SteamGridDB exigem uma chave pessoal opcional, configurada em Preferências.
 
 ## Mods locais do Nexus
 
-Conecte sua chave pessoal em **Conta Nexus** e escolha mods no **Catálogo**, ou importe arquivos ZIP, 7z e RAR pelo botão **Mod Local**. Para receber downloads do site, habilite **Usar PeliGames nos links Nexus** e escolha **Mod Manager Download**.
+Na aba **Mods** dos detalhes do jogo, conecte sua conta em **Configurações → Conexões → Nexus Mods** para acessar o catálogo e as coleções. Arquivos ZIP, 7z e RAR podem ser importados pelo botão **Mod Local**, sem conta conectada. Jogos sem módulo compatível exibem a explicação de indisponibilidade nessa mesma aba. Para receber downloads do site, habilite **Usar PeliGames nos links Nexus** e escolha **Mod Manager Download**.
 
 Contas gratuitas confirmam o download na página do Nexus; Premium permite download direto. Acompanhe a fila em **Downloads Nexus** e, na lista de mods, confira os requisitos antes de **Instalar**, **Ativar** ou **Desativar**.
 
@@ -52,11 +54,27 @@ Integração independente, sem afiliação ao Nexus Mods. Reporte erros ao PeliG
 
 O suporte depende do jogo e do formato do pacote. A chave fica no chaveiro do sistema; AppImage requer `secret-tool` e um chaveiro disponível. Use **Logs** ou **Reportar erro** para diagnosticar problemas.
 
-Em **Configurações → Ferramentas**, crie um backup ZIP dos jogos com mods Nexus instalados ou restaure um ZIP salvo em outro disco. A opção de recuperação por jogo mantém uma pasta oculta `.peligames` no disco dos jogos, permitindo recuperar os registros ao escanear novamente após trocar de distribuição. Use **Encontrar mods no SSD** para procurar cópias de recuperação em uma biblioteca inteira. A `.config` continua sendo o armazenamento principal.
+Em **Configurações → Ferramentas**, crie um backup ZIP dos jogos com mods Nexus instalados ou restaure um ZIP salvo em outro disco. A opção de recuperação por jogo mantém uma pasta oculta `.peligames` no disco dos jogos, permitindo recuperar os registros ao escanear novamente após trocar de distribuição. Use **Encontrar mods no SSD** para procurar cópias de recuperação em uma biblioteca inteira. Novas instalações mantêm registros, pacotes, perfis e originais preservados junto de cada jogo em `.peligames/mods/<id>/`; registros antigos são migrados antes da redefinição. O índice de localização é preservado fora das pastas redefinidas, inclusive para discos desconectados.
+
+## Biblioteca unificada e geração de quadros
+
+Nexus Mods, DLSSNR e geração de quadros ficam nas abas dos **detalhes de cada jogo**, acessíveis pela biblioteca principal. A Visão geral distingue a raiz da instalação, o prefixo e o destino específico do DLSSNR. Escolher o destino do mod não altera a pasta usada para identificar o jogo. Pastas manuais continuam permitindo adicionar uma coleção com várias subpastas de jogos.
+
+Na aba **Geração de quadros**, configure o **MAKO Renderer 4.5.0** (multiplicador fixo ou adaptativo), versão estável verificada em 18/10/2026. O botão de instalação baixa o pacote oficial, valida a estrutura e confere o SHA-256 quando há um checksum de referência; a ativação e as configurações são específicas de cada instalação e valem na próxima execução. Componentes e perfis ficam em `~/.config/PeliGames/FrameGeneration`, sem arquivos novos nas pastas dos jogos ou ativação Vulkan global. A busca de lançamentos estáveis usa cache de seis horas e também pode ser solicitada na interface. Atualizações preservam os runtimes anteriores: em **Versões e backups**, selecione a versão para este jogo e salve. A lixeira só remove backups sem vínculo com perfis. Versões maiores que precisem de adaptação da integração não são instaladas automaticamente.
+
+A geração exige uma instalação própria do **Lossless Scaling**: O MAKO utiliza a ramificação pública padrão e `Lossless.dll`. O PeliGames procura essas DLLs nas bibliotecas Steam e permite selecioná-las manualmente. Não fornece essas DLLs.
+
+Use um único gerador de quadros. Desative o FG interno do jogo e do OptiScaler; o launcher bloqueia combinações conhecidas com MLFG, camadas de baixa latência DX12/Vulkan e captura Vulkan OBS. OptiScaler para upscaling e DLSSNR não são automaticamente considerados incompatíveis; o resultado depende do jogo. Configuração explícita de FG ativado no `OptiScaler.ini` impede ativar outro gerador. Requer Vulkan, diretamente ou via DXVK/VKD3D. A integração inicial é para jogos no host; launchers Flatpak informam a necessidade da extensão de runtime correspondente. MangoHUD pode contar somente os quadros reais.
+
+A primeira ativação mostra a linha necessária nas opções de inicialização da Steam. É possível colar e verificar com a Steam aberta, ou pedir aplicação automática com reinício da Steam; ajustes do perfil não repetem essa etapa. Flatpak exige extensão e acesso aos perfis/DLL: use **Preparar / verificar Flatpak**, que mostra a ABI e os comandos específicos antes de liberar a ativação. O multiplicador vai de **2× a 5×** e o FPS alvo adaptativo de **10 a 1000**. Veja [a revisão da integração](docs/mako-integration.md) para requisitos e limites de cada launcher.
+
+Na Steam, uma linha fixa chama o auxiliar Rust `pelirun`, que lê o perfil atualizado do jogo. Depois de vincular essa linha uma vez, mudar MangoHUD, geração de quadros, variáveis ou argumentos não exige reiniciar a Steam: as opções de inicialização valem ao reabrir o jogo. Ajustes com recarga durante a partida dependem de cada ferramenta. A escolha do Proton continua em **Compatibilidade**, na Steam. Veja [o funcionamento e os limites do auxiliar](docs/steam-launch-runtime.md).
+
+Referências: [MAKO Renderer](https://github.com/eugeniosegala/MAKO/blob/main/engine/README.md), [compatibilidade do MAKO](https://github.com/eugeniosegala/MAKO/blob/main/engine/docs/LAYER-CHAINING.md).
 
 ## DLSS 5 Neural Rendering em placas AMD (DLSSNR)
 
-A aba **DLSS 5 NR** roda o modelo de Neural Rendering (NR) do DLSS 5 da NVIDIA em placas AMD Radeon. Quem faz esse trabalho são dois projetos independentes, que reimplementam a rede em shaders Vulkan, executados no próprio dispositivo Vulkan do jogo (DXVK / vkd3d-proton sob o Proton). O PeliGames baixa o backend certo para a sua placa, executa o instalador dele com as opções escolhidas na interface e guarda o modelo para as próximas instalações. As informações abaixo resumem a documentação desses projetos e explicam como o PeliGames os usa.
+A aba **DLSSNR-AMD** roda o modelo de Neural Rendering (NR) do DLSS 5 da NVIDIA em placas AMD Radeon. Quem faz esse trabalho são dois projetos independentes, que reimplementam a rede em shaders Vulkan, executados no próprio dispositivo Vulkan do jogo (DXVK / vkd3d-proton sob o Proton). O PeliGames baixa o backend certo para a sua placa, executa o instalador dele com as opções escolhidas na interface e guarda o modelo para as próximas instalações. As informações abaixo resumem a documentação desses projetos e explicam como o PeliGames os usa.
 
 > Projetos experimentais (versões 0.0.x), sem afiliação com a NVIDIA nem com a AMD. **Não use em jogos online com anti-cheat**: DLLs injetadas podem levar ao banimento da conta. O instalador coloca arquivos na pasta do jogo; **Remover** apaga só o que ele instalou.
 
@@ -67,7 +85,7 @@ A aba **DLSS 5 NR** roda o modelo de Neural Rendering (NR) do DLSS 5 da NVIDIA e
 | RX 9000 (RDNA 4) | [DLSSNR-AMD, de mochizuki0323](https://github.com/mochizuki0323/DLSSNR-AMD) | RX 9070 XT, Mesa 26.2, GE-Proton |
 | RX 7000 (RDNA 3) | [DLSSNR-RDNA3, de mauri870](https://github.com/mauri870/DLSSNR-RDNA3) (fork do anterior) | RX 7900 XTX, Mesa 26.2.3, GE-Proton 11-7 |
 
-- O PeliGames identifica a série da placa e oferece o backend correspondente em **Configurações → Mods → Gerenciar backend**. O download vem das releases do GitHub de cada projeto e fica em `~/.config/PeliGames/Mod/DLSSNR/backend-files/<rdna3|rdna4>/<32|64>`.
+- O PeliGames identifica a série da placa e oferece o backend correspondente em **Configurações → Mods → DLSSNR-AMD**. O download vem das releases do GitHub de cada projeto e fica em `~/.config/PeliGames/Mod/DLSSNR/backend-files/<rdna3|rdna4>/<32|64>`.
 - A RX 7000 não tem as instruções de matriz FP8 da RDNA 4. O fork reproduz a mesma rede com FP16 e chega à mesma fidelidade, mas custa cerca de 2,6 vezes mais por quadro.
 - Requisitos: Mesa 26.2 ou mais novo (driver RADV) e um Proton recente. O instalador do backend usa `bash` e `python3`.
 
@@ -86,9 +104,19 @@ A `nvngx_dlssnr.dll` e os pesos pertencem à NVIDIA e **não acompanham o PeliGa
 
 Os arquivos permanecem no diretório padrão do backend: `~/.config/PeliGames/Mod/DLSSNR/backend-files/<rdna3|rdna4>/<32|64>/dlssnr-amd/`, conforme as arquiteturas disponíveis. Não é necessário mover o `.bin` para a raiz `Mod/DLSSNR`. Ao importar o modelo novo já extraído, mantenha `dlssnr-small.bin` ao lado de `dlssnr.bin`; o launcher importa os dois.
 
-Nos detalhes do jogo, **Modelo NR → Novo / Antigo** aparece quando os dois modelos estão disponíveis e o backend permite a escolha. Com apenas o antigo, não aparece um seletor desnecessário. **Após trocar o modelo de um mod já instalado, clique em Reparar para aplicar ao jogo**. O **int4 misto funciona apenas com o modelo antigo (310.8.0)**.
+Nos detalhes do jogo, o backend **0.0.7 da RX 9000** usa **Rede inicial → Novo / Antigo / int4**. As escolhas correspondem a `CC_SMALL_FP8` (310.9.16), `CC_SILVER_AARDWOLD` (310.8.0) e `CC_SILVER_AARDWOLD_INT4_MIXED` (derivado do antigo). O instalador prepara as redes disponíveis juntas; a escolha no launcher define qual inicia após instalar ou reparar. No jogo, alterne no **NR Control (End)**, em **ReShade → Add-ons**, ou com **Ctrl+F11**, sem reinstalar a cada troca. Redes sem pesos ou sem suporte ficam indisponíveis no menu do backend. O launcher utiliza a linha completa impressa pelo instalador com a camada int4 quando ela está disponível, mesmo se a rede inicial for outra.
 
-Quem atualiza o PeliGames não precisa apagar o backend anterior. Para habilitar o modelo novo, atualize também o backend em **Configurações → Mods → Gerenciar backend** e extraia a DLL **310.9.16** na configuração inicial. Atualizar somente o launcher não fornece a DLL nem gera os modelos novos.
+Backends anteriores e o fork RDNA3 mantêm o fluxo que seus scripts suportam: **Modelo NR → Novo / Antigo**, quando disponível, e a opção separada de int4. Nesses backends, após mudar as opções do launcher, use **Reparar**. Não se presume que o fork RDNA3 tenha recebido as mudanças do 0.0.7.
+
+Quem atualiza o PeliGames não precisa apagar o backend anterior. Para habilitar o modelo novo, atualize também o backend em **Configurações → Mods → DLSSNR-AMD** e extraia a DLL **310.9.16** na configuração inicial. Atualizar somente o launcher não fornece a DLL nem gera os modelos novos.
+
+### Backend Mochizuki 0.0.7 (19/10/2026)
+
+A versão Linux estável 0.0.7 foi publicada para x86_64 e i686 junto de um pacote Windows experimental. O atualizador seleciona somente os assets Linux da arquitetura correspondente. O arquivo interno `backend-files/rdna4/version.txt` continua registrando a tag do pacote com o sufixo `-rdna4`; os nomes das redes não substituem essa versão. Os hashes dos modelos 310.8.0/310.9.16 não mudaram: modelos válidos em cache podem ser reutilizados.
+
+O backend acrescentou troca de redes durante o jogo, política de memória **Residency**, indicador de rede **OSD**, diagnóstico **Engine data** e opções de rede/log no menu do próprio mod. Também corrigiu crescimento de VRAM em mudanças de resolução, leitura de texturas e diferenças no processamento Natural/Cinematic. Esses recursos vêm do backend atualizado; não exigem que o launcher reproduza seus controles nem permanecem disponíveis em uma instalação antiga do mod. Atualize o backend e use **Reparar / reinstalar** em cada jogo que deve recebê-los. O PeliRun reaproveita a linha fixa já vinculada; a alteração do perfil não exige reiniciar a Steam.
+
+**LumeniteFX** é uma alternativa opcional de vetores de movimento para as rotas ReShade, oferecida pelo script oficial com `--lumenite`; não se aplica ao OptiScaler. É um projeto separado e exige um download adicional do autor. O PeliGames mantém VORT como padrão e não ativa nem baixa LumeniteFX automaticamente nesta integração. [Notas oficiais do release](https://github.com/mochizuki0323/DLSSNR-AMD/releases/tag/v0.0.7).
 
 ### Rotas
 
@@ -158,11 +186,13 @@ O PeliGames instala mods do Nexus Mods em **215 jogos**, com módulos baseados n
    - Debian/Ubuntu: `sudo apt install build-essential curl wget file libwebkit2gtk-4.1-dev libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev`
    - Fedora: `sudo dnf install webkit2gtk4.1-devel openssl-devel curl wget file libappindicator-gtk3-devel librsvg2-devel libxdo-devel` e `sudo dnf group install c-development`
 2. Instale o [Rust](https://rustup.rs) e o [Bun](https://bun.sh).
+   O auxiliar da Steam exige também `rustup target add x86_64-unknown-linux-musl` (em ARM64, use `aarch64-unknown-linux-musl`).
 3. Baixe o código e as dependências da interface:
    ```
    git clone https://github.com/pelicanux/PeliGames.git
    cd PeliGames
    bun install
+   cargo fetch --locked --manifest-path src-tauri/launch-runtime/Cargo.toml
    ```
 4. Compile a interface (gera também os ícones):
    ```

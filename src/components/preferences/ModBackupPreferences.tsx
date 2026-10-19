@@ -53,18 +53,19 @@ export function ModBackupPreferences({ onError, onBusy, onRestored }: { onError:
     await onRestored();
     window.dispatchEvent(new Event("refreshGames"));
   });
-  return <section className="preference-section">
-    <h3>{pt ? "Backup e recuperação de mods Nexus" : "Nexus mod backup and recovery"}</h3>
-    <p>{pt ? "Crie um ZIP com pacotes, perfis e registros dos jogos com mods Nexus instalados. Na restauração, jogos já configurados são preservados. As contas não entram no backup." : "Create a ZIP with packages, profiles and records for games with installed Nexus mods. Restoring preserves games already configured. Accounts are excluded."}</p>
-    <div className="preference-tool-buttons">
-      <button type="button" data-preference-id="backup-create" disabled={busy} onClick={backup}><MenuIcon name="floppy"/>{pt ? "Criar backup Nexus" : "Create Nexus backup"}</button>
-      <button type="button" data-preference-id="backup-discover" disabled={busy} onClick={recoverDisk}><MenuIcon name="folderSearch"/>{pt ? "Encontrar mods no SSD" : "Find mods on drive"}</button>
-      <button type="button" data-preference-id="backup-restore" disabled={busy} onClick={restore}><MenuIcon name="download"/>{pt ? "Restaurar backup" : "Restore backup"}</button>
+  return <section className="mod-workspace mod-backup-workspace mod-backup-card">
+    <header className="mod-intro"><h3>{pt?"Backup e recuperação":"Backup and recovery"}</h3><p>{pt?"Guarde uma cópia ou recupere uma instalação existente. As contas ficam fora do backup.":"Keep a copy or recover an existing installation. Accounts are excluded from backups."}</p></header>
+    <div className="mod-backup-actions">
+      <div data-preference-id="backup-create" className="mod-setting-row"><div className="mod-row-copy"><span className="mod-component-icon"><MenuIcon name="floppy"/></span><div><strong>{pt?"Guardar uma cópia":"Keep a copy"}</strong><small>{pt?"Cria um ZIP com pacotes, perfis e registros de todos os jogos com mods.":"Creates a ZIP with packages, profiles and records for all modded games."}</small></div></div><button type="button" className="mod-action-primary" disabled={busy} onClick={backup}>{pt?"Criar backup":"Create backup"}</button></div>
+      <div data-preference-id="backup-restore" className="mod-setting-row"><div className="mod-row-copy"><span className="mod-component-icon"><MenuIcon name="download"/></span><div><strong>{pt?"Voltar de um backup":"Restore from a backup"}</strong><small>{pt?"Importa seu ZIP. Jogos já configurados são preservados.":"Imports your ZIP. Already configured games are preserved."}</small></div></div><button type="button" className="mod-action-secondary" disabled={busy} onClick={restore}>{pt?"Restaurar":"Restore"}</button></div>
+      <div data-preference-id="backup-discover" className="mod-setting-row"><div className="mod-row-copy"><span className="mod-component-icon"><MenuIcon name="folderSearch"/></span><div><strong>{pt?"Encontrar uma instalação anterior":"Find a previous installation"}</strong><small>{pt?"Procura registros de recuperação do PeliGames na pasta dos jogos.":"Finds PeliGames recovery records in your game folders."}</small></div></div><button type="button" className="mod-action-secondary" disabled={busy} onClick={recoverDisk}>{pt?"Procurar no disco":"Search drive"}</button></div>
     </div>
+    <div className="mod-backup-policy"><h4>{pt?"Recuperação por jogo":"Per-game recovery"}</h4>
     <label data-preference-id="backup-per-game" className="preference-switch" style={{ marginTop: 20 }}>
       <input type="checkbox" disabled={busy || !settings} checked={settings?.per_game ?? false} onChange={event => { const perGame = event.target.checked; void run(async () => { setSettings(await invoke<Settings>("set_mod_backup_settings", { perGame })); window.dispatchEvent(new Event("modBackupSettingsChanged")); }); }}/>
       <span className="preference-switch-track"/><span>{pt ? "Cópia de recuperação na pasta de cada jogo" : "Recovery copy in each game folder"}<small>{pt ? "Mantém uma pasta oculta .peligames somente nos jogos com mods Nexus instalados. Ocupa espaço adicional. Ao escanear ou associar o jogo novamente, recupera os mods na .config. As escolhas individuais prevalecem sobre esta opção global." : "Keeps a hidden .peligames folder only for games with installed Nexus mods. Uses extra disk space. Scanning or associating the game again restores mods to .config. Individual choices override this global default."}</small></span>
     </label>
+    </div>
     {copies.length > 0 && <ul className="mod-backup-copies" aria-label={pt ? "Cópias de recuperação por jogo" : "Recovery copies by game"}>
       {copies.map(game => <li key={game.game_id} className={game.error ? "is-error" : game.updated && !game.enabled ? "is-stale" : ""}>
         <strong>{game.name}</strong>

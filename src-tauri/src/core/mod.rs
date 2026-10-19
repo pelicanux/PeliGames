@@ -1,4 +1,6 @@
 pub mod script_runner;
+#[path = "../../launch-runtime/src/release_features.rs"]
+pub mod release_features;
 pub mod file_manager;
 pub mod env_utils;
 pub mod config_manager;

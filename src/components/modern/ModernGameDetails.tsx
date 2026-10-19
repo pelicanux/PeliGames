@@ -1,7 +1,8 @@
 import { CatalogNavigationContext } from "./CatalogNavigationContext";
+import { HoverTooltip } from "../HoverTooltip";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-export interface ModernTab { id: string; label: string; content: ReactNode; count?: number }
+export interface ModernTab { id: string; label: string; content: ReactNode; count?: number; disabled?: boolean; disabledHint?: string }
 
 interface Props {
   /** Game artwork behind the spotlight (shaded where the text sits); later
@@ -54,7 +55,7 @@ export function ModernGameDetails({ artwork, artSharp = false, cover, eyebrow, t
   useEffect(() => { setTab(tabs[0]?.id); }, [resetKey]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (requestedTab && tabs.some(item => item.id === requestedTab)) { setTab(requestedTab); onTabChange?.(requestedTab); } }, [requestedTab, resetKey]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (tabRequest?.revision && tabs.some(item => item.id === tabRequest.tab)) { setTab(tabRequest.tab); onTabChange?.(tabRequest.tab); } }, [tabRequest]); // eslint-disable-line react-hooks/exhaustive-deps
-  const current = tabs.find(item => item.id === (activeTab ?? tab)) ?? tabs[0];
+  const current = tabs.find(item => !item.disabled && item.id === (activeTab ?? tab)) ?? tabs.find(item => !item.disabled);
   return <section ref={frame} className={`modern-details${contentView ? " modern-details-secondary" : ""}${catalog ? " modern-details-browsing" : ""}${tabs[0]?.id === "installation" ? " modern-details-installation" : ""}`} aria-label={typeof title === "string" ? title : undefined}>
     <div className={`modern-details-art${artSharp ? " sharp" : ""}`} style={{
       ...(artwork?.length ? { backgroundImage: artwork.map(url => `url("${url.replace(/"/g, "%22")}")`).join(", ") } : {}),
@@ -74,7 +75,7 @@ export function ModernGameDetails({ artwork, artSharp = false, cover, eyebrow, t
       {actions && <div className="modern-details-actions" hidden={Boolean(catalog)}>{actions}</div>}
     </div>}
     {!catalog && tabs.length > 1 && <div className="modern-tabs" role="tablist">
-      {tabs.map(item => <button type="button" key={item.id} role="tab" aria-selected={current?.id === item.id} onClick={() => { setTab(item.id); onTabChange?.(item.id); }}>
+      {tabs.map(item => item.disabled ? <HoverTooltip key={item.id} text={item.disabledHint || "Em desenvolvimento"}><button type="button" role="tab" disabled aria-selected={false} style={{opacity:0.45,cursor:"not-allowed"}}>{item.label}</button></HoverTooltip> : <button type="button" key={item.id} role="tab" aria-selected={current?.id === item.id} onClick={() => { setTab(item.id); onTabChange?.(item.id); }}>
         {item.label}{item.count ? <span className="modern-tab-count">{item.count}</span> : null}
       </button>)}
     </div>}

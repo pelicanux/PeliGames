@@ -5,6 +5,7 @@ import { installationFolderName } from "../services/installationPaths";
 export function useInstallationLocation(confirmedName: string, open: boolean) {
   const [root, setRoot] = useState("");
   const [custom, setCustom] = useState<string | null>(null);
+  const [reserved, setReserved] = useState<{ folder: string; path: string } | null>(null);
   const [selected, setSelected] = useState(false);
   const [error, setError] = useState(false);
   useEffect(() => {
@@ -16,16 +17,18 @@ export function useInstallationLocation(confirmedName: string, open: boolean) {
     }).catch(() => { if (active) setError(true); });
     return () => { active = false; };
   }, [open]);
-  const suggested = root && confirmedName ? `${root}/${installationFolderName(confirmedName)}` : root;
+  const folderName = confirmedName ? installationFolderName(confirmedName) : "";
+  const suggested = reserved?.folder === folderName ? reserved.path : root && folderName ? `${root}/${folderName}` : root;
   const selectDefault = async () => {
     const folder = confirmedName ? installationFolderName(confirmedName) : undefined;
     try {
-      const path = await invoke<string>("prepare_default_installation_directory", { folder });
+      const path = reserved?.folder === (folder || "") ? reserved.path : await invoke<string>("prepare_default_installation_directory", { folder });
+      setReserved({ folder: folder || "", path });
       setRoot(folder ? path.slice(0, path.lastIndexOf("/")) : path);
       setCustom(null); setSelected(true); setError(false);
     } catch (error) { setError(true); throw error; }
   };
-  return { directory: custom ?? suggested, selected, selectDefault,
+  return { directory: custom ?? suggested, selected: selected && (custom !== null || reserved?.folder === folderName), selectDefault,
     setDirectory: (path: string) => { setCustom(path); setSelected(true); },
-    reset: () => { setCustom(null); setSelected(false); }, error: error && custom === null };
+    reset: () => { setCustom(null); setReserved(null); setSelected(false); }, error: error && custom === null };
 }

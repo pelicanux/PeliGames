@@ -1,3 +1,4 @@
+import { NexusModTitle } from "./NexusModTitle";
 import { requireNexusAccount } from "./requireNexusAccount";
 import { useI18n } from "../../i18n/I18nContext";
 import { ModOptionSwitch } from "../../components/ModOptionRow";
@@ -386,13 +387,15 @@ export function NexusPanels({ section, toolState, tab, onTabChange, highlightedM
             }}>
             {selectingMods && <input className="nexus-mod-select" type="checkbox" aria-label={`${text.selectMod}: ${identity.name}`} checked={selectedMods.includes(mod.id)} disabled={locked || settingsBusy} onChange={event => setSelectedMods(current => event.target.checked ? [...current, mod.id] : current.filter(id => id !== mod.id))} />}
             
+            <div className="nexus-mod-header">
             <Summary className="nexus-mod-summary" aria-expanded={undefined} aria-controls={undefined} onClick={undefined}>
               <span className="nexus-mod-position">{game.mods.findIndex(item => item.id === mod.id) + 1}</span>
-              <span className="nexus-installed-mod-info"><span className="nexus-mod-title"><strong>{identity.name}</strong><NexusDeployCounter progress={!installReview && togglingMod?.gameId === game.id && togglingMod.modId === mod.id ? progress : undefined} /></span><small>{identity.version ? `v${identity.version} · ` : ""}{mod.nexus_source ? "Nexus Mods · " : ""}{(mod.size / 1024 / 1024).toFixed(1)} MB</small></span>
+              <span className="nexus-installed-mod-info"><span className="nexus-mod-title"><NexusModTitle name={identity.name} /><NexusDeployCounter progress={!installReview && togglingMod?.gameId === game.id && togglingMod.modId === mod.id ? progress : undefined} /></span><small>{identity.version ? `v${identity.version} · ` : ""}{mod.nexus_source ? "Nexus Mods · " : ""}{(mod.size / 1024 / 1024).toFixed(1)} MB</small></span>
               
               
             </Summary>
             <div className="nexus-mod-visible-toggle"><HoverTooltip text={text.requirements}><button type="button" className="nexus-mod-info-button" aria-label={`${text.requirements}: ${identity.name}`} onClick={() => setRequirementsMod(mod.id)}><MenuIcon name="info" /></button></HoverTooltip>{mod.installed ? <ModOptionSwitch label={`${mod.enabled ? text.disable : text.enable}: ${identity.name}`} enabled={mod.enabled} disabled={locked || settingsBusy || !supported || Boolean(togglingMod)} onToggle={() => void toggleMod(game.id, mod.id, !mod.enabled)} /> : <button type="button" className="btn btn-secondary nexus-mod-inline-install" disabled={locked || settingsBusy} onClick={() => setInstallReview(mod.id)} aria-label={`${text.install}: ${identity.name}`}><MenuIcon name="download" />{text.install}</button>}</div>
+            </div>
             {expanded && mod.identification_note && <small className="nexus-local-identification-note" role="status">{mod.identification_note}</small>}
             {expanded && extras?.extender_errors.filter(item => item.mod_id === mod.id).map(item => <small key={item.dll} className="nexus-local-identification-note nexus-error" role="status">{text.extenderErrors}: {item.dll} · {item.message}</small>)}
             {expanded && mod.installed && mod.enabled && (() => {

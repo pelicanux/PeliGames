@@ -12,6 +12,8 @@ use std::{
 static SETTINGS_LOCK: Mutex<()> = Mutex::new(());
 #[path = "external_proton.rs"]
 mod external_proton;
+#[path = "epic_runtime.rs"]
+mod epic_runtime;
 #[path = "steam_settings.rs"]
 mod steam_settings;
 #[path = "steam_proton_state.rs"]
@@ -275,9 +277,18 @@ pub async fn configure_external_game(settings: ExternalSettings) -> Result<Exter
         )
         .map_err(|_| "Não foi possível gravar configurações.")?;
         std::fs::rename(temporary, file).map_err(|_| "Não foi possível salvar configurações.")?;
+        if game.launcher == "Epic Games" && !game.native_linux {
+            let mut proposed = game.clone();
+            proposed.advanced = settings.advanced.clone();
+            let selected = proton.as_deref().map(Path::new);
+            if let Err(error) = epic_runtime::configure(&dirs::home_dir().ok_or("Pasta pessoal indisponível.")?, &proposed, selected) {
+                std::fs::write(settings_file()?, serde_json::to_vec_pretty(&before).map_err(|e|e.to_string())?).map_err(|e|format!("{error}; falha ao restaurar preferências: {e}"))?;
+                return Err(error);
+            }
+        }
         if game.launcher == "Steam" {
             let baseline = Some(SavedExternalSettings { advanced: previous.as_ref().map(|s| s.advanced.clone()).unwrap_or_default(), proton: game.proton.clone(), directory: previous.and_then(|s| s.directory) });
-            if let Err(error) = steam_settings::stage(&game.external_id, baseline, next) {
+            if let Err(error) = steam_settings::stage(&game, baseline, next) {
                 std::fs::write(settings_file()?, serde_json::to_vec_pretty(&before).map_err(|e|e.to_string())?).map_err(|e| format!("{error}; falha ao restaurar configurações: {e}"))?;
                 return Err(error);
             }
@@ -298,11 +309,38 @@ fn custom_options(settings: &AdvancedSettings) -> Result<Command, String> {
     }
     Ok(options)
 }
+
+/// Mod deployment already owns the game files. Its launch requirements are
+/// saved in the same persistent runtime profile as monitoring and wrappers.
+pub(super) fn save_steam_mod_runtime(external_id: &str, app_id: &str, launch_options: Option<String>, line: Option<String>) -> Result<(bool, Option<String>), String> {
+    let _guard = SETTINGS_LOCK.lock().map_err(|_| "Configurações ocupadas.")?;
+    let game = all()?.into_iter().find(|game| game.external_id == external_id && game.launcher == "Steam" && game.app_id.as_deref() == Some(app_id)).ok_or("Jogo Steam não encontrado. Atualize a biblioteca.")?;
+    let mut saved = read_settings()?;
+    let snapshot = saved.clone();
+    let before = saved.get(external_id).cloned().unwrap_or_else(|| SavedExternalSettings { advanced: game.advanced.clone(), proton: game.proton.clone(), directory: None });
+    let mut after = before.clone();
+    let previous_mods = super::steam_runtime::mod_options(&game)?;
+    let launch_options = super::mod_launch_options::merge(launch_options.as_deref(), previous_mods.as_deref(), None)?;
+    after.advanced.launch_options = launch_options.clone();
+    saved.insert(external_id.into(), after.clone());
+    let path = settings_file()?;
+    let temporary = path.with_extension("json.part");
+    std::fs::write(&temporary, serde_json::to_vec_pretty(&saved).map_err(|error| error.to_string())?).map_err(|error| error.to_string())?;
+    std::fs::rename(temporary, &path).map_err(|error| error.to_string())?;
+    if let Err(error) = steam_settings::stage_with_mods(&game, Some(before), after, line) {
+        std::fs::write(&path, serde_json::to_vec_pretty(&snapshot).map_err(|rollback| format!("{error}; {rollback}"))?).map_err(|rollback| format!("{error}; não foi possível restaurar as preferências: {rollback}"))?;
+        return Err(error);
+    }
+    Ok((steam_settings::pending(external_id)?, launch_options))
+}
 fn invocation(game: &ExternalGame) -> Result<(String, Vec<String>), String> {
     let id = game
         .app_id
         .as_deref()
         .ok_or("Identificação externa ausente.")?;
+    if game.launcher == "Epic Games" {
+        return super::epic_library::command(&dirs::home_dir().ok_or("Pasta pessoal indisponível.")?, id);
+    }
     let custom = custom_options(&game.advanced)?;
     let extra: Vec<String> = custom
         .get_args()
@@ -346,7 +384,6 @@ fn invocation(game: &ExternalGame) -> Result<(String, Vec<String>), String> {
             }
             ("heroic", vec!["--no-gui".into(), url.to_string()])
         }
-        "Epic Games" => return super::epic_library::command(&dirs::home_dir().ok_or("Pasta pessoal indisponível.")?, id),
         "Lutris" => {
             if !id.bytes().all(|b| b.is_ascii_digit()) {
                 return Err("ID Lutris inválido.".into());
@@ -580,13 +617,9 @@ fn launcher_needs_environment(launcher: &str, config: Option<&Path>) -> bool {
             matches_process
         })
 }
-/// A Steam game's mod options belong in Steam's own launch options: a line
-/// an older PeliGames put in the game's PeliGames options moves there (so an
-/// open Steam no longer blocks the launch), and waiting changes are written
-/// when Steam is closed. Proton loads a mod's DLL from the game folder by
-/// itself, so the game starts normally meanwhile.
+/// Migrate older per-directory mod records into the persistent runtime profile.
 fn steam_mod_options(game: &mut ExternalGame) -> Result<(), String> {
-    let Some(app) = game.app_id.clone() else { return Ok(()) };
+    if game.app_id.is_none() { return Ok(()); }
     let mut taken = super::mod_launch_options::take_records_under(&game.path)?;
     if game.directory != game.path { taken.extend(super::mod_launch_options::take_records_under(&game.directory)?); }
     if let Some(line) = taken.last() {
@@ -602,9 +635,14 @@ fn steam_mod_options(game: &mut ExternalGame) -> Result<(), String> {
             std::fs::rename(temporary, file).map_err(|_| "Não foi possível salvar configurações.")?;
         }
         game.advanced.launch_options = cleaned;
-        let _ = super::steam_launch_options::want(&app, Some(line.clone()));
+        let previous = saved.get(&game.external_id).cloned().unwrap_or_else(|| SavedExternalSettings { advanced: game.advanced.clone(), proton: game.proton.clone(), directory: None });
+        steam_settings::stage_with_mods(game, Some(previous.clone()), previous, Some(line.clone()))?;
     } else {
-        let _ = super::steam_launch_options::waiting(&app);
+        // A converted game no longer needs a VDF write when its mod changes.
+        // Retain the old path only for games not converted to a runtime profile.
+        if !super::steam_runtime::has_profile(game)? {
+            let _ = super::steam_launch_options::waiting(game.app_id.as_deref().unwrap_or_default());
+        }
     }
     Ok(())
 }
@@ -616,26 +654,26 @@ pub async fn launch_external_game(external_id: String) -> Result<(), String> {
         let selected_proton = read_settings()?.get(&game.external_id).filter(|_| !game.native_linux).and_then(|settings| settings.proton.clone());
         let global_monitoring = crate::core::mangohud_config::global_enabled()? && game.advanced.mangohud_enabled != Some(false);
         let global_config = crate::core::mangohud_config::directory()?.join("MangoHud.conf");
-        if game.launcher != "Steam" && (((has_local_adjustments(&game.advanced) || selected_proton.is_some()) && launcher_open(&game.launcher))
+        if !matches!(game.launcher.as_str(), "Steam" | "Epic Games") && (((has_local_adjustments(&game.advanced) || selected_proton.is_some()) && launcher_open(&game.launcher))
             || (global_monitoring && launcher_needs_environment(&game.launcher, Some(&global_config)))) {
             return Err(format!("Feche {} antes de iniciar por aqui para aplicar os ajustes avançados do PeliGames. Um launcher que já está aberto não recebe o novo ambiente de execução.", game.launcher));
         }
         if game.launcher == "Epic Games" && !game.native_linux {
             let _guard = SETTINGS_LOCK.lock().map_err(|_| "Configurações ocupadas.")?;
             let proton = selected_proton.as_deref().map(crate::core::game_installation::validate_proton).transpose()?;
-            external_proton::epic(&dirs::home_dir().ok_or("Pasta pessoal indisponível.")?, &game, proton.as_deref(), launcher_open("Epic Games"))?;
+            epic_runtime::configure(&dirs::home_dir().ok_or("Pasta pessoal indisponível.")?, &game, proton.as_deref())?;
         } else if let Some(proton) = selected_proton.filter(|_| game.launcher != "Steam") {
             let _guard = SETTINGS_LOCK.lock().map_err(|_| "Configurações ocupadas.")?;
             let proton = crate::core::game_installation::validate_proton(&proton)?;
             external_proton::apply(&game, &proton)?;
         }
         let mut source_game = game.clone();
-        if game.launcher == "Steam" { source_game.advanced = AdvancedSettings::default(); }
+        if matches!(game.launcher.as_str(), "Steam" | "Epic Games") { source_game.advanced = AdvancedSettings::default(); }
         let (program,args)=invocation(&source_game)?;
-        let mut command=if game.launcher == "Steam" { Command::new(&program) } else { launch_command(Path::new(&program),Some(&game.advanced))? };
+        let mut command=if matches!(game.launcher.as_str(), "Steam" | "Epic Games") { Command::new(&program) } else { launch_command(Path::new(&program),Some(&game.advanced))? };
         crate::core::env_utils::host_environment(&mut command);
         command.args(args).env_remove("LD_LIBRARY_PATH").env_remove("LD_PRELOAD").stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
-        if game.launcher != "Steam" {
+        if !matches!(game.launcher.as_str(), "Steam" | "Epic Games") {
         for (key,value) in custom_options(&game.advanced)?.get_envs() {if let Some(value)=value {command.env(key,value);} }
         crate::core::mangohud_config::apply_with_override(&mut command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit, game.advanced.mangohud_enabled)?;
         }
@@ -666,6 +704,43 @@ pub async fn launch_external_game(external_id: String) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    #[ignore = "explicit local Steam smoke test; prepares only the selected game's pelirun profile"]
+    fn installed_steam_pelirun_preparation() {
+        let snapshot =
+            std::fs::read(std::env::var("PELI_STEAM_SMOKE_SNAPSHOT").unwrap()).unwrap();
+        let snapshot: serde_json::Value = serde_json::from_slice(&snapshot).unwrap();
+        let app = snapshot["app_id"].as_str().unwrap();
+        let mut game = all()
+            .unwrap()
+            .into_iter()
+            .find(|game| {
+                game.launcher == "Steam"
+                    && !game.flatpak
+                    && game.app_id.as_deref() == Some(app)
+            })
+            .expect("The explicitly selected Steam game must be installed");
+        // Change only this generated test profile, never the saved preferences.
+        if let Some(enabled) = snapshot["mangohud_enabled"].as_bool() {
+            game.advanced.mangohud_enabled = Some(enabled);
+        }
+        if let Some(phase) = snapshot["phase"].as_str() {
+            assert!(["first", "second"].contains(&phase));
+            let mut options = super::super::nexus_launch_options::parse(
+                game.advanced.launch_options.as_deref().unwrap_or(""),
+            )
+            .unwrap();
+            options.env.insert("PELIRUN_SMOKE_TEST".into(), phase.into());
+            game.advanced.launch_options =
+                Some(super::super::nexus_launch_options::describe(&options));
+        }
+        let config = Path::new(snapshot["localconfig"].as_str().unwrap());
+        let before = std::fs::read(config).unwrap();
+        let exported = steam_settings::manual(&game).unwrap();
+        assert_eq!(std::fs::read(config).unwrap(), before);
+        assert!(super::super::steam_runtime::has_profile(&game).unwrap());
+        println!("{} ({app}): {}", game.name, exported.line);
+    }
     #[test]
     #[ignore = "reads the current user's installed launchers without launching or changing games"]
     fn native_linux_local_inventory() {
@@ -872,6 +947,7 @@ pub async fn steam_game_settings_action(external_id: String, action: String) -> 
         match action.as_str() {
             "status" => return Ok(game),
             "revert" => steam_settings::revert(&game)?,
+            "confirm-manual" => steam_settings::confirm_manual(&game)?,
             "restart" => steam_settings::restart(&game)?,
             _ => return Err("Ação Steam inválida.".into()),
         }

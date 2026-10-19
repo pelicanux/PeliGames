@@ -1,3 +1,6 @@
+import { ComponentDownloadProgress } from "../ComponentDownloadProgress";
+import { MenuIcon } from "../MenuIcon";
+import { formatTransferBytes } from "../../services/downloadProgress";
 import { ModernMangoHudEditor } from "./ModernMangoHudEditor";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -5,14 +8,15 @@ import { useI18n } from "../../i18n/I18nContext";
 import { invoke } from "@tauri-apps/api/core";
 import { consumeMangoHudInstallationRequest, getMangoHudRelease, getMangoHudStatus, type MangoHudRelease, type MangoHudStatus, getDownloadedMangoHud, downloadMangoHud, installMangoHud, cancelMangoHudDownload, type MangoHudReady, type MangoHudProgress } from "../../services/mangohud";
 
-export function MonitoringPreferences({ onDirtyChange, searchControl }: { onDirtyChange:(dirty:boolean)=>void; searchControl?: ReactNode }) {
+export function MonitoringPreferences({ onDirtyChange, searchControl, searchQuery }: { onDirtyChange:(dirty:boolean)=>void; searchControl?: ReactNode; searchQuery?:string }) {
   const { language } = useI18n(); const pt = language === "pt";
   const [editorDirty,setEditorDirty]=useState(false);
+  const [tab,setTab]=useState<"installation"|"monitoring"|"benchmark">("monitoring");
   const [operation,setOperation]=useState<"download"|"install"|null>(null);
   const [ready,setReady]=useState<MangoHudReady|null>(null),[progress,setProgress]=useState<MangoHudProgress|null>(null);
   const [message,setMessage]=useState(""),[cancelling,setCancelling]=useState(false);
   const operationLock=useRef(false);
-  const installationRef=useRef<HTMLDetailsElement>(null);
+  const installationRef=useRef<HTMLButtonElement>(null);
   useEffect(()=>{onDirtyChange(editorDirty||Boolean(operation));return()=>onDirtyChange(false);},[editorDirty,operation,onDirtyChange]);
   const [status, setStatus] = useState<MangoHudStatus | null>(null);
   const [release, setRelease] = useState<MangoHudRelease | null>(null);
@@ -40,43 +44,46 @@ export function MonitoringPreferences({ onDirtyChange, searchControl }: { onDirt
     if(operationLock.current||kind==="download"&&!release)return;
     operationLock.current=true;setOperation(kind);setProgress(null);setError("");setMessage("");setCancelling(false);
     const report=(p:MangoHudProgress)=>{if(mounted.current)setProgress(p);};
-    try{if(kind==="download"){const r=await downloadMangoHud(release!.version,report);if(mounted.current){setReady(r);setMessage("Download concluído. O MangoHUD está pronto para instalar.");}}
-      else{await installMangoHud(report);if(mounted.current){setMessage("__PELI_UI_PREVIEW__" in window?"Instalação simulada concluída. Nenhum programa foi instalado no sistema.":"MangoHUD instalado com sucesso.");await check();}}}
-    catch(e){if(mounted.current){const detail=e instanceof Error?e.message:String(e);if(detail==="Download cancelado.")setMessage(detail);else setError(detail);}}
+    try{if(kind==="download"){const r=await downloadMangoHud(release!.version,report);if(mounted.current){setProgress(p=>({phase:"complete",downloaded:p?.downloaded??0,total:p?.total??0,speed_bytes_per_sec:0}));setReady(r);setMessage("Download concluído. O MangoHUD está pronto para instalar.");}}
+      else{await installMangoHud(report);if(mounted.current){setProgress(p=>({phase:"complete",downloaded:p?.downloaded??0,total:p?.total??0,speed_bytes_per_sec:0}));setMessage("__PELI_UI_PREVIEW__" in window?"Instalação simulada concluída. Nenhum programa foi instalado no sistema.":"MangoHUD instalado com sucesso.");await check();}}}
+    catch(e){if(mounted.current){setProgress(null);const detail=e instanceof Error?e.message:String(e);if(detail==="Download cancelado.")setMessage(detail);else setError(detail);}}
     finally{operationLock.current=false;if(mounted.current){setOperation(null);setCancelling(false);}}
   };
   const cancel=async()=>{setCancelling(true);try{await cancelMangoHudDownload();}catch(e){setError(String(e));setCancelling(false);}};
-  const percent=progress?.total?Math.min(100,progress.downloaded/progress.total*100):0;
   const phase=progress?.phase??(operation==="install"?"authorizing":"checking");
-  const phaseLabel=phase==="downloading"?`Baixando… ${percent.toFixed(0)}% · ${((progress?.speed_bytes_per_sec??0)/1048576).toFixed(1)} MB/s`:phase==="verifying"?"Verificando integridade…":phase==="authorizing"?"Aguardando autorização de administrador…":phase==="installing"?"Instalando MangoHUD…":"Preparando download…";
-  const showInstallation=()=>{const panel=installationRef.current;if(panel){panel.open=true;panel.scrollIntoView({behavior:"smooth",block:"start"});}};
+  const phaseLabel=phase==="complete"?(pt?"Concluído":"Complete"):phase==="downloading"?(pt?"Baixando MangoHUD…":"Downloading MangoHUD…"):phase==="verifying"?(pt?"Verificando integridade…":"Verifying integrity…"):phase==="authorizing"?(pt?"Aguardando autorização de administrador…":"Waiting for administrator authorization…"):phase==="installing"?(pt?"Instalando MangoHUD…":"Installing MangoHUD…"):(pt?"Preparando download…":"Preparing download…");
+  const showInstallation=()=>{setTab("installation");requestAnimationFrame(()=>installationRef.current?.focus());};
   useEffect(() => {
     const show = () => { if (consumeMangoHudInstallationRequest()) showInstallation(); };
     show(); window.addEventListener("showMangoHudInstallation", show);
     return () => window.removeEventListener("showMangoHudInstallation", show);
   }, []);
   const open = async (url: string) => { try { await openUrl(url); } catch (e) { if (mounted.current) setError(String(e)); } };
-  const installation = <details ref={installationRef} className="preference-panel monitoring-panel mango-installation" open>
-      <summary>Instalação e versão do MangoHUD · {checking ? "Verificando…" : status?.installed ? "Detectado" : "Não detectado"}</summary>
-      <h3>{pt ? "Instalação no sistema" : "System installation"}</h3>
-      <p role="status">{checking ? (pt ? "Verificando MangoHUD…" : "Checking MangoHUD…") : status ? (status.installed ? (pt ? "MangoHUD detectado no sistema." : "MangoHUD detected on your system.") : (pt ? "MangoHUD não foi detectado no sistema." : "MangoHUD was not detected on your system.")) : (pt ? "Não foi possível verificar a instalação." : "Could not check the installation.")}</p>
-      {status?.executable && <p><code>{status.executable}</code></p>}
-      <div className="monitoring-actions"><button type="button" disabled={checking||Boolean(operation)} onClick={() => void check()}>{pt ? "Verificar novamente" : "Check again"}</button><button type="button" disabled={fetching||Boolean(operation)} onClick={() => void fetchRelease()}>{fetching ? (pt ? "Buscando versão estável…" : "Looking up stable release…") : (pt ? "Buscar última versão estável" : "Find latest stable release")}</button></div>
-      {(release||ready)&&<div className="monitoring-release">
-        <div className={`proton-distribution-card mango-install-card ${operation?"is-downloading":""}`}>
-          {operation&&<span className={`proton-card-progress ${operation==="install"?"mango-install-working":""}`} style={{transform:`scaleX(${phase==="downloading"?percent/100:1})`}}/>}
-          <div className="proton-distribution-info"><span><strong>MangoHUD {release?.version??ready?.version}</strong><small role="status">{operation?(cancelling?"Cancelando download…":phaseLabel):ready&&(!release||ready.version===release.version)?"Pacote baixado · pronto para instalar":`${((release?.size??0)/1048576).toFixed(1)} MiB · versão estável oficial`}</small></span></div>
-          <div className="monitoring-actions mango-install-actions">
-            {operation==="download"?<button type="button" disabled={cancelling} onClick={()=>void cancel()}>Cancelar</button>:operation==="install"?<button type="button" disabled>Instalando…</button>:ready&&(!release||ready.version===release.version)?<button type="button" disabled={needsInstall} title={needsInstall ? (pt ? "Instale o PeliGames no sistema (botão Instalar) para instalar o MangoHUD." : "Install PeliGames (Install button) to install MangoHUD.") : undefined} onClick={()=>void run("install")}>Instalar MangoHUD</button>:<button type="button" disabled={!release} onClick={()=>void run("download")}>Baixar MangoHUD</button>}
-          </div>
-        </div>
-        <p>A instalação executa o instalador oficial e solicita autorização de administrador. Ela pode atualizar uma instalação existente do MangoHUD.</p>
-        {"__PELI_UI_PREVIEW__" in window&&<p>Pré-visualização: download e instalação demonstrativos, sem alterar o sistema.</p>}
-        {release&&<div className="monitoring-actions"><button type="button" disabled={Boolean(operation)} onClick={()=>void open(release.release_url)}>Notas da versão ↗</button></div>}
-      </div>}
-      {needsInstall&&ready&&<p role="note">{pt ? "Para instalar o MangoHUD, instale primeiro o PeliGames no sistema pelo botão Instalar da tela de boas-vindas ou em Configurações → Ferramentas." : "To install MangoHUD, first install PeliGames on the system with the Install button on the welcome screen or in Settings → Tools."}</p>}
-      {message&&<p role="status">{message}</p>}
-      {error && <p className="preferences-error" role="alert">{error}</p>}
-    </details>;
-  return <ModernMangoHudEditor searchControl={searchControl} onDirtyChange={setEditorDirty} installation={installation}/>;
+  const installation = <section className="mango-installation-view mod-workspace" aria-label={pt?"Instalação do MangoHUD":"MangoHUD installation"}>
+    <header className="mod-intro"><h3>{pt?"Prepare o MangoHUD no sistema":"Prepare MangoHUD on your system"}</h3><p>{pt?"Verifique a instalação, baixe o pacote e instale. Depois personalize o painel na aba Monitoramento.":"Check the installation, download the package and install it. Then customize your HUD in the Monitoring tab."}</p></header>
+    <div className="mod-install-surface"><div className="mod-step-heading"><span className="mod-component-icon"><MenuIcon name="graphics"/></span><div><h4>MangoHUD {release?.version??ready?.version??""}</h4><p>{pt?"FPS e informações de hardware nos seus jogos.":"FPS and hardware information in your games."}</p></div><span className="mod-status-badge" data-ready={status?.installed} role="status">{checking?(pt?"Verificando…":"Checking…"):status?.installed?(pt?"Detectado":"Detected"):status?(pt?"Não detectado":"Not detected"):(pt?"Não verificado":"Not checked")}</span></div>
+    {status?.executable&&<div className="mod-destination"><MenuIcon name="folder"/><div><span>{pt?"Executável detectado":"Detected executable"}</span><code>{status.executable}</code></div></div>}
+    <div className="connection-primary-actions"><button type="button" className="mod-action-secondary" disabled={checking||Boolean(operation)} onClick={()=>void check()}><MenuIcon name="repair"/>{pt?"Verificar instalação":"Check installation"}</button><button type="button" className="mod-action-secondary" disabled={fetching||Boolean(operation)} onClick={()=>void fetchRelease()}>{fetching?(pt?"Buscando…":"Checking…"):(pt?"Buscar versão estável":"Find stable release")}</button></div>
+    {(release||ready)&&<><div className="mod-setting-row"><div className="mod-row-copy"><strong>{ready&&(!release||ready.version===release.version)?(pt?"Pacote pronto para instalar":"Package ready to install"):(pt?"Baixar pacote oficial":"Download official package")}</strong><small>{release?`${release.version} · ${formatTransferBytes(release.size)}`:ready?.version}</small></div>
+      {operation==="download"?<button type="button" className="mod-action-secondary" disabled={cancelling} onClick={()=>void cancel()}>{pt?"Cancelar":"Cancel"}</button>:operation==="install"?<button type="button" className="mod-action-primary" disabled>{pt?"Instalando…":"Installing…"}</button>:ready&&(!release||ready.version===release.version)?<button type="button" className="mod-action-primary" disabled={needsInstall} title={needsInstall?(pt?"Instale o PeliGames no sistema para instalar o MangoHUD.":"Install PeliGames on your system to install MangoHUD."):undefined} onClick={()=>void run("install")}><MenuIcon name="download"/>{pt?"Instalar MangoHUD":"Install MangoHUD"}</button>:<button type="button" className="mod-action-primary" disabled={!release} onClick={()=>void run("download")}><MenuIcon name="download"/>{pt?"Baixar MangoHUD":"Download MangoHUD"}</button>}
+    </div>{(operation||progress?.phase==="complete")&&<ComponentDownloadProgress onDismiss={()=>{setProgress(null);setMessage("")}} progress={{phase:phase==="checking"||phase==="authorizing"?"connecting":phase,downloaded:progress?.downloaded??0,total:progress?.total||null,speed_bytes_per_sec:progress?.speed_bytes_per_sec??0}} label={cancelling?(pt?"Cancelando…":"Cancelling…"):phaseLabel}/>}
+    <p className="monitoring-install-note">{pt?"A instalação usa o instalador oficial e pede autorização de administrador. Uma instalação existente pode ser atualizada.":"Installation uses the official installer and requests administrator authorization. An existing installation may be updated."}</p>
+    {release&&<button type="button" className="mod-action-quiet" disabled={Boolean(operation)} onClick={()=>void open(release.release_url)}><MenuIcon name="externalLink"/>{pt?"Notas da versão":"Release notes"}</button>}
+    </>}
+    {needsInstall&&ready&&<p role="note">{pt?"Instale primeiro o PeliGames no sistema pela tela de boas-vindas ou em Configurações → Ferramentas.":"First install PeliGames on the system from the welcome screen or Settings → Tools."}</p>}
+    {"__PELI_UI_PREVIEW__" in window&&<p className="monitoring-install-note">{pt?"Prévia demonstrativa: nenhuma instalação é feita no sistema.":"Demo preview: nothing is installed on your system."}</p>}
+    {message&&<p role="status">{message}</p>}{error&&<p className="mod-feedback-error" role="alert">{error}</p>}
+    </div>
+  </section>;
+  const searching=Boolean(searchQuery?.trim());
+  return <div className="monitoring-workspace">
+    <div className="monitoring-navigation" hidden={searching}><header className="settings-page-head"><div><h1>{pt?"Monitoramento":"Monitoring"}</h1><p>{pt?"Instale o MangoHUD, personalize o painel e compare seus testes.":"Install MangoHUD, customize your HUD and compare your tests."}</p></div>{searchControl}</header>
+    <div className="preference-mod-tabs monitoring-tabs" role="tablist" aria-label={pt?"MangoHUD":"MangoHUD"} data-active={tab} onKeyDown={event=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key)||operation||editorDirty)return;event.preventDefault();const tabs=["installation","monitoring","benchmark"] as const;const next=tabs[event.key==="Home"?0:event.key==="End"?2:(tabs.indexOf(tab)+(event.key==="ArrowRight"?1:2))%3];setTab(next);requestAnimationFrame(()=>document.getElementById(`mango-tab-${next}`)?.focus())}}>
+      <button ref={installationRef} type="button" id="mango-tab-installation" role="tab" aria-selected={tab==="installation"} aria-controls="mango-panel-installation" tabIndex={tab==="installation"?0:-1} disabled={Boolean(operation)||editorDirty} onClick={()=>setTab("installation")}>{pt?"Instalação do MangoHUD":"MangoHUD installation"}</button>
+      <button type="button" id="mango-tab-monitoring" role="tab" aria-selected={tab==="monitoring"} aria-controls="mango-panel-monitoring" tabIndex={tab==="monitoring"?0:-1} disabled={Boolean(operation)||editorDirty} onClick={()=>setTab("monitoring")}>{pt?"Monitoramento do MangoHUD":"MangoHUD monitoring"}</button>
+      <button type="button" id="mango-tab-benchmark" role="tab" aria-selected={tab==="benchmark"} aria-controls="mango-panel-monitoring" tabIndex={tab==="benchmark"?0:-1} disabled={Boolean(operation)||editorDirty} onClick={()=>setTab("benchmark")}>{pt?"Comparação de benchmarks":"Benchmark comparison"}</button>
+    </div></div>
+    <div className="monitoring-tab-panel" id="mango-panel-installation" role="tabpanel" aria-labelledby="mango-tab-installation" hidden={searching||tab!=="installation"}>{installation}</div>
+    <div className="monitoring-tab-panel" id="mango-panel-monitoring" role={searching?undefined:"tabpanel"} aria-labelledby={searching?undefined:`mango-tab-${tab==="benchmark"?"benchmark":"monitoring"}`} hidden={!searching&&tab==="installation"}><ModernMangoHudEditor onDirtyChange={setEditorDirty} searchQuery={searchQuery} benchmarkOnly={tab==="benchmark"} visible={!searching&&tab==="monitoring"}/></div>
+  </div>;
 }

@@ -97,46 +97,6 @@
 
 /* The glass frame stays fixed; navigation and settings scroll independently. */
 
-.proton-distribution-card { position: relative; isolation: isolate; display: flex; flex-wrap: wrap; align-items: center; overflow: hidden; border: 1px solid rgba(var(--surface-255-255-255,255,255,255),.16); border-radius: 8px; background: rgba(var(--surface-255-255-255,255,255,255),.02); transition: border-color .15s, background .15s, box-shadow .15s; }
-.proton-distribution-info { display: flex; flex: 1; align-items: center; gap: 13px; min-width: 0; padding: 14px; text-align: left; border: 0; background: transparent; color: var(--tone-e2e8f0,#e2e8f0); }
-.proton-distribution-info img { width: 34px; height: 34px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }
-.proton-distribution-info strong { font-size: .86rem; }
-.proton-distribution-info small { display: block; margin-top: 5px; font-size: .75rem; color: var(--tone-94a3b8,#94a3b8); overflow-wrap: anywhere; }
-.proton-card-actions { display: flex; gap: 8px; padding: 12px; flex-shrink: 0; }
-.proton-card-actions button { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 32px; height: 32px; min-width: 32px; min-height: 32px; border-radius: 50%; padding: 0; line-height: 0; border: 1px solid rgba(var(--accent-rgb),.5); background: rgba(var(--accent-rgb),.1); color: var(--accent); }
-.proton-card-actions button:hover:not(:disabled) { background: rgba(var(--accent-rgb),.25); box-shadow: 0 0 10px rgba(var(--accent-rgb),.2); }
-.proton-card-actions .proton-card-cancel { background: #ef4444; color: white; border-color: #ef4444; font-size: 1.4375rem; line-height: 1; }
-.proton-card-progress { position: absolute; inset: 0; width: 100%; z-index: 0; pointer-events: none; background: rgba(var(--accent-rgb),.35); transform-origin: left center; transition: transform .25s linear; }
-.proton-distribution-card.is-downloading { border-color: var(--accent); }
-.proton-distribution-card.is-downloading small { color: var(--tone-e2e8f0,#e2e8f0); font-variant-numeric: tabular-nums; }
-.proton-card-message { flex-basis: 100%; padding: 0 14px 8px; overflow-wrap: anywhere; }
-.proton-card-actions .is-checking .menu-icon { animation: proton-card-spin 1s linear infinite; }
-@keyframes proton-card-spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .proton-card-progress { transition: none; } .proton-card-actions .is-checking .menu-icon { animation: none; } }
-
-
-.proton-card-actions button > svg { display: block; width: 18px; height: 18px; margin: 0; flex: 0 0 18px; }
-.proton-distribution-info,.proton-card-actions,.proton-card-message { position: relative; z-index: 1; }
-
-.preferences-page .proton-card-message {
-  color: var(--accent-soft, var(--accent));
-  font-size: .85rem;
-  font-weight: 600;
-  line-height: 1.5;
-  text-shadow: 0 0 6px rgba(var(--accent-rgb),.65), 0 0 16px rgba(var(--accent-rgb),.35);
-}
-:root[data-appearance="light"] .preferences-page .proton-card-message {
-  color: var(--accent);
-  text-shadow: 0 0 6px rgba(var(--accent-rgb),.25);
-}
-:root .performance-mode .preferences-page .proton-card-message { text-shadow: none; }
-
-.proton-distribution-card:not(.is-downloading):hover {
-  border-color: var(--accent);
-  background: rgba(var(--accent-rgb),.09);
-  box-shadow: inset 0 0 20px rgba(var(--accent-rgb),.06), 0 0 10px rgba(var(--accent-rgb),.1);
-}
-
 .proton-preferences-overlay { z-index: 1500; }
 .proton-preferences-dialog.modal-content { width: min(760px, calc(100vw - 32px)) !important; max-height: calc(100dvh - 64px); }
 
@@ -147,16 +107,9 @@
 .preference-backend-update svg { width:14px; height:14px; }
 .preference-backend-update:disabled { opacity:.5; cursor:default; }
 @media(max-width:540px) { .preference-backend-card { flex-wrap:wrap; } }
-.preference-connections { display:grid; gap:14px; margin-top:16px; }
-.preference-connection,.preference-panel,.preference-section { box-sizing:border-box; min-width:0; padding:16px; border:1px solid rgba(var(--accent-rgb),.24); border-radius:10px; background:rgba(var(--surface-255-255-255,255,255,255),.025); }
+.preference-panel,.preference-section { box-sizing:border-box; min-width:0; padding:16px; border:1px solid rgba(var(--accent-rgb),.24); border-radius:10px; background:rgba(var(--surface-255-255-255,255,255,255),.025); }
 .preferences-page :is(.preference-panel,.preference-section,.preference-glass-settings) > :is(h2,h3):first-child { margin-top:0; }
 .preferences-page :is(.preference-panel,.preference-section,.preference-glass-settings) > :last-child { margin-bottom:0; }
-.preference-connection > header { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
-.preference-connection > header > img,.preference-connection > header > .menu-icon { width:24px; height:24px; color:var(--accent); object-fit:contain; }
-.preference-connection > header h3 { margin:0; }
-.preference-connection-status { margin-left:auto; padding:4px 8px; border:1px solid rgba(var(--accent-rgb),.25); border-radius:6px; font-size:.7rem; color:var(--tone-94a3b8,#94a3b8); }
-.preference-connection .nexus-account > h3 { display:none; }
-.preference-connection .nexus-account-actions > button { max-width:100%; white-space:normal; }
 .preference-effect-lock { width:15px; height:15px; flex-shrink:0; color:var(--tone-94a3b8,#94a3b8); }
 .preferences-page .preference-effects-locked { color:var(--accent-soft,var(--accent)); }
 .preferences-page button.preference-connections-link { display:inline; padding:0; border:0; border-radius:2px; background:none; box-shadow:none; color:var(--accent); font:inherit; font-weight:600; text-decoration:underline; text-underline-offset:3px; text-shadow:0 0 7px rgba(var(--accent-rgb),.4); transition:color .18s,text-shadow .18s; }
@@ -256,9 +209,6 @@
 :root .storage-volume-card-actions .preference-outline:is(:hover,:focus-visible):not(:disabled) { color:var(--accent-soft); }
 :root .storage-volume-card-actions .preference-outline:disabled:hover { background:rgba(var(--accent-rgb),.06); border-color:rgba(var(--accent-rgb),.5); box-shadow:none; }
 
-:root .preference-connection > header { align-items:center; }
-:root .preference-connection > header > img { display:block; flex-shrink:0; margin:0; }
-:root .preference-connection > header h3 { margin:0; line-height:1.2; }
 
 /* Palette samples show their actual color, without a surrounding bloom. */
 :root .preference-swatches button { box-shadow:none !important; text-shadow:none !important; }
@@ -269,22 +219,9 @@
 .matrix-notification-sound-controls > input[type="range"] { width:160px; max-width:100%; accent-color:var(--accent); }
 .matrix-notification-sound-controls > .btn { flex:0 0 auto; }
 .matrix-notification-sound-settings > small { color:var(--text-secondary); }
-.monitoring-panel h3:first-child { margin-top:0; }
 .monitoring-actions { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
 .monitoring-actions button { padding:9px 13px; border:1px solid rgba(var(--accent-rgb),.4); border-radius:7px; color:var(--accent-soft); background:rgba(var(--accent-rgb),.08); }
 .monitoring-actions button:hover:not(:disabled) { border-color:var(--accent); background:rgba(var(--accent-rgb),.16); }
-.monitoring-panel code { overflow-wrap:anywhere; }
-.monitoring-release { margin-top:16px; padding-top:12px; border-top:1px solid rgba(var(--accent-rgb),.2); }
-.monitoring-release > code { display:block; margin-bottom:10px; color:var(--accent-soft); }
-.mango-installation { margin-top:16px; }
-.mango-installation summary { cursor:pointer; color:var(--accent-soft); font-size:.85rem; }
-.mango-installation[open] summary { margin-bottom:18px; }
-.mango-install-card > .proton-distribution-info,.mango-install-actions { position:relative; z-index:1; }
-.mango-install-actions { padding:10px 14px; margin:0; }
-.mango-install-working { animation:mango-install-pulse 1.3s ease-in-out infinite; }
-.monitoring-release > p { margin-top:12px; }
-@keyframes mango-install-pulse { 50% { opacity:.45; } }
-@media(prefers-reduced-motion:reduce) { .mango-install-working { animation:none; } }
 
 /* Settings → Interface → layout: miniature of each layout. */
 .maintenance-paths { max-height: 220px; overflow: auto; padding: 12px 12px 12px 30px; border: 1px solid rgba(var(--accent-rgb), .2); border-radius: 12px; background: rgba(0,0,0,.16); font-size: .8125rem; line-height: 1.7; }
@@ -293,3 +230,17 @@
 .maintenance-confirm input { flex-shrink: 0; margin-top: 4px; accent-color: var(--accent); }
 /* Reset cannot return to a session whose accounts have already been removed. */
 .maintenance-restart-required > .dialog-titlebar > .surface-close-button { display: none !important; }
+
+/* Keep large mod inventories inside the reset dialog instead of growing it. */
+.maintenance-popup .maintenance-game-list {
+  max-height: min(220px, 28vh);
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.maintenance-popup .maintenance-game-list:focus-visible {
+  outline: 2px solid rgba(var(--accent-rgb), .65);
+  outline-offset: 2px;
+}

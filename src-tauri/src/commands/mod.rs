@@ -34,6 +34,7 @@ mod nexus_profile;
 pub mod nexus_launch_options;
 pub mod mod_launch_options;
 pub mod steam_launch_options;
+pub(crate) mod steam_runtime;
 pub mod matrix_gifs;
 
 mod nexus_deployment;
@@ -78,6 +79,7 @@ pub mod nexus_patches;
 pub mod nexus_smapi;
 
 pub mod nexus_storage;
+pub mod nexus_durable;
 
 pub mod browser;
 pub mod nexus_browser;
@@ -117,3 +119,9 @@ pub mod matrix_rtc;
 mod epic_library;
 
 pub mod maintenance;
+
+pub mod frame_generation;
+
+pub mod frame_overlay_shortcut;
+
+pub mod frame_overlay_runtime;

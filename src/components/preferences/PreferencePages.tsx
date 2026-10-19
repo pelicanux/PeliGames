@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject, type CSSProperties } from "react";
+import { useEffect, useRef, useState, useMemo, type RefObject, type CSSProperties } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { AppConfig } from "../SetupWizard";
@@ -13,6 +13,7 @@ import { LaunchEffectIcon } from "./LaunchEffectIcon";
 import { usePreferencesText } from "./labels";
 import { notifyError } from "../../services/notifications";
 import { ConfirmModal } from "../ConfirmModal";
+import { BackendUpdaterModal } from "../BackendUpdaterModal";
 import { MaintenancePreferences } from "./MaintenancePreferences";
 
 type ConfigProps = { config: AppConfig; disabled: boolean; save: (patch: Partial<AppConfig>) => void };
@@ -85,18 +86,23 @@ export function ThemePreferences({ onApplied, onOpenConnections }: { onApplied: 
     </section>
   </>;
 }
-export function ModPreferences({ disabled, onUpdate, onWizard, onClear }: { disabled: boolean; onUpdate: (architecture: "rdna3" | "rdna4") => void; onWizard: () => void; onClear: () => void }) {
-  const text = usePreferencesText(), { t } = useI18n();
-  return <><h2>{text.mods}</h2><section className="preference-panel"><h3>{text.project}</h3><p>{text.projectHint}</p>
-    <div data-preference-id="backend-project"><div data-preference-id="backend-update" className="preference-choice-list preference-backend-projects">{(["rdna4", "rdna3"] as const).map(architecture => <div key={architecture} className="preference-choice preference-backend-card">
-      <span><strong>{architecture === "rdna4" ? "DLSSNR-AMD" : "DLSSNR-RDNA3"}</strong><small>{architecture === "rdna4" ? text.rdna4 : text.rdna3}</small></span>
-      <button type="button" className="preference-backend-update" disabled={disabled} aria-label={`${t("app", "manageBackend")}: ${architecture === "rdna4" ? "RDNA 4 / RX 9000" : "RDNA 3 / RX 7000"}`} onClick={() => onUpdate(architecture)}><MenuIcon name="download"/>{t("app", "manageBackend")}</button>
+export function ModPreferences({ disabled, onBusy, onWizard, onClear }: { disabled: boolean; onBusy: (busy: boolean) => void; onWizard: () => void; onClear: () => void }) {
+  const text = usePreferencesText(), { t, language } = useI18n();
+  const pt=language==="pt";
+  const [backendBusy,setBackendBusy]=useState({rdna3:false,rdna4:false});
+  const busyHandlers=useMemo(()=>Object.fromEntries((["rdna3","rdna4"] as const).map(arch=>[arch,(value:boolean)=>setBackendBusy(old=>old[arch]===value?old:{...old,[arch]:value})])) as Record<"rdna3"|"rdna4",(busy:boolean)=>void>,[]);
+  useEffect(()=>{onBusy(backendBusy.rdna3||backendBusy.rdna4);return()=>onBusy(false)},[backendBusy,onBusy]);
+  return <><section className="preference-panel mod-backend-workspace"><header className="mod-intro"><h3>{text.projectHint}</h3><p>{pt?"Escolha o projeto para sua GPU. Depois, configure o modelo e os jogos no assistente inicial.":"Choose the project for your GPU, then configure the model and games in the initial setup."}</p></header>
+    <div data-preference-id="backend-project"><div data-preference-id="backend-update" className="preference-choice-list preference-backend-projects">{(["rdna4", "rdna3"] as const).map(architecture => <div key={architecture} className="mod-backend-card">
+      <header className="mod-backend-heading"><span className="mod-component-icon"><MenuIcon name="graphics"/></span><div><h4>{architecture === "rdna4" ? "DLSSNR-AMD" : "DLSSNR-RDNA3"}</h4><span>{architecture === "rdna4" ? "RDNA 4 · RX 9000" : "RDNA 3 · RX 7000"}</span></div></header>
+      <BackendUpdaterModal gpuArch={architecture} compact disabled={disabled} onBusyChange={busyHandlers[architecture]} onClose={()=>{}}/>
     </div>)}</div></div>
-    <div className="preference-backend-tools"><h3>{text.modTools}</h3><div className="preference-tool-buttons"><button type="button" data-preference-id="setup" disabled={disabled} onClick={onWizard}><MenuIcon name="repair"/>{t("settings", "reset")}</button><button type="button" data-preference-id="clear-cache" className="danger" disabled={disabled} onClick={onClear}><MenuIcon name="trash"/>{t("gameCache", "clear")}</button></div></div></section>
+    <div className="mod-backend-tools mod-workspace"><div className="mod-row-copy"><h4>{pt?"Próximo passo: configurar o modelo":"Next: configure the model"}</h4><p>{pt?"Use sua DLL da NVIDIA ou um modelo .bin existente. O backend não inclui esses arquivos.":"Use your NVIDIA DLL or an existing .bin model. The backend does not include these files."}</p></div><div className="mod-tool-actions"><button className="mod-action-secondary" type="button" data-preference-id="setup" disabled={disabled} onClick={onWizard}><MenuIcon name="repair"/>{t("settings", "reset")}</button><button type="button" data-preference-id="clear-cache" className="mod-action-quiet" disabled={disabled} onClick={onClear}><MenuIcon name="trash"/>{t("gameCache", "clear")}</button></div></div></section>
   </>;
 }
 export function ProtonPreferences({ config, disabled, save, onBusy, focusRef, onConfirmationChange }: ConfigProps & { onBusy: (busy: boolean) => void; focusRef: RefObject<HTMLInputElement | null>; onConfirmationChange: (open: boolean) => void }) {
   const text = usePreferencesText();
+  const pt=useI18n().language==="pt";
   const [confirmSteam, setConfirmSteam] = useState(false);
   const cancelSteamRef = useRef<HTMLButtonElement>(null);
   const confirmationCallback = useRef(onConfirmationChange);
@@ -118,11 +124,11 @@ export function ProtonPreferences({ config, disabled, save, onBusy, focusRef, on
     window.addEventListener("keydown", escape, true);
     return () => window.removeEventListener("keydown", escape, true);
   }, [confirmSteam, focusRef]);
-  return <><h2>{text.protons}</h2><section className="preference-panel"><h3>{text.distribution}</h3><p>{text.distributionHint}</p>
-    <div data-preference-id="proton-family"><ProtonDistributionCards disabled={disabled} onBusy={onBusy}/></div></section>
-    <section className="preference-section"><h3>{text.steam}</h3><label data-preference-id="steam-scan" className="preference-switch"><input ref={focusRef} type="checkbox" checked={Boolean(config.scan_steam_protons)} disabled={disabled} onChange={event => { if (event.target.checked) setConfirmSteam(true); else save({ scan_steam_protons:false }); }}/><span className="preference-switch-track"/><span>{text.steamScan}<small>{text.steamHint}</small></span></label></section>
+  return <div className="proton-workspace mod-workspace"><header className="mod-intro"><h3>{text.distribution}</h3><p>{pt?"Instale a versão que preferir. Depois, selecione-a nas opções de cada jogo.":"Install your preferred version, then select it in each game’s options."}</p></header>
+    <div data-preference-id="proton-family"><ProtonDistributionCards disabled={disabled} onBusy={onBusy}/></div>
+    <section className="proton-steam-options"><div><h3>{text.steam}</h3><p>{pt?"Inclua as versões já instaladas pela Steam na lista de opções dos jogos.":"Include versions already installed by Steam among your game’s options."}</p></div><label data-preference-id="steam-scan" className="preference-switch"><input ref={focusRef} type="checkbox" checked={Boolean(config.scan_steam_protons)} disabled={disabled} onChange={event => { if (event.target.checked) setConfirmSteam(true); else save({ scan_steam_protons:false }); }}/><span className="preference-switch-track"/><span>{text.steamScan}<small>{text.steamHint}</small></span></label></section>
     {confirmSteam && <ConfirmModal title={text.steamConfirmTitle} message={text.steamConfirmMessage} confirmText={text.steamConfirmEnable} cancelText={text.steamConfirmCancel} cancelButtonRef={cancelSteamRef} busy={disabled} onCancel={() => { setConfirmSteam(false); focusRef.current?.focus({ preventScroll:true }); }} onConfirm={() => { if (disabled) return; setConfirmSteam(false); save({ scan_steam_protons:true }); }}/>}
-  </>;
+  </div>;
 }
 export function CoverPreferences({ config, disabled, save, focusRef, onError }: ConfigProps & { focusRef: RefObject<HTMLInputElement | null>; onError: (error: string) => void }) {
   const text = usePreferencesText(), { t } = useI18n();

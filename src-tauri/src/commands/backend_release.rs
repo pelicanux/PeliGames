@@ -45,6 +45,14 @@ mod tests {
         assert_eq!(linux_bitness("DLSSNR-AMD-Linux-0.0.4-x86_64.zip", true), Some("64"));
     }
     #[test]
+    fn release_007_shared_windows_linux_assets_keep_linux_only() {
+        let windows = windows_release("v0.0.7", "DLSSNR-AMD 0.0.7", "This release is for Linux and Windows (experimental preview).");
+        assert!(!windows);
+        assert_eq!(linux_bitness("DLSSNR-AMD-Vulkan-Linux-0.0.7-x86_64.tar.gz", windows), Some("64"));
+        assert_eq!(linux_bitness("DLSSNR-AMD-Vulkan-Linux-0.0.7-i686.tar.gz", windows), Some("32"));
+        assert_eq!(linux_bitness("DLSSNR-AMD-Vulkan-Windows-0.0.7-preview-x86_64.zip", windows), None);
+    }
+    #[test]
     fn legacy_and_ambiguous_assets() {
         assert_eq!(linux_bitness("DLSSNR-AMD-Vulkan-0.0.2.5-i686.tar.gz", false), Some("32"));
         assert_eq!(linux_bitness("backend-x86_64.zip", false), None);
