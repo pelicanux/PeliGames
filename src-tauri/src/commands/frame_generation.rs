@@ -32,7 +32,6 @@ pub struct Settings {
     pub target_fps: u16,
     pub flow_scale: f32,
     pub performance: bool,
-    pub other_fg_disabled: bool,
 }
 impl Default for Settings {
     fn default() -> Self {
@@ -48,7 +47,6 @@ impl Default for Settings {
             target_fps: 60,
             flow_scale: 1.0,
             performance: false,
-            other_fg_disabled: false,
         }
     }
 }
@@ -589,6 +587,71 @@ fn same_launch_profile(previous: &Settings, next: &Settings) -> bool {
         && previous.enabled == next.enabled
         && previous.flatpak == next.flatpak
 }
+
+/// Edits only reloadable keys, retaining pause state and startup configuration.
+fn live_config(text: &str, settings: &Settings) -> Result<String, String> {
+    let values = [
+        ("multiplier", settings.multiplier.to_string()),
+        ("adaptive_max_multiplier", settings.multiplier.to_string()),
+        ("target_fps", settings.target_fps.to_string()),
+        ("flow_scale", format!("{:.2}", settings.flow_scale)),
+        ("performance_mode", settings.performance.to_string()),
+        ("adaptive", settings.adaptive.to_string()),
+    ];
+    let mut counts = [0; 6];
+    let mut profile = false;
+    let mut output = String::new();
+    for line in text.lines() {
+        if line.trim().starts_with('[') { profile = line.trim() == "[[profile]]"; }
+        let key = line.split_once('=').map(|(key, _)| key.trim());
+        if let Some((index, (key, value))) = values.iter().enumerate().find(|(_, (name, _))| profile && Some(*name) == key) {
+            counts[index] += 1;
+            output.push_str(&format!("{key} = {value}\n"));
+        } else { output.push_str(line); output.push('\n'); }
+    }
+    if counts != [1; 6] { return Err("O perfil MAKO não tem um formato de recarga reconhecido. As configurações foram preservadas.".into()); }
+    Ok(output)
+}
+
+#[tauri::command]
+pub async fn update_frame_generation_live(active_profile: String, settings: Settings) -> Result<(), String> {
+    crate::core::release_features::require()?;
+    tauri::async_runtime::spawn_blocking(move || {
+        if INSTALLING.swap(true,Ordering::AcqRel) { return Err("Aguarde a operação de geração de quadros em andamento.".into()); }
+        struct Guard; impl Drop for Guard { fn drop(&mut self) { INSTALLING.store(false,Ordering::Release); } } let _guard=Guard;
+        check_settings(&settings)?;
+        let script = Path::new(&active_profile);
+        let profiles = root()?.join("profiles");
+        if script.parent() != Some(profiles.as_path()) || script.extension().and_then(|v|v.to_str()) != Some("sh")
+            || !script.file_stem().and_then(|v|v.to_str()).is_some_and(profile_names::valid) {
+            return Err("Selecione um perfil de execução MAKO do PeliGames.".into());
+        }
+        let path=script.with_extension("json");
+        for path in [&path,&script.with_extension("toml")] {
+            use std::os::unix::fs::MetadataExt;
+            let metadata=fs::symlink_metadata(path).map_err(|e|e.to_string())?;
+            if !metadata.is_file() || metadata.file_type().is_symlink() || metadata.uid()!=unsafe{libc::geteuid()} || metadata.mode()&0o022!=0 || metadata.len()>65536 {
+                return Err("Perfil MAKO sem propriedade ou permissões válidas.".into());
+            }
+        }
+        let mut previous: Settings=serde_json::from_slice(&fs::read(&path).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;
+        if !previous.enabled || previous.backend!="mako" { return Err("O perfil precisa ter MAKO habilitado antes de iniciar o jogo.".into()); }
+        // Ignore all non-live fields supplied by the UI. They cannot change the
+        // DLL, runner, startup wrapper, overlay opt-in, or another launcher's state.
+        previous.multiplier=settings.multiplier; previous.adaptive=settings.adaptive;
+        previous.target_fps=settings.target_fps; previous.flow_scale=settings.flow_scale; previous.performance=settings.performance;
+        let toml=script.with_extension("toml");
+        let old=fs::read_to_string(&toml).map_err(|e|e.to_string())?;
+        let updated=live_config(&old,&previous)?;
+        let paused=old.lines().any(|line|line.split_once('=').is_some_and(|(key,value)|key.trim()=="frame_generation_enabled"&&value.trim()=="false"));
+        write(&path,&serde_json::to_vec(&previous).map_err(|e|e.to_string())?,0o600)?;
+        write(&toml,updated.as_bytes(),0o600)?;
+        write(&script.with_extension("live.json"),&serde_json::to_vec(&serde_json::json!({
+            "multiplier":previous.multiplier,"adaptive":previous.adaptive,"target_fps":previous.target_fps,
+            "flow_scale":previous.flow_scale,"performance":previous.performance,"paused":paused
+        })).map_err(|e|e.to_string())?,0o600)
+    }).await.map_err(|e|e.to_string())?
+}
 fn reusable_profile(
     advanced: &AdvancedSettings,
     settings: &Settings,
@@ -630,7 +693,7 @@ pub async fn prepare_frame_generation(
     tauri::async_runtime::spawn_blocking(move||{
  if INSTALLING.swap(true,Ordering::AcqRel){return Err("Aguarde a instalação ou limpeza do runtime em andamento.".into())}struct Guard;impl Drop for Guard{fn drop(&mut self){INSTALLING.store(false,Ordering::Release);}}let _guard=Guard;
  settings.flatpak=flatpak;check_settings(&settings)?;if settings.runtime_version.is_empty(){settings.runtime_version=versions::current(&settings.backend)?;}if !versions::compatible(&settings.backend,&settings.runtime_version){return Err("Esta versão de runtime não é compatível com a integração atual.".into())}let runtime_path=versions::location(&settings.backend,&settings.runtime_version)?;let directory=Path::new(&directory).canonicalize().map_err(|_|"A pasta do jogo não está disponível. Verifique o disco e a montagem.")?;if !directory.is_dir(){return Err("Pasta de jogo inválida.".into())}
- if settings.enabled{if settings.backend=="mako" && advanced.options.get("hdr")==Some(&true){return Err("A integração estável do MAKO usa SDR. Desative HDR; o suporte HDR do MAKO ainda é experimental.".into())}check_local_fg(&directory)?;let mut checked=advanced.clone();checked.wrappers.retain(|w|!Path::new(&w.program).parent().is_some_and(|p|root().is_ok_and(|r|p==r.join("profiles"))));conflicts(&checked)?;if !settings.other_fg_disabled{return Err("Confirme que os outros geradores de quadros estão desativados.".into())}if !flatpak{validate_runtime_at(&runtime_path,&settings.backend)?;}
+ if settings.enabled{if settings.backend=="mako" && advanced.options.get("hdr")==Some(&true){return Err("A integração estável do MAKO usa SDR. Desative HDR; o suporte HDR do MAKO ainda é experimental.".into())}check_local_fg(&directory)?;let mut checked=advanced.clone();checked.wrappers.retain(|w|!Path::new(&w.program).parent().is_some_and(|p|root().is_ok_and(|r|p==r.join("profiles"))));conflicts(&checked)?;if !flatpak{validate_runtime_at(&runtime_path,&settings.backend)?;}
  if settings.dll.is_empty(){settings.dll=detect_dll(&settings.backend).ok_or("Instale o Lossless Scaling pela Steam ou localize sua DLL.")?}
  let dll=Path::new(&settings.dll);let expected=vec!["Lossless.dll"];if !dll.is_absolute()||!dll_valid(dll)||!expected.iter().any(|n|dll.file_name().is_some_and(|f|f.to_string_lossy().eq_ignore_ascii_case(n))){return Err("Selecione a DLL válida da sua instalação do Lossless Scaling.".into())}settings.dll=dll.canonicalize().map_err(|e|e.to_string())?.to_string_lossy().into();if flatpak{let status=self::flatpak::inspect(&game_key,&settings.dll,&settings.runtime_version)?;if !status.ready{return Err(status.message)}}}
  let serialized=serde_json::to_vec(&settings).map_err(|e|e.to_string())?;
@@ -752,6 +815,16 @@ pub async fn set_game_mod_destination(
 mod tests {
     use super::*;
     #[test]
+    fn live_edits_preserve_pause_dll_runtime_and_unknown_options() {
+        let before = Settings { dll: "/games/Lossless.dll".into(), ..Default::default() };
+        let text = config(&before).replace("frame_generation_enabled = true", "frame_generation_enabled = false") + "custom_option = 123\n";
+        let next = Settings { multiplier: 4, adaptive: true, target_fps: 144, flow_scale: 0.5, performance: true, ..before };
+        let updated = live_config(&text, &next).unwrap();
+        for line in ["multiplier = 4", "adaptive_max_multiplier = 4", "target_fps = 144", "flow_scale = 0.50", "performance_mode = true", "adaptive = true", "frame_generation_enabled = false", "custom_option = 123", "dll = \"/games/Lossless.dll\""] { assert!(updated.lines().any(|v|v==line), "{line}"); }
+        assert!(live_config(&(text.clone()+"multiplier = 2\n"),&next).is_err());
+        assert!(live_config(&text.replace("target_fps = 60\n",""),&next).is_err());
+    }
+    #[test]
     fn existing_profiles_do_not_enable_the_internal_layer() {
         let old: Settings = serde_json::from_str(r#"{"backend":"mako","enabled":true}"#).unwrap();
         assert!(!old.overlay_enabled);
@@ -769,7 +842,6 @@ mod tests {
         next.multiplier = 4;
         next.flow_scale = 0.5;
         next.performance = true;
-        next.other_fg_disabled = true;
         next.overlay_enabled = true;
         assert!(same_launch_profile(&previous, &next));
         next.runtime_version = "2.0.1".into();

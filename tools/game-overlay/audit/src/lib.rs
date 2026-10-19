@@ -184,6 +184,10 @@ pub unsafe extern "C" fn la_objopen(
             abi::X11
         } else if equals(name, b"libVkLayer_WINELAND_translate_x86_64.so") {
             abi::WINELAND
+        } else if equals(name, b"ntdll.so") {
+            abi::WINE_NTDLL
+        } else if equals(name, b"win32u.so") {
+            abi::WINE_WIN32U
         } else {
             0
         };

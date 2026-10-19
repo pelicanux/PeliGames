@@ -23,14 +23,15 @@ fn backend_route(script: &str, route: &str) -> String {
     route.to_string()
 }
 
-/// Optional parts of an installation, on every route of current backends:
-/// int4 mixed (faster network) and the RenoDX style. `None` leaves the
+/// Optional installation parts: int4 mixed, RenoDX, and LumeniteFX (ReShade only).
+/// `None` leaves the
 /// backend's default (off when not run in a terminal).
 #[derive(Clone, Copy, Default)]
 pub struct InstallExtras {
     pub int4: Option<bool>,
     pub renodx: Option<bool>,
     pub model: Option<NeuralModel>,
+    pub lumenite: Option<bool>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -42,6 +43,9 @@ pub fn unified_networks(script: &str) -> bool {
 }
 pub fn selectable_models(script: &str) -> bool {
     unified_networks(script) || (script.contains("--new-model)") && script.contains("--old-model)"))
+}
+pub fn supports_lumenite(script: &str) -> bool {
+    script.contains("--lumenite)") && script.contains("--no-lumenite)")
 }
 
 fn model_arguments(script: &str, extras: InstallExtras, has_small: bool, has_original: bool) -> Result<Vec<&'static str>, String> {
@@ -70,6 +74,15 @@ fn model_arguments(script: &str, extras: InstallExtras, has_small: bool, has_ori
 fn extra_arguments(script: &str, route: &str, extras: InstallExtras) -> Result<(String, Vec<&'static str>), String> {
     let mut route = route.to_string();
     let mut arguments = Vec::new();
+    if let Some(enabled) = extras.lumenite {
+        let reshade = RENAMED_ROUTES.iter().any(|(old, new)| route == *old || route == *new);
+        if enabled && (!supports_lumenite(script) || !reshade) {
+            return Err("LumeniteFX exige um backend compatível e uma rota ReShade, Vulkan ou DX9.".into());
+        }
+        if supports_lumenite(script) && reshade {
+            arguments.push(if enabled { "--lumenite" } else { "--no-lumenite" });
+        }
+    }
     if let Some(int4) = extras.int4.filter(|_| !unified_networks(script)) {
         if script.contains("--int4)") {
             arguments.push(if int4 { "--int4" } else { "--no-int4" });
@@ -344,6 +357,27 @@ mod tests {
         assert!(extra_arguments(older, "optiscaler", off).unwrap().1.is_empty(), "desligado num backend antigo não muda nada");
     }
     #[test]
+    fn lumenite_requires_capability_and_a_reshade_route() {
+        use super::{supports_lumenite, RENAMED_ROUTES};
+        let script = "--lumenite) lumenite=1;; --no-lumenite) lumenite=0;;";
+        assert!(supports_lumenite(script));
+        assert!(!supports_lumenite("--lumenite)"));
+        for (old, new) in RENAMED_ROUTES {
+            for route in [old, new] {
+                for enabled in [false, true] {
+                    let extras = InstallExtras { lumenite: Some(enabled), ..Default::default() };
+                    assert_eq!(extra_arguments(script, route, extras).unwrap().1, [if enabled { "--lumenite" } else { "--no-lumenite" }]);
+                }
+            }
+        }
+        let on = InstallExtras { lumenite: Some(true), ..Default::default() };
+        for route in ["optiscaler", "optiscaler-renodx", "remove", "invalid"] {
+            assert!(extra_arguments(script, route, on).is_err());
+        }
+        assert!(extra_arguments("old backend", "reshade", on).is_err());
+        assert!(extra_arguments("old backend", "reshade", InstallExtras { lumenite: Some(false), ..Default::default() }).unwrap().1.is_empty());
+    }
+    #[test]
     fn neural_model_selection_respects_cache_and_int4() {
         use super::{model_arguments, NeuralModel};
         let script = "--new-model) newmodel=1;;\n--old-model) newmodel=0;;";
@@ -372,7 +406,7 @@ mod tests {
             (NeuralModel::Auto, true, true, "CC_SILVER_AARDWOLD_INT4_MIXED"),
             (NeuralModel::Auto, false, false, "CC_SILVER_AARDWOLD"),
         ] {
-            let extras = InstallExtras { model: Some(model), int4: Some(int4), renodx: Some(true) };
+            let extras = InstallExtras { model: Some(model), int4: Some(int4), renodx: Some(true), ..Default::default() };
             assert_eq!(model_arguments(script, extras, small, true).unwrap(), ["--model", expected]);
             let (_, flags) = extra_arguments(script, "optiscaler", extras).unwrap();
             assert_eq!(flags, ["--renodx"], "int4/model flags must have one owner");

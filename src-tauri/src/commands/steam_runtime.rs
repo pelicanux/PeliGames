@@ -6,19 +6,22 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
     fs,
-    io::{Read, Write},
+    io::Write,
     os::unix::fs::{DirBuilderExt, MetadataExt, OpenOptionsExt, PermissionsExt},
     path::{Path, PathBuf},
     process::Command,
 };
 
 #[path = "../../launch-runtime/src/profile.rs"]
-mod contract;
+pub(super) mod contract;
+use contract as profile;
+#[path = "../../launch-runtime/src/profile_io.rs"]
+pub(super) mod profile_io;
 use contract::{Profile, MARKER, MAX_BYTES, VERSION};
 
 const DIRECTORY: &str = "peligames-launcher";
 const KIND: &str = "peligames-steam-profile";
-const HELPER: &[u8] = include_bytes!(env!("PELIGAMES_LAUNCH_HELPER_EMBEDDED"));
+pub(super) const HELPER: &[u8] = include_bytes!(env!("PELIGAMES_LAUNCH_HELPER_EMBEDDED"));
 static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -52,13 +55,14 @@ fn directory(flatpak: bool) -> Result<PathBuf, String> {
     Ok(steam_config(flatpak)?.join(DIRECTORY))
 }
 
-fn private_directory(path: &Path) -> Result<(), String> {
+pub(super) fn private_directory(path: &Path) -> Result<(), String> {
     match fs::symlink_metadata(path) {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-            fs::DirBuilder::new()
-                .mode(0o700)
-                .create(path)
-                .map_err(|error| error.to_string())?;
+            match fs::DirBuilder::new().mode(0o700).create(path) {
+                Ok(()) => {},
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => return private_directory(path),
+                Err(error) => return Err(error.to_string()),
+            }
         }
         Err(error) => return Err(error.to_string()),
         Ok(meta)
@@ -74,7 +78,7 @@ fn private_directory(path: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn atomic_write(path: &Path, bytes: &[u8], mode: u32) -> Result<(), String> {
+pub(super) fn atomic_write(path: &Path, bytes: &[u8], mode: u32) -> Result<(), String> {
     if let Ok(meta) = fs::symlink_metadata(path) {
         if !meta.is_file()
             || meta.file_type().is_symlink()
@@ -106,33 +110,14 @@ fn atomic_write(path: &Path, bytes: &[u8], mode: u32) -> Result<(), String> {
 }
 
 fn read_at(path: &Path, app: u32) -> Result<Option<Profile>, String> {
-    let file = match fs::OpenOptions::new()
-        .read(true)
-        .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
-        .open(path)
-    {
-        Ok(file) => file,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
-        Err(error) => return Err(error.to_string()),
-    };
-    let meta = file.metadata().map_err(|error| error.to_string())?;
-    if !meta.is_file()
-        || meta.uid() != unsafe { libc::geteuid() }
-        || meta.mode() & 0o022 != 0
-        || meta.len() > MAX_BYTES
-    {
-        return Err("Perfil do auxiliar Steam inválido.".into());
-    }
-    let mut bytes = Vec::new();
-    file.take(MAX_BYTES + 1)
-        .read_to_end(&mut bytes)
-        .map_err(|error| error.to_string())?;
-    if bytes.len() as u64 > MAX_BYTES {
-        return Err("Perfil do auxiliar Steam muito grande.".into());
-    }
-    let value: Profile = serde_json::from_slice(&bytes).map_err(|error| error.to_string())?;
-    value.validate(app)?;
-    Ok(Some(value))
+    let value = profile_io::legacy(path, app)?;
+    Ok(value.map(|mut profile| {
+        // Legacy GUI callers keep their AppID; the file remains universal on disk.
+        profile.version = VERSION;
+        profile.app_id = app;
+        profile.id = None;
+        profile
+    }))
 }
 
 fn source(profile: &Profile) -> Result<Source, String> {
@@ -174,6 +159,7 @@ fn build(app: u32, source: &Source) -> Result<Profile, String> {
     let mut profile = Profile {
         version: VERSION,
         app_id: app,
+        id: None, installation: None,
         command: std::iter::once(command.get_program())
             .chain(command.get_args())
             .map(|word| word.to_string_lossy().into_owned())
@@ -190,7 +176,20 @@ fn build(app: u32, source: &Source) -> Result<Profile, String> {
     Ok(profile)
 }
 
+pub(super) fn build_for(name: &str, advanced: &AdvancedSettings, mods: Option<String>) -> Result<Profile, String> {
+    build(1, &Source { kind: KIND.into(), name: name.into(), flatpak: false, advanced: advanced.clone(), mod_options: mods })
+}
+
 fn publish_at(directory: &Path, profile: &Profile) -> Result<(), String> {
+    if let Some(installation) = &profile.installation {
+        let saved = super::launch_profiles::save(Path::new(installation), profile.clone())?;
+        private_directory(directory)?;
+        private_directory(&directory.join("profiles"))?;
+        let reference = profile_io::Reference { version: 1, app_id: profile.app_id,
+            pelirun_reference: saved.id, directory: PathBuf::from(saved.profiles) };
+        return atomic_write(&directory.join("profiles").join(format!("{}.json", profile.app_id)),
+            &serde_json::to_vec_pretty(&reference).map_err(|e| e.to_string())?, 0o600);
+    }
     let bytes = serde_json::to_vec_pretty(profile).map_err(|error| error.to_string())?;
     if bytes.len() as u64 > MAX_BYTES {
         return Err("Perfil do auxiliar Steam muito grande.".into());
@@ -258,7 +257,8 @@ pub(super) fn prepare(
         advanced: advanced.clone(),
         mod_options: mods,
     };
-    let profile = build(app, &source)?;
+    let mut profile = build(app, &source)?;
+    if !game.flatpak { profile.installation = Some(super::launch_profiles::installation(Path::new(&game.path))?.to_string_lossy().into_owned()); }
     let directory = directory(game.flatpak)?;
     private_directory(&directory)?;
     let profile_directory = directory.join("profiles");
@@ -360,7 +360,8 @@ pub(super) fn refresh_monitoring() -> Result<(), String> {
             let Some(previous) = read_at(&path, app)? else {
                 continue;
             };
-            let next = build(app, &source(&previous)?)?;
+            let mut next = build(app, &source(&previous)?)?;
+            next.installation = previous.installation;
             publish_at(profiles.parent().ok_or("Perfil sem diretório.")?, &next)?;
         }
     }
@@ -402,6 +403,7 @@ mod tests {
         let original = Profile {
             version: VERSION,
             app_id: 42,
+            id: None, installation: None,
             command: vec![MARKER.into()],
             environment: BTreeMap::new(),
             extra_args: vec!["-before".into()],

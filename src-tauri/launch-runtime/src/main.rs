@@ -1,65 +1,27 @@
 mod profile;
 mod release_features;
 
-use profile::{app_id, Profile, MAX_BYTES};
+mod profile_io;
+use profile::app_id;
 use std::ffi::OsString;
-use std::fs;
-use std::io::Read;
-use std::os::unix::{
-    fs::{MetadataExt, OpenOptionsExt},
-    process::CommandExt,
-};
-use std::path::Path;
+use std::os::unix::process::CommandExt;
 use std::process::Command;
-
-fn load(path: &Path, app: u32) -> Result<Option<Profile>, String> {
-    let file = match fs::OpenOptions::new()
-        .read(true)
-        .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
-        .open(path)
-    {
-        Ok(file) => file,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
-        Err(error) => return Err(format!("Não foi possível abrir o perfil: {error}")),
-    };
-    let meta = file.metadata().map_err(|error| error.to_string())?;
-    if !meta.is_file()
-        || meta.uid() != unsafe { libc::geteuid() }
-        || meta.mode() & 0o022 != 0
-        || meta.len() > MAX_BYTES
-    {
-        return Err("O perfil de inicialização não é um arquivo privado válido.".into());
-    }
-    let mut bytes = Vec::new();
-    file.take(MAX_BYTES + 1)
-        .read_to_end(&mut bytes)
-        .map_err(|error| error.to_string())?;
-    if bytes.len() as u64 > MAX_BYTES {
-        return Err("Perfil de inicialização muito grande.".into());
-    }
-    let profile: Profile = serde_json::from_slice(&bytes)
-        .map_err(|error| format!("Perfil de inicialização inválido: {error}"))?;
-    profile.validate(app)?;
-    Ok(Some(profile))
-}
 
 fn run() -> Result<(), String> {
     let mut args = std::env::args_os().skip(1);
-    if args.next().as_deref() != Some(std::ffi::OsStr::new("--app")) {
-        return Err("Uso: pelirun --app APPID -- comando-do-jogo [argumentos]".into());
+    let mode = args.next().and_then(|v| v.into_string().ok()).ok_or("Use pelirun --profile ID -- comando [argumentos].")?;
+    let identity = args.next().and_then(|v| v.into_string().ok()).ok_or("Identificador do perfil ausente.")?;
+    match mode.as_str() {
+        "--profile" => { profile::profile_id(&identity)?; }
+        "--app" => { app_id(&identity)?; }
+        _ => return Err("Use pelirun --profile ID -- comando [argumentos].".into()),
     }
-    let app = app_id(
-        &args
-            .next()
-            .and_then(|value| value.into_string().ok())
-            .ok_or("Steam AppID ausente.")?,
-    )?;
     if args.next().as_deref() != Some(std::ffi::OsStr::new("--")) {
         return Err("Separador do comando ausente.".into());
     }
     let original: Vec<OsString> = args.collect();
     if original.is_empty() || original[0].is_empty() {
-        return Err("A Steam não forneceu o comando do jogo.".into());
+        return Err("O launcher não forneceu o comando do jogo.".into());
     }
     // Survives a launcher reset: if its JSON is removed, launch the original
     // Steam command. Never delete this executable while Steam references it.
@@ -67,7 +29,11 @@ fn run() -> Result<(), String> {
     let directory = executable
         .parent()
         .ok_or("Diretório do auxiliar indisponível.")?;
-    let mut profile = load(&directory.join("profiles").join(format!("{app}.json")), app)?;
+    let mut profile = if mode == "--profile" {
+        profile_io::universal(&directory.join("profiles"), &identity)?
+    } else {
+        profile_io::legacy(&directory.join("profiles").join(format!("{identity}.json")), app_id(&identity)?)?
+    };
     if let Some(value) = profile.as_mut() {
         release_features::restrict(&mut value.command, &mut value.environment, release_features::enabled());
     }

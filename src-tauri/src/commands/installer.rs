@@ -20,6 +20,7 @@ pub async fn install_mod(
     int4: Option<bool>,
     renodx: Option<bool>,
     model: Option<crate::core::script_runner::NeuralModel>,
+    lumenite: Option<bool>,
 ) -> Result<String, String> {
     crate::core::logger::log_launcher(&app, "INFO", &format!("Operação no jogo: rota={route}, arquitetura={bitness}, GPU={gpu_arch}, diretório={game_dir}"));
     let result = async {
@@ -47,7 +48,7 @@ pub async fn install_mod(
     let install_route = route.clone();
     let output = tauri::async_runtime::spawn_blocking(move || execute_standalone_install(
         &resource_path, &install_game, &install_route, dll_path.as_ref(), bin_path.as_ref(), &shortcut_key,
-        crate::core::script_runner::InstallExtras { int4, renodx, model },
+        crate::core::script_runner::InstallExtras { int4, renodx, model, lumenite },
     )).await.map_err(|error| error.to_string())??;
     if route != "remove" {
         if let Some(enabled) = neural_startup {
@@ -98,10 +99,10 @@ pub async fn import_model_bins(app: AppHandle, gpu_arch: String, bin_path: Strin
 }
 
 #[derive(serde::Serialize)]
-pub struct NeuralModelStatus { pub small: bool, pub original: bool, pub selectable: bool, pub unified_networks: bool }
+pub struct NeuralModelStatus { pub small: bool, pub original: bool, pub selectable: bool, pub unified_networks: bool, pub lumenite: bool, pub lumenite_selected: bool }
 
 #[tauri::command]
-pub fn get_neural_model_status(app: AppHandle, gpu_arch: String, bitness: String, bin_path: Option<String>) -> Result<NeuralModelStatus, String> {
+pub fn get_neural_model_status(app: AppHandle, gpu_arch: String, bitness: String, bin_path: Option<String>, game_dir: Option<String>) -> Result<NeuralModelStatus, String> {
     if !matches!(gpu_arch.as_str(), "rdna3" | "rdna4") || !matches!(bitness.as_str(), "32" | "64") {
         return Err("Arquitetura inválida.".into());
     }
@@ -117,6 +118,8 @@ pub fn get_neural_model_status(app: AppHandle, gpu_arch: String, bitness: String
         small: has("dlssnr-small.bin") && has("dlssnr.bin"), original: has("dlssnr.bin"),
         selectable: crate::core::script_runner::selectable_models(&script),
         unified_networks: crate::core::script_runner::unified_networks(&script),
+        lumenite: crate::core::script_runner::supports_lumenite(&script),
+        lumenite_selected: match game_dir { Some(directory) => super::neural_settings::lumenite_selected(std::path::Path::new(&directory))?, None => false },
     })
 }
 

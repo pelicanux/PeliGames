@@ -2,6 +2,8 @@
   <img src="public/images/readme-header.svg" alt="PeliGames" width="900" />
 </p>
 
+> **0.4.5 experimental:** MAKO frame generation and the new PeliGames in-game overlay are available for testing, with per-game opt-in. Mouse capture, focus, shortcuts and compatibility with some games/Proton versions may still have issues. See the [usage and limitations guide](docs/overlay.md).
+
 <p align="center"><a href="README.md">Português</a> · <strong>English</strong></p>
 
 Windows game launcher for Linux with Proton, a game library, Pelinstall, Wine tools, Nexus Mods integration and the DLSSNR-AMD mod manager.
@@ -53,6 +55,16 @@ Independent integration, not affiliated with Nexus Mods. Report issues to PeliGa
 Support depends on the game and on the package layout. The API key is stored only in the system keyring (the AppImage needs `secret-tool` and an available keyring). Use **Logs** or **Report error** to diagnose problems.
 
 Under **Settings → Tools** you can create a ZIP backup of the games with Nexus mods installed, or restore one saved on another disk. The per-game recovery option keeps a hidden `.peligames` folder on the games' disk, so the records come back after rescanning on another distribution.
+
+## MAKO frame generation and PeliGames overlay
+
+Open **Library → Game details → Frame generation**. Install MAKO from **Settings → Mods → MAKO**, provide your own public Steam Lossless Scaling installation (`Lossless.dll`), and enable it for the game. Changes save automatically. Multipliers (2×–5×), adaptive target FPS, motion scale and the lightweight model can be adjusted from the launcher while a game is running with MAKO.
+
+Enable **PeliGames overlay** before launching the game. **F8** shows/hides its draggable panel; the shortcut is configurable and is local to the focused game. Esc does not close it, and no global desktop shortcut is registered. Startup options require reopening the game. This overlay is experimental: input capture, cursor behavior and compatibility still need testing across games and compositors. Linux 32-bit graphics hosts and Flatpak are not supported by the overlay; Windows 32-bit executables are allowed for experimental testing with a 64-bit new-WoW64 graphics host.
+
+**PeliRun** exports short per-installation IDs (`pg-xxxxxxxx`) for Steam, Heroic, Lutris and compatible wrapper/command-prefix fields in other launchers. Copy the command shown by PeliGames. Once linked, profile changes apply on the next game launch without repeatedly restarting Steam; live changes depend on the backend. Steam's Proton selection remains in Steam → Compatibility. See [PeliRun](docs/steam-launch-runtime.md).
+
+In supported DLSSNR backends, ReShade/Vulkan/DX9 routes offer **VORT / LumeniteFX** motion vectors. VORT is bundled; choosing LumeniteFX and installing/repairing downloads it from its official project. This option is not used by the OptiScaler route.
 
 ## DLSS 5 Neural Rendering on AMD cards (DLSSNR)
 

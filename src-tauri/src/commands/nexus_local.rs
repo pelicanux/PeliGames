@@ -1418,6 +1418,9 @@ pub(super) fn save_advanced(game_id: &str, settings: crate::core::advanced_setti
             }
         }
     }
+    let path = game.game["path"].as_str().or(game.game["directory"].as_str()).ok_or("Instalação indisponível.")?;
+    let name = game.game["name"].as_str().unwrap_or("Jogo");
+    super::launch_profiles::refresh(std::path::Path::new(path), name, &settings)?;
     game.advanced = settings;
     save(&data)?;
     Ok(data)

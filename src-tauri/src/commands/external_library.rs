@@ -188,7 +188,7 @@ fn from_launcher(game: LauncherGame, key: String, id: String, name: String) -> E
         advanced: AdvancedSettings::default(),
     }
 }
-fn all() -> Result<Vec<ExternalGame>, String> {
+pub(super) fn all() -> Result<Vec<ExternalGame>, String> {
     let home = dirs::home_dir().ok_or("Pasta pessoal indisponível.")?;
     let preferences = read_settings()?;
     let mut games = discover(&home);
@@ -292,6 +292,9 @@ pub async fn configure_external_game(settings: ExternalSettings) -> Result<Exter
                 std::fs::write(settings_file()?, serde_json::to_vec_pretty(&before).map_err(|e|e.to_string())?).map_err(|e| format!("{error}; falha ao restaurar configurações: {e}"))?;
                 return Err(error);
             }
+        }
+        if game.launcher != "Steam" {
+            super::launch_profiles::refresh(Path::new(&game.path), &game.name, &settings.advanced)?;
         }
         game.steam_pending = game.launcher == "Steam" && steam_settings::pending(&game.external_id)?;
         game.advanced = settings.advanced;
@@ -940,19 +943,27 @@ pub(crate) fn maintenance_entry(id: &str) -> Result<(String, String, String, Str
 }
 
 #[tauri::command]
-pub async fn steam_game_settings_action(external_id: String, action: String) -> Result<ExternalGame, String> {
-    tauri::async_runtime::spawn_blocking(move || {
+pub async fn steam_game_settings_action(app: tauri::AppHandle, external_id: String, action: String) -> Result<ExternalGame, String> {
+    use tauri::Emitter;
+    let handle = app.clone();
+    let operation = format!("Steam · {action}");
+    let result = tauri::async_runtime::spawn_blocking(move || {
         let _guard = SETTINGS_LOCK.lock().map_err(|_| "Configurações ocupadas.")?;
         let game = all()?.into_iter().find(|g| g.external_id == external_id && g.launcher == "Steam").ok_or("Jogo Steam não encontrado.")?;
         match action.as_str() {
             "status" => return Ok(game),
             "revert" => steam_settings::revert(&game)?,
             "confirm-manual" => steam_settings::confirm_manual(&game)?,
-            "restart" => steam_settings::restart(&game)?,
+            "restart" => steam_settings::restart(&game, |phase| {
+                crate::core::logger::log_launcher(&handle,"INFO",&format!("Reinício Steam: instalação={}, jogo={}, etapa={phase}",if game.flatpak {"flatpak"} else {"nativa"},game.name));
+                let _=handle.emit("steam-settings-progress",serde_json::json!({"external_id":game.external_id,"phase":phase}));
+            })?,
             _ => return Err("Ação Steam inválida.".into()),
         }
         all()?.into_iter().find(|g| g.external_id == external_id).ok_or("Jogo não encontrado.".into())
-    }).await.map_err(|_| "Falha ao gerenciar as configurações da Steam.")?
+    }).await.map_err(|_| "Falha ao gerenciar as configurações da Steam.")?;
+    crate::core::logger::log_result(&app,&operation,&result);
+    result
 }
 
 #[tauri::command]

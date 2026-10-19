@@ -13,6 +13,7 @@ mod symbols;
 mod wayland;
 mod wayland_surface;
 mod wineland;
+mod wine_input;
 mod x11;
 use std::sync::{
     atomic::{AtomicU64, AtomicUsize, Ordering},

@@ -111,7 +111,7 @@ fn game_overlay() {
 /// executable rather than launching the Tauri/AppImage binary inside its runtime.
 fn launch_helper() {
     use std::{env, fs, path::PathBuf, process::Command};
-    for file in ["Cargo.toml", "Cargo.lock", "src/main.rs", "src/profile.rs"] {
+    for file in ["Cargo.toml", "Cargo.lock", "src/main.rs", "src/profile.rs", "src/profile_io.rs"] {
         println!("cargo:rerun-if-changed=launch-runtime/{file}");
     }
     println!("cargo:rerun-if-changed=launch-runtime/src/release_features.rs");

@@ -26,7 +26,7 @@ O runner e os controles exigem `overlay_enabled=true` no JSON associado ao `MAKO
 
 ## Limites e verificação
 
-Linux/glibc x86_64 e Vulkan SDR são o alvo inicial. O launcher rejeita opt-in em executáveis de 32 bits e Flatpak. OpenGL, HDR, entrada nativa XCB, escalas fracionárias e combinações com anti-cheat não têm suporte declarado. Os caminhos KDE/GNOME Wayland e Wine/Proton precisam de teste real; uma análise de código não os certifica.
+Linux/glibc x86_64 e Vulkan SDR são o alvo inicial. O launcher permite opt-in em executáveis Windows de 32 bits para testar o novo WoW64 do Proton com processo gráfico Linux de 64 bits; isso ainda não é suporte validado. Executáveis Linux de 32 bits e Flatpak continuam bloqueados. O payload permanece exclusivamente x86_64, com manifest Vulkan `library_arch=64`. OpenGL, HDR, entrada nativa XCB, escalas fracionárias e combinações com anti-cheat não têm suporte declarado. Os caminhos KDE/GNOME Wayland e Wine/Proton precisam de teste real; uma análise de código não os certifica.
 
 Dependências fixadas e textos de licença preparados. Na revisão de entrada passaram 39 testes do renderer/UI/entrada e cinco do runner. O audit shim passou em `cargo check --release --locked --offline`; a tabela compartilhada agora contém 26 símbolos. Os testes cobrem restauração da captura, falha sem remover a captura de outro cliente, conexões Wine distintas, polling de botões, ordem dos eventos raw/nativos, cursor escalado, clique nos controles, arraste e perda de foco. Os testes usam um backend Xlib simulado e o painel egui real sem GPU; **não certificam a entrega real de eventos no Palworld, KDE ou GNOME**.
 
@@ -45,3 +45,15 @@ Em 19/10/2026 passaram 50 testes isolados (45 do renderer/entrada e cinco do run
 O teste no mesmo CachyOS Proton confirmou overlay em XWayland e falha de abertura em Wayland; os logs novos já mostram renderer preparado com SDR de dez bits. O código exigia foco na superfície Vulkan exata, ignorando a janela pai de uma subsuperfície. A nova revisão observa o protocolo público de criação/destruição de subsuperfícies, aceita foco apenas na própria superfície ou em ancestrais comprovados e trata leave/Alt+Tab, destruição e reutilização de objetos. Não presume foco por pertencer ao mesmo processo. Não cria conexão ou captura global, não modifica o Proton e não usa C ou assembly.
 
 Passaram 55 testes de regressão, um teste Vulkan explícito (56 no total) e o probe de carregamento com 28 símbolos. Os testes de encaminhamento e foco são isolados; ainda falta teste real no Palworld. **Esta revisão de foco foi incorporada ao binário e ao AppImage em `Release/` após autorização em 19/10/2026.** Os 56 testes e o probe release com 28 símbolos passaram novamente; os payloads foram conferidos nos dois executáveis e as interfaces passaram em `--verify-ui`. O relatório está em `Release/build-validation.json`; os temporários em RAM foram removidos. Salve novamente o perfil no launcher atualizado antes de reabrir o jogo para atualizar o wrapper. Os limites do cursor Wayland experimental permanecem. Detalhes e evidências em `docs/in-game-overlay.md`.
+
+### Filtro de movimento Wine/Proton
+
+A revisão `wine_input.rs` acrescenta filtragem de Raw Input (individual e em lote) e congelamento da posição consultada pelo jogo durante a captura, além das rotas nativas Wayland/XWayland. O registro da tabela win32u é reconhecido por endereços e ABI, sem números fixos de syscall; tabelas desconhecidas são preservadas. O diagnóstico registra se o filtro foi instalado. Ainda requer teste gráfico real.
+
+Bancada isolada do carregador e do filtro, com fixtures inteiramente em Rust e sem abrir Wine ou jogos:
+
+```sh
+bash tools/game-overlay/tests/wine_input/run.sh
+```
+
+Detalhes e fontes: `docs/in-game-overlay.md`.

@@ -159,7 +159,9 @@ pub async fn update_peligames_settings(
         if crate::core::game_execution::active() {
             return Err("Encerre a execução antes de alterar suas configurações.".into());
         }
-        crate::core::installed_library::update_settings(settings)
+        let updated = crate::core::installed_library::update_settings(settings)?;
+        super::launch_profiles::refresh(std::path::Path::new(&updated.path), &updated.name, &updated.advanced)?;
+        Ok(updated)
     })
     .await
     .map_err(|e| e.to_string())?

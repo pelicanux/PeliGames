@@ -5,14 +5,21 @@ use std::collections::BTreeMap;
 use std::ffi::OsString;
 
 pub const VERSION: u32 = 1;
-pub const MARKER: &str = "__PELIGAMES_STEAM_COMMAND__";
+pub const UNIVERSAL_VERSION: u32 = 2;
+pub const MARKER: &str = "__PELIGAMES_COMMAND__";
+const LEGACY_MARKER: &str = "__PELIGAMES_STEAM_COMMAND__";
 pub const MAX_BYTES: u64 = 512 * 1024;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Profile {
     pub version: u32,
+    #[serde(default)]
     pub app_id: u32,
-    /// The complete command Steam supplied replaces exactly one marker.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub installation: Option<String>,
+    /// The complete command supplied by any launcher replaces exactly one marker.
     pub command: Vec<String>,
     /// None explicitly removes an inherited variable, unlike an omitted key.
     pub environment: BTreeMap<String, Option<String>>,
@@ -30,18 +37,36 @@ pub fn app_id(value: &str) -> Result<u32, String> {
         .ok_or_else(|| "Steam AppID inválido.".into())
 }
 
+pub fn profile_id(value: &str) -> Result<&str, String> {
+    if value.len() == 11 && value.starts_with("pg-") && value[3..].bytes().all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c)) {
+        Ok(value)
+    } else { Err("Identificador PeliRun inválido.".into()) }
+}
+
 impl Profile {
+    pub fn validate_id(&self, expected: &str) -> Result<(), String> {
+        profile_id(expected)?;
+        if self.version != UNIVERSAL_VERSION || self.id.as_deref() != Some(expected)
+            || self.installation.as_ref().is_none_or(|p| !std::path::Path::new(p).is_absolute()) {
+            return Err("Perfil PeliRun incompatível ou de outra instalação.".into());
+        }
+        self.validate_command()
+    }
     pub fn validate(&self, expected: u32) -> Result<(), String> {
         if self.version != VERSION || self.app_id != expected || expected == 0 {
             return Err("Perfil de inicialização incompatível ou de outro jogo.".into());
         }
+        self.validate_command()
+    }
+
+    fn validate_command(&self) -> Result<(), String> {
         if self.command.is_empty()
             || self.command[0].is_empty()
             || self.command.len() + self.extra_args.len() > 4096
             || self
                 .command
                 .iter()
-                .filter(|word| word.as_str() == MARKER)
+                .filter(|word| matches!(word.as_str(), MARKER | LEGACY_MARKER))
                 .count()
                 != 1
             || self
@@ -65,13 +90,15 @@ impl Profile {
     }
 
     pub fn expand(&self, original: &[OsString]) -> Result<Vec<OsString>, String> {
-        self.validate(self.app_id)?;
+        if self.version == UNIVERSAL_VERSION {
+            self.validate_id(self.id.as_deref().ok_or("Perfil sem identificador.")?)?;
+        } else { self.validate(self.app_id)?; }
         if original.is_empty() || original[0].is_empty() {
-            return Err("A Steam não forneceu o comando do jogo.".into());
+            return Err("O launcher não forneceu o comando do jogo.".into());
         }
         let mut words = Vec::new();
         for word in &self.command {
-            if word == MARKER {
+            if word == MARKER || word == LEGACY_MARKER {
                 words.extend_from_slice(original);
             } else {
                 words.push(OsString::from(word.as_str()));
@@ -94,6 +121,7 @@ mod tests {
         Profile {
             version: VERSION,
             app_id: 42,
+            id: None, installation: None,
             command: vec!["/path with spaces/wrapper".into(), MARKER.into()],
             environment: BTreeMap::from([("MANGOHUD".into(), None)]),
             extra_args: vec!["$(touch /never-executed)".into(), "two words".into()],

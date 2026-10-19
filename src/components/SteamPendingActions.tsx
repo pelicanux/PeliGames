@@ -1,3 +1,4 @@
+import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -16,6 +17,16 @@ export function SteamPendingActions({game, disabled, onSaved, children}: {
   const pt = useI18n().language === "pt";
   const steamLabel = "Steam";
   const [busy, setBusy] = useState(false);
+  const [restartPhase, setRestartPhase] = useState("");
+  useEffect(() => {
+    if (!isTauri() || !game.external_id) return;
+    let live = true;
+    let unlisten: (() => void) | undefined;
+    void listen<{external_id: string; phase: string}>("steam-settings-progress", event => {
+      if (live && event.payload.external_id === game.external_id) setRestartPhase(event.payload.phase);
+    }).then(stop => { if (live) unlisten = stop; else stop(); }).catch(() => {});
+    return () => { live = false; unlisten?.(); };
+  }, [game.external_id]);
   const [exporting, setExporting] = useState(false);
   const [pending, setPending] = useState(Boolean(game.steam_pending));
   const [manual, setManual] = useState<ManualOptions | null>(null);
@@ -66,6 +77,7 @@ export function SteamPendingActions({game, disabled, onSaved, children}: {
   const act = async (action: "restart" | "revert" | "confirm-manual") => {
     if (busy || disabled || exporting) return;
     setBusy(true);
+    setRestartPhase(action === "restart" ? "checking" : "");
     try {
       const next = await invoke<GameInfo>("steam_game_settings_action", {externalId: game.external_id, action});
       setPending(Boolean(next.steam_pending));
@@ -73,8 +85,17 @@ export function SteamPendingActions({game, disabled, onSaved, children}: {
       window.dispatchEvent(new Event("peligamesLibraryChanged"));
       notifyInfo(steamLabel, action === "restart" ? (pt ? "Configurações aplicadas. Steam reiniciada." : "Settings applied. Steam restarted.") : action === "confirm-manual" ? (pt ? "Opções da Steam verificadas. Perfil preservado." : "Steam options verified. Profile preserved.") : (pt ? "Alterações revertidas." : "Changes reverted."));
       if (action !== "revert") setManual(null);
-    } catch (error) { notifyError(steamLabel, String(error)); }
-    finally { setBusy(false); }
+    } catch (error) {
+      notifyError(steamLabel, String(error));
+      // Applying may succeed even if reopening the client fails. Reflect the
+      // actual pending state instead of asking the user to apply it twice.
+      try {
+        const next = await invoke<GameInfo>("steam_game_settings_action", {externalId: game.external_id, action: "status"});
+        setPending(Boolean(next.steam_pending));
+        onSaved({...game, ...next, cover_url: game.cover_url});
+      } catch { /* Keep the last confirmed state if status is unavailable. */ }
+    }
+    finally { setBusy(false); setRestartPhase(""); }
   };
   const showManual = async () => {
     if (busy || disabled || exporting) return;
@@ -92,6 +113,11 @@ export function SteamPendingActions({game, disabled, onSaved, children}: {
   };
   if (game.launcher !== "Steam" || !game.external_id) return children;
   const blocked = disabled || busy || exporting;
+  const phases: Record<string, string> = pt ? {
+    checking: "Verificando a Steam…", closing: "Encerrando a Steam…", terminating: "Finalizando o cliente que não encerrou…",
+    finishing: "Liberando o cliente da Steam…", applying: "Aplicando configurações…", starting: "Abrindo a Steam…", done: "Steam iniciada",
+  } : { checking: "Checking Steam…", closing: "Closing Steam…", terminating: "Terminating the unresponsive client…",
+    finishing: "Releasing the Steam client…", applying: "Applying settings…", starting: "Starting Steam…", done: "Steam started" };
   const protonName = manual?.proton?.split(/[\\/]/).filter(Boolean).pop();
   return <>
     <div className="steam-action-slot">
@@ -101,7 +127,7 @@ export function SteamPendingActions({game, disabled, onSaved, children}: {
           <button type="button" className="btn btn-play modern-play" disabled={blocked} aria-busy={exporting} onClick={() => void showManual()}><MenuIcon name="settings" />{exporting ? (pt ? "Aguarde…" : "Please wait…") : (pt ? "Configurar na Steam" : "Configure in Steam")}</button>
           <button type="button" className="modern-mini-btn" disabled={blocked} onClick={() => void act("revert")}>{pt ? "Reverter alterações" : "Revert changes"}</button>
         </div>
-        <button type="button" className="modern-mini-btn steam-manual-open" disabled={blocked} aria-busy={busy} onClick={() => void act("restart")}><MenuIcon name="repair" />{busy ? (pt ? "Aguarde…" : "Please wait…") : (pt ? "Reiniciar Steam e aplicar automaticamente" : "Restart Steam and apply automatically")}</button>
+        <button type="button" className="modern-mini-btn steam-manual-open" disabled={blocked} aria-busy={busy} onClick={() => void act("restart")}><MenuIcon name="repair" />{busy ? (phases[restartPhase] || (pt ? "Aguarde…" : "Please wait…")) : (pt ? "Reiniciar Steam e aplicar automaticamente" : "Restart Steam and apply automatically")}</button>
       </div> : children}
     </div>
     {manual && <NexusPopup className="steam-manual-popup" title={pt ? "Configurar na Steam" : "Configure in Steam"} titleIcon={<MenuIcon name="settings" />} onClose={() => { if (!busy) setManual(null); }} footer={<>

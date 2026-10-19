@@ -114,3 +114,57 @@ fn corrupt_profiles_and_symlinks_do_not_launch_an_unvalidated_command() {
     std::os::unix::fs::symlink("../unrelated", fixture.0.join("profiles/42.json")).unwrap();
     assert!(!fixture.command().status().unwrap().success());
 }
+
+fn universal(fixture: &Fixture, value: &str) {
+    let path = fixture.0.join("profiles/pg-a73c92e4.json");
+    fs::write(&path, serde_json::to_vec(&serde_json::json!({
+        "version":2,"id":"pg-a73c92e4","installation":"/games/tomb-raider",
+        "command":["__PELIGAMES_STEAM_COMMAND__"],
+        "environment":{"PELI_HELPER_TEST":value},"extra_args":["literal argument"]
+    })).unwrap()).unwrap();
+    fs::set_permissions(path, fs::Permissions::from_mode(0o600)).unwrap();
+}
+
+#[test]
+fn one_universal_profile_serves_other_launchers_and_legacy_steam_links() {
+    let fixture = Fixture::new();
+    universal(&fixture, "first");
+    fixture.profile(&serde_json::json!({"version":1,"app_id":42,
+        "pelirun_reference":"pg-a73c92e4","directory":fixture.0.join("profiles")}));
+    let run = || Command::new(fixture.0.join("pelirun"))
+        .args(["--profile", "pg-a73c92e4", "--", "/bin/sh", "-c", "printf '%s\\n' \"$PELI_HELPER_TEST\" \"$@\"", "--"])
+        .arg("other launcher").output().unwrap();
+    let output = run();
+    assert!(output.status.success());
+    assert_eq!(String::from_utf8(output.stdout).unwrap(), "first\nother launcher\nliteral argument\n");
+    assert_eq!(String::from_utf8(fixture.command().output().unwrap().stdout).unwrap(), "first\nliteral argument\n");
+    // The fixed commands stay unchanged. Both callers read the same edited file.
+    universal(&fixture, "updated");
+    assert!(String::from_utf8(run().stdout).unwrap().starts_with("updated\n"));
+    assert!(String::from_utf8(fixture.command().output().unwrap().stdout).unwrap().starts_with("updated\n"));
+    fs::remove_file(fixture.0.join("profiles/pg-a73c92e4.json")).unwrap();
+    assert_eq!(String::from_utf8(fixture.command().output().unwrap().stdout).unwrap(), "unset\n");
+}
+
+#[test]
+fn universal_profiles_reject_wrong_identity_symlinks_and_traversal() {
+    let fixture = Fixture::new();
+    universal(&fixture, "private");
+    let run = |id: &str| Command::new(fixture.0.join("pelirun")).args(["--profile",id,"--","/bin/echo","launched"]).output().unwrap();
+    for id in ["../42", "pg-../../42", "pg-A73C92E4", "42", "pg-a73c92e4/extra"] {
+        let output = run(id);
+        assert!(!output.status.success());
+        assert!(output.stdout.is_empty());
+    }
+    let path = fixture.0.join("profiles/pg-a73c92e4.json");
+    let mut profile: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    profile["id"] = "pg-00000000".into();
+    fs::write(&path, serde_json::to_vec(&profile).unwrap()).unwrap();
+    assert!(!run("pg-a73c92e4").status.success());
+    fs::remove_file(&path).unwrap();
+    std::os::unix::fs::symlink("../unrelated", &path).unwrap();
+    assert!(!run("pg-a73c92e4").status.success());
+    fixture.profile(&serde_json::json!({"version":1,"app_id":43,
+        "pelirun_reference":"pg-a73c92e4","directory":fixture.0.join("profiles")}));
+    assert!(!fixture.command().output().unwrap().status.success());
+}

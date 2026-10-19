@@ -1,3 +1,4 @@
+import { PeliRunProfile } from "./components/PeliRunProfile";
 import {OPEN_FRAME_GENERATION_PREFERENCES} from "./services/frameGenerationNavigation";
 import {experimentalFrameGeneration} from "./services/releaseFeatures";
 import { sameGameInstallation } from "./services/integrationGameIdentity";
@@ -167,7 +168,8 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   // Optional parts of the next install or repair, on every route.
   const [neuralModel, setNeuralModel] = useState<"small" | "original">("small");
   const [neuralModelsError, setNeuralModelsError] = useState(false);
-  const [neuralModels, setNeuralModels] = useState<{small:boolean; original:boolean; selectable:boolean; unified_networks:boolean} | null>(null);
+  const [neuralModels, setNeuralModels] = useState<{small:boolean; original:boolean; selectable:boolean; unified_networks:boolean; lumenite:boolean; lumenite_selected:boolean} | null>(null);
+  const [lumeniteChoices, setLumeniteChoices] = useState<Record<string, boolean>>({});
   const [renodxStyle, setRenodxStyle] = useState(false), [int4Mixed, setInt4Mixed] = useState(false);
   const [bitness, setBitness] = useState<"32" | "64">("64");
   const [gpuArch, setGpuArch] = useState<"rdna4" | "rdna3">("rdna4");
@@ -366,6 +368,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
         model: neuralModel,
         int4: int4Mixed,
         renodx: renodxStyle,
+        lumenite: route !== "optiscaler" && Boolean(neuralModels?.lumenite) && (lumeniteChoices[gameDir] ?? neuralModels?.lumenite_selected ?? false),
       });
       setLogs((prev) => prev + "\n" + localizeInstallationMessage(response, language));
 
@@ -497,8 +500,8 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       const current = ++revision;
       setNeuralModelsError(false);
       try {
-        const status = await invoke<{small:boolean; original:boolean; selectable:boolean; unified_networks:boolean}>("get_neural_model_status", {
-          gpuArch, bitness, binPath: appConfig.dll_version.endsWith(".bin") ? appConfig.dll_version : null,
+        const status = await invoke<{small:boolean; original:boolean; selectable:boolean; unified_networks:boolean; lumenite:boolean; lumenite_selected:boolean}>("get_neural_model_status", {
+          gpuArch, bitness, gameDir, binPath: appConfig.dll_version.endsWith(".bin") ? appConfig.dll_version : null,
         });
         if (!active || revision !== current) return;
         setNeuralModels(status);
@@ -524,7 +527,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     };
     // A new extraction can keep exactly the same dll_version pathname. Recheck
     // the saved configuration object and dialog lifecycle, not just that string.
-  }, [gamePanelMode, unifiedTab, selectedGame?.path, appConfig, gpuArch, bitness, loading, showSetupWizard, showSettingsModal]);
+  }, [gamePanelMode, unifiedTab, selectedGame?.path, gameDir, appConfig, gpuArch, bitness, loading, showSetupWizard, showSettingsModal]);
   const [executableAlternatives, setExecutableAlternatives] = useState<GameInfo[]>([]);
   useEffect(() => {
     let active = true;
@@ -1264,6 +1267,8 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     startup={neuralStartup.enabled} startupDisabled={loading || neuralStartup.initializing || installStatus === "Verificando..."}
     onStartup={() => neuralStartup.change(!neuralStartup.enabled)} renodx={renodxStyle} onRenodx={() => setRenodxStyle(value => !value)}
     unifiedNetworks={Boolean(neuralModels?.unified_networks)}
+    lumeniteAvailable={Boolean(neuralModels?.lumenite)} lumenite={lumeniteChoices[gameDir] ?? neuralModels?.lumenite_selected ?? false}
+    onLumenite={value => setLumeniteChoices(previous => ({...previous, [gameDir]: value}))}
     model={neuralModel} installed={isInstalledMod(installStatus)} modelAvailable={Boolean(neuralModels?.small && neuralModels.original && neuralModels.selectable)}
     modelStatus={neuralModelsError ? "error" : !neuralModels ? "checking" : !neuralModels.selectable ? "backend" : !neuralModels.small ? "missing" : "ready"}
     onModel={value => {
@@ -1301,9 +1306,9 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       { id: "nexus", label: t("modern", "mods"), count:installedModCount, content: selectedGame && <NexusGameTab key={detailsResetKey} game={selectedGame} workspace={nexus}>{cloneElement(nexusPanels,{section:"mods"})}</NexusGameTab> },
       ...(nexusToolState.available ? [{ id:"tools",label:language === "pt" ? "Ferramentas" : "Tools",content:cloneElement(nexusPanels,{section:"tools"}) }] : []),
       { id: "dlss", label: t("modern", "dlssConfig"), content: selectedGame?.native_linux ? <div className="modern-tile"><h3>DLSSNR-AMD</h3><p>{language === "pt" ? "Esta instalação é nativa do Linux. O instalador de DLLs do DLSSNR-AMD é destinado a jogos Windows executados com Proton." : "This is a native Linux installation. The DLSSNR-AMD DLL installer targets Windows games running through Proton."}</p></div> : !hasDlssnrConfiguration(appConfig) ? <div className="modern-tile"><h3>DLSSNR-AMD</h3><p>{language === "pt" ? "Configure o backend e o modelo antes de instalar o DLSSNR-AMD neste jogo." : "Configure the backend and model before installing DLSSNR-AMD in this game."}</p><button className="modern-mini-btn" onClick={()=>setShowSetupWizard(true)}>{language === "pt" ? "Configuração inicial" : "Initial setup"}</button></div> : modPathsError ? <div className="modern-tile" role="alert">{modPathsError}</div> : modPaths?.key !== modPathKey ? <p role="status">{language === "pt" ? "Localizando o executável e o destino do DLSSNR-AMD…" : "Locating the executable and DLSSNR-AMD destination…"}</p> : !modPaths.dlss_destination ? <div className="modern-tile"><p>{language === "pt" ? "Não foi possível localizar o executável desta instalação. Escolha a pasta do executável para configurar o DLSSNR-AMD." : "Could not locate this installation’s executable. Choose its folder to configure DLSSNR-AMD."}</p><button className="modern-mini-btn" disabled={directoryPickerBusy} onClick={()=>void handleChooseCustomPath()}>{language === "pt" ? "Escolher destino" : "Choose destination"}</button></div> : <><div className="modern-overview-paths">{pathTile(language === "pt" ? "Destino do DLSSNR-AMD · pasta do executável" : "DLSSNR-AMD destination · executable folder",modPaths.dlss_destination,<button className="modern-mini-btn" disabled={directoryPickerBusy || loading} onClick={()=>void handleChooseCustomPath()}>{language === "pt" ? "Alterar destino" : "Change destination"}</button>)}</div>{dlssInstallPanel}</> },
-      { id: "frame-generation", disabled: !experimentalFrameGeneration, disabledHint: language === "pt" ? "Em desenvolvimento. Indisponível nesta versão." : "Under development. Unavailable in this release.", label: language === "pt" ? "Geração de quadros" : "Frame generation", content:experimentalFrameGeneration && selectedGame && <FrameGenerationPanel key={detailsResetKey} game={!supportsExecutionSettings && nexusGame ? {...selectedGame,advanced:nexusGame.advanced} : selectedGame} onPersist={!supportsExecutionSettings && nexusGame ? async settings=>{if(!await nexus.configureAdvanced(nexusGame.id,settings))throw new Error("Não foi possível salvar o perfil de execução.");} : undefined} disabled={gameExecution.active || Boolean(gameExecution.pendingPath) || Boolean(nexusGame?.running) || Boolean(nexus.launching) || nexus.busy || nexus.settingsBusy} onSaved={game=>{setSelectedGame(game);if(supportsExecutionSettings && nexusGame)void nexus.configureAdvanced(nexusGame.id,game.advanced!);}} /> },
+      { id: "frame-generation", disabled: !experimentalFrameGeneration, disabledHint: language === "pt" ? "Em desenvolvimento. Indisponível nesta versão." : "Under development. Unavailable in this release.", label: language === "pt" ? "Geração de quadros" : "Frame generation", content:experimentalFrameGeneration && selectedGame && <FrameGenerationPanel key={detailsResetKey} game={!supportsExecutionSettings && nexusGame ? {...selectedGame,advanced:nexusGame.advanced} : selectedGame} onPersist={!supportsExecutionSettings && nexusGame ? async settings=>{if(!await nexus.configureAdvanced(nexusGame.id,settings))throw new Error("Não foi possível salvar o perfil de execução.");} : undefined} running={gameExecution.active || Boolean(nexusGame?.running)} disabled={Boolean(gameExecution.pendingPath) || Boolean(nexus.launching) || nexus.busy || nexus.settingsBusy} onSaved={game=>{setSelectedGame(game);if(supportsExecutionSettings && nexusGame)void nexus.configureAdvanced(nexusGame.id,game.advanced!);}} /> },
       { id: "performance", label: t("modern", "performance"), content: executionPanel("performance") },
-      { id: "options", label: t("modern", "options"), content: executionPanel("options") },
+      { id: "options", label: t("modern", "options"), content: <>{executionPanel("options")}{selectedGame && <PeliRunProfile key={detailsResetKey} game={!supportsExecutionSettings && nexusGame ? {...selectedGame,advanced:nexusGame.advanced} : selectedGame} disabled={loading || gameInstaller.busy || libraryMutationBusy || nexus.busy || nexus.settingsBusy} />}</> },
       { id: "advanced", label: language === "pt" ? "Avançado" : "Advanced", content: executionPanel("advanced") },
     ];
   const gameGrid = <GameGrid key="unified-library" supplementalGames={(nexus.loaded ? nexus.workspace.games : cachedNexus.games).map(item=>({...item.game,nexus_id:item.id,nexus_platform:item.platform}))} onCoverAction={coverAction} coverHoldBlocked={gameInstaller.busy || libraryMutationBusy || nexus.busy || Boolean(gameExecution.pendingPath)} coverActionsBlocked={gameInstaller.busy || libraryMutationBusy || nexus.busy || gameExecution.active || Boolean(gameExecution.pendingPath)} homeRevision={homeRevision} onSelectGame={handleSelectGame} startingGamePath={gameExecution.pendingPath || (gameExecution.session?.state === "starting" ? gameExecution.session.path : undefined)} runningGamePath={gameExecution.session?.state === "running" ? gameExecution.session.path : undefined} selectedGameKey={selectedGame ? gameViewKey(selectedGame) : undefined} mode={gamePanelMode === "mods" || gamePanelMode === "nexus" ? "installed" : gamePanelMode} libraryScope="own" modeDisabled={gameInstaller.busy || libraryMutationBusy || nexus.busy} onModeChange={changeGamePanelMode} onCountChange={setLibraryCount} />;

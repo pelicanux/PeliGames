@@ -116,6 +116,7 @@ fn load(dir: &Path) -> Result<Option<Journal>, String> {
         &base(dirs::cache_dir())?,
     );
     allowed.extend(super::super::steam_runtime::profile_directories()?);
+    allowed.push(super::super::launch_profiles::profiles_directory()?);
     for entry in &journal.entries {
         if !allowed.contains(&entry.original)
             || entry.backup != sibling(&entry.original, &journal.id, "reset")
@@ -488,7 +489,7 @@ pub fn restart(
     // The stable executable is retained. Only its mutable profiles enter the
     // same rename/recovery journal as preferences, so reset cannot leave stale
     // launch adjustments or break a Steam line pointing at the helper.
-    for profiles in super::super::steam_runtime::profile_directories()? {
+    for profiles in super::super::steam_runtime::profile_directories()?.into_iter().chain(std::iter::once(super::super::launch_profiles::profiles_directory()?)) {
         if exists(&profiles) {
             validate_ancestors(&profiles)?;
             let path = profiles.to_string_lossy().into_owned();

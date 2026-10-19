@@ -1,8 +1,9 @@
 <p align="center">
 
-> **Publicação 0.4.4:** geração de quadros MAKO, overlay PeliGames e seu atalho estão em desenvolvimento e indisponíveis nesta versão. A aba permanece visível e desabilitada. DLSSNR-AMD e monitoramento continuam disponíveis.
   <img src="public/images/readme-header.svg" alt="PeliGames" width="900" />
 </p>
+
+> **0.4.5 experimental:** geração de quadros MAKO e o novo overlay PeliGames estão disponíveis para testes, com ativação por jogo. O overlay ainda pode apresentar falhas de captura do mouse, foco, atalhos ou compatibilidade com determinados jogos/Protons. Consulte o [guia de uso e limitações](docs/overlay.md).
 
 <p align="center"><strong>Português</strong> · <a href="README.en.md">English</a></p>
 
@@ -60,17 +61,23 @@ Em **Configurações → Ferramentas**, crie um backup ZIP dos jogos com mods Ne
 
 Nexus Mods, DLSSNR e geração de quadros ficam nas abas dos **detalhes de cada jogo**, acessíveis pela biblioteca principal. A Visão geral distingue a raiz da instalação, o prefixo e o destino específico do DLSSNR. Escolher o destino do mod não altera a pasta usada para identificar o jogo. Pastas manuais continuam permitindo adicionar uma coleção com várias subpastas de jogos.
 
-Na aba **Geração de quadros**, configure o **MAKO Renderer 4.5.0** (multiplicador fixo ou adaptativo), versão estável verificada em 18/10/2026. O botão de instalação baixa o pacote oficial, valida a estrutura e confere o SHA-256 quando há um checksum de referência; a ativação e as configurações são específicas de cada instalação e valem na próxima execução. Componentes e perfis ficam em `~/.config/PeliGames/FrameGeneration`, sem arquivos novos nas pastas dos jogos ou ativação Vulkan global. A busca de lançamentos estáveis usa cache de seis horas e também pode ser solicitada na interface. Atualizações preservam os runtimes anteriores: em **Versões e backups**, selecione a versão para este jogo e salve. A lixeira só remove backups sem vínculo com perfis. Versões maiores que precisem de adaptação da integração não são instaladas automaticamente.
+Na aba **Geração de quadros**, configure o **MAKO Renderer 4.5.0** (multiplicador fixo ou adaptativo), versão estável verificada em 18/10/2026. O botão de instalação baixa o pacote oficial, valida a estrutura e confere o SHA-256 quando há um checksum de referência; a ativação e as configurações são específicas de cada instalação e valem na próxima execução. Componentes e perfis ficam em `~/.config/PeliGames/FrameGeneration`, sem arquivos novos nas pastas dos jogos ou ativação Vulkan global. A busca de lançamentos estáveis usa cache de seis horas e também pode ser solicitada na interface. Atualizações preservam os runtimes anteriores: em **Versões e backups**, selecione a versão para este jogo; as alterações são salvas automaticamente. A lixeira só remove backups sem vínculo com perfis. Versões maiores que precisem de adaptação da integração não são instaladas automaticamente.
+
+O overlay é opcional, começa oculto e usa **F8** (configurável) para abrir e fechar dentro do jogo. Ele não registra atalho global no desktop e Esc continua reservado ao jogo. Multiplicador, modo adaptativo, FPS alvo, escala de movimento e modelo leve podem ser ajustados pelo launcher durante a partida, com salvamento automático; a ativação e o carregamento do overlay exigem reabrir o jogo. Os detalhes e limites estão no [guia do overlay](docs/overlay.md).
 
 A geração exige uma instalação própria do **Lossless Scaling**: O MAKO utiliza a ramificação pública padrão e `Lossless.dll`. O PeliGames procura essas DLLs nas bibliotecas Steam e permite selecioná-las manualmente. Não fornece essas DLLs.
 
 Use um único gerador de quadros. Desative o FG interno do jogo e do OptiScaler; o launcher bloqueia combinações conhecidas com MLFG, camadas de baixa latência DX12/Vulkan e captura Vulkan OBS. OptiScaler para upscaling e DLSSNR não são automaticamente considerados incompatíveis; o resultado depende do jogo. Configuração explícita de FG ativado no `OptiScaler.ini` impede ativar outro gerador. Requer Vulkan, diretamente ou via DXVK/VKD3D. A integração inicial é para jogos no host; launchers Flatpak informam a necessidade da extensão de runtime correspondente. MangoHUD pode contar somente os quadros reais.
 
-A primeira ativação mostra a linha necessária nas opções de inicialização da Steam. É possível colar e verificar com a Steam aberta, ou pedir aplicação automática com reinício da Steam; ajustes do perfil não repetem essa etapa. Flatpak exige extensão e acesso aos perfis/DLL: use **Preparar / verificar Flatpak**, que mostra a ABI e os comandos específicos antes de liberar a ativação. O multiplicador vai de **2× a 5×** e o FPS alvo adaptativo de **10 a 1000**. Veja [a revisão da integração](docs/mako-integration.md) para requisitos e limites de cada launcher.
+A primeira ativação mostra a linha necessária nas opções de inicialização da Steam. É possível colar e verificar com a Steam aberta, ou pedir aplicação automática com reinício da Steam; ajustes do perfil não repetem essa etapa. Flatpak exige extensão e acesso aos perfis/DLL: use **Preparar / verificar Flatpak**, que mostra a ABI e os comandos específicos antes de liberar a ativação. O multiplicador vai de **2× a 5×** e o FPS alvo adaptativo de **10 a 1000**. Veja o [guia de uso e compatibilidade](docs/overlay.md) para requisitos e limites de cada launcher.
+
+O auxiliar Rust **PeliRun** exporta perfis com identificadores curtos (`pg-xxxxxxxx`) para Steam, Heroic, Lutris e outros launchers com suporte a wrapper/prefixo de comando. A interface fornece o executável e os argumentos adequados a cada formato; um perfil identifica a instalação, sem depender apenas do AppID da Steam.
 
 Na Steam, uma linha fixa chama o auxiliar Rust `pelirun`, que lê o perfil atualizado do jogo. Depois de vincular essa linha uma vez, mudar MangoHUD, geração de quadros, variáveis ou argumentos não exige reiniciar a Steam: as opções de inicialização valem ao reabrir o jogo. Ajustes com recarga durante a partida dependem de cada ferramenta. A escolha do Proton continua em **Compatibilidade**, na Steam. Veja [o funcionamento e os limites do auxiliar](docs/steam-launch-runtime.md).
 
 Referências: [MAKO Renderer](https://github.com/eugeniosegala/MAKO/blob/main/engine/README.md), [compatibilidade do MAKO](https://github.com/eugeniosegala/MAKO/blob/main/engine/docs/LAYER-CHAINING.md).
+
+Nas rotas ReShade, Vulkan e DX9, o backend compatível também oferece **Vetores de movimento: VORT / LumeniteFX**. VORT já acompanha o backend. Selecionar LumeniteFX e clicar em Instalar/Reparar baixa os arquivos do projeto oficial; a escolha pode ser alternada em ReShade → Add-ons após a instalação.
 
 ## DLSS 5 Neural Rendering em placas AMD (DLSSNR)
 

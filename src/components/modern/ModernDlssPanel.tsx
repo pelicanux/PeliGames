@@ -22,6 +22,9 @@ interface Props {
   model: "small" | "original";
   modelAvailable: boolean;
   unifiedNetworks: boolean;
+  lumeniteAvailable: boolean;
+  lumenite: boolean;
+  onLumenite: (enabled: boolean) => void;
   installed?: boolean;
   modelStatus: "checking" | "error" | "backend" | "missing" | "ready";
   onModel: (model: "small" | "original") => void;
@@ -87,6 +90,16 @@ export function ModernDlssPanel(props: Props) {
     <section className="modern-dlss-card" aria-label={pt ? "Opções do DLSSNR-AMD" : "DLSSNR-AMD options"}>
       <h3>{pt ? "Opções" : "Options"}</h3>
       <p className="modern-dlss-description">{pt ? "As escolhas abaixo valem na próxima instalação ou reparo." : "The choices below apply when installing or repairing."}</p>
+      {props.route !== "optiscaler" && props.route !== "remove" && props.lumeniteAvailable && <div className="modern-dlss-setting">
+        <span>{pt ? "Vetores de movimento" : "Motion vectors"}</span>
+        <div className="modern-dlss-choice"><div className="modern-dlss-segments" role="group" aria-label={pt ? "Fonte dos vetores de movimento" : "Motion vector source"}>
+          {[false, true].map(enabled => <HoverTooltip key={String(enabled)} tooltipClassName="modern-dlss-tooltip" text={enabled
+            ? (pt ? "Ao instalar ou reparar, o backend baixa e instala LumeniteFX do projeto oficial. Depois, alterne pelo menu Add-ons do ReShade. Se incompatível, o backend usa VORT." : "When installing or repairing, the backend downloads and installs LumeniteFX from its official project. Then switch in ReShade's Add-ons menu. If incompatible, the backend falls back to VORT.")
+            : (pt ? "Opção padrão, já incluída no backend. Aplicada ao instalar ou reparar." : "Default option, already bundled with the backend. Applied when installing or repairing.")}>
+            <button type="button" aria-pressed={props.lumenite === enabled} disabled={props.busy} onClick={() => props.onLumenite(enabled)}>{enabled ? "LumeniteFX" : "VORT"}</button>
+          </HoverTooltip>)}
+        </div><small className="modern-dlss-recommendation">{props.lumenite ? (pt ? "Download adicional ao instalar / reparar." : "Additional download when installing / repairing.") : (pt ? "Incluído no backend." : "Bundled with the backend.")}</small></div>
+      </div>}
       {option(pt ? "Começar ligado" : "Start enabled", pt ? "A caixa do NR já vem marcada ao abrir o jogo." : "The NR checkbox starts checked when launching the game.", props.startup, props.onStartup, props.startupDisabled)}
       {option(t("routeSelector", "renodx"), t("routeSelector", "renodxHint"), props.renodx, props.onRenodx, props.busy, pt ? "Estilo de imagem do add-on DLSS 5." : "Image style from the DLSS 5 add-on.")}
       {!props.unifiedNetworks && option(t("routeSelector", "int4"), t("routeSelector", "int4Hint"), props.int4, props.onInt4, props.busy || props.model === "small", pt ? "Disponível apenas com o modelo antigo (310.8.0)." : "Available only with the old model (310.8.0).")}

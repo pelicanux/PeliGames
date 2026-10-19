@@ -33,3 +33,19 @@ Troca de redes com preparação em segundo plano; gerenciamento de memória comp
 - TypeScript verificado com `tsc --noEmit`.
 - Após autorização, binário e AppImage foram compilados no Ubuntu 24.04 com 12 tarefas. Os 14 testes desta integração e os 56 do overlay passaram novamente; o probe release validou 28 símbolos. Os payloads incorporados e a interface dos dois executáveis foram conferidos. Hashes e fontes estão em `Release/build-validation.json`. Temporários em RAM removidos.
 - A instalação local do backend e os arquivos dos jogos não foram alterados. Falta o teste gráfico do DLSSNR; atualize o backend para 0.0.7 pela interface e repare a instalação desejada para testar.
+
+## Rechecagem do release e da interface — 19/10/2026
+
+A API oficial `/releases/latest` ainda retorna `v0.0.7`, publicado às 08:38:47 e com notas atualizadas às 14:25:22 (America/Fortaleza). Foram relidas as notas atuais e o `linux/package/install.sh` do tag, além de `InstallExtras`, `extra_arguments`, `get_neural_model_status` e `ModernDlssPanel` locais. Esta rechecagem não instalou dependências, não alterou jogos e não gerou pacotes.
+
+- A escolha de rede inicial Novo / Antigo / int4 e seu mapeamento para `--model` já existem no launcher. RenoDX e Começar ligado também estão expostos.
+- A opção de instalação ausente é `--lumenite` / `--no-lumenite`. A CLI também aceita um ZIP local após `--lumenite`. O instalador recusa essa opção na rota OptiScaler; aplica-se às três rotas ReShade. Sem a opção, o instalador não interativo usa VORT. Não há campo LumeniteFX em `InstallExtras` nem controle correspondente na interface.
+- Para expor esse recurso, a proposta é um seletor compacto **Vetores de movimento: VORT / LumeniteFX**, visível nas rotas ReShade/Vulkan/DX9 e condicionado à capacidade do script instalado. Instalar/Reparar com LumeniteFX faria o download separado da revisão fixada pelo backend e instalaria seus arquivos. Alterar apenas o INI não substitui essa preparação. Após isso, o menu Add-ons permite alternar; o backend volta a VORT quando LumeniteFX não pode ser usado. A interface ainda não foi alterada nesta rechecagem.
+- Residency, OSD, Engine data, Style Grade, Motion Without Depth, Resize History e ajustes de log/atalhos não criam requisitos novos de instalação: são oferecidos/configurados pelo backend. Não é obrigatório duplicar esses controles no launcher.
+- As alterações ACO Mode descritas sob **Windows** não justificam uma nova chave no launcher Linux.
+
+## Integração LumeniteFX no launcher — 19/10/2026
+
+Implementado o seletor VORT / LumeniteFX no painel de opções por jogo, somente nas rotas ReShade/Vulkan/DX9 e quando o script oferece as duas flags. A escolha segue pelo payload TypeScript e `InstallExtras` até `--lumenite` / `--no-lumenite`; solicitações incompatíveis também são recusadas no Rust. Backends antigos preservam seu fluxo. VORT é o padrão em instalações novas; ao abrir uma instalação existente, a seleção é lida de `[DlssNr] MotionVectors` no INI do destino, com leitura limitada a 1 MiB. A seleção feita na interface permanece separada por diretório enquanto o launcher está aberto. Instalar/Reparar aplica a escolha; não há download ao apenas selecionar a pílula.
+
+Passaram 14 testes de contratos Rust, incluindo o parser Bash real do release com LumeniteFX ligado/desligado nas três rotas (sem instalar nem baixar); um teste do leitor de INI; dois testes de renderização do seletor e três regressões de opções de inicialização. `tsc --noEmit` e `cargo check --lib --tests` passaram. O controle visual do navegador não respondeu nesta rodada, portanto não foi realizada inspeção por captura de tela. Nenhum backend/jogo real foi alterado e nenhum pacote foi gerado.
