@@ -135,8 +135,9 @@ pub(super) fn load() -> Result<Workspace, String> {
                 for game in &mut data.games {
                     let storage = super::nexus_profile::directory(game)?;
                     let legacy = root()?.join("games").join(&game.id);
+                    let named_legacy = super::nexus_storage::legacy_directory(game)?;
                     for item in &mut game.mods {
-                        if let Ok(relative) = Path::new(&item.archive).strip_prefix(&legacy) {
+                        if let Ok(relative) = Path::new(&item.archive).strip_prefix(&legacy).or_else(|_| Path::new(&item.archive).strip_prefix(&named_legacy)) {
                             let archive = storage.join(relative).to_string_lossy().to_string();
                             paths_changed |= item.archive != archive;
                             item.archive = archive;
@@ -168,9 +169,14 @@ pub(super) fn load() -> Result<Workspace, String> {
                     paths_changed |= dependency_order(game);
                 }
                 if paths_changed { save(&data)?; }
+                super::nexus_durable::recover(&mut data)?;
                 Ok(data)
             }),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(Workspace::default()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            let mut data=Workspace::default();
+            super::nexus_durable::recover(&mut data)?;
+            Ok(data)
+        },
         Err(e) => Err(e.to_string()),
     }
 }
@@ -182,10 +188,12 @@ pub(super) fn save(data: &Workspace) -> Result<(), String> {
     let temporary = directory.join(format!("library-{}.tmp", uuid::Uuid::new_v4()));
     let bytes = serde_json::to_vec_pretty(data).map_err(|e| e.to_string())?;
     fs::write(&temporary, bytes).map_err(|e| e.to_string())?;
+    let metadata=super::nexus_durable::stage_metadata(data)?;
     if let Err(error) = fs::rename(&temporary, directory.join("library.json")) {
         let _ = fs::remove_file(&temporary);
         return Err(error.to_string());
     }
+    metadata.commit();
     super::mod_backup::schedule(data);
     Ok(())
 }
@@ -240,7 +248,7 @@ pub async fn scan_nexus_library(app: tauri::AppHandle) -> Result<Workspace, Stri
             // Deduplicate installations, preserving IDs, profiles, manually selected settings and mods.
             if data.games.iter().any(|existing| existing.game["directory"].as_str()
                 .is_some_and(|root| fs::canonicalize(root).ok().as_ref() == Some(&directory))) { continue; }
-            if super::mod_backup::recover(&directory, &mut data)? { continue; }
+            if super::nexus_durable::recover_game(&directory, &mut data)? || super::mod_backup::recover(&directory, &mut data)? { continue; }
             game["directory"] = directory.to_string_lossy().to_string().into();
             game["library_view"] = "nexus".into();
             // Lutris names come from the config file slug; the module knows the real title.
@@ -349,6 +357,7 @@ pub struct DiscoveryReport {
     isolated_profile: bool,
     frameworks: Vec<super::nexus_deployment::FrameworkStatus>,
     module_version: Option<String>,
+    vortex_supported: bool,
     notes: Vec<String>,
 }
 #[tauri::command]
@@ -363,6 +372,7 @@ pub async fn inspect_nexus_game(source: String) -> Result<DiscoveryReport, Strin
             required_files: found.as_ref().map(|definition| definition.required.clone()).unwrap_or_default(),
             mod_destinations: found.as_ref().filter(|definition| definition.engine == super::nexus_modules::Engine::Deployment).map(|definition| definition.destinations.iter().map(|relative| root.join(relative).to_string_lossy().into()).collect()).unwrap_or_default(),
             frameworks: found.as_ref().map(|definition| super::nexus_deployment::framework_status(definition, &root)).unwrap_or_default(),
+            vortex_supported: found.as_ref().is_some_and(|m|m.vortex_supported),
             module_version: found.as_ref().map(|definition| definition.version.clone()),
             notes: found.as_ref().map(|definition| definition.notes.clone()).unwrap_or_default(),
             isolated_profile: found.is_some_and(|definition| definition.engine == super::nexus_modules::Engine::ValheimProfile),
@@ -413,9 +423,12 @@ fn add_nexus_game_inner(mut game: serde_json::Value, platform: String) -> Result
             fs::canonicalize(existing).ok().as_ref() == Some(&directory)
         })
     }) {
-        return Err("Este jogo já está na biblioteca Nexus.".into());
+        // Opening a unified game tab may race discovery or use a legacy store
+        // identity. Reuse the registration and its mods/profile, never create
+        // another entry or treat an already managed installation as a failure.
+        return Ok(data);
     }
-    if super::mod_backup::recover(&directory, &mut data)? { save(&data)?; return Ok(data); }
+    if super::nexus_durable::recover_game(&directory, &mut data)? || super::mod_backup::recover(&directory, &mut data)? { save(&data)?; return Ok(data); }
     let mut compat_data = String::new();
     let mut proton = String::new();
     if platform == "proton" {
@@ -1391,6 +1404,7 @@ mod prune_tests {
 }
 
 pub(super) fn save_advanced(game_id: &str, settings: crate::core::advanced_settings::AdvancedSettings) -> Result<Workspace,String> {
+    settings.validate()?;
     let _lock = STORAGE.lock().map_err(|e|e.to_string())?;
     let mut data = load()?;
     let game = data.games.iter_mut().find(|g|g.id==game_id).ok_or("Jogo não encontrado.")?;

@@ -1,13 +1,18 @@
 import { ModalSurface } from "./ModalSurface";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { openDirectoryPicker } from "../services/tauriService";
 import { useI18n } from "../i18n/I18nContext";
 import { ConfirmModal } from "./ConfirmModal";
+import { HoverTooltip } from "./HoverTooltip";
+import { MenuIcon } from "./MenuIcon";
+import { notifyError, notifyInfo } from "../services/notifications";
 
 interface Props {
   gpuArch: "rdna3" | "rdna4";
+  compact?: boolean;
+  disabled?: boolean;
   onClose: () => void;
   isEmbedded?: boolean;
   onBack?: () => void;
@@ -26,7 +31,7 @@ interface BackendVersionStatus {
   needs_update: boolean;
 }
 
-export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbedded, onBack, onBusyChange }) => {
+export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbedded, onBack, onBusyChange, compact = false, disabled = false }) => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState(false);
@@ -38,33 +43,53 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
   const [downloadComplete, setDownloadComplete] = useState(false);
   const [openingFolder, setOpeningFolder] = useState(false);
   const [checkingVersion, setCheckingVersion] = useState(true);
+  const [manualChecking, setManualChecking] = useState(false);
+  const versionRequest = useRef(0);
   const [versionStatus, setVersionStatus] = useState<BackendVersionStatus | null>(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-  const { t } = useI18n();
-  useEffect(() => { onBusyChange?.(loading || isDownloading); }, [loading, isDownloading, onBusyChange]);
+  const { t, language } = useI18n();
+  const pt = language === "pt";
+  const downloadingRef = useRef(false);
+  downloadingRef.current = isDownloading;
+  const blocked = loading || disabled || checkingVersion;
+  useEffect(() => { onBusyChange?.(loading || isDownloading || manualChecking); return () => onBusyChange?.(false); }, [loading, isDownloading, manualChecking, onBusyChange]);
+
+  const checkVersion = useCallback(async (manual = false) => {
+    const request = ++versionRequest.current;
+    setCheckingVersion(true);
+    if (manual) { setManualChecking(true); setStatus(""); setError(false); }
+    try {
+      const result = await invoke<BackendVersionStatus>("check_backend_version", { gpuArch });
+      if (request !== versionRequest.current) return;
+      setVersionStatus(result);
+      setDownloadComplete(Boolean(result.current && !result.needs_update));
+      setError(false);
+      setStatus("");
+      window.dispatchEvent(new CustomEvent("backendVersionChecked", { detail: { target: gpuArch, status: result } }));
+      if (manual) {
+        const label = gpuArch === "rdna4" ? "DLSSNR-AMD" : "DLSSNR-RDNA3";
+        const message = result.current?.includes("local-copy")
+          ? (pt ? `Versão disponível: ${result.latest}. Os arquivos importados não têm uma versão comparável.` : `Available version: ${result.latest}. Imported files have no comparable version.`)
+          : result.needs_update
+            ? (pt ? `Versão ${result.latest} disponível. Clique em ${result.current ? "Atualizar" : "Baixar"} para instalar.` : `Version ${result.latest} available. Choose ${result.current ? "Update" : "Download"} to install.`)
+            : (pt ? "Seu backend já está atualizado." : "Your backend is up to date.");
+        notifyInfo(label, message);
+      }
+    } catch (err) {
+      if (request !== versionRequest.current) return;
+      setError(true);
+      setStatus(String(err));
+      if (manual) notifyError(gpuArch === "rdna4" ? "DLSSNR-AMD" : "DLSSNR-RDNA3", String(err));
+    } finally {
+      if (request === versionRequest.current) { setCheckingVersion(false); setManualChecking(false); }
+    }
+  }, [gpuArch, pt]);
 
   useEffect(() => {
-    const checkVersion = async () => {
-      setCheckingVersion(true);
-      setDownloadComplete(false);
-      try {
-        const status = await invoke<BackendVersionStatus>("check_backend_version", { gpuArch });
-        setVersionStatus(status);
-        window.dispatchEvent(new CustomEvent("backendVersionChecked", { detail: { target: gpuArch, status } }));
-        if (status.current && !status.needs_update) {
-          setDownloadComplete(true);
-        } else {
-          setDownloadComplete(false);
-        }
-      } catch (err) {
-        console.error("Failed to check version:", err);
-      } finally {
-        setCheckingVersion(false);
-      }
-    };
-    checkVersion();
+    void checkVersion();
 
     const unlisten = listen<ProgressPayload>("download-progress", (event) => {
+      if (!downloadingRef.current) return;
       const payload = event.payload;
       if (payload.total > 0) {
         const pct = (payload.downloaded / payload.total) * 100;
@@ -78,9 +103,10 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
     });
 
     return () => {
+      ++versionRequest.current;
       unlisten.then(f => f());
     };
-  }, [gpuArch]);
+  }, [gpuArch, checkVersion]);
 
   const formatSpeed = (speed: string) => {
     if (!speed) return "";
@@ -88,7 +114,7 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
   };
 
   const handleDownload = async () => {
-    if (isDownloading) return;
+    if (blocked) return;
     
     setLoading(true);
     setIsDownloading(true);
@@ -130,6 +156,7 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
   };
 
   const handleLocalFolder = async () => {
+    if (blocked) return;
     const path = await openDirectoryPicker(t("updater", "localFolderPrompt"));
     if (!path) return;
 
@@ -150,10 +177,11 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
   };
 
   const handleDelete = async () => {
-    setShowConfirmDelete(true);
+    if (!blocked) setShowConfirmDelete(true);
   };
 
   const confirmDelete = async () => {
+    if (blocked) return;
     setShowConfirmDelete(false);
     setLoading(true);
     setStatus(t("updater", "deleting"));
@@ -183,6 +211,16 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
     } finally { setOpeningFolder(false); }
   };
 
+
+  const compactContent = <div className="backend-inline-controls mod-workspace">
+    <div className="mod-component-state"><span className="mod-status-badge" data-ready={downloadComplete} role="status">{checkingVersion?t("updater", "checking"):downloadComplete?(pt?"Atualizado":"Up to date"):versionStatus?.current?(pt?"Atualização disponível":"Update available"):(pt?"Não instalado":"Not installed")}</span>{versionStatus?.current&&<span className="mod-version-label" title={versionStatus.current}>{versionStatus.current.includes("local-copy")?(pt?"Versão local não identificada":"Unidentified local version"):`${pt?"Versão instalada":"Installed version"}: ${versionStatus.current.replace(/-rdna[34]$/, "")}`}</span>}<button type="button" className="mod-action-quiet backend-check-update" disabled={blocked} onClick={()=>void checkVersion(true)}><MenuIcon name="repair"/>{checkingVersion?(pt?"Verificando…":"Checking…"):(pt?"Buscar atualização":"Check for updates")}</button></div>
+    <div className="mod-setting-row"><div className="mod-row-copy"><strong>{pt?"Arquivos do backend":"Backend files"}</strong><small>{downloadComplete?(pt?"Pronto para configurar nos seus jogos.":"Ready to configure in your games."):(pt?"Baixe os componentes do projeto, sem a DLL da NVIDIA.":"Download the project components, without the NVIDIA DLL.")}</small></div>{!downloadComplete&&<button type="button" className="mod-action-primary" disabled={blocked || checkingVersion} onClick={() => void handleDownload()}><MenuIcon name="download"/>{isDownloading?`${progressPct.toFixed(0)}%`:versionStatus?.current&&versionStatus.needs_update?t("updater", "update"):(pt?"Baixar":"Download")}</button>}{isDownloading&&<button type="button" className="mod-action-secondary" onClick={e=>void handleCancelDownload(e)}>{t("updater", "cancel")}</button>}</div>
+    {isDownloading&&<div className="mod-inline-progress" role="status"><span>{t("updater", "downloadingPct")} {progressPct.toFixed(0)}% {formatSpeed(speedStr)}</span><progress aria-label={t("updater", "downloadingPct")} max={100} value={progressPct}/></div>}
+    <div className="mod-setting-row"><div className="mod-row-copy"><strong>{pt?"Já tem os arquivos?":"Already have the files?"}</strong><small>{pt?"Importe uma pasta com os pacotes do backend.":"Import a folder with the backend packages."}</small></div><HoverTooltip text={t("updater", "localFolderHint")} align="right"><button type="button" className="mod-action-secondary" disabled={blocked} aria-label={t("updater", "localFolder")} onClick={()=>void handleLocalFolder()}><MenuIcon name="folderSearch"/>{pt?"Importar":"Import"}</button></HoverTooltip></div>
+    <div className="mod-setting-row"><div className="mod-row-copy"><strong>{pt?"Pasta do componente":"Component folder"}</strong><small>{pt?"Veja os arquivos usados pelo launcher.":"View the files used by the launcher."}</small></div><button type="button" className="mod-action-secondary" disabled={blocked||openingFolder} onClick={()=>void handleOpenFolder()}><MenuIcon name="folder"/>{pt?"Abrir":"Open"}</button></div>
+    <div className="mod-setting-row mod-destructive-row"><div className="mod-row-copy"><strong>{pt?"Remover arquivos locais":"Remove local files"}</strong><small>{pt?"Será preciso baixar ou importar novamente.":"You will need to download or import them again."}</small></div><button type="button" className="mod-action-quiet danger" disabled={blocked} onClick={()=>void handleDelete()}><MenuIcon name="trash"/>{pt?"Remover":"Remove"}</button></div>
+    {status&&<p className={error?"backend-inline-status mod-feedback-error":"backend-inline-status"} role={error?"alert":"status"}>{status}</p>}
+  </div>;
 
   const innerContent = (
     <ModalSurface header={<h3 className="modal-title" style={{ marginTop: isEmbedded ? 0 : undefined }}>{t("updater", "title")}</h3>} onDismiss={onClose} closeDisabled={isDownloading} className={isEmbedded ? "" : "modal-content"} style={{ maxWidth: "480px", margin: "0 auto", animation: isEmbedded ? "fade-in 0.3s ease" : undefined }}>
@@ -271,14 +309,14 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
             )}
           </button>
 
-          <button 
+          <HoverTooltip text={t("updater", "localFolderHint")} align="left"><button
             onClick={handleLocalFolder} 
             disabled={loading}
             style={{ padding: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
             {t("updater", "localFolder")}
-          </button>
+          </button></HoverTooltip>
 
           <button 
             onClick={handleOpenFolder} 
@@ -337,7 +375,7 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
           onConfirm={confirmDelete}
         />
       )}
-      {isEmbedded ? innerContent : (
+      {compact ? compactContent : isEmbedded ? innerContent : (
         <div className="modal-overlay">
           {innerContent}
         </div>

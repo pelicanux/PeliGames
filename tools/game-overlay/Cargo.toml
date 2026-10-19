@@ -1,0 +1,30 @@
+[package]
+name = "peligames-game-overlay"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-only"
+publish = false
+
+[lib]
+name = "peligames_game_overlay"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "peligames-overlay-run"
+path = "src/runner.rs"
+
+[dependencies]
+ash = { version = "=0.38.0", default-features = false, features = ["std", "debug"] }
+egui = "=0.31.1"
+egui-ash-renderer = { version = "=0.8.0", default-features = false }
+libc = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+[profile.release]
+panic = "abort"
+lto = "thin"
+
+# Separate target for the bundled, per-game opt-in layer.
+[workspace]

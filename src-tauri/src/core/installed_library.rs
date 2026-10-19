@@ -128,6 +128,47 @@ fn destinations(index: &Path) -> Result<BTreeSet<String>, String> {
         Err(error) => Err(error.to_string()),
     }
 }
+/// Read-only reset inventory. Keep unavailable destinations in the index so a
+/// disconnected disk can be recognized when it returns to its original path.
+#[derive(Serialize)]
+pub struct ResetGame {
+    pub name: String,
+    pub directory: String,
+    pub available: bool,
+}
+pub fn reset_inventory(targets: &[String]) -> Result<Vec<ResetGame>, String> {
+    reset_inventory_at(&library_file()?, targets)
+}
+fn reset_inventory_at(index: &Path, targets: &[String]) -> Result<Vec<ResetGame>, String> {
+    let mut games = Vec::new();
+    for directory in destinations(index)? {
+        let root = Path::new(&directory).canonicalize().unwrap_or_else(|_|PathBuf::from(&directory));
+        if targets.iter().any(|target| root.starts_with(target)) {
+            return Err(format!("A instalação {directory} está dentro das pastas de redefinição. Mova-a para uma pasta externa antes de preservar os jogos."));
+        }
+        let manifest = Path::new(&directory).join("installation.json");
+        let record = match fs::read(&manifest) {
+            Ok(bytes) => Some(serde_json::from_slice::<InstallationRecord>(&bytes)
+                .map_err(|_|format!("Registro de instalação inválido em {directory}."))?),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+            Err(e) => return Err(format!("Não foi possível verificar {directory}: {e}")),
+        };
+        if let Some(record) = &record {
+            for path in std::iter::once(directory.as_str()).chain(std::iter::once(record.prefix.as_str()))
+                .chain(record.entries.iter().flat_map(|e| [e.executable.as_str(), e.prefix.as_str()])) {
+                let path = Path::new(path);
+                let resolved = path.canonicalize().unwrap_or_else(|_|path.to_path_buf());
+                if targets.iter().any(|target|resolved.starts_with(target)) {
+                    return Err(format!("{} usa arquivos dentro das pastas de redefinição. Mova a instalação para uma pasta externa antes de preservar os jogos.",record.name));
+                }
+            }
+        }
+        let available = record.as_ref().is_some_and(|r| Path::new(&r.prefix).is_dir() && r.entries.iter().any(|e|Path::new(&e.executable).is_file()));
+        let name = record.map(|r|r.name).unwrap_or_else(||Path::new(&directory).file_name().unwrap_or_default().to_string_lossy().into_owned());
+        games.push(ResetGame {name,directory,available});
+    }
+    Ok(games)
+}
 fn excluded_file(name: &str) -> bool {
     let name = name.to_ascii_lowercase();
     [
@@ -551,6 +592,11 @@ fn scan(record: &mut InstallationRecord) -> Result<(), String> {
         }
     }
     files.retain(|file| {
+        // An explicitly added card already represents this executable. Do not
+        // manufacture a discovered copy when rescanning its installation.
+        if added.iter().any(|entry| entry.shortcut.is_none() && entry.prefix == record.prefix && Path::new(&entry.executable) == file) {
+            return false;
+        }
         if record
             .overrides
             .iter()
@@ -965,6 +1011,13 @@ fn add_at(
             cover_url: entry.cover_url.clone(), entries: vec![], overrides: vec![], baseline: vec![], known_shortcuts: None, launcher_games: vec![], install_shortcuts: None, profile_kind: Default::default(),
         }
     };
+    // Repeated registration in the same prefix is idempotent. A different
+    // prefix remains a separate installation, even with the same executable.
+    if let Some(existing) = record.entries.iter().find(|existing|
+        Path::new(&existing.executable).canonicalize().ok().as_ref() == Some(&executable)
+        && Path::new(&existing.prefix).canonicalize().ok().as_ref() == Some(&prefix)) {
+        return Ok(existing.clone());
+    }
     record.entries.push(entry.clone());
     record.overrides.push(EntryOverride {
         cover_url: entry.cover_url.clone(),
@@ -976,6 +1029,25 @@ fn add_at(
     roots.insert(record.directory);
     write_json(index, &roots)?;
     Ok(entry)
+}
+/// Removes only the library registration. Game files, prefix, saves and profiles stay.
+pub fn remove_entry(path: &str) -> Result<(), String> { remove_entry_at(&library_file()?, path) }
+fn remove_entry_at(index: &Path, path: &str) -> Result<(), String> {
+    let _guard = LIBRARY_LOCK.lock().map_err(|e| e.to_string())?;
+    let _process_guard = process_lock(index)?;
+    for directory in destinations(index)? {
+        let manifest = Path::new(&directory).join("installation.json");
+        if !manifest.is_file() { continue; }
+        let mut record: InstallationRecord = serde_json::from_slice(&fs::read(&manifest).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+        if !record.entries.iter().any(|entry| entry.path == path) { continue; }
+        record.entries.retain(|entry| entry.path != path);
+        record.overrides.retain(|item| item.source != path);
+        if !path.starts_with("peligames:") {
+            record.overrides.push(EntryOverride { source: path.into(), name: String::new(), proton: record.proton.clone(), executable: String::new(), prefix: None, advanced: None, cover_url: None });
+        }
+        write_json(&manifest, &record)?;
+    }
+    Ok(())
 }
 /// The UI supplies only a registered entry identity, never a directory to erase.
 /// What an uninstall deletes besides the library entries and their shortcuts
@@ -1142,6 +1214,23 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
 mod tests {
     use super::*;
     #[test]
+    fn reset_inventory_keeps_offline_destinations_and_rejects_reset_targets() {
+        let root = std::env::temp_dir().join(format!("peligames-reset-games-{}",uuid::Uuid::new_v4()));
+        fs::create_dir(&root).unwrap();
+        let index = root.join("installed-destinations.json");
+        let missing = root.join("offline/Jogo");
+        write_json(&index, &BTreeSet::from([missing.to_string_lossy().into_owned()])).unwrap();
+        let games = reset_inventory_at(&index, &[]).unwrap();
+        assert_eq!(games.len(),1);
+        assert!(!games[0].available);
+        assert_eq!(games[0].name,"Jogo");
+        assert_eq!(destinations(&index).unwrap().len(),1);
+        assert!(list_at(&index,false).unwrap().is_empty());
+        assert_eq!(destinations(&index).unwrap().len(),1,"an offline disk must not erase its registration");
+        assert!(reset_inventory_at(&index,&[root.to_string_lossy().into_owned()]).is_err());
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
     fn current_layout_uses_the_folder_as_prefix_and_uninstall_removes_it() {
         use std::os::unix::fs::PermissionsExt;
         let base = std::env::temp_dir().join(format!("peligames-layout-uninstall-{}", uuid::Uuid::new_v4()));
@@ -1161,6 +1250,11 @@ mod tests {
         assert!(add_at(&index, request(&base)).err().unwrap().contains("não está vazia"));
         let folder = base.join("Jogos/Jogo");
         let added = add_at(&index, request(&folder)).unwrap();
+        assert_eq!(add_at(&index, request(&folder)).unwrap().path, added.path);
+        assert_eq!(list_at(&index, true).unwrap().len(), 1, "repeated add reuses the registration");
+        let separate = base.join("Jogos/Outra instalação");
+        let other = add_at(&index, request(&separate)).unwrap();
+        assert_ne!(other.path, added.path, "another prefix remains independent");
         let folder = folder.canonicalize().unwrap();
         assert_eq!(Path::new(&added.prefix), folder, "a pasta escolhida é o prefixo");
         assert!(folder.join("installation.json").is_file() && folder.join(".peligames-prefix").is_file());
@@ -1239,6 +1333,41 @@ mod tests {
             name: String::new(), path: executable.to_string_lossy().into_owned(), directory: String::new(),
             executable: executable.to_string_lossy().into_owned(), prefix: String::new(), proton: String::new(), cover_url: None, launcher: "PeliGames".into(),
         }
+    }
+    #[test]
+    fn removed_library_entries_stay_removed_after_restart_and_rescan() {
+        let base = std::env::temp_dir().join(format!("peligames-remove-entry-{}", uuid::Uuid::new_v4()));
+        let index = base.join("destinations.json");
+        let folder = base.join("Among Us");
+        let game = folder.join("prefix/drive_c/Among Us/Among Us.exe");
+        fs::create_dir_all(game.parent().unwrap()).unwrap();
+        fs::write(&game, b"MZgame").unwrap();
+        let mut record = record(&folder, vec![]);
+        let mut first = entry(&game, None);
+        first.path = "peligames:first".into(); first.prefix = record.prefix.clone();
+        let mut duplicate = first.clone(); duplicate.path = "peligames:duplicate".into();
+        record.entries = vec![first.clone(), duplicate.clone()];
+        for item in &record.entries {
+            record.overrides.push(EntryOverride {source:item.path.clone(), name:"Among Us".into(), proton:String::new(), executable:item.executable.clone(), prefix:None, advanced:None, cover_url:None});
+        }
+        // A discovered entry must also remain suppressed after scanning.
+        let discovered = folder.join("prefix/drive_c/Other.exe");
+        fs::write(&discovered, b"MZother").unwrap();
+        record.entries.push(entry(&discovered, None));
+        write_json(&folder.join("installation.json"), &record).unwrap();
+        write_json(&index, &BTreeSet::from([folder.to_string_lossy().into_owned()])).unwrap();
+        remove_entry_at(&index, &duplicate.path).unwrap();
+        remove_entry_at(&index, &discovered.to_string_lossy()).unwrap();
+        for rescan in [false, true, false] {
+            let entries = list_at(&index, rescan).unwrap();
+            assert_eq!(entries.len(), 1, "rescan must not manufacture another card for the same executable");
+            assert!(entries.iter().any(|e| e.path == first.path));
+            assert!(!entries.iter().any(|e| e.path == duplicate.path || e.path == discovered.to_string_lossy()));
+        }
+        assert!(game.is_file() && discovered.is_file(), "removal never deletes games or prefixes");
+        let saved: InstallationRecord = serde_json::from_slice(&fs::read(folder.join("installation.json")).unwrap()).unwrap();
+        assert!(!saved.overrides.iter().any(|e| e.source == duplicate.path));
+        fs::remove_dir_all(base).unwrap();
     }
     /// Minimal Windows shortcut: relative path and working folder (ANSI).
     fn shortcut(target: &str, folder: &str) -> Vec<u8> {

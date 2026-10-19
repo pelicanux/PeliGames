@@ -133,6 +133,9 @@ impl Default for AdvancedSettings {
 impl AdvancedSettings {
     pub fn validate(&self) -> Result<(), String> {
         if self.mangohud_fps_limit.is_some_and(|fps| fps > 1000) { return Err("Informe um limite de FPS entre 0 e 1000.".into()); }
+        if super::release_features::enabled() && self.wrappers.iter().any(|w|w.enabled && w.program.contains("/FrameGeneration/profiles/") && w.program.ends_with(".sh")) {
+            crate::commands::frame_generation::conflicts(self)?;
+        }
         if let Some(value) = &self.launch_options { crate::commands::nexus_launch_options::validate_custom(value)?; }
         if self.wrappers.len() > 16 { return Err("Use até 16 wrappers.".into()); }
         for wrapper in &self.wrappers {
@@ -400,6 +403,19 @@ pub(crate) fn configured_launch_command(umu: &Path, settings: Option<&AdvancedSe
     }
     let mut command = launch_command_with_tools(umu, Some(&effective), executable)?;
     super::mangohud_config::apply_with_override(&mut command, settings.is_some_and(|s| s.on("mangohud") || s.on("mangohud_env")), effective.mangohud_fps_limit, effective.mangohud_enabled)?;
+    if super::release_features::enabled() {
+        crate::commands::frame_generation::configure_monitoring(&mut command, &effective)?;
+    }
+    if !super::release_features::enabled() {
+        let mut words: Vec<String> = std::iter::once(command.get_program()).chain(command.get_args()).map(|s|s.to_string_lossy().into_owned()).collect();
+        let mut environment = command.get_envs().map(|(k,v)|(k.to_string_lossy().into_owned(),v.map(|s|s.to_string_lossy().into_owned()))).collect();
+        super::release_features::restrict(&mut words, &mut environment, false);
+        let mut restricted = Command::new(words.first().ok_or("Comando do jogo ausente")?);
+        restricted.args(&words[1..]);
+        for (key,value) in environment { match value {Some(v)=>{restricted.env(key,v);},None=>{restricted.env_remove(key);}} }
+        if let Some(dir)=command.get_current_dir(){restricted.current_dir(dir);}
+        command=restricted;
+    }
     Ok(command)
 }
 fn with_global_monitoring(settings: Option<&AdvancedSettings>, global: bool) -> AdvancedSettings {
@@ -425,6 +441,7 @@ fn launch_command_with_tools(
     settings.validate()?;
     let mut wrappers: Vec<(PathBuf, Vec<String>)> = Vec::new();
     for wrapper in settings.wrappers.iter().filter(|wrapper| wrapper.enabled) {
+        if !super::release_features::enabled() && super::release_features::experimental_program(&wrapper.program) { continue; }
         wrappers.push((resolve(wrapper.program.trim())?, wrapper_args(&wrapper.arguments)?));
     }
     if settings.gamescope.enabled() {

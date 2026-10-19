@@ -1,0 +1,24 @@
+.proton-download-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-items:start; }
+.proton-runtime-card { min-width:0; padding:18px; box-sizing:border-box; background:var(--modern-card,#171a22); border:1px solid var(--mod-line); border-radius:16px; }
+.proton-runtime-heading { display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding-bottom:16px; border-bottom:1px solid var(--mod-line); }
+.proton-runtime-heading > div { flex:1; min-width:100px; }
+.proton-runtime-heading .mod-status-badge { margin-left:auto; }
+.proton-runtime-icon { display:grid; place-items:center; width:38px; height:38px; flex-shrink:0; border-radius:10px; background:var(--modern-card-2); }
+.proton-runtime-icon img { width:29px; height:29px; object-fit:contain; }
+.modern-ui .settings-page .proton-runtime-heading h4 { margin:0 0 3px; font-size:.9375rem; font-weight:600; }
+.proton-runtime-heading > div > span { color:var(--mod-muted); font-size:.75rem; }
+.proton-runtime-versions { display:grid; gap:10px; margin:16px 0; font-size:.8125rem; }
+.proton-runtime-versions > div { display:grid; grid-template-columns:80px minmax(0,1fr); gap:12px; }
+.proton-runtime-versions dt { color:var(--mod-muted); }
+.proton-runtime-versions dd { margin:0; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+.proton-runtime-versions small { display:inline-block; color:var(--mod-muted); font-size:.75rem; margin-left:8px; }
+.proton-runtime-actions { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0; }
+.proton-runtime-card .mod-destructive-row { margin-top:16px; padding-top:14px; border-top:1px solid var(--mod-line); }
+.modern-ui .settings-page .proton-runtime-message { margin:12px 0 0; font-size:.8125rem; line-height:1.5; overflow-wrap:anywhere; text-shadow:none; }
+.proton-steam-options { display:flex; align-items:center; gap:24px; flex-wrap:wrap; margin-top:22px; padding-top:18px; border-top:1px solid var(--mod-line); }
+.proton-steam-options > div { flex:1; min-width:220px; }
+.modern-ui .settings-page .proton-steam-options h3 { margin:0 0 5px; font-size:.9375rem; }
+.modern-ui .settings-page .proton-steam-options p { margin:0; font-size:.8125rem; }
+.proton-steam-options .preference-switch { max-width:430px; margin:0; }
+@container settings-page (max-width:780px){.proton-download-grid{grid-template-columns:minmax(0,1fr)}}
+@container settings-page (max-width:480px){.proton-runtime-card{padding:14px}.proton-runtime-card .mod-setting-row{flex-wrap:wrap}.proton-runtime-card .mod-row-copy{flex-basis:100%}}

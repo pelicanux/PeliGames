@@ -11,6 +11,8 @@ export function gamescopeEnabled(g: GamescopeSettings): boolean {
   return g.enable_upscaling || g.enable_limiter || g.force_grab_cursor || Boolean(g.additional_options.trim());
 }
 export interface LaunchWrapper { program: string; arguments: string; enabled: boolean; }
+/** Recognize both existing SHA-256 paths and readable per-game profile names. */
+export const isFrameGenerationWrapper = (w: LaunchWrapper): boolean => /\/FrameGeneration\/profiles\/(?:[a-f0-9]{64}|[a-z0-9]+(?:-[a-z0-9]+)*-[a-f0-9]{8,64})\.sh$/.test(w.program);
 export interface AdvancedSettings {
   mangohud_enabled?: boolean | null; mangohud_fps_limit?: number | null; schema_version?: number; launch_options?: string | null; options: Record<string, boolean>; dll_overrides: string;
   wrappers?: LaunchWrapper[]; launch_backend: "system" | "gamescope"; gamescope?: GamescopeSettings;
@@ -39,6 +41,8 @@ function relatedOptions(id: string, dependents = false): string[] {
 /** Explain the attempted action, including the order of transitive prerequisites. */
 export function advancedToggleError(settings: AdvancedSettings, id: string): string | undefined {
   const turningOff = Boolean(settings.options[id]);
+  if (!turningOff && ["mlfg", "obs_capture", "vkd3d_latency", "vulkan_latency"].includes(id) && settings.wrappers?.some(w => w.enabled && isFrameGenerationWrapper(w))) return "Desative a geração de quadros na aba Geração de quadros antes de ativar esta opção.";
+
   const required = relatedOptions(id, turningOff).filter(other => turningOff ? settings.options[other] : !settings.options[other]);
   const names = (ids: string[]) => ids.map(other => `“${optionTitle(other)}”`).join(" → ");
   if (!turningOff) {
@@ -55,6 +59,8 @@ export function advancedOptionHint(settings: AdvancedSettings, id: string): stri
   if (required.length) return `Requer: ${required.map(optionTitle).join(" → ")}.`;
 }
 export function advancedError(settings: AdvancedSettings): string | undefined {
+  if (settings.wrappers?.some(w=>w.enabled && isFrameGenerationWrapper(w)) && ["mlfg","obs_capture","vkd3d_latency","vulkan_latency"].some(id=>settings.options[id])) return "Desative a geração de quadros antes de ativar geração ML, baixa latência DX12/Vulkan ou captura Vulkan OBS.";
+
   const limit = settings.mangohud_fps_limit;
   if (limit != null && (!Number.isInteger(limit) || limit < 0 || limit > 1000)) return "Informe um limite de FPS entre 0 e 1000.";
   for (const [id, dependency, message] of rules.dependencies) if (settings.options[id] && !settings.options[dependency]) return message;

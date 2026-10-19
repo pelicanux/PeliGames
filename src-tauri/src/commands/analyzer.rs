@@ -91,7 +91,7 @@ pub fn scan_directory_for_exe(dir: &Path) -> Option<PathBuf> {
     best_exe
 }
 
-fn analyze_pe_header(exe_path: &Path) -> Option<String> {
+pub(super) fn analyze_pe_header(exe_path: &Path) -> Option<String> {
     // Executables can be hundreds of MB; only the DOS/ELF header and PE machine are needed.
     let mut file = fs::File::open(exe_path).ok()?;
     architecture_from_reader(&mut file)

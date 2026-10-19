@@ -2,8 +2,8 @@ import { comparisonInsight, metricBarWidths, metricGroups, metricDescriptions, t
 import type { BenchmarkStats } from "./mangoHudBenchmarks";
 
 export const comparisonRows: {label:string; key:keyof BenchmarkStats; unit:string; lower?:boolean; neutral?:boolean}[] = [
-  {label:"FPS médio",key:"averageFps",unit:"FPS"}, {label:"1% mínimo (amostras)",key:"low1",unit:"FPS"},
-  {label:"0,1% mínimo (amostras)",key:"low01",unit:"FPS"}, {label:"Frametime médio",key:"frameTime",unit:"ms",lower:true},
+  {label:"FPS médio",key:"averageFps",unit:"FPS"}, {label:"1% Low (amostras)",key:"low1",unit:"FPS"},
+  {label:"0.1% Low (amostras)",key:"low01",unit:"FPS"}, {label:"Frametime médio",key:"frameTime",unit:"ms",lower:true},
   {label:"Uso médio da CPU",key:"cpuLoad",unit:"%",neutral:true},
   {label:"Uso médio da GPU",key:"gpuLoad",unit:"%",neutral:true},
   {label:"RAM média em uso (sistema)",key:"ramUsed",unit:"GiB",neutral:true},

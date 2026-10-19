@@ -34,6 +34,18 @@ fn read_records() -> Result<BTreeMap<String, Entry>, String> {
         Err(error) => Err(format!("Não foi possível ler as opções da Steam: {error}")),
     }
 }
+
+/// Import the previous release's managed variables into the fixed helper.
+pub(super) fn runtime_mod_options(app_id: &str) -> Result<Option<String>, String> {
+    valid_app(app_id)?;
+    Ok(read_records()?.get(app_id).and_then(|entry| entry.wanted.clone()))
+}
+
+pub(super) fn strip_runtime_mod_options(app_id: &str, current: &str) -> Result<String, String> {
+    let records = read_records()?;
+    let previous = records.get(app_id).and_then(|entry| entry.applied.as_deref());
+    merged(current, previous, None)
+}
 fn write_records(records: &BTreeMap<String, Entry>) -> Result<(), String> {
     let path = record_file();
     if let Some(parent) = path.parent() {
@@ -277,10 +289,7 @@ fn local_configs() -> Vec<PathBuf> {
     }
     seen
 }
-pub(crate) fn settings_files(flatpak: bool) -> Vec<PathBuf> {
-    let Some(home) = dirs::home_dir() else { return Vec::new() };
-    settings_files_in(&home, flatpak)
-}
+#[cfg(test)]
 fn settings_files_in(home: &Path, flatpak: bool) -> Vec<PathBuf> {
     let mut files = Vec::new();
     for root in super::steam_installation::roots(home, flatpak) {
@@ -319,6 +328,7 @@ fn apply(records: &mut BTreeMap<String, Entry>, steam_open: bool) -> Result<Vec<
         let mut text = fs::read_to_string(path).map_err(|e| format!("Não foi possível ler {}: {e}", path.display()))?;
         for app in &waiting {
             let entry = &records[app];
+            if super::steam_runtime::manages_config(path, app) { continue; }
             let current = read_launch_options(&text, app)?;
             let next = merged(&current, entry.applied.as_deref(), entry.wanted.as_deref())?;
             if next != current {
@@ -367,20 +377,26 @@ pub struct SteamModOptions {
     launch_options: Option<String>,
     /// Steam is open: the line is written when it closes.
     waiting: bool,
+    steam_pending: bool,
 }
 /// After the mod was installed (`line`) or removed (`None`) in `game_dir` of a
 /// Steam game: the line goes to Steam's own launch options, and whatever the
 /// mod had put in the PeliGames launch options before is taken out of them.
 #[tauri::command]
-pub fn apply_steam_mod_launch_options(app_id: String, game_dir: String, current: Option<String>, line: Option<String>) -> Result<SteamModOptions, String> {
+pub fn apply_steam_mod_launch_options(app_id: String, game_dir: String, current: Option<String>, line: Option<String>, external_id: Option<String>) -> Result<SteamModOptions, String> {
+    valid_app(&app_id)?;
     let line = line.map(|value| value.trim().to_string()).filter(|value| !value.is_empty());
     let previous = super::mod_launch_options::take_record(&game_dir)?;
     let launch_options = match &previous {
         Some(previous) => merge(current.as_deref(), Some(previous), None)?,
         None => current,
     };
+    if let Some(external_id) = external_id {
+        let (steam_pending, launch_options) = super::external_library::save_steam_mod_runtime(&external_id, &app_id, launch_options, line)?;
+        return Ok(SteamModOptions { launch_options, waiting: steam_pending, steam_pending });
+    }
     let waiting = want(&app_id, line)?;
-    Ok(SteamModOptions { launch_options, waiting })
+    Ok(SteamModOptions { launch_options, waiting, steam_pending: false })
 }
 
 #[cfg(test)]

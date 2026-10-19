@@ -12,7 +12,7 @@ const PREFIXES = ["license", "licence", "copying", "notice", "copyright"];
 type Package = { name: string; version: string; license: string; source: string; repository?: string | null; authors?: string[] };
 type Row = Package & { notices: { file: string; sha256: string }[] };
 
-const noticeName = (name: string) => PREFIXES.some(prefix => name.toLowerCase().startsWith(prefix));
+const noticeName = (name: string) => PREFIXES.some(prefix => name.toLowerCase().startsWith(prefix)) || /(?:^|[-_])licen[cs]e(?:[-_.]|$)/i.test(name) || ["OFL.txt", "UFL.txt", "Hack-Regular.txt"].includes(name);
 /** Paths compared part by part, as Python sorts them. */
 function comparePaths(a: string, b: string) {
   const left = a.split("/"), right = b.split("/");
@@ -70,18 +70,24 @@ function generate(label: string, packages: [Package, [string, string][]][], dest
 /** JSON with non-ASCII characters escaped, as the inventory always used. */
 const asciiJson = (value: unknown) => JSON.stringify(value, null, 2).replace(/[^\x00-\x7f]/g, char => "\\u" + char.charCodeAt(0).toString(16).padStart(4, "0"));
 
-const metadataPath = process.argv[2];
-if (!metadataPath) { console.error("Usage: bun scripts/generate-license-notices.ts <cargo-metadata.json>"); process.exit(2); }
-const metadata = JSON.parse(readFileSync(metadataPath, "utf8"));
+const metadataPaths = process.argv.slice(2);
+if (!metadataPaths.length) { console.error("Usage: bun scripts/generate-license-notices.ts <cargo-metadata.json> [additional-metadata.json ...]"); process.exit(2); }
+// The bundled PeliRun and in-game overlay have separate locked Cargo graphs.
+// Their runtime dependencies need the same notices as the main application.
+const merged = new Map<string, any>();
+for (const path of metadataPaths) for (const pkg of JSON.parse(readFileSync(path, "utf8")).packages) {
+  if (pkg.source) merged.set(`${pkg.name}:${pkg.version}:${pkg.source}`, pkg);
+}
+const metadata = { packages: [...merged.values()] };
 const rust: [Package, [string, string][]][] = [];
 for (const pkg of metadata.packages) {
   if (pkg.name === "peligames") continue;
   let folder = dirname(pkg.manifest_path);
   let files: [string, string][] = noticeFiles(folder).map(path => [path, relative(folder, path)]);
-  if (!files.length) {
-    const fallback = join(ROOT, "licenses/upstream", pkg.name);
-    files = existsSync(fallback) ? noticeFiles(fallback).map(path => [path, relative(ROOT, path)]) : [];
-  }
+  const eguiCrates = ["ecolor", "egui", "emath", "epaint", "epaint_default_fonts"];
+  const fallback = join(ROOT, "licenses/upstream", eguiCrates.includes(pkg.name) && pkg.version === "0.31.1" ? "egui" : pkg.name);
+  // Include repository-level terms even when a font notice was already present.
+  if (existsSync(fallback)) files.push(...noticeFiles(fallback).map(path => [path, relative(ROOT, path)] as [string, string]));
   if (!files.length && pkg.name === "libappindicator-sys") {
     const parent = metadata.packages.find((other: { name: string }) => other.name === "libappindicator");
     folder = dirname(parent.manifest_path);

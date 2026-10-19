@@ -8,7 +8,7 @@
   .nexus-panel-heading-actions, .nexus-installed-mod-actions,
   .nexus-browser-controls, .matrix-rooms-heading,
   .modal-actions, .nexus-popup-footer, .preferences-breadcrumb,
-  .steamgrid-settings-footer, .proton-card-actions, .winetricks-actions
+  .steamgrid-settings-footer, .winetricks-actions
 ) {
   isolation: isolate;
   transform: translateZ(0);

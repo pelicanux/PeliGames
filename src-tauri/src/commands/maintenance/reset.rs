@@ -31,6 +31,10 @@ struct Journal {
     phase: Phase,
     entries: Vec<Entry>,
     error: Option<String>,
+    #[serde(default)]
+    preserve_accounts: bool,
+    #[serde(default)]
+    preserve_games: bool,
 }
 #[derive(Serialize)]
 pub struct Status {
@@ -106,11 +110,12 @@ fn load(dir: &Path) -> Result<Option<Journal>, String> {
     let journal: Journal = serde_json::from_slice(&fs::read(&path).map_err(|e| e.to_string())?)
         .map_err(|e| format!("Não foi possível ler o registro de redefinição: {e}"))?;
     uuid::Uuid::parse_str(&journal.id).map_err(|e| e.to_string())?;
-    let allowed = reset_paths(
+    let mut allowed = reset_paths(
         &base(dirs::config_dir())?,
         &base(dirs::data_dir())?,
         &base(dirs::cache_dir())?,
     );
+    allowed.extend(super::super::steam_runtime::profile_directories()?);
     for entry in &journal.entries {
         if !allowed.contains(&entry.original)
             || entry.backup != sibling(&entry.original, &journal.id, "reset")
@@ -139,6 +144,8 @@ fn new_journal(paths: &[String]) -> Journal {
             })
             .collect(),
         id,
+        preserve_accounts: false,
+        preserve_games: false,
         phase: Phase::Prepared,
         error: None,
     }
@@ -152,9 +159,98 @@ fn rename(from: &Path, to: &Path) -> Result<(), String> {
         .map_err(|e| format!("Não foi possível renomear {}: {e}", from.display()))?;
     sync_parent(to)
 }
+// Copy only session stores after every owning process has exited. Backups remain
+// untouched for recovery. No keyring secret is exported into the reset journal.
+fn session_paths(root: &Path) -> Vec<PathBuf> {
+    match root.file_name().and_then(|n| n.to_str()) {
+        Some("PeliGames" | "peligames") => vec!["nexus-browser".into()],
+        Some("com.pelicano.peligames" | "com.pelicano.dlssnr-installer") => [
+            "databases",
+            "IndexedDB",
+            "storage",
+            "cookies.sqlite",
+            "cookies.sqlite-wal",
+            "cookies.sqlite-shm",
+        ]
+        .into_iter()
+        .map(PathBuf::from)
+        .collect(),
+        _ => Vec::new(),
+    }
+}
+fn copy_session(from: &Path, to: &Path) -> Result<(), String> {
+    use std::os::unix::fs::PermissionsExt;
+    validate_ancestors(from)?;
+    validate_ancestors(to)?;
+    let meta = fs::symlink_metadata(from).map_err(|e| e.to_string())?;
+    if meta.file_type().is_symlink() || !(meta.is_file() || meta.is_dir()) {
+        return Err("Sessão contém um arquivo não regular; cópia antiga preservada.".into());
+    }
+    if meta.is_dir() {
+        fs::create_dir(to).map_err(|e| e.to_string())?;
+        fs::set_permissions(to, fs::Permissions::from_mode(0o700)).map_err(|e| e.to_string())?;
+        for child in fs::read_dir(from).map_err(|e| e.to_string())? {
+            let child = child.map_err(|e| e.to_string())?;
+            copy_session(&child.path(), &to.join(child.file_name()))?;
+        }
+        fs::File::open(to)
+            .and_then(|f| f.sync_all())
+            .map_err(|e| e.to_string())?;
+    } else {
+        use std::os::unix::fs::OpenOptionsExt;
+        let mut input = fs::File::open(from).map_err(|e| e.to_string())?;
+        let mut output = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(to)
+            .map_err(|e| e.to_string())?;
+        std::io::copy(&mut input, &mut output)
+            .and_then(|_| output.sync_all())
+            .map_err(|e| e.to_string())?;
+    }
+    sync_parent(to)
+}
+fn preserve_sessions(journal: &Journal) -> Result<(), String> {
+    use std::os::unix::fs::DirBuilderExt;
+    for entry in &journal.entries {
+        let mut preserved = if journal.preserve_accounts {
+            session_paths(&entry.original)
+        } else {
+            vec![]
+        };
+        if journal.preserve_games
+            && entry
+                .original
+                .file_name()
+                .is_some_and(|n| n == "PeliGames" || n == "peligames")
+        {
+            preserved.push("installed-destinations.json".into());
+        }
+        for relative in preserved {
+            let from = entry.backup.join(&relative);
+            if !exists(&from) {
+                continue;
+            }
+            validate_ancestors(&entry.original)?;
+            if !exists(&entry.original) {
+                fs::DirBuilder::new()
+                    .mode(0o700)
+                    .create(&entry.original)
+                    .map_err(|e| e.to_string())?;
+                sync_parent(&entry.original)?;
+            }
+            copy_session(&from, &entry.original.join(relative))?;
+        }
+    }
+    Ok(())
+}
 fn stage(dir: &Path, journal: &mut Journal) -> Result<(), String> {
     for entry in &journal.entries {
         rename(&entry.original, &entry.backup)?;
+    }
+    if journal.preserve_accounts || journal.preserve_games {
+        preserve_sessions(journal)?;
     }
     journal.phase = Phase::Ready;
     save(dir, journal)
@@ -319,6 +415,9 @@ pub fn launcher_reset_continue() -> Result<(), String> {
     if !matches!(journal.phase, Phase::Recovery | Phase::Checking) {
         return Err("Recuperação indisponível nesta etapa.".into());
     }
+    if (journal.preserve_accounts || journal.preserve_games) && journal.phase == Phase::Recovery {
+        return Err("A preservação de contas ou jogos pode ter sido interrompida. Restaure os arquivos anteriores e tente redefinir novamente para manter os dados com segurança.".into());
+    }
     // A partially completed rename must be recovered, not treated as a clean profile.
     if journal.entries.iter().any(|e| !exists(&e.backup)) {
         return Err("A renomeação foi interrompida. Restaure os arquivos anteriores antes de tentar novamente.".into());
@@ -356,7 +455,12 @@ fn spawn_helper(app: &tauri::AppHandle, mode: &str) -> Result<(), String> {
     app.exit(0);
     Ok(())
 }
-pub fn restart(app: &tauri::AppHandle, paths: &[String]) -> Result<(), String> {
+pub fn restart(
+    app: &tauri::AppHandle,
+    paths: &[String],
+    preserve_accounts: bool,
+    preserve_games: bool,
+) -> Result<(), String> {
     let _lock = LOCK.lock().map_err(|e| e.to_string())?;
     let dir = directory()?;
     let _disk = disk_lock(&dir)?;
@@ -380,7 +484,20 @@ pub fn restart(app: &tauri::AppHandle, paths: &[String]) -> Result<(), String> {
     if load(&dir)?.is_some() {
         return Err("Conclua a redefinição anterior antes de iniciar outra.".into());
     }
-    let journal = new_journal(paths);
+    let mut paths = paths.to_vec();
+    // The stable executable is retained. Only its mutable profiles enter the
+    // same rename/recovery journal as preferences, so reset cannot leave stale
+    // launch adjustments or break a Steam line pointing at the helper.
+    for profiles in super::super::steam_runtime::profile_directories()? {
+        if exists(&profiles) {
+            validate_ancestors(&profiles)?;
+            let path = profiles.to_string_lossy().into_owned();
+            if !paths.contains(&path) { paths.push(path); }
+        }
+    }
+    let mut journal = new_journal(&paths);
+    journal.preserve_accounts = preserve_accounts;
+    journal.preserve_games = preserve_games;
     save(&dir, &journal)?;
     if let Err(error) = spawn_helper(app, "reset") {
         // No helper was started, so no rename can have happened yet. Permit retry.
@@ -481,6 +598,103 @@ mod tests {
         fn drop(&mut self) {
             let _ = fs::remove_dir_all(&self.root);
         }
+    }
+    #[test]
+    fn game_preservation_is_independent_of_accounts_and_keeps_only_the_index() {
+        let mut f = Fixture::new();
+        let entry = &mut f.journal.entries[0];
+        let target = entry.original.with_file_name("PeliGames");
+        fs::rename(&entry.original, &target).unwrap();
+        entry.original = target;
+        entry.backup = sibling(&entry.original, &f.journal.id, "reset");
+        entry.discarded = sibling(&entry.original, &f.journal.id, "replaced");
+        fs::write(
+            entry.original.join("installed-destinations.json"),
+            b"[\"/offline/Game\"]",
+        )
+        .unwrap();
+        fs::create_dir(entry.original.join("nexus-browser")).unwrap();
+        fs::write(entry.original.join("nexus-browser/cookie"), b"fake").unwrap();
+        f.journal.preserve_games = true;
+        stage(&f.root, &mut f.journal).unwrap();
+        let entry = &f.journal.entries[0];
+        assert_eq!(
+            fs::read(entry.original.join("installed-destinations.json")).unwrap(),
+            b"[\"/offline/Game\"]"
+        );
+        assert!(!entry.original.join("nexus-browser").exists());
+        assert!(entry.backup.join("nexus-browser/cookie").is_file());
+        f.journal.phase = Phase::Committed;
+        collect(&f.root, &f.journal).unwrap();
+        assert!(f.journal.entries[0]
+            .original
+            .join("installed-destinations.json")
+            .is_file());
+    }
+    #[test]
+    fn account_preservation_copies_only_sessions_and_keeps_recovery_backups() {
+        let mut f = Fixture::new();
+        for entry in &mut f.journal.entries {
+            let name = if entry.original.ends_with("config") {
+                "PeliGames"
+            } else {
+                "com.pelicano.peligames"
+            };
+            let target = entry.original.with_file_name(name);
+            fs::rename(&entry.original, &target).unwrap();
+            entry.original = target;
+            entry.backup = sibling(&entry.original, &f.journal.id, "reset");
+            entry.discarded = sibling(&entry.original, &f.journal.id, "replaced");
+            let store = if name == "PeliGames" {
+                "nexus-browser"
+            } else {
+                "databases"
+            };
+            fs::create_dir_all(entry.original.join(store)).unwrap();
+            fs::write(
+                entry.original.join(store).join("session"),
+                b"fake encrypted session",
+            )
+            .unwrap();
+            fs::write(entry.original.join("preferences.json"), b"old preferences").unwrap();
+        }
+        f.journal.preserve_accounts = true;
+        stage(&f.root, &mut f.journal).unwrap();
+        for entry in &f.journal.entries {
+            let store = if entry.original.ends_with("PeliGames") {
+                "nexus-browser"
+            } else {
+                "databases"
+            };
+            assert_eq!(
+                fs::read(entry.original.join(store).join("session")).unwrap(),
+                b"fake encrypted session"
+            );
+            assert!(!entry.original.join("preferences.json").exists());
+            assert!(entry.backup.join("preferences.json").exists());
+        }
+        restore(&f.root, &mut f.journal).unwrap();
+        assert!(f.journal.entries[0]
+            .original
+            .join("preferences.json")
+            .exists());
+    }
+    #[test]
+    fn preserving_accounts_rejects_links_without_losing_original_data() {
+        let f = Fixture::new();
+        let source = f.root.join("session-source");
+        fs::create_dir(&source).unwrap();
+        std::os::unix::fs::symlink(f.root.join("config"), source.join("unexpected-link")).unwrap();
+        assert!(copy_session(&source, &f.root.join("copy")).is_err());
+        assert!(f.root.join("config/mods/nested/keep").exists());
+        // Old journals keep the original disconnect-and-reset behavior.
+        let mut value = serde_json::to_value(&f.journal).unwrap();
+        value.as_object_mut().unwrap().remove("preserve_accounts");
+        assert!(
+            !serde_json::from_value::<Journal>(value)
+                .unwrap()
+                .preserve_accounts
+        );
     }
     #[test]
     fn a_crash_before_health_confirmation_offers_recovery_on_the_next_boot() {

@@ -1,3 +1,7 @@
+import { ComponentDownloadProgress } from "../ComponentDownloadProgress";
+import { formatTransferBytes } from "../../services/downloadProgress";
+import { invoke } from "@tauri-apps/api/core";
+import { notifyError } from "../../services/notifications";
 import { useEffect, useRef, useState } from "react";
 import { ConfirmModal } from "../ConfirmModal";
 import { MenuIcon } from "../MenuIcon";
@@ -12,11 +16,13 @@ const distributions = [
 export function ProtonDistributionCards({ disabled, onBusy }: {
   disabled: boolean; onBusy: (busy: boolean) => void;
 }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const pt=language==="pt";
   const [releases, setReleases] = useState<Partial<Record<ProtonFamily, RunnerRelease>>>({});
   const [checking, setChecking] = useState<Partial<Record<ProtonFamily, boolean>>>({});
   const [messages, setMessages] = useState<Partial<Record<ProtonFamily, string>>>({});
   const [active, setActive] = useState<ProtonFamily | null>(null);
+  const [progressFamily, setProgressFamily] = useState<ProtonFamily | null>(null);
   const [progress, setProgress] = useState<RunnerProgress | null>(null);
   const [removal, setRemoval] = useState<{ family: ProtonFamily; name: string; version: string } | null>(null);
   const [removing, setRemoving] = useState(false);
@@ -39,14 +45,17 @@ export function ProtonDistributionCards({ disabled, onBusy }: {
   }, []);
   const download = async (f: ProtonFamily) => {
     if (lock.current || disabled || checks.current.has(f) || !releases[f]?.needs_update) return;
-    lock.current = true; setActive(f); setProgress(null); setCancelling(false); onBusy(true);
+    lock.current = true; setActive(f); setProgressFamily(f); setProgress(null); setCancelling(false); onBusy(true);
     setMessages(old => ({ ...old, [f]: "" }));
     try {
-      await installRunner(f, p => { if (mounted.current) setProgress(p); });
+      await installRunner(f, p => { if (mounted.current && p.phase !== "complete") setProgress(p); });
       window.dispatchEvent(new Event("protonRunnersChanged"));
       await refresh(f);
-      if (mounted.current) setMessages(old => ({ ...old, [f]: t("runners", "installed") }));
-    } catch (error) { if (mounted.current) setMessages(old => ({ ...old, [f]: error instanceof Error ? error.message : String(error) })); }
+      if (mounted.current) {
+        setProgress(p => ({phase:"complete",family:f,downloaded:p?.downloaded??0,total:p?.total??0,speed_bytes_per_sec:0}));
+        setMessages(old => ({ ...old, [f]: t("runners", "installed") }));
+      }
+    } catch (error) { if (mounted.current) { setProgress(null); setMessages(old => ({ ...old, [f]: error instanceof Error ? error.message : String(error) })); } }
     finally { lock.current = false; if (mounted.current) { setActive(null); setCancelling(false); } onBusy(false); }
   };
   const cancel = async () => {
@@ -69,26 +78,25 @@ export function ProtonDistributionCards({ disabled, onBusy }: {
     } catch (error) { setMessages(old => ({ ...old, [f]: error instanceof Error ? error.message : String(error) })); }
     finally { lock.current = false; setRemoving(false); setRemoval(null); onBusy(false); }
   };
-  return <><div className="preference-choice-list proton-distribution-list">
-    {distributions.map(d => {
-      const release = releases[d.family], downloading = active === d.family;
-      const phase = progress?.phase ?? "downloading";
-      const percent = progress?.total ? Math.min(100, progress.downloaded / progress.total * 100) : 0;
-      const status = downloading ? `${t("runners", cancelling ? "cancelling" : phase)}${!cancelling && phase === "downloading" ? `… ${percent.toFixed(0)}% (${((progress?.speed_bytes_per_sec ?? 0) / 1024 / 1024).toFixed(1)} MB/s)` : ""}` : checking[d.family] ? t("updater", "checking") : release ? `${release.latest} · ${release.needs_update ? (release.current ? t("updater", "update") : t("runners", "notInstalled")) : t("updater", "updated")}` : d.author;
-      return <div key={d.family} className={`proton-distribution-card ${downloading ? "is-downloading" : ""}`}>
-        {downloading && <span className="proton-card-progress" style={{ transform: `scaleX(${phase === "downloading" ? percent / 100 : 1})` }}/>}
-        <div className="proton-distribution-info">
-          <img src={d.icon} alt=""/><span><strong>{d.name}</strong><small role="status">{status}</small></span>
-        </div>
-        <div className="proton-card-actions">
-          {downloading ? <button type="button" className="proton-card-cancel" disabled={cancelling || phase === "complete"} aria-label={`${t("runners", "cancel")}: ${d.name}`} title={t("runners", "cancel")} onClick={() => void cancel()}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button> : <>
-            {release?.current && <button type="button" disabled={disabled || !!active || checking[d.family]} aria-label={`${t("runners", "uninstall")}: ${d.name}`} title={t("runners", "uninstall")} onClick={() => { setRemoval({ family: d.family, name: d.name, version: release.current! }); onBusy(true); }}><MenuIcon name="trash"/></button>}
-            {(!release?.current || release.needs_update) && <button type="button" disabled={disabled || !!active || checking[d.family] || !release?.needs_update} aria-label={`${t("runners", "download")}: ${d.name}`} title={release && !release.needs_update ? t("updater", "updated") : t("runners", "download")} onClick={() => void download(d.family)}><MenuIcon name="download"/></button>}
-            <button type="button" className={checking[d.family] ? "is-checking" : ""} disabled={disabled || !!active || checking[d.family]} aria-label={`${t("runners", "check")}: ${d.name}`} title={t("runners", "check")} onClick={() => void refresh(d.family)}><MenuIcon name="repair"/></button>
+  return <><div className="proton-download-grid">
+    {distributions.map(d=>{
+      const release=releases[d.family],downloading=active===d.family;
+      const stateLabel=downloading?(pt?"Instalando…":"Installing…"):checking[d.family]?(pt?"Verificando…":"Checking…"):!release?(pt?"Não verificado":"Not checked"):!release.current?t("runners","notInstalled"):release.needs_update?(pt?"Atualização disponível":"Update available"):t("updater","updated");
+      const currentProgress=progress||{phase:"connecting",downloaded:0,total:null,speed_bytes_per_sec:0};
+      return <section key={d.family} className="proton-runtime-card mod-workspace" aria-label={d.name} aria-busy={downloading}>
+        <header className="proton-runtime-heading"><span className="proton-runtime-icon"><img src={d.icon} alt=""/></span><div><h4>{d.name.replace(" Latest","")}</h4><span>{d.author}</span></div><span className="mod-status-badge" data-ready={Boolean(release?.current&&!release.needs_update)} role="status">{stateLabel}</span></header>
+        <dl className="proton-runtime-versions"><div><dt>{pt?"Instalada":"Installed"}</dt><dd>{release?.current||(pt?"Nenhuma":"None")}</dd></div><div><dt>{pt?"Disponível":"Available"}</dt><dd>{release?.latest||"—"}{release&&release.asset.size>0&&<small>{formatTransferBytes(release.asset.size)}</small>}</dd></div></dl>
+        <div className="proton-runtime-actions">
+          {downloading?<button type="button" className="mod-action-secondary" disabled={cancelling||progress?.phase==="complete"} onClick={()=>void cancel()}><MenuIcon name="stop"/>{t("runners",cancelling?"cancelling":"cancel")}</button>:<>
+            {(!release?.current||release.needs_update)&&<button type="button" className="mod-action-primary" disabled={disabled||Boolean(active)||checking[d.family]||!release?.needs_update} onClick={()=>void download(d.family)}><MenuIcon name="download"/>{release?.current?(pt?"Atualizar":"Update"):(pt?"Instalar":"Install")}</button>}
+            <button type="button" className="mod-action-secondary" disabled={disabled||Boolean(active)||checking[d.family]} onClick={()=>void refresh(d.family)}><MenuIcon name="repair"/>{checking[d.family]?(pt?"Verificando…":"Checking…"):(pt?"Buscar atualização":"Check for updates")}</button>
           </>}
         </div>
-        {messages[d.family] && <p className="proton-card-message" role="status">{messages[d.family]}</p>}
-      </div>;
+        {progressFamily===d.family&&(downloading||progress?.phase==="complete")&&<ComponentDownloadProgress progress={currentProgress} onDismiss={()=>{setProgress(null);setMessages(old=>old[d.family]===t("runners","installed")?{...old,[d.family]:""}:old)}} label={progress?.phase==="complete"?(pt?"Instalação concluída":"Installation complete"):cancelling?t("runners","cancelling"):progress?t("runners",progress.phase):(pt?"Preparando download…":"Preparing download…")}/>}
+        {release?.installed_path&&<div className="mod-destination"><MenuIcon name="folder"/><div><span>{pt?"Destino da instalação":"Install location"}</span><button type="button" title={release.installed_path} disabled={downloading} onClick={()=>void invoke("open_folder",{path:release.installed_path}).catch(error=>notifyError(d.name,String(error)))}>{release.installed_path}</button></div></div>}
+        {release?.current&&<div className="mod-setting-row mod-destructive-row"><div className="mod-row-copy"><strong>{pt?"Remover esta versão":"Remove this version"}</strong><small>{pt?"Jogos que usam esta versão precisarão de outra seleção.":"Games using this version will need another selection."}</small></div><button type="button" className="mod-action-quiet danger" disabled={disabled||Boolean(active)||checking[d.family]} onClick={()=>{setRemoval({family:d.family,name:d.name,version:release.current!});onBusy(true)}}><MenuIcon name="trash"/>{pt?"Remover":"Remove"}</button></div>}
+        {messages[d.family]&&<p className="proton-runtime-message" role="status">{messages[d.family]}</p>}
+      </section>;
     })}
   </div>
     {removal && <ConfirmModal title={t("runners", "uninstall")} message={t("runners", "uninstallConfirm").replace("{name}", removal.name).replace("{version}", removal.version)} confirmText={t("runners", "uninstall")} cancelText={t("confirm", "cancel")} isDanger busy={removing} onConfirm={() => void uninstall()} onCancel={closeRemoval}/>}

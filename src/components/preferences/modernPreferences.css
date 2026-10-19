@@ -5,10 +5,10 @@
 
 /* All embedded modern settings share the same quiet panel material. */
 .modern-ui .settings-page { container: settings-page / inline-size; max-width: 1440px; margin: 0 auto; padding: 10px 8px 24px; }
-.modern-ui .settings-page :is(.preference-panel,.preference-section,.preference-glass-settings,.preference-connection,.menu-glass-panel) {
+.modern-ui .settings-page :is(.preference-panel,.preference-section,.preference-glass-settings,.menu-glass-panel) {
   padding: 20px; border-radius: 18px !important; background: var(--modern-card) !important; border: 1px solid var(--modern-line) !important; box-shadow: none !important; backdrop-filter: none; -webkit-backdrop-filter: none;
 }
-.modern-ui .settings-page :is(.preference-panel,.preference-section,.preference-glass-settings,.preference-connection,.menu-glass-panel)::after,
+.modern-ui .settings-page :is(.preference-panel,.preference-section,.preference-glass-settings,.menu-glass-panel)::after,
 .modern-ui .settings-page :is(.preference-panel,.preference-section,.menu-glass-panel)::before { content: none !important; }
 .modern-ui .settings-page .preferences-page :is(h2,h3,h4) { color: var(--modern-text); }
 .modern-ui .settings-page .preferences-page h3 { font-size: 1rem; font-weight: 650; margin-bottom: 9px; }
@@ -23,12 +23,12 @@
 .modern-ui .settings-page .settings-page-search { position: relative; display: flex; align-items: center; gap: 6px; flex: 0 0 132px; width: 132px; height: 36px; padding: 0 9px; box-sizing: border-box; border-radius: 12px; background: var(--modern-card); border: 1px solid var(--modern-line); }
 .settings-page-search > button { display: grid; place-items: center; width: 22px; height: 28px; flex-shrink: 0; padding: 0; background: transparent; border: 0; color: var(--modern-muted); cursor: pointer; }
 .settings-page-search > button:hover { background: transparent; color: var(--accent); }
-.modern-ui .settings-page-search input { width: 100%; min-width: 0; border: 0; border-radius: 0; padding: 0; background: transparent; font-size: 0.75rem; outline: none; }
+.modern-ui .settings-page .settings-page-search input[type="search"] { width: 100%; min-width: 0; border: 0; border-radius: 0; padding: 0; background: transparent; font-size: 0.75rem; outline: none; }
 .settings-page-search:focus-within { border-color: rgba(var(--accent-rgb),.6) !important; }
 @container settings-page (max-width: 1120px) {
   .modern-ui .settings-page .settings-page-search { width: 36px; flex-basis: 36px; padding: 0 6px; }
   .settings-page-search input { display: none; }
-  .settings-page-search[data-expanded] input { display: block; position: absolute; z-index: 85; right: 0; top: 42px; width: min(250px,calc(100vw - 40px)); height: 38px; box-sizing: border-box; padding: 0 12px; border: 1px solid rgba(var(--accent-rgb),.45) !important; border-radius: 11px !important; background: var(--modern-overlay) !important; backdrop-filter: blur(18px); box-shadow: 0 12px 30px #0004; }
+  .modern-ui .settings-page .settings-page-search[data-expanded] input[type="search"] { display: block; position: absolute; z-index: 85; right: 0; top: 42px; width: min(250px,calc(100vw - 40px)); height: 38px; box-sizing: border-box; padding: 0 12px; border: 1px solid rgba(var(--accent-rgb),.45) !important; border-radius: 11px !important; background: var(--modern-overlay) !important; backdrop-filter: blur(18px); box-shadow: 0 12px 30px #0004; }
 }
 
 /* Keep the monitoring search mounted while displaying global results. */
@@ -43,3 +43,46 @@
 .modern-ui .settings-page .preference-backend-projects { grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; }
 .modern-ui .settings-page .preference-backend-projects .preference-backend-card { flex-direction: column; align-items: flex-start; gap: 14px; }
 .modern-ui .settings-page .preference-backend-projects .preference-backend-update { margin-left: 0; margin-top: auto; }
+
+/* Mod preferences are grouped by module; their existing controls stay intact. */
+.preference-mod-tabs { position:relative; isolation:isolate; display:inline-grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:max-content; max-width:100%; box-sizing:border-box; gap:3px; padding:3px; margin-bottom:16px; border:1px solid rgba(255,255,255,.09); border-radius:12px; background:#080b12; }
+.preference-mod-tabs::before { content:""; position:absolute; z-index:-1; pointer-events:none; top:3px; bottom:3px; left:3px; width:calc((100% - 12px)/3); border:1px solid rgba(var(--accent-rgb),.4); border-radius:9px; box-sizing:border-box; background:linear-gradient(125deg,rgba(var(--accent-rgb),.27),rgba(var(--accent-rgb),.13)); box-shadow:inset 0 0 10px rgba(var(--accent-rgb),.1); transform:translateX(0); transition:transform 420ms cubic-bezier(.22,1.25,.36,1); }
+.preference-mod-tabs[data-active=nexus]::before { transform:translateX(calc(100% + 3px)); }
+.preference-mod-tabs[data-active=mako]::before { transform:translateX(calc(200% + 6px)); }
+.preference-mod-tabs button { min-width:0; padding:7px 12px; border:1px solid transparent; border-radius:9px; background:transparent; color:#a9b1c1; font:inherit; font-size:.8125rem; font-weight:600; cursor:pointer; }
+.preference-mod-tabs button[aria-selected=true] { color:#f2f6ff; }
+.preference-mod-tabs button:hover:not(:disabled) { color:#f2f6ff; background:rgba(var(--accent-rgb),.07); }
+.preference-mod-tabs button:disabled { opacity:.5; cursor:default; }
+.mod-module-description { font-size:.9375rem; margin:0 0 14px; }
+.modern-ui .settings-page .mod-preferences-content .mod-module-description { font-size:.9375rem; margin:0 0 14px; }
+@media(prefers-reduced-motion:reduce){.preference-mod-tabs::before{transition:none}}
+
+/* Mod modules use the page background, with no nested panel material. */
+.mod-preferences-content :is(.preference-panel,.preference-section),
+.modern-ui .settings-page .mod-preferences-content :is(.preference-panel,.preference-section) {
+  margin-top:0; padding:0; border:0 !important; border-radius:0 !important; background:transparent !important; box-shadow:none !important; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+
+/* Global results reuse the real controls instead of a list of page shortcuts. */
+.preference-search-scope [data-search-hidden] { display:none !important; }
+.preference-search-group { min-width:0; margin-bottom:22px; }
+.preference-search-group > header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--modern-line,rgba(122,135,171,.18)); }
+.preference-search-group > header h2 { display:flex; align-items:center; gap:8px; margin:0; font-size:1rem; }
+.preference-search-group > header h2 .menu-icon { width:18px; height:18px; color:var(--accent); }
+.preference-search-open { border:0; background:none; color:var(--text-secondary); font:inherit; font-size:.75rem; cursor:pointer; }
+.preference-search-scope > h2 { display:none; }
+.mango-search-results .mm-advanced-section { margin-top:10px; }
+.mango-search-results .mm-advanced-section h3 { font-size:.8125rem; color:var(--accent); margin:12px 0 5px; }
+.mango-search-results .mm-advanced-row > span small { display:block; font-size:.6875rem; color:var(--text-secondary); margin-top:3px; }
+.mango-search-results .mm-advanced-row { min-height:38px; }
+@media(max-width:540px){.mango-search-results .mm-advanced-row{flex-wrap:wrap}.mango-search-results .mm-advanced-row > span{flex-basis:100%}}
+
+.mod-preferences-content .backend-inline-controls { width:100%; min-width:0; margin-top:auto; }
+.backend-inline-version:empty { display:none; }
+.backend-inline-version { margin-bottom:8px; color:var(--modern-muted); font-size:.75rem; overflow-wrap:anywhere; }
+.backend-inline-actions { display:flex; flex-wrap:wrap; gap:6px; }
+.modern-ui .settings-page .preference-backend-card .backend-inline-actions button { min-height:30px; padding:6px 10px; font-size:.8125rem; line-height:1.25; }
+.modern-ui .settings-page .preference-backend-card .backend-inline-actions .danger { color:#f8a2a2; background:rgba(220,70,70,.08); border-color:rgba(248,113,113,.25); }
+.backend-inline-controls progress { display:block; width:100%; height:5px; margin-top:10px; accent-color:var(--accent); }
+.modern-ui .settings-page .backend-inline-status { margin:9px 0 0; font-size:.8125rem; overflow-wrap:anywhere; }
+.modern-ui .settings-page .backend-inline-status.error { color:#f8a2a2; }

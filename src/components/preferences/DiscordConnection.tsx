@@ -66,24 +66,23 @@ export function DiscordConnection() {
   };
   const account = status?.account;
   const valid = account?.benefit && account.valid_until && account.valid_until > Date.now();
-  return <section className="preference-connection" data-preference-id="connection-discord" aria-busy={busy}>
-    <header><MenuIcon name="discord"/><h3>Discord</h3><span className="preference-connection-status">{account ? pt ? "Conectado" : "Connected" : pt ? "Não conectado" : "Not connected"}</span></header>
-    <p>{pt ? "Entre pelo navegador para verificar seu cargo de membro do YouTube ou seu impulso neste servidor." : "Sign in through your browser to check your YouTube membership role or your boost in this server."}</p>
-    {!status && !error && <p role="status">{pt ? "Verificando conexão…" : "Checking connection…"}</p>}
-    {status && !status.configured && <p>{pt ? "O serviço de login ainda precisa ser configurado para habilitar esta conexão." : "The sign-in service needs to be configured to enable this connection."}</p>}
-    {status?.pending && <p role="status">{pt ? "Aguardando autorização no navegador. Depois de autorizar, você pode fechar a página." : "Waiting for browser authorization. You can close the page after authorizing."}</p>}
-    {account && <>
-      <p><strong>{account.name}</strong></p>
-      <p>{!account.in_server ? pt ? "Entre no servidor da comunidade para verificar seus benefícios." : "Join the community server to check your benefits." : valid ? `${pt ? "Elegibilidade confirmada" : "Eligibility confirmed"}: ${account.benefit === "owner" ? pt ? "dono da comunidade" : "community owner" : account.benefit === "youtube" ? pt ? "membro do YouTube" : "YouTube member" : pt ? "impulsionador do servidor" : "server booster"}.` : pt ? "Nenhum benefício ativo confirmado. Verifique novamente após a sincronização dos cargos." : "No active benefit confirmed. Check again after roles have synced."}</p>
-      {valid && <p>{pt ? "Validade da verificação" : "Verification valid until"}: {new Date(account.valid_until!).toLocaleDateString(pt ? "pt-BR" : "en-US")}</p>}
-      {status?.offline && <p role="status">{pt ? "Sem validação online. Exibindo a última verificação salva." : "Online validation unavailable. Showing the last saved verification."}</p>}
-    </>}
-    <div className="nexus-account-actions">
-      {!account && !status?.pending && <button type="button" className="btn btn-primary" disabled={busy || !status?.configured} onClick={() => void run("connect")}><MenuIcon name="discord"/>{pt ? "Entrar com Discord" : "Sign in with Discord"}</button>}
-      {account && <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void run("refresh")}><MenuIcon name="repair"/>{pt ? "Verificar novamente" : "Check again"}</button>}
-      {(account || status?.pending || error) && <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void run("disconnect")}><MenuIcon name="chainBroken"/>{status?.pending ? pt ? "Cancelar login" : "Cancel sign-in" : pt ? "Desconectar e remover credenciais" : "Disconnect and remove credentials"}</button>}
-      {error && <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void run("refresh")}><MenuIcon name="repair"/>{pt ? "Tentar novamente" : "Retry"}</button>}
+  return <section className="connection-module" data-preference-id="connection-discord" aria-busy={busy}><div className="connection-grid">
+    <section className="connection-card"><header className="connection-heading"><span className="mod-component-icon"><MenuIcon name="discord"/></span><div><h3>Discord</h3><p>{pt?"Vincule sua conta à comunidade.":"Link your account to the community."}</p></div><span className="mod-status-badge" data-ready={Boolean(account)} role="status">{account?(pt?"Conectado":"Connected"):status?.pending?(pt?"Aguardando login":"Waiting for sign-in"):!status&&!error?(pt?"Verificando…":"Checking…"):(pt?"Não conectado":"Not connected")}</span></header>
+    <div className="connection-account-row"><MenuIcon name={account?"check":"chainLinked"}/><div><strong>{account?account.name:(pt?"Autorize pelo navegador":"Authorize in your browser")}</strong><p>{pt?"O PeliGames verifica os cargos vinculados à sua conta.":"PeliGames checks the roles linked to your account."}</p></div></div>
+    {status&&!status.configured&&<p role="status">{pt?"O serviço de login ainda precisa ser configurado para habilitar esta conexão.":"The sign-in service needs to be configured to enable this connection."}</p>}
+    {status?.pending&&<p role="status">{pt?"Aguardando autorização no navegador. Depois de autorizar, você pode fechar a página.":"Waiting for browser authorization. You can close the page after authorizing."}</p>}
+    <div className="connection-primary-actions">
+      {!account&&!status?.pending&&<button type="button" className="mod-action-primary" disabled={busy||!status?.configured} onClick={()=>void run("connect")}><MenuIcon name="discord"/>{pt?"Entrar com Discord":"Sign in with Discord"}</button>}
+      {account&&<button type="button" className="mod-action-secondary" disabled={busy} onClick={()=>void run("refresh")}><MenuIcon name="repair"/>{pt?"Verificar novamente":"Check again"}</button>}
+      {error&&<button type="button" className="mod-action-secondary" disabled={busy} onClick={()=>void run("refresh")}><MenuIcon name="repair"/>{pt?"Tentar novamente":"Retry"}</button>}
     </div>
-    {error && <p className="preferences-error" role="alert">{error}</p>}
-  </section>;
+    {(account||status?.pending||error)&&<div className="mod-setting-row mod-destructive-row"><div className="mod-row-copy"><strong>{status?.pending?(pt?"Cancelar autorização":"Cancel authorization"):(pt?"Remover conexão":"Remove connection")}</strong><small>{pt?"Remove a conexão deste dispositivo, sem excluir sua conta Discord.":"Removes the connection from this device without deleting your Discord account."}</small></div><button type="button" className="mod-action-quiet danger" disabled={busy} onClick={()=>void run("disconnect")}><MenuIcon name="chainBroken"/>{status?.pending?(pt?"Cancelar":"Cancel"):(pt?"Desconectar":"Disconnect")}</button></div>}
+    {error&&<p className="mod-feedback-error" role="alert">{error}</p>}
+    </section>
+    <section className="connection-card"><h3>{pt?"Verificação de benefícios":"Benefit verification"}</h3><p className="connection-section-hint">{pt?"O cargo de membro do YouTube ou o impulso no servidor pode liberar benefícios no launcher.":"A YouTube membership role or a server boost may unlock launcher benefits."}</p>
+      <div className="connection-info-row"><MenuIcon name="heart"/><div><strong>{account?(valid?(pt?"Elegibilidade confirmada":"Eligibility confirmed"):(pt?"Sem benefício confirmado":"No confirmed benefit")):(pt?"Conecte para verificar":"Connect to check")}</strong><p>{account?(!account.in_server?(pt?"Entre no servidor da comunidade para verificar seus benefícios.":"Join the community server to check your benefits."):valid?(account.benefit==="owner"?(pt?"Dono da comunidade":"Community owner"):account.benefit==="youtube"?(pt?"Membro do YouTube":"YouTube member"):(pt?"Impulsionador do servidor":"Server booster")):(pt?"Se seus cargos mudaram, use Verificar novamente após a sincronização.":"If your roles have changed, use Check again after synchronization.")):(pt?"Entre com a conta que tem seus cargos no servidor.":"Sign in with the account holding your server roles.")}</p></div></div>
+      {valid&&<div className="connection-info-row"><MenuIcon name="calendar"/><div><strong>{pt?"Validade da verificação":"Verification valid until"}</strong><p>{new Date(account.valid_until!).toLocaleDateString(pt?"pt-BR":"en-US")}</p></div></div>}
+      {status?.offline&&<p role="status">{pt?"Sem validação online. Exibindo a última verificação salva.":"Online validation unavailable. Showing the last saved verification."}</p>}
+    </section>
+  </div></section>;
 }

@@ -63,7 +63,7 @@ export function SteamPendingActions({game, disabled, onSaved, children}: {
       window.removeEventListener("peligamesLibraryChanged", refresh);
     };
   }, [game.external_id, game.launcher]);
-  const act = async (action: "restart" | "revert") => {
+  const act = async (action: "restart" | "revert" | "confirm-manual") => {
     if (busy || disabled || exporting) return;
     setBusy(true);
     try {
@@ -71,8 +71,8 @@ export function SteamPendingActions({game, disabled, onSaved, children}: {
       setPending(Boolean(next.steam_pending));
       onSaved({...game, ...next, cover_url: game.cover_url});
       window.dispatchEvent(new Event("peligamesLibraryChanged"));
-      notifyInfo(steamLabel, action === "restart" ? (pt ? "Configurações aplicadas. Steam reiniciada." : "Settings applied. Steam restarted.") : (pt ? "Alterações revertidas." : "Changes reverted."));
-      if (action === "restart") setManual(null);
+      notifyInfo(steamLabel, action === "restart" ? (pt ? "Configurações aplicadas. Steam reiniciada." : "Settings applied. Steam restarted.") : action === "confirm-manual" ? (pt ? "Opções da Steam verificadas. Perfil preservado." : "Steam options verified. Profile preserved.") : (pt ? "Alterações revertidas." : "Changes reverted."));
+      if (action !== "revert") setManual(null);
     } catch (error) { notifyError(steamLabel, String(error)); }
     finally { setBusy(false); }
   };
@@ -96,22 +96,22 @@ export function SteamPendingActions({game, disabled, onSaved, children}: {
   return <>
     <div className="steam-action-slot">
       {pending ? <div className="steam-pending-actions">
-        <p className="steam-pending-label" role="status"><strong>{pt ? "Alterações pendentes na Steam" : "Changes pending in Steam"}</strong>{pt ? "Reinicie para aplicar ou configure manualmente na Steam." : "Restart to apply or configure manually in Steam."}</p>
+        <p className="steam-pending-label" role="status"><strong>{pt ? "Conclua a configuração na Steam" : "Complete Steam setup"}</strong>{pt ? "Confira a linha fixa e o Proton nas propriedades do jogo." : "Check the fixed command and Proton in game properties."}</p>
         <div className="steam-pending-primary">
-          <button type="button" className="btn btn-play modern-play" disabled={blocked} aria-busy={busy} onClick={() => void act("restart")}><MenuIcon name="repair" />{busy ? (pt ? "Aguarde…" : "Please wait…") : (pt ? "Reiniciar Steam" : "Restart Steam")}</button>
+          <button type="button" className="btn btn-play modern-play" disabled={blocked} aria-busy={exporting} onClick={() => void showManual()}><MenuIcon name="settings" />{exporting ? (pt ? "Aguarde…" : "Please wait…") : (pt ? "Configurar na Steam" : "Configure in Steam")}</button>
           <button type="button" className="modern-mini-btn" disabled={blocked} onClick={() => void act("revert")}>{pt ? "Reverter alterações" : "Revert changes"}</button>
         </div>
-        <button type="button" className="modern-mini-btn steam-manual-open" disabled={blocked} aria-busy={exporting} onClick={() => void showManual()}><MenuIcon name="copy" />{exporting ? (pt ? "Gerando opções…" : "Generating options…") : (pt ? "Configurar manualmente" : "Configure manually")}</button>
+        <button type="button" className="modern-mini-btn steam-manual-open" disabled={blocked} aria-busy={busy} onClick={() => void act("restart")}><MenuIcon name="repair" />{busy ? (pt ? "Aguarde…" : "Please wait…") : (pt ? "Reiniciar Steam e aplicar automaticamente" : "Restart Steam and apply automatically")}</button>
       </div> : children}
     </div>
     {manual && <NexusPopup className="steam-manual-popup" title={pt ? "Configurar na Steam" : "Configure in Steam"} titleIcon={<MenuIcon name="settings" />} onClose={() => { if (!busy) setManual(null); }} footer={<>
-      <button type="button" className="modern-mini-btn" disabled={blocked || !pending} onClick={() => void act("revert")}>{pending ? (pt ? "Reverter e liberar Jogar" : "Revert and enable Play") : (pt ? "Alterações revertidas" : "Changes reverted")}</button>
+      <button type="button" className="modern-mini-btn" disabled={blocked || !pending} onClick={() => void act("confirm-manual")}>{pending ? (pt ? "Já adicionei · verificar" : "I added it · verify") : (pt ? "Sem alterações pendentes" : "No pending changes")}</button>
       <button type="button" className="btn btn-primary" onClick={() => void copy()}><MenuIcon name={copied ? "check" : "copy"} />{copied ? (pt ? "Copiado" : "Copied") : (pt ? "Copiar opções" : "Copy options")}</button>
     </>}>
       <p className="steam-manual-intro">{pt ? "Na Steam, abra Propriedades do jogo → Geral → Opções de inicialização e substitua a linha pelas opções abaixo. Acrescente seus argumentos adicionais, se houver." : "In Steam, open game Properties → General → Launch Options and replace the line with the options below. Append any additional game arguments you use."}</p>
       <label className="steam-manual-field"><span>{pt ? "Opções de inicialização geradas" : "Generated launch options"}</span><textarea readOnly spellCheck={false} rows={4} value={manual.line} onFocus={event => event.currentTarget.select()} /></label>
       {protonName && <div className="steam-manual-proton"><MenuIcon name="info" /><p>{pt ? <>Para usar <strong>{protonName}</strong>, abra Propriedades → Compatibilidade na Steam e selecione essa versão do Proton. Ela precisa estar disponível na sua instalação da Steam.</> : <>To use <strong>{protonName}</strong>, open Properties → Compatibility in Steam and select that Proton version. It must be available in your Steam installation.</>}</p></div>}
-      <p className="steam-manual-help">{pt ? "Depois de configurar na Steam, use “Reverter e liberar Jogar” para descartar as pendências do PeliGames. Isso preserva o que você configurou na Steam. Estas opções continuam disponíveis para copiar mesmo após reverter." : "After configuring Steam, use “Revert and enable Play” to discard PeliGames’ pending edits. This preserves your Steam settings. These options remain available to copy after reverting."}</p>
+      <p className="steam-manual-help">{pt ? "Adicione esta linha uma vez e use “Já adicionei · verificar”. Depois, MangoHUD, geração de quadros e variáveis usarão o perfil atualizado na próxima abertura do jogo, sem reiniciar a Steam. A escolha do Proton continua em Compatibilidade." : "Add this command once and use “I added it · verify”. MangoHUD, frame generation and variables will then read the updated profile on the next game launch, without restarting Steam. Proton selection remains under Compatibility."}</p>
     </NexusPopup>}
   </>;
 }

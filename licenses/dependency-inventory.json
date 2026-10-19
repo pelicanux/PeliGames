@@ -1,6 +1,38 @@
 {
   "rust": [
     {
+      "name": "ab_glyph",
+      "version": "0.2.32",
+      "license": "Apache-2.0",
+      "source": "https://crates.io/crates/ab_glyph/0.2.32",
+      "repository": "https://github.com/alexheretic/ab-glyph",
+      "authors": [
+        "Alex Butler <alexheretic@gmail.com>"
+      ],
+      "notices": [
+        {
+          "file": "LICENSE",
+          "sha256": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9"
+        }
+      ]
+    },
+    {
+      "name": "ab_glyph_rasterizer",
+      "version": "0.1.10",
+      "license": "Apache-2.0",
+      "source": "https://crates.io/crates/ab_glyph_rasterizer/0.1.10",
+      "repository": "https://github.com/alexheretic/ab-glyph",
+      "authors": [
+        "Alex Butler <alexheretic@gmail.com>"
+      ],
+      "notices": [
+        {
+          "file": "LICENSE",
+          "sha256": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9"
+        }
+      ]
+    },
+    {
       "name": "adler2",
       "version": "2.0.1",
       "license": "0BSD OR MIT OR Apache-2.0",
@@ -22,6 +54,26 @@
         {
           "file": "LICENSE-MIT",
           "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "ahash",
+      "version": "0.8.12",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/ahash/0.8.12",
+      "repository": "https://github.com/tkaitchuck/ahash",
+      "authors": [
+        "Tom Kaitchuck <Tom.Kaitchuck@gmail.com>"
+      ],
+      "notices": [
+        {
+          "file": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "0444c6991eead6822f7b9102e654448d51624431119546492e8b231db42c48bb"
         }
       ]
     },
@@ -223,6 +275,28 @@
         {
           "file": "LICENSE",
           "sha256": "0aab2eeeaa27c8e946c235e5e605c6d52cb0a56d254c660bdcf618d6f7faf4af"
+        }
+      ]
+    },
+    {
+      "name": "ash",
+      "version": "0.38.0+1.3.281",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/ash/0.38.0+1.3.281",
+      "repository": "https://github.com/ash-rs/ash",
+      "authors": [
+        "Maik Klein <maikklein@googlemail.com>",
+        "Benjamin Saunders <ben.e.saunders@gmail.com>",
+        "Marijn Suijten <marijn@traverseresearch.nl>"
+      ],
+      "notices": [
+        {
+          "file": "LICENSE-APACHE",
+          "sha256": "0e8a410375e1ee5c75c6198b08b534fec6e5edef766cf971bab4a404542636ab"
+        },
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "c733ccf8ab25df175a63d9d844677b98e3a5ab8f8de1c1616087e6868a7f948e"
         }
       ]
     },
@@ -2231,6 +2305,63 @@
       ]
     },
     {
+      "name": "ecolor",
+      "version": "0.31.1",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/ecolor/0.31.1",
+      "repository": "https://github.com/emilk/egui",
+      "authors": [
+        "Emil Ernerfeldt <emil.ernerfeldt@gmail.com>",
+        "Andreas Reich <reichandreas@gmx.de>"
+      ],
+      "notices": [
+        {
+          "file": "licenses/upstream/egui/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "file": "licenses/upstream/egui/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+        }
+      ]
+    },
+    {
+      "name": "egui",
+      "version": "0.31.1",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/egui/0.31.1",
+      "repository": "https://github.com/emilk/egui",
+      "authors": [
+        "Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"
+      ],
+      "notices": [
+        {
+          "file": "licenses/upstream/egui/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "file": "licenses/upstream/egui/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+        }
+      ]
+    },
+    {
+      "name": "egui-ash-renderer",
+      "version": "0.8.0",
+      "license": "MIT",
+      "source": "https://crates.io/crates/egui-ash-renderer/0.8.0",
+      "repository": "https://github.com/adrien-ben/egui-ash-renderer",
+      "authors": [
+        "Adrien Bennadji <adrien.bennadji@live.fr>"
+      ],
+      "notices": [
+        {
+          "file": "LICENSE",
+          "sha256": "27be5205d5e0eaa74490f965953e47b770c7b2aa855544087a864f75432958b5"
+        }
+      ]
+    },
+    {
       "name": "either",
       "version": "1.19.0",
       "license": "MIT OR Apache-2.0",
@@ -2245,6 +2376,26 @@
         {
           "file": "LICENSE-MIT",
           "sha256": "7576269ea71f767b99297934c0b2367532690f8c4badc695edf8e04ab6a1e545"
+        }
+      ]
+    },
+    {
+      "name": "emath",
+      "version": "0.31.1",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/emath/0.31.1",
+      "repository": "https://github.com/emilk/egui/tree/master/crates/emath",
+      "authors": [
+        "Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"
+      ],
+      "notices": [
+        {
+          "file": "licenses/upstream/egui/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "file": "licenses/upstream/egui/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
         }
       ]
     },
@@ -2380,10 +2531,84 @@
       ]
     },
     {
+      "name": "epaint",
+      "version": "0.31.1",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/epaint/0.31.1",
+      "repository": "https://github.com/emilk/egui/tree/master/crates/epaint",
+      "authors": [
+        "Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"
+      ],
+      "notices": [
+        {
+          "file": "licenses/upstream/egui/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "file": "licenses/upstream/egui/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+        }
+      ]
+    },
+    {
+      "name": "epaint_default_fonts",
+      "version": "0.31.1",
+      "license": "(MIT OR Apache-2.0) AND OFL-1.1 AND Ubuntu-font-1.0",
+      "source": "https://crates.io/crates/epaint_default_fonts/0.31.1",
+      "repository": "https://github.com/emilk/egui/tree/master/crates/epaint_default_fonts",
+      "authors": [
+        "Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"
+      ],
+      "notices": [
+        {
+          "file": "fonts/Hack-Regular.txt",
+          "sha256": "47c0cccbeec7e8614548cc485588b28149e7874188df5f41b36efebcee285c87"
+        },
+        {
+          "file": "fonts/OFL.txt",
+          "sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2"
+        },
+        {
+          "file": "fonts/UFL.txt",
+          "sha256": "2f0015108d68627bd788d313f529c21ff4da2c2c42a5e1f3883acc83480f9002"
+        },
+        {
+          "file": "fonts/emoji-icon-font-mit-license.txt",
+          "sha256": "b9d2c1d909aa149996fd4c91dcb92b2362a04431640c1d200959da94caf8cde1"
+        },
+        {
+          "file": "licenses/upstream/egui/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "file": "licenses/upstream/egui/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c"
+        }
+      ]
+    },
+    {
       "name": "equivalent",
       "version": "1.0.2",
       "license": "Apache-2.0 OR MIT",
       "source": "https://crates.io/crates/equivalent/1.0.2",
+      "repository": "https://github.com/indexmap-rs/equivalent",
+      "authors": [],
+      "notices": [
+        {
+          "file": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "7365cc8878a1d7ce155a58c4ca09c3d7a6be413efa5334a80ea842912b669349"
+        }
+      ]
+    },
+    {
+      "name": "equivalent",
+      "version": "1.0.3",
+      "license": "Apache-2.0 OR MIT",
+      "source": "https://crates.io/crates/equivalent/1.0.3",
       "repository": "https://github.com/indexmap-rs/equivalent",
       "authors": [],
       "notices": [
@@ -4418,6 +4643,24 @@
       ]
     },
     {
+      "name": "libc",
+      "version": "0.2.191",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/libc/0.2.191",
+      "repository": "https://github.com/rust-lang/libc",
+      "authors": [],
+      "notices": [
+        {
+          "file": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "123a331b5dbf04c30097fa43b8f858bc85df671fe776de498d01f3d6b7c1f69e"
+        }
+      ]
+    },
+    {
       "name": "libdbus-sys",
       "version": "0.2.7",
       "license": "Apache-2.0/MIT",
@@ -5164,6 +5407,26 @@
       ]
     },
     {
+      "name": "nohash-hasher",
+      "version": "0.2.0",
+      "license": "Apache-2.0 OR MIT",
+      "source": "https://crates.io/crates/nohash-hasher/0.2.0",
+      "repository": "https://github.com/paritytech/nohash-hasher",
+      "authors": [
+        "Parity Technologies <admin@parity.io>"
+      ],
+      "notices": [
+        {
+          "file": "LICENSE-APACHE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "ec353d4fecf7963b4c054384557e5dbc3c7a717997eb4a3815b315721a6aa75a"
+        }
+      ]
+    },
+    {
       "name": "nom",
       "version": "8.0.0",
       "license": "MIT",
@@ -5415,6 +5678,22 @@
         {
           "file": "LICENSE",
           "sha256": "8f71659370c5268d9a1dc962a46232540e8fca63462586d8efaa95aab492a208"
+        }
+      ]
+    },
+    {
+      "name": "owned_ttf_parser",
+      "version": "0.25.1",
+      "license": "Apache-2.0",
+      "source": "https://crates.io/crates/owned_ttf_parser/0.25.1",
+      "repository": "https://github.com/alexheretic/owned-ttf-parser",
+      "authors": [
+        "Alex Butler <alexheretic@gmail.com>"
+      ],
+      "notices": [
+        {
+          "file": "LICENSE",
+          "sha256": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9"
         }
       ]
     },
@@ -6072,6 +6351,26 @@
         {
           "file": "LICENSE-MIT",
           "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "profiling",
+      "version": "1.0.18",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/profiling/1.0.18",
+      "repository": "https://github.com/aclysma/profiling",
+      "authors": [
+        "Philip Degarmo <aclysma@gmail.com>"
+      ],
+      "notices": [
+        {
+          "file": "licenses/upstream/profiling/LICENSE-APACHE",
+          "sha256": "10d30a673cd5e9349bdc02aeb48f14b3386d27d0da32df8f0a555d4aa16aa551"
+        },
+        {
+          "file": "licenses/upstream/profiling/LICENSE-MIT",
+          "sha256": "c8167fdeeed46d3f244d3f85c5bf998ce889343691c32be2c61a8bc4b5c08333"
         }
       ]
     },
@@ -7357,6 +7656,24 @@
       ]
     },
     {
+      "name": "serde_json",
+      "version": "1.0.154",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/serde_json/1.0.154",
+      "repository": "https://github.com/serde-rs/json",
+      "authors": [],
+      "notices": [
+        {
+          "file": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
       "name": "serde_repr",
       "version": "0.1.21",
       "license": "MIT OR Apache-2.0",
@@ -7767,6 +8084,26 @@
       ]
     },
     {
+      "name": "smallvec",
+      "version": "1.16.3",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/smallvec/1.16.3",
+      "repository": "https://github.com/servo/rust-smallvec",
+      "authors": [
+        "The Servo Project Developers"
+      ],
+      "notices": [
+        {
+          "file": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "0b28172679e0009b655da42797c03fd163a3379d5cfa67ba1f1655e974a2a1a9"
+        }
+      ]
+    },
+    {
       "name": "socket2",
       "version": "0.6.5",
       "license": "MIT OR Apache-2.0",
@@ -8013,6 +8350,26 @@
       "version": "3.0.6",
       "license": "MIT OR Apache-2.0",
       "source": "https://crates.io/crates/syn/3.0.6",
+      "repository": "https://github.com/dtolnay/syn",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "notices": [
+        {
+          "file": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "syn",
+      "version": "3.0.9",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/syn/3.0.9",
       "repository": "https://github.com/dtolnay/syn",
       "authors": [
         "David Tolnay <dtolnay@gmail.com>"
@@ -8840,9 +9197,45 @@
     },
     {
       "name": "toml",
+      "version": "0.8.23",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/toml/0.8.23",
+      "repository": "https://github.com/toml-rs/toml",
+      "authors": [],
+      "notices": [
+        {
+          "file": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "toml",
       "version": "1.1.6+spec-1.1.0",
       "license": "MIT OR Apache-2.0",
       "source": "https://crates.io/crates/toml/1.1.6+spec-1.1.0",
+      "repository": "https://github.com/toml-rs/toml",
+      "authors": [],
+      "notices": [
+        {
+          "file": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "toml_datetime",
+      "version": "0.6.11",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/toml_datetime/0.6.11",
       "repository": "https://github.com/toml-rs/toml",
       "authors": [],
       "notices": [
@@ -8938,6 +9331,24 @@
     },
     {
       "name": "toml_edit",
+      "version": "0.22.27",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/toml_edit/0.22.27",
+      "repository": "https://github.com/toml-rs/toml",
+      "authors": [],
+      "notices": [
+        {
+          "file": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "toml_edit",
       "version": "0.25.15+spec-1.1.0",
       "license": "MIT OR Apache-2.0",
       "source": "https://crates.io/crates/toml_edit/0.25.15+spec-1.1.0",
@@ -8959,6 +9370,24 @@
       "version": "1.1.3+spec-1.1.0",
       "license": "MIT OR Apache-2.0",
       "source": "https://crates.io/crates/toml_parser/1.1.3+spec-1.1.0",
+      "repository": "https://github.com/toml-rs/toml",
+      "authors": [],
+      "notices": [
+        {
+          "file": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "toml_write",
+      "version": "0.1.2",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/toml_write/0.1.2",
       "repository": "https://github.com/toml-rs/toml",
       "authors": [],
       "notices": [
@@ -9185,6 +9614,33 @@
       ]
     },
     {
+      "name": "ttf-parser",
+      "version": "0.25.1",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://crates.io/crates/ttf-parser/0.25.1",
+      "repository": "https://github.com/harfbuzz/ttf-parser",
+      "authors": [
+        "Caleb Maclennan <caleb@alerque.com>",
+        "Laurenz Stampfl <laurenz.stampfl@gmail.com>",
+        "Yevhenii Reizner <razrfalcon@gmail.com>",
+        "\u062e\u0627\u0644\u062f \u062d\u0633\u0646\u064a (Khaled Hosny) <khaled@aliftype.com>"
+      ],
+      "notices": [
+        {
+          "file": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "f3c9fe731c701ed77fd5fbaac573872af04dc5869385eb9bd5e3c73c42713814"
+        },
+        {
+          "file": "tests/fonts/colr_1_LICENSE",
+          "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+        }
+      ]
+    },
+    {
       "name": "tungstenite",
       "version": "0.29.0",
       "license": "MIT OR Apache-2.0",
@@ -9292,6 +9748,30 @@
       "version": "1.0.26",
       "license": "(MIT OR Apache-2.0) AND Unicode-3.0",
       "source": "https://crates.io/crates/unicode-ident/1.0.26",
+      "repository": "https://github.com/dtolnay/unicode-ident",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "notices": [
+        {
+          "file": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "file": "LICENSE-UNICODE",
+          "sha256": "f7db81051789b729fea528a63ec4c938fdcb93d9d61d97dc8cc2e9df6d47f2a1"
+        }
+      ]
+    },
+    {
+      "name": "unicode-ident",
+      "version": "1.0.27",
+      "license": "(MIT OR Apache-2.0) AND Unicode-3.0",
+      "source": "https://crates.io/crates/unicode-ident/1.0.27",
       "repository": "https://github.com/dtolnay/unicode-ident",
       "authors": [
         "David Tolnay <dtolnay@gmail.com>"
@@ -9723,6 +10203,10 @@
           "sha256": "d6aea75749fea86fda6bf81453bfb507a005de04d21d8a77ef9625fd19c39cc7"
         },
         {
+          "file": "libwebrtc/patches/fix_license_json_parsing.patch",
+          "sha256": "602275f0ebe9b5122496eaf3ecf624068316c87fdbcfee9d8fa5495463ca471b"
+        },
+        {
           "file": "src/lazy_load_deps_for/LICENSE.txt",
           "sha256": "670cfb02946c9f4dd2591768127928f2897ce8cc5dc3411469c19e9de152746f"
         }
@@ -9767,6 +10251,20 @@
       "version": "0.5.40",
       "license": "MIT",
       "source": "https://crates.io/crates/winnow/0.5.40",
+      "repository": "https://github.com/winnow-rs/winnow",
+      "authors": [],
+      "notices": [
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "cb5aedb296c5246d1f22e9099f925a65146f9f0d6b4eebba97fd27a6cdbbab2d"
+        }
+      ]
+    },
+    {
+      "name": "winnow",
+      "version": "0.7.15",
+      "license": "MIT",
+      "source": "https://crates.io/crates/winnow/0.7.15",
       "repository": "https://github.com/winnow-rs/winnow",
       "authors": [],
       "notices": [
@@ -10072,6 +10570,28 @@
       "version": "0.8.59",
       "license": "BSD-2-Clause OR Apache-2.0 OR MIT",
       "source": "https://crates.io/crates/zerocopy/0.8.59",
+      "repository": "https://github.com/google/zerocopy",
+      "authors": [],
+      "notices": [
+        {
+          "file": "LICENSE-APACHE",
+          "sha256": "9d185ac6703c4b0453974c0d85e9eee43e6941009296bb1f5eb0b54e2329e9f3"
+        },
+        {
+          "file": "LICENSE-BSD",
+          "sha256": "83c1763356e822adde0a2cae748d938a73fdc263849ccff6b27776dff213bd32"
+        },
+        {
+          "file": "LICENSE-MIT",
+          "sha256": "1a2f5c12ddc934d58956aa5dbdd3255fe55fd957633ab7d0d39e4f0daa73f7df"
+        }
+      ]
+    },
+    {
+      "name": "zerocopy",
+      "version": "0.8.63",
+      "license": "BSD-2-Clause OR Apache-2.0 OR MIT",
+      "source": "https://crates.io/crates/zerocopy/0.8.63",
       "repository": "https://github.com/google/zerocopy",
       "authors": [],
       "notices": [

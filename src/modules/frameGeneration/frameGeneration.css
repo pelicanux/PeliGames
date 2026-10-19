@@ -1,0 +1,94 @@
+.frame-generation-panel { display:grid; gap:12px; min-width:0; font-size:.875rem; }
+.frame-generation-panel h3 { margin:0 0 5px; font-size:1rem; }
+.frame-generation-panel p { color:var(--text-secondary); line-height:1.45; margin:0; }
+.fg-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; }
+.fg-configuration { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; align-items:start; }
+.fg-source { display:grid; gap:10px; min-width:0; }
+.fg-dll { display:flex; gap:8px; align-items:flex-end; }
+.fg-dll label { display:grid; gap:6px; flex:1; min-width:0; }
+.fg-dll input { width:100%; text-overflow:ellipsis; }
+.frame-generation-panel .modern-mini-btn { min-height:32px; padding:5px 10px; border-radius:8px; flex-shrink:0; justify-content:center; }
+.fg-controls { display:grid; grid-template-columns:1fr; gap:0; align-items:center; }
+.fg-controls label { display:flex; align-items:center; gap:8px; min-width:0; }
+.fg-controls .fg-control-field,.fg-control-field { display:flex; align-items:center; justify-content:space-between; gap:10px; min-width:0; }
+.frame-generation-panel input:not([type=checkbox]):not([type=range]) { box-sizing:border-box; height:32px; background:var(--bg-secondary,#12151d); color:var(--text-primary); border:1px solid rgba(var(--accent-rgb),.25); border-radius:8px; padding:5px 9px; min-width:0; max-width:100%; font:inherit; }
+.fg-control-field input[type=number] { width:76px; flex-shrink:0; }
+.fg-flow input[type=range] { width:110px; min-width:60px; max-width:100%; margin:0; accent-color:var(--accent); }
+.fg-multipliers { display:inline-flex; flex-shrink:0; gap:3px; padding:3px; border:1px solid var(--modern-line); border-radius:9px; background:var(--modern-card); }
+.fg-multipliers button { min-width:36px; height:27px; padding:3px 7px; border:1px solid transparent; border-radius:6px; background:transparent; color:var(--text-secondary); font:inherit; font-weight:600; cursor:pointer; }
+.fg-multipliers button[aria-pressed=true] { color:var(--text-primary); border-color:rgba(var(--accent-rgb),.5); background:rgba(var(--accent-rgb),.18); }
+.fg-multipliers button:hover:not(:disabled) { color:var(--text-primary); background:rgba(var(--accent-rgb),.12); }
+.frame-generation-panel button:disabled { cursor:default; }
+.frame-generation-panel input[type=checkbox] { flex-shrink:0; accent-color:var(--accent); }
+.frame-generation-panel .fg-compatibility { display:grid; gap:7px; padding:12px 0 0; border-top:1px solid var(--modern-line); font-size:.8125rem; }
+.fg-compatibility label { display:flex; gap:8px; align-items:flex-start; line-height:1.45; }
+.frame-generation-panel .fg-save { justify-self:end; width:auto; min-height:32px; padding:6px 12px; border-radius:8px; }
+@container game-spotlight (max-width:720px){.fg-configuration{grid-template-columns:1fr;gap:14px}}
+@media(max-width:700px){.fg-configuration{grid-template-columns:1fr;gap:14px}}
+@media(max-width:420px){.fg-dll{flex-wrap:wrap}.fg-dll label{flex-basis:100%}.fg-dll .modern-mini-btn{margin-left:auto}}
+
+.frame-generation-panel .fg-partition-note { font-size:.8125rem; line-height:1.45; padding-left:8px; border-left:2px solid rgba(var(--accent-rgb),.45); color:var(--text-secondary); }
+
+/* Same label/control alignment as DLSSNR, without surrounding cards. */
+.frame-generation-panel .fg-setting { min-height:42px; box-sizing:border-box; padding:6px 0; gap:12px; }
+.fg-controls .fg-setting:last-child { border-bottom:0; }
+.fg-flow-value { display:flex; align-items:center; justify-content:flex-end; gap:10px; }
+.fg-flow-value output { min-width:34px; text-align:right; color:var(--text-secondary); font-size:.8125rem; font-variant-numeric:tabular-nums; }
+/* A single lit surface moves between equal slots; only its transform animates. */
+
+.fg-master-toggle { display:flex; align-items:center; gap:10px; font-weight:600; flex-shrink:0; }
+@container game-spotlight (max-width:480px){.fg-master-toggle{flex-basis:100%;justify-content:flex-start}}
+
+/* Main activation uses a full-size switch without the legacy button frame. */
+.frame-generation-panel .fg-master-toggle { min-height:40px; gap:12px; padding:2px 4px 2px 0; }
+.frame-generation-panel .fg-master-toggle .neural-startup-switch.mod-option-switch { width:48px; min-height:36px; padding:0; border:0; background:transparent; box-shadow:none; }
+.fg-master-toggle .neural-switch-track { flex:0 0 48px; width:48px; height:28px; padding:3px; border-radius:999px; }
+.fg-master-toggle .neural-switch-track > span { width:22px; height:22px; }
+.fg-master-toggle .enabled .neural-switch-track > span { transform:translateX(20px); }
+
+.fg-download-info { display:grid; gap:5px; margin:0; min-width:0; font-size:.75rem; line-height:1.45; color:var(--text-secondary); }
+.fg-download-info > div { display:grid; grid-template-columns:48px minmax(0,1fr); gap:8px; }
+.fg-download-info dt { font-weight:600; }
+.fg-download-info dd { margin:0; min-width:0; overflow-wrap:anywhere; }
+.fg-download-info a { color:inherit; text-decoration:underline; text-underline-offset:2px; }
+.fg-download-info dd button { display:block; text-align:left; padding:0; border:0; background:none; font:inherit; color:inherit; text-decoration:underline; text-underline-offset:2px; overflow-wrap:anywhere; cursor:pointer; }
+.fg-download-info dd button:disabled { cursor:default; text-decoration:none; opacity:.8; }
+
+.fg-version-history { font-size:.8125rem; color:var(--text-secondary); min-width:0; }
+.fg-version-history summary { cursor:pointer; font-weight:600; padding:4px 0; }
+.fg-version-history > p { margin:5px 0 8px; font-size:.75rem; }
+.fg-version-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--modern-line); }
+.fg-version-row > span { font-variant-numeric:tabular-nums; color:var(--text-primary); }
+.fg-version-row small { display:block; color:var(--text-secondary); font-size:.6875rem; }
+.fg-version-row > div { display:flex; gap:5px; }
+.fg-version-row .fg-delete-backup { min-width:30px; padding:5px; }
+.fg-delete-backup .menu-icon { width:15px; height:15px; }
+.fg-delete-confirm { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding-top:8px; }
+.fg-delete-confirm > span { flex-basis:100%; }
+
+.fg-runtime-management { max-width:800px; }
+.fg-runtime-management .fg-version-history { margin-top:4px; }
+.fg-runtime-management .fg-runtime-requirement { font-size:.8125rem; }
+
+/* The same setup / options flow as the game's DLSSNR tab. */
+.fg-game-workflow .fg-game-grid { align-items:start; }
+.fg-game-workflow .fg-game-setup,.fg-game-workflow .fg-game-options { min-width:0; }
+.fg-game-workflow .fg-toolbar { gap:10px 14px; margin:15px 0 0; }
+.fg-game-workflow .fg-component-row { padding:12px 0; margin-bottom:10px; border-bottom:1px solid var(--modern-line); }
+.fg-game-workflow .fg-source > p { font-size:.75rem; }
+.fg-game-workflow .fg-game-actions { display:grid; justify-items:start; gap:8px; margin-top:10px; }
+.fg-game-workflow .fg-save { justify-self:start; }
+.fg-game-workflow .fg-setting-copy { display:grid; gap:3px; }
+.fg-setting-copy small { color:var(--modern-muted,var(--text-secondary)); font-size:.75rem; line-height:1.4; font-weight:400; }
+.fg-game-workflow .fg-game-options .fg-setting { min-height:58px; }
+.fg-game-workflow .fg-compatibility { margin-top:12px; }
+.fg-game-workflow .fg-download-info { margin-top:8px; }
+@container game-spotlight (max-width:820px){.fg-game-workflow .fg-game-grid{grid-template-columns:minmax(0,1fr)}}
+.modern-ui .fg-game-workflow button.fg-save:not(:disabled) { background:var(--accent)!important; color:var(--accent-foreground,#fff)!important; border:1px solid var(--accent)!important; opacity:1!important; filter:none!important; box-shadow:none!important; text-shadow:none; }
+
+
+.fg-generator-name { color:var(--modern-text,var(--text-primary)); font-size:.8125rem; font-weight:600; padding:4px 0; }
+
+.mako-launch-setup textarea { display:block; width:100%; box-sizing:border-box; resize:vertical; min-height:64px; padding:10px; border:1px solid rgba(255,255,255,.12); border-radius:8px; background:#090d14; color:inherit; font: .8125rem/1.5 monospace; }
+.mako-launch-setup p { font-size:.875rem; line-height:1.5; }
+.fg-sandbox-setup { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:12px; font-size:.8125rem; }

@@ -1,0 +1,15 @@
+.component-download-progress { display:grid; gap:7px; min-width:0; padding:12px 0; font-size:.8125rem; color:var(--modern-text,var(--text-primary)); }
+.component-download-heading,.component-download-details { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:5px 12px; min-width:0; }
+.component-download-details { color:var(--modern-muted,var(--text-secondary)); font-size:.75rem; font-variant-numeric:tabular-nums; }
+.component-download-heading > span:last-child { font-variant-numeric:tabular-nums; }
+.component-download-progress progress { display:block; width:100%; height:5px; border:0; border-radius:99px; overflow:hidden; accent-color:#68ba91; background:rgba(140,150,170,.15); }
+.component-download-progress progress::-webkit-progress-bar { background:rgba(140,150,170,.15); border-radius:99px; }
+.component-download-progress progress::-webkit-progress-value { background:#68ba91; border-radius:99px; }
+.component-download-progress progress::-moz-progress-bar { background:#68ba91; border-radius:99px; }
+.component-download-progress[data-phase=error] { color:#e7a1a1; }
+
+.component-download-progress { max-height:180px; overflow:hidden; opacity:1; transition:max-height .25s ease,padding .25s ease,opacity .2s ease; }
+.component-download-progress[data-phase=complete] { color:#68ba91; }
+.component-download-progress[data-phase=complete] [role=status] { display:inline-flex; align-items:center; gap:7px; }
+.component-download-progress.is-collapsing { max-height:0; padding-block:0; opacity:0; }
+@media (prefers-reduced-motion:reduce) { .component-download-progress { transition:none; } }

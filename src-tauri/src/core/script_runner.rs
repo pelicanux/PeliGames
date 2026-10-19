@@ -36,11 +36,19 @@ pub struct InstallExtras {
 #[serde(rename_all = "lowercase")]
 pub enum NeuralModel { Auto, Small, Original }
 
+/// Capability detection keeps RDNA3 and older packages on their original CLI.
+pub fn unified_networks(script: &str) -> bool {
+    script.contains("--model)") && script.contains("CC_SILVER_AARDWOLD_INT4_MIXED")
+}
+pub fn selectable_models(script: &str) -> bool {
+    unified_networks(script) || (script.contains("--new-model)") && script.contains("--old-model)"))
+}
+
 fn model_arguments(script: &str, extras: InstallExtras, has_small: bool, has_original: bool) -> Result<Vec<&'static str>, String> {
     if extras.model == Some(NeuralModel::Small) && extras.int4 == Some(true) {
         return Err("int4 misto só funciona com o modelo original (310.8.0).".into());
     }
-    let selectable = script.contains("--new-model)") && script.contains("--old-model)");
+    let selectable = selectable_models(script);
     if extras.model == Some(NeuralModel::Small) && (!selectable || !has_small) {
         return Err("Modelo novo indisponível. Atualize o backend e extraia a DLL 310.9.16 no assistente.".into());
     }
@@ -49,6 +57,11 @@ fn model_arguments(script: &str, extras: InstallExtras, has_small: bool, has_ori
     }
     if !selectable { return Ok(vec![]); }
     let old = extras.model == Some(NeuralModel::Original) || extras.int4 == Some(true) || !has_small;
+    if unified_networks(script) {
+        return Ok(vec!["--model", if extras.int4 == Some(true) {
+            "CC_SILVER_AARDWOLD_INT4_MIXED"
+        } else if old { "CC_SILVER_AARDWOLD" } else { "CC_SMALL_FP8" }]);
+    }
     Ok(vec![if old { "--old-model" } else { "--new-model" }])
 }
 
@@ -57,7 +70,7 @@ fn model_arguments(script: &str, extras: InstallExtras, has_small: bool, has_ori
 fn extra_arguments(script: &str, route: &str, extras: InstallExtras) -> Result<(String, Vec<&'static str>), String> {
     let mut route = route.to_string();
     let mut arguments = Vec::new();
-    if let Some(int4) = extras.int4 {
+    if let Some(int4) = extras.int4.filter(|_| !unified_networks(script)) {
         if script.contains("--int4)") {
             arguments.push(if int4 { "--int4" } else { "--no-int4" });
         } else if int4 {
@@ -344,6 +357,27 @@ mod tests {
         assert!(select(NeuralModel::Original, false, true, false).is_err());
         assert!(model_arguments("old backend", InstallExtras {model:Some(NeuralModel::Small),..Default::default()}, true, true).is_err());
         assert!(model_arguments("old backend", InstallExtras::default(), false, true).unwrap().is_empty());
+    }
+
+    #[test]
+    fn unified_networks_use_one_explicit_model_without_overwriting_int4() {
+        use super::{model_arguments, unified_networks, NeuralModel};
+        let script = "--model) model=$2;; CC_SILVER_AARDWOLD_INT4_MIXED --int4) model=CC_SILVER_AARDWOLD_INT4_MIXED;; --no-int4) ignored;; --new-model) model=CC_SMALL_FP8;; --old-model) model=CC_SILVER_AARDWOLD;; --renodx) renodx=1;;";
+        assert!(unified_networks(script));
+        for (model, int4, small, expected) in [
+            (NeuralModel::Auto, false, true, "CC_SMALL_FP8"),
+            (NeuralModel::Small, false, true, "CC_SMALL_FP8"),
+            (NeuralModel::Original, false, true, "CC_SILVER_AARDWOLD"),
+            (NeuralModel::Original, true, true, "CC_SILVER_AARDWOLD_INT4_MIXED"),
+            (NeuralModel::Auto, true, true, "CC_SILVER_AARDWOLD_INT4_MIXED"),
+            (NeuralModel::Auto, false, false, "CC_SILVER_AARDWOLD"),
+        ] {
+            let extras = InstallExtras { model: Some(model), int4: Some(int4), renodx: Some(true) };
+            assert_eq!(model_arguments(script, extras, small, true).unwrap(), ["--model", expected]);
+            let (_, flags) = extra_arguments(script, "optiscaler", extras).unwrap();
+            assert_eq!(flags, ["--renodx"], "int4/model flags must have one owner");
+        }
+        assert!(model_arguments(script, InstallExtras {model:Some(NeuralModel::Small), ..Default::default()}, false, true).is_err());
     }
 
 }

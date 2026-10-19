@@ -98,7 +98,7 @@ pub async fn import_model_bins(app: AppHandle, gpu_arch: String, bin_path: Strin
 }
 
 #[derive(serde::Serialize)]
-pub struct NeuralModelStatus { pub small: bool, pub original: bool, pub selectable: bool }
+pub struct NeuralModelStatus { pub small: bool, pub original: bool, pub selectable: bool, pub unified_networks: bool }
 
 #[tauri::command]
 pub fn get_neural_model_status(app: AppHandle, gpu_arch: String, bitness: String, bin_path: Option<String>) -> Result<NeuralModelStatus, String> {
@@ -115,7 +115,8 @@ pub fn get_neural_model_status(app: AppHandle, gpu_arch: String, bitness: String
     let has = |name| model_dir.map(|dir| dir.join(name).is_file()).unwrap_or(false);
     Ok(NeuralModelStatus {
         small: has("dlssnr-small.bin") && has("dlssnr.bin"), original: has("dlssnr.bin"),
-        selectable: script.contains("--new-model)") && script.contains("--old-model)"),
+        selectable: crate::core::script_runner::selectable_models(&script),
+        unified_networks: crate::core::script_runner::unified_networks(&script),
     })
 }
 

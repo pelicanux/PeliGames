@@ -75,12 +75,13 @@ fn run_mode(installer: bool) {
             && assets.iter().any(|name| name.ends_with(".js"))
             && assets.iter().any(|name| name.ends_with(".css"))
             && assets.iter().any(|name| name.ends_with(".wasm"));
-        println!("{}", serde_json::json!({"production": !tauri::is_dev(), "embedded_ui": embedded, "asset_count": assets.len()}));
+        println!("{}", serde_json::json!({"production": !tauri::is_dev(), "embedded_ui": embedded, "asset_count": assets.len(), "experimental_frame_generation": core::release_features::enabled(), "overlay_payloads_available": commands::frame_overlay_runtime::bundled()}));
         if !embedded { std::process::exit(1); }
         return;
     }
     if let Err(error) = commands::maintenance::reset::begin_startup() { core::paths::pause_migrations(true); eprintln!("Recuperação PeliGames: {error}"); }
     if let Err(error) = core::paths::initialize() { eprintln!("Migração PeliGames: {error}"); }
+    if let Err(error) = commands::steam_runtime::enforce_release_policy() { eprintln!("Política de recursos PeliGames: {error}"); }
     let nxm_start = if args.len() == 1 && args[0].get(..4).is_some_and(|s| s.eq_ignore_ascii_case("nxm:")) { Some(args[0].clone()) } else { None };
     let launcher_args = if nxm_start.is_some() { Vec::new() } else { args };
     let mut startup = core::pelinstall::parse_args(&launcher_args, installer && nxm_start.is_none()).unwrap_or_else(|error| core::pelinstall::StartupInfo {
@@ -140,6 +141,7 @@ fn run_mode(installer: bool) {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(move |app| {
+            if launcher_window { commands::frame_overlay_shortcut::startup(); }
             #[cfg(unix)]
             if let Some(instance) = launcher_instance {
                 use tauri::{Emitter, Manager};
@@ -374,6 +376,7 @@ fn run_mode(installer: bool) {
             commands::game_installation::set_peligames_profile_kind,
             commands::game_installation::add_peligames_shortcut_to_library,
             commands::game_installation::remove_peligames_shortcut_from_library,
+            commands::game_installation::remove_peligames_library_entry,
             commands::game_installation::new_peligames_launcher_games,
             commands::game_installation::add_peligames_launcher_games,
             commands::game_installation::list_peligames_executable_choices,
@@ -439,6 +442,7 @@ fn run_mode(installer: bool) {
             commands::external_library::configure_external_game,
             commands::external_library::launch_external_game,
             commands::scanner::scan_installed_games,
+            commands::scanner::scan_manual_game_folders,
             commands::scanner::fetch_steam_release_date,
             commands::scanner::launch_game,
             commands::scanner::start_steam_game,
@@ -461,6 +465,18 @@ fn run_mode(installer: bool) {
             commands::config::log_cached_library,
             commands::maintenance::launcher_maintenance_plan,
             commands::maintenance::launcher_maintenance_apply,
+            commands::frame_generation::frame_generation_state,
+            commands::frame_generation::versions::frame_generation_check_updates,
+            commands::frame_generation::versions::frame_generation_remove_backup,
+            commands::frame_generation::frame_generation_dll_external_filesystem,
+            commands::frame_generation::install_frame_generation,
+            commands::frame_generation::prepare_frame_generation,
+            commands::frame_generation::flatpak::frame_generation_flatpak_status,
+            commands::frame_overlay_shortcut::frame_overlay_preferences,
+            commands::frame_overlay_runtime::frame_overlay_support,
+            commands::frame_overlay_shortcut::configure_frame_overlay,
+            commands::frame_generation::resolve_game_mod_paths,
+            commands::frame_generation::set_game_mod_destination,
             commands::maintenance::launcher_maintenance_restart,
             commands::maintenance::reset::launcher_reset_status,
             commands::maintenance::reset::launcher_reset_confirm_health,
@@ -476,7 +492,12 @@ fn run_mode(installer: bool) {
         })
         .build(context)
         .expect("error while building tauri application")
-        .run(|_, event| {
+        .run(|handle, event| {
+            // The hidden mini panel must not keep a launcher without its main
+            // window alive, holding launcher.sock and rejecting every new open.
+            if matches!(&event, tauri::RunEvent::WindowEvent { label, event: tauri::WindowEvent::Destroyed, .. } if label == "main") {
+                handle.exit(0);
+            }
             if matches!(event, tauri::RunEvent::Exit) { commands::mangohud::stop_preview(); commands::matrix_call::stop(); }
         });
 }

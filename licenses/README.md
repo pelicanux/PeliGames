@@ -9,6 +9,7 @@ O código próprio do PeliGames usa [GNU GPL 3.0](../LICENSE) (`GPL-3.0-only`). 
 | DLSSNR-RDNA3 — mauri870, a partir de mochizuki0323 | [MIT original do fork](DLSSNR-RDNA3-LICENSE.txt); o copyright original de mochizuki0323 foi mantido |
 | React, React DOM, Scheduler, Motion e APIs Tauri | [Avisos das dependências da interface](Frontend-Dependencies.txt) |
 | Bibliotecas Rust, inclusive dependências transitivas e de compilação | [Avisos completos](Rust-Dependencies.txt) e [inventário por versão](dependency-inventory.json) |
+| musl libc — auxiliar estático de inicialização Steam | [Copyright e licença originais](Musl-COPYRIGHT.txt) |
 | Jersey 10 — The Soft Type Project Authors | [SIL OFL 1.1 original](../public/fonts/jersey-10/OFL.txt) |
 | SVG Linux / Tux — Simple Icons contributors | [CC0-1.0 original](upstream/Simple-Icons/LICENSE.md); [SVG e origem](../public/icons/linux.svg) |
 | SVG Nexus Mods copiado do Vortex | [GPL-3.0 do repositório de origem](upstream/Vortex-Nexus-Icon/LICENSE.md); [arquivo-fonte e origem](../public/nexus-mods.svg) |
@@ -23,3 +24,5 @@ As fontes originais das dependências MPL-2.0 estão em [sources/](sources/READM
 **Pendências e limites da verificação:** consulte a [auditoria](AUDIT.md). A presença destes avisos, por si só, não certifica o cumprimento de todas as obrigações de distribuição GPL/LGPL do AppImage.
 
 Proton, UMU, Winetricks e os backends são baixados separadamente. Seus pacotes e componentes internos mantêm as próprias licenças. Os avisos do backend não demonstram que esses componentes estão dentro do binário PeliGames. A DLL e os pesos de modelos da NVIDIA não são incluídos nem cobertos pela GPL do launcher.
+
+A camada interna opcional mantém suas [referências e atribuições](PeliGames-Overlay-NOTICES.md). O inventário inclui os grafos isolados do overlay e do PeliRun, os textos das fontes padrão do egui e os [commits e hashes dos avisos adicionais](Overlay-Dependency-Sources.json).
