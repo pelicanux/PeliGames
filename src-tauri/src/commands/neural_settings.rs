@@ -104,6 +104,23 @@ fn settings_path(game_dir: &Path) -> Result<PathBuf, String> {
     }
     Ok(root.join("ReShadePreset.ini"))
 }
+fn lumenite_in_ini(text: &str) -> bool {
+    let mut section = false;
+    let mut enabled = false;
+    for line in text.lines() {
+        let line = line.split([';', '#']).next().unwrap_or("").trim();
+        if line.starts_with('[') { section = line.trim_matches(['[', ']']).trim().eq_ignore_ascii_case("DlssNr"); }
+        else if section {
+            if let Some((key, value)) = line.split_once('=') {
+                if key.trim().eq_ignore_ascii_case("MotionVectors") { enabled = value.trim().eq_ignore_ascii_case("lumenite"); }
+            }
+        }
+    }
+    enabled
+}
+pub(super) fn lumenite_selected(game_dir: &Path) -> Result<bool, String> {
+    Ok(lumenite_in_ini(&read_file(&game_dir.join("dlssnr-amd.ini"))?))
+}
 fn read_file(path: &Path) -> Result<String, String> {
     match fs::File::open(path) {
         Ok(file) => {
@@ -172,4 +189,16 @@ pub async fn set_neural_startup(app: tauri::AppHandle, game_dir: String, enabled
     }).await.map_err(|e| e.to_string())?;
     crate::core::logger::log_result(&app, "Preferência de inicialização do Neural Rendering", &result);
     result
+}
+
+#[cfg(test)]
+mod lumenite_tests {
+    use super::*;
+    #[test]
+    fn installed_motion_vector_choice_is_read_only_from_dlssnr_section() {
+        assert!(!lumenite_in_ini(""));
+        assert!(lumenite_in_ini("[DlssNr]\n MotionVectors = Lumenite ; selected\n[Network]\nMotionVectors=vort"));
+        assert!(!lumenite_in_ini(";MotionVectors=lumenite\n[Network]\nMotionVectors=lumenite"));
+        assert!(!lumenite_in_ini("[DlssNr]\nMotionVectors=lumenite\nMotionVectors=vort"));
+    }
 }

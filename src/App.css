@@ -2058,3 +2058,15 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
 .launcher-settings-menu .effects-preference-label { min-width: 0; flex: 1; }
 .launcher-settings-menu .effects-preference-label > svg { flex-shrink: 0; }
 .launcher-settings-menu .launcher-settings-scale > div:first-child { min-width: 0; }
+
+.pelirun-export { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:16px 0; border-top:1px solid var(--border-color, #ffffff18); }
+.pelirun-export p { margin:5px 0 0; font-size:13px; color:var(--text-secondary, #aab0bb); }
+.pelirun-export > button { flex-shrink:0; }
+.pelirun-export-targets { display:flex; flex-wrap:wrap; gap:6px; margin:16px 0; }
+.pelirun-export-targets [aria-pressed="true"] { background:var(--accent-color, #167dba); color:white; }
+.pelirun-export-field { display:block; margin:14px 0; font-size:13px; }
+.pelirun-export-field > span { display:block; margin-bottom:7px; }
+.pelirun-export-field > div { display:flex; align-items:center; gap:8px; }
+.pelirun-export-field input { flex:1; min-width:0; padding:9px 10px; border:1px solid #ffffff20; border-radius:8px; background:#0003; color:inherit; font-size:12px; }
+.pelirun-export-note { font-size:12px; opacity:.8; line-height:1.5; }
+@media (max-width:640px) { .pelirun-export { align-items:flex-start; flex-direction:column; } }

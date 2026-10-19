@@ -81,6 +81,7 @@ fn run_mode(installer: bool) {
     }
     if let Err(error) = commands::maintenance::reset::begin_startup() { core::paths::pause_migrations(true); eprintln!("Recuperação PeliGames: {error}"); }
     if let Err(error) = core::paths::initialize() { eprintln!("Migração PeliGames: {error}"); }
+    if let Err(error) = commands::launch_profiles::enforce_release_policy() { eprintln!("Política PeliRun: {error}"); }
     if let Err(error) = commands::steam_runtime::enforce_release_policy() { eprintln!("Política de recursos PeliGames: {error}"); }
     let nxm_start = if args.len() == 1 && args[0].get(..4).is_some_and(|s| s.eq_ignore_ascii_case("nxm:")) { Some(args[0].clone()) } else { None };
     let launcher_args = if nxm_start.is_some() { Vec::new() } else { args };
@@ -231,6 +232,7 @@ fn run_mode(installer: bool) {
             commands::steam_launch_options::apply_steam_mod_launch_options,
             commands::external_library::steam_game_settings_action,
             commands::external_library::steam_game_launch_preview,
+            commands::launch_profiles::export_launch_profile,
             commands::external_library::steam_game_proton_status,
             commands::matrix_chat::matrix_chat_rooms,
             commands::matrix_chat::matrix_chat_join,
@@ -471,6 +473,7 @@ fn run_mode(installer: bool) {
             commands::frame_generation::frame_generation_dll_external_filesystem,
             commands::frame_generation::install_frame_generation,
             commands::frame_generation::prepare_frame_generation,
+            commands::frame_generation::update_frame_generation_live,
             commands::frame_generation::flatpak::frame_generation_flatpak_status,
             commands::frame_overlay_shortcut::frame_overlay_preferences,
             commands::frame_overlay_runtime::frame_overlay_support,

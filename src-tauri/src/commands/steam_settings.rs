@@ -163,7 +163,7 @@ fn linked(game: &ExternalGame) -> Result<bool, String> {
     };
     let text = fs::read_to_string(&configs[0]).map_err(|error| error.to_string())?;
     let actual = super::super::steam_launch_options::read_launch_options(&text, app)?;
-    Ok(same_manual_line(&actual, &expected))
+    Ok(same_manual_line(&actual, &expected) || universal_line_matches(game, &actual)?)
 }
 fn update(
     records: &mut BTreeMap<String, Pending>,
@@ -186,6 +186,10 @@ fn update(
             },
         );
     }
+}
+fn universal_line_matches(game: &ExternalGame, actual: &str) -> Result<bool, String> {
+    Ok(super::super::launch_profiles::prefix(Path::new(&game.path))?
+        .is_some_and(|prefix| same_manual_line(actual, &format!("{prefix}%command%"))))
 }
 fn quote(value: &str) -> String {
     format!("'{}'", value.replace('\'', "'\"'\"'"))
@@ -283,7 +287,14 @@ fn apply(game: &ExternalGame) -> Result<(), String> {
     for path in configs {
         let before = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         let current = super::super::steam_launch_options::read_launch_options(&before, app)?;
-        let current = current.replacen(&old_prefix, "", 1);
+        let mut current = current.replacen(&old_prefix, "", 1);
+        if let Some(prefix) = super::super::launch_profiles::prefix(Path::new(&game.path))? {
+            if same_manual_line(&current, &format!("{prefix}%command%")) {
+                let words = crate::core::advanced_settings::wrapper_args(&current)?;
+                let count = crate::core::advanced_settings::wrapper_args(&prefix)?.len();
+                current = words[count..].iter().map(|word| if word == "%command%" { word.clone() } else { quote(word) }).collect::<Vec<_>>().join(" ");
+            }
+        }
         let current = migrate_expanded_line(&current, edit.before.as_ref())?;
         let current = super::super::steam_launch_options::strip_runtime_mod_options(app, &current)?;
         let after = super::super::steam_launch_options::write_launch_options(
@@ -507,7 +518,7 @@ pub(super) fn confirm_manual(game: &ExternalGame) -> Result<(), String> {
         manual_account_configs(super::super::steam_installation::roots(&home, game.flatpak))?;
     let text = fs::read_to_string(&configs[0]).map_err(|e| e.to_string())?;
     let actual = super::super::steam_launch_options::read_launch_options(&text, app)?;
-    if !same_manual_line(&actual, &expected) {
+    if !same_manual_line(&actual, &expected) && !universal_line_matches(game, &actual)? {
         return Err("A Steam ainda não gravou a linha esperada. Cole as opções em Propriedades → Geral → Opções de inicialização, feche essa tela e tente verificar novamente.".into());
     }
     if let Some(proton) = &edit.after.proton {
@@ -564,32 +575,11 @@ pub(super) fn revert(game: &ExternalGame) -> Result<(), String> {
     records.remove(&game.external_id);
     write(&records)
 }
-pub(super) fn restart(game: &ExternalGame) -> Result<(), String> {
-    if !pending(&game.external_id)? {
-        return Ok(());
-    }
-    // Graceful shutdown only: never kill Steam or its running games.
-    let mut shutdown = super::super::steam_installation::command(game.flatpak, None);
-    crate::core::env_utils::host_environment(&mut shutdown);
-    if super::super::steam_installation::running(game.flatpak) {
-        let mut child = shutdown
-            .arg("-shutdown")
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-            .map_err(|e| e.to_string())?;
-        std::thread::spawn(move || {
-            let _ = child.wait();
-        });
-    }
-    let until = std::time::Instant::now() + std::time::Duration::from_secs(30);
-    while super::super::steam_installation::running(game.flatpak) {
-        if std::time::Instant::now() >= until {
-            return Err("A Steam não encerrou. Feche os jogos e a Steam e tente novamente. Suas alterações continuam pendentes.".into());
-        }
-        std::thread::sleep(std::time::Duration::from_millis(250));
-    }
+pub(super) fn restart(game: &ExternalGame, mut progress: impl FnMut(&str)) -> Result<(), String> {
+    if !pending(&game.external_id)? { return Ok(()); }
+    let mut client = SteamClient::new(game.flatpak)?;
+    super::super::steam_restart::stop(&mut client, &mut progress)?;
+    progress("applying");
     apply(game)?;
     let proton = if game.flatpak {
         game.proton
@@ -599,6 +589,7 @@ pub(super) fn restart(game: &ExternalGame) -> Result<(), String> {
     } else {
         None
     };
+    progress("starting");
     let mut open = super::super::steam_installation::command(game.flatpak, proton.as_deref());
     crate::core::env_utils::host_environment(&mut open);
     let mut child = open
@@ -609,11 +600,65 @@ pub(super) fn restart(game: &ExternalGame) -> Result<(), String> {
         .map_err(|e| {
             format!("Configurações aplicadas, mas não foi possível reabrir a Steam: {e}")
         })?;
-    std::thread::spawn(move || {
-        let _ = child.wait();
-    });
-    Ok(())
+    let until = std::time::Instant::now() + std::time::Duration::from_secs(12);
+    while std::time::Instant::now() < until {
+        if super::super::steam_processes::clients(Path::new("/proc"), game.flatpak)?
+            .iter().any(|p|p.executable.file_name().is_some_and(|name|name=="steam")) {
+            std::thread::spawn(move || { let _ = child.wait(); });
+            progress("done");
+            return Ok(());
+        }
+        if child.try_wait().map_err(|e|e.to_string())?.is_some_and(|status|!status.success()) {
+            return Err("Configurações aplicadas, mas a Steam encerrou durante a inicialização. Abra a Steam manualmente; o perfil já está salvo.".into());
+        }
+        std::thread::sleep(std::time::Duration::from_millis(250));
+    }
+    std::thread::spawn(move || { let _ = child.wait(); });
+    Err("Configurações aplicadas. A Steam está demorando para iniciar e a abertura não pôde ser confirmada. Abra a Steam manualmente; não é preciso reaplicar o perfil.".into())
 }
+
+struct SteamClient {
+    flatpak: bool,
+    original: Vec<super::super::steam_processes::Process>,
+    roots: Vec<PathBuf>,
+}
+impl SteamClient {
+    fn new(flatpak: bool) -> Result<Self,String> {
+        let home=dirs::home_dir().ok_or("Pasta pessoal indisponível.")?;
+        Ok(Self {flatpak, original:super::super::steam_processes::clients(Path::new("/proc"),flatpak)?,roots:super::super::steam_installation::roots(&home,flatpak)})
+    }
+}
+impl super::super::steam_restart::Client for SteamClient {
+    fn running(&mut self)->Result<bool,String> {
+        let current=super::super::steam_processes::clients(Path::new("/proc"),self.flatpak)?;
+        if current.iter().any(|p| !self.original.iter().any(|old|old.pid==p.pid && old.start==p.start)) {
+            return Err("Uma nova instância da Steam apareceu durante o encerramento. As configurações continuam pendentes; tente novamente.".into());
+        }
+        Ok(!current.is_empty())
+    }
+    fn games_running(&mut self)->Result<bool,String> {
+        super::super::steam_processes::games_running(Path::new("/proc"),self.flatpak,&self.original.iter().map(|p|p.pid).collect::<Vec<_>>())
+    }
+    fn request_shutdown(&mut self)->Result<(),String> {
+        let mut command=super::super::steam_installation::command(self.flatpak,None);
+        crate::core::env_utils::host_environment(&mut command);
+        let mut child=command.arg("-shutdown").stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null()).spawn().map_err(|e|e.to_string())?;
+        std::thread::spawn(move || {let _=child.wait();});
+        Ok(())
+    }
+    fn terminate(&mut self,force:bool)->Result<(),String> {
+        let current=super::super::steam_processes::clients(Path::new("/proc"),self.flatpak)?;
+        let targets:Vec<_>=current.iter().filter(|p|p.executable.file_name().is_some_and(|name|name=="steam")).collect();
+        if targets.is_empty() && !current.is_empty() {return Err("O cliente principal encerrou, mas um inicializador da Steam ficou preso. Feche-o e tente novamente; as alterações continuam pendentes.".into());}
+        for process in targets {
+            let original=self.original.iter().find(|p|p.pid==process.pid && p.start==process.start).ok_or("A instância da Steam mudou; tente novamente.")?;
+            super::super::steam_processes::signal(original,self.flatpak,&self.roots,force)?;
+        }
+        Ok(())
+    }
+    fn pause(&mut self,duration:std::time::Duration){std::thread::sleep(duration)}
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

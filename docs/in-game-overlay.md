@@ -53,9 +53,25 @@ A documentação atual do upstream declara camadas Vulkan arbitrárias fora do c
 
 Flatpak é outro limite: as bibliotecas precisam estar acessíveis e ser compatíveis com o runtime dentro do sandbox, nas arquiteturas necessárias. O host `mako-launch` e uma `.so` do host não substituem a preparação da extensão.
 
+## Bloqueio de movimento na câmera — revisão de 19/10/2026
+
+Soltar a restrição do cursor e consumir eventos Wayland/X11 não cobre sozinho jogos que consultam Raw Input ou a posição do cursor na camada Windows. O ReShade trata leitura normal e em lote; o OptiScaler também sanitiza os deltas do mouse separadamente da gestão do cursor. Esta revisão aplica o princípio em Rust no limite Unix do Wine, sem incorporar código C/C++ ou criar outro cursor.
+
+`wine_input.rs` intercepta o registro de serviços `KeAddSystemServiceTable` do Wine e entrega uma cópia da tabela win32u com três entradas substituídas: `NtUserGetRawInputBuffer`, `NtUserGetRawInputData` e `NtUserGetCursorPos`. A descoberta usa os endereços ELF publicados pelo audit shim e valida unicidade e tamanho dos argumentos; não depende de números de syscall de uma versão do Proton. A tabela original permanece intacta. Isso é registro de serviços **do Wine no processo do jogo**, sem alterações no kernel ou no desktop.
+
+Com captura ativa, as leituras de Raw Input continuam consumindo a fila normalmente, mas os deltas entregues ao jogo são zerados e o modo absoluto é neutralizado. Tamanhos, retornos de erro, consultas de tamanho, teclado, HID e transições de botões são preservados. A posição consultada pelo jogo fica congelada; o painel continua recebendo o movimento pelo adaptador nativo. Fechar o painel, perder foco ou parar de apresentar quadros libera esse filtro. Tabelas/ABIs não reconhecidas são encaminhadas sem alterações e geram diagnóstico; esse caminho ainda exige validação gráfica com cada Proton.
+
+Validação desta revisão: 55 testes de biblioteca e cinco do runner passaram; um teste Vulkan opcional ficou ignorado. Uma bancada com fixtures ELF escritas em Rust passou pelo audit shim release, carregamento `RTLD_LOCAL` e registro de tabela, executando as funções reais do novo módulo. Conferiu captura ligada/desligada repetidamente, leitura individual/em lote, congelamento/restauração de posição e preservação de erros e consultas de tamanho. Não abriu jogo, sessão Wine ou compositor e não certifica o comportamento gráfico real. Nenhum pacote foi gerado nesta revisão.
+
+Referências consultadas:
+
+- [ReShade — entrada e leitura de Raw Input](https://github.com/crosire/reshade/blob/main/source/input_windows.cpp).
+- [OptiScaler — sanitização de entrada bruta](https://github.com/optiscaler/OptiScaler/blob/master/OptiScaler/menu/input/input_system_raw.cpp).
+- [Wine — registro da tabela win32u](https://github.com/ValveSoftware/wine/blob/proton_11.0/dlls/win32u/syscall.c) e [leitura de Raw Input](https://github.com/ValveSoftware/wine/blob/proton_11.0/dlls/win32u/rawinput.c).
+
 ## Integração e validação pendente
 
-`overlay_enabled` é uma opção por jogo, com default `false` na UI e na desserialização Rust. O salvamento confirma a arquitetura do executável e rejeita 32 bits/Flatpak antes de acrescentar o runner. Isso não muda o caminho de perfil já usado pelo PeliRun. A opção desativada não encadeia a camada; controles e runner também conferem o opt-in antes de ativar.
+`overlay_enabled` é uma opção por jogo, com default `false` na UI e na desserialização Rust. O salvamento confirma a arquitetura do executável e permite PE32 para testes com o novo WoW64 do Proton. Isso não confirma que o Proton escolhido usa um processo gráfico Linux de 64 bits: essa condição precisa ser verificada no teste real. ELF32 e Flatpak continuam bloqueados, e os payloads ELF64 e o manifest Vulkan `library_arch=64` permanecem inalterados. Não há suporte nativo i686 nesta alteração. Isso não muda o caminho de perfil já usado pelo PeliRun. A opção desativada não encadeia a camada; controles e runner também conferem o opt-in antes de ativar.
 
 O build do launcher incorpora `peligames-overlay-run`, `libpeligames_game_overlay.so` e `libpeligames_overlay_audit.so`. Os crates usam alvos Cargo separados, lockfiles e dependências offline. O instalador materializa somente o conjunto incorporado, em diretório privado com hash de conteúdo; versões antigas permanecem para os wrappers já salvos. O runner gera um manifest explícito privado junto ao conjunto e respeita o limite de descoberta do MAKO. Reconhece a camada MAKO também quando o adaptador MangoHUD já removeu `ENABLE_MAKO`.
 
@@ -165,3 +181,13 @@ Referências: [protocolo de subsuperfícies](https://wayland.freedesktop.org/doc
 - [Bridge Steam Wayland](https://github.com/nanomatters/ge-steam-overlay-wayland): distingue desenho da limitação de consumo de entrada no Wine.
 - [Wine: fila e cookies Xlib](https://github.com/wine-mirror/wine/blob/master/dlls/winex11.drv/event.c) e [XI2/movimento relativo](https://github.com/wine-mirror/wine/blob/master/dlls/winex11.drv/mouse.c): contrato observado para o adaptador X11 inicial; cookies sem dados são tratados pelo dispatcher. São referências de comportamento, sem copiar o driver C.
 - [X.Org: contrato da fila Xlib](https://xorg.freedesktop.org/archive/current/doc/libX11/libX11/libX11.html) e [libXi: ABI XInput2](https://github.com/mirror/libXi/blob/master/include/X11/extensions/XInput2.h). As estruturas Xlib usam o ABI LP64; não têm o mesmo layout dos eventos wire/XCB.
+
+## Diagnóstico real Tomb Raider — ABI do cursor em GE-Proton 11-7
+
+O console da Steam em 19/10/2026, nas execuções das 19:50 e 19:53 (America/Fortaleza), registra o overlay renderizado e a captura nativa ativada, mas também `Wine: tabela de entrada não reconhecida; filtro de câmera não instalado.` O teste anterior com fixtures somente para a variante de dois argumentos não reproduzia a tabela deste Proton.
+
+A inspeção estática do `x86_64-unix/win32u.so` instalado de Proton-GE Latest identificou os três endereços exportados na tabela de serviços real; os tamanhos de argumentos são Buffer=24, Data=40 e Cursor=8 bytes. O código anterior exigia Cursor=16 bytes e recusava a tabela inteira.
+
+Correção: selecionar uma função de encaminhamento de um argumento para Cursor=8 e outra de dois argumentos para Cursor=16, mantendo validação de endereço, unicidade e tamanho dos demais serviços. Não se relaxou o reconhecimento para uma ABI arbitrária. Diagnóstico de falha agora informa os três tamanhos encontrados, sem expor endereços.
+
+Passaram os cinco testes do módulo real e a bancada audit/RTLD_LOCAL em dois processos separados, um para cada variante. Ambos validaram registro, movimento bruto normal/em lote, congelamento de posição, restauração ao fechar e preservação de erros. Nenhum pacote foi gerado após esta correção e o comportamento no jogo ainda precisa de novo teste gráfico.

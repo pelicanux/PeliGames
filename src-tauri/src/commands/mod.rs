@@ -3,6 +3,8 @@ pub mod updater;
 pub mod scanner;
 mod steam_readiness;
 mod steam_installation;
+mod steam_processes;
+mod steam_restart;
 pub mod analyzer;
 pub mod config;
 pub mod covers;
@@ -35,6 +37,7 @@ pub mod nexus_launch_options;
 pub mod mod_launch_options;
 pub mod steam_launch_options;
 pub(crate) mod steam_runtime;
+pub mod launch_profiles;
 pub mod matrix_gifs;
 
 mod nexus_deployment;

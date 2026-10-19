@@ -234,6 +234,7 @@ pub fn save_mangohud_profile(settings: Settings) -> Result<String, String> {
     // save() releases the MangoHUD file lock before profile generation, which
     // itself renders per-game HUD configurations. Never nest those locks.
     super::steam_runtime::refresh_monitoring().map_err(|error| format!("MangoHUD salvo, mas não foi possível atualizar os perfis da Steam: {error}"))?;
+    super::launch_profiles::refresh_all()?;
     Ok(path)
 }
 #[tauri::command]

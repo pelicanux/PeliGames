@@ -3,8 +3,10 @@
 pub const WAYLAND: u8 = 1;
 pub const X11: u8 = 2;
 pub const WINELAND: u8 = 3;
+pub const WINE_NTDLL: u8 = 4;
+pub const WINE_WIN32U: u8 = 5;
 // (symbol, defining DSO, redirect calls to the wrapper)
-pub const SYMBOLS: [(&[u8], u8, bool); 28] = [
+pub const SYMBOLS: [(&[u8], u8, bool); 32] = [
     (b"wl_proxy_add_listener", WAYLAND, true),
     (b"wl_proxy_destroy", WAYLAND, true),
     (b"wl_proxy_add_dispatcher", WAYLAND, true),
@@ -33,4 +35,8 @@ pub const SYMBOLS: [(&[u8], u8, bool); 28] = [
     (b"XDestroyWindow", X11, true),
     (b"__wine_wayland_vulkan_register_surface_v1", WINELAND, true),
     (b"wl_proxy_marshal_array_flags", WAYLAND, true),
+    (b"KeAddSystemServiceTable", WINE_NTDLL, true),
+    (b"NtUserGetRawInputBuffer", WINE_WIN32U, false),
+    (b"NtUserGetRawInputData", WINE_WIN32U, false),
+    (b"NtUserGetCursorPos", WINE_WIN32U, false),
 ];

@@ -26,4 +26,6 @@ export interface InstallerPayload {
   model?: "auto" | "small" | "original";
   int4?: boolean;
   renodx?: boolean;
+  /** Optional ReShade motion vectors; installed by the compatible backend. */
+  lumenite?: boolean;
 }

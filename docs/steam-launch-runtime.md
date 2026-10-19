@@ -121,3 +121,131 @@ execução dentro do sandbox.
   do PeliGames é em Rust e usa seu próprio contrato; não incorpora código Pascal.
 - [Valve: runtimes Steam Linux](https://github.com/ValveSoftware/steam-runtime/blob/master/doc/reporting-steamlinuxruntime-bugs.md).
 - [Flatpak: permissões de sandbox](https://docs.flatpak.org/en/latest/sandbox-permissions.html).
+
+## Perfis universais do PeliRun (implementação local)
+
+O helper também aceita `--profile pg-a73c92e4 -- comando [argumentos]`.
+O identificador tem `pg-` e oito caracteres hexadecimais. Ele é gerado pelo
+PeliGames, com verificação de colisão e bloqueio entre processos; não é um ID da
+Steam, da Epic ou do Heroic. Renomear o jogo e trocar o Proton não altera o ID.
+A associação automática usa a pasta canônica da instalação (resolvendo links
+simbólicos), nunca apenas o título. Outra instalação em outra pasta recebe
+outro perfil. Um perfil existente não é associado automaticamente a uma pasta
+movida: a confirmação dessa associação exige um fluxo separado.
+
+Em **detalhes do jogo → Opções → PeliRun → Usar em outro launcher**, a aplicação
+exporta o mesmo perfil nos formatos:
+
+- **Steam:** linha completa, com `%command%`.
+- **Heroic:** executável do wrapper e argumentos em campos separados, sem
+  `%command%`.
+- **Lutris:** prefixo de comando completo, sem `%command%`.
+- **Outro:** prefixo genérico para qualquer launcher que forneça o comando
+  original ao wrapper. Um campo que apenas acrescenta argumentos ao jogo não
+  pode executar o PeliRun.
+
+Os campos têm botões de copiar e exibem o identificador curto. Não são gerados
+executáveis por jogo. O helper compartilhado fica em
+`$XDG_DATA_HOME/pelirun/pelirun` (normalmente
+`~/.local/share/pelirun/pelirun`); os perfis ficam em `profiles/pg-xxxxxxxx.json`.
+O arquivo v2 guarda comando, ambiente, argumentos e origem das preferências,
+independentemente de qual launcher forneceu o comando de execução.
+
+Ao salvar configurações de jogos externos, PeliGames/Pelinstall ou Nexus, um
+perfil universal já existente é atualizado. A configuração global do MangoHUD
+também regenera esses perfis. A exportação cria o perfil quando necessário.
+Instalação/remoção de mods continua seguindo os gerenciadores existentes e
+seus requisitos de inicialização entram no perfil, sem duplicar os backups.
+Não há alteração automática da versão do Proton no launcher de destino.
+
+### Compatibilidade com os comandos já existentes
+
+Na Steam nativa, ao preparar o perfil, o antigo `profiles/<AppID>.json` passa a
+ser uma referência privada ao arquivo universal. A chamada antiga `--app`
+continua funcionando e lê o mesmo perfil da chamada `--profile`, sem cópias de
+configuração divergentes. O verificador da Steam reconhece ambos os formatos,
+e a migração evita encadear duas chamadas do helper.
+
+A Steam Flatpak mantém o perfil legado dentro do seu próprio diretório; não se
+migra automaticamente para um caminho que sua sandbox pode não acessar. A
+exportação universal informa a necessidade de acesso ao executável, ao perfil
+e aos componentes utilizados. Nenhuma permissão Flatpak é concedida pelo fluxo.
+
+O perfil usa leitura privada com limite de tamanho e rejeição de symlinks,
+validação do ID e substituição atômica com fsync. O helper aceita os marcadores
+antigo e novo, preserva o comando/argumentos originais e não interpreta shell.
+A ausência de perfil após redefinição preserva a execução original. Arquivos
+inválidos geram erro, sem executar um comando não validado. Os perfis universais
+entram no registro de recuperação da redefinição; o binário fixo é preservado.
+As restrições da build pública também são aplicadas aos perfis universais.
+
+### Referências de configuração dos launchers
+
+- [Heroic: configurações do wrapper](https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/blob/main/public/locales/en/translation.json).
+- [Lutris: opção Command prefix](https://github.com/lutris/lutris/blob/master/lutris/sysoptions.py).
+
+Esta mudança ainda não foi empacotada nem testada graficamente em Heroic,
+Lutris ou runtimes Flatpak. Os testes isolados executam o helper real com
+comandos pequenos e arquivos temporários, sem iniciar jogos ou modificar
+configurações pessoais.
+
+### Encerramento e confirmação do reinício
+
+A aplicação automática registra as etapas em `launcher.log` e emite
+`steam-settings-progress` para o botão: verificação, encerramento, finalização,
+aplicação e abertura. Requisitantes `steam -shutdown`, processos zumbis e o
+serviço auxiliar do runtime não são tratados como um cliente que mantém o VDF
+aberto.
+
+Com o cliente ativo, primeiro solicita `-shutdown` e aguarda aproximadamente
+oito segundos. Se não encerrar, verifica novamente a existência de jogos e
+pode enviar SIGTERM ao cliente principal confirmado; depois de mais quatro
+segundos, SIGKILL é o último recurso, com mais três segundos de espera. Só
+processos do usuário, da instalação selecionada, presentes no início do fluxo
+e com executável conhecido podem receber sinais. A identidade é revalidada
+com PID/start-time e pidfd, evitando atingir um PID reutilizado. Não são usados
+`pkill`, sinais para grupos nem encerramento de jogos. Um jogo em execução,
+um processo não verificável ou uma nova instância interrompe a operação e
+preserva as pendências.
+
+Os arquivos só são alterados após confirmar o encerramento. A abertura é
+observada por até 12 segundos; criar o subprocesso inicializador não basta
+para informar sucesso. Se as configurações forem aplicadas mas a Steam não
+voltar, a interface informa essa situação e atualiza o estado das pendências,
+evita exigir reaplicação e orienta abrir o cliente manualmente.
+
+Esse tratamento foi verificado com processos e relógio simulados, além de
+checagem Rust/TypeScript; não foi executado um reinício real da Steam durante
+o desenvolvimento da correção.
+
+### Controles MAKO pelo launcher durante a partida
+
+A aba de geração de quadros distingue execução em andamento de operações que
+bloqueiam a interface. Com o jogo aberto, multiplicador, adaptativo, FPS alvo,
+escala de movimento e modelo leve podem ser enviados ao perfil ativo por
+`update_frame_generation_live`. O salvamento automático envia esses controles após 450 ms sem novas alterações. DLL,
+ativação, versão do runtime e carregamento do overlay continuam protegidos.
+
+Essa operação não salva configurações de execução gerais, não prepara um novo
+wrapper e não altera opções da Steam. Ela modifica apenas seis chaves de
+recarga do TOML existente, atualiza o JSON de preferências e a representação
+`live.json` lida pelo painel interno. Preserva a pausa da geração e outras
+configurações do documento. Formatos inesperados ou chaves duplicadas são
+recusados. A recarga depende de o jogo ter sido iniciado com MAKO; salvar um
+perfil não injeta MAKO em um jogo que começou sem ele.
+
+
+### Salvamento automático da geração de quadros
+
+Os controles do perfil dispensam Salvar/Aplicar. A fila agrupa alterações por
+450 ms, serializa gravações e envia uma alteração pendente ao sair da aba.
+Carregar a tela não dispara uma gravação. Erros ficam no painel com opção de
+tentar novamente; alterações comuns não geram notificações repetidas. A
+configuração inicial em um launcher externo continua sendo oferecida quando
+uma ativação exige vincular o wrapper.
+
+A confirmação manual de que outros geradores estão desligados foi removida,
+inclusive do contrato de preferências e da validação Rust. Perfis antigos que
+contenham esse campo continuam legíveis por Serde. As verificações efetivas
+de conflitos com configuração local de FG, HDR e outras camadas permanecem.
+O programa não presume conseguir detectar todas as opções internas de um jogo.

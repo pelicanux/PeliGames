@@ -20,6 +20,7 @@ export const runInstallation = async (payload: InstallerPayload): Promise<string
     model: payload.model ?? "auto",
     int4: payload.int4 ?? null,
     renodx: payload.renodx ?? null,
+    lumenite: payload.lumenite ?? null,
   });
 };
 
