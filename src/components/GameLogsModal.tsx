@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { ModalSurface } from "./ModalSurface";
-import { DetachedLogWindow, dragLogWindow, LogWindowActions, LogOutput, LogResizeHandles } from "./DetachedLogWindow";
+import { OpenLogFolderButton, DetachedLogWindow, dragLogWindow, LogWindowActions, LogOutput, LogResizeHandles } from "./DetachedLogWindow";
 import type { GameInfo } from "./GameGrid";
 export function GameLogsModal({ game, onClose, standalone = false }: { game: GameInfo; onClose: () => void; standalone?: boolean }) {
   return standalone ? <GameLogsContent game={game} onClose={onClose} /> : <DetachedLogWindow kind="game" target={game.path} title={game.name} onClose={onClose} />;
@@ -35,6 +35,7 @@ function GameLogsContent({ game, onClose }: { game: GameInfo; onClose: () => voi
   return createPortal(<div className="detached-log-page">
     <ModalSurface role="dialog" aria-modal="false" aria-labelledby="game-log-title" className="modal-content dialog-glass game-logs-dialog" onHeaderMouseDown={dragLogWindow} hideClose headerActions={<LogWindowActions onClose={onClose} />} header={<h2 id="game-log-title">Logs · {game.name}</h2>} onDismiss={onClose}>
       <div className="game-log-tabs"><button aria-pressed={tab === "current"} onClick={() => setTab("current")}>Atual</button><button aria-pressed={tab === "previous"} onClick={() => setTab("previous")}>Anterior</button></div>
+      <OpenLogFolderButton kind="game" target={game.path}/>
       <p className="game-log-hint">Atualiza durante a execução. Mantém a última execução e um backup da anterior.</p>
       {error ? <p role="alert">{error}</p> : <LogOutput content={logs[tab] || (loading ? "Carregando…" : "Nenhum log disponível para esta execução.")} />}
     </ModalSurface>

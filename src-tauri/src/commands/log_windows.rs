@@ -106,3 +106,21 @@ mod tests {
         assert!(super::keep_above_script("Logs", 1, false).contains("window.keepAbove = false"));
     }
 }
+
+/// Resolve only registered log targets; the webview never supplies a folder to open.
+#[tauri::command]
+pub async fn open_log_folder(kind: String, target: Option<String>) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let folder = match kind.as_str() {
+            "game" => crate::core::game_logs::folder(target.as_deref().ok_or("Jogo não informado.")?)?,
+            "nexus" => {
+                let game = super::nexus_local::log_game(target.as_deref().ok_or("Jogo não informado.")?)?;
+                super::nexus_profile::directory(&game)?.join("logs")
+            }
+            "launcher" => crate::core::paths::app_root()?,
+            _ => return Err("Destino de logs inválido.".into()),
+        };
+        if !folder.is_dir() { return Err("Ainda não há pasta de logs para esta execução.".into()); }
+        super::backend_folder::open(&folder)
+    }).await.map_err(|error| error.to_string())?
+}

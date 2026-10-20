@@ -24,3 +24,15 @@ export function steamLaunchOptionsForRoute(route: string): string {
     : "dxgi=n,b";
   return `WINEDLLOVERRIDES="${overrides}" %command%`;
 }
+
+/** ReShade's DirectX/OpenGL/Vulkan routes share its menu; OptiScaler has its own. */
+export function menuShortcutStorageKey(game: string, route: string): string {
+  const menu = route === "optiscaler" ? "optiscaler" : "reshade";
+  return `${game}::menu:${menu}`;
+}
+export function menuShortcutForRoute(keys: Record<string, string> | undefined, game: string, directory: string, route: string): string {
+  return keys?.[menuShortcutStorageKey(game, route)]
+    || keys?.[menuShortcutStorageKey(directory, route)]
+    // Older builds saved one key per game. Keep it until each menu is customized.
+    || keys?.[game] || keys?.[directory] || defaultShortcutForRoute(route);
+}

@@ -111,7 +111,7 @@ import { ShortcutKeySelector } from "./components/ShortcutKeySelector";
 
 import { EffectsContext } from "./components/EffectsContext";
 import { APP_BUILD_LABEL } from "./services/buildInfo";
-import { defaultShortcutForRoute, steamLaunchOptionsForRoute, launchOptionsFromInstallOutput } from "./services/routeDefaults";
+import { menuShortcutForRoute, menuShortcutStorageKey, steamLaunchOptionsForRoute, launchOptionsFromInstallOutput } from "./services/routeDefaults";
 import { syncModLaunchOptions } from "./services/modLaunchOptions";
 // Launch report shown over the library (same order as when Pelinstall was bundled here).
 import "./modules/pelinstall/pelinstall.css";
@@ -255,6 +255,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   const [notificationBackendArch, setNotificationBackendArch] = useState<"rdna3" | "rdna4">("rdna4");
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
+  const shortcutWrites = useRef<Promise<unknown>>(Promise.resolve());
   const [appConfigLoaded, setAppConfigLoaded] = useState(false);
 
   const changeInstallRoute = (nextRoute: InstallRoute) => {
@@ -363,7 +364,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
         gpuArch,
         dllPath: /\.(dll|zip)$/i.test(appConfig.dll_version) ? appConfig.dll_version : null,
         binPath: appConfig.dll_version.endsWith('.bin') ? appConfig.dll_version : null,
-        shortcutKey: appConfig?.game_shortcut_keys?.[selectedGame?.path || gameDir] || appConfig?.game_shortcut_keys?.[gameDir] || defaultShortcutForRoute(route),
+        shortcutKey: menuShortcutForRoute(appConfig?.game_shortcut_keys, selectedGame?.path || gameDir, gameDir, route),
         neuralStartup: neuralStartup.enabled,
         model: neuralModel,
         int4: int4Mixed,
@@ -1157,7 +1158,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   ) : null;
   const nexusPanels = <NexusPanels toolState={nexusToolState} highlightRequestId={nexusModToView?.requestId} highlightedModId={nexusModToView?.gameId === nexusGame?.id ? nexusModToView?.modId : undefined} tab={nexusTab} onTabChange={tab => { if (tab === "mods") setNexusTab(tab); else void requireNexusAccount(language).then(connected => { if (connected) setNexusTab(tab); }); }} game={nexusGame} busy={nexus.busy} settingsBusy={nexus.settingsBusy} progress={nexusGame ? nexus.progress[nexusGame.id] : undefined} error={nexus.error} reducedMotion={performanceMode} onImport={nexus.importArchive} onRemove={nexus.removeArchive} onInstall={nexus.install} onToggle={nexus.toggle} onMove={nexus.move} onSwitchProfile={nexus.switchProfile} onDownloadLoader={nexus.downloadLoader} onLogs={setNexusLogTarget} onConfigure={nexus.configureProton} onConfigureDeploy={nexus.configureDeploy} onConfigureLaunch={nexus.configureLaunch} onUninstall={nexusGame && ["PeliGames", "Steam"].includes(nexusGame.game.launcher) ? () => {void coverAction("uninstall", {...nexusGame.game, prefix:nexusGame.compat_data || nexusGame.game.prefix});} : undefined} onConfigureAdvanced={nexus.configureAdvanced} onError={nexus.setError} />;
   const installedPanel = (section: InstalledPanelSection) => <InstalledGamePanels key={selectedGame?.path} section={section} game={selectedGame} onChangeExecutable={selectedGame?.launcher === "PeliGames" && executableAlternatives.length > 1 ? changeSelectedExecutable : undefined} onUninstall={selectedGame && ["PeliGames", "Steam"].includes(selectedGame.launcher) ? () => {void coverAction("uninstall", selectedGame);} : undefined} disabled={gameInstaller.busy || libraryMutationBusy || gameExecution.active || Boolean(nexusGame?.running) || Boolean(nexus.launching) || nexus.busy || nexus.settingsBusy || Boolean(gameExecution.pendingPath)}
-              onSaved={game => { setSelectedGame(previous => previous && previous.path === game.path ? game : previous); if(nexusGame && game.advanced)void nexus.configureAdvanced(nexusGame.id,game.advanced); }} programsDisabled={gameInstaller.busy || libraryMutationBusy || Boolean(gameExecution.pendingPath)}
+              onSaved={game => { setSelectedGame(previous => previous && previous.path === game.path ? game : previous); if(nexusGame && game.advanced)void nexus.configureAdvanced(nexusGame.id,game.advanced); }} programsDisabled={gameInstaller.busy || libraryMutationBusy || nexus.busy || nexus.settingsBusy || Boolean(nexus.launching) || Boolean(gameExecution.pendingPath)}
               onRunProgram={gameExecution.runProgram} onStartShortcut={gameExecution.startShortcut} />;
   const installationPanels = <InstallGamePanels primaryAction={<InstallGameSubmit mode={gamePanelMode === "add" ? "add" : "install"} ready={installationReady} busy={gameInstaller.busy || libraryMutationBusy || (addingNexusGame && nexus.busy)} onInstall={() => void submitGameEntry()} />} onClose={collapseGameDetails} mode={gamePanelMode === "add" ? "add" : "install"} draft={installationDraft} directory={installationLocation.directory} directorySelected={installationLocation.selected} onDefaultDirectory={installationLocation.selectDefault} directoryError={installationLocation.error} busy={gameInstaller.busy || libraryMutationBusy || (addingNexusGame && nexus.busy)} nexusAddition={addingNexusGame ? { platform: nexusAdditionPlatform, onPlatformChange: setNexusAdditionPlatform, prefix: nexusAdditionPrefix, onPrefixChange: setNexusAdditionPrefix } : undefined} onDirectoryChange={installationLocation.setDirectory}
                 executable={installationExecutable} onExecutableChange={setInstallationExecutable} proton={installationProton} onProtonChange={setInstallationProton} />;
@@ -1285,12 +1286,17 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
         onClick={() => void handleInstall()}>{loading ? t("installAction", "loading") : isInstalledMod(installStatus) ? (language === "pt" ? "Reparar / reinstalar" : "Repair / reinstall") : t("installAction", "install")}</button>
       {isInstalledMod(installStatus) && <button type="button" className="modern-mini-btn danger" disabled={loading || neuralStartup.busy} onClick={() => setShowConfirmGameUninstall(selectedGameDirectory!)}><MenuIcon name="trash" />{t("gameInfo", "uninstall")}</button>}
     </>}
-    shortcut={<ShortcutKeySelector disabled={loading || installStatus === "Verificando..."} route={route} shortcutKey={appConfig?.game_shortcut_keys?.[selectedGame?.path || gameDir] || appConfig?.game_shortcut_keys?.[gameDir] || defaultShortcutForRoute(route)} setShortcutKey={val => {
+    shortcut={<ShortcutKeySelector key={`${selectedGame?.path || gameDir}:${route}`} disabled={loading || installStatus === "Verificando..."} route={route} shortcutKey={menuShortcutForRoute(appConfig?.game_shortcut_keys, selectedGame?.path || gameDir, gameDir, route)} setShortcutKey={val => {
       if (appConfig && selectedGame) {
-        const newConfig = { ...appConfig, game_shortcut_keys: { ...appConfig.game_shortcut_keys, [selectedGame.path]: val } };
+        const newConfig = { ...appConfig, game_shortcut_keys: { ...appConfig.game_shortcut_keys, [menuShortcutStorageKey(selectedGame.path, route)]: val } };
         setAppConfig(newConfig);
-        invoke("save_app_config", { config: newConfig }).catch(err => console.error("Failed to save config:", err));
-        if (isInstalledMod(installStatus)) invoke("update_shortcut_key_in_game", { gameDir: selectedGameDirectory, shortcutKey: val }).catch(err => console.error("Failed to update shortcut in game:", err));
+        // Save and update INIs in selection order: a slow older write must not win.
+        const gameDirectory = selectedGameDirectory;
+        const updateInstalled = isInstalledMod(installStatus);
+        shortcutWrites.current = shortcutWrites.current.catch(() => {}).then(async () => {
+          await invoke("save_app_config", { config: newConfig });
+          if (updateInstalled) await invoke("update_shortcut_key_in_game", { gameDir: gameDirectory, shortcutKey: val, route });
+        }).catch(error => notifyError(language === "pt" ? "Atalho do menu" : "Menu shortcut", String(error)));
       }
     }} />}
     feedback={<>{neuralStartup.feedback && <p role="status" className="neural-startup-feedback">{t("neuralStartup", neuralStartup.feedback)}</p>}

@@ -31,13 +31,15 @@ export function useDiscordBenefits() {
     };
     const refresh = async () => {
       lastRefresh = Date.now();
-      try { await accept(await invoke<DiscordStatus>("load_discord_account")); }
+      const request = revision;
+      try { const status = await invoke<DiscordStatus>("load_discord_account"); if (active && request === revision) await accept(status); }
       catch { /* Keep only the already-verified lease until expiry. */ }
     };
     const changed = (event: Event) => { void accept((event as CustomEvent<DiscordStatus>).detail); };
     const focus = () => { if (Date.now() - lastRefresh > 6 * 3600000) void refresh(); };
     // The saved entitlement first (no network), then the online check.
-    void invoke<DiscordStatus>("cached_discord_account").then(accept).catch(() => {})
+    const cachedRevision = revision;
+    void invoke<DiscordStatus>("cached_discord_account").then(status => { if (active && cachedRevision === revision) return accept(status); }).catch(() => {})
       .finally(() => { if (active) setChecked(true); void refresh(); });
     const refreshTimer = setInterval(() => void refresh(), 6 * 3600000);
     window.addEventListener("discordConnectionChanged", changed);

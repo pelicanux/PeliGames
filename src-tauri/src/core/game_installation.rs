@@ -184,6 +184,7 @@ fn run_inner(request: InstallationRequest, repair: Option<(super::installed_libr
             .into_owned(),
         cover_url: request.cover_url,
         entries: vec![],
+        selected_executable: None,
         overrides: vec![],
         baseline,
         known_shortcuts: None,
@@ -284,6 +285,7 @@ pub fn launch(path: String) -> Result<(), String> {
     }
 }
 pub(crate) struct PreparedRun {
+    pub name: String,
     pub command: Command,
     pub prefix: PathBuf,
     pub log: PathBuf,
@@ -479,6 +481,7 @@ fn prepare_run_mode(
         .stdout(Stdio::from(log))
         .stderr(Stdio::from(stderr));
     Ok(PreparedRun {
+        name: request.name,
         command,
         prefix,
         log: log_path,

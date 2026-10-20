@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { MenuIcon } from "./MenuIcon";
 import { CloseButton } from "./CloseButton";
 import { ModalSurface } from "./ModalSurface";
 
@@ -119,4 +120,18 @@ export function logLineTone(line: string): string | undefined {
   if (/\b(?:warning|warn)\b|ANTERIOR à última execução/i.test(line)) return "log-line-warning";
   if (/successfully|\bhas been (?:loaded|initialized|started)\b|\b\d+ plugin\(s\) loaded|\b(?:loaded successfully|compilation succeeded|import completed|concluído)\b/i.test(line)) return "log-line-success";
   return undefined;
+}
+
+export function OpenLogFolderButton({kind, target}: {kind: "game" | "nexus" | "launcher"; target?: string}) {
+  const [busy, setBusy] = useState(false), [error, setError] = useState("");
+  const open = async () => {
+    if (busy) return;
+    setBusy(true); setError("");
+    try {
+      if ("__PELI_UI_PREVIEW__" in window) { setError("Prévia: nenhuma pasta real será aberta."); return; }
+      await invoke("open_log_folder", {kind, target: target ?? null});
+    } catch (failure) { setError(String(failure)); }
+    finally { setBusy(false); }
+  };
+  return <div className="log-folder-actions"><button type="button" className="modern-mini-btn log-folder-button" disabled={busy} onClick={() => void open()} title="Abrir a pasta destes logs no gerenciador de arquivos"><MenuIcon name="folder"/>{busy ? "Abrindo…" : "Abrir pasta dos logs"}</button>{error && <span role="alert">{error}</span>}</div>;
 }

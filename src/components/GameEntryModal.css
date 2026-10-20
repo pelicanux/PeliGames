@@ -1,0 +1,5 @@
+:root .game-entry-options .game-entry-option { display:flex; flex-direction:row; align-items:center; justify-content:flex-start; gap:12px; text-align:left; min-width:0; }
+.game-entry-option > span:last-child { min-width:0; overflow-wrap:anywhere; }
+:root .game-entry-option .installation-action-icon { flex-shrink:0; }
+:root .game-entry-option .installation-action-icon > .menu-icon { width:19px; height:19px; color:#fff; }
+:root .game-entry-option > .installation-action-icon { background:linear-gradient(150deg,var(--action-icon-top),var(--action-icon-bottom)); color:#fff; }

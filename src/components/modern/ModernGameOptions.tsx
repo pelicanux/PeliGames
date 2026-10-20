@@ -11,9 +11,9 @@ import { MenuIcon } from "../MenuIcon";
 import { notifyError, notifyInfo } from "../../services/notifications";
 import { WinetricksModal } from "../WinetricksModal";
 
-export function ModernGameOptions({name="",value, proton, protonLabel, onProton, onAdvanced, launchOptions, disabled, native, maintenancePath, onUninstall, onChangeExecutable, automaticDlls, dllError, onResetDlls, children, protonDisabled, protonDisabledHint, protonDisabledLabel, configuration, prefixPrograms}: {
+export function ModernGameOptions({name="",value, proton, protonLabel, onProton, onAdvanced, launchOptions, disabled, toolsDisabled = disabled, native, maintenancePath, onUninstall, onChangeExecutable, automaticDlls, dllError, onResetDlls, children, protonDisabled, protonDisabledHint, protonDisabledLabel, configuration, prefixPrograms}: {
   name?: string; protonLabel?: string; configuration?: ReactNode; prefixPrograms?: ReactNode; protonDisabled?: boolean; protonDisabledHint?: string; protonDisabledLabel?: string; value?: AdvancedSettings; proton: string; onProton: (path: string)=>Promise<boolean>; onAdvanced: (settings:AdvancedSettings)=>Promise<boolean>;
-  launchOptions: ReactNode; disabled?: boolean; native?: boolean; maintenancePath: string; onUninstall?: ()=>void; onChangeExecutable?: ()=>void;
+  launchOptions: ReactNode; disabled?: boolean; toolsDisabled?: boolean; native?: boolean; maintenancePath: string; onUninstall?: ()=>void; onChangeExecutable?: ()=>void;
   automaticDlls?: string; dllError?: string; onResetDlls?: ()=>void; children?: ReactNode;
 }) {
   const {language,t} = useI18n(), pt=language==="pt";
@@ -30,7 +30,7 @@ export function ModernGameOptions({name="",value, proton, protonLabel, onProton,
   const lock=useRef(false), alive=useRef(true);
   useEffect(()=>{alive.current=true;if(native)return()=>{alive.current=false;};const scan=()=>{void invoke<InstalledProton[]>("scan_installed_protons").then(data=>{if(alive.current){setRunners(data);setRunnerError("");}}).catch(e=>{if(alive.current)setRunnerError(String(e));});};scan();window.addEventListener("protonRunnersChanged",scan);return()=>{alive.current=false;window.removeEventListener("protonRunnersChanged",scan);};},[native]);
   const run=async(action:()=>Promise<unknown>,message?:string,source=pt?"Opções do jogo":"Game options",tool?:string)=>{
-    if(disabled||lock.current)return;
+    if((tool ? toolsDisabled : disabled)||lock.current)return;
     lock.current=true;setBusy(true);setActiveTool(tool??null);
     try{await action();if(message)notifyInfo(source,message);}
     catch(e){notifyError(source,e);}
@@ -72,7 +72,7 @@ export function ModernGameOptions({name="",value, proton, protonLabel, onProton,
     </section>
     <section className="modern-performance-card modern-maintenance-options"><h3>{pt?"Manutenção":"Maintenance"}</h3>
       {!native&&<section className="modern-wine-section" aria-label={pt?"Ferramentas do Wine":"Wine tools"}><h4>{pt?"Ferramentas do Wine":"Wine tools"}</h4>
-      <div className="modern-wine-tools">{([['winecfg','Winecfg','settings'],['winetricks-gui','Winetricks','cube'],['regedit','Regedit','document'],['explorer',pt?'Explorador de arquivos':'File explorer','folder']] as const).map(([action,label,icon])=><button type="button" className="modern-mini-btn" key={action} disabled={blocked||!proton} aria-busy={activeTool===action} title={activeTool===action?(pt?"Preparando ou executando a ferramenta. Aguarde…":"Preparing or running the tool. Please wait…"):undefined} onClick={()=>action==="winetricks-gui"?setWinetricks(true):void run(()=>runWineTool(maintenancePath,action),undefined,label,action)}>{activeTool===action?<span className="modern-wine-tool-spinner" aria-hidden="true"/>:<MenuIcon name={icon}/>}<span>{label}</span></button>)}{!proton&&<p>{pt?"Selecione uma versão do Proton para usar as ferramentas.":"Select a Proton version to use these tools."}</p>}</div></section>}
+      <div className="modern-wine-tools">{([['winecfg','Winecfg','settings'],['winetricks-gui','Winetricks','cube'],['regedit','Regedit','document'],['explorer',pt?'Explorador de arquivos':'File explorer','folder']] as const).map(([action,label,icon])=><button type="button" className="modern-mini-btn" key={action} disabled={toolsDisabled||busy||!proton} aria-busy={activeTool===action} title={activeTool===action?(pt?"Preparando ou executando a ferramenta. Aguarde…":"Preparing or running the tool. Please wait…"):undefined} onClick={()=>action==="winetricks-gui"?setWinetricks(true):void run(()=>runWineTool(maintenancePath,action),undefined,label,action)}>{activeTool===action?<span className="modern-wine-tool-spinner" aria-hidden="true"/>:<MenuIcon name={icon}/>}<span>{label}</span></button>)}{!proton&&<p>{pt?"Selecione uma versão do Proton para usar as ferramentas.":"Select a Proton version to use these tools."}</p>}</div></section>}
       {onChangeExecutable&&<div className="modern-option-row"><span>{t("gameInfo","changeExecutable")}</span><button type="button" className="modern-mini-btn" disabled={blocked} onClick={onChangeExecutable}>{pt?"Escolher":"Choose"}</button></div>}
       <div className="modern-option-row"><span>{pt?"Atalho na área de trabalho":"Desktop shortcut"}</span><button type="button" className="modern-mini-btn" disabled={blocked} onClick={()=>void run(()=>invoke<string>("create_peligames_shortcut",{path:maintenancePath}),pt?"Atalho criado na área de trabalho.":"Desktop shortcut created.")}>{pt?"Criar":"Create"}</button></div>
       <div className="modern-option-row modern-uninstall-row"><span>{pt?"Desinstalar jogo":"Uninstall game"}</span><button type="button" className="modern-mini-btn danger" disabled={blocked||!onUninstall} onClick={onUninstall}>{pt?"Desinstalar":"Uninstall"}</button></div>

@@ -1,5 +1,6 @@
 import { ModalSurface } from "./ModalSurface";
-import { MenuIcon } from "./MenuIcon";
+import { InstallationActionIcon } from "./InstallationActionIcon";
+import "./GameEntryModal.css";
 import { useI18n } from "../i18n/I18nContext";
 import { launcherRecipes, type LauncherRecipe } from "../services/launcherInstallation";
 import { LauncherInstallWizard } from "./LauncherInstallWizard";
@@ -19,7 +20,7 @@ export function GameEntryModal({ onClose, onSelect }: { onClose: () => void; onS
       onDismiss={onClose} header={<h2 id="game-entry-title">{t("gameModes", "entryTitle")}</h2>}>
       <div className="mod-manager-options game-entry-options">
         {(["install", "add"] as const).map(mode => <button key={mode} type="button" className="btn btn-secondary game-entry-option"
-          onClick={() => onSelect(mode)}><MenuIcon name={mode === "install" ? "download" : "folder"} /><span>{t("gameModes", mode === "install" ? "install" : "addGame")}</span></button>)}
+          onClick={() => onSelect(mode)}><InstallationActionIcon name={mode === "install" ? "download" : "plusCircle"} /><span>{t("gameModes", mode === "install" ? "install" : "addGame")}</span></button>)}
       </div>
       <section className="game-entry-launchers" aria-label={language === "pt" ? "Instalar launcher" : "Install launcher"}>
         <h3>{language === "pt" ? "Instalar launcher" : "Install launcher"}</h3>

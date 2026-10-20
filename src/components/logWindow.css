@@ -87,3 +87,7 @@ html.log-monitor-window .detached-log-page .modal-glass-backdrop { display: none
 html.log-monitor-window .detached-log-page .dialog-titlebar { position: relative !important; inset: auto !important; width: auto !important; flex-shrink: 0; }
 html.log-monitor-window .detached-log-page .dialog-titlebar h2 { background: none !important; -webkit-text-fill-color: currentColor !important; text-shadow: none !important; }
 html.log-monitor-window .detached-log-page .modal-scroll-body { position: relative; inset: auto; flex: 1; min-height: 0; margin: 0 !important; }
+.log-folder-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:10px 0; }
+.log-folder-actions > [role=alert] { font-size:.75rem; color:var(--color-error,#f87171); }
+.log-folder-button { display:inline-flex; align-items:center; gap:7px; padding:6px 11px; border:1px solid var(--modern-line,#ffffff24); border-radius:10px; background:var(--modern-card-2,#ffffff0c); color:var(--modern-text,inherit); font:inherit; font-size:.8rem; cursor:pointer; }
+.log-folder-button .menu-icon { width:16px; height:16px; }

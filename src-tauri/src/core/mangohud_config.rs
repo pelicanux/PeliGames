@@ -338,6 +338,21 @@ pub(super) fn safe_directory(path: &Path) -> Result<(), String> {
 mod tests {
     use super::*;
     #[test]
+    fn default_monitoring_has_no_fps_cap_or_forced_vsync() {
+        let mut settings = defaults();
+        let config = render(&settings, Path::new("/tmp/logs")).unwrap();
+        // Vulkan immediate is 1; OpenGL's disabled swap interval is 0.
+        for line in ["fps_limit=0", "vsync=1", "gl_vsync=0"] {
+            assert!(config.lines().any(|actual| actual == line), "{line}");
+        }
+        // Explicit user choices still override these defaults.
+        settings.insert("vsync".into(), serde_json::json!("3"));
+        settings.insert("gl_vsync".into(), serde_json::json!("1"));
+        let config = render(&settings, Path::new("/tmp/logs")).unwrap();
+        assert!(config.lines().any(|line| line == "vsync=3"));
+        assert!(config.lines().any(|line| line == "gl_vsync=1"));
+    }
+    #[test]
     fn game_logs_keep_global_style_and_invocation_fps_override() {
         let root = std::env::temp_dir().join(format!("peligames-game-hud-{}",uuid::Uuid::new_v4()));
         fs::create_dir(&root).unwrap();

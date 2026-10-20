@@ -18,7 +18,7 @@ import { MatrixGameActivities } from "./MatrixGameActivity";
 import { MenuIcon } from "./MenuIcon";
 import { useI18n } from "../i18n/I18nContext";
 import { MATRIX_COMMUNITY_ID, MATRIX_PREMIUM_ROOM_ID } from "../services/matrixCommunity";
-import { displayName, loadOlderMessages, mentionsMe, moderation, powerOf, refreshMatrixRoomMembers, refreshMatrixRooms, refreshMatrixStatus, reloadMatrixRooms, useMatrixChat, type ChatMessage } from "../services/matrixChat";
+import { displayName, loadOlderMessages, mentionsMe, moderation, powerOf, refreshMatrixRoomMembers, refreshMatrixRooms, disconnectMatrixChat, refreshMatrixStatus, reloadMatrixRooms, useMatrixChat, type ChatMessage } from "../services/matrixChat";
 import { notifyError } from "../services/notifications";
 import { GIF_LINK, matrixAnimatedImage, matrixAvatar, matrixGifMedia, matrixImage, matrixVideo, type GifMedia } from "../services/matrixMedia";
 import { useDiscordBenefits } from "../theme/useDiscordBenefits";
@@ -255,9 +255,9 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
     if (actionLock.current) return; actionLock.current = true; setBusy(true);
     try {
       // Offline, the account still leaves this computer; the server keeps the session until it is ended in Element.
-      if (!await invoke<boolean>("disconnect_matrix_chat")) fail(null, pt ? "Conta removida deste computador, mas sem conexão para encerrar a sessão no Matrix. Encerre-a no Element, em Configurações → Sessões." : "Account removed from this computer, but there was no connection to end the Matrix session. End it in Element, under Settings → Sessions.");
+      if (!await disconnectMatrixChat()) fail(null, pt ? "Conta removida deste computador, mas sem conexão para encerrar a sessão no Matrix. Encerre-a no Element, em Configurações → Sessões." : "Account removed from this computer, but there was no connection to end the Matrix session. End it in Element, under Settings → Sessions.");
     } catch (e) { fail(e, pt ? "Não foi possível desconectar." : "Could not disconnect."); }
-    finally { actionLock.current = false; setBusy(false); void refreshMatrixStatus(); }
+    finally { actionLock.current = false; setBusy(false); }
   };
   // Reacting again with the same emoji removes the reaction (its event is redacted).
   const react = async (message: ChatMessage, key: string) => {

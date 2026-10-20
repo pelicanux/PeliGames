@@ -80,7 +80,7 @@
     "key": "vsync",
     "label": "VSync Vulkan",
     "kind": "select",
-    "default": "-1",
+    "default": "1",
     "values": [
       "-1",
       "0",
@@ -94,7 +94,7 @@
     "key": "gl_vsync",
     "label": "VSync OpenGL",
     "kind": "select",
-    "default": "-2",
+    "default": "0",
     "values": [
       "-2",
       "0",

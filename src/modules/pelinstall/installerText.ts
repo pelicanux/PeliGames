@@ -1,6 +1,9 @@
 import { useI18n } from "../../i18n/I18nContext";
 
 const english: Record<string, string> = {
+  "Qual é o nome do jogo ou programa?": "What is the name of the game or program?",
+  "A pasta padrão do prefixo usará este nome. Na próxima etapa, escolha onde ela será criada.": "The default prefix folder will use this name. Choose where it will be created in the next step.",
+  "Revisão": "Review",
   "Todo o prefixo será apagado permanentemente, incluindo jogos, programas, configurações e saves. Todos os jogos que usam esse prefixo serão removidos da biblioteca. Os atalhos também serão removidos da área de trabalho e das pastas de aplicativos. Outros arquivos fora do prefixo serão preservados. Deseja continuar?": "The entire prefix will be permanently deleted, including games, programs, settings and saves. All games using this prefix will be removed from the library. Shortcuts will also be removed from the desktop and application folders. Files outside the prefix will be kept. Continue?",
   "Instalar ou adicionar?": "Install or add?",
   "Instalar": "Install",

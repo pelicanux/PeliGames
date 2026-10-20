@@ -34,6 +34,8 @@ export function setMatrixPresence(user: string, status: string) {
   if (state.userId === user) set({ presence: { ...state.presence, [user]: status } });
 }
 let generation = 0, started = false, pendingTimer: ReturnType<typeof setTimeout> | undefined;
+let statusRequest = 0;
+let disconnectRequest: Promise<boolean> | null = null;
 let profileRun = -1;
 const profileAttempts = new Map<string, number>();
 function resolveMissingNames() {
@@ -215,14 +217,30 @@ async function begin() {
 /** Reads the sign-in state; starts or stops the chat when it changes. */
 export async function refreshMatrixStatus() {
   clearTimeout(pendingTimer);
+  if (disconnectRequest) return;
+  const request = ++statusRequest;
   try {
     const data = await invoke<{ user_id: string | null; pending: boolean; error?: string | null }>("matrix_chat_status");
+    if (request !== statusRequest || disconnectRequest) return;
     const changed = data.user_id !== state.userId;
     set({ userId: data.user_id, pending: data.pending, error: data.error || (changed ? "" : state.error) });
     if (changed) { window.dispatchEvent(new Event("peligamesMatrixSignedOut")); if (data.user_id) void begin(); else stop(); }
     // While the browser sign-in is open, check again until it finishes.
     if (data.pending) pendingTimer = setTimeout(() => void refreshMatrixStatus(), 2000);
-  } catch (error) { set({ error: String(error) }); }
+  } catch (error) { if (request === statusRequest && !disconnectRequest) set({ error: String(error) }); }
+}
+/** Clear shared chat state only after the backend has removed local credentials. */
+export function disconnectMatrixChat(): Promise<boolean> {
+  if (disconnectRequest) return disconnectRequest;
+  ++statusRequest;
+  clearTimeout(pendingTimer);
+  disconnectRequest = invoke<boolean>("disconnect_matrix_chat").then(revoked => {
+    ++statusRequest;
+    set({ userId: null, pending: false, error: "" });
+    stop();
+    return revoked;
+  }).finally(() => { disconnectRequest = null; });
+  return disconnectRequest;
 }
 /** Starts once per app: an existing sign-in resumes the chat in the background. */
 export function startMatrixChat() {
