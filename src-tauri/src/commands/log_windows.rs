@@ -121,6 +121,6 @@ pub async fn open_log_folder(kind: String, target: Option<String>) -> Result<(),
             _ => return Err("Destino de logs inválido.".into()),
         };
         if !folder.is_dir() { return Err("Ainda não há pasta de logs para esta execução.".into()); }
-        super::backend_folder::open(&folder)
+        super::updater::backend_folder::open(&folder)
     }).await.map_err(|error| error.to_string())?
 }
