@@ -1,4 +1,4 @@
-//! Allow only MangoHUD through MAKO's private Vulkan layer boundary.
+//! Preserve requested explicit layers and add MangoHUD inside MAKO's layer boundary.
 //! The vendor launcher owns isolation; our final exec stage orders the optional
 //! host HUD explicitly, without restoring system-wide implicit discovery.
 use serde_json::{json, Value};
@@ -135,6 +135,10 @@ pub(super) fn launch(runtime: &Path, config: &Path, overlay: Option<&Path>) -> S
     let hud = directory(config);
     // Run after mako-launch: it deliberately replaces implicit search paths and
     // may prepend Steam's overlay. Do not edit the checksummed vendor payload.
+    let legacy_overlay_guard = overlay.map(|runner| format!(
+        "if [ \"${{PELI_OVERLAY_GENERAL:-0}}\" = 1 ] && [ \"$1\" = {} ] && [ \"$2\" = -- ]; then shift 2; fi\n",
+        super::quote(&runner.to_string_lossy())
+    )).unwrap_or_default();
     let adapter = format!(
         r#"if [ "${{PELIGAMES_MAKO_MANGOHUD:-0}}" = 1 ]; then
     unset PELIGAMES_MAKO_MANGOHUD
@@ -169,7 +173,12 @@ pub(super) fn launch(runtime: &Path, config: &Path, overlay: Option<&Path>) -> S
 else
     unset PELIGAMES_MAKO_MANGOHUD
 fi
-exec "$@"
+# VK_LAYER_PATH overrides VK_ADD_LAYER_PATH. Preserve explicitly requested
+# NR Control/int4/ReShade layers after the vendor creates its private path.
+if [ -n "${{VK_LAYER_PATH:-}}" ] && [ -n "${{VK_ADD_LAYER_PATH:-}}" ]; then
+    export VK_LAYER_PATH="$VK_ADD_LAYER_PATH:$VK_LAYER_PATH"
+fi
+{legacy_overlay_guard}exec "$@"
 "#,
         hud64 = super::quote(&hud.join(LAYERS[0].0).to_string_lossy()),
         hud32 = super::quote(&hud.join(LAYERS[1].0).to_string_lossy()),
@@ -269,6 +278,7 @@ mod tests {
                 .env(ENABLE_ENV, if hud { "1" } else { "0" })
                 .env("ENABLE_VKBASALT", if vkbasalt { "1" } else { "0" })
                 .env("VK_INSTANCE_LAYERS", layers).env("VK_ADD_IMPLICIT_LAYER_PATH", "/unrelated")
+                .env("VK_ADD_LAYER_PATH", "/game/dlssnr/control:/game/dlssnr/int4")
                 .env("MANGOHUD_CONFIGFILE", "/own profile/game.conf").output().unwrap()
         }
     }
@@ -278,6 +288,24 @@ mod tests {
         }
     }
 
+    #[test]
+    fn general_overlay_skips_the_legacy_runner_without_losing_the_command() {
+        let fixture = Fixture::new();
+        let runtime = fixture.0.join("runtime");
+        fs::create_dir_all(runtime.join("bin")).unwrap();
+        let launcher = runtime.join("bin/mako-launch");
+        fs::write(&launcher, "#!/bin/sh\nexec \"$@\"\n").unwrap();
+        fs::set_permissions(&launcher, fs::Permissions::from_mode(0o700)).unwrap();
+        let script = fixture.0.join("launch.sh");
+        fs::write(&script, launch(&runtime, &fixture.0.join("profiles/game.toml"), Some(&fixture.0.join("legacy-runner-must-not-run")))).unwrap();
+        let result = std::process::Command::new("/bin/sh")
+            .arg(script).args(["/bin/echo", "argument with spaces"])
+            .env("PELI_OVERLAY_GENERAL", "1")
+            .env(ENABLE_ENV, "0")
+            .output().unwrap();
+        assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
+        assert_eq!(result.stdout, b"argument with spaces\n");
+    }
     #[test]
     fn overlay_runner_is_optional_and_runs_after_the_private_hud_adapter() {
         for overlay in [false, true] {
@@ -295,7 +323,10 @@ mod tests {
             );
             assert_eq!(value["env"]["MANGOHUD"], "1");
             assert_eq!(value["env"]["VK_IMPLICIT_LAYER_PATH"], "/private-mako");
-            assert_eq!(value["args"], json!(["arg with spaces", "$(not-code)"]));
+            let paths = value["env"]["VK_LAYER_PATH"].as_str().unwrap();
+        assert!(paths.starts_with("/game/dlssnr/control:/game/dlssnr/int4:"));
+        assert!(paths.contains("/steam-overlays"));
+        assert_eq!(value["args"], json!(["arg with spaces", "$(not-code)"]));
         }
     }
     #[test]
@@ -385,7 +416,7 @@ mod tests {
             value["env"]["VK_INSTANCE_LAYERS"],
             "VK_LAYER_MAKO_render:VK_LAYER_VALVE_steam_overlay_64"
         );
-        assert_eq!(value["env"]["VK_LAYER_PATH"], "/steam-overlays");
+        assert_eq!(value["env"]["VK_LAYER_PATH"], "/game/dlssnr/control:/game/dlssnr/int4:/steam-overlays");
     }
 
     #[test]

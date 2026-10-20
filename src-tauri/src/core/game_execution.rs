@@ -1,4 +1,4 @@
-//! Lifecycle of one launcher-owned Proton session. No global Wine/Steam kills.
+//! Lifecycle of launcher-owned Proton sessions isolated by prefix. No global Wine/Steam kills.
 use super::game_installation::PreparedRun;
 use serde::{Serialize, Deserialize};
 use std::{
@@ -29,6 +29,7 @@ struct Session {
     cancel: AtomicBool,
 }
 static SESSION: Mutex<Option<Arc<Session>>> = Mutex::new(None);
+static OWNED_SESSIONS: Mutex<Vec<Arc<Session>>> = Mutex::new(Vec::new());
 pub(crate) fn local_status() -> Result<Option<ExecutionStatus>, String> {
     let slot = SESSION.lock().map_err(|e| e.to_string())?;
     slot.as_ref()
@@ -41,11 +42,18 @@ pub(crate) fn local_status() -> Result<Option<ExecutionStatus>, String> {
         })
         .transpose()
 }
-pub fn status() -> Result<Option<ExecutionStatus>, String> {
-    let local = local_status()?;
-    if local.as_ref().is_some_and(|s|s.active()) {return Ok(local);}
-    let shared = super::execution_registry::status_at(&super::execution_registry::directory()?);
-    Ok(shared.or(local))
+pub fn statuses()->Result<Vec<ExecutionStatus>,String>{
+    let mut result=super::execution_registry::statuses_at(&super::execution_registry::directory()?);
+    if let Some(local)=local_status()? {result.retain(|s|s.id!=local.id);result.push(local);}
+    for session in OWNED_SESSIONS.lock().map_err(|e|e.to_string())?.iter(){
+        let local=session.status.lock().map_err(|e|e.to_string())?.clone();
+        result.retain(|s|s.id!=local.id);result.push(local);
+    }
+    Ok(result)
+}
+pub fn status()->Result<Option<ExecutionStatus>,String>{
+    let all=statuses()?;
+    Ok(all.iter().rev().find(|s|s.active()).cloned().or_else(||all.last().cloned()))
 }
 
 pub fn active() -> bool {
@@ -67,6 +75,7 @@ pub fn running_prefix() -> Option<String> {
 /// end, and the game's session is left as it is.
 pub fn run_in_prefix(path: String, executable: String, arguments: Vec<String>) -> Result<(), String> {
     let mut prepared = super::game_installation::prepare_launch_program(path, Some(executable), arguments)?;
+    super::bounded_logs::capture(&mut prepared.command,&prepared.log)?;
     prepared.command.env("PROTON_VERB", "runinprefix");
     let mut child = prepared.command.spawn().map_err(|e| format!("Não foi possível abrir o programa: {e}"))?;
     std::thread::spawn(move || { let _ = child.wait(); });
@@ -74,20 +83,13 @@ pub fn run_in_prefix(path: String, executable: String, arguments: Vec<String>) -
 }
 pub fn start_program_with(path: String, executable: Option<String>, arguments: Vec<String>) -> Result<ExecutionStatus, String> {
     if super::wine_tools::busy() { return Err("Uma ferramenta Wine está em execução.".into()); }
-    let mut slot = SESSION.lock().map_err(|e| e.to_string())?;
-    if slot
-        .as_ref()
-        .is_some_and(|s| s.status.lock().map(|s| s.active()).unwrap_or(true))
-    {
-        if executable.is_none() {
-            if let Some(state) = slot.as_ref().and_then(|s|s.status.lock().ok().map(|s|s.clone())).filter(|s|s.path==path) { return Ok(state); }
-        }
-        return Err("Um jogo ou programa já está em execução.".into());
-    }
-    let registry = super::execution_registry::directory()?;
-    if let Some(state) = super::execution_registry::status_at(&registry) {
-        if executable.is_none() && state.path == path { return Ok(state); }
-        return Err("Um jogo ou programa já está em execução.".into());
+    let mut sessions=OWNED_SESSIONS.lock().map_err(|e|e.to_string())?;
+    let registry=super::execution_registry::directory()?;
+    let current=sessions.iter().filter_map(|session|session.status.lock().ok().map(|s|s.clone()))
+        .chain(super::execution_registry::statuses_at(&registry)).find(|s|s.active()&&s.path==path);
+    if let Some(current)=current {
+        if executable.is_none(){return Ok(current);}
+        return Err("Esta entrada já está em execução. Abra ferramentas pelo próprio prefixo.".into());
     }
     let may_reuse = executable.is_none();
     let prepared = super::game_installation::prepare_launch_program(path.clone(), executable, arguments)?;
@@ -97,7 +99,7 @@ pub fn start_program_with(path: String, executable: Option<String>, arguments: V
             // Two desktop invocations can race before the first monitor publishes its state.
             if may_reuse && error.contains("já usa este prefixo") {
                 for _ in 0..10 {
-                    if let Some(state) = super::execution_registry::status_at(&registry).filter(|s|s.path==path) { return Ok(state); }
+                    if let Some(state) = super::execution_registry::statuses_at(&registry).into_iter().find(|s|s.path==path) { return Ok(state); }
                     std::thread::sleep(Duration::from_millis(50));
                 }
             }
@@ -105,12 +107,15 @@ pub fn start_program_with(path: String, executable: Option<String>, arguments: V
         }
     };
     let initial = session.status.lock().map_err(|e| e.to_string())?.clone();
-    *slot = Some(session);
+    sessions.retain(|s|s.status.lock().map(|s|s.active()).unwrap_or(true));
+    sessions.push(session);
     Ok(initial)
 }
 pub fn cancel(id: &str) -> Result<ExecutionStatus, String> {
-    let slot = SESSION.lock().map_err(|e| e.to_string())?;
-    let Some(session) = slot.as_ref().filter(|s|s.status.lock().is_ok_and(|s|s.id == id)) else { return super::execution_registry::cancel_at(&super::execution_registry::directory()?,id); };
+    let primary=SESSION.lock().map_err(|e|e.to_string())?.clone();
+    let sessions=OWNED_SESSIONS.lock().map_err(|e|e.to_string())?;
+    let session=sessions.iter().chain(primary.iter()).find(|s|s.status.lock().is_ok_and(|s|s.id==id));
+    let Some(session)=session else{return super::execution_registry::cancel_at(&super::execution_registry::directory()?,id);};
     let mut status = session.status.lock().map_err(|e| e.to_string())?;
     if status.id != id {
         return Err("Esta execução já foi substituída.".into());
@@ -248,11 +253,12 @@ fn start_prepared_registered(path: String, mut prepared: PreparedRun, wait_for_c
         );
     }
     if registry.is_some() { super::game_logs::prepare(&path, &mut prepared)?; }
+    super::logger::event("INFO",&format!("Iniciando {}: Proton={}, log={}",prepared.name,prepared.command.get_envs().find(|(key,_)|*key=="PROTONPATH").and_then(|(_,value)|value).unwrap_or(std::ffi::OsStr::new("padrão")).to_string_lossy(),prepared.log.display()));
     prepared.command.process_group(0);
     let mut child = prepared
         .command
         .spawn()
-        .map_err(|e| format!("Falha ao iniciar: {e}. Log: {}", prepared.log.display()))?;
+        .map_err(|e| {super::logger::event("ERROR",&format!("Falha ao iniciar {}: {e}",prepared.name));format!("Falha ao iniciar: {e}. Log: {}", prepared.log.display())})?;
     let root = child.id() as i32;
     let session = Arc::new(Session {
         status: Mutex::new(ExecutionStatus {
@@ -379,6 +385,7 @@ fn start_prepared_registered(path: String, mut prepared: PreparedRun, wait_for_c
                 failure=Some(format!("{hint}\n{}",failure.unwrap_or_default()));
             }
         }
+        super::logger::event(if failure.is_some(){"ERROR"}else{"INFO"},&format!("Execução de {}: {}; código de saída={:?}; log={}",prepared.name,if failure.is_some(){"falhou"}else if cancelled{"cancelada"}else{"encerrada"},exit.and_then(|s|s.code()),prepared.log.display()));
         if let Ok(mut status) = worker.status.lock() {
             status.state = if failure.is_some() {
                 "failed"

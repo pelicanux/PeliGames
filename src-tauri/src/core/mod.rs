@@ -47,3 +47,8 @@ pub mod pe_imports;
 pub mod game_executable;
 
 pub mod neural_models;
+
+pub mod game_copies;
+pub mod mangohud_presets;
+pub mod bounded_logs;
+pub mod game_reset;

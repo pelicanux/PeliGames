@@ -128,3 +128,6 @@ pub mod frame_generation;
 pub mod frame_overlay_shortcut;
 
 pub mod frame_overlay_runtime;
+
+pub mod credential_storage;
+pub mod game_reset;

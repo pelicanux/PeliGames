@@ -775,13 +775,13 @@ fn launch_with(game: &NexusGame, tool: Option<&super::nexus_modules::GameTool>) 
     let dir = folder(game)?;
     let installed = load_deployment(game)?;
     verify_targets(game,&installed)?;
-    if tool.is_none() {
+    if tool.is_none() && !installed.files.is_empty() {
         let files = installed.files.keys().cloned().collect::<Vec<_>>();
         let staged = profile(game).ok();
         let missing = missing_frameworks(&module, &dir, &files, staged.as_deref(), &installed.files);
         if !missing.is_empty() { return Err(format!("Instale as dependências antes de iniciar: {}", missing.iter().map(|item|item.name.as_str()).collect::<Vec<_>>().join(", "))); }
     }
-    let virtual_view = if installed.method == super::nexus_deploy_methods::Method::Vfs {
+    let virtual_view = if installed.method == super::nexus_deploy_methods::Method::Vfs && !installed.files.is_empty() {
         Some(super::nexus_deploy_methods::mount(game, &profile(game)?, &dir)?)
     } else {None};
     let visible = virtual_view.as_deref().unwrap_or(&dir);
@@ -804,7 +804,7 @@ fn launch_with(game: &NexusGame, tool: Option<&super::nexus_modules::GameTool>) 
     let modengine = module.domain == "eldenring" && installed.files.keys().any(|path| path.starts_with("Game/mod/"));
     if modengine && !visible.join("modengine2_launcher.exe").is_file() {return Err("Instale o Mod Engine 2 antes de iniciar este perfil.".into());}
     let reloaded = module.activation.as_ref().is_some_and(|a| a.kind == super::nexus_modules::ActivationKind::Reloaded) && installed.files.keys().any(|p|p.starts_with("Reloaded/Mods/"));
-    let launcher = if reloaded { "Reloaded/Reloaded-II.exe" } else if modengine { "modengine2_launcher.exe" } else if module.domain == "finalfantasy12" && installed.files.contains_key("x64/ff12-launcher.exe") && installed.files.contains_key("x64/launcher.dll") && !visible.join("x64/dinput8.dll").is_file() && !visible.join("x64/dxgi.dll").is_file() {
+    let launcher = if installed.files.is_empty() { module.executable.as_str() } else if reloaded { "Reloaded/Reloaded-II.exe" } else if modengine { "modengine2_launcher.exe" } else if module.domain == "finalfantasy12" && installed.files.contains_key("x64/ff12-launcher.exe") && installed.files.contains_key("x64/launcher.dll") && !visible.join("x64/dinput8.dll").is_file() && !visible.join("x64/dxgi.dll").is_file() {
         "x64/ff12-launcher.exe"
     } else if let Some(executable) = module.mod_launch_executable.as_deref().filter(|path| visible.join(path).is_file()) { executable
     } else {module.launch_executable.as_deref().unwrap_or(&module.executable)};

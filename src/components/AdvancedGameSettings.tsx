@@ -1,3 +1,4 @@
+import {useGameSaveStatus, GameSaveStatusIndicator} from "./GameSaveStatus";
 import { getMangoHudStatus, notifyMangoHudMissing } from "../services/mangohud";
 import { WineDllPriorities } from "./WineDllPriorities";
 import { LaunchWrappersEditor } from "./LaunchWrappersEditor";
@@ -24,6 +25,7 @@ export function AdvancedGameSettings({ value, disabled, reducedMotion, saved, on
   isSteam?: boolean; appId?: string;
 }) {
   const { t } = useI18n();
+  const headerStatus=useGameSaveStatus(saved ? "saved" : "");
   const settings = normalizeAdvanced(value);
   const reportError = (message: string) => notifyError(t("installedSettings", "advancedTitle"), message);
   const apply = (next: AdvancedSettings) => { const issue = advancedError(next); if (issue) reportError(issue); if (!issue) onChange(next); return !issue; };
@@ -66,7 +68,7 @@ export function AdvancedGameSettings({ value, disabled, reducedMotion, saved, on
   const foundWrappers = searching && textMatch("Comando do wrapper scripts argumentos empacotador compatibilidade Proton Wine");
   const foundGamescope = searching && textMatch("Gamescope escala upscaling FSR NIS integer inteira esticar imagem resolução largura altura jogo saída janela tela cheia sem borda FPS limitador foco captura cursor opções adicionais");
   return <div className={`installed-advanced-panel${embedded ? "" : " game-info-panel menu-glass-panel"}`}>
-    <div className="installed-advanced-heading">{onBack && !group && !searching ? <button type="button" className="installation-name-confirm advanced-return" aria-label={t("installedSettings", "backToSettings")} onClick={onBack}><MenuIcon name="back" /></button> : <MenuIcon name="settings" />}<span>{t("installedSettings", "advancedTitle")}</span><label className="advanced-search"><MenuIcon name="search" /><input type="search" aria-label="Buscar configurações avançadas" placeholder="Busca" value={search} onChange={event => { setSearch(event.target.value); }} onKeyDown={event => { if (event.key === "Escape") setSearch(""); }} /></label><div className="advanced-heading-feedback">{checkingMonitoring ? <span role="status">Verificando MangoHUD…</span> : saved && <TimedFeedback className="advanced-saved-feedback">{t("installedSettings", "saved")}</TimedFeedback>}</div></div>
+    <div className="installed-advanced-heading">{onBack && !group && !searching ? <button type="button" className="installation-name-confirm advanced-return" aria-label={t("installedSettings", "backToSettings")} onClick={onBack}><MenuIcon name="back" /></button> : <MenuIcon name="settings" />}<span>{t("installedSettings", "advancedTitle")}</span><label className="advanced-search"><MenuIcon name="search" /><input type="search" aria-label="Buscar configurações avançadas" placeholder="Busca" value={search} onChange={event => { setSearch(event.target.value); }} onKeyDown={event => { if (event.key === "Escape") setSearch(""); }} /></label><GameSaveStatusIndicator/><div className="advanced-heading-feedback">{checkingMonitoring ? <span role="status">Verificando MangoHUD…</span> : saved && !headerStatus && <TimedFeedback className="advanced-saved-feedback">{t("installedSettings", "saved")}</TimedFeedback>}</div></div>
     <div className="advanced-pages">
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={searching ? "search" : group ?? "categories"} className="advanced-page"

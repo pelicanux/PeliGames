@@ -21,7 +21,7 @@ O inventário Rust é conservador: inclui dependências de compilação e não a
 
 As fontes originais das dependências MPL-2.0 estão em [sources/](sources/README.md). Os textos adicionais obtidos dos repositórios oficiais têm suas URLs e referências registradas em [upstream/sources.json](upstream/sources.json).
 
-**Pendências e limites da verificação:** consulte a [auditoria](AUDIT.md). A presença destes avisos, por si só, não certifica o cumprimento de todas as obrigações de distribuição GPL/LGPL do AppImage.
+**Limites da verificação:** A presença destes avisos, por si só, não certifica o cumprimento de todas as obrigações de distribuição GPL/LGPL do AppImage.
 
 Proton, UMU, Winetricks e os backends são baixados separadamente. Seus pacotes e componentes internos mantêm as próprias licenças. Os avisos do backend não demonstram que esses componentes estão dentro do binário PeliGames. A DLL e os pesos de modelos da NVIDIA não são incluídos nem cobertos pela GPL do launcher.
 

@@ -2,7 +2,7 @@ import catalog from "../../config/mangohudOptions.json";
 import type { MangoHudSettings } from "../../services/mangohud";
 const options = catalog;
 
-// Presets put hardware sensors first, followed by FPS and frame timing.
+// All presets share CPU, GPU, VRAM, RAM, FPS, averages, graph, system, clock order.
 export const PRESETS = [
   { id: "basic", name: "Essencial", description: "FPS, CPU, GPU e memória." },
   { id: "full", name: "Detalhado", description: "Sensores, frequências e gráfico." },
@@ -13,6 +13,7 @@ export function applyPreset(kind: string, base: MangoHudSettings): MangoHudSetti
   // Presets explicitly disable Vulkan and OpenGL VSync, including saved profiles.
   const next = { ...base, vsync: "1", gl_vsync: "0" } as MangoHudSettings;
   next.launcher_hud_order = "hardware-first";
+  next.launcher_hud_custom_order = "";
   for (const option of options) if (option.kind === "toggle" && option.key !== "gpu_load_change" && ["fps", "gpu", "cpu", "extras"].includes(option.section)) next[option.key] = false;
   next.fps = true;
   if (kind !== "fps") for (const key of ["gpu_stats", "cpu_stats", "ram", "vram", "frametime"]) next[key] = true;

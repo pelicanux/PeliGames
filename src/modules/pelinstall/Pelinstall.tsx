@@ -1,3 +1,4 @@
+import { useRemovedPrefixNotice } from "../../components/RemovedPrefixNotice";
 import "./installerStyles";
 import { useInstallerText } from "./installerText";
 import { InstallerSettingsMenu } from "./InstallerSettingsMenu";
@@ -76,6 +77,7 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
   const [cancelPending, setCancelPending] = useState(false);
   const closeAfterCancel = useRef(false);
   const location = useInstallationLocation(name.trim(), mode !== null && Boolean(name.trim()) && step >= 0);
+  const removedPrefixNotice=useRemovedPrefixNotice(location.trackReservation);
   const directory = mode === "repair" ? repairPrefix : location.directory;
   const directorySelected = mode === "repair" ? Boolean(repairPrefix.trim()) : location.selected;
   const canResolveDirectory = mode === "repair" ? directorySelected : location.hasSelection;
@@ -84,6 +86,7 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
   const closing = useRef(false);
   stateRef.current = { busy: busy || protonPreferencesBusy, dirty: !result && Boolean(directorySelected || proton || name.trim()), installing: busy && step === 3 };
   const close = async () => {
+    await location.release();
     if (embedded) { window.dispatchEvent(new Event("peligamesLibraryChanged")); embedded.onClose(); return; }
     if (preview) return;
     closing.current = true;
@@ -191,6 +194,13 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
     setMode(repair ? "repair" : target.installer ? "install" : "add");
     setFile(repair ? target.entry.executable || startup.executable || "" : target.installer || startup.executable || ""); setStep(repair ? 1 : -2);
   };
+  const removeOnly=async()=>{
+    if(!target||busy)return;
+    if(preview){setError("A prévia não remove entradas reais.");return;}
+    setBusy(true);setError("");
+    try{await invoke("remove_peligames_library_entry",{path:target.entry.path});setUninstallConfirmation(false);window.dispatchEvent(new Event("peligamesLibraryChanged"));await close();}
+    catch(error){setError(String(error));}finally{setBusy(false);}
+  };
   const uninstall = async (options: UninstallOptions) => {
     if (!target || busy) return;
     if (preview) { setUninstallConfirmation(false); setError("Execute o binário Pelinstall para desinstalar."); return; }
@@ -215,7 +225,6 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
     if (busy || (mode === "repair" && (shortcutChecking || shortcutCheckFailed)) || !validFile || !canResolveDirectory || !proton || !name.trim() || !mode) return;
     if (preview) { setError("A prévia permite testar as etapas. Execute o binário Pelinstall para iniciar uma instalação real."); return; }
     setBusy(true); setError("");
-    if (mode !== "add" && (mode !== "repair" || proton !== target?.entry.proton || repairPrefix !== target?.entry.prefix)) setStep(3);
     let installed = false;
     try {
       if (mode === "repair") {
@@ -227,6 +236,8 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
       }
       // Renaming a game after choosing the default location needs a new, unique reservation.
       const installationDirectory = mode === "repair" ? directory : await location.resolveDirectory();
+      if(mode!=="repair"&&!await removedPrefixNotice.inspect(installationDirectory,file))return;
+    if (mode !== "add" && (mode !== "repair" || proton !== target?.entry.proton || repairPrefix !== target?.entry.prefix)) setStep(3);
       const cover = await resolveCover(name);
       const request = { name: name.trim(), directory: installationDirectory, executable: file, proton, cover_url: cover || undefined };
       if (mode === "add") {
@@ -485,8 +496,9 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
         <button type="button" className="pi-btn grow" disabled={busy} onClick={() => void openLauncher()}>{tr("Abrir no PeliGames")}</button>
       </div>}
     </div>
-    {uninstallConfirmation && target && <PrefixUninstallModal name={target.entry.name} prefix={target.entry.prefix || ""} busy={busy} onConfirm={options => void uninstall(options)} onCancel={() => setUninstallConfirmation(false)} />}
+    {uninstallConfirmation && target && <PrefixUninstallModal name={target.entry.name} prefix={target.entry.prefix || ""} busy={busy} error={error} onRemoveOnly={()=>void removeOnly()} onConfirm={options => void uninstall(options)} onCancel={() => setUninstallConfirmation(false)} />}
     {cancelConfirmation && <ConfirmModal title={mode === "repair" ? tr("Cancelar reparação?") : tr("Cancelar instalação?")} message={mode === "repair" ? tr("Deseja encerrar a atualização do prefixo? Os arquivos e logs serão preservados, mas a preparação pode ficar incompleta. As alterações do registro não serão salvas.") : tr("Deseja encerrar o instalador e os processos deste prefixo? A instalação pode ficar incompleta. O prefixo e os logs serão preservados e nenhum jogo será registrado por esta tentativa.")} confirmText={tr("Encerrar instalação")} onConfirm={() => void cancelInstallation()} onCancel={() => { closeAfterCancel.current = false; setCancelConfirmation(false); }} />}
+    {removedPrefixNotice.dialog}
     {exitConfirmation && <ConfirmModal title={tr("Configuração incompleta")} message={tr("Deseja sair e descartar a configuração iniciada?")} onConfirm={() => { stateRef.current.dirty = false; setExitConfirmation(false); void close(); }} onCancel={() => setExitConfirmation(false)} />}
     {protonPreferencesOpen && <Suspense fallback={null}><ProtonPreferencesDialog overlayLayer={embedded ? 2300 : undefined} onClose={() => setProtonPreferencesOpen(false)} onBusyChange={setProtonPreferencesBusy} /></Suspense>}
   </main>;

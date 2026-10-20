@@ -1,3 +1,5 @@
+import { ConnectionStorageChoice } from "../ConnectionStorageChoice";
+import { refreshMatrixStatus } from "../../services/matrixChat";
 import { useI18n } from "../../i18n/I18nContext";
 import { NexusAccountPanel } from "../../modules/nexus/NexusAccountPanel";
 import { usePreferencesText } from "./labels";
@@ -44,6 +46,7 @@ export function ConnectionsPreferences({searchMode=false,focusTarget,searchContr
     <div className="connection-tab-panel" hidden={!searchMode&&tab!=="matrix"} role={searchMode?undefined:"tabpanel"} id="connection-panel-matrix" aria-labelledby={searchMode?undefined:"connection-tab-matrix"}>
       <section className="connection-module" data-preference-id="connection-matrix"><div className="connection-grid">
         <section className="connection-card"><header className="connection-heading"><span className="mod-component-icon"><MatrixIcon/></span><div><h3>Matrix</h3><p>{pt?"Converse com a comunidade pelo launcher.":"Chat with the community in the launcher."}</p></div><span className="mod-status-badge" data-ready={Boolean(matrix.userId)} role="status">{matrix.userId?(pt?"Conectado":"Connected"):matrix.pending?(pt?"Aguardando login":"Waiting for sign-in"):(pt?"Não conectado":"Not connected")}</span></header>
+        <ConnectionStorageChoice service="matrix" disabled={Boolean(matrix.userId)||matrix.pending||removingMatrix} onChange={()=>void refreshMatrixStatus()}/>
         <div className="connection-account-row"><MenuIcon name={matrix.userId?"check":"chainLinked"}/><div><strong>{matrix.userId?displayName(matrix.userId,matrix.names):(pt?"Entre na sua conta":"Sign in to your account")}</strong><p>{matrix.userId?matrix.userId:(pt?"Abra o chat para autorizar a conexão pelo navegador.":"Open the chat to authorize the connection in your browser.")}</p></div></div>
         <div className="connection-primary-actions"><button type="button" className="mod-action-primary" disabled={removingMatrix} onClick={()=>setMatrixOpen(true)}><MatrixIcon/>{matrix.userId?(pt?"Abrir chat Matrix":"Open Matrix chat"):(pt?"Conectar Matrix":"Connect Matrix")}</button></div>
         {matrix.userId && <div className="mod-setting-row mod-destructive-row"><div className="mod-row-copy"><strong>{pt?"Remover conexão":"Remove connection"}</strong><small>{pt?"Apaga as credenciais deste dispositivo. Sua conta continua existindo.":"Deletes credentials from this device. Your account is preserved."}</small></div><button type="button" className="mod-action-quiet danger" disabled={removingMatrix||matrix.pending} aria-busy={removingMatrix} onClick={()=>void removeMatrix()}><MenuIcon name="chainBroken"/>{removingMatrix?(pt?"Removendo…":"Removing…"):(pt?"Desconectar":"Disconnect")}</button></div>}
@@ -56,6 +59,6 @@ export function ConnectionsPreferences({searchMode=false,focusTarget,searchContr
         </section>
       </div></section>
     </div>
-    {!searchMode&&<div className="connection-privacy-note"><MenuIcon name="info"/><p>{pt?"As credenciais ficam no chaveiro do sistema. Apagar a pasta de configurações não desconecta suas contas; use Desconectar para removê-las deste dispositivo.":"Credentials stay in the system keyring. Deleting the settings folder does not disconnect accounts; use Disconnect to remove them from this device."}</p></div>}
+    {!searchMode&&<div className="connection-privacy-note"><MenuIcon name="info"/><p>{pt?"Sessões salvas usam o chaveiro do sistema. Sessões temporárias ficam na memória até encerrar completamente o PeliGames. Use Desconectar para encerrar uma conexão antes disso.":"Saved sessions use the system keyring. Temporary sessions stay in memory until PeliGames fully exits. Use Disconnect to end a connection sooner."}</p></div>}
   </div>;
 }

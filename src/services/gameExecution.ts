@@ -20,6 +20,10 @@ export function executionStatus(): Promise<ExecutionStatus | null> {
   }
   return "__PELI_UI_PREVIEW__" in window ? previewRequest() : invoke("get_peligames_execution");
 }
+export async function executionStatuses(): Promise<ExecutionStatus[]> {
+  if ("__PELI_UI_PREVIEW__" in window) {const current=await executionStatus(); return current?[current]:[];}
+  return invoke("get_peligames_executions");
+}
 export async function startGame(path: string, executable?: string): Promise<ExecutionStatus> {
   steamPreview = null;
   return "__PELI_UI_PREVIEW__" in window ? (await previewRequest({ action: "start", path, executable }))! : invoke("start_peligames_game", { path, executable });

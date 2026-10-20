@@ -247,61 +247,34 @@ async fn fetch_steamgriddb_cover(name: &str, api_key: &str) -> Option<String> {
     Some(first_grid.url.clone())
 }
 
-fn has_executable(dir: &Path, depth: u8) -> bool {
-    if depth == 0 {
-        return false;
-    }
-    if let Ok(entries) = fs::read_dir(dir) {
-        for entry in entries.flatten() {
-            let p = entry.path();
-            if p.is_file() {
-                if let Some(ext) = p.extension().and_then(|e| e.to_str()) {
-                    if ext.eq_ignore_ascii_case("exe") {
-                        return true;
-                    }
-                }
-            } else if p.is_dir() {
-                if has_executable(&p, depth - 1) {
-                    return true;
-                }
-            }
-        }
-    }
-    false
-}
-
-pub(super) fn scan_custom(folders: Vec<String>) -> Vec<GameInfo> {
+/// Compatibility reader for previously saved folder sources. No UI adds new sources.
+pub(super) fn scan_saved_folders(folders: Vec<String>) -> Vec<GameInfo> {
     let mut games = Vec::new();
+    let mut seen=std::collections::BTreeSet::new();
     for folder in folders {
-        let path = Path::new(&folder);
-        if path.is_dir() {
-            if let Ok(entries) = fs::read_dir(path) {
-                for entry in entries.flatten() {
-                    let p = entry.path();
-                    if p.is_dir() {
-                        // Check if it actually contains an .exe file (up to depth 3)
-                        if has_executable(&p, 3) {
-                            if let Some(name) = p.file_name().and_then(|n| n.to_str()) {
-                                games.push(GameInfo {
-                                    name: name.to_string(),
-                                    path: p.to_string_lossy().to_string(),
-                                    app_id: None,
-                                    cover_url: None,
-                                    launcher: "Custom".to_string(),
-                                });
-                            }
-                        }
-                    }
-                }
+        let Ok(children)=fs::read_dir(&folder) else{continue};
+        for root in children.flatten().filter(|entry|entry.file_type().is_ok_and(|kind|kind.is_dir())).take(512).map(|entry|entry.path()) {
+            if crate::core::game_executable::best_executable_dir(&root,5).is_none(){continue;}
+            let identity=root.canonicalize().unwrap_or_else(|_|root.clone());
+            if !seen.insert(identity){continue;}
+            if let Some(name)=root.file_name().and_then(|name|name.to_str()) {
+                games.push(GameInfo{name:name.into(),path:root.to_string_lossy().into_owned(),app_id:None,cover_url:None,launcher:"Custom".into()});
             }
         }
     }
     games
 }
+fn resolve_executable_paths(games:&mut [GameInfo]) {
+    let config=crate::core::config_manager::load_config().unwrap_or_default();
+    for game in games {
+        if let Some(custom_path)=config.custom_game_paths.get(&game.name){game.path=custom_path.clone();continue;}
+        if let Some(best)=crate::core::game_executable::best_executable_dir(Path::new(&game.path),5){game.path=best.to_string_lossy().into_owned();}
+    }
+}
 
 #[tauri::command]
-pub async fn scan_manual_game_folders(custom_folders: Vec<String>) -> Result<Vec<GameInfo>, String> {
-    tauri::async_runtime::spawn_blocking(move || scan_custom(custom_folders)).await.map_err(|e|e.to_string())
+pub async fn read_saved_game_folders(custom_folders: Vec<String>) -> Result<Vec<GameInfo>, String> {
+    tauri::async_runtime::spawn_blocking(move || {let mut games=scan_saved_folders(custom_folders);resolve_executable_paths(&mut games);games}).await.map_err(|e|e.to_string())
 }
 
 #[tauri::command]
@@ -322,7 +295,7 @@ pub async fn scan_installed_games(app: AppHandle, api_key: String, custom_folder
 
     // 3. Scan Custom
     if let Some(folders) = custom_folders {
-        all_games.extend(scan_custom(folders));
+        all_games.extend(scan_saved_folders(folders));
     }
     
     // Deduplicate by path and name
@@ -333,26 +306,8 @@ pub async fn scan_installed_games(app: AppHandle, api_key: String, custom_folder
         }
     }
     
-    let config = crate::core::config_manager::load_config().unwrap_or_default();
-    
-    // Process paths: heuristic + user overrides
-    for game in &mut unique_games {
-        // 1. Check for manual overrides first
-        if let Some(custom_path) = config.custom_game_paths.get(&game.name) {
-            game.path = custom_path.clone();
-            continue; // Skip heuristic if user set a manual override
-        }
-        
-        // 2. Apply heuristics for nested executable paths
-        let base_path = Path::new(&game.path);
-        if base_path.exists() {
-            // The folder of the game's real executable, up to 5 levels deep.
-            if let Some(best_dir) = crate::core::game_executable::best_executable_dir(base_path, 5) {
-                game.path = best_dir.to_string_lossy().to_string();
-            }
-        }
-    }
-    
+    resolve_executable_paths(&mut unique_games);
+
     // Resolve current Steam artwork filenames in one catalog request.
     let steam_ids: Vec<u32> = unique_games.iter().filter_map(|game| game.app_id.as_ref()?.parse().ok()).collect();
     let steam_assets = super::store_artwork::fetch_steam_assets(&steam_ids).await;

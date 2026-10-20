@@ -3,6 +3,8 @@
 #[cfg(not(target_arch = "x86_64"))]
 compile_error!("O renderer inicial suporta Linux x86_64.");
 mod controls;
+mod focus_fps;
+mod tools;
 mod input;
 mod layer;
 mod panel;
@@ -20,7 +22,7 @@ use std::sync::{
     Mutex, OnceLock,
 };
 static INPUT: OnceLock<Mutex<input::Input>> = OnceLock::new();
-static CONTROLLER: OnceLock<Option<controls::Controller>> = OnceLock::new();
+static CONTROLLER: OnceLock<Option<tools::Tools>> = OnceLock::new();
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(crate) enum Target {
     #[default]
@@ -109,6 +111,7 @@ pub(crate) fn set_target(target: Target) {
         if let Ok(mut s) = state().lock() {
             s.focus(focused);
         }
+        tools::focus(focused);
     }
 }
 pub(crate) fn input_available() -> bool {
@@ -135,6 +138,7 @@ pub(crate) fn refresh_wayland_focus() {
             s.focus(focused);
         }
         if changed {
+            tools::focus(focused);
             report(if focused {
                 "Foco Wayland reconhecido na superfície do jogo ou em sua janela pai."
             } else {
@@ -143,7 +147,7 @@ pub(crate) fn refresh_wayland_focus() {
         }
     }
 }
-pub(crate) fn controller() -> Option<&'static controls::Controller> {
+pub(crate) fn controller() -> Option<&'static tools::Tools> {
     CONTROLLER
         .get_or_init(|| {
             let shortcut = std::env::var("PELI_OVERLAY_SHORTCUT").unwrap_or_else(|_| "F8".into());
@@ -153,12 +157,9 @@ pub(crate) fn controller() -> Option<&'static controls::Controller> {
                     return None;
                 }
             }
-            match controls::Controller::new() {
-                Ok(c) => Some(c),
-                Err(e) => {
-                    report(&e);
-                    None
-                }
+            match tools::Tools::new() {
+                Ok(tools) => Some(tools),
+                Err(error) => { report(&error); None }
             }
         })
         .as_ref()

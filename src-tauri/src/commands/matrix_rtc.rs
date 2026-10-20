@@ -94,7 +94,7 @@ pub async fn matrix_rtc_identity(window: WebviewWindow) -> Result<Value, String>
     .map_err(|_| "Chaveiro de criptografia indisponível.")??;
     let storage_key = sha2::Sha256::digest(password.as_bytes()).to_vec();
     Ok(
-        json!({"user_id":account.user_id,"device_id":value["device_id"],"base_url":API,"storage_key":storage_key}),
+        json!({"user_id":account.user_id,"device_id":value["device_id"],"base_url":API,"storage_key":storage_key,"temporary":super::credential_storage::temporary("matrix")?}),
     )
 }
 

@@ -23,6 +23,8 @@ pub struct AdvancedSettings {
     pub schema_version: u32,
     pub launch_options: Option<String>,
     pub mangohud_fps_limit: Option<u32>,
+    pub overlay_enabled: Option<bool>,
+    pub background_fps: Option<u32>,
     pub mangohud_enabled: Option<bool>,
     pub gamescope: GamescopeSettings,
     pub options: BTreeMap<String, bool>,
@@ -82,6 +84,8 @@ struct SavedSettings {
     schema_version: u32,
     launch_options: Option<String>,
     mangohud_fps_limit: Option<u32>,
+    overlay_enabled: Option<bool>,
+    background_fps: Option<u32>,
     mangohud_enabled: Option<bool>,
     options: BTreeMap<String, bool>,
     dll_overrides: Option<String>,
@@ -95,6 +99,8 @@ impl From<SavedSettings> for AdvancedSettings {
         if saved.schema_version == 2 {
             settings.launch_options = saved.launch_options;
             settings.mangohud_fps_limit = saved.mangohud_fps_limit;
+            settings.overlay_enabled = saved.overlay_enabled;
+            settings.background_fps = saved.background_fps;
             settings.mangohud_enabled = saved.mangohud_enabled;
             settings.options = saved.options;
             settings.wrappers = saved.wrappers;
@@ -118,6 +124,8 @@ impl Default for AdvancedSettings {
             schema_version: 2,
             launch_options: None,
             mangohud_fps_limit: None,
+            overlay_enabled: None,
+            background_fps: None,
             mangohud_enabled: None,
             gamescope: GamescopeSettings {
                 model_version: 2,
@@ -132,6 +140,8 @@ impl Default for AdvancedSettings {
 }
 impl AdvancedSettings {
     pub fn validate(&self) -> Result<(), String> {
+        if self.background_fps.is_some_and(|fps| fps > 1000) { return Err("Informe FPS sem foco entre 1 e 1000, ou use Automático.".into()); }
+        if self.background_fps.is_some() && self.overlay_enabled != Some(true) { return Err("Ative o Overlay PeliGames para limitar FPS sem foco.".into()); }
         if self.mangohud_fps_limit.is_some_and(|fps| fps > 1000) { return Err("Informe um limite de FPS entre 0 e 1000.".into()); }
         if super::release_features::enabled() && self.wrappers.iter().any(|w|w.enabled && w.program.contains("/FrameGeneration/profiles/") && w.program.ends_with(".sh")) {
             crate::commands::frame_generation::conflicts(self)?;
@@ -191,7 +201,7 @@ impl AdvancedSettings {
             return Err("Método de escala ou tipo de janela inválido.".into());
         }
         additional_args(&g.additional_options)?;
-        if g.enabled() && (self.on("mangohud") || self.on("mangohud_env") || self.mangohud_fps_limit.unwrap_or(0) > 0) {
+        if g.enabled() && (self.on("mangohud") || self.on("mangohud_env") || self.mangohud_fps_limit.unwrap_or(0) > 0 || self.background_fps.is_some()) {
             return Err("Desative o MangoHUD e o limitador individual antes de usar o Gamescope.".into());
         }
         Ok(())
@@ -401,6 +411,7 @@ pub(crate) fn configured_launch_command(umu: &Path, settings: Option<&AdvancedSe
     if global && effective.mangohud_enabled != Some(false) && effective.gamescope.enabled() {
         return Err("O MangoHUD global não é compatível com este modo de Gamescope. Desative a chave global de MangoHUD para executar com Gamescope.".into());
     }
+    if effective.overlay_enabled == Some(true) { crate::commands::frame_overlay_runtime::install_standalone()?; }
     let mut command = launch_command_with_tools(umu, Some(&effective), executable)?;
     super::mangohud_config::apply_with_override(&mut command, settings.is_some_and(|s| s.on("mangohud") || s.on("mangohud_env")), effective.mangohud_fps_limit, effective.mangohud_enabled)?;
     if super::release_features::enabled() {
@@ -425,7 +436,7 @@ fn with_global_monitoring(settings: Option<&AdvancedSettings>, global: bool) -> 
         effective.options.insert("mangohud_env".into(), false);
     }
     let display = effective.mangohud_enabled.unwrap_or(global);
-    if (display || effective.mangohud_fps_limit.unwrap_or(0) > 0) && !effective.on("mangohud") && !effective.on("mangohud_env") {
+    if (display || effective.mangohud_fps_limit.unwrap_or(0) > 0 || effective.background_fps.is_some()) && !effective.on("mangohud") && !effective.on("mangohud_env") {
         effective.options.insert("mangohud".into(), true);
     }
     effective
@@ -453,6 +464,7 @@ fn launch_command_with_tools(
             wrappers.push((resolve(&spec.key)?, Vec::new()));
         }
     }
+    if settings.overlay_enabled == Some(true) { wrappers.push((resolve(&crate::commands::frame_overlay_runtime::standalone_runner()?.to_string_lossy())?, vec!["--".into()])); }
     let mut command = if let Some((first, args)) = wrappers.first() {
         let mut c = Command::new(first); c.args(args);
         for (program, args) in wrappers.iter().skip(1) { c.arg(program).args(args); }
@@ -472,6 +484,12 @@ fn launch_command_with_tools(
             command.env_remove(&spec.key);
         }
     }
+    if let Some(enabled) = settings.overlay_enabled {
+        command.env("PELI_OVERLAY_GENERAL", if enabled {"1"} else {"0"}).env("PELI_OVERLAY_DISABLED",if enabled {"0"} else {"1"});
+        if enabled {command.env("PELI_OVERLAY_CONFIG_ROOT",super::paths::app_root()?);}
+    }
+    command.env_remove("PELI_OVERLAY_BACKGROUND_FPS");
+    if let Some(fps)=settings.background_fps {command.env("PELI_OVERLAY_BACKGROUND_FPS",fps.to_string());}
     if settings.on("hdr") {
         command.env("DXVK_HDR", "1");
     } else {
@@ -582,5 +600,32 @@ mod per_game_monitoring_tests {
         let second = AdvancedSettings::default();
         assert_eq!(second.mangohud_enabled, None);
         assert_eq!(second.mangohud_fps_limit, None);
+    }
+}
+
+#[cfg(test)]
+mod overlay_monitoring_tests {
+    use super::*;
+    #[test]
+    fn background_cap_needs_overlay_and_rejects_incompatible_compositor() {
+        let mut settings=AdvancedSettings::default();settings.background_fps=Some(0);
+        assert!(settings.validate().is_err());settings.overlay_enabled=Some(true);assert!(settings.validate().is_ok());
+        settings.background_fps=Some(1001);assert!(settings.validate().is_err());
+        settings.background_fps=Some(30);settings.gamescope.enable_limiter=true;assert!(settings.validate().is_err());
+    }
+    #[test]
+    fn overlay_and_hidden_limiter_run_without_frame_generation() {
+        let mut saved=AdvancedSettings::default();saved.overlay_enabled=Some(true);saved.background_fps=Some(0);saved.mangohud_enabled=Some(false);
+        let original=serde_json::to_value(&saved).unwrap();let effective=with_global_monitoring(Some(&saved),false);
+        let command=launch_command_with_tools(Path::new("umu"),Some(&effective),|name|Ok(PathBuf::from(name))).unwrap();
+        let words:Vec<_>=std::iter::once(command.get_program()).chain(command.get_args()).map(|v|v.to_string_lossy().into_owned()).collect();
+        assert!(words.iter().any(|word|word.ends_with("peligames-overlay-run")));assert!(!words.iter().any(|word|word=="gamescope"||word.contains("mako")));
+        assert!(command.get_envs().any(|(key,value)|key=="PELI_OVERLAY_BACKGROUND_FPS"&&value==Some(std::ffi::OsStr::new("0"))));
+        assert_eq!(original,serde_json::to_value(saved).unwrap());
+    }
+    #[test]
+    fn old_profiles_keep_legacy_overlay_and_new_profiles_remember_explicit_off() {
+        let old:AdvancedSettings=serde_json::from_str(r#"{"schema_version":2}"#).unwrap();assert_eq!(old.overlay_enabled,None);assert_eq!(old.background_fps,None);
+        let mut next=old;next.overlay_enabled=Some(false);let restored:AdvancedSettings=serde_json::from_value(serde_json::to_value(next).unwrap()).unwrap();assert_eq!(restored.overlay_enabled,Some(false));
     }
 }

@@ -146,6 +146,14 @@ async fn catalog(
     progress(format!("{} componentes disponíveis.", result.len()));
     Ok(result)
 }
+fn validate_winetricks_runner(proton: &Path, action: &str) -> Result<(), String> {
+    // UMU starts its Winetricks subprocess in this exact directory, including
+    // when it falls back to a Winetricks executable from PATH.
+    if matches!(action, "install" | "winetricks-gui") && !proton.join("protonfixes").is_dir() {
+        return Err("O Proton selecionado não possui a pasta protonfixes exigida pelo UMU para executar o Winetricks. Nenhum instalador de componente foi iniciado. Use um runner compatível, como GE-Proton ou UMU-Proton; o launcher não trocará o Proton nem modificará o prefixo automaticamente.".into());
+    }
+    Ok(())
+}
 fn prepare(umu: &Path, proton: &Path, prefix: &Path, action: &str, packages: &[String], join_running: bool) -> Command {
     let mut cmd = Command::new(umu);
     super::env_utils::host_environment(&mut cmd);
@@ -205,6 +213,7 @@ pub async fn execute(request: ToolRequest, id: String, progress: Progress) -> Re
         return Err("O prefixo Wine ainda não foi inicializado. Execute o jogo antes de usar as ferramentas.".into());
     }
     let proton = super::game_installation::validate_proton(&proton)?;
+    validate_winetricks_runner(&proton, &request.action)?;
     if request.action == "catalog" {
         return Ok(ToolResult {
             packages: cancellable(catalog(&proton, &prefix, &progress), &cancel).await?,
@@ -244,9 +253,9 @@ pub async fn execute(request: ToolRequest, id: String, progress: Progress) -> Re
         .ok_or("Diretório do jogo inválido.")?
         .join("logs");
     fs::create_dir_all(&logs).map_err(|e| e.to_string())?;
-    let log = logs.join(format!("{}-{}.log", request.action, uuid::Uuid::new_v4()));
+    let log = logs.join(format!("{}.log", request.action));
     let logfile = Arc::new(std::sync::Mutex::new(
-        fs::File::create(&log).map_err(|e| e.to_string())?,
+        super::bounded_logs::LogWriter::create(&log).map_err(|e| e.to_string())?,
     ));
     progress(format!(
         "Abrindo {} no prefixo {}",
@@ -271,12 +280,28 @@ pub fn maintenance_entry(path: &str) -> Result<(String,String,String,String),Str
     if let Some(id) = path.strip_prefix("nexus:") { return crate::commands::nexus_local::maintenance_entry(id); }
     if let Some(id) = path.strip_prefix("external:") { return crate::commands::external_library::maintenance_entry(id); }
     let entry = super::installed_library::list(false)?.into_iter().find(|entry|entry.path == path).ok_or("Jogo não registrado na biblioteca.")?;
+    super::installed_library::ensure_prefix_writable(Path::new(&entry.prefix))?;
     Ok((entry.name, entry.prefix, entry.proton, entry.executable))
 }
 
 #[cfg(test)]
 mod maintenance_tests {
     use super::*;
+    #[test]
+    fn winetricks_rejects_missing_umu_working_directory_before_starting() {
+        let root = std::env::temp_dir().join(format!("peligames-winetricks-runner-{}", uuid::Uuid::new_v4()));
+        fs::create_dir(&root).unwrap();
+        for action in ["install", "winetricks-gui"] {
+            assert!(validate_winetricks_runner(&root, action).unwrap_err().contains("Nenhum instalador"));
+        }
+        for action in ["catalog", "winecfg", "regedit", "explorer", "uninstaller"] {
+            assert!(validate_winetricks_runner(&root, action).is_ok());
+        }
+        fs::create_dir(root.join("protonfixes")).unwrap();
+        assert!(validate_winetricks_runner(&root, "install").is_ok());
+        assert!(validate_winetricks_runner(&root, "winetricks-gui").is_ok());
+        fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn cancellation_is_scoped_to_the_active_request() {
         let flag = Arc::new(AtomicBool::new(false));

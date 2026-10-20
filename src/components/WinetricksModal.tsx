@@ -126,13 +126,27 @@ export function WinetricksModal({ path, name, proton, onClose }: { path: string;
     : (pt ? "Acompanhe a operação aqui; os detalhes ficam no registro técnico." : "Follow the operation here; details are in the technical log.");
   return createPortal(<div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget && !busy) onClose(); }}>
     <ModalSurface className="modal-content dialog-glass winetricks-modal" role="dialog" aria-modal="true" aria-labelledby={titleId} onDismiss={() => { if (!busy) onClose(); }} closeDisabled={busy}
-      header={<div className="winetricks-title"><span className="winetricks-title-icon"><MenuIcon name="cube" /></span><span><h2 id={titleId}>Winetricks</h2><small>{name}</small></span></div>}
-      footer={<div className="winetricks-actions">
+      header={<div className="winetricks-title"><span className="winetricks-title-icon"><MenuIcon name="cube" /></span><h2 id={titleId}><span>Winetricks</span><span className="winetricks-title-separator" aria-hidden="true">·</span><span className="winetricks-title-game" title={name}>{name}</span></h2></div>}
+      footer={<div className="winetricks-bottom">
+      {progress && <section className={`winetricks-progress${progress.phase === "failed" ? " is-error" : ""}`} aria-label={pt ? "Andamento do Winetricks" : "Winetricks progress"}>
+        <div className="winetricks-progress-heading"><span className="winetricks-section-label">{["failed", "cancelled", "complete"].includes(progress.phase) ? (pt ? "Resultado" : "Result") : (pt ? "Andamento" : "Progress")}</span><span>{progress.phase === "downloading" && progress.percent !== undefined ? `${progress.percent}%` : busy ? (pt ? "Em andamento" : "In progress") : ""}</span></div>
+        <div className="winetricks-progress-status" role="status" aria-live="polite"><strong>{phases[progress.phase]}</strong>{progress.component && <span className="winetricks-component">{progress.component}</span>}</div>
+        {operation === "install" && installing.length > 0 && <p className="winetricks-progress-selection" title={installing.join(", ")}>{installing.join(" · ")}</p>}
+        <p>{phaseHint}</p>
+        {progress.file && <small className="winetricks-progress-file" title={progress.file}>{progress.file.split(/[\\/]/).pop()}{progress.speed && ` · ${progress.speed}`}</small>}
+        {!["failed", "cancelled"].includes(progress.phase) && <div className={`winetricks-progress-track${busy && !(progress.phase === "downloading" && progress.percent !== undefined) ? " is-indeterminate" : ""}`} role="progressbar" aria-label={phases[progress.phase]} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress.phase === "complete" ? 100 : progress.phase === "downloading" ? progress.percent : undefined}><i style={{width: progress.phase === "complete" ? "100%" : progress.phase === "downloading" && progress.percent !== undefined ? `${progress.percent}%` : undefined}} /></div>}
+      </section>}
+      <details className="winetricks-log" open={Boolean(error) || undefined}>
+        <summary>{pt ? "Registro técnico" : "Technical log"}</summary>
+        <pre ref={terminal} className="wine-tool-terminal" aria-label={pt ? "Log do Winetricks" : "Winetricks log"} role="log">{lines.join("\n") || (pt ? "Preparando Winetricks…" : "Preparing Winetricks…")}</pre>
+      </details>
+      {error && <TimedFeedback role="alert" className="advanced-validation-error">{error}</TimedFeedback>}{complete && <TimedFeedback><span title={complete}>{pt ? "Componentes instalados. O registro foi salvo no disco." : "Components installed. The log was saved to disk."}</span></TimedFeedback>}
+      <div className="winetricks-actions">
         <span role="status">{busy && progress ? phases[progress.phase] : pt ? `${selection.length} selecionado(s)` : `${selection.length} selected`}</span>
         {(error || progress?.phase === "cancelled") && !packages.length && !busy && proton && <button type="button" className="modern-mini-btn" onClick={() => void step("catalog", load)}><MenuIcon name="repair" />{pt ? "Tentar novamente" : "Try again"}</button>}
         {busy && <button type="button" className="modern-mini-btn" disabled={!cancelReady || cancelPending} onClick={() => void cancelOperation()} title={pt ? "Interrompe esta operação. Alterações já feitas no prefixo não são desfeitas automaticamente." : "Stops this operation. Changes already made to the prefix are not automatically reverted."}><MenuIcon name="stop" />{cancelPending ? (pt ? "Cancelando…" : "Cancelling…") : (pt ? "Cancelar" : "Cancel")}</button>}
         <button type="button" className="modern-mini-btn winetricks-install" disabled={busy || !proton || !selection.length} onClick={install}><MenuIcon name="download" />{pt ? "Instalar selecionados" : "Install selected"}</button>
-      </div>}>
+      </div></div>}>
       <div className="winetricks-section-label">{pt ? "Componentes do jogo" : "Game components"}</div>
       <div className="winetricks-toolbar">
         <p className="winetricks-intro">{pt ? "Instale DLLs, fontes e dependências no prefixo deste jogo." : "Install DLLs, fonts and dependencies in this game's prefix."}{proton && <span className="winetricks-proton" title={proton}><MenuIcon name="cube" />{protonName}</span>}</p>
@@ -152,20 +166,6 @@ export function WinetricksModal({ path, name, proton, onClose }: { path: string;
         {!filtered.length && <p className="winetricks-empty" role="status">{busy && progress ? phases[progress.phase] : !proton ? (pt ? "Escolha o Proton do jogo em Opções → Execução para ver os componentes." : "Choose the game's Proton in Options → Execution to see the components.") : !query && filter !== "installed" ? (pt ? "Digite o nome de uma DLL, fonte ou dependência para buscar." : "Enter a DLL, font or dependency name to search.") : filter === "installed" && !query ? (pt ? "Nenhum componente instalado neste prefixo." : "No components installed in this prefix.") : (pt ? "Nenhum componente encontrado." : "No components found.")}</p>}
         {filtered.length > visibleCount && <button type="button" className="modern-mini-btn" onClick={() => setVisibleCount(count => count + WINE_RESULTS_PAGE)}>{pt ? `Mostrar mais resultados (${Math.min(visibleCount, filtered.length)} de ${filtered.length})` : `Show more results (${Math.min(visibleCount, filtered.length)} of ${filtered.length})`}</button>}
       </fieldset>
-      {progress && <section className={`winetricks-progress${progress.phase === "failed" ? " is-error" : ""}`} aria-label={pt ? "Andamento do Winetricks" : "Winetricks progress"}>
-        <div className="winetricks-progress-heading"><span className="winetricks-section-label">{pt ? "Andamento" : "Progress"}</span><span>{progress.phase === "downloading" && progress.percent !== undefined ? `${progress.percent}%` : busy ? (pt ? "Em andamento" : "In progress") : ""}</span></div>
-        <div className="winetricks-progress-status" role="status" aria-live="polite"><strong>{phases[progress.phase]}</strong>{progress.component && <span className="winetricks-component">{progress.component}</span>}</div>
-        {operation === "install" && installing.length > 0 && <p className="winetricks-progress-selection" title={installing.join(", ")}>{installing.join(" · ")}</p>}
-        <p>{phaseHint}</p>
-        {progress.file && <small className="winetricks-progress-file" title={progress.file}>{progress.file.split(/[\\/]/).pop()}{progress.speed && ` · ${progress.speed}`}</small>}
-        {!["failed", "cancelled"].includes(progress.phase) && <div className={`winetricks-progress-track${busy && !(progress.phase === "downloading" && progress.percent !== undefined) ? " is-indeterminate" : ""}`} role="progressbar" aria-label={phases[progress.phase]} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress.phase === "complete" ? 100 : progress.phase === "downloading" ? progress.percent : undefined}><i style={{width: progress.phase === "complete" ? "100%" : progress.phase === "downloading" && progress.percent !== undefined ? `${progress.percent}%` : undefined}} /></div>}
-      </section>}
-      <details className="winetricks-log" open={Boolean(error) || undefined}>
-        <summary>{pt ? "Registro técnico" : "Technical log"}</summary>
-        <pre ref={terminal} className="wine-tool-terminal" aria-label={pt ? "Log do Winetricks" : "Winetricks log"} role="log">{lines.join("\n") || (pt ? "Preparando Winetricks…" : "Preparing Winetricks…")}</pre>
-      </details>
-      {error && <TimedFeedback role="alert" className="advanced-validation-error">{error}</TimedFeedback>}{complete && <TimedFeedback><span title={complete}>{pt ? "Componentes instalados. O registro foi salvo no disco." : "Components installed. The log was saved to disk."}</span></TimedFeedback>}
-
     </ModalSurface>
   </div>, document.body);
 }

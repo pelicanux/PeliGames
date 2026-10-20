@@ -78,3 +78,8 @@ fn directory_at(base: &Path,id: &str,name: &str) -> Result<PathBuf,String> {
     #[test] fn conflicting_folders_are_not_merged_or_overwritten() {let base=base();let id=uuid::Uuid::new_v4().to_string();let named=directory_at(&base,&id,"Game").unwrap();fs::create_dir(&named).unwrap();let old=base.join("games").join(&id);fs::create_dir(&old).unwrap();fs::write(old.join("old.txt"),"old").unwrap();fs::write(named.join("new.txt"),"new").unwrap();assert!(directory_at(&base,&id,"Game").is_err());assert!(old.join("old.txt").is_file());assert!(named.join("new.txt").is_file());fs::remove_dir_all(base).unwrap();}
 
 }
+
+/// Restrict maintenance to diagnostic logs, never archived mods or prefix state.
+pub(crate) fn clean_diagnostic_logs(){
+    if let Ok(workspace)=super::nexus_local::workspace(){for game in workspace.games {if let Ok(root)=directory(&game){crate::core::bounded_logs::sweep(&root.join("logs"));}}}
+}

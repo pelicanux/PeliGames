@@ -41,7 +41,7 @@ export function startMatrixSdk<T>(user: string, onSync: (data: T, initial: boole
     const [{ createClient, ClientEvent, SyncState }, { logger }, identity] = await Promise.all([
       import("matrix-js-sdk"),
       import("matrix-js-sdk/lib/logger"),
-      invoke<{ user_id: string; device_id: string; base_url: string; storage_key: number[] }>("matrix_rtc_identity"),
+      invoke<{ user_id: string; device_id: string; base_url: string; storage_key: number[]; temporary?:boolean }>("matrix_rtc_identity"),
     ]);
     if (run !== epoch || identity.user_id !== user) throw new Error("A conta Matrix mudou.");
     logger.getChild = () => quiet;
@@ -72,7 +72,7 @@ export function startMatrixSdk<T>(user: string, onSync: (data: T, initial: boole
       },
     });
     client = sdk;
-    await sdk.initRustCrypto({ useIndexedDB: true, storageKey: new Uint8Array(identity.storage_key), cryptoDatabasePrefix: `peligames-matrix-${encodeURIComponent(user)}-${encodeURIComponent(identity.device_id)}` });
+    await sdk.initRustCrypto({ useIndexedDB: !identity.temporary, storageKey: new Uint8Array(identity.storage_key), cryptoDatabasePrefix: `peligames-matrix-${encodeURIComponent(user)}-${encodeURIComponent(identity.device_id)}` });
     if (run !== epoch) { sdk.stopClient(); throw new Error("Conexão Matrix cancelada."); }
     sdk.on(ClientEvent.Sync, (state, _previous, data) => {
       if (run === epoch && state === SyncState.Error) onError(data?.error?.message || "Sem conexão com o Matrix.");

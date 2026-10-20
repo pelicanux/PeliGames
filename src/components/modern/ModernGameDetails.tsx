@@ -1,3 +1,4 @@
+import {GameSaveStatusProvider} from "../GameSaveStatus";
 import { CatalogNavigationContext } from "./CatalogNavigationContext";
 import { HoverTooltip } from "../HoverTooltip";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
@@ -56,7 +57,7 @@ export function ModernGameDetails({ artwork, artSharp = false, cover, eyebrow, t
   useEffect(() => { if (requestedTab && tabs.some(item => item.id === requestedTab)) { setTab(requestedTab); onTabChange?.(requestedTab); } }, [requestedTab, resetKey]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (tabRequest?.revision && tabs.some(item => item.id === tabRequest.tab)) { setTab(tabRequest.tab); onTabChange?.(tabRequest.tab); } }, [tabRequest]); // eslint-disable-line react-hooks/exhaustive-deps
   const current = tabs.find(item => !item.disabled && item.id === (activeTab ?? tab)) ?? tabs.find(item => !item.disabled);
-  return <section ref={frame} className={`modern-details${contentView ? " modern-details-secondary" : ""}${catalog ? " modern-details-browsing" : ""}${tabs[0]?.id === "installation" ? " modern-details-installation" : ""}`} aria-label={typeof title === "string" ? title : undefined}>
+  return <GameSaveStatusProvider key={resetKey}><section ref={frame} className={`modern-details${contentView ? " modern-details-secondary" : ""}${catalog ? " modern-details-browsing" : ""}${tabs[0]?.id === "installation" ? " modern-details-installation" : ""}`} aria-label={typeof title === "string" ? title : undefined}>
     <div className={`modern-details-art${artSharp ? " sharp" : ""}`} style={{
       ...(artwork?.length ? { backgroundImage: artwork.map(url => `url("${url.replace(/"/g, "%22")}")`).join(", ") } : {}),
       ...(artHeight !== undefined ? { "--modern-art-height": `${artHeight}px` } : {}),
@@ -81,5 +82,5 @@ export function ModernGameDetails({ artwork, artSharp = false, cover, eyebrow, t
     </div>}
     {catalog ? <CatalogNavigationContext.Provider value={navigationHost}><div className="modern-catalog-scroll modern-details-catalog" data-scrollbar-persistent="true">{catalog}</div></CatalogNavigationContext.Provider> : <div className="modern-tab-body" role={tabs.length > 1 ? "tabpanel" : undefined}>{current?.content}</div>}
     </>}
-  </section>;
+  </section></GameSaveStatusProvider>;
 }

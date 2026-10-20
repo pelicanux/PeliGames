@@ -152,7 +152,32 @@ fn write_settings(path: &Path, text: &str) -> Result<(), String> {
     result
 }
 
-pub fn set_enabled(game_dir: &Path, enabled: bool) -> Result<(), String> {
+#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+pub struct NeuralSettings {
+    pub enabled: bool,
+    pub renodx: bool,
+}
+
+fn get_settings(game_dir: &Path) -> Result<NeuralSettings, String> {
+    let root = super::installer::installed_mod_directory(game_dir).ok_or("Neural Rendering is not installed in this game")?;
+    let backend_text = read_file(&root.join("dlssnr-amd.ini"))?;
+    let renodx = bool_in_section(&backend_text, "RenoDX", "Enabled").unwrap_or(false);
+    let enabled = if renodx {
+        bool_in_section(&backend_text, "RenoDX", "NeuralUplift").unwrap_or(true)
+    } else {
+        let path = settings_path(game_dir)?;
+        let text = read_file(&path)?;
+        if path == root.join("OptiScaler.ini") {
+            enabled_in_ini(&text).unwrap_or(false)
+        } else {
+            enabled_in_ini(&backend_text).unwrap_or(true)
+                && techniques_in_preset(&text).map(|list| list.split(',').any(is_feed)).unwrap_or(false)
+        }
+    };
+    Ok(NeuralSettings { enabled, renodx })
+}
+
+fn set_options(game_dir: &Path, enabled: bool, renodx: Option<bool>) -> Result<(), String> {
     let path = settings_path(game_dir)?;
     let root = super::installer::installed_mod_directory(game_dir).ok_or("Neural Rendering is not installed in this game")?;
     let backend = root.join("dlssnr-amd.ini");
@@ -161,48 +186,50 @@ pub fn set_enabled(game_dir: &Path, enabled: bool) -> Result<(), String> {
     if !canonical_parent.starts_with(&canonical_root) { return Err("Redirected configuration directories are not supported".into()); }
     let text = read_file(&path)?;
     let backend_text = read_file(&backend)?;
-    if bool_in_section(&backend_text, "RenoDX", "Enabled") == Some(true) {
-        // In RenoDX mode the backend ignores OptiScaler's [DlssNr] settings.
-        return write_settings(&backend, &with_section_bool(&backend_text, "RenoDX", "NeuralUplift", enabled, true));
+    let optiscaler = path == root.join("OptiScaler.ini");
+    if !optiscaler && !path.is_file() { return Err("ReShade preset was not found".into()); }
+    // Keep both routes ready for the next run, including after a RenoDX mode change.
+    // In RenoDX mode OptiScaler's NR switch is ignored; NeuralUplift owns NR.
+    let mode = renodx.unwrap_or_else(|| bool_in_section(&backend_text, "RenoDX", "Enabled").unwrap_or(false));
+    let mut updated_backend = with_section_bool(&backend_text, "RenoDX", "NeuralUplift", enabled, true);
+    if renodx.is_some() {
+        updated_backend = with_section_bool(&updated_backend, "RenoDX", "Enabled", mode, true);
     }
-    let updated = if path == root.join("OptiScaler.ini") {
-        with_enabled(&text, enabled)
-    } else {
-        if !path.is_file() { return Err("ReShade preset was not found".into()); }
-        with_feed(&text, enabled)
-    };
-    // Keep the backend available, including installations disabled by the old launcher.
-    // The visible checkbox is controlled by OptiScaler or by the ReShade technique list.
-    if enabled_in_ini(&backend_text) != Some(true) {
-        write_settings(&backend, &with_enabled(&backend_text, true))?;
+    // On ReShade, the preset owns classic startup visibility. Disabling the
+    // add-on as well would prevent its effect-list checkbox from enabling NR.
+    updated_backend = with_enabled(&updated_backend, true);
+    let updated = if optiscaler { with_enabled(&text, enabled) } else { with_feed(&text, enabled || mode) };
+    // Reject redirected files before writing either configuration.
+    for target in [&path, &backend] {
+        if fs::symlink_metadata(target).map(|meta| meta.file_type().is_symlink()).unwrap_or(false) {
+            return Err("Redirected configuration files are not supported".into());
+        }
     }
-    write_settings(&path, &updated)
+    write_settings(&path, &updated)?;
+    write_settings(&backend, &updated_backend)?;
+    let actual = get_settings(game_dir)?;
+    if actual != (NeuralSettings { enabled, renodx: mode }) {
+        return Err("Neural Rendering configuration could not be confirmed".into());
+    }
+    Ok(())
+}
+
+pub fn set_enabled(game_dir: &Path, enabled: bool) -> Result<(), String> {
+    set_options(game_dir, enabled, None)
 }
 #[tauri::command]
-pub async fn get_neural_startup(game_dir: String) -> Result<bool, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let root = super::installer::installed_mod_directory(Path::new(&game_dir)).ok_or("Neural Rendering is not installed in this game")?;
-        let backend_text = read_file(&root.join("dlssnr-amd.ini"))?;
-        if bool_in_section(&backend_text, "RenoDX", "Enabled") == Some(true) {
-            return Ok(bool_in_section(&backend_text, "RenoDX", "NeuralUplift").unwrap_or(true));
-        }
-        let path = settings_path(Path::new(&game_dir))?;
-        let text = read_file(&path)?;
-        if path.file_name().map(|name| name == "OptiScaler.ini").unwrap_or(false) {
-            Ok(enabled_in_ini(&text).unwrap_or(true))
-        } else {
-            Ok(techniques_in_preset(&text).map(|list| list.split(',').any(is_feed)).unwrap_or(false))
-        }
-    }).await.map_err(|e| e.to_string())?
+pub async fn get_neural_settings(game_dir: String) -> Result<NeuralSettings, String> {
+    tauri::async_runtime::spawn_blocking(move || get_settings(Path::new(&game_dir))).await.map_err(|e| e.to_string())?
 }
 #[tauri::command]
-pub async fn set_neural_startup(app: tauri::AppHandle, game_dir: String, enabled: bool) -> Result<(), String> {
+pub async fn set_neural_startup(app: tauri::AppHandle, game_dir: String, enabled: bool, renodx: Option<bool>) -> Result<(), String> {
     let result = tauri::async_runtime::spawn_blocking(move || {
-        set_enabled(Path::new(&game_dir), enabled)?;
+        crate::core::installed_library::ensure_path_writable(Path::new(&game_dir))?;
+        set_options(Path::new(&game_dir), enabled, renodx)?;
         crate::core::config_manager::save_neural_preference(game_dir.clone(), enabled)?;
         Ok::<(),String>(())
     }).await.map_err(|e| e.to_string())?;
-    crate::core::logger::log_result(&app, "Preferência de inicialização do Neural Rendering", &result);
+    crate::core::logger::log_result(&app, "Preferências do Neural Rendering", &result);
     result
 }
 
@@ -243,5 +270,76 @@ mod startup_mode_tests {
         assert!(!techniques_in_preset(&disabled).unwrap().split(',').any(is_feed));
         assert!(disabled.contains("Lumenite_Kernel@lumenite_Kernel.fx"));
         assert!(techniques_in_preset(&with_feed(&disabled, true)).unwrap().split(',').any(is_feed));
+    }
+}
+
+#[cfg(test)]
+mod saved_options_tests {
+    use super::*;
+    struct Fixture(PathBuf);
+    impl Fixture {
+        fn new(opti: bool) -> Self {
+            let root = std::env::temp_dir().join(format!("peligames-neural-{}", uuid::Uuid::new_v4()));
+            fs::create_dir(&root).unwrap();
+            fs::write(root.join("dlssnr-amd.ini"), "[DlssNr]\r\nEnabled=true\r\n[RenoDX]\r\nEnabled=1\r\nNeuralUplift=1\r\nNRIntensity=0.7\r\n[Network]\r\nModel=custom\r\n").unwrap();
+            if opti {
+                fs::write(root.join("OptiScaler.ini"), "[DlssNr]\nEnabled=true\nIntensity=0.6\n").unwrap();
+            } else {
+                fs::write(root.join("ReShade.ini"), "[GENERAL]\nPresetPath=ReShadePreset.ini\n").unwrap();
+                fs::write(root.join("ReShadePreset.ini"), format!("Techniques=Lumenite_Kernel@lumenite_Kernel.fx,{FEED}\n")).unwrap();
+            }
+            Self(root)
+        }
+    }
+    impl Drop for Fixture { fn drop(&mut self) { let _ = fs::remove_dir_all(&self.0); } }
+    #[test]
+    fn switches_persist_across_reload_and_mode_changes_on_both_routes() {
+        for opti in [true, false] {
+            let f = Fixture::new(opti);
+            assert_eq!(get_settings(&f.0).unwrap(), NeuralSettings { enabled: true, renodx: true });
+            for (enabled, renodx) in [(false,true),(false,false),(true,false),(true,true),(false,true),(false,false)] {
+                set_options(&f.0, enabled, Some(renodx)).unwrap();
+                assert_eq!(get_settings(&f.0).unwrap(), NeuralSettings { enabled, renodx });
+                let backend = read_file(&f.0.join("dlssnr-amd.ini")).unwrap();
+                assert_eq!(bool_in_section(&backend,"RenoDX","Enabled"), Some(renodx));
+                assert_eq!(bool_in_section(&backend,"RenoDX","NeuralUplift"), Some(enabled));
+                assert!(backend.contains("NRIntensity=0.7\r\n"));
+                assert!(backend.contains("Model=custom\r\n"));
+                if !opti { assert!(read_file(&f.0.join("ReShadePreset.ini")).unwrap().contains("Lumenite_Kernel@lumenite_Kernel.fx")); }
+            }
+        }
+    }
+    #[test]
+    fn classic_reshade_can_be_enabled_from_the_effect_list_after_starting_off() {
+        let f = Fixture::new(false);
+        set_options(&f.0, false, Some(false)).unwrap();
+        let backend = read_file(&f.0.join("dlssnr-amd.ini")).unwrap();
+        assert_eq!(enabled_in_ini(&backend), Some(true));
+        assert!(!get_settings(&f.0).unwrap().enabled);
+        // Simulate checking DLSS5_Feed in ReShade, without changing the add-on.
+        let preset = f.0.join("ReShadePreset.ini");
+        fs::write(&preset, with_feed(&read_file(&preset).unwrap(), true)).unwrap();
+        assert!(get_settings(&f.0).unwrap().enabled);
+        assert_eq!(read_file(&f.0.join("dlssnr-amd.ini")).unwrap(), backend);
+    }
+    #[test]
+    fn renodx_startup_uses_neural_uplift_and_keeps_the_feeder_available() {
+        let f = Fixture::new(false);
+        set_options(&f.0, false, Some(true)).unwrap();
+        let preset = read_file(&f.0.join("ReShadePreset.ini")).unwrap();
+        assert!(techniques_in_preset(&preset).unwrap().split(',').any(is_feed));
+        assert!(!get_settings(&f.0).unwrap().enabled);
+        assert_eq!(bool_in_section(&read_file(&f.0.join("dlssnr-amd.ini")).unwrap(), "RenoDX", "NeuralUplift"), Some(false));
+    }
+    #[test]
+    fn installer_startup_preserves_the_selected_mode() {
+        for opti in [true, false] {
+            let f = Fixture::new(opti);
+            set_enabled(&f.0, false).unwrap();
+            assert_eq!(get_settings(&f.0).unwrap(), NeuralSettings { enabled: false, renodx: true });
+            set_options(&f.0, true, Some(false)).unwrap();
+            set_enabled(&f.0, false).unwrap();
+            assert_eq!(get_settings(&f.0).unwrap(), NeuralSettings { enabled: false, renodx: false });
+        }
     }
 }

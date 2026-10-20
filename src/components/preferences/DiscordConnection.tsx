@@ -1,3 +1,4 @@
+import { ConnectionStorageChoice } from "../ConnectionStorageChoice";
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "../../i18n/I18nContext";
@@ -79,6 +80,7 @@ export function DiscordConnection() {
   const valid = account?.benefit && account.valid_until && account.valid_until > Date.now();
   return <section className="connection-module" data-preference-id="connection-discord" aria-busy={busy}><div className="connection-grid">
     <section className="connection-card"><header className="connection-heading"><span className="mod-component-icon"><MenuIcon name="discord"/></span><div><h3>Discord</h3><p>{pt?"Vincule sua conta à comunidade.":"Link your account to the community."}</p></div><span className="mod-status-badge" data-ready={Boolean(account)} role="status">{account?(pt?"Conectado":"Connected"):status?.pending?(pt?"Aguardando login":"Waiting for sign-in"):!status&&!error?(pt?"Verificando…":"Checking…"):(pt?"Não conectado":"Not connected")}</span></header>
+    <ConnectionStorageChoice service="discord" disabled={busy||Boolean(account)||Boolean(status?.pending)} onChange={()=>void run("refresh")}/>
     <div className="connection-account-row"><MenuIcon name={account?"check":"chainLinked"}/><div><strong>{account?account.name:(pt?"Autorize pelo navegador":"Authorize in your browser")}</strong><p>{pt?"O PeliGames verifica os cargos vinculados à sua conta.":"PeliGames checks the roles linked to your account."}</p></div></div>
     {status&&!status.configured&&<p role="status">{pt?"O serviço de login ainda precisa ser configurado para habilitar esta conexão.":"The sign-in service needs to be configured to enable this connection."}</p>}
     {status?.pending&&<p role="status">{pt?"Aguardando autorização no navegador. Depois de autorizar, você pode fechar a página.":"Waiting for browser authorization. You can close the page after authorizing."}</p>}

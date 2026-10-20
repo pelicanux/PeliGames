@@ -1,3 +1,4 @@
+import {useGameSaveStatus} from "./GameSaveStatus";
 import { invoke } from "@tauri-apps/api/core";
 import { TimedFeedback } from "./TimedFeedback";
 import { InstalledLaunchOptions } from "./InstalledLaunchOptions";
@@ -46,6 +47,7 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
   const [error, setShownError] = useState("");
   const setError = (message: string) => { setShownError(message); if (message) notifyError(game?.name || t("installedSettings", "title"), message); };
   const [saved, setSaved] = useState<false | "settings" | "advanced">(false);
+  const headerStatus=useGameSaveStatus(busy ? "saving" : error ? "error" : saved ? "saved" : "");
   const id = useId();
   const saving = useRef(false);
   useEffect(() => {
@@ -174,7 +176,7 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
   const programsPanel = game && <LauncherProgramsPanel path={game.path} disabled={programsBlocked} onStart={id => onStartShortcut(game.path, id)} />;
   const advancedPanel = <AdvancedGameSettings hideExecutionEditors key={game?.path} value={game?.advanced} disabled={blocked} reducedMotion={reducedMotion} saved={saved === "advanced"} onChange={value => void save({ advanced: value })} isSteam={game?.launcher === "Steam"} appId={game?.app_id} />;
   if (section === "advanced") return <div className="modern-advanced-tab">{advancedPanel}{error && <TimedFeedback>{error}</TimedFeedback>}</div>;
-  if (section === "performance") return <GamePerformancePanel key={game?.path} value={game?.advanced} disabled={blocked} onChange={value => save({advanced: value})} />;
+  if (section === "performance") return <GamePerformancePanel game={game||undefined} key={game?.path} value={game?.advanced} disabled={blocked} onChange={value => save({advanced: value})} />;
   const isBottles = external && game?.launcher === "Bottles";
   const protonDisabled = isBottles;
   const protonDisabledHint = isBottles
@@ -187,7 +189,7 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
   if (section === "options") return game ? <><ModernGameOptions name={game.name} protonLabel={game.steam_proton_name || undefined} protonDisabled={protonDisabled} protonDisabledHint={protonDisabledHint} protonDisabledLabel={protonDisabledLabel} value={game.advanced} proton={proton} onProton={value=>save({proton:value})} onAdvanced={value=>save({advanced:value})} disabled={blocked} toolsDisabled={Boolean(programsDisabled || busy || !game)} native={game.native_linux || game.nexus_platform === "native"} maintenancePath={game.external_id ? `external:${game.external_id}` : game.path} onUninstall={onUninstall} onChangeExecutable={onChangeExecutable}
     launchOptions={<InstalledLaunchOptions inline game={game} disabled={blocked} errorMessage={error} onSave={options=>save({advanced:{...normalizeAdvanced(currentGame.current?.advanced),launch_options:options}})}/>} configuration={
       <section className="modern-game-fields modern-options-section"><h4>{t("installedSettings", "title")}</h4>{game.launcher === "Epic Games" && !game.native_linux && <p className="modern-performance-hint">{pt ? "Integração experimental: alterações valem na próxima execução do jogo, mesmo com a Epic aberta." : "Experimental integration: changes apply on the next game launch, even while Epic is open."}</p>}<fieldset className="installation-fields" disabled={blocked}>{nameField}</fieldset>{gameDirectoryField}{directoryFields}
-        {error && <TimedFeedback>{error}</TimedFeedback>}{saved === "settings" && <TimedFeedback>{t("installedSettings", "saved")}</TimedFeedback>}
+        {error && <TimedFeedback>{error}</TimedFeedback>}{!headerStatus && saved === "settings" && <TimedFeedback>{t("installedSettings", "saved")}</TimedFeedback>}
       </section>} prefixPrograms={<section className="modern-prefix-actions modern-options-section"><h4>{t("installedSettings", "runTitle")}</h4>
         <div className="modern-prefix-buttons"><button type="button" className="modern-mini-btn" disabled={programsBlocked} onClick={() => void runProgram()}><MenuIcon name="play" />{t("installedSettings", "runProgram")}</button>
         <button type="button" className="modern-mini-btn" disabled={programsBlocked || external} aria-expanded={panel === "programs"} onClick={() => setPanel(value => value === "programs" ? "information" : "programs")}><MenuIcon name="gamepad" />{t("installedSettings", "programsButton")}</button>

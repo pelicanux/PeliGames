@@ -1,0 +1,8 @@
+.connection-storage-choice {padding:12px 0;border-bottom:1px solid rgba(160,177,204,.14);margin-bottom:12px;}
+.connection-storage-options {display:flex;align-items:center;flex-wrap:wrap;gap:6px;}
+.connection-storage-options>span {font-size:.75rem;margin-right:4px;color:var(--mod-muted,#a5afc0);}
+.connection-storage-options button {font:inherit;font-size:.75rem;border:1px solid rgba(160,177,204,.2);border-radius:10px;padding:6px 10px;background:rgba(160,177,204,.04);color:inherit;cursor:pointer;box-shadow:none;}
+.connection-storage-options button[aria-pressed=true] {border-color:rgba(var(--accent-rgb),.5);background:rgba(var(--accent-rgb),.13);}
+.connection-storage-options button:disabled {cursor:default;opacity:.6;}
+.connection-storage-choice p,.connection-storage-choice small {display:block;margin:8px 0 0;font-size:.75rem;line-height:1.5;color:var(--mod-muted,#a5afc0);}
+.connection-storage-options button:focus-visible {outline:2px solid var(--accent);outline-offset:2px;}

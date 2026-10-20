@@ -58,6 +58,9 @@ fn credential(action: &str, key: Option<&str>) -> Result<Option<String>, String>
     credential_for(action, key, "nexusmods-personal-api", "PeliGames — Nexus Mods")
 }
 pub(super) fn credential_for(action: &str, key: Option<&str>, service: &str, label: &str) -> Result<Option<String>, String> {
+    super::credential_storage::credential(action,key,service,||system_credential_for(action,key,service,label))
+}
+fn system_credential_for(action: &str, key: Option<&str>, service: &str, label: &str) -> Result<Option<String>, String> {
     let mut command = Command::new("secret-tool");
     command.arg(action);
     // The system helper must use system libraries even when launched from AppImage.

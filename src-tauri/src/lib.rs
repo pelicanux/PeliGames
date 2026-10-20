@@ -47,6 +47,10 @@ fn nvidia_driver() -> bool {
     std::path::Path::new("/proc/driver/nvidia/version").exists() || std::path::Path::new("/sys/module/nvidia").exists()
 }
 fn run_mode(installer: bool) {
+    if std::env::args_os().nth(1).as_deref() == Some(std::ffi::OsStr::new(core::bounded_logs::FLAG)) {
+        let result = std::env::args_os().nth(2).ok_or_else(|| std::io::Error::other("Log path missing")).and_then(|path|core::bounded_logs::collect(std::path::Path::new(&path)));
+        std::process::exit(if result.is_ok(){0}else{1});
+    }
     // Root helper started through pkexec: nothing else of the launcher runs.
     let first = std::env::args().nth(1);
     if first.as_deref() == Some(commands::maintenance::reset::HELPER_FLAG) {
@@ -142,6 +146,8 @@ fn run_mode(installer: bool) {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(move |app| {
+            std::thread::spawn(core::bounded_logs::startup_cleanup);
+            core::logger::startup();
             if launcher_window { commands::frame_overlay_shortcut::startup(); }
             #[cfg(unix)]
             if let Some(instance) = launcher_instance {
@@ -360,6 +366,7 @@ fn run_mode(installer: bool) {
             commands::gpu::detect_linux_gpus,
             commands::proton::scan_installed_protons,
             commands::installation_paths::prepare_default_installation_directory,
+            commands::installation_paths::release_default_installation_directory,
             commands::game_installation::run_game_installer,
             commands::launcher_installation::install_launcher,
             commands::runtime_activity::get_runtime_activity,
@@ -370,12 +377,22 @@ fn run_mode(installer: bool) {
             commands::game_installation::add_peligames_entry,
             commands::game_installation::uninstall_peligames_entry,
             commands::game_installation::list_peligames_entries,
+            commands::game_installation::discover_peligames_library,
+            commands::game_installation::restore_peligames_library,
             commands::game_installation::update_peligames_settings,
             commands::game_installation::choose_peligames_entry,
             commands::game_installation::run_peligames_program,
             commands::game_installation::list_peligames_launcher_shortcuts,
             commands::game_installation::start_peligames_shortcut,
             commands::game_installation::peligames_profile_options,
+            commands::game_installation::game_copy_options,
+            commands::game_installation::get_game_copy_reference,
+            commands::credential_storage::connection_storage_status,
+            commands::credential_storage::set_connection_temporary,
+            commands::game_installation::check_removed_installation_destination,
+            commands::game_installation::reset_removed_installation_destination,
+            commands::game_installation::duplicate_peligames_game,
+            commands::game_installation::cancel_game_copy,
             commands::game_installation::set_peligames_profile_kind,
             commands::game_installation::add_peligames_shortcut_to_library,
             commands::game_installation::remove_peligames_shortcut_from_library,
@@ -385,13 +402,14 @@ fn run_mode(installer: bool) {
             commands::game_installation::list_peligames_executable_choices,
             commands::game_installation::start_peligames_game,
             commands::game_installation::get_peligames_execution,
+            commands::game_installation::get_peligames_executions,
             commands::game_installation::get_peligames_game_logs,
             commands::game_installation::cancel_peligames_game,
             commands::proton::check_proton_release,
             commands::proton::install_proton,
             commands::proton::cancel_proton_install,
             commands::proton::uninstall_proton,
-            commands::neural_settings::get_neural_startup,
+            commands::neural_settings::get_neural_settings,
             commands::neural_settings::set_neural_startup,
             commands::app_updates::check_launcher_update,
             commands::app_updates::launcher_experimental_updates,
@@ -419,6 +437,10 @@ fn run_mode(installer: bool) {
             commands::covers::cover_directories,
             commands::covers::import_game_cover,
             commands::covers::cache_automatic_game_cover,
+            commands::game_reset::reset_game_details,
+            commands::mangohud::list_mangohud_presets,
+            commands::mangohud::save_mangohud_preset,
+            commands::mangohud::remove_mangohud_preset,
             commands::mangohud::load_mangohud_profile,
             commands::mangohud::list_mangohud_benchmarks,
             commands::mangohud::read_mangohud_benchmark,
@@ -445,7 +467,7 @@ fn run_mode(installer: bool) {
             commands::external_library::configure_external_game,
             commands::external_library::launch_external_game,
             commands::scanner::scan_installed_games,
-            commands::scanner::scan_manual_game_folders,
+            commands::scanner::read_saved_game_folders,
             commands::scanner::fetch_steam_release_date,
             commands::scanner::launch_game,
             commands::scanner::start_steam_game,

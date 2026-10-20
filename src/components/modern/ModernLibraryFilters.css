@@ -1,0 +1,11 @@
+.modern-library-filter{position:relative;flex:0 0 auto;min-width:0}
+.modern-library-filter-trigger{display:inline-flex;align-items:center;gap:7px;max-width:210px;min-height:36px}
+.modern-library-filter-trigger>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.modern-library-filter-trigger[aria-expanded="true"]{border-color:var(--accent)}
+.modern-library-filter-popover{position:absolute;top:calc(100% + 8px);left:0;z-index:30;width:min(260px,calc(100vw - 40px));max-height:min(360px,60vh);overflow:auto;scrollbar-gutter:stable;display:grid;gap:4px;padding:7px;border-radius:14px;border:1px solid rgba(160,177,204,.22);background:rgb(var(--glass-base-start,12,17,32));color:var(--text-primary);box-shadow:0 12px 32px rgba(0,0,0,.3)}
+.modern-library-filter-popover>button{display:flex;align-items:center;gap:9px;width:100%;min-width:0;border:0;border-radius:9px;background:transparent;color:inherit;padding:9px 10px;text-align:left;font:inherit;font-size:.8125rem;cursor:pointer}
+.modern-library-filter-popover>button>b{margin-left:auto;font-size:.75rem;color:var(--text-secondary)}
+.modern-library-filter-popover>button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent-light,var(--accent))}
+.modern-library-filter-popover>button:hover{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.modern-library-filter-popover>button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.modern-library-filter-popover .modern-chip-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}

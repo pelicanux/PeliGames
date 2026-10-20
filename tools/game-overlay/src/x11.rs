@@ -182,6 +182,7 @@ fn focus(window: u64) {
         if let Ok(mut s) = state().lock() {
             s.focus(focused);
         }
+        crate::tools::focus(focused);
     }
 }
 pub unsafe fn register(display: *mut c_void, window: u64) -> bool {

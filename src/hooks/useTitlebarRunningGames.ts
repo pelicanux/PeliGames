@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { GameInfo } from "../components/GameGrid";
 import type { RunningGameSummary } from "../components/RunningGamesIndicator";
 import type { useGameExecution } from "./useGameExecution";
@@ -14,33 +14,32 @@ export function useTitlebarRunningGames({ execution, selected, source, nexusGame
   onDetails: (game: GameInfo, source: "main" | "dlss" | "nexus") => void;
 }): RunningGameSummary[] {
   const { language } = useI18n();
-  const activePath = execution.pendingPath || (execution.active ? execution.session?.path : undefined);
-  const snapshot = useRef<{path:string; source: "main" | "dlss"; game?:GameInfo} | null>(null);
-  const [resolved, setResolved] = useState<GameInfo | null>(null);
-  const current = useRef({selected, source}); current.current = {selected,source};
-  useEffect(() => {
-    if (!activePath) { snapshot.current = null; setResolved(null); return; }
-    if (snapshot.current?.path === activePath) return;
-    const {selected,source} = current.current;
-    const game = selected?.path === activePath ? selected : [...(readGameLibrary("own") || []), ...(readGameLibrary("all") || [])].find(g=>g.path===activePath);
-    snapshot.current = {path:activePath,source,game}; setResolved(game || null);
-    let active=true;
-    if (!game) void listPeliGamesEntries().then(entries => { const found=applyCustomCovers(entries).find(g=>g.path===activePath); if (active && found) setResolved(found); }).catch(()=>{});
-    return () => {active=false;};
-  }, [activePath]);
+  const activeSessions=execution.sessions.filter(item=>["starting","running","stopping"].includes(item.state));
+  const paths=activeSessions.map(item=>item.path);
+  if(execution.pendingPath&&!paths.includes(execution.pendingPath))paths.push(execution.pendingPath);
+  const pathsKey=paths.join("\n");
+  const [resolved,setResolved]=useState<GameInfo[]>([]);
+  useEffect(()=>{
+    let alive=true;
+    const cached=[...(readGameLibrary("own")||[]),...(readGameLibrary("all")||[])];
+    setResolved(cached);
+    if(paths.length)void listPeliGamesEntries().then(entries=>{if(alive)setResolved([...applyCustomCovers(entries),...cached]);}).catch(()=>{});
+    return()=>{alive=false;};
+  },[pathsKey]);
   const games:RunningGameSummary[] = nexusGames.filter(game=>game.running || game.id===nexusLaunching || game.id===nexusStopping).map(game=>({
     onDetails:()=>onDetails({...game.game, library_view:"nexus", nexus_id:game.id, nexus_platform:game.platform}, "nexus"),
     id:`nexus:${game.id}`, name:game.game.name, cover:game.game.cover_url, library:"Nexus Mods",
     state:game.id===nexusStopping ? "stopping" : game.running ? "running" : "starting",
     stopDisabled:game.id===nexusStopping || (nexusBusy && game.id!==nexusLaunching), onStop:()=>stopNexus(game.id)
   }));
-  if (activePath) {
-    const game = resolved?.path === activePath ? resolved : selected?.path===activePath ? selected : snapshot.current?.game;
-    const origin = snapshot.current?.path===activePath ? snapshot.current.source : source;
-    games.push({id:`peligames:${execution.session?.id || activePath}`, name:game?.name || activePath.split(/[\\/]/).filter(Boolean).pop() || "PeliGames", cover:game?.cover_url,
-      library:origin==="dlss" ? "DLSSNR-AMD" : language==="pt" ? "Biblioteca principal" : "Main library",
-      state:execution.cancellingPath===activePath || execution.session?.state==="stopping" ? "stopping" : execution.pendingPath ? "starting" : execution.session?.state==="running" ? "running" : "starting",
-      onDetails:game ? ()=>onDetails(game, origin) : undefined, onStop:()=>execution.cancel()});
+  for(const path of paths){
+    const status=activeSessions.find(item=>item.path===path);
+    const game=selected?.path===path?selected:resolved.find(item=>item.path===path);
+    const origin=selected?.path===path?source:"main";
+    games.push({id:`peligames:${status?.id||path}`,name:game?.name||path.split(/[\\/]/).filter(Boolean).pop()||"PeliGames",cover:game?.cover_url,
+      library:origin==="dlss"?"DLSSNR-AMD":language==="pt"?"Biblioteca principal":"Main library",
+      state:execution.cancellingPath===path||status?.state==="stopping"?"stopping":status?.state==="running"?"running":"starting",
+      stopDisabled:status?.state==="stopping",onDetails:game?()=>onDetails(game,origin):undefined,onStop:()=>execution.cancel(path)});
   }
   return games;
 }

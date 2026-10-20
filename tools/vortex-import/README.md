@@ -59,7 +59,7 @@ Regrava, para cada família (`unreal`, `unity`, `re_engine`),
 `src-tauri/resources/nexus-games/<família>-vortex.json` (módulos com `family`) e
 `<família>-vortex-audit.json` (evidência, casos de rota e jogos recusados com o
 motivo). A unicidade de identidade é verificada entre todas as famílias e os
-módulos existentes. Ver `docs/nexus-unreal-family.md`, `docs/nexus-unity-family.md` e `docs/nexus-re-engine-family.md`. Baixa as listas públicas de jogos do
+módulos existentes. Confira os perfis de família em `src-tauri/src/core/nexus_modules.rs`. Baixa as listas públicas de jogos do
 Nexus e de extensões Vortex (sem chave de API) para validar domínio e extensão.
 Jogos com módulo próprio nunca são substituídos. Depois de gerar, rode os testes
 do `src-tauri`: a matriz de rotas e a unicidade de identidade precisam passar.

@@ -12,3 +12,7 @@ The project already ships the upstream license in `licenses/upstream/Simple-Icon
 `*-cover.svg` are original PeliGames portrait layouts using these brand paths, for offline/missing-cover fallback.
 
 `epic-games-cover.svg` remains only for library entries installed before removal of the Epic installation wizard. It does not enable installation.
+
+`lutris.svg` is the unmodified Lutris application icon from https://github.com/lutris/lutris/blob/master/share/icons/hicolor/scalable/apps/net.lutris.Lutris.svg. The upstream GPL-3.0 license is preserved in `licenses/upstream/Lutris/LICENSE`.
+
+`faugus.svg` is the unmodified `faugus-launcher.svg` from https://github.com/Faugus/faugus-launcher/blob/main/assets/faugus-launcher.svg. Copyright (c) 2026 Felix Ribeiro, licensed CC BY 4.0. The upstream assets notice is preserved in `licenses/upstream/Faugus-Assets/LICENSE`; license terms: https://creativecommons.org/licenses/by/4.0/. These icons identify their launchers; PeliGames is independent of those projects.

@@ -53,3 +53,20 @@ export function openMangoHudInstallation() {
 export function notifyMangoHudMissing() {
   notifyInfo("MangoHUD", "MangoHUD não foi detectado no sistema. Clique aqui para instalar em Configurações → Monitoramento.", "mangohud-install");
 }
+
+export interface MangoHudPreset {name:string;settings:MangoHudSettings}
+const previewPresetKey="peligames.preview.mangohudPresets";
+export const listMangoHudPresets=():Promise<MangoHudPreset[]>=>demo()?Promise.resolve(JSON.parse(localStorage.getItem(previewPresetKey)||"[]")):invoke("list_mangohud_presets");
+export async function saveMangoHudPreset(name:string,settings:MangoHudSettings):Promise<MangoHudPreset[]> {
+ if(!demo())return invoke("save_mangohud_preset",{name,settings});
+ const presets=await listMangoHudPresets();name=name.trim();
+ if(!name||name.length>64)throw new Error("Use um nome de 1 a 64 caracteres.");
+ if(presets.some(p=>p.name.toLowerCase()===name.toLowerCase()))throw new Error("Já existe um preset com esse nome.");
+ if(presets.length>=32)throw new Error("Você pode guardar até 32 presets personalizados.");
+ const snapshot={...settings};delete snapshot.launcher_enabled;delete snapshot.launcher_sync_system;
+ presets.push({name,settings:snapshot});localStorage.setItem(previewPresetKey,JSON.stringify(presets));return presets;
+}
+export async function removeMangoHudPreset(name:string):Promise<MangoHudPreset[]> {
+ if(!demo())return invoke("remove_mangohud_preset",{name});
+ const presets=(await listMangoHudPresets()).filter(p=>p.name!==name);localStorage.setItem(previewPresetKey,JSON.stringify(presets));return presets;
+}

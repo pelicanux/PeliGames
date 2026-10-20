@@ -1,6 +1,6 @@
+import {useGameSaveStatus, GameSaveStatusIndicator} from "../../components/GameSaveStatus";
 import {DebouncedSave} from "../../services/debouncedSave";
 import {MakoLaunchSetup,type MakoSandboxStatus} from "./MakoLaunchSetup";
-import {FrameOverlaySettings} from "./FrameOverlaySettings";
 import {openFrameGenerationPreferences} from "../../services/frameGenerationNavigation";
 import {ComponentDownloadProgress} from "../../components/ComponentDownloadProgress";
 import {createDownloadRateTracker} from "../../services/downloadProgress";
@@ -27,6 +27,8 @@ export function FrameGenerationPanel({game,disabled,running=false,onSaved,onPers
  const [state,setState]=useState<State>();const [settings,setSettings]=useState<FrameSettings>();const [backend,setBackend]=useState<"mako"|"saved">(managementBackend||"saved");const [busy,setBusy]=useState(false);const [error,setError]=useState("");const lock=useRef(false);const request=useRef(0);
  const autosave=useRef<DebouncedSave>(new DebouncedSave());
  const [saveStatus,setSaveStatus]=useState<""|"pending"|"saving"|"saved"|"error">("");
+ const [savePanel,setSavePanel]=useState<"fg-prepare"|"fg-options">("fg-prepare");
+ const headerStatus=useGameSaveStatus(saveStatus,savePanel);
  useEffect(()=>()=>{void autosave.current.flush();},[]);
  const [checking,setChecking]=useState(false);const [backupToDelete,setBackupToDelete]=useState<string>();const checkedBackends=useRef(new Set<string>());
  useEffect(()=>{onBusyChange?.(busy);return()=>onBusyChange?.(false)},[busy,onBusyChange]);
@@ -34,8 +36,6 @@ export function FrameGenerationPanel({game,disabled,running=false,onSaved,onPers
  const [launchSetup,setLaunchSetup]=useState<{game:GameInfo;enabled?:boolean}>();
  const [sandbox,setSandbox]=useState<MakoSandboxStatus>();const [sandboxOpen,setSandboxOpen]=useState(false);const [sandboxBusy,setSandboxBusy]=useState(false);
  const [externalDll,setExternalDll]=useState(false);
- const [overlaySupport,setOverlaySupport]=useState<{available:boolean;reason:string}>();
- useEffect(()=>{let current=true;if(managementBackend)return;setOverlaySupport(undefined);void invoke<{available:boolean;reason:string}>("frame_overlay_support",{directory:game.directory||game.path,executable:game.executable||null,flatpak:Boolean(game.flatpak)}).then(value=>{if(current)setOverlaySupport(value)}).catch(()=>{if(current)setOverlaySupport({available:false,reason:pt?"Não foi possível verificar a arquitetura deste jogo.":"Could not check this game's architecture."})});return()=>{current=false}},[game.directory,game.path,game.executable,game.flatpak,managementBackend,pt]);
  const dllPath=settings?.dll||"";
  useEffect(()=>{
   let current=true;setExternalDll(false);
@@ -62,15 +62,15 @@ export function FrameGenerationPanel({game,disabled,running=false,onSaved,onPers
  }catch(e){setSaveStatus("error");setError(String(e))}finally{lock.current=false;setBusy(false)}};
  const save=async(settings:FrameSettings)=>{if(managementBackend||lock.current)return;lock.current=true;setBusy(true);setSaveStatus("saving");try{
   const wrapper=await invoke<LaunchWrapper>("prepare_frame_generation",{gameKey:key,gameName:game.name,directory:game.directory||game.path,settings,advanced,flatpak:Boolean(game.flatpak),executable:game.executable||null});
-  const launchChanged=settings.enabled?!(advanced.wrappers??[]).some(w=>isFrameWrapper(w)&&w.enabled&&w.program===wrapper.program):enabled;
-  const next={...advanced,wrappers:[...(advanced.wrappers ?? []).filter(w=>!isFrameWrapper(w)),...(settings.enabled?[wrapper]:[])]};
+  const launchChanged=(settings.enabled?!(advanced.wrappers??[]).some(w=>isFrameWrapper(w)&&w.enabled&&w.program===wrapper.program):enabled)||(advanced.overlay_enabled==null&&settings.overlay_enabled);
+  const next={...advanced,overlay_enabled:advanced.overlay_enabled??(settings.overlay_enabled?true:null),wrappers:[...(advanced.wrappers ?? []).filter(w=>!isFrameWrapper(w)),...(settings.enabled?[wrapper]:[])]};
   const updated=!launchChanged?game:onPersist?await onPersist(next).then(()=>({...game,advanced:next})):game.external_id?await invoke<GameInfo>("configure_external_game",{settings:{external_id:game.external_id,advanced:next}}):await updatePeliGamesSettings({path:game.path,name:game.name,executable:game.executable||game.path,proton:game.proton||"",prefix:game.prefix,advanced:next});
   const saved={...game,...updated,library_view:game.library_view};onSaved(saved);if(launchChanged&&(saved.launcher==="Steam"?saved.steam_pending:settings.enabled&&saved.launcher!=="PeliGames"))setLaunchSetup({game:saved,enabled:settings.enabled});window.dispatchEvent(new Event("peligamesLibraryChanged"));setSaveStatus("saved");setError("");
  }catch(e){setSaveStatus("error");setError(String(e))}finally{lock.current=false;setBusy(false)}};
- const patch=(v:Partial<FrameSettings>)=>{
+ const patch=(v:Partial<FrameSettings>,panel:"fg-prepare"|"fg-options"="fg-prepare")=>{
    if(!settings)return;
    const next={...settings,...v};
-   setSettings(next);setError("");setSaveStatus("pending");
+   setSavePanel(panel);setSettings(next);setError("");setSaveStatus("pending");
    autosave.current.schedule(()=>running?saveLive(next):save(next));
  };
 
@@ -103,7 +103,7 @@ export function FrameGenerationPanel({game,disabled,running=false,onSaved,onPers
   {game.flatpak&&<div className="fg-sandbox-setup"><span>{sandbox?.ready?(pt?"Flatpak preparado":"Flatpak prepared"):(pt?"O Flatpak precisa de extensão e acesso ao perfil e à DLL.":"Flatpak requires an extension and access to the profile and DLL.")}</span><button type="button" className="modern-mini-btn" disabled={sandboxBusy||busy||!settings} onClick={()=>void checkSandbox()}>{sandboxBusy?(pt?"Verificando…":"Checking…"):(pt?"Preparar / verificar Flatpak":"Prepare / verify Flatpak")}</button></div>}
   <div className="modern-dlss-panels fg-game-grid">
    <section className="modern-dlss-card fg-game-setup" aria-label={pt?"Configurar geração de quadros":"Configure frame generation"}>
-    <h3>{pt?"Preparar para este jogo":"Prepare for this game"}</h3>
+    <div className="modern-panel-heading"><h3>{pt?"Preparar para este jogo":"Prepare for this game"}</h3><GameSaveStatusIndicator scope="fg-prepare"/></div>
     <p className="modern-dlss-description">{pt?"Confira a DLL do MAKO e ajuste o multiplicador. As alterações são salvas automaticamente para a próxima execução.":"Check the MAKO DLL and set the multiplier. Changes save automatically for the next launch."}</p>
   <div className="fg-toolbar">
    {state&&settings&&<div className="fg-master-toggle"><span>{pt?"Ativar neste jogo":"Enable for this game"}</span><ModOptionSwitch label={pt?"Ativar neste jogo":"Enable for this game"} enabled={settings.enabled} disabled={startupBlocked||!componentInstalled||!supported} onToggle={()=>patch({enabled:!settings.enabled})}/></div>}
@@ -121,7 +121,7 @@ export function FrameGenerationPanel({game,disabled,running=false,onSaved,onPers
 
     {running&&<p role="status">{liveUnavailable?(pt?"Este jogo não tem MAKO ativado no perfil. Encerre o jogo para habilitá-lo.":"MAKO is not enabled in this profile. Close the game to enable it."):(pt?"Jogo em execução: multiplicador, adaptativo, FPS alvo, escala de movimento e modelo leve podem ser ajustados aqui. DLL, versão e ativação exigem encerrar o jogo.":"Game running: adjust multiplier, adaptive mode, target FPS, flow scale and lighter model here. DLL, version and activation require closing the game.")}</p>}
     <div className="modern-dlss-actions fg-game-actions">
-  <span role="status" className="fg-autosave-status">{saveStatus==="saving"?(pt?"Salvando…":"Saving…"):saveStatus==="pending"?(pt?"Alterações serão salvas automaticamente":"Changes will save automatically"):saveStatus==="error"?(pt?"Não foi possível salvar. Ajuste a opção ou tente novamente.":"Could not save. Adjust the option or retry."):saveStatus==="saved"?(pt?"Salvo automaticamente":"Saved automatically"):(pt?"As alterações são salvas automaticamente":"Changes save automatically")}</span>
+  {!headerStatus&&<span role="status" className="fg-autosave-status">{saveStatus==="saving"?(pt?"Salvando…":"Saving…"):saveStatus==="pending"?(pt?"Alterações serão salvas automaticamente":"Changes will save automatically"):saveStatus==="error"?(pt?"Não foi possível salvar. Ajuste a opção ou tente novamente.":"Could not save. Adjust the option or retry."):saveStatus==="saved"?(pt?"Salvo automaticamente":"Saved automatically"):(pt?"As alterações são salvas automaticamente":"Changes save automatically")}</span>}
   {saveStatus==="error"&&<button type="button" className="modern-mini-btn" disabled={blocked||liveUnavailable||!supported} onClick={()=>{setSaveStatus("pending");autosave.current.schedule(()=>running?saveLive(settings):save(settings));}}>{pt?"Tentar novamente":"Retry"}</button>}
   {game.steam_pending&&<p>{pt?"Há alterações pendentes na Steam. Use as opções de aplicar, configurar manualmente ou reverter junto ao botão Jogar.":"Steam has pending changes. Apply, configure manually or revert beside the Play button."}</p>}
 
@@ -129,18 +129,16 @@ export function FrameGenerationPanel({game,disabled,running=false,onSaved,onPers
     </div>}
    </section>
    <section className="modern-dlss-card fg-game-options" aria-label={pt?"Opções da geração de quadros":"Frame generation options"}>
-    <h3>{pt?"Opções":"Options"}</h3><p className="modern-dlss-description">{pt?"Refine a geração e confira a compatibilidade antes de ativar.":"Fine-tune generation and check compatibility before enabling."}</p>
+    <div className="modern-panel-heading"><h3>{pt?"Opções":"Options"}</h3><GameSaveStatusIndicator scope="fg-options"/></div><p className="modern-dlss-description">{pt?"Refine a geração e confira a compatibilidade antes de ativar.":"Fine-tune generation and check compatibility before enabling."}</p>
     {state&&settings&&<><div className="fg-controls">
-   {backend==="mako"&&<div className="modern-dlss-option fg-setting"><span className="fg-setting-copy"><span>{pt?"Modo adaptativo":"Adaptive mode"}</span><small>{pt?"Ajusta os quadros extras conforme a cena.":"Adjusts extra frames to the scene."}</small></span><ModOptionSwitch label={pt?"Modo adaptativo":"Adaptive mode"} enabled={settings.adaptive} disabled={blocked||liveUnavailable} onToggle={()=>patch({adaptive:!settings.adaptive})}/></div>}
+   {backend==="mako"&&<div className="modern-dlss-option fg-setting"><span className="fg-setting-copy"><span>{pt?"Modo adaptativo":"Adaptive mode"}</span><small>{pt?"Ajusta os quadros extras conforme a cena.":"Adjusts extra frames to the scene."}</small></span><ModOptionSwitch label={pt?"Modo adaptativo":"Adaptive mode"} enabled={settings.adaptive} disabled={blocked||liveUnavailable} onToggle={()=>patch({adaptive:!settings.adaptive},"fg-options")}/></div>}
 
-   {backend==="mako"&&settings.adaptive&&<label className="modern-dlss-setting fg-control-field fg-setting">{pt?"FPS de saída desejado":"Target output FPS"}<input type="number" min={10} max={1000} value={settings.target_fps} disabled={blocked||liveUnavailable} onChange={e=>patch({target_fps:Number(e.target.value)})}/></label>}
-   <label className="modern-dlss-setting fg-control-field fg-setting fg-flow"><span className="fg-setting-copy"><span>{pt?"Escala de movimento":"Flow scale"}</span><small>{pt?"Resolução usada para estimar o movimento.":"Resolution used to estimate motion."}</small></span><span className="fg-flow-value"><output>{Math.round(settings.flow_scale*100)}%</output><input type="range" aria-label={pt?"Escala de movimento":"Flow scale"} min={25} max={100} value={Math.round(settings.flow_scale*100)} disabled={blocked||liveUnavailable} onChange={e=>patch({flow_scale:Number(e.target.value)/100})}/></span></label>
-   <div className="modern-dlss-option fg-setting"><span className="fg-setting-copy"><span>{pt?"Modelo leve":"Lighter model"}</span><small>{pt?"Prioriza desempenho na geração de quadros.":"Prioritizes frame generation performance."}</small></span><ModOptionSwitch label={pt?"Modelo leve":"Lighter model"} enabled={settings.performance} disabled={blocked||liveUnavailable} onToggle={()=>patch({performance:!settings.performance})}/></div>
+   {backend==="mako"&&settings.adaptive&&<label className="modern-dlss-setting fg-control-field fg-setting">{pt?"FPS de saída desejado":"Target output FPS"}<input type="number" min={10} max={1000} value={settings.target_fps} disabled={blocked||liveUnavailable} onChange={e=>patch({target_fps:Number(e.target.value)},"fg-options")}/></label>}
+   <label className="modern-dlss-setting fg-control-field fg-setting fg-flow"><span className="fg-setting-copy"><span>{pt?"Escala de movimento":"Flow scale"}</span><small>{pt?"Resolução usada para estimar o movimento.":"Resolution used to estimate motion."}</small></span><span className="fg-flow-value"><output>{Math.round(settings.flow_scale*100)}%</output><input type="range" aria-label={pt?"Escala de movimento":"Flow scale"} min={25} max={100} value={Math.round(settings.flow_scale*100)} disabled={blocked||liveUnavailable} onChange={e=>patch({flow_scale:Number(e.target.value)/100},"fg-options")}/></span></label>
+   <div className="modern-dlss-option fg-setting"><span className="fg-setting-copy"><span>{pt?"Modelo leve":"Lighter model"}</span><small>{pt?"Prioriza desempenho na geração de quadros.":"Prioritizes frame generation performance."}</small></span><ModOptionSwitch label={pt?"Modelo leve":"Lighter model"} enabled={settings.performance} disabled={blocked||liveUnavailable} onToggle={()=>patch({performance:!settings.performance},"fg-options")}/></div>
 
     </div>
-  <div className="modern-dlss-option fg-setting"><span className="fg-setting-copy"><span>{pt?"Overlay PeliGames":"PeliGames overlay"} <small>{pt?"Experimental":"Experimental"}</small></span><small>{pt?"Carrega com o jogo e começa oculto. Use o atalho para mostrar os controles e arrastar o painel.":"Loads with the game and starts hidden. Use the shortcut to show the controls and drag the panel."}</small></span><ModOptionSwitch label={pt?"Overlay PeliGames neste jogo":"PeliGames overlay for this game"} enabled={settings.overlay_enabled} disabled={startupBlocked||(!settings.overlay_enabled&&(!overlaySupport?.available||Boolean(game.flatpak)))} onToggle={()=>patch({overlay_enabled:!settings.overlay_enabled})}/></div>
-  <p className="fg-overlay-support-note">{overlaySupport?.reason||(pt?"Vulkan de 64 bits; compatibilidade gráfica ainda em validação.":"64-bit Vulkan; graphics compatibility is still being validated.")}</p>
-  <FrameOverlaySettings compact disabled={startupBlocked}/>
+  <p className="fg-overlay-support-note">{pt?"Overlay PeliGames e limite de FPS sem foco: configure na aba Desempenho. O overlay pode ser usado com o MAKO desligado.":"Configure the PeliGames overlay and background FPS limit in Performance. The overlay can run with MAKO disabled."}</p>
 
   <div className="fg-compatibility"><strong>{pt?"Compatibilidade":"Compatibility"}</strong><p>{state.warning}</p><p>{pt?"O MangoHUD pode contar apenas os quadros reais. Mais FPS de saída não reduz a latência na mesma proporção. Desative qualquer outro gerador antes de testar.":"MangoHUD may count only real frames. Higher output FPS does not proportionally reduce input latency. Disable other frame generators before testing."}</p>
    {backend==="mako"&&advanced.options.hdr&&<p role="alert">{pt?"Desative HDR para usar esta integração estável do MAKO, configurada para SDR. O HDR do MAKO ainda é experimental.":"Disable HDR for this stable MAKO integration, configured for SDR. MAKO HDR is still experimental."}</p>}

@@ -1,10 +1,11 @@
 .winetricks-modal { box-sizing: border-box; width: min(720px, calc(100vw - 32px)); max-width: 720px; max-height: min(780px, calc(100dvh - 32px)); display: flex; flex-direction: column; }
 .winetricks-title { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.winetricks-title-icon { display: grid; place-items: center; flex-shrink: 0; width: 24px; height: 30px; color: var(--accent-soft, var(--accent)); }
+.winetricks-title-icon { display: grid; place-items: center; flex-shrink: 0; width: 24px; height: 24px; color: var(--accent-soft, var(--accent)); }
 .winetricks-title-icon .menu-icon { width: 20px; height: 20px; }
-.winetricks-title > span:last-child { min-width: 0; }
-.winetricks-title h2 { margin: 0; font-size: 1.15rem; line-height: 1.2; }
-.winetricks-title small { display: block; margin-top: 2px; overflow: hidden; color: var(--modern-muted, var(--tone-94a3b8, #94a3b8)); font-size: .8rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.winetricks-title h2 { display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0; line-height: 1.2; white-space: nowrap; }
+.winetricks-title h2 > span:first-child, .winetricks-title-separator { flex-shrink: 0; }
+.winetricks-title-separator { color: var(--modern-muted, #94a3b8); }
+.winetricks-title-game { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--modern-muted, #94a3b8); font-weight: 500; }
 .winetricks-intro { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; color: var(--modern-muted, var(--tone-94a3b8, #94a3b8)); font-size: .88rem; line-height: 1.5; }
 .winetricks-toolbar { display: grid; grid-template-columns: minmax(0, 1fr); align-items: center; gap: 10px; margin-top: 7px; }
 .winetricks-toolbar > .modern-mini-btn { min-height: 32px; }
@@ -73,12 +74,12 @@
 }
 :root .winetricks-modal::after { content: none !important; }
 :root .winetricks-modal > .dialog-titlebar {
-  position: relative; inset: auto; flex-shrink: 0; height: auto; min-height: 72px;
-  padding: 18px 64px 16px 24px; border: 0; border-radius: 0;
+  position: relative; inset: auto; flex-shrink: 0; height: auto; min-height: 56px;
+  padding: 14px 64px 14px 24px; border: 0; border-radius: 0;
   background: none; box-shadow: none; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
 }
 :root .winetricks-modal .dialog-titlebar h2 { font-family: inherit !important; font-size: 1.125rem !important; font-weight: 650; letter-spacing: -.02em; }
-:root .winetricks-modal.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { min-height: 0; padding: 0 24px 18px; }
+:root .winetricks-modal.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { min-height: 0; padding: 0 24px 18px; display: flex; flex-direction: column; overflow-y: auto; }
 .winetricks-modal .winetricks-section-label { margin-top: 0; font-size: .8rem; font-weight: 600; color: var(--modern-text, #edf0f8); }
 .winetricks-modal .winetricks-intro { font-size: .8125rem; }
 .winetricks-modal .winetricks-proton { font-weight: 500; background: rgba(160,177,204,.06); }
@@ -92,8 +93,8 @@
 :root .winetricks-modal .winetricks-filters button[aria-pressed="true"] { background: rgba(160,177,204,.13) !important; border-color: rgba(160,177,204,.2); }
 :root .winetricks-modal .winetricks-filters button::before,
 :root .winetricks-modal .modern-mini-btn::before { content: none !important; }
-.winetricks-modal .winetricks-packages { min-height: 150px; max-height: min(320px, 38dvh); border-color: rgba(160,177,204,.14); background: rgba(0,0,0,.1); scrollbar-width: thin; }
-.winetricks-modal .winetricks-package { gap: 10px; padding: 10px 12px; }
+.winetricks-modal .winetricks-packages { min-height: 60px; max-height: 242px; flex: 1 1 242px; overscroll-behavior: contain; border-color: rgba(160,177,204,.14); background: rgba(0,0,0,.1); scrollbar-width: thin; }
+.winetricks-modal .winetricks-package { gap: 10px; padding: 10px 12px; min-height: 60px; box-sizing: border-box; }
 .winetricks-modal .winetricks-package em { padding: 2px 7px; background: transparent; font-weight: 500; }
 .winetricks-modal .winetricks-package[data-installed] { opacity: 1; }
 .winetricks-modal .winetricks-package[data-installed] em { background: rgba(34,197,94,.1); }
@@ -109,16 +110,29 @@
 :root .winetricks-modal .winetricks-filters button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 :root .winetricks-modal .modern-mini-btn:disabled { opacity: .45; cursor: default; }
 :root .winetricks-modal .winetricks-install:not(:disabled) { background: rgba(var(--accent-rgb),.18) !important; border-color: rgba(var(--accent-rgb),.4); }
-:root .winetricks-modal > .winetricks-actions { flex-shrink: 0; flex-wrap: wrap; gap: 8px; padding: 14px 24px; margin: 0; border-top: 1px solid rgba(160,177,204,.12); background: rgba(0,0,0,.12); }
+:root .winetricks-modal .winetricks-bottom > .winetricks-actions { flex-shrink: 0; flex-wrap: wrap; gap: 8px; padding: 14px 24px; margin: 0; border-top: 1px solid rgba(160,177,204,.12); background: rgba(0,0,0,.12); }
 .winetricks-modal .winetricks-actions > span { font-size: .75rem; }
 .winetricks-modal .wine-tool-terminal { background: rgba(0,0,0,.2); }
 :root[data-appearance="light"] .winetricks-modal { --glass-base-start: 240,244,250; --glass-base-end: 225,232,243; }
 @media (max-width: 560px) {
   :root .winetricks-modal > .dialog-titlebar { padding-left: 16px; }
   :root .winetricks-modal.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { padding-left: 16px; padding-right: 16px; }
-  :root .winetricks-modal > .winetricks-actions { padding: 12px 16px; }
+  :root .winetricks-modal .winetricks-bottom > .winetricks-actions { padding: 12px 16px; }
   .winetricks-modal .winetricks-tools > button { flex: 1 1 auto; white-space: normal; }
 }
 @media (prefers-reduced-motion: reduce) {
   .winetricks-modal .modern-mini-btn, .winetricks-modal .winetricks-filters button { transition: none; }
+}
+
+/* The operation remains visible while only the component catalogue scrolls. */
+.winetricks-bottom { flex-shrink: 0; min-width: 0; }
+.winetricks-bottom > .winetricks-progress { margin: 0 24px; }
+.winetricks-bottom > .winetricks-log { margin: 10px 24px 14px; }
+.winetricks-bottom > :is(.advanced-validation-error, .installation-cover-feedback) { margin: 8px 24px; max-height: 64px; overflow-y: auto; overflow-wrap: anywhere; }
+.winetricks-bottom .wine-tool-terminal { max-height: min(120px, 16dvh); }
+.winetricks-modal .modal-scroll-body > :not(.winetricks-packages) { flex-shrink: 0; }
+.winetricks-modal .winetricks-search { box-sizing: border-box; flex-shrink: 0; }
+@media (max-width: 560px) {
+  .winetricks-bottom > .winetricks-progress { margin-left: 16px; margin-right: 16px; }
+  .winetricks-bottom > .winetricks-log { margin-left: 16px; margin-right: 16px; }
 }

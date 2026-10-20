@@ -705,7 +705,7 @@
     "key": "launcher_hud_order",
     "label": "Ordem das informações",
     "kind": "select",
-    "default": "fps-first",
+    "default": "hardware-first",
     "values": [
       "fps-first",
       "hardware-first"
@@ -755,5 +755,12 @@
     "label": "Atalho para alternar limites de FPS",
     "kind": "shortcut",
     "default": "Shift_L+F1"
+  },
+  {
+    "key": "launcher_hud_custom_order",
+    "section": "launcher",
+    "label": "Ordem dos indicadores",
+    "kind": "hudorder",
+    "default": ""
   }
 ]

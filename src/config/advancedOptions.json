@@ -86,7 +86,7 @@
     "key": "PROTON_USE_WOW64",
     "value": "1",
     "enabled": false,
-    "description": "Executa aplicativos de 32 bits usando o suporte WoW64 do Proton de 64 bits.",
+    "description": "Executa jogos Windows de 32 bits pelo novo WoW64, se o Proton oferecer suporte, e pode permitir o uso do overlay. Ative manualmente para testar; desative se o jogo deixar de abrir ou apresentar problemas.",
     "kind": "env"
   },
   {

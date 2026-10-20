@@ -45,9 +45,10 @@ export const translations = {
       libraryAdded: "executável(is) encontrado(s) na categoria PeliGames.",
       nexusDisclaimer: "Integração independente, sem afiliação ao Nexus Mods. Reporte erros ao PeliGames, não ao Nexus Mods.",
       chooseExecutableTitle: "Qual é o executável do jogo?",
-      chooseExecutableHint: "A instalação foi concluída. Selecione o executável que inicia o jogo para definir seu atalho na biblioteca. Os demais arquivos continuam na pasta de instalação.",
-      changeExecutableHint: "Selecione o executável que deve iniciar o jogo. A biblioteca usará esta opção; os arquivos da instalação serão preservados.",
-      chooseExecutableRecommended: "recomendado",
+      chooseExecutableHint: "Escolha o arquivo que inicia o jogo. Os atalhos encontrados no Windows aparecem em destaque.",
+      changeExecutableHint: "Escolha o arquivo que a biblioteca deve usar para iniciar o jogo.",
+      chooseExecutableRecommended: "Recomendado",
+      chooseExecutableOthers: "Outros executáveis",
       chooseExecutableConfirm: "Usar este executável",
       chooseExecutableKeepAll: "Manter todos",
       launcherGamesTitle: "Novos jogos instalados pelo launcher",
@@ -294,7 +295,7 @@ export const translations = {
       dx9: "DX9 Clássico",
       dx9Desc: "(com suporte a profundidade antigo)",
       renodx: "RenoDX",
-      renodxHint: "Usa o processamento de imagem do RenoDX, com a mesma rede NR. Ajustes: NR Control (End) no OptiScaler ou Add-ons no ReShade. Aplica ao instalar ou reparar.",
+      renodxHint: "Usa o processamento de imagem do RenoDX, com a mesma rede NR. Ajustes: NR Control (End) no OptiScaler ou Add-ons no ReShade. Salva automaticamente quando instalado; reabra o jogo para mudar o modo.",
       int4: "int4 misto",
       int4Hint: "Acelera parte da rede com menor precisão; pode alterar a imagem e aumentar o tempo de início do NR. Ctrl+F11 alterna com a rede padrão. Aplica ao instalar ou reparar.",
       layersNote: "Copie a linha inteira: VK_ADD_LAYER_PATH e VK_INSTANCE_LAYERS são necessários para o NR Control (tecla End) e o int4 misto."
@@ -388,7 +389,7 @@ export const translations = {
       folder: "Pasta",
       removeGame: "Remover Jogo",
       changeCover: "Alterar Capa (Local)",
-      rescan: "Escanear Novamente",
+      rescan: "Rescanear",
       scanLibrary: "Escanear Biblioteca"
     },
     setupWizard: {
@@ -468,9 +469,10 @@ export const translations = {
       libraryAdded: "executable(s) found in the PeliGames category.",
       nexusDisclaimer: "Independent integration, not affiliated with Nexus Mods. Report issues to PeliGames, not to Nexus Mods.",
       chooseExecutableTitle: "Which executable starts the game?",
-      chooseExecutableHint: "Installation is complete. Select the executable that starts the game to define its library shortcut. The other files remain in the installation folder.",
-      changeExecutableHint: "Select the executable that should start the game. The library will use this option; installation files will be preserved.",
-      chooseExecutableRecommended: "recommended",
+      chooseExecutableHint: "Choose the file that starts the game. Windows shortcuts are highlighted.",
+      changeExecutableHint: "Choose the file the library should use to start the game.",
+      chooseExecutableRecommended: "Recommended",
+      chooseExecutableOthers: "Other executables",
       chooseExecutableConfirm: "Use this executable",
       chooseExecutableKeepAll: "Keep all",
       launcherGamesTitle: "New games installed by the launcher",
@@ -717,7 +719,7 @@ export const translations = {
       dx9: "Classic DX9",
       dx9Desc: "(with old depth support)",
       renodx: "RenoDX",
-      renodxHint: "Uses RenoDX image processing with the same NR network. Settings: NR Control (End) with OptiScaler, or Add-ons with ReShade. Applies when installing or repairing.",
+      renodxHint: "Uses RenoDX image processing with the same NR network. Settings: NR Control (End) with OptiScaler, or Add-ons with ReShade. Saves automatically when installed; restart the game to change modes.",
       int4: "int4 mixed",
       int4Hint: "Speeds up part of the network at lower precision; may alter the image and delay NR startup. Ctrl+F11 switches to the default network. Applies when installing or repairing.",
       layersNote: "Copy the whole line: VK_ADD_LAYER_PATH and VK_INSTANCE_LAYERS are needed by NR Control (End key) and int4 mixed."
@@ -811,7 +813,7 @@ export const translations = {
       folder: "Folder",
       removeGame: "Remove Game",
       changeCover: "Change Cover (Local)",
-      rescan: "Rescan Library",
+      rescan: "Rescan",
       scanLibrary: "Scan Library"
     },
     setupWizard: {

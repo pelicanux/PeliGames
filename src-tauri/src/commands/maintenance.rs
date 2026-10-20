@@ -345,14 +345,8 @@ fn launch_cleanup(app: &tauri::AppHandle, paths: &[String]) -> Result<(), String
         .env_remove("APPDIR")
         .env_remove("LD_LIBRARY_PATH")
         .env_remove("LD_PRELOAD");
-    let log = fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(std::env::temp_dir().join(format!(
-            "peligames-maintenance-{}.log",
-            uuid::Uuid::new_v4()
-        )))
-        .map_err(|e| e.to_string())?;
+    let log = std::env::temp_dir().join("peligames-maintenance.log");
+    crate::core::bounded_logs::capture(&mut helper,&log)?;
     helper
         .arg("-c")
         .arg(CLEANUP)
@@ -360,9 +354,7 @@ fn launch_cleanup(app: &tauri::AppHandle, paths: &[String]) -> Result<(), String
         .arg(std::process::id().to_string())
         .args(paths)
         .current_dir("/")
-        .stdin(Stdio::null())
-        .stdout(Stdio::from(log.try_clone().map_err(|e| e.to_string())?))
-        .stderr(Stdio::from(log));
+        .stdin(Stdio::null());
     helper
         .spawn()
         .map_err(|e| format!("Não foi possível iniciar a limpeza: {e}"))?;

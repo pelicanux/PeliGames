@@ -1,3 +1,4 @@
+import {LibraryRecoveryDialog} from "./LibraryRecoveryDialog";
 import { sameGameInstallation } from "../services/integrationGameIdentity";
 import { GameBannerImage } from "./GameBannerImage";
 import { CoverHoldProgress } from "./CoverHoldProgress";
@@ -14,7 +15,7 @@ import { NexusLibraryLoading } from "../modules/nexus/NexusLibraryLoading";
 import { useFavorites, toggleFavorite } from "../services/favorites";
 import type { CoverGameAction } from "./CoverGameActions";
 import { GameCoverMenu } from "./GameCoverMenu";
-import { useRemovedLibraryGames, restoreRemovedLibraryFolder } from "../services/libraryVisibility";
+import { useRemovedLibraryGames } from "../services/libraryVisibility";
 import { gameViewKey } from "../services/gameIdentity";
 import { TimedFeedback } from "./TimedFeedback";
 import { MenuIcon } from "./MenuIcon";
@@ -31,7 +32,6 @@ import { applyCustomCovers, readGameLibrary, saveGameLibrary } from "../services
 import { warmAmbientCover } from "../services/ambientCoverCache";
 import type { GamePanelMode } from "../types/gamePanel";
 import { LauncherIcon } from "./LauncherIcon";
-import { openDirectoryPicker } from "../services/tauriService";
 import { launcherCoverFallback } from "../services/launcherInstallation";
 import { listPeliGamesEntries } from "../services/installedLibrary";
 import { activityOf, daysSince, formatPlaytime, loadGameActivity, type ActivityMap } from "../services/gameActivity";
@@ -90,6 +90,8 @@ interface Props {
   homeRevision: number;
   onSelectGame: (game: GameInfo, portrait?: HTMLElement) => void;
   selectedGameKey?: string;
+  runningGamePaths?: string[];
+  startingGamePaths?: string[];
   runningGamePath?: string;
   startingGamePath?: string;
   mode: GamePanelMode;
@@ -101,9 +103,10 @@ interface Props {
   onCountChange?: (count: number) => void;
 }
 
-export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, coverHoldBlocked, homeRevision, onSelectGame, selectedGameKey, runningGamePath, startingGamePath, mode, libraryScope, onModeChange, modeDisabled, managedLibrary, supplementalGames = [], onCountChange }) => {
+export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, coverHoldBlocked, homeRevision, onSelectGame, selectedGameKey, runningGamePaths = [], startingGamePaths = [], runningGamePath, startingGamePath, mode, libraryScope, onModeChange, modeDisabled, managedLibrary, supplementalGames = [], onCountChange }) => {
   const tilt = 6;
   const { launchEffect } = useAccentTheme();
+  const [recoverLibrary,setRecoverLibrary]=useState(false);
   const [, setCoverRevision] = useState(0);
   const managed = Boolean(managedLibrary);
   useEffect(() => {
@@ -146,7 +149,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       if (request !== ownRequest.current) return;
       ownEntries.current = entries;
       setLibraryError("");
-      setGames(previous => applyCustomCovers([...previous.filter(game => game.launcher !== "PeliGames"), ...entries]));
+      setGames(previous => applyCustomCovers([...previous.filter(game => game.launcher !== "PeliGames" && (game.launcher !== "Custom" || !entries.some(entry=>sameGameInstallation(entry,game)))), ...entries]));
     } catch (error) { if (request === ownRequest.current) setLibraryError(String(error)); }
   };
   useEffect(() => {
@@ -183,13 +186,14 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   // New interface: last play and playtime from each launcher's own records,
   // refreshed when a session ends and when the window regains focus.
   const [activity, setActivity] = useState<ActivityMap>({});
+  const runningPathsKey=runningGamePaths.join("\n");
   useEffect(() => {
     let alive = true;
     const refresh = () => { void loadGameActivity().then(value => { if (alive) setActivity(value); }); };
     refresh();
     window.addEventListener("focus", refresh);
     return () => { alive = false; window.removeEventListener("focus", refresh); };
-  }, [runningGamePath, homeRevision]);
+  }, [runningGamePath, runningPathsKey, homeRevision]);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, game: GameInfo } | null>(null);
   const { t } = useI18n();
   useEffect(() => { setSearchQuery(""); setContextMenu(null); }, [libraryScope]);
@@ -219,7 +223,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     }
     try {
       const [scanned, external] = scope === "own"
-        ? [await invoke<GameInfo[]>("scan_external_library").then(async external => { const manual = folders.length ? await invoke<GameInfo[]>("scan_manual_game_folders", { customFolders: folders }) : []; return [...external, ...manual.filter(game => !external.some(other => (other.directory || other.path) === game.path))]; }), [] as GameInfo[]]
+        ? [await invoke<GameInfo[]>("scan_external_library").then(async external => { const manual = folders.length ? await invoke<GameInfo[]>("read_saved_game_folders", { customFolders: folders }) : []; return [...external, ...manual.filter(game => !external.some(other => sameGameInstallation(other, game)))]; }), [] as GameInfo[]]
         : await Promise.all([invoke<GameInfo[]>("scan_installed_games", { apiKey: STEAMGRIDDB_API_KEY, customFolders: folders }), invoke<GameInfo[]>("scan_external_library").catch(() => [] as GameInfo[])]);
       const result = scanned.map(game => {
         // The DLSS scan points at the executable's folder, often below the game's
@@ -231,7 +235,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         return settings ? {...game, external_id: settings.external_id, native_linux: settings.native_linux, advanced: settings.advanced, proton: settings.proton, prefix: settings.prefix} : game;
       });
       if (scope !== activeScope.current) return;
-      setGames(applyCustomCovers([...result.filter(game => game.launcher !== "PeliGames"), ...ownEntries.current]));
+      setGames(applyCustomCovers([...result.filter(game => game.launcher !== "PeliGames" && (game.launcher !== "Custom" || !ownEntries.current.some(entry=>sameGameInstallation(entry,game)))), ...ownEntries.current]));
       await refreshOwnLibrary(true);
       setLibraryLoaded(true);
     } catch (e) {
@@ -254,16 +258,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     return () => window.removeEventListener("focus", refreshOnFocus);
   }, [managed, customFolders, libraryScope]);
 
-  const handleAddCustomFolder = async () => {
-    const dir = await openDirectoryPicker(t("gameGrid", "selectFolder"));
-    if (dir) {
-      const newFolders = customFolders.includes(dir) ? customFolders : [...customFolders, dir];
-      restoreRemovedLibraryFolder(dir);
-      setCustomFolders(newFolders);
-      localStorage.setItem("custom_folders", JSON.stringify(newFolders));
-      await fetchGames(newFolders);
-    }
-  };
+
 
   useEffect(() => {
     if (managedLibrary) return;
@@ -378,9 +373,9 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const coverPress = useRef<{ key: string; startedAt: number } | null>(null);
   const launchBlocked = useRef(coverHoldBlocked ?? coverActionsBlocked);
   launchBlocked.current = coverHoldBlocked ?? coverActionsBlocked;
-  const runningSnapshot = useRef({ path: runningGamePath, games: managedLibrary?.games });
-  runningSnapshot.current = { path: runningGamePath, games: managedLibrary?.games };
-  const isRunning = (game: GameInfo) => game.path === runningSnapshot.current.path || Boolean(runningSnapshot.current.games?.find(entry => entry.path === game.path && entry.launcher === game.launcher)?.nexus_running);
+  const runningSnapshot = useRef({ paths: runningGamePaths, path: runningGamePath, games: managedLibrary?.games });
+  runningSnapshot.current = { paths: runningGamePaths, path: runningGamePath, games: managedLibrary?.games };
+  const isRunning = (game: GameInfo) => runningSnapshot.current.paths.includes(game.path) || game.path === runningSnapshot.current.path || Boolean(runningSnapshot.current.games?.find(entry => entry.path === game.path && entry.launcher === game.launcher)?.nexus_running);
   const launchFromHold = useRef(onCoverAction);
   launchFromHold.current = onCoverAction;
   const cancelHold = () => {
@@ -499,8 +494,8 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     const when = days < 0 ? "" : days === 0 ? t("modern", "playedToday") : days === 1 ? t("modern", "playedYesterday") : t("modern", "playedDaysAgo").replace("{n}", String(days));
     return [when, formatPlaytime(record.minutes)].filter(Boolean).join(" · ");
   };
-  const isPreparing = (game: GameInfo) => (game.nexus_starting || game.path === startingGamePath) && !(game.nexus_running || game.path === runningGamePath);
-  const runningBadge = (game: GameInfo) => (game.nexus_running || game.path === runningGamePath) && <span className="library-running-badge" role="status"><i aria-hidden="true" />{t("gameExecution", "running")}</span>;
+  const isPreparing = (game: GameInfo) => (game.nexus_starting || (game.path === startingGamePath || startingGamePaths.includes(game.path))) && !(game.nexus_running || (game.path === runningGamePath || runningGamePaths.includes(game.path)));
+  const runningBadge = (game: GameInfo) => (game.nexus_running || (game.path === runningGamePath || runningGamePaths.includes(game.path))) && <span className="library-running-badge" role="status"><i aria-hidden="true" />{t("gameExecution", "running")}</span>;
   const renderCardContent = (game: GameInfo) => {
     if (brokenCards.has(gameViewKey(game))) return null;
     // List view: a separate "selected" row. Grid view keeps the same card and image
@@ -675,7 +670,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       {renderCardContent(game)}
       {!brokenCards.has(gameViewKey(game)) && <div className="modern-card-caption">
         <p>{game.name}</p>
-        <small>{game.nexus_running || game.path === runningGamePath ? t("gameExecution", "running") : playedLabel(game) || (game.launcher === "PeliGames" && game.executable ? game.executable.split(/[\\/]/).pop() : game.library_category === "launchers" ? "Launcher" : game.launcher)}</small>
+        <small>{game.nexus_running || (game.path === runningGamePath || runningGamePaths.includes(game.path)) ? t("gameExecution", "running") : playedLabel(game) || (game.launcher === "PeliGames" && game.executable ? game.executable.split(/[\\/]/).pop() : game.library_category === "launchers" ? "Launcher" : game.launcher)}</small>
       </div>}
     </div>
   );
@@ -747,11 +742,12 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       .sort((a, b) => (activityOf(activity, b)?.last_played ?? 0) - (activityOf(activity, a)?.last_played ?? 0)).slice(0, 4)
     : [];
   const launchable = (game: GameInfo) => managed || Boolean(game.external_id) || game.launcher === "Steam" || game.launcher === "PeliGames";
-  const chipIcon = (category: string) => category === "Launchers" ? <MenuIcon name="gamepad" /> : ["Steam", "Heroic", "Epic Games", "PeliGames"].includes(category) ? <LauncherIcon launcher={category} size={14} /> : <MenuIcon name="folder" />;
+  const chipIcon = (category: string) => category === "Launchers" ? <MenuIcon name="gamepad" /> : ["Steam", "Heroic", "Epic Games", "PeliGames", "Lutris", "Faugus"].includes(category) ? <LauncherIcon launcher={category} size={14} /> : <MenuIcon name="folder" />;
   const showEmptyOwnLibrary = !scanning && ownLoaded && (libraryScope === "own" || mode === "mods") && !searchQuery && filteredGames.length === 0;
 
   return (
     <div ref={gridRoot} style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {recoverLibrary&&<LibraryRecoveryDialog onClose={()=>setRecoverLibrary(false)}/>}
       <AnimatePresence>{teleport && <CoverLaunchTeleport value={teleport} reducedMotion={performanceMode} cancellingDisabled={launchCommitted} onCancel={() => cancelPendingLaunch.current?.()} />}</AnimatePresence>
       <div className="modern-lib-toolbar">
         <label className="modern-lib-search">
@@ -760,15 +756,16 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
             onKeyDown={event => { if (event.key === "Escape") setSearchQuery(""); }} />
           {searchQuery ? <button type="button" aria-label={t("gameGrid", "clearSearch")} onClick={() => { setSearchQuery(""); searchInput.current?.focus(); }}>×</button> : <kbd>Ctrl K</kbd>}
         </label>
-        <ModernLibraryFilters>
+
+        <div className="modern-lib-actions">
+        <ModernLibraryFilters activeLabel={storeFilter==="all"?undefined:storeFilter==="favorites"?t("gameGrid","favorites"):storeFilter}>
           <button type="button" aria-pressed={storeFilter === "all"} onClick={() => setStoreFilter("all")}>{t("modern", "all")} <b>{filteredGames.length}</b></button>
           {favoriteGames.length > 0 && <button type="button" aria-pressed={storeFilter === "favorites"} onClick={() => setStoreFilter("favorites")}><i className="modern-chip-dot" />{t("gameGrid", "favorites")} <b>{favoriteGames.length}</b></button>}
           {storeChips.map(category => <button type="button" key={category} aria-pressed={storeFilter === category} onClick={() => setStoreFilter(category)}>{chipIcon(category)}{category} <b>{filteredGames.filter(game => categoryOf(game) === category).length}</b></button>)}
         </ModernLibraryFilters>
-        <div className="modern-lib-actions">
           {managedLibrary && <button type="button" className="modern-lib-icon" onClick={managedLibrary.onAccount} title={managedLibrary.accountLabel} aria-label={managedLibrary.accountLabel}><img src="/nexus-mods.svg" alt="" /></button>}
-          {!managedLibrary && <button type="button" className="modern-lib-icon" onClick={() => void handleAddCustomFolder()} title={t("gameGrid", "addFolder")} aria-label={t("gameGrid", "addFolder")}><MenuIcon name="folder" /></button>}
-          <button type="button" className={`modern-lib-icon${scanSpinning ? " spinning" : ""}`} disabled={scanSpinning || managedLibrary?.busy} onClick={() => void fetchGames()} title={t("gameGrid", "scanLibrary")} aria-label={t("gameGrid", "scanLibrary")}><MenuIcon name="repair" /></button>
+          {!managedLibrary&&<button type="button" className="modern-lib-icon modern-lib-labeled" disabled={modeDisabled||coverActionsBlocked||scanSpinning} onClick={()=>setRecoverLibrary(true)} title="Localizar instalações e cópias do PeliGames"><MenuIcon name="folder"/>Localizar biblioteca</button>}
+          <button type="button" className={`modern-lib-icon modern-lib-labeled${scanSpinning ? " spinning" : ""}`} disabled={scanSpinning || managedLibrary?.busy} onClick={() => void fetchGames()} title={t("gameGrid", "scanLibrary")} aria-label={t("gameGrid", "scanLibrary")}><MenuIcon name="repair" /><span>{t("gameGrid","rescan")}</span></button>
           <div className="modern-lib-view" role="group" aria-label={t("gameGrid", "viewMode")}>
             <button type="button" aria-pressed={viewMode === "grid"} aria-label={t("gameGrid", "gridView")} title={t("gameGrid", "gridView")} onClick={() => setViewMode("grid")}><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></button>
             <button type="button" aria-pressed={viewMode === "list"} aria-label={t("gameGrid", "listView")} title={t("gameGrid", "listView")} onClick={() => setViewMode("list")}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></button>
@@ -778,7 +775,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       </div>
       {(libraryError || managedLibrary?.error) && <TimedFeedback>{libraryError || managedLibrary?.error}</TimedFeedback>}
 
-      <div className={`game-grid-container game-library--${viewMode} modern-grid-container`} style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: "1rem" }}>
+      <div className={`game-grid-container game-library--${viewMode} modern-grid-container`} style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
         {showScanScreen ? <div className="empty-library-state"><NexusLibraryLoading reducedMotion={performanceMode} /></div> : <>
         {filteredGames.length === 0 && !scanSpinning && (managedLibrary ? <div className="empty-library-state">
           {searchQuery ? <p role="status">{t("gameGrid", "noSearchResults")}</p>
@@ -841,8 +838,8 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         </>}
       </div>
       {contextMenu && createPortal(<GameCoverMenu game={contextMenu.game} x={contextMenu.x} y={contextMenu.y}
-        running={contextMenu.game.path === runningGamePath || Boolean(managedLibrary?.games.find(game => game.nexus_id && game.nexus_id === contextMenu.game.nexus_id)?.nexus_running)}
-        preparing={contextMenu.game.path === startingGamePath || Boolean(managedLibrary?.games.find(game => game.nexus_id && game.nexus_id === contextMenu.game.nexus_id)?.nexus_starting)}
+        running={(contextMenu.game.path === runningGamePath || runningGamePaths.includes(contextMenu.game.path)) || Boolean(managedLibrary?.games.find(game => game.nexus_id && game.nexus_id === contextMenu.game.nexus_id)?.nexus_running)}
+        preparing={(contextMenu.game.path === startingGamePath || startingGamePaths.includes(contextMenu.game.path)) || Boolean(managedLibrary?.games.find(game => game.nexus_id && game.nexus_id === contextMenu.game.nexus_id)?.nexus_starting)}
         blocked={coverActionsBlocked} onClose={() => setContextMenu(null)}
         onAction={(action, game) => { if (action === "scan") void fetchGames(); else onCoverAction(action, game); }} />, document.body)}
 

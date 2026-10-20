@@ -77,22 +77,15 @@ fn record(dir: &Path, id: &str) -> Option<Record> {
     (record.status.id == id && record.status.active() && birth(record.owner) == Some(record.birth))
         .then_some(record)
 }
-pub(crate) fn status_at(dir: &Path) -> Option<ExecutionStatus> {
-    let entries = fs::read_dir(dir).ok()?;
-    for entry in entries.take(1024).flatten() {
-        let path = entry.path();
-        if path.extension().is_none_or(|e| e != "json") {
-            continue;
-        }
-        let Some(id) = path.file_stem().and_then(|s| s.to_str()) else {
-            continue;
-        };
-        if let Some(record) = record(dir, id) {
-            return Some(record.status);
-        }
-    }
-    None
+pub(crate) fn statuses_at(dir:&Path)->Vec<ExecutionStatus>{
+    let Ok(entries)=fs::read_dir(dir) else{return vec![];};
+    entries.take(1024).flatten().filter_map(|entry|{
+        let path=entry.path();
+        if path.extension().is_none_or(|e|e!="json"){return None;}
+        record(dir,path.file_stem()?.to_str()?).map(|r|r.status)
+    }).collect()
 }
+pub(crate) fn status_at(dir:&Path)->Option<ExecutionStatus>{statuses_at(dir).into_iter().next()}
 pub(crate) fn cancel_at(dir: &Path, id: &str) -> Result<ExecutionStatus, String> {
     let mut record =
         record(dir, id).ok_or("Esta execução já terminou ou o monitor está indisponível.")?;
@@ -108,4 +101,25 @@ pub(crate) fn cancellation_requested(dir: &Path, id: &str) -> bool {
 pub(crate) fn finish(dir: &Path, id: &str) {
     let _ = fs::remove_file(dir.join(format!("{id}.json")));
     let _ = fs::remove_file(dir.join(format!("{id}.cancel")));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn registry_tracks_each_session_and_cancels_only_the_selected_one() {
+        let root=std::env::temp_dir().join(format!("peligames-session-registry-{}",uuid::Uuid::new_v4()));
+        let sessions:Vec<_>=(1..=3).map(|number|ExecutionStatus{
+            id:uuid::Uuid::new_v4().to_string(),path:format!("copy-{number}"),state:"running".into(),log:String::new(),error:None,
+        }).collect();
+        for session in &sessions {publish(&root,session).unwrap();}
+        assert_eq!(statuses_at(&root).len(),3);
+        cancel_at(&root,&sessions[1].id).unwrap();
+        assert!(!cancellation_requested(&root,&sessions[0].id));
+        assert!(cancellation_requested(&root,&sessions[1].id));
+        assert!(!cancellation_requested(&root,&sessions[2].id));
+        finish(&root,&sessions[1].id);
+        assert_eq!(statuses_at(&root).len(),2);
+        fs::remove_dir_all(root).unwrap();
+    }
 }

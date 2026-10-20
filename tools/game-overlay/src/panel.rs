@@ -1,14 +1,24 @@
 //! The actual panel UI, shared with headless click/drag regression tests.
 use crate::controls::Controls;
 
+#[cfg(test)]
 pub(crate) fn show(
     ctx: &egui::Context,
     extent: egui::Vec2,
     controls: &mut Controls,
     error: &str,
 ) -> egui::InnerResponse<bool> {
+    show_tools(ctx, extent, Some(controls), error)
+}
+
+pub(crate) fn show_tools(
+    ctx: &egui::Context,
+    extent: egui::Vec2,
+    mut mako: Option<&mut Controls>,
+    error: &str,
+) -> egui::InnerResponse<bool> {
     let position = egui::pos2((extent.x - 310.).max(8.), 16.);
-    egui::Area::new(egui::Id::new("peligames-mako"))
+    egui::Area::new(egui::Id::new("peligames-overlay"))
         .default_pos(position)
         .movable(true)
         .constrain(true)
@@ -22,45 +32,55 @@ pub(crate) fn show(
                     ui.set_width(270.);
                     ui.horizontal(|ui| {
                         ui.add(
-                            egui::Label::new(egui::RichText::new("PeliGames · MAKO").strong())
+                            egui::Label::new(egui::RichText::new("PeliGames").strong())
                                 .selectable(false),
                         )
                         .on_hover_text(
                             "Arraste para mover o painel. O mesmo atalho mostra e oculta.",
                         );
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                            changed |= ui.checkbox(&mut controls.paused, "Pausar").changed();
+                            if let Some(controls) = mako.as_mut() {
+                                changed |= ui.checkbox(&mut controls.paused, "Pausar").changed();
+                            }
                         });
                     });
-                    ui.horizontal(|ui| {
-                        for n in 2..=5 {
-                            changed |= ui
-                                .selectable_value(&mut controls.multiplier, n, format!("{n}×"))
-                                .changed();
-                        }
-                    });
-                    changed |= ui.checkbox(&mut controls.adaptive, "Adaptativo").changed();
-                    if controls.adaptive {
+                    if let Some(controls) = mako.as_mut() {
+                        ui.small("MAKO · geração de quadros");
                         ui.horizontal(|ui| {
-                            ui.label(format!("Alvo: {} FPS", controls.target_fps));
-                            changed |= ui
-                                .add(
-                                    egui::Slider::new(&mut controls.target_fps, 10..=1000)
-                                        .show_value(false),
-                                )
-                                .changed();
+                            for n in 2..=5 {
+                                changed |= ui
+                                    .selectable_value(&mut controls.multiplier, n, format!("{n}×"))
+                                    .changed();
+                            }
                         });
+                        changed |= ui.checkbox(&mut controls.adaptive, "Adaptativo").changed();
+                        if controls.adaptive {
+                            ui.horizontal(|ui| {
+                                ui.label(format!("Alvo: {} FPS", controls.target_fps));
+                                changed |= ui
+                                    .add(
+                                        egui::Slider::new(&mut controls.target_fps, 10..=1000)
+                                            .show_value(false),
+                                    )
+                                    .changed();
+                            });
+                        }
+                        ui.label(format!("Movimento: {:.0}%", controls.flow_scale * 100.));
+                        changed |= ui
+                            .add(
+                                egui::Slider::new(&mut controls.flow_scale, 0.25..=1.)
+                                    .show_value(false),
+                            )
+                            .changed();
+                        changed |= ui
+                            .checkbox(&mut controls.performance, "Modelo leve")
+                            .changed();
                     }
-                    ui.label(format!("Movimento: {:.0}%", controls.flow_scale * 100.));
-                    changed |= ui
-                        .add(
-                            egui::Slider::new(&mut controls.flow_scale, 0.25..=1.)
-                                .show_value(false),
-                        )
-                        .changed();
-                    changed |= ui
-                        .checkbox(&mut controls.performance, "Modelo leve")
-                        .changed();
+                    ui.separator();
+                    ui.small(crate::focus_fps::status());
+                    if mako.is_none() && error.is_empty() {
+                        ui.label("Configure as ferramentas nos detalhes do jogo.");
+                    }
                     if !error.is_empty() {
                         ui.colored_label(egui::Color32::from_rgb(255, 180, 120), error);
                     }
@@ -77,6 +97,62 @@ mod tests {
         epaint::{ClippedShape, Shape},
         Pos2, Rect, Vec2,
     };
+
+    #[test]
+    fn one_panel_composes_optional_mako_with_monitoring_status() {
+        fn texts(shape: &Shape, output: &mut Vec<String>) {
+            match shape {
+                Shape::Text(text) => output.push(text.galley.text().into()),
+                Shape::Vec(shapes) => shapes.iter().for_each(|s| texts(s, output)),
+                _ => (),
+            }
+        }
+        for mako in [false, true] {
+            let context = egui::Context::default();
+            let mut controls = Controls {
+                multiplier: 2,
+                flow_scale: 1.,
+                performance: false,
+                adaptive: false,
+                target_fps: 60,
+                paused: false,
+            };
+            let render = || egui::RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1280., 720.))),
+                ..Default::default()
+            };
+            // egui measures a new area before its first visible frame.
+            let _ = context.run(render(), |ctx| {
+                show_tools(
+                    ctx,
+                    Vec2::new(1280., 720.),
+                    mako.then_some(&mut controls),
+                    "",
+                );
+            });
+            let frame = context.run(render(), |ctx| {
+                show_tools(
+                    ctx,
+                    Vec2::new(1280., 720.),
+                    mako.then_some(&mut controls),
+                    "",
+                );
+            });
+            let mut labels = Vec::new();
+            for shape in &frame.shapes {
+                texts(&shape.shape, &mut labels);
+            }
+            assert_eq!(
+                labels.iter().filter(|s| s.as_str() == "PeliGames").count(),
+                1
+            );
+            assert_eq!(
+                labels.iter().any(|s| s == "MAKO · geração de quadros"),
+                mako
+            );
+            assert!(labels.contains(&crate::focus_fps::status()));
+        }
+    }
 
     struct Harness {
         ctx: egui::Context,
@@ -182,7 +258,7 @@ mod tests {
             h.bounds
         );
         let output = h.frame();
-        let header = text_position(&output.shapes, "PeliGames · MAKO");
+        let header = text_position(&output.shapes, "PeliGames");
         h.move_to(header);
         h.input.button(272, true);
         h.frame();

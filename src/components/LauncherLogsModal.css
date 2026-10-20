@@ -1,0 +1,7 @@
+.launcher-logs-overlay .launcher-log-dialog {height:min(720px,calc(100dvh - 48px));max-height:calc(100dvh - 48px);display:flex;flex-direction:column;}
+.launcher-logs-overlay .launcher-log-dialog>.modal-scroll-body {display:flex;flex-direction:column;gap:10px;flex:1;min-height:0;overflow:hidden;}
+.launcher-log-dialog .launcher-log-toolbar {margin:0;flex-shrink:0;flex-wrap:wrap;}
+.launcher-log-dialog .launcher-log-toolbar code {min-width:160px;}
+.launcher-log-dialog .launcher-log-description {margin:0;flex-shrink:0;font-size:.78rem;color:var(--text-secondary);line-height:1.45;}
+.launcher-log-dialog .game-log-output {flex:1;min-height:0;height:auto;max-height:none;margin:0;overflow-y:scroll;overflow-x:auto;scrollbar-gutter:stable;overscroll-behavior:contain;}
+.launcher-log-dialog .launcher-log-summary {flex-shrink:0;font-size:.73rem;color:var(--text-secondary);}

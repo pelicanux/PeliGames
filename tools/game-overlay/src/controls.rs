@@ -70,7 +70,7 @@ fn atomically(path: &Path, bytes: &[u8]) -> Result<(), String> {
 fn initial(path: &Path) -> Result<Controls, String> {
     let value: serde_json::Value =
         serde_json::from_slice(&read(&path.with_extension("json"))?).map_err(|e| e.to_string())?;
-    if value["backend"] != "mako" || value["enabled"] != true || value["overlay_enabled"] != true {
+    if value["backend"] != "mako" || value["enabled"] != true || (value["overlay_enabled"] != true && std::env::var("PELI_OVERLAY_GENERAL").ok().as_deref()!=Some("1")) {
         return Err("Overlay não habilitado neste perfil MAKO.".into());
     }
     let controls = Controls {
@@ -181,13 +181,6 @@ impl Controller {
         let current = Arc::new(Mutex::new((initial(&path)?, String::new())));
         let (sender, receiver) = mpsc::sync_channel::<Controls>(16);
         let shared = current.clone();
-        std::thread::Builder::new()
-            .name("peli-overlay-watchdog".into())
-            .spawn(move || loop {
-                crate::watchdog();
-                std::thread::sleep(Duration::from_millis(10));
-            })
-            .map_err(|e| e.to_string())?;
         std::thread::Builder::new()
             .name("peli-overlay-controls".into())
             .spawn(move || {

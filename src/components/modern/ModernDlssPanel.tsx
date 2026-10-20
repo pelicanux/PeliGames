@@ -89,7 +89,7 @@ export function ModernDlssPanel(props: Props) {
     </section>
     <section className="modern-dlss-card" aria-label={pt ? "Opções do DLSSNR-AMD" : "DLSSNR-AMD options"}>
       <h3>{pt ? "Opções" : "Options"}</h3>
-      <p className="modern-dlss-description">{pt ? "As escolhas abaixo valem na próxima instalação ou reparo." : "The choices below apply when installing or repairing."}</p>
+      <p className="modern-dlss-description">{pt ? "Em jogos com o mod instalado, Começar ligado e RenoDX são salvos automaticamente para a próxima execução. As demais opções exigem instalar ou reparar." : "For installed mods, Start enabled and RenoDX save automatically for the next launch. Other options require installation or repair."}</p>
       {props.route !== "optiscaler" && props.route !== "remove" && props.lumeniteAvailable && <div className="modern-dlss-setting">
         <span>{pt ? "Vetores de movimento" : "Motion vectors"}</span>
         <div className="modern-dlss-choice"><div className="modern-dlss-segments" role="group" aria-label={pt ? "Fonte dos vetores de movimento" : "Motion vector source"}>
@@ -101,7 +101,7 @@ export function ModernDlssPanel(props: Props) {
         </div><small className="modern-dlss-recommendation">{props.lumenite ? (pt ? "Download adicional ao instalar / reparar." : "Additional download when installing / repairing.") : (pt ? "Incluído no backend." : "Bundled with the backend.")}</small></div>
       </div>}
       {option(pt ? "Começar ligado" : "Start enabled", pt ? "A caixa do NR já vem marcada ao abrir o jogo." : "The NR checkbox starts checked when launching the game.", props.startup, props.onStartup, props.startupDisabled)}
-      {option(t("routeSelector", "renodx"), t("routeSelector", "renodxHint"), props.renodx, props.onRenodx, props.busy, pt ? "Estilo de imagem do add-on DLSS 5." : "Image style from the DLSS 5 add-on.")}
+      {option(t("routeSelector", "renodx"), t("routeSelector", "renodxHint"), props.renodx, props.onRenodx, props.busy || props.startupDisabled, pt ? "Estilo de imagem do add-on DLSS 5." : "Image style from the DLSS 5 add-on.")}
       {!props.unifiedNetworks && option(t("routeSelector", "int4"), t("routeSelector", "int4Hint"), props.int4, props.onInt4, props.busy || props.model === "small", pt ? "Disponível apenas com o modelo antigo (310.8.0)." : "Available only with the old model (310.8.0).")}
       {props.shortcut && <div className="modern-dlss-shortcut"><span>{props.route === "optiscaler" ? (pt ? "Menu do OptiScaler" : "OptiScaler menu") : (pt ? "Menu do ReShade" : "ReShade menu")}</span>{props.shortcut}</div>}
       {props.route === "optiscaler" && <p className="modern-dlss-key-hint">{pt ? "End abre o NR Control. Com RenoDX ativado, os ajustes de NR ficam nesse painel; o menu do OptiScaler continua para upscaling e geração de quadros." : "End opens NR Control. With RenoDX enabled, NR settings move to that panel; OptiScaler keeps its upscaling and frame generation menu."}</p>}

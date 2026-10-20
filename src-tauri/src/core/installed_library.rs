@@ -708,9 +708,14 @@ pub fn register(mut record: InstallationRecord) -> Result<usize, String> {
     if manifest.is_file() {
         let previous: InstallationRecord = serde_json::from_slice(&fs::read(&manifest).map_err(|e| e.to_string())?)
             .map_err(|e| e.to_string())?;
-        record.entries = previous.entries;
-        record.overrides = previous.overrides;
-        record.selected_executable = previous.selected_executable;
+        if previous.entries.is_empty() {
+            // A new installation explicitly reusing a removed prefix must not inherit hidden old cards.
+            record.entries.clear();record.overrides.clear();record.selected_executable=None;
+        } else {
+            record.entries = previous.entries;
+            record.overrides = previous.overrides;
+            record.selected_executable = previous.selected_executable;
+        }
     }
     scan(&mut record)?;
     record.known_shortcuts = Some(shortcut_targets(Path::new(&record.prefix)).into_keys().collect());
@@ -860,6 +865,14 @@ fn update_at(index: &Path, settings: EntrySettings) -> Result<InstalledEntry, St
             .iter_mut()
             .find(|entry| entry.path == settings.path)
         {
+            ensure_no_copy_dependents(&destinations(index)?,Path::new(&entry.prefix))?;
+            if Path::new(&directory).join("copy.json").is_file() {
+                let prefix=Path::new(&entry.prefix).canonicalize().map_err(|e|e.to_string())?;
+                if !executable.starts_with(&prefix) || settings.prefix.as_ref().is_some_and(|value|!same_location(Path::new(value),&prefix)) {
+                    return Err("Uma cópia deve manter seu próprio prefixo e um executável dentro dele. Use a instalação original para configurar outra origem.".into());
+                }
+            }
+
             if let Some(prefix) = settings.prefix.as_deref() {
                 if prefix != entry.prefix {
                     entry.prefix = validate_selected_prefix(prefix)?
@@ -1071,6 +1084,164 @@ fn add_at(
     write_json(index, &roots)?;
     Ok(entry)
 }
+/// Locate the selected entry and its owning installation, never a caller-supplied prefix.
+pub fn copy_source(path: &str) -> Result<(InstalledEntry, PathBuf), String> {
+    let _guard = LIBRARY_LOCK.lock().map_err(|e|e.to_string())?;
+    let index=library_file()?;let _process_guard=process_lock(&index)?;
+    let (_,record)=record_of(&index,path)?.ok_or("Jogo não registrado no PeliGames.")?;
+    let entry=record.entries.into_iter().find(|entry|entry.path==path).ok_or("Jogo não encontrado.")?;
+    Ok((entry,PathBuf::from(record.directory)))
+}
+/// Register exactly one copied executable; rescans must not add prefix helpers.
+pub fn register_copy(entry: InstalledEntry, directory: &Path) -> Result<InstalledEntry,String> {
+    register_copy_at(&library_file()?,entry,directory)
+}
+fn register_copy_at(index:&Path,entry:InstalledEntry,directory:&Path)->Result<InstalledEntry,String>{
+    let _guard=LIBRARY_LOCK.lock().map_err(|e|e.to_string())?;
+    let _process_guard=process_lock(index)?;
+    let directory=directory.canonicalize().map_err(|e|e.to_string())?;
+    let prefix=Path::new(&entry.prefix).canonicalize().map_err(|e|e.to_string())?;
+    let executable=Path::new(&entry.executable).canonicalize().map_err(|e|e.to_string())?;
+    if !prefix.starts_with(&directory)||!executable.starts_with(&prefix)||directory.join("installation.json").exists(){return Err("Destino da cópia inválido ou já registrado.".into());}
+    let record=InstallationRecord {
+        name:entry.name.clone(),directory:directory.to_string_lossy().into_owned(),prefix:entry.prefix.clone(),proton:entry.proton.clone(),installer:String::new(),cover_url:entry.cover_url.clone(),
+        entries:vec![entry.clone()],selected_executable:Some(entry.executable.clone()),
+        overrides:vec![EntryOverride{cover_url:entry.cover_url.clone(),advanced:Some(entry.advanced.clone()),prefix:None,source:entry.path.clone(),name:entry.name.clone(),proton:entry.proton.clone(),executable:entry.executable.clone()}],
+        baseline:vec![],known_shortcuts:Some(vec![]),launcher_games:vec![],install_shortcuts:Some(vec![]),profile_kind:Default::default(),
+    };
+    write_json(&directory.join("installation.json"),&record)?;
+    let mut roots=destinations(&index)?;roots.insert(record.directory.clone());write_json(&index,&roots)?;
+    Ok(entry)
+}
+#[derive(Clone, Serialize)]
+pub struct CopyReference {
+    pub kind: Option<String>,
+    pub base: Option<String>,
+    pub reserved: bool,
+    pub dependents: Vec<String>,
+}
+fn same_location(a: &Path, b: &Path) -> bool {
+    a == b || a.canonicalize().ok().zip(b.canonicalize().ok()).is_some_and(|(a,b)|a==b)
+}
+fn copy_dependents(roots: &BTreeSet<String>, prefix: &Path) -> Result<Vec<String>,String> {
+    let mut result=Vec::new();
+    for directory in roots {
+        let root=Path::new(directory);
+        let metadata=root.join("copy.json");
+        if !metadata.is_file(){continue;}
+        let copy:serde_json::Value=serde_json::from_slice(&fs::read(&metadata).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;
+        if copy["kind"] != "overlay" {continue;}
+        let source=copy["source"].as_str().ok_or("Referência de cópia inválida.")?;
+        // Keep tracking an overlay even if its library entry was removed: its files still depend on the base.
+        if same_location(Path::new(source),prefix) {
+            let record:InstallationRecord=serde_json::from_slice(&fs::read(root.join("installation.json")).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;
+            result.push(record.name);
+        }
+    }
+    Ok(result)
+}
+fn ensure_no_copy_dependents(roots:&BTreeSet<String>,prefix:&Path)->Result<(),String>{
+    let copies=copy_dependents(roots,prefix)?;
+    if copies.is_empty(){Ok(())}else{Err(format!("Prefixo reservado como base de {} cópia(s) overlay: {}. Use as cópias; remova seus arquivos para liberar a base.",copies.len(),copies.join(", ")))}
+}
+/// Reject launcher writes to a base while any managed overlay still references it.
+pub fn ensure_prefix_writable(prefix:&Path)->Result<(),String>{
+    let _guard=LIBRARY_LOCK.lock().map_err(|e|e.to_string())?;
+    let index=library_file()?;let _process=process_lock(&index)?;
+    ensure_no_copy_dependents(&destinations(&index)?,prefix)
+}
+pub fn ensure_path_writable(path:&Path)->Result<(),String>{
+    let path=path.canonicalize().map_err(|e|e.to_string())?;
+    let _guard=LIBRARY_LOCK.lock().map_err(|e|e.to_string())?;
+    let index=library_file()?;let _process=process_lock(&index)?;
+    for root in destinations(&index)? {
+        let metadata=Path::new(&root).join("copy.json");
+        if !metadata.is_file(){continue;}
+        let copy:serde_json::Value=serde_json::from_slice(&fs::read(metadata).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;
+        if copy["kind"]!="overlay"{continue;}
+        let source=Path::new(copy["source"].as_str().ok_or("Referência overlay inválida.")?);
+        let base=source.canonicalize().unwrap_or_else(|_|source.to_path_buf());
+        if path.starts_with(&base){return Err("Esta pasta pertence a uma base reservada. Faça as alterações em uma cópia overlay.".into());}
+    }
+    Ok(())
+}
+pub fn copy_reference(path:&str)->Result<CopyReference,String>{
+    let _guard=LIBRARY_LOCK.lock().map_err(|e|e.to_string())?;
+    let index=library_file()?;let _process=process_lock(&index)?;
+    let (_,record)=record_of(&index,path)?.ok_or("Jogo não registrado.")?;
+    let entry=record.entries.iter().find(|entry|entry.path==path).ok_or("Jogo não encontrado.")?;
+    let dependents=copy_dependents(&destinations(&index)?,Path::new(&entry.prefix))?;
+    let metadata=Path::new(&record.directory).join("copy.json");
+    let copy:serde_json::Value=if metadata.exists(){serde_json::from_slice(&fs::read(metadata).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?}else{serde_json::Value::Null};
+    let kind=copy["kind"].as_str().map(str::to_owned);
+    let base=if kind.as_deref()==Some("overlay"){copy["source"].as_str().map(str::to_owned)}else{None};
+    Ok(CopyReference{kind,base,reserved:!dependents.is_empty(),dependents})
+}
+#[derive(Clone, Serialize)]
+pub struct RemovedDestination {
+    pub name:String,
+    pub directory:String,
+    pub prefix:String,
+    pub token:String,
+    pub reset_reason:Option<String>,
+}
+fn removed_destination_at(index:&Path,directory:&Path)->Result<Option<RemovedDestination>,String>{
+    if !directory.exists() || !directory.join("installation.json").is_file(){return Ok(None);}
+    let directory=directory.canonicalize().map_err(|e|e.to_string())?;
+    let bytes=fs::read(directory.join("installation.json")).map_err(|e|e.to_string())?;
+    let record:InstallationRecord=serde_json::from_slice(&bytes).map_err(|e|format!("Registro de instalação inválido: {e}"))?;
+    if Path::new(&record.directory)!=directory || !record.entries.is_empty(){return Ok(None);}
+    let prefix=Path::new(&record.prefix);
+    if !prefix.starts_with(&directory)||!prefix.is_dir(){return Ok(None);}
+    let roots=destinations(index)?;
+    let mut reset_reason=if !roots.contains(directory.to_str().ok_or("Destino inválido.")?){Some("Esta pasta não está no registro de instalações gerenciadas. Reaproveite-a ou remova os arquivos manualmente após conferir seu conteúdo.".into())}else{None};
+    if let Err(error)=ensure_no_copy_dependents(&roots,prefix){reset_reason=Some(error);}
+    for root in roots.iter().filter(|root|Path::new(root.as_str())!=directory){
+        let manifest=Path::new(root).join("installation.json");if !manifest.is_file(){continue;}
+        let other:InstallationRecord=serde_json::from_slice(&fs::read(manifest).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;
+        if other.entries.iter().any(|entry|same_location(Path::new(&entry.prefix),prefix)||entry.profile.as_ref().is_some_and(|profile|same_location(Path::new(&profile.base),prefix))){
+            reset_reason=Some("Outro jogo registrado utiliza este prefixo. Remova essas entradas antes de recriá-lo.".into());
+        }
+    }
+    if prefix.canonicalize().is_ok_and(|path|!path.starts_with(&directory))||fs::symlink_metadata(prefix).is_ok_and(|m|m.file_type().is_symlink()){
+        reset_reason=Some("O prefixo foi redirecionado para fora da instalação. Confira as pastas antes de recriá-lo.".into());
+    }
+    if directory.join("copy.json").is_file(){reset_reason=Some("Esta pasta pertence a uma cópia gerenciada. Desinstale a cópia antes de criar um prefixo novo neste local.".into());}
+    use std::hash::{Hash,Hasher};
+    let mut hash=std::collections::hash_map::DefaultHasher::new();bytes.hash(&mut hash);
+    #[cfg(unix)] {use std::os::unix::fs::MetadataExt;let info=fs::metadata(&directory).map_err(|e|e.to_string())?;info.dev().hash(&mut hash);info.ino().hash(&mut hash);let info=fs::metadata(prefix).map_err(|e|e.to_string())?;info.dev().hash(&mut hash);info.ino().hash(&mut hash);}
+    Ok(Some(RemovedDestination{name:record.name,directory:directory.to_string_lossy().into_owned(),prefix:record.prefix,token:format!("{:x}",hash.finish()),reset_reason}))
+}
+pub fn removed_destination(directory:&Path)->Result<Option<RemovedDestination>,String>{
+    let _guard=LIBRARY_LOCK.lock().map_err(|e|e.to_string())?;
+    let index=library_file()?;let _process=process_lock(&index)?;
+    removed_destination_at(&index,directory)
+}
+pub fn reset_removed_destination(directory:&Path,token:&str,executable:&Path)->Result<(),String>{
+    reset_removed_destination_at(&library_file()?,directory,token,executable)
+}
+fn reset_removed_destination_at(index:&Path,directory:&Path,token:&str,executable:&Path)->Result<(),String>{
+    let _guard=LIBRARY_LOCK.lock().map_err(|e|e.to_string())?;
+    let _process=process_lock(index)?;
+    let removed=removed_destination_at(index,directory)?.ok_or("Este destino não é mais uma instalação removida da biblioteca.")?;
+    if removed.token!=token{return Err("A instalação mudou. Confira novamente o aviso antes de apagar.".into());}
+    if let Some(reason)=removed.reset_reason{return Err(reason);}
+    let directory=PathBuf::from(&removed.directory);
+    let executable=executable.canonicalize().map_err(|_|"O executável selecionado não está disponível.")?;
+    if executable.starts_with(&directory){return Err("O executável selecionado está dentro da pasta que seria apagada. Escolha um executável ou instalador externo antes de recriar o prefixo.".into());}
+    let prefix=Path::new(&removed.prefix);
+    if super::wine_tools::busy()||super::game_execution::prefix_in_use(prefix){return Err("Feche o jogo e as ferramentas Wine antes de recriar o prefixo.".into());}
+    let _lease=super::game_installation::lock_prefix(prefix)?;
+    // Never recursively remove a mount or a directory that contains mounted profiles.
+    let mounted=fs::read_to_string("/proc/self/mountinfo").map_err(|e|e.to_string())?.lines().filter_map(|line|line.split_whitespace().nth(4)).any(|path|{
+        let path=PathBuf::from(path.replace("\\040"," ").replace("\\011","\t").replace("\\012","\n").replace("\\134","\\"));path.starts_with(&directory)
+    });
+    if mounted{return Err("Desmonte os perfis e outras montagens desta pasta antes de recriar o prefixo.".into());}
+    fs::remove_dir_all(&directory).map_err(|e|format!("Não foi possível apagar o prefixo: {e}"))?;
+    fs::create_dir(&directory).map_err(|e|format!("O prefixo foi removido, mas não foi possível recriar a pasta: {e}"))?;
+    crate::commands::installation_paths::track_created_directory(&directory)?;
+    Ok(())
+}
 /// Removes only the library registration. Game files, prefix, saves and profiles stay.
 pub fn remove_entry(path: &str) -> Result<(), String> { remove_entry_at(&library_file()?, path) }
 fn remove_entry_at(index: &Path, path: &str) -> Result<(), String> {
@@ -1081,6 +1252,10 @@ fn remove_entry_at(index: &Path, path: &str) -> Result<(), String> {
         if !manifest.is_file() { continue; }
         let mut record: InstallationRecord = serde_json::from_slice(&fs::read(&manifest).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
         if !record.entries.iter().any(|entry| entry.path == path) { continue; }
+        if let Some(entry)=record.entries.iter().find(|entry|entry.path==path){ensure_no_copy_dependents(&destinations(index)?,Path::new(&entry.prefix))?;}
+        if Path::new(&directory).join("copy.json").is_file() && record.entries.iter().any(|entry|entry.path==path && entry.profile.as_ref().is_some_and(|p|p.kind==super::game_profiles::ProfileKind::Overlay)) {
+            return Err("Use Desinstalar para remover esta cópia overlay e liberar sua referência com segurança.".into());
+        }
         record.entries.retain(|entry| entry.path != path);
         record.overrides.retain(|item| item.source != path);
         if !path.starts_with("peligames:") {
@@ -1141,6 +1316,12 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
                 .map(|entry| entry.prefix.as_str())
                 .unwrap_or(&record.prefix),
         );
+        ensure_no_copy_dependents(&roots,&prefix)?;
+        if !options.remove_prefix && root.join("copy.json").is_file() && record.entries.iter().any(|entry|entry.path==path && entry.profile.as_ref().is_some_and(|p|p.kind==super::game_profiles::ProfileKind::Overlay)) {
+            return Err("Para desinstalar um overlay, mantenha marcada a remoção do prefixo. A base e as outras cópias serão preservadas.".into());
+        }
+
+
         let mut affected = Vec::new();
         let mut shortcut_entries = BTreeSet::new();
         let mut managed = false;
@@ -1212,6 +1393,10 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
                 if super::game_execution::prefix_in_use(&prefix) {
                     return Err("Encerre os programas deste prefixo antes de desinstalar.".into());
                 }
+                // Lock outside a mounted overlay so the lock itself does not prevent unmounting.
+                let lock_root=profiles.iter().find(|profile|profile.prefix()==prefix)
+                    .map(|profile|Path::new(&profile.root)).unwrap_or(&prefix);
+                let _prefix_lease = super::game_installation::lock_prefix(lock_root)?;
                 for profile in &profiles {
                     super::game_profiles::remove(profile).map_err(|error| format!("Não foi possível remover o perfil de um jogo do launcher: {error}"))?;
                 }
@@ -1219,7 +1404,10 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
                 if !options.remove_settings && prefix == canonical {
                     super::installation_layout::clear_prefix_keeping_settings(&prefix)
                 } else {
-                    fs::remove_dir_all(&prefix)
+                    match fs::remove_dir_all(&prefix) {
+                        Err(error) if error.kind()==std::io::ErrorKind::NotFound => Ok(()),
+                        result=>result,
+                    }
                 }
                 .map_err(|e| format!("Não foi possível remover o prefixo: {e}"))?;
             }
@@ -1234,6 +1422,7 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
             if remaining.entries.is_empty() {
                 // Kept settings stay in the folder; the game only leaves the library.
                 if options.remove_settings {
+                    let _=fs::remove_file(Path::new(&destination).join("copy.json"));
                     // In the current layout the manifest may have gone with the prefix folder.
                     match fs::remove_file(&manifest) {
                         Err(error) if error.kind() != std::io::ErrorKind::NotFound => return Err(error.to_string()),
@@ -1254,6 +1443,69 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn removed_destination_can_be_reused_or_explicitly_recreated_without_touching_other_folders(){
+        let root=std::env::temp_dir().join(format!("peligames-reuse-test-{}",uuid::Uuid::new_v4()));
+        let directory=root.join("Game");let exe=directory.join("drive_c/game.exe");fs::create_dir_all(exe.parent().unwrap()).unwrap();fs::write(&exe,b"MZ").unwrap();
+        let index=root.join("library.json");let mut game=entry(&exe,None);game.prefix=directory.to_string_lossy().into_owned();game.path=format!("peligames:{}",uuid::Uuid::new_v4());
+        register_copy_at(&index,game.clone(),&directory).unwrap();
+        assert!(removed_destination_at(&index,&directory).unwrap().is_none());
+        remove_entry_at(&index,&game.path).unwrap();
+        let removed=removed_destination_at(&index,&directory).unwrap().unwrap();assert!(removed.reset_reason.is_none());assert!(exe.exists());
+        assert!(reset_removed_destination_at(&index,&directory,&removed.token,&exe).unwrap_err().contains("dentro"));assert!(exe.exists());
+        let installer=root.join("setup.exe");fs::write(&installer,b"MZ").unwrap();
+        let other=root.join("Other");fs::create_dir(&other).unwrap();
+        let mut dependent:InstallationRecord=serde_json::from_slice(&fs::read(directory.join("installation.json")).unwrap()).unwrap();
+        dependent.directory=other.to_string_lossy().into_owned();dependent.entries.push(game.clone());
+        write_json(&other.join("installation.json"),&dependent).unwrap();
+        let mut roots=destinations(&index).unwrap();roots.insert(other.to_string_lossy().into_owned());write_json(&index,&roots).unwrap();
+        assert!(removed_destination_at(&index,&directory).unwrap().unwrap().reset_reason.is_some());
+        assert!(reset_removed_destination_at(&index,&directory,&removed.token,&installer).is_err());assert!(exe.exists());
+        dependent.entries.clear();write_json(&other.join("installation.json"),&dependent).unwrap();
+        write_json(&other.join("copy.json"),&serde_json::json!({"kind":"overlay","source":directory})).unwrap();
+        assert!(removed_destination_at(&index,&directory).unwrap().unwrap().reset_reason.is_some());
+        assert!(reset_removed_destination_at(&index,&directory,&removed.token,&installer).is_err());assert!(exe.exists());
+        roots.remove(other.to_str().unwrap());write_json(&index,&roots).unwrap();
+        assert!(reset_removed_destination_at(&index,&directory,"old-token",&installer).is_err());assert!(exe.exists());
+        reset_removed_destination_at(&index,&directory,&removed.token,&installer).unwrap();
+        assert!(directory.is_dir());assert!(!exe.exists());assert!(installer.exists());assert!(fs::read_dir(&directory).unwrap().next().is_none());
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn overlay_reservation_releases_only_after_last_copy_and_never_for_reflinks() {
+        let root=std::env::temp_dir().join(format!("peligames-base-reservation-{}",uuid::Uuid::new_v4()));
+        let base=root.join("Original");fs::create_dir_all(&base).unwrap();
+        let mut roots=BTreeSet::new();
+        for number in 1..=3 {
+            let copy=root.join(format!("Copy {number}"));fs::create_dir_all(copy.join("prefix/drive_c")).unwrap();
+            let exe=copy.join("prefix/drive_c/game.exe");fs::write(&exe,b"MZ").unwrap();
+            let mut record=InstallationRecord{name:format!("Copy {number}"),directory:copy.to_string_lossy().into_owned(),prefix:copy.join("prefix").to_string_lossy().into_owned(),proton:String::new(),installer:String::new(),cover_url:None,entries:vec![],selected_executable:None,overrides:vec![],baseline:vec![],known_shortcuts:None,launcher_games:vec![],install_shortcuts:None,profile_kind:Default::default()};
+            record.entries.push(entry(&exe,None));
+            write_json(&copy.join("installation.json"),&record).unwrap();
+            write_json(&copy.join("copy.json"),&serde_json::json!({"version":1,"kind":"overlay","source":base})).unwrap();
+            roots.insert(copy.to_string_lossy().into_owned());
+        }
+        assert_eq!(copy_dependents(&roots,&base).unwrap().len(),3);
+        assert!(ensure_no_copy_dependents(&roots,&base).is_err());
+        roots.remove(root.join("Copy 1").to_str().unwrap());assert_eq!(copy_dependents(&roots,&base).unwrap().len(),2);
+        roots.remove(root.join("Copy 2").to_str().unwrap());assert!(ensure_no_copy_dependents(&roots,&base).is_err());
+        write_json(&root.join("Copy 3/copy.json"),&serde_json::json!({"kind":"reflink","source":base})).unwrap();
+        assert!(ensure_no_copy_dependents(&roots,&base).is_ok());
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn copied_installation_keeps_one_identity_after_a_rescan() {
+        let base=std::env::temp_dir().join(format!("peligames-copy-registry-{}",uuid::Uuid::new_v4()));
+        let destination=base.join("Real MU - cópia");let prefix=destination.join("prefix");
+        let executable=prefix.join("drive_c/RealMU/Launcher.exe");
+        fs::create_dir_all(executable.parent().unwrap()).unwrap();fs::write(&executable,b"MZ").unwrap();
+        fs::write(prefix.join("drive_c/RealMU/DW20.exe"),b"MZ").unwrap();
+        let mut copy=entry(&executable,None);copy.path=format!("peligames:{}",uuid::Uuid::new_v4());copy.prefix=prefix.to_string_lossy().into_owned();copy.name="Real MU - cópia".into();
+        let index=base.join("installed-destinations.json");
+        let registered=register_copy_at(&index,copy,&destination).unwrap();
+        for rescan in [false,true,true] {let entries=list_at(&index,rescan).unwrap();assert_eq!(entries.len(),1);assert_eq!(entries[0].path,registered.path);assert_eq!(entries[0].prefix,registered.prefix);}
+        fs::remove_dir_all(base).unwrap();
+    }
     #[test]
     fn reset_inventory_keeps_offline_destinations_and_rejects_reset_targets() {
         let root = std::env::temp_dir().join(format!("peligames-reset-games-{}",uuid::Uuid::new_v4()));
@@ -1652,3 +1904,6 @@ mod tests {
         fs::remove_dir_all(base).unwrap();
     }
 }
+
+#[path="library_recovery.rs"]
+pub mod recovery;

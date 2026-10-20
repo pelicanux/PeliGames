@@ -523,7 +523,7 @@ fn fatal_session_logs(log: &str, since: SystemTime) -> Option<String> {
             continue;
         }
         let name = file.file_name().to_string_lossy().into_owned();
-        if !name.ends_with(".log") || name.starts_with("installer-") {
+        if !name.ends_with(".log") || (name.starts_with("installer-") || name=="installer.log") {
             continue;
         }
         if !file

@@ -24,6 +24,7 @@ pub async fn install_mod(
 ) -> Result<String, String> {
     crate::core::logger::log_launcher(&app, "INFO", &format!("Operação no jogo: rota={route}, arquitetura={bitness}, GPU={gpu_arch}, diretório={game_dir}"));
     let result = async {
+    crate::core::installed_library::ensure_path_writable(std::path::Path::new(&game_dir))?;
     backend_arch(&gpu_arch, &bitness)?;
     if bin_path.as_deref().and_then(|path| std::path::Path::new(path).parent()) == Some(crate::core::paths::mod_root()?.as_path()) {
         bin_path = check_cached_bin(app.clone(), bitness.clone(), gpu_arch.clone())?;

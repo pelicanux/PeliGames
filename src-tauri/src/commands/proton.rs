@@ -20,6 +20,8 @@ fn scan_roots(roots: impl IntoIterator<Item = PathBuf>) -> Vec<InstalledProton> 
         for entry in entries.flatten() {
             let path = entry.path();
             if entry.file_name().to_string_lossy().starts_with('.') { continue; }
+            // Steam aliases delegate to an existing runner; they are not another Proton.
+            if path.join(".peligames-proton-path").symlink_metadata().is_ok() { continue; }
             if !path.is_dir() || !path.join("proton").is_file() {
                 continue;
             }
@@ -171,4 +173,21 @@ pub async fn uninstall_proton(
     let root = proton_manager::runners_dir()?;
     tauri::async_runtime::spawn_blocking(move || proton_manager::uninstall_at(family, &root, &version))
         .await.map_err(|e| e.to_string())?
+}
+
+#[cfg(test)]
+mod discovery_tests {
+    use super::*;
+    #[test]
+    fn steam_aliases_are_hidden_without_removing_or_renaming_real_runners(){
+        let root=std::env::temp_dir().join(format!("peligames-proton-discovery-{}",uuid::Uuid::new_v4()));
+        let real=root.join("GE-Proton-Test");let alias=root.join("peligames-1234567890abcdef");
+        std::fs::create_dir_all(&real).unwrap();std::fs::create_dir(&alias).unwrap();
+        std::fs::write(real.join("proton"),"original").unwrap();
+        std::os::unix::fs::symlink(real.join("proton"),alias.join("proton")).unwrap();
+        std::fs::write(alias.join(".peligames-proton-path"),real.to_str().unwrap()).unwrap();
+        let found=scan_roots([root.clone()]);assert_eq!(found.len(),1);assert_eq!(found[0].name,"GE-Proton-Test");assert_eq!(found[0].path,real.canonicalize().unwrap().to_string_lossy());
+        assert!(alias.join("proton").is_file());assert_eq!(std::fs::read_to_string(real.join("proton")).unwrap(),"original");
+        std::fs::remove_dir_all(root).unwrap();
+    }
 }

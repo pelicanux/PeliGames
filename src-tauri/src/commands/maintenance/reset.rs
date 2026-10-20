@@ -444,14 +444,8 @@ fn spawn_helper(app: &tauri::AppHandle, mode: &str) -> Result<(), String> {
         .arg(&binary)
         .current_dir("/")
         .stdin(Stdio::null());
-    let log = fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(std::env::temp_dir().join(format!("peligames-reset-{}.log", uuid::Uuid::new_v4())))
-        .map_err(|e| e.to_string())?;
-    command
-        .stdout(Stdio::from(log.try_clone().map_err(|e| e.to_string())?))
-        .stderr(Stdio::from(log));
+    let log = std::env::temp_dir().join("peligames-reset.log");
+    crate::core::bounded_logs::capture(&mut command,&log)?;
     command.spawn().map_err(|e| e.to_string())?;
     app.exit(0);
     Ok(())

@@ -1409,6 +1409,7 @@ pub(super) fn save_advanced(game_id: &str, settings: crate::core::advanced_setti
     let mut data = load()?;
     let game = data.games.iter_mut().find(|g|g.id==game_id).ok_or("Jogo não encontrado.")?;
     super::nexus_profile::idle(game)?;
+    if game.game["flatpak"] == true && settings.overlay_enabled == Some(true) {return Err("O overlay interno ainda não está disponível no Flatpak.".into());}
     // DLL priorities now belong to the dedicated editor. Clearing them must also
     // remove overrides saved by the previous launch-options editor.
     if settings.options.get("dll_overrides") != Some(&true) {
@@ -1418,7 +1419,9 @@ pub(super) fn save_advanced(game_id: &str, settings: crate::core::advanced_setti
             }
         }
     }
-    let path = game.game["path"].as_str().or(game.game["directory"].as_str()).ok_or("Instalação indisponível.")?;
+    let path = game.game["directory"].as_str().filter(|p| std::path::Path::new(p).is_absolute())
+        .or_else(|| game.game["path"].as_str().filter(|p| std::path::Path::new(p).is_absolute()))
+        .ok_or("Instalação indisponível.")?;
     let name = game.game["name"].as_str().unwrap_or("Jogo");
     super::launch_profiles::refresh(std::path::Path::new(path), name, &settings)?;
     game.advanced = settings;
@@ -1431,4 +1434,33 @@ pub(crate) fn maintenance_entry(game_id: &str) -> Result<(String, String, String
     let game = diagnostic_game(game_id)?;
     Ok((game.game.get("name").and_then(|v|v.as_str()).unwrap_or("Jogo").into(), game.compat_data, game.proton,
         game.game.get("path").and_then(|v|v.as_str()).unwrap_or_default().into()))
+}
+
+/// Restore tracked game originals transactionally, then discard owned downloads.
+/// User backups and saved user profiles are outside the cleanup directories.
+pub(super) fn reset_game_mods(game_id:&str)->Result<(),String>{
+    let _lock=STORAGE.lock().map_err(|e|e.to_string())?;
+    let mut data=load()?;
+    let game=data.games.iter_mut().find(|g|g.id==game_id).ok_or("Jogo não encontrado na biblioteca de mods.")?;
+    super::nexus_profile::idle(game)?;
+    let root=super::nexus_profile::directory(game)?;
+    let mut cleanup=Vec::new();
+    for name in ["archives","archive-cache"]{let path=root.join(name);match fs::symlink_metadata(&path){Ok(m)if !m.is_dir()||m.file_type().is_symlink()=>return Err("Pasta de mods inválida; arquivos preservados.".into()),Ok(_)=>cleanup.push(path),Err(e)if e.kind()==std::io::ErrorKind::NotFound=>{},Err(e)=>return Err(e.to_string())}}
+    let old=game.profile.clone();game.mods.clear();
+    let transaction=if super::nexus_deployment::supports(game){
+        game.profile=Some(super::nexus_deployment::build_after_removal(game)?);
+        match super::nexus_deployment::apply(game){Ok(tx)=>Some(tx),Err(error)=>{if let Some(revision)=&game.profile{super::nexus_profile::discard(game,revision);}return Err(error);}}
+    }else{None};
+    let empty=game.profile.take();game.detected_mods.clear();let updated=game.clone();
+    if let Err(error)=save(&data){if let Some(revision)=&empty{super::nexus_profile::discard(&updated,revision);}return Err(error);}
+    if let Some(tx)=transaction{tx.commit();}
+    // Only generated deployment profiles, not saved backup/user-profile folders.
+    for revision in old.into_iter().chain(empty){super::nexus_profile::discard(&updated,&revision);}
+    for path in cleanup{fs::remove_dir_all(&path).map_err(|e|format!("Mods removidos, mas não foi possível limpar {}: {e}",path.display()))?;}
+    Ok(())
+}
+pub(super) fn clear_game_launch_options(game_id:&str)->Result<(),String>{
+    let _lock=STORAGE.lock().map_err(|e|e.to_string())?;let mut data=load()?;
+    let game=data.games.iter_mut().find(|g|g.id==game_id).ok_or("Jogo não encontrado.")?;
+    super::nexus_profile::idle(game)?;game.launch_options=None;save(&data)
 }

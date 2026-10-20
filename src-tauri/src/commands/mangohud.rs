@@ -276,9 +276,11 @@ pub async fn mangohud_preview(
                 if guard.is_none(){
                     let hud=tool("mangohud").ok_or("MangoHUD não foi detectado. Instale-o antes de abrir a preview.")?;
                     let demo=tool("vkcube").ok_or("A preview precisa do vkcube. Instale o pacote de ferramentas Vulkan da sua distribuição (geralmente vulkan-tools).")?;
-                    let log=std::fs::File::create(mangohud_config::directory()?.join("preview.log")).map_err(|e|e.to_string())?;
-                    let mut child=Command::new(hud).arg(demo).env_remove("MANGOHUD_CONFIG").env_remove("MANGOHUD_PRESETSFILE")
-                        .env("MANGOHUD_CONFIGFILE",config).stdin(Stdio::null()).stderr(log.try_clone().map_err(|e|e.to_string())?).stdout(log).spawn().map_err(|_|"Não foi possível abrir a preview Vulkan.")?;
+                    let log=mangohud_config::directory()?.join("preview.log");
+                    let mut command=Command::new(hud);
+                    crate::core::bounded_logs::capture(&mut command,&log)?;
+                    let mut child=command.arg(demo).env_remove("MANGOHUD_CONFIG").env_remove("MANGOHUD_PRESETSFILE")
+                        .env("MANGOHUD_CONFIGFILE",config).stdin(Stdio::null()).spawn().map_err(|_|"Não foi possível abrir a preview Vulkan.")?;
                     std::thread::sleep(Duration::from_millis(300));
                     if let Some(status)=child.try_wait().map_err(|e|e.to_string())?{return Err(format!("A preview Vulkan encerrou ({status}). Verifique o driver Vulkan e o MangoHUD. O diagnóstico está em MangoHUD/preview.log."));}
                     *guard=Some(child);
@@ -350,4 +352,17 @@ pub async fn select_mangohud_benchmark(app: tauri::AppHandle) -> Result<Option<c
         let path=selected.into_path().map_err(|_| "Selecione um arquivo local.")?;
         crate::core::mangohud_benchmarks::selected(&path).map(Some)
     }).await.map_err(|e|e.to_string())?
+}
+
+#[tauri::command]
+pub fn list_mangohud_presets() -> Result<Vec<crate::core::mangohud_presets::Preset>,String> {
+    crate::core::mangohud_presets::list()
+}
+#[tauri::command]
+pub fn save_mangohud_preset(name:String,settings:Settings) -> Result<Vec<crate::core::mangohud_presets::Preset>,String> {
+    crate::core::mangohud_presets::save(name,settings)
+}
+#[tauri::command]
+pub fn remove_mangohud_preset(name:String) -> Result<Vec<crate::core::mangohud_presets::Preset>,String> {
+    crate::core::mangohud_presets::remove(name)
 }

@@ -71,7 +71,7 @@ fn runner(folder: &Path, name: &str) -> Option<Selection> {
     }
     Some(Selection {
         proton: Some(path.canonicalize().ok()?.to_string_lossy().into_owned()),
-        name: name.into(),
+        name: if original.is_some() {path.file_name().map(|value|value.to_string_lossy().into_owned()).unwrap_or_else(||name.into())}else{name.into()},
     })
 }
 pub(super) fn selected(home: &Path, flatpak: bool, app: &str) -> Option<Selection> {
@@ -288,4 +288,12 @@ mod tests {
         assert!(!Arc::ptr_eq(&first, &document(&path).unwrap()));
         fs::remove_dir_all(root).unwrap();
     }
+}
+
+#[cfg(test)]mod alias_label_tests{
+ use super::*;
+ #[test]fn internal_steam_tool_uses_the_original_proton_name(){
+  let root=std::env::temp_dir().join(format!("peligames-alias-label-{}",uuid::Uuid::new_v4()));let real=root.join("Proton-GE Latest");let alias=root.join("peligames-1234567890abcdef");fs::create_dir_all(&real).unwrap();fs::create_dir(&alias).unwrap();fs::write(real.join("proton"),"fixture").unwrap();fs::write(alias.join(".peligames-proton-path"),real.to_str().unwrap()).unwrap();
+  let selection=runner(&alias,"peligames-1234567890abcdef").unwrap();assert_eq!(selection.name,"Proton-GE Latest");assert_eq!(selection.proton.unwrap(),real.canonicalize().unwrap().to_string_lossy());assert_eq!(runner(&real,"Friendly Proton").unwrap().name,"Friendly Proton");fs::remove_dir_all(root).unwrap();
+ }
 }

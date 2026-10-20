@@ -1,0 +1,268 @@
+[
+  {
+    "id": "fps",
+    "label": "FPS e tempo de quadro",
+    "keys": [
+      "fps",
+      "frametime",
+      "fps_color_change",
+      "show_fps_limit",
+      "fps_value",
+      "fps_color"
+    ],
+    "hint": "O tempo em ms acompanha a linha de FPS.",
+    "hardware_order": 7
+  },
+  {
+    "id": "frame_count",
+    "label": "Contagem de quadros",
+    "keys": [
+      "frame_count"
+    ],
+    "hint": "",
+    "hardware_order": 8
+  },
+  {
+    "id": "fps_metrics",
+    "label": "Média e mínimos de FPS",
+    "keys": [
+      "fps_metrics"
+    ],
+    "hint": "",
+    "hardware_order": 9
+  },
+  {
+    "id": "frame_timing",
+    "label": "Gráfico de tempo de quadro",
+    "keys": [
+      "frame_timing",
+      "throttling_status_graph"
+    ],
+    "hint": "",
+    "hardware_order": 10
+  },
+  {
+    "id": "cpu",
+    "label": "Processador (CPU)",
+    "keys": [
+      "cpu_stats",
+      "cpu_text",
+      "cpu_temp",
+      "cpu_mhz",
+      "cpu_power"
+    ],
+    "hint": "Temperatura, frequência e consumo acompanham a CPU.",
+    "hardware_order": 0
+  },
+  {
+    "id": "core_load",
+    "label": "Núcleos do processador",
+    "keys": [
+      "core_load",
+      "core_type"
+    ],
+    "hint": "",
+    "hardware_order": 1
+  },
+  {
+    "id": "gpu",
+    "label": "Placa de vídeo (GPU)",
+    "keys": [
+      "gpu_text",
+      "gpu_stats",
+      "gpu_temp",
+      "gpu_junction_temp",
+      "gpu_mem_temp",
+      "gpu_core_clock",
+      "gpu_mem_clock",
+      "gpu_power",
+      "gpu_fan",
+      "gpu_voltage",
+      "gpu_power_limit",
+      "throttling_status",
+      "gpu_list",
+      "gpu_load_change",
+      "gpu_load_value",
+      "gpu_load_color"
+    ],
+    "hint": "Temperatura, frequência e consumo acompanham a GPU.",
+    "hardware_order": 2
+  },
+  {
+    "id": "vram",
+    "label": "Memória de vídeo (VRAM)",
+    "keys": [
+      "vram",
+      "proc_vram"
+    ],
+    "hint": "",
+    "hardware_order": 3
+  },
+  {
+    "id": "ram",
+    "label": "Memória RAM e swap",
+    "keys": [
+      "ram",
+      "swap",
+      "procmem"
+    ],
+    "hint": "",
+    "hardware_order": 4
+  },
+  {
+    "id": "io",
+    "label": "Leitura e escrita em disco",
+    "keys": [
+      "io_read",
+      "io_write"
+    ],
+    "hint": "",
+    "hardware_order": 5
+  },
+  {
+    "id": "engine_version",
+    "label": "API gráfica",
+    "keys": [
+      "engine_version"
+    ],
+    "hint": "",
+    "hardware_order": 6
+  },
+  {
+    "id": "gpu_name",
+    "label": "Nome da GPU",
+    "keys": [
+      "gpu_name"
+    ],
+    "hint": "",
+    "hardware_order": 11
+  },
+  {
+    "id": "vulkan_driver",
+    "label": "Driver Vulkan",
+    "keys": [
+      "vulkan_driver"
+    ],
+    "hint": "",
+    "hardware_order": 12
+  },
+  {
+    "id": "resolution",
+    "label": "Resolução",
+    "keys": [
+      "resolution"
+    ],
+    "hint": "",
+    "hardware_order": 13
+  },
+  {
+    "id": "display_server",
+    "label": "Sessão gráfica",
+    "keys": [
+      "display_server"
+    ],
+    "hint": "",
+    "hardware_order": 14
+  },
+  {
+    "id": "arch",
+    "label": "Arquitetura",
+    "keys": [
+      "arch"
+    ],
+    "hint": "",
+    "hardware_order": 15
+  },
+  {
+    "id": "wine",
+    "label": "Versão do Wine/Proton",
+    "keys": [
+      "wine"
+    ],
+    "hint": "",
+    "hardware_order": 16
+  },
+  {
+    "id": "winesync",
+    "label": "Sincronização Wine",
+    "keys": [
+      "winesync"
+    ],
+    "hint": "",
+    "hardware_order": 17
+  },
+  {
+    "id": "version",
+    "label": "Versão do MangoHUD",
+    "keys": [
+      "version"
+    ],
+    "hint": "",
+    "hardware_order": 18
+  },
+  {
+    "id": "gamemode",
+    "label": "GameMode",
+    "keys": [
+      "gamemode"
+    ],
+    "hint": "",
+    "hardware_order": 19
+  },
+  {
+    "id": "vkbasalt",
+    "label": "vkBasalt",
+    "keys": [
+      "vkbasalt"
+    ],
+    "hint": "",
+    "hardware_order": 20
+  },
+  {
+    "id": "battery",
+    "label": "Bateria",
+    "keys": [
+      "battery",
+      "battery_watt",
+      "battery_time"
+    ],
+    "hint": "",
+    "hardware_order": 21
+  },
+  {
+    "id": "media_player",
+    "label": "Reprodutor de mídia",
+    "keys": [
+      "media_player"
+    ],
+    "hint": "",
+    "hardware_order": 22
+  },
+  {
+    "id": "network",
+    "label": "Rede",
+    "keys": [
+      "network"
+    ],
+    "hint": "",
+    "hardware_order": 23
+  },
+  {
+    "id": "custom_text_center",
+    "label": "Título personalizado",
+    "keys": [
+      "custom_text_center"
+    ],
+    "hint": "",
+    "hardware_order": 24
+  },
+  {
+    "id": "time",
+    "label": "Relógio",
+    "keys": [
+      "time"
+    ],
+    "hint": "",
+    "hardware_order": 25
+  }
+]

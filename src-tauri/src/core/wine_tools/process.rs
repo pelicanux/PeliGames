@@ -96,7 +96,7 @@ fn reader(
     pipe: impl Read + AsRawFd + Send + 'static,
     stop: Arc<AtomicBool>,
     progress: Progress,
-    log: Arc<Mutex<fs::File>>,
+    log: Arc<Mutex<crate::core::bounded_logs::LogWriter>>,
 ) -> Result<std::thread::JoinHandle<()>, String> {
     let fd = pipe.as_raw_fd();
     let flags = unsafe { libc::fcntl(fd, libc::F_GETFL) };
@@ -117,7 +117,7 @@ pub fn run(
     marker: String,
     cancel: Arc<AtomicBool>,
     progress: Progress,
-    log: Arc<Mutex<fs::File>>,
+    log: Arc<Mutex<crate::core::bounded_logs::LogWriter>>,
 ) -> Result<(), String> {
     if cancel.load(Ordering::Acquire) {
         return Err("PELIGAMES_WINE_TOOL_CANCELLED".into());
@@ -245,7 +245,7 @@ mod tests {
                 .as_nanos()
         );
         let path = std::env::temp_dir().join(&marker);
-        let log = Arc::new(Mutex::new(fs::File::create(&path).unwrap()));
+        let log = Arc::new(Mutex::new(crate::core::bounded_logs::LogWriter::create(&path).unwrap()));
         let mut cmd = Command::new("/bin/sh");
         cmd.args(["-c", script])
             .stdout(Stdio::piped())

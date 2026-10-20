@@ -1,0 +1,15 @@
+.game-reset-panel {margin-top:18px;}
+.game-reset-header {display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.game-reset-header h3 {margin:0;font-size:.95rem;}
+.game-reset-pills {display:flex;align-items:center;flex-wrap:wrap;gap:4px;padding:4px;border:1px solid rgba(160,177,204,.14);border-radius:14px;background:rgba(0,0,0,.15);}
+.game-reset-pills button {font:inherit;font-size:.76rem;white-space:nowrap;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--text-secondary);padding:7px 10px;cursor:pointer;}
+.game-reset-pills button[aria-pressed=true] {color:var(--text-primary);background:rgba(var(--accent-rgb),.14);border-color:rgba(var(--accent-rgb),.35);}
+.game-reset-panel>p,.game-reset-result p,.game-reset-confirm-copy p {font-size:.8125rem;line-height:1.5;}
+.game-reset-action {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.game-reset-action small,.game-reset-confirm-copy small {font-size:.75rem;line-height:1.5;color:var(--text-secondary);}
+.game-reset-action small {flex:1;min-width:180px;}
+.game-reset-action button {display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.game-reset-pills button:disabled {opacity:.5;cursor:default;}
+.game-reset-confirm-copy {display:grid;gap:12px;}
+.game-reset-confirm-copy p {margin:0;}
+.game-reset-confirm-copy [role=alert] {color:var(--tone-ff7070,#ff7070);white-space:pre-wrap;}

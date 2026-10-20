@@ -1,3 +1,6 @@
+import { MangoHudCustomPresets } from "./MangoHudCustomPresets";
+import { MangoHudMetrics } from "./MangoHudMetrics";
+import { hudOrder } from "./mangoHudLayout";
 import {mangoSearchOptions} from "./preferenceSearch";
 import { SelectionMenu } from "../SelectionMenu";
 import { shortcutConflict } from "./shortcutConflicts";
@@ -20,17 +23,10 @@ const options: Spec[] = catalog;
 const presetOf = (settings: MangoHudSettings) => PRESETS.find(preset => {
   const expected = applyPreset(preset.id, settings);
   return expected.launcher_hud_order === settings.launcher_hud_order
+    && !settings.launcher_hud_custom_order
     && options.every(option => option.kind !== "toggle" || expected[option.key] === settings[option.key]);
 })?.id;
 
-// Plain-language metrics; the native keys stay underneath.
-const GROUPS: { title: string; color: string; items: [string, string, string?][] }[] = [
-  { title: "Desempenho", color: "#34c77b", items: [["fps", "FPS"], ["frametime", "Tempo de quadro"], ["frame_timing", "Gráfico de quadros"], ["fps_metrics", "Média e 1% Low", "avg,0.01"]] },
-  { title: "Placa de vídeo", color: "#55b9f3", items: [["gpu_stats", "Uso"], ["gpu_temp", "Temperatura"], ["vram", "Memória (VRAM)"], ["gpu_core_clock", "Frequência"], ["gpu_power", "Consumo"], ["gpu_fan", "Ventoinha"]] },
-  { title: "Processador", color: "#b793ef", items: [["cpu_stats", "Uso"], ["cpu_temp", "Temperatura"], ["cpu_mhz", "Frequência"], ["core_load", "Por núcleo"], ["cpu_power", "Consumo"]] },
-  { title: "Memória", color: "#dca0d5", items: [["ram", "RAM"], ["swap", "Swap"]] },
-  { title: "Sistema", color: "#f4b350", items: [["resolution", "Resolução"], ["time", "Relógio"], ["wine", "Versão do Wine/Proton"], ["gamemode", "GameMode"], ["battery", "Bateria"]] },
-];
 const PALETTES = [
   { name: "PeliGames", colors: ["FFFFFF", "54C58D", "55B9F3", "DCA0D5", "B793EF"] },
   { name: "Terminal", colors: ["9BEDB0", "41D77A", "67C993", "8FDF9F", "56AC7E"] },
@@ -53,20 +49,20 @@ export function Hud({ settings, tick, size, graph }: { settings: MangoHudSetting
   const color = (key: string) => `#${String(s[key] || "FFFFFF")}`;
   const gpuUsage = Math.round(82 + wave(2) * 12);
   const unit = (text: string) => <span className="u">{text}</span>;
-  const row = (label: string, tint: string, cells: (React.ReactNode | false)[]) => <div className="r" key={label}><span className="k" style={{ color: tint }}>{label}</span>{cells.filter(Boolean).map((cell, index) => <span key={index}>{cell}</span>)}</div>;
+  const row = (label: string, tint: string, cells: (React.ReactNode | false)[], id = label) => <div className="r" key={id}><span className="k" style={{ color: tint }}>{label}</span>{cells.filter(Boolean).map((cell, index) => <span key={index}>{cell}</span>)}</div>;
   const rows: React.ReactNode[] = [];
   const performanceRows: React.ReactNode[] = [];
   if (s.engine_version) performanceRows.push(row("VULKAN", color("engine_color"), []));
-  if (s.fps) performanceRows.push(row("FPS", color("text_color"), [<span style={{ fontSize: "1.25em" }}>{fps}</span>, Boolean(s.frametime) && <>{(1000 / fps).toFixed(1)}{unit("ms")}</>]));
+  if (s.fps || s.frametime) performanceRows.push(row(s.fps ? "FPS" : "Tempo de quadro", color("text_color"), [Boolean(s.fps) && <span style={{ fontSize: "1.25em" }}>{fps}</span>, Boolean(s.frametime) && <>{(1000 / fps).toFixed(1)}{unit("ms")}</>], "fps"));
   if (s.frame_timing) performanceRows.push(<svg className="graph" key="graph" viewBox="0 0 100 40" preserveAspectRatio="none"><polyline points={graph.map((y, i) => `${(i / (graph.length - 1)) * 100},${40 - (y - 10) * 3}`).join(" ")} fill="none" stroke={color("frametime_color")} strokeWidth="2.2" vectorEffect="non-scaling-stroke" /></svg>);
   const metrics = String(s.fps_metrics || "").split(",");
   for (const [key, label, factor] of [["avg", "AVG", .93], ["0.01", "1% Low", .71], ["0.001", "0.1% Low", .59]] as const) {
     if (metrics.includes(key)) performanceRows.push(row(label, color("text_color"), [<>{Math.round(fps * factor)}{unit("FPS")}</>]));
   }
   if (s.custom_text_center) performanceRows.push(<div className="title" key="title">{String(s.custom_text_center)}</div>);
-  if (s.gpu_stats || s.gpu_temp || s.gpu_core_clock || s.gpu_power || s.gpu_fan) rows.push(row(String(s.gpu_text || "GPU"), color("gpu_color"), [Boolean(s.gpu_stats) && <span style={s.gpu_load_change ? { color: gpuLoadColor(gpuUsage, String(s.gpu_load_value), String(s.gpu_load_color)) } : undefined}>{gpuUsage}{unit("%")}</span>, Boolean(s.gpu_temp) && <>{Math.round(64 + wave(3) * 4)}{unit("°C")}</>, Boolean(s.gpu_core_clock) && <>{Math.round(2410 + wave(4) * 90)}{unit("MHz")}</>, Boolean(s.gpu_power) && <>{Math.round(212 + wave(5) * 18)}{unit("W")}</>, Boolean(s.gpu_fan) && <>{Math.round(1450 + wave(6) * 120)}{unit("RPM")}</>]));
+  if (s.gpu_stats || s.gpu_temp || s.gpu_core_clock || s.gpu_power || s.gpu_fan) rows.push(row(String(s.gpu_text || "GPU"), color("gpu_color"), [Boolean(s.gpu_stats) && <span style={s.gpu_load_change ? { color: gpuLoadColor(gpuUsage, String(s.gpu_load_value), String(s.gpu_load_color)) } : undefined}>{gpuUsage}{unit("%")}</span>, Boolean(s.gpu_temp) && <>{Math.round(64 + wave(3) * 4)}{unit("°C")}</>, Boolean(s.gpu_core_clock) && <>{Math.round(2410 + wave(4) * 90)}{unit("MHz")}</>, Boolean(s.gpu_power) && <>{Math.round(212 + wave(5) * 18)}{unit("W")}</>, Boolean(s.gpu_fan) && <>{Math.round(1450 + wave(6) * 120)}{unit("RPM")}</>], "gpu"));
   if (s.vram) rows.push(row("VRAM", color("vram_color"), [<>{(9.2 + wave(10) * .4).toFixed(1)}{unit("GiB")}</>]));
-  if (s.cpu_stats || s.cpu_temp || s.cpu_mhz || s.cpu_power) rows.push(row(String(s.cpu_text || "CPU"), color("cpu_color"), [Boolean(s.cpu_stats) && <>{Math.round(41 + wave(7) * 15)}{unit("%")}</>, Boolean(s.cpu_temp) && <>{Math.round(58 + wave(8) * 5)}{unit("°C")}</>, Boolean(s.cpu_mhz) && <>{Math.round(4780 + wave(9) * 120)}{unit("MHz")}</>, Boolean(s.cpu_power) && <>{Math.round(62 + wave(9) * 9)}{unit("W")}</>]));
+  if (s.cpu_stats || s.cpu_temp || s.cpu_mhz || s.cpu_power) rows.push(row(String(s.cpu_text || "CPU"), color("cpu_color"), [Boolean(s.cpu_stats) && <>{Math.round(41 + wave(7) * 15)}{unit("%")}</>, Boolean(s.cpu_temp) && <>{Math.round(58 + wave(8) * 5)}{unit("°C")}</>, Boolean(s.cpu_mhz) && <>{Math.round(4780 + wave(9) * 120)}{unit("MHz")}</>, Boolean(s.cpu_power) && <>{Math.round(62 + wave(9) * 9)}{unit("W")}</>], "cpu"));
   if (s.core_load) rows.push(row("Núcleos", color("cpu_color"), [Array.from({ length: 8 }, (_, i) => Math.round(30 + wave(i * 1.7) * 60)).join(" ")]));
   if (s.ram || s.swap) rows.push(row("RAM", color("ram_color"), [Boolean(s.ram) && <>{(12.4 + wave(11) * .3).toFixed(1)}{unit("GiB")}</>, Boolean(s.swap) && <>0.3{unit("GiB swap")}</>]));
   if (s.launcher_hud_order === "hardware-first") rows.push(...performanceRows);
@@ -76,6 +72,14 @@ export function Hud({ settings, tick, size, graph }: { settings: MangoHudSetting
   if (s.wine) rows.push(row("Proton", color("text_color"), ["GE-Proton"]));
   if (s.gamemode) rows.push(row("GameMode", color("text_color"), ["ATIVO"]));
   if (s.battery) rows.push(row("Bateria", color("text_color"), [<>87{unit("%")}</>]));
+  {
+    const ids=hudOrder(s);
+    const labels:Record<string,string>={VULKAN:"engine_version",fps:"fps",graph:"frame_timing",AVG:"fps_metrics","1% Low":"fps_metrics","0.1% Low":"fps_metrics",title:"custom_text_center",gpu:"gpu",cpu:"cpu",VRAM:"vram","Núcleos":"core_load",RAM:"ram",Tela:"resolution",Hora:"time",Proton:"wine",GameMode:"gamemode",Bateria:"battery"};
+    rows.sort((a,b)=>{
+      const rank=(node:React.ReactNode)=>ids.indexOf(labels[String((node as React.ReactElement).key)]||"");
+      return rank(a)-rank(b);
+    });
+  }
   if (!rows.length) rows.push(<div className="title" key="empty">Nada selecionado</div>);
   const background = String(s.background_color || "020202").match(/../g)?.map(hex => parseInt(hex, 16)).join(",") ?? "2,2,2";
   const [vertical, horizontal] = String(s.position || "top-left").split("-");
@@ -92,7 +96,6 @@ export function Hud({ settings, tick, size, graph }: { settings: MangoHudSetting
   </div>;
 }
 
-const Check = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="m5 12 5 5 9-10" /></svg>;
 
 /** New interface: the MangoHUD profile in three plain steps beside a live
  *  preview, with every native option still reachable in "Todas as opções".
@@ -202,6 +205,7 @@ export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=
   const sections = [...new Set(filtered.map(option => option.section))];
   const advancedControl = (option: Spec) => {
     const value = settings[option.key];
+    if(option.kind==="hudorder")return <MangoHudMetrics settings={settings} onToggle={set} onOrder={value=>set(option.key,value)}/>;
     if(option.key==="launcher_enabled")return <button type="button" className="mango-switch sm" role="switch" aria-label={option.label} aria-checked={Boolean(value)} disabled={checkingGlobal} onClick={()=>void toggleGlobal()}/>;
     if(option.kind==="fpslimits")return <MangoHudFpsCycle value={String(value||"")} onChange={value=>set(option.key,value)}/>;
     if (option.kind === "toggle") return <button type="button" className="mango-switch sm" role="switch" aria-checked={Boolean(value)} aria-label={option.label} onClick={() => set(option.key, !value)} />;
@@ -248,6 +252,8 @@ export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=
           <button type="button" className="mango-switch" role="switch" aria-label="Aplicar também ao MangoHUD do sistema" aria-checked={Boolean(settings.launcher_sync_system)} onClick={()=>set("launcher_sync_system",!settings.launcher_sync_system)} />
         </section>
 
+        <section className="mm-card"><MangoHudCustomPresets settings={settings} onLoad={update}/></section>
+
         {advancedOpen?<section className="mm-card mm-advanced-screen" aria-label="Todas as opções do MangoHUD"><h2>Todas as opções</h2><p className="mm-hint">Ajustes completos. Use a busca para localizar uma opção específica.</p>          <div className="mm-advanced-body">
             <label className="mm-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Buscar opção (ex.: vsync, bateria, ventoinha)" /></label>
             {sections.map(section => <div key={section} className="mm-advanced-section"><h4>{SECTION_NAMES[section] ?? section}</h4>
@@ -270,14 +276,8 @@ export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=
 
         <section className="mm-card">
           <h2><span className="mm-step">2</span>O que mostrar</h2>
-          <p className="mm-hint">Toque para ligar ou desligar. A prévia ao lado muda na hora.</p>
-          <div className="mm-groups">{GROUPS.map(group => <div key={group.title} className="mm-group">
-            <h3><i style={{ background: group.color }} />{group.title}</h3>
-            <div className="mm-chips">{group.items.filter(([key]) => key in settings).map(([key, label, on]) => {
-              const active = key === "fps_metrics" ? String(settings[key] || "").split(",").includes("0.01") : on ? settings[key] === on : Boolean(settings[key]);
-              return <button type="button" key={key} className="mm-chip" aria-pressed={active} onClick={() => set(key, on ? (active ? "" : on) : !settings[key])}><Check />{label}</button>;
-            })}</div>
-          </div>)}</div>
+          <p className="mm-hint">Clique para ligar ou desligar. Arraste o título para mover a categoria; arraste as pílulas móveis para ordenar seus blocos. Salva automaticamente.</p>
+          <MangoHudMetrics settings={settings} onToggle={set} onOrder={value=>set("launcher_hud_custom_order",value)}/>
         </section>
 
         <section className="mm-card">
@@ -287,7 +287,7 @@ export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=
             <div className="mm-row"><span>Formato</span><div className="mm-segmented">{([["vertical", "Coluna"], ["horizontal", "Linha"], ["compact", "Compacto"]] as const).map(([id, label]) => <button type="button" key={id} aria-pressed={layout === id}
               onClick={() => update({ horizontal: id === "horizontal", hud_compact: id === "compact", ...(id === "horizontal" && String(settings.position).startsWith("middle") ? { position: "top-center" } : {}) })}>{label}</button>)}</div></div>
             <div className="mm-row"><span>Ordem das informações<small>GPU, VRAM, CPU e RAM antes ou depois do FPS</small></span><div className="mm-segmented" role="group" aria-label="Ordem das informações">
-              {([["fps-first", "FPS primeiro"], ["hardware-first", "Hardware primeiro"]] as const).map(([value, label]) => <button type="button" key={value} aria-pressed={settings.launcher_hud_order === value} onClick={() => set("launcher_hud_order", value)}>{label}</button>)}
+              {([["fps-first", "FPS primeiro"], ["hardware-first", "Hardware primeiro"]] as const).map(([value, label]) => <button type="button" key={value} aria-pressed={settings.launcher_hud_order === value} onClick={() => update({launcher_hud_order: value, launcher_hud_custom_order: ""})}>{label}</button>)}
             </div></div>
             <div className="mm-row"><span>Tamanho do texto</span>{slider("font_size", 14, 40, 1, value => `${value}px`, "Tamanho do texto")}</div>
             <div className="mm-row"><span>Fundo<small>Quanto o painel esconde o jogo</small></span>{slider("background_alpha", 0, 1, .05, value => `${Math.round(value * 100)}%`, "Fundo")}</div>

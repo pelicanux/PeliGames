@@ -1,4 +1,4 @@
-//! Per-game launch boundary, after MAKO and its managed HUD adapter.
+//! General per-game overlay launch boundary, optionally alongside MAKO.
 //! Preparation failures preserve the original game invocation and environment.
 use std::{
     env,
@@ -24,6 +24,14 @@ fn layer_manifest(library: &Path) -> String {
         "implementation_version":"1","description":"PeliGames interactive overlay",
         "library_arch":"64",
         "functions":{"vkNegotiateLoaderLayerInterfaceVersion":"peliNegotiateLoaderLayerInterfaceVersion"}}}).to_string()
+}
+// An explicit override must include the game's additive NR Control/int4/ReShade paths.
+fn explicit_paths(mut current: Option<OsString>, additional: Option<OsString>) -> Result<Option<OsString>, String> {
+    if let Some(additional) = additional {
+        let paths: Vec<_> = env::split_paths(&additional).filter(|path| !path.as_os_str().is_empty()).collect();
+        for path in paths.into_iter().rev() { current = Some(prepend(&path, current)?); }
+    }
+    Ok(current)
 }
 fn checked_elf(path: &Path) -> Result<(), String> {
     let m = fs::symlink_metadata(path).map_err(|e| e.to_string())?;
@@ -125,7 +133,7 @@ fn prepare() -> Result<Vec<(&'static str, OsString)>, String> {
         }
         result?;
     }
-    let mut layer_paths = env::var_os("VK_LAYER_PATH");
+    let mut layer_paths = explicit_paths(env::var_os("VK_LAYER_PATH"), env::var_os("VK_ADD_LAYER_PATH"))?;
     if let Some(private) = env::var_os("VK_IMPLICIT_LAYER_PATH") {
         // Explicitly requesting MAKO must still find its private manifest.
         for p in env::split_paths(&private) {
@@ -155,6 +163,7 @@ fn run() -> Result<(), String> {
     let program = args.next().ok_or("Informe o comando real do jogo.")?;
     let mut command = Command::new(program);
     command.args(args);
+    if env::var("PELI_OVERLAY_DISABLED").ok().as_deref()==Some("1"){return Err(command.exec().to_string());}
     match prepare() {
         Ok(environment) => {
             command.envs(environment);
@@ -169,6 +178,9 @@ fn run() -> Result<(), String> {
 }
 
 fn shortcut() -> Result<String, String> {
+    let root = if env::var("PELI_OVERLAY_GENERAL").ok().as_deref()==Some("1") {
+        PathBuf::from(env::var_os("PELI_OVERLAY_CONFIG_ROOT").ok_or("Pasta do PeliGames ausente")?)
+    } else {
     let path = PathBuf::from(
         env::var_os("MAKO_CONFIG").ok_or("Use MAKO_CONFIG com um perfil do PeliGames.")?,
     );
@@ -198,6 +210,9 @@ fn shortcut() -> Result<String, String> {
     {
         return Err("Overlay não habilitado neste jogo nativo.".into());
     }
+        root.to_owned()
+    };
+    if !root.is_absolute(){return Err("Pasta do overlay inválida".into());}
     let preferences = root.join("frame-overlay.json");
     let meta = match fs::symlink_metadata(&preferences) {
         Ok(m) => m,
@@ -222,7 +237,7 @@ fn shortcut() -> Result<String, String> {
     Ok(key.into())
 }
 fn append_dso(path: &Path, existing: Option<OsString>) -> Result<OsString, String> {
-    use std::os::unix::ffi::OsStrExt;
+    use std::os::unix::ffi::{OsStrExt, OsStringExt};
     if path
         .as_os_str()
         .as_bytes()
@@ -233,9 +248,18 @@ fn append_dso(path: &Path, existing: Option<OsString>) -> Result<OsString, Strin
     }
     let mut value = path.as_os_str().to_owned();
     if let Some(old) = existing {
-        if !old.is_empty() {
+        // Nested legacy/general runners can refer to different installations
+        // of this payload. Keep one copy across exec, preserving other DSOs.
+        for entry in old.as_bytes().split(|b| *b == b':' || b.is_ascii_whitespace()) {
+            if entry.is_empty() {
+                continue;
+            }
+            let entry = OsString::from_vec(entry.to_vec());
+            if Path::new(&entry).file_name() == path.file_name() {
+                continue;
+            }
             value.push(":");
-            value.push(old);
+            value.push(entry);
         }
     }
     Ok(value)
@@ -250,6 +274,13 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn additive_mod_layers_remain_discoverable_under_an_explicit_override() {
+        let paths = explicit_paths(Some("/steam:/mako".into()), Some("/game/control:/game/int4".into())).unwrap().unwrap();
+        assert_eq!(paths, "/game/control:/game/int4:/steam:/mako");
+        assert_eq!(explicit_paths(Some(paths.clone()), Some("/game/control:/game/int4".into())).unwrap(), Some(paths));
+        assert_eq!(explicit_paths(None, None).unwrap(), None);
+    }
     #[test]
     fn manifest_matches_steam_runtime_string_field_contract() {
         // Mirrors pressure-vessel's required field types, rather than the
@@ -310,5 +341,16 @@ mod tests {
             append_dso(Path::new("/tmp/peli.so"), Some("old.so".into())).unwrap(),
             "/tmp/peli.so:old.so"
         );
+    }
+    #[test]
+    fn nested_runners_replace_their_own_payload_and_preserve_other_overlays() {
+        for name in ["libpeligames_game_overlay.so", "libpeligames_overlay_audit.so"] {
+            let current = format!("/general/{name}");
+            let old = format!("/mako/{name}:steam.so /general/{name}:mangohud.so");
+            assert_eq!(
+                append_dso(Path::new(&current), Some(old.into())).unwrap(),
+                OsString::from(format!("{current}:steam.so:mangohud.so"))
+            );
+        }
     }
 }

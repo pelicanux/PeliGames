@@ -138,8 +138,7 @@ fn run_inner(request: InstallationRequest, repair: Option<(super::installed_libr
                 super::env_utils::host_environment(&mut command);
                 command.arg("winetricks").args(&plan.dependencies);
                 for (key,value) in prepared.command.get_envs() { if let Some(value)=value { command.env(key,value); } else { command.env_remove(key); } }
-                let log=fs::OpenOptions::new().append(true).open(&prepared.log).map_err(|e|e.to_string())?;
-                command.current_dir(&prepared.prefix).stdin(Stdio::null()).stdout(Stdio::from(log.try_clone().map_err(|e|e.to_string())?)).stderr(Stdio::from(log));
+                command.current_dir(&prepared.prefix).stdin(Stdio::null());
                 prepared.command=command;
                 wait_for_installation(prepared, &cancel)?;
             }
@@ -238,6 +237,7 @@ pub(crate) fn prepare_launch_program(
         .into_iter()
         .find(|entry| entry.path == path)
         .ok_or("Executável não registrado na biblioteca PeliGames.")?;
+    super::installed_library::ensure_prefix_writable(Path::new(&entry.prefix))?;
     // A game's profile prefix (overlay) is mounted before anything runs in it.
     if let Some(profile) = &entry.profile { super::game_profiles::ensure_ready(profile)?; }
     // This launches the registered executable without replacing the installation manifest.
@@ -273,6 +273,7 @@ pub(crate) fn prepare_launch_program(
 }
 pub fn launch(path: String) -> Result<(), String> {
     let mut prepared = prepare_launch(path)?;
+    super::bounded_logs::capture(&mut prepared.command,&prepared.log)?;
     let status = prepared.command.status().map_err(|e| e.to_string())?;
     if status.success() {
         Ok(())
@@ -311,10 +312,11 @@ fn prefix_baseline(request: &InstallationRequest, umu: &Path, cancel: &AtomicBoo
 fn run_with_umu_cancellable(request: InstallationRequest, umu: &Path, cancel: &AtomicBool) -> Result<InstallationResult, String> {
     wait_for_installation(prepare_run(request, umu)?, cancel)
 }
-fn wait_for_installation(prepared: PreparedRun, cancel: &AtomicBool) -> Result<InstallationResult, String> {
+fn wait_for_installation(mut prepared: PreparedRun, cancel: &AtomicBool) -> Result<InstallationResult, String> {
     let prefix = prepared.prefix.to_string_lossy().into_owned();
     let log = prepared.log.to_string_lossy().into_owned();
     if cancel.load(Ordering::Acquire) { return Err(format!("Instalação cancelada. Log: {log}")); }
+    super::bounded_logs::capture(&mut prepared.command,&prepared.log)?;
     let status = super::game_execution::wait_for_installer(prepared, cancel)?;
     if status.state == "cancelled" || cancel.load(Ordering::Acquire) { return Err(format!("Instalação cancelada. Nenhum jogo foi registrado. O prefixo e o log foram preservados: {log}")); }
     if status.state == "failed" { return Err(status.error.unwrap_or_else(|| format!("Falha ao executar o instalador. Log: {log}"))); }
@@ -408,6 +410,7 @@ fn prepare_run_mode(
     if request.name.trim().is_empty() {
         return Err("Confirme o nome do jogo ou programa.".into());
     }
+    if let Some(prefix)=selected_prefix {super::installed_library::ensure_prefix_writable(prefix)?;}
     let directory = absolute(&request.directory)?;
     let executable = validate_executable(&request.executable)?;
     let proton = validate_proton(&request.proton)?;
@@ -439,7 +442,7 @@ fn prepare_run_mode(
     fs::create_dir_all(&prefix)
         .and_then(|_| fs::create_dir_all(&logs))
         .map_err(|e| format!("Não foi possível preparar o prefixo: {e}"))?;
-    let log_path = logs.join(format!("installer-{}.log", uuid::Uuid::new_v4()));
+    let log_path = logs.join("installer.log");
     let mut log = File::create(&log_path).map_err(|e| e.to_string())?;
     writeln!(
         log,
@@ -473,13 +476,12 @@ fn prepare_run_mode(
         .env("GAMEID", "umu-default")
         .env("STORE", "none")
         .env("PROTON_VERB", "waitforexitandrun")
-        .env("PROTON_LOG", "1")
+        .env("PROTON_LOG", "0")
         .env("PROTON_LOG_DIR", &logs)
         .env_remove("UMU_NO_PROTON")
         .env_remove("UMU_NO_RUNTIME")
-        .stdin(Stdio::null())
-        .stdout(Stdio::from(log))
-        .stderr(Stdio::from(stderr));
+        .stdin(Stdio::null());
+    drop(log);drop(stderr);
     Ok(PreparedRun {
         name: request.name,
         command,

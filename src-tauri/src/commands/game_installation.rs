@@ -160,7 +160,9 @@ pub async fn update_peligames_settings(
             return Err("Encerre a execução antes de alterar suas configurações.".into());
         }
         let updated = crate::core::installed_library::update_settings(settings)?;
-        super::launch_profiles::refresh(std::path::Path::new(&updated.path), &updated.name, &updated.advanced)?;
+        // Registered entries use an opaque library ID in `path`.
+        // PeliRun profiles are keyed by the actual installation directory.
+        super::launch_profiles::refresh(std::path::Path::new(&updated.directory), &updated.name, &updated.advanced)?;
         Ok(updated)
     })
     .await
@@ -238,7 +240,11 @@ pub async fn run_wine_tool(app: tauri::AppHandle, request: crate::core::wine_too
     use tauri::Emitter;
     if BUSY.compare_exchange(false,true,Ordering::AcqRel,Ordering::Acquire).is_err() { return Err("Aguarde a operação em andamento.".into()); }
     let _guard = BusyGuard;
-    crate::core::wine_tools::execute(request, request_id.clone(), std::sync::Arc::new(move |line| { let _=app.emit("peligames-wine-tool-progress",serde_json::json!({"id":request_id,"line":line})); })).await
+    let operation=format!("Ferramenta Wine: {}",request.action);
+    crate::core::logger::event("INFO",&format!("{operation}: iniciada"));
+    let result=crate::core::wine_tools::execute(request, request_id.clone(), std::sync::Arc::new(move |line| { let _=app.emit("peligames-wine-tool-progress",serde_json::json!({"id":request_id,"line":line})); })).await;
+    match &result {Ok(_)=>crate::core::logger::event("INFO",&format!("{operation}: concluída")),Err(error)=>crate::core::logger::event("ERROR",&format!("{operation}: {error}"))}
+    result
 }
 
 #[tauri::command]
@@ -258,4 +264,46 @@ pub async fn remove_peligames_library_entry(app: tauri::AppHandle, path: String)
     tauri::async_runtime::spawn_blocking(move || crate::core::installed_library::remove_entry(&path)).await.map_err(|e| e.to_string())??;
     let _ = app.emit("peligames-library-changed", ());
     Ok(())
+}
+
+#[tauri::command]
+pub async fn game_copy_options(path:String,parent:Option<String>)->Result<crate::core::game_copies::CopyOptions,String>{
+    tauri::async_runtime::spawn_blocking(move||crate::core::game_copies::options(&path,parent.as_deref())).await.map_err(|e|e.to_string())?
+}
+#[tauri::command]
+pub async fn duplicate_peligames_game(app:tauri::AppHandle,request:crate::core::game_copies::CopyRequest,request_id:String)->Result<crate::core::installed_library::InstalledEntry,String>{
+    use tauri::Emitter;
+    tauri::async_runtime::spawn_blocking(move||{
+        let id=request_id.clone();
+        crate::core::game_copies::create(request,request_id,|message|{let _=app.emit("peligames-copy-progress",serde_json::json!({"id":id,"message":message}));})
+    }).await.map_err(|e|e.to_string())?
+}
+#[tauri::command]
+pub fn cancel_game_copy(request_id:String)->Result<(),String>{crate::core::game_copies::cancel(&request_id)}
+
+#[tauri::command]
+pub async fn get_game_copy_reference(path:String)->Result<crate::core::installed_library::CopyReference,String>{
+    tauri::async_runtime::spawn_blocking(move||crate::core::installed_library::copy_reference(&path)).await.map_err(|e|e.to_string())?
+}
+
+#[tauri::command]
+pub fn get_peligames_executions()->Result<Vec<crate::core::game_execution::ExecutionStatus>,String>{crate::core::game_execution::statuses()}
+
+#[tauri::command]
+pub async fn check_removed_installation_destination(directory:String)->Result<Option<crate::core::installed_library::RemovedDestination>,String>{
+    tauri::async_runtime::spawn_blocking(move||crate::core::installed_library::removed_destination(std::path::Path::new(&directory))).await.map_err(|e|e.to_string())?
+}
+#[tauri::command]
+pub async fn reset_removed_installation_destination(directory:String,token:String,executable:String)->Result<(),String>{
+    let _guard=acquire_installer_busy()?;
+    tauri::async_runtime::spawn_blocking(move||crate::core::installed_library::reset_removed_destination(std::path::Path::new(&directory),&token,std::path::Path::new(&executable))).await.map_err(|e|e.to_string())?
+}
+
+#[tauri::command]
+pub async fn discover_peligames_library(roots:Vec<String>)->Result<crate::core::installed_library::recovery::Discovery,String>{
+ tauri::async_runtime::spawn_blocking(move||crate::core::installed_library::recovery::discover(roots)).await.map_err(|e|e.to_string())?
+}
+#[tauri::command]
+pub async fn restore_peligames_library(token:String,selected:Vec<String>)->Result<crate::core::installed_library::recovery::Imported,String>{
+ tauri::async_runtime::spawn_blocking(move||crate::core::installed_library::recovery::restore(token,selected)).await.map_err(|e|e.to_string())?
 }

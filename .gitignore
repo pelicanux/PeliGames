@@ -58,20 +58,13 @@ dist-ssr
 # Local preview, tests and development captures
 /tools/*
 /docs/*
-# Exceções versionadas: importador Vortex e documentação das famílias de módulos.
+# Exceções públicas: ferramentas e guias de uso revisados.
 !/tools/vortex-import/
 !/tools/game-overlay/
 !/docs/in-game-overlay.md
 !/docs/steam-launch-runtime.md
-!/docs/nexus-unreal-family.md
-!/docs/nexus-unity-family.md
-!/docs/nexus-collections.md
-!/docs/nexus-re-engine-family.md
-!/docs/nexus-bethesda.md
-!/docs/nexus-launchers.md
 !/docs/supported-games.md
 !/docs/matrix-community.md
-!/docs/nexus-oauth.md
 !/docs/interface-navigation.md
 /preview.html
 /src/preview.ts
@@ -121,3 +114,32 @@ dist-ssr
 
 # Python helpers compiled during validation
 __pycache__/
+
+# Private working instructions and internal research
+/AGENTS.md
+/.local-notes/
+
+# Private working instructions, research and session notes (never force-add)
+/AGENTS.md
+/.local-notes/
+/installers/RESEARCH.md
+/licenses/AUDIT.md
+# Public docs are opt-in guides; internal reports are always excluded.
+/docs/**/*audit*.md
+/docs/**/*research*.md
+/docs/**/*RESEARCH*.md
+/docs/**/*plan*.md
+!/docs/overlay.md
+!/docs/releases/
+/docs/releases/*
+!/docs/releases/0.4.6.md
+!/docs/nexus-bethesda.md
+
+# Reusable build entry points and public usage guide
+!/scripts/build-container.sh
+!/scripts/build-binaries.sh
+!/docs/compilation.md
+
+!/docs/game-copies.md
+
+!/docs/releases/0.4.7.md

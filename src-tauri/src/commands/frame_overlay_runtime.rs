@@ -32,6 +32,7 @@ pub(crate) fn bundled() -> bool { FILES.iter().all(|(_,bytes)| bytes.len() >= 64
 pub struct Support {
     available: bool,
     reason: String,
+    legacy_enabled: bool,
 }
 pub(super) fn check_game(
     directory: &Path,
@@ -77,11 +78,22 @@ pub async fn frame_overlay_support(
     directory: String,
     executable: Option<String>,
     flatpak: bool,
+    advanced: Option<crate::core::advanced_settings::AdvancedSettings>,
 ) -> Result<Support, String> {
     tauri::async_runtime::spawn_blocking(move || {
+        let legacy_enabled=advanced.as_ref().is_some_and(|settings| {
+            let Ok(root)=crate::core::paths::app_root().map(|p|p.join("FrameGeneration/profiles")) else{return false};
+            settings.wrappers.iter().filter(|wrapper|wrapper.enabled).any(|wrapper|{
+                let path=Path::new(&wrapper.program);
+                if path.parent()!=Some(root.as_path()) || path.extension().is_none_or(|e|e!="sh"){return false;}
+                let Ok(file)=fs::File::open(path.with_extension("json")) else{return false};
+                let mut bytes=Vec::new();if file.take(65537).read_to_end(&mut bytes).is_err()||bytes.len()>65536{return false;}
+                serde_json::from_slice::<serde_json::Value>(&bytes).is_ok_and(|v|v["backend"]=="mako"&&v["enabled"]==true&&v["overlay_enabled"]==true)
+            })
+        });
         match check_game(Path::new(&directory), executable.as_deref(), flatpak) {
-            Ok(()) => Support { available: true, reason: "Experimental · Exige Vulkan em processo Linux de 64 bits. Jogos Windows de 32 bits podem ser testados com o novo WoW64 do Proton; processos Linux de 32 bits ainda não são suportados.".into() },
-            Err(reason) => Support { available: false, reason },
+            Ok(()) => Support { available: true, legacy_enabled, reason: "Experimental · Exige Vulkan em processo Linux de 64 bits. Para jogos Windows de 32 bits, procure “Compatibilidade WoW64” na aba Avançado e ative manualmente para testar, se o Proton oferecer suporte. Pode causar incompatibilidade; se o jogo deixar de abrir, desative a opção. Processos Linux de 32 bits ainda não são suportados.".into() },
+            Err(reason) => Support { available: false, legacy_enabled, reason },
         }
     }).await.map_err(|e| e.to_string())
 }
@@ -108,7 +120,7 @@ pub(super) fn runner(config: &Path) -> PathBuf {
         .join(version())
         .join(FILES[0].0)
 }
-pub(super) fn install(config: &Path) -> Result<(), String> {
+pub(crate) fn install(config: &Path) -> Result<(), String> {
     crate::core::release_features::require()?;
     use std::os::unix::fs::{MetadataExt, PermissionsExt};
     if !cfg!(all(target_os = "linux", target_arch = "x86_64"))
@@ -153,6 +165,19 @@ pub(super) fn install(config: &Path) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+/// The general overlay has its own installation boundary, independent of MAKO.
+pub(crate) fn standalone_runner() -> Result<PathBuf,String> {
+    Ok(runner(&crate::core::paths::app_root()?.join("Overlay/profiles/standalone.toml")))
+}
+pub(crate) fn install_standalone() -> Result<(),String> {
+    use std::os::unix::fs::{MetadataExt,PermissionsExt};
+    let root=crate::core::paths::app_root()?.join("Overlay");
+    match fs::create_dir(&root){Ok(())=>fs::set_permissions(&root,fs::Permissions::from_mode(0o700)).map_err(|e|e.to_string())?,Err(e) if e.kind()==std::io::ErrorKind::AlreadyExists=>{},Err(e)=>return Err(e.to_string())}
+    let meta=fs::symlink_metadata(&root).map_err(|e|e.to_string())?;
+    if !meta.is_dir()||meta.file_type().is_symlink()||meta.uid()!=unsafe{libc::geteuid()}||meta.mode()&0o077!=0{return Err("Pasta do overlay sem permissões privadas.".into());}
+    install(&root.join("profiles/standalone.toml"))
 }
 
 #[cfg(test)]

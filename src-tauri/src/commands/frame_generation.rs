@@ -537,7 +537,7 @@ pub(crate) fn configure_monitoring(
         {
             continue;
         }
-        let Some(settings) = fs::read(path.with_extension("json"))
+        let Some(mut settings) = fs::read(path.with_extension("json"))
             .ok()
             .and_then(|bytes| serde_json::from_slice::<Settings>(&bytes).ok())
             .filter(|s| s.backend == "mako" && s.enabled && !s.flatpak)
@@ -549,6 +549,11 @@ pub(crate) fn configure_monitoring(
             .starts_with("#!/bin/sh\n# PeliGames per-game MAKO profile; no global activation.\n")
         {
             continue;
+        }
+        // Explicit general-overlay settings supersede the legacy MAKO toggle,
+        // including when only monitoring was edited on an existing profile.
+        if advanced.overlay_enabled.is_some() {
+            settings.overlay_enabled = false;
         }
         let config = path.with_extension("toml");
         if settings.overlay_enabled {
@@ -692,6 +697,7 @@ pub async fn prepare_frame_generation(
     crate::core::release_features::require()?;
     tauri::async_runtime::spawn_blocking(move||{
  if INSTALLING.swap(true,Ordering::AcqRel){return Err("Aguarde a instalação ou limpeza do runtime em andamento.".into())}struct Guard;impl Drop for Guard{fn drop(&mut self){INSTALLING.store(false,Ordering::Release);}}let _guard=Guard;
+ if advanced.overlay_enabled.is_some(){settings.overlay_enabled=false;}
  settings.flatpak=flatpak;check_settings(&settings)?;if settings.runtime_version.is_empty(){settings.runtime_version=versions::current(&settings.backend)?;}if !versions::compatible(&settings.backend,&settings.runtime_version){return Err("Esta versão de runtime não é compatível com a integração atual.".into())}let runtime_path=versions::location(&settings.backend,&settings.runtime_version)?;let directory=Path::new(&directory).canonicalize().map_err(|_|"A pasta do jogo não está disponível. Verifique o disco e a montagem.")?;if !directory.is_dir(){return Err("Pasta de jogo inválida.".into())}
  if settings.enabled{if settings.backend=="mako" && advanced.options.get("hdr")==Some(&true){return Err("A integração estável do MAKO usa SDR. Desative HDR; o suporte HDR do MAKO ainda é experimental.".into())}check_local_fg(&directory)?;let mut checked=advanced.clone();checked.wrappers.retain(|w|!Path::new(&w.program).parent().is_some_and(|p|root().is_ok_and(|r|p==r.join("profiles"))));conflicts(&checked)?;if !flatpak{validate_runtime_at(&runtime_path,&settings.backend)?;}
  if settings.dll.is_empty(){settings.dll=detect_dll(&settings.backend).ok_or("Instale o Lossless Scaling pela Steam ou localize sua DLL.")?}
@@ -1103,4 +1109,12 @@ mod tests {
         assert!(unpack(&z.finish().unwrap(), &root).is_err());
         fs::remove_dir(root).unwrap();
     }
+}
+
+/// No runtime files are installed into the game by MAKO. Leave shared runtimes intact.
+pub(super) fn reset_selection(game_key:&str)->Result<(),String>{
+    let profiles=root()?.join("profiles");
+    let selection=profiles.join(profile_key(game_key)+".selection.json");
+    if selection.exists(){write(&selection,&serde_json::to_vec_pretty(&Settings::default()).map_err(|e|e.to_string())?,0o600)?;}
+    Ok(())
 }

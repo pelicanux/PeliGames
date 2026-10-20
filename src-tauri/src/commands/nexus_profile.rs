@@ -5,7 +5,7 @@ use std::{
     fs,
     io::{Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
-    process::{Command, Stdio},
+    process::Command,
 };
 
 pub(super) fn adapter(game: &NexusGame) -> String {
@@ -256,6 +256,12 @@ pub(super) fn launch(game: &NexusGame) -> Result<(), String> {
             }
         }
     }
+    if game.profile.is_none() && !game.mods.iter().any(|item|item.installed) {
+        let mut command=Command::new(&exe);
+        command.current_dir(exe.parent().ok_or("Pasta inválida.")?).env("SteamAppId","892970").env("SteamGameId","892970");
+        super::nexus_launch_options::apply(game,&mut command,exe.parent().ok_or("Pasta inválida.")?)?;
+        return spawn(game,command);
+    }
     let runtime = profile(game)?;
     for required in [
         "start_game_bepinex.sh",
@@ -344,14 +350,14 @@ fn spawn_with_session(game: &NexusGame, command: Command, new_session: bool) -> 
         fs::write(logs.join("session-started.txt"), started.as_secs().to_string()).map_err(|e|e.to_string())?;
         fs::write(logs.join("session-started-ms.txt"), started.as_millis().to_string()).map_err(|e|e.to_string())?;
     }
-    let err_log = log.try_clone().map_err(|e| e.to_string())?;
+    drop(log);
     command
         .env_remove("LD_LIBRARY_PATH")
         .env_remove("LD_PRELOAD")
         .env_remove("APPIMAGE")
         .env_remove("APPDIR")
-        .stdout(Stdio::from(log))
-        .stderr(Stdio::from(err_log));
+        .env("PROTON_LOG","0");
+    crate::core::bounded_logs::capture(&mut command,&current)?;
     #[cfg(unix)]
     {
         use std::os::unix::process::CommandExt;

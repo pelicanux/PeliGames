@@ -247,6 +247,7 @@ pub async fn configure_external_game(settings: ExternalSettings) -> Result<Exter
             .into_iter()
             .find(|g| g.external_id == settings.external_id)
             .ok_or("Jogo não encontrado no launcher de origem. Atualize a biblioteca.")?;
+        if game.flatpak && settings.advanced.overlay_enabled == Some(true) {return Err("O overlay interno ainda não está disponível no Flatpak.".into());}
         let mut saved = read_settings()?;
         if game.native_linux && settings.proton.is_some() { return Err("Este jogo usa a versão nativa de Linux. A troca de Proton está desabilitada.".into()); }
         let previous_proton = if game.launcher == "Steam" { game.proton.clone() } else { saved.get(&settings.external_id).filter(|_| !game.native_linux).and_then(|saved| saved.proton.clone()) };
@@ -537,7 +538,7 @@ fn heroic_desktop_command(url: &str) -> Option<(String, Vec<String>)> {
     None
 }
 fn has_local_adjustments(settings: &AdvancedSettings) -> bool {
-    if settings.mangohud_enabled == Some(true)
+    if settings.overlay_enabled == Some(true) || settings.background_fps.is_some() || settings.mangohud_enabled == Some(true)
         || settings.options.get("mangohud") == Some(&true)
         || settings.options.get("mangohud_env") == Some(&true)
     {
@@ -789,6 +790,7 @@ mod tests {
         let mut advanced = AdvancedSettings::default();
         assert!(!has_local_adjustments(&advanced));
 
+        advanced.overlay_enabled=Some(true);assert!(has_local_adjustments(&advanced));advanced.overlay_enabled=Some(false);assert!(!has_local_adjustments(&advanced));
         advanced.mangohud_enabled = Some(true);
         assert!(has_local_adjustments(&advanced));
 

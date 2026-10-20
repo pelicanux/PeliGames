@@ -1,4 +1,4 @@
-use crate::controls::Controller;
+use crate::tools::Tools;
 use ash::{vk, Device, Instance};
 
 /// Precision does not determine the transfer function: packed 10-bit UNORM
@@ -207,7 +207,7 @@ impl Render {
         family: u32,
         index: usize,
         waits: &[vk::Semaphore],
-        controller: &Controller,
+        controller: &Tools,
     ) -> Result<Option<vk::Semaphore>, String> {
         if family != self.family || index >= self.buffers.len() {
             return Ok(None);
@@ -230,20 +230,8 @@ impl Render {
             }
             input.frame(&self.context, crate::uptime())
         };
-        let (mut controls, error) = controller
-            .current
-            .lock()
-            .map(|s| s.clone())
-            .map_err(|_| "Controles indisponíveis")?;
-        let mut changed = false;
         let output = self.context.run(raw, |ctx| {
-            changed = crate::panel::show(
-                ctx,
-                egui::vec2(self.extent.width as f32, self.extent.height as f32),
-                &mut controls,
-                &error,
-            )
-            .inner;
+            controller.draw(ctx, egui::vec2(self.extent.width as f32, self.extent.height as f32));
             // Wine/XWayland uses the real server cursor, free in the game. Do not
             // draw a second arrow at an unrelated relative-motion position.
             // The native Wayland adapter still has its locked-pointer fallback.
@@ -267,15 +255,6 @@ impl Render {
                 }
             }
         });
-        if changed {
-            if controller.sender.try_send(controls.clone()).is_ok() {
-                if let Ok(mut s) = controller.current.lock() {
-                    *s = (controls, String::new());
-                }
-            } else if let Ok(mut s) = controller.current.lock() {
-                s.1 = "Aguarde a aplicação dos controles.".into();
-            }
-        }
         let renderer = self.renderer.as_mut().ok_or("Renderer ausente")?;
         // Texture changes are rare (font atlas updates). All readers must finish
         // before modifying/freeing a shared texture; ordinary frames do not wait.

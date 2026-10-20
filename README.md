@@ -3,7 +3,7 @@
   <img src="public/images/readme-header.svg" alt="PeliGames" width="900" />
 </p>
 
-> **0.4.6 experimental:** geração de quadros MAKO e o novo overlay PeliGames estão disponíveis para testes, com ativação por jogo. O overlay ainda pode apresentar falhas de captura do mouse, foco, atalhos ou compatibilidade com determinados jogos/Protons. Consulte o [guia de uso e limitações](docs/overlay.md).
+> **0.4.7 experimental:** overlay PeliGames independente do MAKO, limite de FPS sem foco por jogo, cópias de instalações e melhorias no monitoramento. Veja as [notas da versão](docs/releases/0.4.7.md). O overlay ainda pode apresentar falhas de captura do mouse, foco, atalhos ou compatibilidade com determinados jogos/Protons. Consulte o [guia de uso e limitações](docs/overlay.md).
 
 <p align="center"><strong>Português</strong> · <a href="README.en.md">English</a></p>
 
@@ -219,7 +219,7 @@ PeliGames é desenvolvido por Pelicano e distribuído sob [GNU GPL 3.0](LICENSE)
 
 Integra [DLSSNR-AMD, de mochizuki0323](https://github.com/mochizuki0323/DLSSNR-AMD), e [DLSSNR-RDNA3, de mauri870](https://github.com/mauri870/DLSSNR-RDNA3).
 
-A tradução opcional das descrições de mods utiliza a API online [MyMemory, da Translated S.r.l.](https://mymemory.translated.net/). O texto é enviado ao serviço somente ao solicitar a tradução. Consulte os [avisos de uso, privacidade e cotas](licenses/MyMemory-Service.md) e a [análise da implementação e alternativas](docs/nexus-translation-review.md).
+A tradução opcional das descrições de mods utiliza a API online [MyMemory, da Translated S.r.l.](https://mymemory.translated.net/). O texto é enviado ao serviço somente ao solicitar a tradução. Consulte os [avisos de uso, privacidade e cotas](licenses/MyMemory-Service.md).
 
 Os componentes de terceiros mantêm suas próprias licenças. Os [créditos e avisos completos](licenses/README.md) acompanham o programa e podem ser consultados na janela **Sobre**.
 

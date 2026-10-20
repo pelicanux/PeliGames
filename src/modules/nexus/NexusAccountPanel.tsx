@@ -1,3 +1,4 @@
+import { ConnectionStorageChoice } from "../../components/ConnectionStorageChoice";
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { openBrowserUrl as openUrl, openNexusBrowser } from "../../services/browser";
@@ -60,6 +61,7 @@ export function NexusAccountPanel() {
   const open = (url: string) => void openUrl(url).catch(() => setError(text.accountBrowserError));
   return <div className="connection-grid" aria-busy={busy}>
     <section className="connection-card"><header className="connection-heading"><span className="mod-component-icon"><img src="/nexus-mods.svg" alt=""/></span><div><h3>Nexus Mods</h3><p>{pt?"Conecte sua conta para acessar os mods online.":"Connect your account to access online mods."}</p></div><span className="mod-status-badge" data-ready={Boolean(account)} role="status">{account?(pt?"Conectado":"Connected"):authorizing||oauth.pending?(pt?"Aguardando login":"Waiting for sign-in"):busy?text.loading:(pt?"Não conectado":"Not connected")}</span></header>
+    <ConnectionStorageChoice service="nexus" disabled={Boolean(account)||authorizing||oauth.pending} onChange={()=>{setError("");void run("verify");}}/>
     {account?<div className="connection-account-row"><MenuIcon name="check"/><div><strong>{account.name}</strong><p>{account.is_premium?text.premiumAccount:text.freeAccount}</p></div></div>:<><p className="connection-section-hint">{pt?"Autorize no navegador ou use sua chave pessoal da API.":"Authorize in your browser or use your personal API key."}</p><div className="connection-primary-actions"><button type="button" className="mod-action-primary" disabled={busy||oauth.pending||!oauth.configured} onClick={()=>void login()}><MenuIcon name="chainLinked"/>{text.oauthLogin}</button>{(authorizing||oauth.pending)&&<button type="button" className="mod-action-secondary" onClick={()=>void invoke("cancel_nexus_oauth").catch(()=>setError(text.accountOperationError))}>{text.oauthCancel}</button>}</div></>}
     {(authorizing||oauth.pending)&&<p role="status">{text.oauthWaiting}</p>}
     {!account&&!oauth.configured&&<p className="connection-section-hint">{text.oauthUnavailable}</p>}

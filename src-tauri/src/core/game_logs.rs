@@ -126,8 +126,9 @@ pub(crate) fn prepare(path: &str, run: &mut super::game_installation::PreparedRu
     let file = fs::File::create(directory.join("execution.log")).map_err(|e|e.to_string())?;
     use std::io::Write;
     writeln!(&file, "PeliGames\nGame: {}\nExecutable: {}\nPrefix: {}", run.name, run.executable.display(), run.prefix.display()).map_err(|e|e.to_string())?;
-    let stderr = file.try_clone().map_err(|e|e.to_string())?;
-    run.command.stdout(file).stderr(stderr).env("PROTON_LOG_DIR", &directory);
+    drop(file);
+    super::bounded_logs::capture(&mut run.command,&directory.join("execution.log"))?;
+    run.command.env("PROTON_LOG", "0").env("PROTON_LOG_DIR", &directory);
     let old = std::mem::replace(&mut run.log, directory.join("execution.log"));
     let _ = fs::remove_file(old);
     Ok(())

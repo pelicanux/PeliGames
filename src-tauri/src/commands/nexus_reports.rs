@@ -3,7 +3,6 @@ use super::nexus_local::NexusGame;
 use std::{fs, io::Write, path::{Path, PathBuf}, sync::Mutex};
 use serde::Serialize;
 static LOCK: Mutex<()> = Mutex::new(());
-const EVENT_LIMIT: u64 = 1024 * 1024;
 const REPORT_LIMIT: usize = 19_000_000;
 
 pub(super) fn sanitize(text: &str) -> String {
@@ -59,10 +58,9 @@ pub(super) fn event(game: &NexusGame, level: &str, action: &str, detail: &str) {
     let _guard = LOCK.lock().unwrap_or_else(|e|e.into_inner());
     let _ = (|| -> Result<(),String> {
         let dir = directory(game)?;let path = dir.join("events.log");
-        if fs::metadata(&path).is_ok_and(|m|m.len() >= EVENT_LIMIT) {fs::rename(&path,dir.join("events.previous.log")).map_err(|e|e.to_string())?;}
         let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|t|t.as_secs()).unwrap_or(0);
         let detail = sanitize(detail).chars().take(4096).map(|c|if c.is_control(){' '}else{c}).collect::<String>();
-        writeln!(private_file(&path,true)?,"[{stamp}] [{level}] {action}: {detail}").map_err(|e|e.to_string())
+        crate::core::bounded_logs::append(&path,format!("[{stamp}] [{level}] {action}: {detail}\n").as_bytes()).map_err(|e|e.to_string())
     })();
 }
 pub(super) fn outcome<T>(game: &NexusGame, action: &str, result: &Result<T,String>) {

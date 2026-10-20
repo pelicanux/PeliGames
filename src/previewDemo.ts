@@ -164,7 +164,7 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
   workspace.games = orderWorkspaceMods(workspace).games;
   const domain = String(args.gameDomain || "stardewvalley");
   switch (command) {
-    case "frame_overlay_support": return {value:{available:true,reason:"Vulkan de 64 bits; compatibilidade gráfica ainda em validação."}};
+    case "frame_overlay_support": return {value:{available:true,reason:"Experimental · Exige Vulkan em processo Linux de 64 bits. Para jogos Windows de 32 bits, procure “Compatibilidade WoW64” na aba Avançado e ative manualmente para testar, se o Proton oferecer suporte. Pode causar incompatibilidade; se o jogo deixar de abrir, desative a opção. Processos Linux de 32 bits ainda não são suportados."}};
     case "frame_overlay_preferences": return {value:{preferences:previewOverlayPreferences}};
     case "configure_frame_overlay": previewOverlayPreferences=args.preferences as typeof previewOverlayPreferences;return {value:null};
 
@@ -192,6 +192,7 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
       if (game) game.profile = String(args.id);
       return { value: clone(workspace) };
     }
+    case "release_default_installation_directory": return {value:false};
     case "prepare_default_installation_directory": return {value: `/preview/games${typeof args.folder === "string" && args.folder ? `/${args.folder}` : ""}`};
     case "read_nexus_mod_logs": return {value:`Demonstração — registros simulados\n--- red4ext/logs/red4ext.log | modified_unix=${Math.floor(Date.now()/1000)} ---\n[RED4ext] Plugin TweakXL loaded\n[TweakXL] Loading tweaks: example.yaml`};
     case "read_nexus_logs": return {value: args.previous ? "Demonstração — execução anterior\nJogo encerrado." : "Demonstração — execução atual\nIniciando o jogo com mods."};
@@ -290,7 +291,7 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "export_nexus_load_order": return { value: clone(demoLoadOrder) };
     case "set_game_mod_destination": return {value:{root:args.directory,executable:String(args.destination)+"/game.exe",dlss_destination:args.destination}};
     case "resolve_game_mod_paths": { const root=String(args.directory); return {value:{root,executable:root+"/bin/x64/game.exe",dlss_destination:root+"/bin/x64"}}; }
-    case "scan_manual_game_folders": return {value:[]};
+    case "read_saved_game_folders": return {value:[]};
     case "frame_generation_dll_external_filesystem": return {value:/^\/(mnt|media|run\/media)\//.test(String(args.path))};
     case "frame_generation_flatpak_status": return {value:{app_id:"com.valvesoftware.Steam",runtime:"org.freedesktop.Platform/x86_64/25.08",branch:"25.08",extension_installed:false,ready:false,message:"Prévia: o Flatpak precisa da extensão MAKO e acesso ao perfil e à DLL.",commands:["flatpak install --user ./org.freedesktop.Platform.VulkanLayer.makorender-25.08.flatpak","flatpak override --user --filesystem='/home/demo/.config/PeliGames/FrameGeneration/profiles:rw' com.valvesoftware.Steam","flatpak override --user --filesystem='/home/demo/Steam/Lossless Scaling:ro' com.valvesoftware.Steam"],release_url:"https://github.com/eugeniosegala/MAKO/releases/tag/render-v4.5.0"}};
     case "frame_generation_state": { const key=String(args.gameKey);const previous=previewFrameProfiles.get(key);const backend="mako";const version="4.5.0";const download_url="https://github.com/eugeniosegala/MAKO/releases/download/render-v4.5.0/MAKO-Renderer-v4.5.0-linux.tar.xz";const directory=`/home/demo/.config/PeliGames/FrameGeneration/mako/versions/${version}`;return {value:{download_url,package_name:"MAKO-Renderer-v4.5.0-linux.tar.xz",install_directory:directory,settings:{enabled:false,overlay_enabled:false,dll:"",multiplier:2,adaptive:false,target_fps:60,flow_scale:1,performance:false,...previous,backend},versions:{mako:version},dll:"/preview/Steam/steamapps/common/Lossless Scaling/Lossless.dll",update_available:false,install_version:version,current_version:version,available_version:version,update_compatible:true,installed_versions:previewFrameInstalled.has(backend)?[{version,current:true,in_use:false,directory}]:[],installed:previewFrameInstalled.has(backend),warning:"Demonstração: desative o FG interno do jogo e do OptiScaler. Requer Vulkan; a compatibilidade depende do jogo."}}; }

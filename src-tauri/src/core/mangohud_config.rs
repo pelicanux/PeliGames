@@ -28,6 +28,18 @@ fn catalog() -> Vec<OptionSpec> {
 pub fn defaults() -> Settings {
     catalog().into_iter().map(|o| (o.key, o.default)).collect()
 }
+#[derive(Deserialize)]
+struct LayoutBlock { id: String, keys: Vec<String>, hardware_order: usize }
+fn layout_blocks() -> Vec<LayoutBlock> {
+    serde_json::from_str(include_str!("../../../src/config/mangohudLayout.json")).expect("MangoHUD layout catalog")
+}
+fn valid_hud_order(value: &str) -> bool {
+    if value.is_empty() { return true; }
+    let blocks = layout_blocks();
+    let ids: Vec<_> = value.split(',').collect();
+    ids.len() == blocks.len() && ids.iter().enumerate().all(|(i, id)|
+        blocks.iter().any(|block| block.id == *id) && !ids[..i].contains(id))
+}
 fn valid_shortcut(value: &str) -> bool {
     let keys: Vec<_> = value.split('+').collect();
     if keys.is_empty() || keys.len() > 5 || value.len() > 100 { return false; }
@@ -60,6 +72,7 @@ pub fn validate(settings: &Settings) -> Result<(), String> {
     for spec in specs {
         let value = settings.get(&spec.key).ok_or("Opção MangoHUD ausente.")?;
         let valid = match spec.kind.as_str() {
+            "hudorder" => value.as_str().is_some_and(valid_hud_order),
             "fpslimits" => value.as_str().is_some_and(valid_fps_limits),
             "shortcut" => value.as_str().is_some_and(valid_shortcut),
             "toggle" => value.is_boolean(),
@@ -124,21 +137,17 @@ pub fn render(settings: &Settings, logs: &Path) -> Result<String, String> {
     validate(settings)?;
     let mut text = String::from("# PeliGames · perfil exclusivo do launcher\nlegacy_layout=0\n");
     let mut specs = catalog();
-    if settings.get("launcher_hud_order").and_then(Value::as_str) == Some("hardware-first") {
-        // legacy_layout=0 draws metrics in configuration order. Keep related
-        // sensors together, followed by FPS, its graph and percentile metrics.
-        specs.sort_by_key(|spec| match spec.key.as_str() {
-            "vram" => 1,
-            "ram" | "swap" | "procmem" | "procmem_shared" | "procmem_virt" => 3,
-            "engine_version" => 4,
-            "frame_timing" => 6,
-            "fps_metrics" => 7,
-            _ if spec.section == "gpu" => 0,
-            _ if spec.section == "cpu" => 2,
-            _ if spec.section == "fps" => 5,
-            _ => 8,
-        });
+    let mut blocks = layout_blocks();
+    let custom = settings.get("launcher_hud_custom_order").and_then(Value::as_str).unwrap_or("");
+    if !custom.is_empty() {
+        let ids: Vec<_> = custom.split(',').collect();
+        blocks.sort_by_key(|b| ids.iter().position(|id| *id == b.id).unwrap_or(ids.len()));
+    } else if settings.get("launcher_hud_order").and_then(Value::as_str) == Some("hardware-first") {
+        blocks.sort_by_key(|b| b.hardware_order);
     }
+    // Display blocks share their order with the UI. Sensor settings stay with
+    // their parent row; launcher-only metadata is never written to MangoHUD.
+    specs.sort_by_key(|spec| blocks.iter().position(|b| b.keys.contains(&spec.key)).unwrap_or(blocks.len()));
     for spec in specs {
         if spec.key.starts_with("launcher_") {
             continue;
@@ -293,10 +302,12 @@ pub fn apply(command: &mut Command, enabled: bool, limit: Option<u32>) -> Result
 pub fn apply_with_override(command: &mut Command, enabled: bool, limit: Option<u32>, display_override: Option<bool>) -> Result<(), String> {
     if limit.is_some_and(|fps| fps > 1000) { return Err("Informe um limite de FPS entre 0 e 1000.".into()); }
     let display = match display_override { Some(value) => value, None => enabled || global_enabled()? };
-    if display || limit.unwrap_or(0) > 0 {
+    let background=command.get_envs().any(|(k,v)|k=="PELI_OVERLAY_BACKGROUND_FPS" && v.is_some());
+    if display || limit.unwrap_or(0) > 0 || background {
         let profile = load()?;
         write(&profile.settings, false)?;
         apply_environment(command, Path::new(&profile.config_path), display, limit);
+        if background && !display {let config=command.get_envs().find(|(k,_)|*k=="MANGOHUD_CONFIG").and_then(|(_,v)|v).map(|v|v.to_string_lossy().into_owned()).unwrap_or_else(||"read_cfg".into());command.env("MANGOHUD_CONFIG",format!("{config},no_display=1"));}
     } else if display_override == Some(false) {
         command.env("MANGOHUD", "0").env("MANGOHUD_CONFIG", "no_display=1");
     }
@@ -337,6 +348,26 @@ pub(super) fn safe_directory(path: &Path) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn custom_layout_is_validated_and_exported_as_native_config_order() {
+        let mut s = defaults();
+        let mut blocks = layout_blocks();
+        let wanted = ["time", "wine", "cpu", "gpu", "frame_timing", "fps"];
+        blocks.sort_by_key(|b| wanted.iter().position(|id| *id == b.id).unwrap_or(wanted.len()));
+        let order = blocks.iter().map(|b| b.id.as_str()).collect::<Vec<_>>().join(",");
+        s.insert("launcher_hud_custom_order".into(), Value::String(order.clone()));
+        let config = render(&s, Path::new("/tmp/logs")).unwrap();
+        for pair in ["time", "wine", "cpu_stats", "gpu_stats", "frame_timing", "fps"].windows(2) {
+            assert!(config.find(&format!("\n{}=", pair[0])).unwrap() < config.find(&format!("\n{}=", pair[1])).unwrap());
+        }
+        assert!(config.contains("legacy_layout=0\n"));
+        assert!(!config.contains("launcher_hud_custom_order="));
+        assert!(valid_hud_order(""));
+        assert!(!valid_hud_order("cpu,gpu"));
+        assert!(!valid_hud_order(&order.replace("time,", "gpu,")));
+        assert!(!valid_hud_order(&order.replace("time,", "exec,")));
+        assert!(!valid_hud_order(&format!("{order}\nexec=bad")));
+    }
     #[test]
     fn default_monitoring_has_no_fps_cap_or_forced_vsync() {
         let mut settings = defaults();
@@ -433,12 +464,12 @@ mod tests {
         assert!(render(&settings, Path::new("/tmp/logs")).is_err());
     }
     #[test]
-    fn hardware_order_keeps_sensors_before_fps_graph_and_metrics() {
+    fn hardware_order_keeps_cpu_first_metrics_before_graph_and_clock_last() {
         let mut settings = defaults();
         settings.insert("launcher_hud_order".into(), serde_json::json!("hardware-first"));
         let config = render(&settings, Path::new("/tmp/logs")).unwrap();
         let keys: Vec<&str> = config.lines().filter_map(|line| line.split_once('=').map(|(key, _)| key)).collect();
-        let order = ["gpu_stats", "vram", "cpu_stats", "ram", "engine_version", "fps", "frame_timing", "fps_metrics"];
+        let order = ["cpu_stats", "gpu_stats", "vram", "ram", "engine_version", "fps", "fps_metrics", "frame_timing", "wine", "gamemode", "time"];
         for pair in order.windows(2) {
             assert!(keys.iter().position(|key| key == &pair[0]).unwrap() < keys.iter().position(|key| key == &pair[1]).unwrap(), "{} before {}", pair[0], pair[1]);
         }

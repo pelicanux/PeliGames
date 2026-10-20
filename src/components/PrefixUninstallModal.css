@@ -8,3 +8,9 @@
 .uninstall-target { margin:0; font-size:.85rem; overflow-wrap:anywhere; }
 .uninstall-target code { font-size:.8rem; color:var(--tone-94a3b8,#94a3b8); }
 .uninstall-summary { margin:14px 0 0; font-size:.85rem; line-height:1.5; }
+
+.prefix-uninstall-dialog .uninstall-option {border-color:rgba(160,177,204,.18);border-radius:12px;}
+.prefix-uninstall-dialog .uninstall-option strong {font-size:.8125rem;}
+.prefix-uninstall-dialog .uninstall-option small,.prefix-uninstall-dialog .uninstall-summary {font-size:.75rem;line-height:1.5;}
+.prefix-uninstall-dialog .uninstall-option:has(input:disabled) {opacity:.5;cursor:default;}
+.prefix-uninstall-dialog .uninstall-option:has(input:checked) {border-color:rgba(var(--accent-rgb),.55);background:rgba(var(--accent-rgb),.08);}
