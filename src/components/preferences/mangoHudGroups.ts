@@ -5,7 +5,7 @@ export const MANGO_GROUPS: {id:string;title:string;color:string;blocks:string[];
  {id:"performance",title:"Desempenho",color:"#34c77b",blocks:["fps","frame_timing","frame_count","fps_metrics"],items:[["fps","FPS"],["frametime","Tempo de quadro"],["frame_timing","Gráfico de quadros"],["fps_metrics","Média e 1% Low","avg,0.01"]]},
  {id:"gpu",title:"Placa de vídeo",color:"#55b9f3",blocks:["gpu","gpu_name","vulkan_driver","vram"],items:[["gpu_stats","Uso"],["gpu_temp","Temperatura"],["vram","Memória (VRAM)"],["gpu_core_clock","Frequência"],["gpu_power","Consumo"],["gpu_fan","Ventoinha"]]},
  {id:"cpu",title:"Processador",color:"#b793ef",blocks:["cpu","core_load"],items:[["cpu_stats","Uso"],["cpu_temp","Temperatura"],["cpu_mhz","Frequência"],["core_load","Por núcleo"],["cpu_power","Consumo"]]},
- {id:"memory",title:"Memória",color:"#dca0d5",blocks:["ram","io"],items:[["ram","RAM"],["swap","Swap"]]},
+ {id:"memory",title:"Memória",color:"#dca0d5",blocks:["ram","io"],items:[["ram","RAM"],["swap","Swap"],["procmem","RAM do jogo"]]},
  {id:"system",title:"Sistema",color:"#f4b350",blocks:["resolution","display_server","time","arch","wine","engine_version","winesync","version","gamemode","vkbasalt","battery","media_player","network","custom_text_center"],items:[["resolution","Resolução"],["time","Relógio"],["wine","Versão do Wine/Proton"],["gamemode","GameMode"],["battery","Bateria"]]},
 ];
 export function orderedMangoGroups(settings:MangoHudSettings){

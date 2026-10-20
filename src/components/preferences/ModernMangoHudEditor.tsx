@@ -65,6 +65,7 @@ export function Hud({ settings, tick, size, graph }: { settings: MangoHudSetting
   if (s.cpu_stats || s.cpu_temp || s.cpu_mhz || s.cpu_power) rows.push(row(String(s.cpu_text || "CPU"), color("cpu_color"), [Boolean(s.cpu_stats) && <>{Math.round(41 + wave(7) * 15)}{unit("%")}</>, Boolean(s.cpu_temp) && <>{Math.round(58 + wave(8) * 5)}{unit("°C")}</>, Boolean(s.cpu_mhz) && <>{Math.round(4780 + wave(9) * 120)}{unit("MHz")}</>, Boolean(s.cpu_power) && <>{Math.round(62 + wave(9) * 9)}{unit("W")}</>], "cpu"));
   if (s.core_load) rows.push(row("Núcleos", color("cpu_color"), [Array.from({ length: 8 }, (_, i) => Math.round(30 + wave(i * 1.7) * 60)).join(" ")]));
   if (s.ram || s.swap) rows.push(row("RAM", color("ram_color"), [Boolean(s.ram) && <>{(12.4 + wave(11) * .3).toFixed(1)}{unit("GiB")}</>, Boolean(s.swap) && <>0.3{unit("GiB swap")}</>]));
+  if (s.procmem) rows.push(row("Processo", color("ram_color"), [<>2.4{unit("GiB")}</>]));
   if (s.launcher_hud_order === "hardware-first") rows.push(...performanceRows);
   else rows.unshift(...performanceRows);
   if (s.resolution) rows.push(row("Tela", color("text_color"), ["2560×1440"]));
@@ -74,7 +75,7 @@ export function Hud({ settings, tick, size, graph }: { settings: MangoHudSetting
   if (s.battery) rows.push(row("Bateria", color("text_color"), [<>87{unit("%")}</>]));
   {
     const ids=hudOrder(s);
-    const labels:Record<string,string>={VULKAN:"engine_version",fps:"fps",graph:"frame_timing",AVG:"fps_metrics","1% Low":"fps_metrics","0.1% Low":"fps_metrics",title:"custom_text_center",gpu:"gpu",cpu:"cpu",VRAM:"vram","Núcleos":"core_load",RAM:"ram",Tela:"resolution",Hora:"time",Proton:"wine",GameMode:"gamemode",Bateria:"battery"};
+    const labels:Record<string,string>={VULKAN:"engine_version",fps:"fps",graph:"frame_timing",AVG:"fps_metrics","1% Low":"fps_metrics","0.1% Low":"fps_metrics",title:"custom_text_center",gpu:"gpu",cpu:"cpu",VRAM:"vram","Núcleos":"core_load",RAM:"ram",Processo:"ram",Tela:"resolution",Hora:"time",Proton:"wine",GameMode:"gamemode",Bateria:"battery"};
     rows.sort((a,b)=>{
       const rank=(node:React.ReactNode)=>ids.indexOf(labels[String((node as React.ReactElement).key)]||"");
       return rank(a)-rank(b);

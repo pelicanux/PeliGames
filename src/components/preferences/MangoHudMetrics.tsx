@@ -8,7 +8,7 @@ export function MangoHudMetrics({settings,onToggle,onOrder}:{settings:MangoHudSe
  const finish=()=>{source.current=null;setTarget("");};
  const begin=(event:React.DragEvent,value:Drag)=>{event.stopPropagation();source.current=value;suppressClick.current=true;event.dataTransfer.effectAllowed="move";event.dataTransfer.setData("text/plain",value.id);};
  const groups=orderedMangoGroups(settings);
- return <div className="mm-groups">{groups.map((group,index)=><div key={group.id} className={`mm-group ${target===group.id?"mm-group-drop":""}`}
+ return <div className="mm-metrics"><p className="mm-hint mm-reorder-hint">Arraste as categorias ou as pílulas com ⠿. O elo indica uma posição vinculada ao bloco; você ainda pode clicar para ligar ou desligar.</p><div className="mm-groups">{groups.map((group,index)=><div key={group.id} className={`mm-group ${target===group.id?"mm-group-drop":""}`}
    onDragOver={event=>{if(source.current?.kind==="group"){event.preventDefault();setTarget(group.id);}}}
    onDrop={event=>{if(source.current?.kind!=="group")return;event.preventDefault();onOrder(placeMangoGroup(settings,source.current.id,group.id));finish();}}>
    <h3 draggable onDragStart={event=>begin(event,{kind:"group",id:group.id,group:group.id})} onDragEnd={finish} title="Arraste para mover a categoria inteira">
@@ -19,16 +19,16 @@ export function MangoHudMetrics({settings,onToggle,onOrder}:{settings:MangoHudSe
    <div className="mm-chips">{orderedMangoItems(settings,group.items).filter(([key])=>key in settings).map(([key,label,on])=>{
     const active=key==="fps_metrics"?String(settings[key]||"").split(",").includes("0.01"):on?settings[key]===on:Boolean(settings[key]);
     const movable=movableMangoItem(key);
-    return <button type="button" key={key} draggable={movable} className={`mm-chip ${target===key?"mm-chip-drop":""}`} aria-pressed={active}
-      title={movable?"Clique para ligar/desligar. Arraste para mover o bloco dentro da categoria; Alt + setas também reorganiza.":"Clique para ligar/desligar. A posição deste sensor acompanha a linha principal no MangoHUD."}
-      onDragStart={event=>begin(event,{kind:"item",id:key,group:group.id})} onDragEnd={finish}
-      onDragOver={event=>{if(source.current?.kind==="item"&&source.current.group===group.id){event.preventDefault();event.stopPropagation();setTarget(key);}}}
-      onDrop={event=>{event.preventDefault();event.stopPropagation();if(source.current?.kind==="item"&&source.current.group===group.id)onOrder(placeMangoItem(settings,source.current.id,key));finish();}}
+    return <button type="button" key={key} draggable={movable} className={`mm-chip ${movable?"mm-chip-movable":"mm-chip-linked"} ${target===key?"mm-chip-drop":""}`} aria-pressed={active}
+      title={key==="procmem"?"Clique para ligar/desligar. A posição está agrupada com RAM neste editor.":movable?"Clique para ligar/desligar. Arraste para mover o bloco dentro da categoria; Alt + setas também reorganiza.":"Clique para ligar/desligar. A posição deste sensor acompanha a linha principal no MangoHUD."}
+      onDragStart={event=>{if(!movable){event.preventDefault();return;}begin(event,{kind:"item",id:key,group:group.id});}} onDragEnd={finish}
+      onDragOver={event=>{if(movable&&source.current?.kind==="item"&&source.current.group===group.id){event.preventDefault();event.stopPropagation();setTarget(key);}}}
+      onDrop={event=>{event.preventDefault();event.stopPropagation();if(movable&&source.current?.kind==="item"&&source.current.group===group.id)onOrder(placeMangoItem(settings,source.current.id,key));finish();}}
       onPointerDown={()=>{suppressClick.current=false;}}
       onKeyDown={event=>{if(!event.altKey||!movable||!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(event.key))return;event.preventDefault();const items=orderedMangoItems(settings,group.items).filter(([id])=>movableMangoItem(id));const delta=["ArrowLeft","ArrowUp"].includes(event.key)?-1:1;const to=items[items.findIndex(([id])=>id===key)+delta];if(to)onOrder(placeMangoItem(settings,key,to[0]));}}
       onClick={()=>{if(suppressClick.current){suppressClick.current=false;return;}onToggle(key,on?(active?"":on):!settings[key]);}}>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="m5 12 5 5 9-10"/></svg>{label}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="m5 12 5 5 9-10"/></svg>{label}{movable?<span className="mm-chip-grip" aria-hidden="true">⠿</span>:<svg className="mm-chip-linked-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m10 13 4-4m-6 6-1 1a3 3 0 0 1-4-4l4-4a3 3 0 0 1 4 0m2 0 1-1a3 3 0 0 1 4 4l-4 4a3 3 0 0 1-4 0"/></svg>}
     </button>;
    })}</div>
- </div>)}</div>;
+ </div>)}</div></div>;
 }

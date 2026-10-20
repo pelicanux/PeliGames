@@ -256,3 +256,8 @@
 .mm-custom-presets input,.mm-custom-presets select {flex:1;min-width:150px;}
 .mm-custom-presets small {font-size:.75rem;color:var(--mm-muted);}
 .mm-custom-presets .mm-hint {margin:0;}
+
+.mm-reorder-hint { margin-top: 0; font-size: .78rem; }
+.mm-chip-grip { opacity: .65; font-size: .95rem; line-height: 1; }
+.mm-chip.mm-chip-linked { cursor: pointer; border-style: dashed; }
+.mm-chip svg.mm-chip-linked-icon { display: inline-block; margin: 0; width: 13px; height: 13px; color: var(--mm-muted); opacity: .75; }
