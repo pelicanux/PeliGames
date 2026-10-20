@@ -1,5 +1,5 @@
 #[path = "backend_folder.rs"]
-mod backend_folder;
+pub(super) mod backend_folder;
 #[path = "backend_release.rs"]
 mod backend_release;
 use tauri::AppHandle;
