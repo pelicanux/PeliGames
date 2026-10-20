@@ -238,7 +238,12 @@ pub async fn run_wine_tool(app: tauri::AppHandle, request: crate::core::wine_too
     use tauri::Emitter;
     if BUSY.compare_exchange(false,true,Ordering::AcqRel,Ordering::Acquire).is_err() { return Err("Aguarde a operação em andamento.".into()); }
     let _guard = BusyGuard;
-    crate::core::wine_tools::execute(request, std::sync::Arc::new(move |line| { let _=app.emit("peligames-wine-tool-progress",serde_json::json!({"id":request_id,"line":line})); })).await
+    crate::core::wine_tools::execute(request, request_id.clone(), std::sync::Arc::new(move |line| { let _=app.emit("peligames-wine-tool-progress",serde_json::json!({"id":request_id,"line":line})); })).await
+}
+
+#[tauri::command]
+pub fn cancel_wine_tool(request_id: String) -> Result<(), String> {
+    crate::core::wine_tools::cancel(&request_id)
 }
 
 #[tauri::command]

@@ -1,5 +1,5 @@
 import { useI18n } from "../i18n/I18nContext";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "../App.css";
 import { createPortal } from "react-dom";
 import { useBoundedDropdown } from "../hooks/useBoundedDropdown";
@@ -20,6 +20,7 @@ export const ShortcutKeySelector: React.FC<Props> = ({ shortcutKey, setShortcutK
   const menuRef = useRef<HTMLDivElement>(null);
   const menuPosition = useBoundedDropdown(isOpen, dropdownRef, menuRef, setIsOpen);
   const defaultKey = defaultShortcutForRoute(route);
+  useEffect(() => { if (disabled) setIsOpen(false); }, [disabled]);
 
   const options = [
     { value: "Insert", label: "Insert", desc: defaultKey === "Insert" ? t("gameInfo", "defaultKey") : "" },
@@ -53,7 +54,7 @@ export const ShortcutKeySelector: React.FC<Props> = ({ shortcutKey, setShortcutK
           <div ref={menuRef} className={`custom-select-menu route-select-menu select-scroll-frame modern-shortcut-menu`} style={menuPosition} role="listbox" aria-label={t("gameInfo", "menuKey")}>
             <div className="select-options-scroll">
             {options.map((opt) => (
-              <button type="button" role="option" aria-selected={shortcutKey === opt.value}
+              <button type="button" role="option" disabled={disabled} aria-selected={shortcutKey === opt.value}
                 key={opt.value} 
                 className={`custom-select-option ${shortcutKey === opt.value ? "selected" : ""}`}
                 style={{ cursor: "pointer" }}

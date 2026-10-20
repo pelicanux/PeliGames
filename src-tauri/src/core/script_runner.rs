@@ -227,17 +227,17 @@ pub fn execute_standalone_install(
     let _ = fs::remove_dir_all(&temp_dir);
 
     if result.is_ok() {
-        let _ = inject_shortcut_key(game_dir, shortcut_key);
+        if route != "remove" { let _ = inject_shortcut_key(game_dir, shortcut_key, &route); }
     }
 
     result
 }
 
-pub fn inject_shortcut_key_pub(game_dir: &str, shortcut_key: &str) -> Result<(), String> {
-    inject_shortcut_key(game_dir, shortcut_key)
+pub fn inject_shortcut_key_pub(game_dir: &str, shortcut_key: &str, route: &str) -> Result<(), String> {
+    inject_shortcut_key(game_dir, shortcut_key, route)
 }
 
-fn inject_shortcut_key(game_dir: &str, shortcut_key: &str) -> Result<(), String> {
+fn inject_shortcut_key(game_dir: &str, shortcut_key: &str, route: &str) -> Result<(), String> {
     let (key_hex, key_dec) = match shortcut_key {
         "End" => ("0x23", "35"),
         "Home" => ("0x24", "36"),
@@ -252,7 +252,11 @@ fn inject_shortcut_key(game_dir: &str, shortcut_key: &str) -> Result<(), String>
         _ => ("0x2D", "45"), // Default to Insert
     };
 
-    let ini_files = vec!["nvngx.ini", "optiscaler.ini", "reshade.ini"];
+    let ini_files: &[&str] = match route {
+        "optiscaler" | "optiscaler-renodx" => &["nvngx.ini", "optiscaler.ini"],
+        "reshade" | "vulkan" | "dx9" | "reshade-feeder" | "reshade-feeder-vulkan" | "reshade-feeder-dx9" => &["reshade.ini"],
+        _ => return Err("Rota inválida para o atalho do menu.".into()),
+    };
     let base_path = Path::new(game_dir);
 
     // Let's also check in common subdirectories where the exe might be (like /Binaries/Win64)
@@ -312,7 +316,7 @@ fn inject_shortcut_key(game_dir: &str, shortcut_key: &str) -> Result<(), String>
                         }
 
                         if changed {
-                            let _ = fs::write(path, lines.join("\n"));
+                            fs::write(path, lines.join("\n")).map_err(|error| format!("Não foi possível atualizar {}: {error}", path.display()))?;
                         }
                     }
                 }
@@ -414,4 +418,39 @@ mod tests {
         assert!(model_arguments(script, InstallExtras {model:Some(NeuralModel::Small), ..Default::default()}, false, true).is_err());
     }
 
+}
+
+#[cfg(test)]
+mod menu_shortcut_tests {
+    use super::*;
+    #[test]
+    fn menu_keys_only_update_the_selected_component() {
+        let root = std::env::temp_dir().join(format!("peligames-menu-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&root).unwrap();
+        let opti = root.join("OptiScaler.ini");
+        let nvngx = root.join("nvngx.ini");
+        let reshade = root.join("ReShade.ini");
+        let original_opti = "[Menu]\nMenuKey=0x2D\n";
+        let original_reshade = "[INPUT]\nKeyOverlay=36,0,0,0\n";
+        fs::write(&opti, original_opti).unwrap();
+        fs::write(&nvngx, original_opti).unwrap();
+        fs::write(&reshade, original_reshade).unwrap();
+        let dir = root.to_str().unwrap();
+        inject_shortcut_key(dir, "F1", "optiscaler").unwrap();
+        assert!(fs::read_to_string(&opti).unwrap().contains("MenuKey=0x70"));
+        assert_eq!(fs::read_to_string(&reshade).unwrap(), original_reshade);
+        let saved_opti = fs::read(&opti).unwrap();
+        let saved_nvngx = fs::read(&nvngx).unwrap();
+        for route in ["reshade", "vulkan", "dx9", "reshade-feeder", "reshade-feeder-vulkan", "reshade-feeder-dx9"] {
+            fs::write(&reshade, original_reshade).unwrap();
+            inject_shortcut_key(dir, "F12", route).unwrap();
+            assert!(fs::read_to_string(&reshade).unwrap().contains("KeyOverlay=123,0,0,0"));
+            assert_eq!(fs::read(&opti).unwrap(), saved_opti);
+            assert_eq!(fs::read(&nvngx).unwrap(), saved_nvngx);
+        }
+        let before = fs::read(&reshade).unwrap();
+        assert!(inject_shortcut_key(dir, "F2", "unknown").is_err());
+        assert_eq!(fs::read(&reshade).unwrap(), before);
+        fs::remove_dir_all(root).unwrap();
+    }
 }

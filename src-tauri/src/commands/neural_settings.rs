@@ -1,14 +1,17 @@
 use std::{fs, io::Read, path::{Path, PathBuf}};
 
 fn enabled_in_ini(text: &str) -> Option<bool> {
+    bool_in_section(text, "DlssNr", "Enabled")
+}
+fn bool_in_section(text: &str, target: &str, option: &str) -> Option<bool> {
     let mut section = false;
     let mut result = None;
     for line in text.lines() {
         let line = line.split([';', '#']).next().unwrap_or("").trim();
-        if line.starts_with('[') { section = line.trim_matches(['[', ']']).trim().eq_ignore_ascii_case("DlssNr"); }
+        if line.starts_with('[') { section = line.trim_matches(['[', ']']).trim().eq_ignore_ascii_case(target); }
         else if section {
             if let Some((key, value)) = line.split_once('=') {
-                if key.trim().eq_ignore_ascii_case("Enabled") {
+                if key.trim().eq_ignore_ascii_case(option) {
                     result = match value.trim().to_ascii_lowercase().as_str() { "true" | "1" | "yes" => Some(true), "false" | "0" | "no" => Some(false), _ => None };
                 }
             }
@@ -18,8 +21,11 @@ fn enabled_in_ini(text: &str) -> Option<bool> {
 }
 
 fn with_enabled(text: &str, enabled: bool) -> String {
+    with_section_bool(text, "DlssNr", "Enabled", enabled, false)
+}
+fn with_section_bool(text: &str, target: &str, option: &str, enabled: bool, numeric: bool) -> String {
     let newline = if text.contains("\r\n") { "\r\n" } else { "\n" };
-    let setting = format!("Enabled={}", if enabled { "true" } else { "false" });
+    let setting = format!("{option}={}", if numeric { if enabled { "1" } else { "0" } } else if enabled { "true" } else { "false" });
     let mut lines = Vec::new();
     let mut section = false;
     let mut written = false;
@@ -27,14 +33,14 @@ fn with_enabled(text: &str, enabled: bool) -> String {
         let trimmed = line.trim();
         if trimmed.starts_with('[') {
             if section && !written { lines.push(setting.clone()); written = true; }
-            section = trimmed.trim_matches(['[', ']']).trim().eq_ignore_ascii_case("DlssNr");
+            section = trimmed.trim_matches(['[', ']']).trim().eq_ignore_ascii_case(target);
         }
-        if section && trimmed.split_once('=').map(|(key, _)| key.trim().eq_ignore_ascii_case("Enabled")).unwrap_or(false) {
+        if section && trimmed.split_once('=').map(|(key, _)| key.trim().eq_ignore_ascii_case(option)).unwrap_or(false) {
             if !written { lines.push(setting.clone()); written = true; }
         } else { lines.push(line.to_string()); }
     }
     if !written {
-        if !section { lines.push("[DlssNr]".into()); }
+        if !section { lines.push(format!("[{target}]")); }
         lines.push(setting);
     }
     lines.join(newline) + newline
@@ -154,6 +160,11 @@ pub fn set_enabled(game_dir: &Path, enabled: bool) -> Result<(), String> {
     let canonical_parent = path.parent().ok_or("Invalid configuration path")?.canonicalize().map_err(|e| e.to_string())?;
     if !canonical_parent.starts_with(&canonical_root) { return Err("Redirected configuration directories are not supported".into()); }
     let text = read_file(&path)?;
+    let backend_text = read_file(&backend)?;
+    if bool_in_section(&backend_text, "RenoDX", "Enabled") == Some(true) {
+        // In RenoDX mode the backend ignores OptiScaler's [DlssNr] settings.
+        return write_settings(&backend, &with_section_bool(&backend_text, "RenoDX", "NeuralUplift", enabled, true));
+    }
     let updated = if path == root.join("OptiScaler.ini") {
         with_enabled(&text, enabled)
     } else {
@@ -162,7 +173,6 @@ pub fn set_enabled(game_dir: &Path, enabled: bool) -> Result<(), String> {
     };
     // Keep the backend available, including installations disabled by the old launcher.
     // The visible checkbox is controlled by OptiScaler or by the ReShade technique list.
-    let backend_text = read_file(&backend)?;
     if enabled_in_ini(&backend_text) != Some(true) {
         write_settings(&backend, &with_enabled(&backend_text, true))?;
     }
@@ -171,6 +181,11 @@ pub fn set_enabled(game_dir: &Path, enabled: bool) -> Result<(), String> {
 #[tauri::command]
 pub async fn get_neural_startup(game_dir: String) -> Result<bool, String> {
     tauri::async_runtime::spawn_blocking(move || {
+        let root = super::installer::installed_mod_directory(Path::new(&game_dir)).ok_or("Neural Rendering is not installed in this game")?;
+        let backend_text = read_file(&root.join("dlssnr-amd.ini"))?;
+        if bool_in_section(&backend_text, "RenoDX", "Enabled") == Some(true) {
+            return Ok(bool_in_section(&backend_text, "RenoDX", "NeuralUplift").unwrap_or(true));
+        }
         let path = settings_path(Path::new(&game_dir))?;
         let text = read_file(&path)?;
         if path.file_name().map(|name| name == "OptiScaler.ini").unwrap_or(false) {
@@ -200,5 +215,33 @@ mod lumenite_tests {
         assert!(lumenite_in_ini("[DlssNr]\n MotionVectors = Lumenite ; selected\n[Network]\nMotionVectors=vort"));
         assert!(!lumenite_in_ini(";MotionVectors=lumenite\n[Network]\nMotionVectors=lumenite"));
         assert!(!lumenite_in_ini("[DlssNr]\nMotionVectors=lumenite\nMotionVectors=vort"));
+    }
+}
+
+#[cfg(test)]
+mod startup_mode_tests {
+    use super::*;
+    #[test]
+    fn renodx_startup_preserves_the_mode_and_other_sections() {
+        let original = "[DlssNr]\r\nEnabled=true\r\n[RenoDX]\r\nEnabled = 1\r\nNeuralUplift = 1\r\nNRIntensity=0.8\r\n";
+        let disabled = with_section_bool(original, "RenoDX", "NeuralUplift", false, true);
+        assert_eq!(bool_in_section(&disabled, "RenoDX", "Enabled"), Some(true));
+        assert_eq!(bool_in_section(&disabled, "RenoDX", "NeuralUplift"), Some(false));
+        assert_eq!(enabled_in_ini(&disabled), Some(true));
+        assert!(disabled.contains("NRIntensity=0.8\r\n"));
+        let enabled = with_section_bool(&disabled, "RenoDX", "NeuralUplift", true, true);
+        assert_eq!(bool_in_section(&enabled, "RenoDX", "NeuralUplift"), Some(true));
+    }
+    #[test]
+    fn legacy_and_feed_toggles_remain_independent() {
+        let ini = "[DlssNr]\nEnabled=true\n[RenoDX]\nEnabled=0\n";
+        let disabled = with_enabled(ini, false);
+        assert_eq!(enabled_in_ini(&disabled), Some(false));
+        assert_eq!(bool_in_section(&disabled, "RenoDX", "Enabled"), Some(false));
+        let preset = "Techniques=Lumenite_Kernel@lumenite_Kernel.fx,DLSS5_Feed@DLSS5_Feed.fx\n";
+        let disabled = with_feed(preset, false);
+        assert!(!techniques_in_preset(&disabled).unwrap().split(',').any(is_feed));
+        assert!(disabled.contains("Lumenite_Kernel@lumenite_Kernel.fx"));
+        assert!(techniques_in_preset(&with_feed(&disabled, true)).unwrap().split(',').any(is_feed));
     }
 }

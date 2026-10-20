@@ -1,13 +1,17 @@
 //! Launcher-owned prefix tools. Catalog text is parsed as data, never sourced or evaluated.
+#[path = "wine_tools/output.rs"]
+mod output;
+#[cfg(target_os = "linux")]
+#[path = "wine_tools/process.rs"]
+mod process;
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
-    io::{BufRead, BufReader, Write},
     path::{Path, PathBuf},
     process::{Command, Stdio},
     sync::{
         atomic::{AtomicBool, Ordering},
-        Arc,
+        Arc, Mutex,
     },
     time::Duration,
 };
@@ -15,9 +19,18 @@ static BUSY: AtomicBool = AtomicBool::new(false);
 pub fn busy() -> bool {
     BUSY.load(Ordering::Acquire)
 }
+static SESSION: Mutex<Option<(String, Arc<AtomicBool>)>> = Mutex::new(None);
+pub fn cancel(id: &str) -> Result<(), String> {
+    let session = SESSION.lock().map_err(|e|e.to_string())?;
+    let (active, cancel) = session.as_ref().ok_or("A operação já foi concluída.")?;
+    if active != id {return Err("Esta operação já foi substituída.".into());}
+    cancel.store(true, Ordering::Release);
+    Ok(())
+}
 struct Guard;
 impl Drop for Guard {
     fn drop(&mut self) {
+        if let Ok(mut session) = SESSION.lock() {*session=None;}
         BUSY.store(false, Ordering::Release);
     }
 }
@@ -133,10 +146,10 @@ async fn catalog(
     progress(format!("{} componentes disponíveis.", result.len()));
     Ok(result)
 }
-fn prepare(umu: &Path, proton: &Path, prefix: &Path, action: &str, packages: &[String]) -> Command {
+fn prepare(umu: &Path, proton: &Path, prefix: &Path, action: &str, packages: &[String], join_running: bool) -> Command {
     let mut cmd = Command::new(umu);
     super::env_utils::host_environment(&mut cmd);
-    cmd.arg(if matches!(action, "winecfg" | "regedit" | "explorer") {
+    cmd.arg(if matches!(action, "winecfg" | "regedit" | "explorer" | "uninstaller") {
         action
     } else {
         "winetricks"
@@ -152,7 +165,7 @@ fn prepare(umu: &Path, proton: &Path, prefix: &Path, action: &str, packages: &[S
         .env("PROTONPATH", proton)
         .env("GAMEID", "umu-default")
         .env("STORE", "none")
-        .env("PROTON_VERB", "waitforexitandrun")
+        .env("PROTON_VERB", if join_running {"runinprefix"} else {"waitforexitandrun"})
         .env("UMU_LOG", "1")
         .env_remove("UMU_NO_PROTON")
         .env_remove("WINETRICKS_SUPER_QUIET")
@@ -162,7 +175,13 @@ fn prepare(umu: &Path, proton: &Path, prefix: &Path, action: &str, packages: &[S
         .stderr(Stdio::piped());
     cmd
 }
-pub async fn execute(request: ToolRequest, progress: Progress) -> Result<ToolResult, String> {
+async fn cancellable<T>(future: impl std::future::Future<Output=Result<T,String>>, cancel: &AtomicBool) -> Result<T,String> {
+    tokio::select! {
+        result = future => result,
+        _ = async {while !cancel.load(Ordering::Acquire) {tokio::time::sleep(Duration::from_millis(50)).await;}} => Err("PELIGAMES_WINE_TOOL_CANCELLED".into()),
+    }
+}
+pub async fn execute(request: ToolRequest, id: String, progress: Progress) -> Result<ToolResult, String> {
     if BUSY
         .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
         .is_err()
@@ -170,7 +189,9 @@ pub async fn execute(request: ToolRequest, progress: Progress) -> Result<ToolRes
         return Err("Uma ferramenta Wine já está em execução.".into());
     }
     let _guard = Guard;
-    if !["catalog", "winecfg", "install", "winetricks-gui", "regedit", "explorer"].contains(&request.action.as_str()) {
+    let cancel = Arc::new(AtomicBool::new(false));
+    *SESSION.lock().map_err(|e|e.to_string())? = Some((id.clone(), cancel.clone()));
+    if !["catalog", "winecfg", "install", "winetricks-gui", "regedit", "explorer", "uninstaller"].contains(&request.action.as_str()) {
         return Err("Ferramenta inválida.".into());
     }
     if request.action != "install" && !request.packages.is_empty() {
@@ -186,20 +207,22 @@ pub async fn execute(request: ToolRequest, progress: Progress) -> Result<ToolRes
     let proton = super::game_installation::validate_proton(&proton)?;
     if request.action == "catalog" {
         return Ok(ToolResult {
-            packages: catalog(&proton, &prefix, &progress).await?,
+            packages: cancellable(catalog(&proton, &prefix, &progress), &cancel).await?,
             log: String::new(),
         });
     }
-    if super::game_execution::active() || super::game_execution::prefix_in_use(&prefix) {
-        return Err(
-            "Encerre o jogo e os programas deste prefixo antes de usar as ferramentas.".into(),
-        );
+    // UMU can expose the same prefix as <root> or its pfx -> . alias.
+    let alias = prefix.join("pfx");
+    let join_running = super::game_execution::prefix_in_use(&prefix)
+        || (alias.is_dir() && super::game_execution::prefix_in_use(&alias));
+    if join_running {
+        progress("Abrindo a ferramenta no prefixo em uso, sem aguardar o encerramento do jogo.".into());
     }
     if request.action == "install" {
         if request.packages.is_empty() || request.packages.len() > 40 {
             return Err("Selecione de 1 a 40 componentes.".into());
         }
-        let available = catalog(&proton, &prefix, &progress).await?;
+        let available = cancellable(catalog(&proton, &prefix, &progress), &cancel).await?;
         if request
             .packages
             .iter()
@@ -208,8 +231,15 @@ pub async fn execute(request: ToolRequest, progress: Progress) -> Result<ToolRes
             return Err("Componente não encontrado no catálogo Winetricks.".into());
         }
     }
+    let _prefix_lease = if join_running {None} else {Some(super::game_installation::lock_prefix(&prefix)?)};
+    if cancel.load(Ordering::Acquire) {return Err("PELIGAMES_WINE_TOOL_CANCELLED".into());}
     progress("Preparando UMU (o download automático será feito se necessário)…".into());
-    let umu = tokio::task::spawn_blocking(super::game_installation::find_umu).await.map_err(|e|e.to_string())??;
+    // The shared UMU cache preparation may finish in the background; cancellation
+    // stops waiting here and never starts a component installer afterward.
+    let umu = cancellable(async {
+        tokio::task::spawn_blocking(super::game_installation::find_umu).await.map_err(|e|e.to_string())?
+    }, &cancel).await?;
+    if cancel.load(Ordering::Acquire) {return Err("PELIGAMES_WINE_TOOL_CANCELLED".into());}
     let logs = super::installation_layout::destination_of(&prefix)
         .ok_or("Diretório do jogo inválido.")?
         .join("logs");
@@ -223,46 +253,12 @@ pub async fn execute(request: ToolRequest, progress: Progress) -> Result<ToolRes
         request.action,
         prefix.display()
     ));
-    let mut cmd = prepare(&umu, &proton, &prefix, &request.action, &request.packages);
-    let exit = tokio::task::spawn_blocking(move || -> Result<(), String> {
-        let mut child = cmd
-            .spawn()
-            .map_err(|e| format!("Não foi possível iniciar a ferramenta: {e}"))?;
-        let read = |pipe: Box<dyn std::io::Read + Send>,
-                    progress: Progress,
-                    logfile: Arc<std::sync::Mutex<fs::File>>| {
-            std::thread::spawn(move || {
-                for line in BufReader::new(pipe).lines().map_while(Result::ok) {
-                    if let Ok(mut log) = logfile.lock() {
-                        let _ = writeln!(log, "{line}");
-                    }
-                    progress(line);
-                }
-            })
-        };
-        let out = read(
-            Box::new(child.stdout.take().unwrap()),
-            progress.clone(),
-            logfile.clone(),
-        );
-        let err = read(
-            Box::new(child.stderr.take().unwrap()),
-            progress.clone(),
-            logfile,
-        );
-        let status = child.wait().map_err(|e| e.to_string())?;
-        let _ = out.join();
-        let _ = err.join();
-        if !status.success() {
-            return Err(format!(
-                "A ferramenta encerrou com código {:?}.",
-                status.code()
-            ));
-        }
-        Ok(())
-    })
-    .await
-    .map_err(|e| e.to_string())?;
+    let cmd = prepare(&umu, &proton, &prefix, &request.action, &request.packages, join_running);
+    #[cfg(target_os = "linux")]
+    let exit = tokio::task::spawn_blocking(move || process::run(cmd, id, cancel, progress, logfile))
+        .await.map_err(|e|e.to_string())?;
+    #[cfg(not(target_os = "linux"))]
+    let exit: Result<(), String> = {let _=(cmd,id,cancel,progress,logfile);Err("Ferramentas Wine requerem Linux.".into())};
     exit.map_err(|e| format!("{e} Log: {}", log.display()))?;
     Ok(ToolResult {
         packages: vec![],
@@ -282,9 +278,20 @@ pub fn maintenance_entry(path: &str) -> Result<(String,String,String,String),Str
 mod maintenance_tests {
     use super::*;
     #[test]
+    fn cancellation_is_scoped_to_the_active_request() {
+        let flag = Arc::new(AtomicBool::new(false));
+        *SESSION.lock().unwrap() = Some(("current".into(), flag.clone()));
+        assert!(cancel("previous").is_err());
+        assert!(!flag.load(Ordering::Acquire));
+        cancel("current").unwrap();
+        assert!(flag.load(Ordering::Acquire));
+        *SESSION.lock().unwrap() = None;
+        assert!(cancel("current").is_err());
+    }
+    #[test]
     fn tools_keep_the_registered_prefix_and_proton_without_a_shell() {
-        for action in ["winecfg", "regedit", "explorer"] {
-            let command = prepare(Path::new("/tools/umu-run"), Path::new("/protons/GE Proton"), Path::new("/games/My Prefix"), action, &[]);
+        for action in ["winecfg", "regedit", "explorer", "uninstaller"] {
+            let command = prepare(Path::new("/tools/umu-run"), Path::new("/protons/GE Proton"), Path::new("/games/My Prefix"), action, &[], false);
             assert_eq!(command.get_program(), "/tools/umu-run");
             assert_eq!(command.get_args().collect::<Vec<_>>(), [std::ffi::OsStr::new(action)]);
             assert!(command.get_envs().any(|(key,value)| key == "WINEPREFIX" && value == Some(std::ffi::OsStr::new("/games/My Prefix"))));
@@ -292,8 +299,18 @@ mod maintenance_tests {
         }
     }
     #[test]
+    fn tools_join_the_running_prefix_without_waiting_for_the_game() {
+        for action in ["winecfg", "regedit", "explorer", "uninstaller", "winetricks-gui", "install"] {
+            let cmd = prepare(Path::new("/umu-run"), Path::new("/proton"), Path::new("/prefix"), action, &[], true);
+            assert!(cmd.get_envs().any(|(key,value)|key=="PROTON_VERB" && value==Some(std::ffi::OsStr::new("runinprefix"))));
+            assert!(cmd.get_envs().any(|(key,value)|key=="WINEPREFIX" && value==Some(std::ffi::OsStr::new("/prefix"))));
+        }
+        let cmd = prepare(Path::new("/umu-run"), Path::new("/proton"), Path::new("/prefix"), "winecfg", &[], false);
+        assert!(cmd.get_envs().any(|(key,value)|key=="PROTON_VERB" && value==Some(std::ffi::OsStr::new("waitforexitandrun"))));
+    }
+    #[test]
     fn winetricks_opens_its_original_interface_without_installing_packages() {
-        let command = prepare(Path::new("/umu-run"), Path::new("/proton"), Path::new("/prefix"), "winetricks-gui", &[]);
+        let command = prepare(Path::new("/umu-run"), Path::new("/proton"), Path::new("/prefix"), "winetricks-gui", &[], false);
         assert_eq!(command.get_args().collect::<Vec<_>>(), [std::ffi::OsStr::new("winetricks"), std::ffi::OsStr::new("--gui")]);
     }
 }

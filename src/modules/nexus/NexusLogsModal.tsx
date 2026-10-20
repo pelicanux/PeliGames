@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { ModalSurface } from "../../components/ModalSurface";
-import { DetachedLogWindow, dragLogWindow, LogWindowActions, LogOutput, LogResizeHandles } from "../../components/DetachedLogWindow";
+import { OpenLogFolderButton, DetachedLogWindow, dragLogWindow, LogWindowActions, LogOutput, LogResizeHandles } from "../../components/DetachedLogWindow";
 import { useNexusText } from "./text";
 export function NexusLogsModal({ gameId, onClose, standalone = false }: { gameId: string; onClose: () => void; standalone?: boolean }) {
   return standalone ? <NexusLogsContent gameId={gameId} onClose={onClose} /> : <DetachedLogWindow kind="nexus" target={gameId} title="Nexus Mods" onClose={onClose} />;
@@ -31,6 +31,7 @@ function NexusLogsContent({ gameId, onClose }: { gameId: string; onClose: () => 
   return createPortal(<div className="detached-log-page">
     <ModalSurface role="dialog" aria-modal="false" aria-labelledby="nexus-log-title" className="modal-content dialog-glass game-logs-dialog" onHeaderMouseDown={dragLogWindow} hideClose headerActions={<LogWindowActions onClose={onClose} />} header={<h2 id="nexus-log-title">{text.logs}</h2>} onDismiss={onClose}>
       <div className="nexus-tabs">{(["current", "previous", "mods"] as const).map(value => <button key={value} className={`btn btn-secondary ${tab === value ? "active" : ""}`} onClick={() => setTab(value)} aria-pressed={tab === value}>{value === "mods" ? text.modLoadingLogs : value === "current" ? text.currentLog : text.previousLog}</button>)}</div>
+      <OpenLogFolderButton kind="nexus" target={gameId}/>
       {tab === "mods" && <p className="nexus-hint">{text.modLoadingHint}</p>}
       {error && <p role="alert">{error}</p>}<LogOutput content={content || text.loading} />
     </ModalSurface>

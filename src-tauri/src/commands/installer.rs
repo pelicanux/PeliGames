@@ -126,8 +126,8 @@ pub fn get_neural_model_status(app: AppHandle, gpu_arch: String, bitness: String
 use crate::core::script_runner::inject_shortcut_key_pub;
 
 #[tauri::command]
-pub fn update_shortcut_key_in_game(game_dir: String, shortcut_key: String) -> Result<(), String> {
-    inject_shortcut_key_pub(&game_dir, &shortcut_key)
+pub fn update_shortcut_key_in_game(game_dir: String, shortcut_key: String, route: String) -> Result<(), String> {
+    inject_shortcut_key_pub(&game_dir, &shortcut_key, &route)
 }
 
 use crate::commands::analyzer::scan_directory_for_exe;

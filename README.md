@@ -3,7 +3,7 @@
   <img src="public/images/readme-header.svg" alt="PeliGames" width="900" />
 </p>
 
-> **0.4.5 experimental:** geração de quadros MAKO e o novo overlay PeliGames estão disponíveis para testes, com ativação por jogo. O overlay ainda pode apresentar falhas de captura do mouse, foco, atalhos ou compatibilidade com determinados jogos/Protons. Consulte o [guia de uso e limitações](docs/overlay.md).
+> **0.4.6 experimental:** geração de quadros MAKO e o novo overlay PeliGames estão disponíveis para testes, com ativação por jogo. O overlay ainda pode apresentar falhas de captura do mouse, foco, atalhos ou compatibilidade com determinados jogos/Protons. Consulte o [guia de uso e limitações](docs/overlay.md).
 
 <p align="center"><strong>Português</strong> · <a href="README.en.md">English</a></p>
 

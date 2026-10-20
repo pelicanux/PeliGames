@@ -3,11 +3,12 @@ import { useInstallerText } from "./installerText";
 import { InstallerSettingsMenu } from "./InstallerSettingsMenu";
 import { findPelinstallMatches, repairPeliGamesEntry, getPelinstallIcon, type ExecutableMatch } from "../../services/pelinstall";
 import { fetchGameCoverByName } from "../../services/customCovers";
-import { lazy, Suspense, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { BrandName } from "../../components/BrandName";
+import { InstallationActionIcon } from "../../components/InstallationActionIcon";
 import { MenuIcon } from "../../components/MenuIcon";
 import { PelinstallProtonPicker } from "./PelinstallProtonPicker";
 import { HoverTooltip } from "../../components/HoverTooltip";
@@ -36,7 +37,7 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
   const completionPreview = !embedded && preview && new URLSearchParams(window.location.search).get("stage") === "complete";
   const sampleEntries: GameInfo[] = completionPreview ? ["7zFM", "7zG", "7z"].map(exe => ({ name: `7-Zip · ${exe}`, path: `/preview/${exe}.exe`, executable: `/preview/${exe}.exe`, launcher: "PeliGames", discovery_source: exe === "7zFM" ? "Atalho do Windows" : null })) : [];
   const panel = useRef<HTMLElement>(null);
-  const [step, setStep] = useState(completionPreview ? 4 : embedded ? 0 : -1);
+  const [step, setStep] = useState(completionPreview ? 4 : embedded ? -2 : -1);
   const [mode, setMode] = useState<"install" | "add" | "repair" | null>(completionPreview ? "install" : embedded?.mode ?? null);
   const [file, setFile] = useState(startup.error ? "" : startup.executable || "");
   const [matches, setMatches] = useState<ExecutableMatch[]>([]);
@@ -74,7 +75,7 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
   const [cancelConfirmation, setCancelConfirmation] = useState(false);
   const [cancelPending, setCancelPending] = useState(false);
   const closeAfterCancel = useRef(false);
-  const location = useInstallationLocation(name.trim(), mode !== null);
+  const location = useInstallationLocation(name.trim(), mode !== null && Boolean(name.trim()) && step >= 0);
   const directory = mode === "repair" ? repairPrefix : location.directory;
   const directorySelected = mode === "repair" ? Boolean(repairPrefix.trim()) : location.selected;
   const canResolveDirectory = mode === "repair" ? directorySelected : location.hasSelection;
@@ -188,7 +189,7 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
     setName(repair ? target.entry.name : `${target.entry.name} (cópia)`);
     setProton(target.entry.proton || ""); setTargetPath(target.entry.path);
     setMode(repair ? "repair" : target.installer ? "install" : "add");
-    setFile(repair ? target.entry.executable || startup.executable || "" : target.installer || startup.executable || ""); setStep(repair ? 1 : 0);
+    setFile(repair ? target.entry.executable || startup.executable || "" : target.installer || startup.executable || ""); setStep(repair ? 1 : -2);
   };
   const uninstall = async (options: UninstallOptions) => {
     if (!target || busy) return;
@@ -319,7 +320,7 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
   const [placeKind, setPlaceKind] = useState<"default" | "custom" | null>(null);
   useEffect(() => { if (!location.hasSelection) setPlaceKind(null); }, [location.hasSelection]);
   const backToStart = () => { if (embedded) { requestClose(); return; } setMode(null); setName(""); setProton(""); location.reset(); setRepairPrefix(""); setFile(startup.executable || ""); setError(""); setStep(-1); };
-  const back = () => { setError(""); if (step === 0 || (mode === "repair" && step === 1)) backToStart(); else setStep(step - 1); };
+  const back = () => { setError(""); if (step === -2 || (mode === "repair" && step === 1)) backToStart(); else setStep(step === 0 ? -2 : step - 1); };
   const fileName = file.split(/[\\/]/).pop() || "";
   const shownName = name.trim() || (step === -1 && target ? target.entry.name : fileName) || tr("Nenhum executável selecionado");
   const shownPath = step === -1 && target ? target.entry.executable || startup.executable || "" : file;
@@ -329,15 +330,16 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
     <div className="pi-file-text"><strong title={shownName}>{shownName}</strong>{shownPath && <small title={shownPath}>{shownPath}</small>}</div>
     <span className={`pi-chip ${chip[1]}`}>{chip[0]}</span>
   </div>;
-  const stepLabels = [tr("Local"), "Proton", tr("Nome"), mode === "add" ? tr("Adicionar") : mode === "repair" ? tr("Reparar") : tr("Instalar")];
-  const progress = step >= 0 && step <= 3 && <div className="pi-steps-wrap" aria-hidden="true">
-    <div className="pi-steps">{stepLabels.map((label, index) => <i key={label} className={index < step ? "done" : index === step ? "now" : ""} />)}</div>
-    <div className="pi-step-labels">{stepLabels.map((label, index) => <span key={label} className={index === step ? "now" : ""}>{label}</span>)}</div>
+  const stepLabels = [tr("Nome"), tr("Local"), "Proton", tr("Revisão"), mode === "add" ? tr("Adicionar") : mode === "repair" ? tr("Reparar") : tr("Instalar")];
+  const progressStep = step === -2 ? 0 : step + 1;
+  const progress = (step === -2 || step >= 0) && step <= 3 && <div className="pi-steps-wrap" aria-hidden="true">
+    <div className="pi-steps">{stepLabels.map((label, index) => <i key={label} className={index < progressStep ? "done" : index === progressStep ? "now" : ""} />)}</div>
+    <div className="pi-step-labels">{stepLabels.map((label, index) => <span key={label} className={index === progressStep ? "now" : ""}>{label}</span>)}</div>
   </div>;
-  const icon = (name: Parameters<typeof MenuIcon>[0]["name"], from: string, to: string) => <span className="pi-ico" style={{ "--c1": from, "--c2": to } as CSSProperties}><MenuIcon name={name} /></span>;
+  const icon = (name: Parameters<typeof MenuIcon>[0]["name"], from: string, to: string) => <InstallationActionIcon name={name} from={from} to={to}/>;
   const card = (key: string, iconNode: ReactNode, title: string, hint: string, onClick: () => void, options: { pressed?: boolean; danger?: boolean; disabled?: boolean } = {}) =>
-    <button type="button" key={key} className={`pi-card${options.danger ? " danger" : ""}`} aria-pressed={options.pressed} disabled={options.disabled} onClick={onClick}>{iconNode}<strong>{title}</strong><small>{hint}</small></button>;
-  const nextDisabled = busy || (step === 0 ? !validFile || !directorySelected || !directory.trim() : !proton);
+    <button type="button" key={key} className={`pi-card${options.danger ? " danger" : ""}`} aria-pressed={options.pressed} disabled={options.disabled} onClick={onClick}>{iconNode}<span className="pi-card-copy"><strong>{title}</strong><small>{hint}</small></span></button>;
+  const nextDisabled = busy || (step === -2 ? !name.trim() || !validFile : step === 0 ? !validFile || !directorySelected || !directory.trim() : !proton);
   const finishDisabled = busy || (mode === "repair" && (shortcutChecking || shortcutCheckFailed)) || !name.trim() || !validFile || !proton || !directory.trim() || !canResolveDirectory;
   const repairShortcuts = mode === "repair" && existingShortcuts.length > 0;
   const launchChosen = () => { if (preview) { setError("Execute o binário Pelinstall para iniciar o programa."); return; } setBusy(true); setError(""); void invoke("launch_pelinstall_entry", { path: chosen }).then(() => close()).catch(error => setError(String(error))).finally(() => setBusy(false)); };
@@ -362,8 +364,8 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
       {step === -1 && !checking && !matches.length && <>
         <h2>{tr("O que deseja fazer?")}</h2>
         <div className="pi-cards">
-          {card("install", icon("download", "#5aa9ff", "#2058d8"), tr("Instalar"), tr("Abre o instalador com o Proton e registra o jogo na biblioteca."), () => { setMode("install"); setError(""); setStep(0); })}
-          {card("add", icon("plusCircle", "#3ee0a6", "#06946a"), tr("Adicionar"), tr("O jogo já está instalado. Só cria o registro e o prefixo."), () => { setMode("add"); setError(""); setStep(0); })}
+          {card("install", icon("download", "#5aa9ff", "#2058d8"), tr("Instalar"), tr("Abre o instalador com o Proton e registra o jogo na biblioteca."), () => { setMode("install"); setError(""); setStep(-2); })}
+          {card("add", icon("plusCircle", "#3ee0a6", "#06946a"), tr("Adicionar"), tr("O jogo já está instalado. Só cria o registro e o prefixo."), () => { setMode("add"); setError(""); setStep(-2); })}
         </div>
       </>}
       {step === -1 && !checking && target && <>
@@ -379,6 +381,13 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
           {card("settings", icon("settings", "#a3abbd", "#555e73"), tr("Configurações"), tr("Abre o jogo no PeliGames."), () => void openSettings(), { disabled: busy })}
           {card("uninstall", icon("trash", "#ff7f8e", "#d1293f"), tr("Desinstalar"), tr("Escolha o que apagar: prefixo, atalhos, saves."), () => setUninstallConfirmation(true), { danger: true, disabled: busy })}
         </div>
+      </>}
+
+      {step === -2 && <>
+        <h2>{tr("Qual é o nome do jogo ou programa?")}</h2>
+        <div className="pi-field"><input aria-label={tr("Nome")} placeholder={tr("Digite o nome")} value={name} onChange={event => setName(event.target.value)} disabled={busy} /></div>
+        <p className="pi-hint">{tr("A pasta padrão do prefixo usará este nome. Na próxima etapa, escolha onde ela será criada.")}</p>
+        {!validFile && <button type="button" className="pi-btn" onClick={() => void chooseFile()}><MenuIcon name="folderSearch" />{tr(mode === "install" ? "Selecionar instalador" : "Selecionar executável")}</button>}
       </>}
 
       {step === 0 && <>
@@ -404,8 +413,8 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
       </>}
 
       {step === 2 && <>
-        <h2>{tr(embedded ? "Confira antes de continuar" : "Como o jogo vai aparecer?")}</h2>
-        <div className="pi-field"><input aria-label={tr("Nome")} placeholder={tr("Digite o nome")} value={name} onChange={event => setName(event.target.value)} disabled={busy} /></div>
+        <h2>{tr("Confira antes de continuar")}</h2>
+        {mode === "repair" && <div className="pi-field"><input aria-label={tr("Nome")} placeholder={tr("Digite o nome")} value={name} onChange={event => setName(event.target.value)} disabled={busy} /></div>}
         {mode === "repair" && <><div className="pi-label">{tr("Executável")}</div><EntrySelector label={tr("Executável para reparar")} value={file} onChange={setFile} disabled={busy} options={Array.from(new Map([...(target ? [target.entry] : []), ...repairExecutables].map(entry => [entry.executable || "", { value: entry.executable || "", label: entry.executable?.split(/[\\/]/).pop() || entry.name }])).values()).filter(option => option.value)} /></>}
         <div className="pi-toggle">
           <span>{mode === "repair" && shortcutChecking ? tr("Verificando atalhos…") : mode === "repair" && shortcutCheckFailed ? tr("Não foi possível verificar os atalhos") : repairShortcuts ? tr("Remover atalho da área de trabalho") : tr("Criar atalho na área de trabalho")}
@@ -465,9 +474,9 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
 
       {error && <p className="pi-error" role="alert">{error}</p>}
 
-      {step >= 0 && step < 3 && <div className="pi-actions">
+      {(step === -2 || step >= 0 && step < 3) && <div className="pi-actions">
         <button type="button" className="pi-btn" disabled={busy} onClick={back}><MenuIcon name="back" />{tr("Voltar")}</button>
-        {step < 2 ? <button type="button" className="pi-btn primary grow" disabled={nextDisabled} onClick={() => { setError(""); setStep(step + 1); }}>{tr("Próximo")} <MenuIcon name="play" /></button>
+        {step < 2 ? <button type="button" className="pi-btn primary grow" disabled={nextDisabled} onClick={() => { setError(""); setStep(step === -2 ? 0 : step + 1); }}>{tr("Próximo")} <MenuIcon name="play" /></button>
           : <button type="button" className="pi-btn primary grow" disabled={finishDisabled} onClick={() => void install()}><MenuIcon name={mode === "add" ? "folder" : mode === "repair" ? "repair" : "download"} />{busy ? mode === "add" ? tr("Adicionando…") : tr("Salvando…") : mode === "add" ? tr("Adicionar") : mode === "repair" ? tr("Reparar") : tr("Instalar")}</button>}
       </div>}
       {step === 3 && <div className="pi-actions"><button type="button" className="pi-btn danger grow" disabled={cancelPending} onClick={() => { closeAfterCancel.current = false; setCancelConfirmation(true); }}>{cancelPending ? tr("Cancelando…") : mode === "repair" ? tr("Cancelar reparação") : tr("Cancelar instalação")}</button></div>}

@@ -81,6 +81,9 @@ pub struct InstallationRecord {
     pub installer: String,
     pub cover_url: Option<String>,
     pub entries: Vec<InstalledEntry>,
+    /// Explicit executable choice; rescans must not register new helpers as games.
+    #[serde(default)]
+    pub selected_executable: Option<String>,
     #[serde(default)]
     pub overrides: Vec<EntryOverride>,
     /// Executables already in the prefix before the installer ran (Proton's own
@@ -201,7 +204,7 @@ pub(crate) fn excluded_game_executable(path: &Path) -> bool {
     {
         let stem = path.file_stem().unwrap_or_default().to_string_lossy().to_ascii_lowercase();
         let configuration_tool = ["_gamesetting", "_gamesettings", "_config", "_configuration"].iter().any(|suffix| stem.ends_with(suffix));
-        excluded_file(&path.file_name().unwrap_or_default().to_string_lossy()) || configuration_tool || proton_steam(path)
+        matches!(stem.as_str(), "dw20" | "dwtrig20") || excluded_file(&path.file_name().unwrap_or_default().to_string_lossy()) || configuration_tool || proton_steam(path)
     }
 }
 /// Reuse the installed library's ranking without creating or modifying a library entry.
@@ -554,7 +557,23 @@ fn rank(entries: &mut [InstalledEntry], game: &str) {
         entries[index] = InstalledEntry { recommended: index == 0 && clear, ..entry };
     }
 }
+// Older choices hid individual files rather than recording the selection itself.
+// Migrate only an unambiguous choice accompanied by hidden alternatives.
+fn restore_executable_selection(record: &mut InstallationRecord) -> bool {
+    if record.selected_executable.is_some() || record.installer.is_empty()
+        || !record.overrides.iter().any(|item| item.executable.is_empty()) { return false; }
+    let choices: Vec<_> = record.overrides.iter().filter(|item|
+        !item.executable.is_empty() && !item.source.starts_with("peligames:")
+        && item.name == record.name && !record.launcher_games.contains(&item.source)
+    ).collect();
+    if let [choice] = choices.as_slice() {
+        record.selected_executable = Some(choice.source.clone());
+        return true;
+    }
+    false
+}
 fn scan(record: &mut InstallationRecord) -> Result<(), String> {
+    restore_executable_selection(record);
     // Explicit registrations have independent identities, even when they share
     // an executable and prefix. Only discovered executables are deduplicated.
     let added: Vec<_> = record.entries.iter()
@@ -613,6 +632,23 @@ fn scan(record: &mut InstallationRecord) -> Result<(), String> {
                     .any(|entry| Path::new(&entry.path) == file)
         })
     });
+    if let Some(selected) = &record.selected_executable {
+        // Keep alternatives available in the executable picker, without adding cards.
+        let hidden: Vec<_> = files.iter().filter(|file|
+            file.to_string_lossy() != selected.as_str()
+            && !record.launcher_games.iter().any(|game| Path::new(game) == file.as_path())
+        ).cloned().collect();
+        for file in &hidden {
+            let source = file.to_string_lossy().into_owned();
+            if !record.overrides.iter().any(|item| item.source == source) {
+                record.overrides.push(EntryOverride {
+                    source, name: String::new(), proton: String::new(), executable: String::new(),
+                    cover_url: None, advanced: None, prefix: Some(record.prefix.clone()),
+                });
+            }
+        }
+        files.retain(|file| !hidden.contains(file));
+    }
     let hints = if record.installer.is_empty() { Default::default() } else { super::installation_targets::discover(Path::new(&record.prefix)) };
     let multiple = files.len() > 1;
     record.entries = files
@@ -674,6 +710,7 @@ pub fn register(mut record: InstallationRecord) -> Result<usize, String> {
             .map_err(|e| e.to_string())?;
         record.entries = previous.entries;
         record.overrides = previous.overrides;
+        record.selected_executable = previous.selected_executable;
     }
     scan(&mut record)?;
     record.known_shortcuts = Some(shortcut_targets(Path::new(&record.prefix)).into_keys().collect());
@@ -714,7 +751,8 @@ fn list_at(index: &Path, rescan: bool) -> Result<Vec<InstalledEntry>, String> {
             }
             record.prefix = prefix.to_string_lossy().into_owned();
         }
-        if rescan || moved {
+        let restored_selection = restore_executable_selection(&mut record);
+        if rescan || moved || restored_selection {
             scan(&mut record)?;
             write_json(&manifest, &record)?;
         }
@@ -927,6 +965,9 @@ fn choose_at(index: &Path, path: &str) -> Result<InstalledEntry, String> {
         let hidden: Vec<InstalledEntry> = if launcher_game { vec![] } else { record.entries.iter()
             .filter(|entry| entry.path != path && !entry.path.starts_with("peligames:") && !separate(&entry.path)).cloned().collect() };
         let mut chosen = record.entries[position].clone();
+        if !launcher_game && !path.starts_with("peligames:") {
+            record.selected_executable = Some(path.to_string());
+        }
         if !record.overrides.iter().any(|item| item.source == path) { chosen.name = record.name.clone(); }
         if !launcher_game { record.entries.retain(|entry| entry.path == path || entry.path.starts_with("peligames:") || separate(&entry.path)); }
         record.overrides.retain(|item| !hidden.iter().any(|entry| entry.path == item.source) && item.source != path);
@@ -1008,7 +1049,7 @@ fn add_at(
         InstallationRecord {
             name: entry.name.clone(), directory: directory.to_string_lossy().into_owned(),
             prefix: entry.prefix.clone(), proton: entry.proton.clone(), installer: String::new(),
-            cover_url: entry.cover_url.clone(), entries: vec![], overrides: vec![], baseline: vec![], known_shortcuts: None, launcher_games: vec![], install_shortcuts: None, profile_kind: Default::default(),
+            cover_url: entry.cover_url.clone(), entries: vec![], selected_executable: None, overrides: vec![], baseline: vec![], known_shortcuts: None, launcher_games: vec![], install_shortcuts: None, profile_kind: Default::default(),
         }
     };
     // Repeated registration in the same prefix is idempotent. A different
@@ -1324,7 +1365,7 @@ mod tests {
             name: "Jogo".into(), directory: base.to_string_lossy().into_owned(),
             prefix: base.join("prefix").to_string_lossy().into_owned(), proton: String::new(),
             installer: base.join("Setup.exe").to_string_lossy().into_owned(), cover_url: None,
-            entries: vec![], overrides: vec![], baseline, known_shortcuts: None, launcher_games: vec![], install_shortcuts: None, profile_kind: Default::default(),
+            entries: vec![], selected_executable: None, overrides: vec![], baseline, known_shortcuts: None, launcher_games: vec![], install_shortcuts: None, profile_kind: Default::default(),
         }
     }
     fn entry(executable: &Path, source: Option<&str>) -> InstalledEntry {
@@ -1519,6 +1560,44 @@ mod tests {
         let mut entries = vec![entry(&first, None)];
         rank(&mut entries, "Alpha");
         assert!(entries[0].recommended);
+        fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
+    fn selected_executable_survives_new_components_and_legacy_reload() {
+        let base = std::env::temp_dir().join(format!("peligames-choice-{}", uuid::Uuid::new_v4()));
+        let mut saved = record(&base, vec![]);
+        let game = base.join("prefix/drive_c/RealMU/Launcher.exe");
+        let helper = game.with_file_name("Popup.exe");
+        fs::create_dir_all(game.parent().unwrap()).unwrap();
+        fs::write(&game, b"MZ").unwrap(); fs::write(&helper, b"MZ").unwrap();
+        scan(&mut saved).unwrap();
+        let index = base.join("destinations.json");
+        write_json(&index, &BTreeSet::from([saved.directory.clone()])).unwrap();
+        write_json(&base.join("installation.json"), &saved).unwrap();
+        choose_at(&index, &game.to_string_lossy()).unwrap();
+        let mut saved: InstallationRecord = serde_json::from_slice(&fs::read(base.join("installation.json")).unwrap()).unwrap();
+        let client = game.with_file_name("main.exe");
+        fs::write(&client, b"MZ").unwrap();
+        for directory in ["Program Files", "Program Files (x86)"] {
+            let tools = base.join("prefix/drive_c").join(directory).join("Common Files/Microsoft Shared/DW");
+            fs::create_dir_all(&tools).unwrap();
+            for file in ["DW20.EXE", "DWTRIG20.EXE"] { fs::write(tools.join(file), b"MZ").unwrap(); }
+        }
+        // Simulate the old manifest and the polluted entries it stored.
+        saved.selected_executable = None;
+        saved.entries.push(entry(&client, None));
+        write_json(&base.join("installation.json"), &saved).unwrap();
+        let visible = list_at(&index, false).unwrap();
+        assert_eq!(visible.len(), 1);
+        assert_eq!(visible[0].executable, game.to_string_lossy());
+        let candidates = executable_choices_at(&index, &game.to_string_lossy()).unwrap();
+        assert!(candidates.iter().any(|entry| entry.executable == client.to_string_lossy()));
+        assert!(!candidates.iter().any(|entry| entry.executable.to_ascii_lowercase().contains("/dw/")));
+        // The alternative can still be explicitly selected.
+        choose_at(&index, &client.to_string_lossy()).unwrap();
+        let visible = list_at(&index, true).unwrap();
+        assert_eq!(visible.len(), 1);
+        assert_eq!(visible[0].executable, client.to_string_lossy());
         fs::remove_dir_all(base).unwrap();
     }
     #[test]

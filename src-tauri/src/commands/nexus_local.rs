@@ -1082,7 +1082,7 @@ pub fn reset_session_logs_at_startup() {
         }
     }
 }
-fn log_game(game_id: &str) -> Result<NexusGame, String> {
+pub(super) fn log_game(game_id: &str) -> Result<NexusGame, String> {
     uuid::Uuid::parse_str(game_id).map_err(|_| "Identificador de jogo inválido.")?;
     let bytes = fs::read(root()?.join("library.json")).map_err(|e| e.to_string())?;
     let mut game = serde_json::from_slice::<Workspace>(&bytes).map_err(|e| e.to_string())?

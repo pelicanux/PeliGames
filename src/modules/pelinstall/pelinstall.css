@@ -103,16 +103,13 @@ html.pelinstall-mode, html.pelinstall-mode body { background: transparent !impor
 .pi-step-labels .now { color: var(--pi-text); font-weight: 700; }
 /* Choice cards with squircle icons. */
 .pi-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.pi-card { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0; padding: 14px; border-radius: 16px; border: 1px solid var(--pi-line); background: var(--pi-card); color: var(--pi-text); text-align: left; cursor: pointer; transition: transform .15s, border-color .15s, background .15s; }
+.pi-card { display: flex; flex-direction: row; align-items: center; gap: 12px; min-width: 0; padding: 14px; border-radius: 16px; border: 1px solid var(--pi-line); background: var(--pi-card); color: var(--pi-text); text-align: left; cursor: pointer; transition: transform .15s, border-color .15s, background .15s; }
 .pi-card:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(var(--accent-rgb), .55); background: var(--pi-card-2); }
 .pi-card[aria-pressed="true"] { border-color: var(--accent); background: rgba(var(--accent-rgb), .12); }
 .pi-card:disabled { opacity: .5; cursor: not-allowed; }
 .pi-card strong { font-size: 0.9375rem; }
 .pi-card small { color: var(--pi-muted); font-size: 0.78125rem; line-height: 1.4; }
 .pi-card.danger strong { color: var(--pi-danger); }
-.pi-ico { position: relative; overflow: hidden; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 11px; color: #fff; background: linear-gradient(150deg, var(--c1), var(--c2)); box-shadow: inset 0 1px 0 rgba(255,255,255,.38), inset 0 -1px 0 rgba(0,0,0,.22), 0 4px 10px -3px var(--c2); }
-.pi-ico::before { content: ""; position: absolute; inset: 0 0 50% 0; background: linear-gradient(180deg, rgba(255,255,255,.28), transparent); }
-.pi-ico .menu-icon { position: relative; width: 19px; height: 19px; }
 /* Fields. */
 .pi-field { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 6px 0 14px; border-radius: 13px; background: var(--pi-card-2); border: 1px solid var(--pi-line); color: var(--pi-muted); }
 .pi-field:focus-within { border-color: rgba(var(--accent-rgb), .7); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), .18); }
@@ -229,3 +226,5 @@ html.pelinstall-mode, html.pelinstall-mode body { background: transparent !impor
 .pelinstall-settings-menu .effects-preference-label .menu-icon { width: 1.125rem; height: 1.125rem; color: var(--accent); }
 .pi-titlebar .pi-brand { min-width: 0; }
 .pi-titlebar .pelinstall-brand { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.pi-card-copy { display:flex; flex-direction:column; gap:4px; min-width:0; overflow-wrap:anywhere; }

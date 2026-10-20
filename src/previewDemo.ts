@@ -324,7 +324,7 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "matrix_chat_status": return {value:{pending:false,user_id:demoMatrixConnected ? "@demo-preview:matrix.org" : null}};
     case "connect_matrix_chat": demoMatrixConnected = true; return {value:null};
     case "matrix_chat_game_activity": demoMatrixActivity = args.gameName ? `Jogando ${args.gameName} · PeliGames` : ""; return {value:null};
-    case "disconnect_matrix_chat": demoMatrixConnected = false; return {value:null};
+    case "disconnect_matrix_chat": demoMatrixConnected = false; return {value:true};
     case "matrix_chat_rooms": return {value:{rooms:[{room_id:"!pNHMqrnxSAmcVFqrgf:matrix.org",name:"PeliGames · Geral",topic:"Jogos, Linux e conversa com a comunidade."},{room_id:"!preview-help:matrix.org",name:"Ajuda com mods",topic:"Dúvidas sobre instalação e compatibilidade de mods."},{room_id:"!preview-voice:matrix.org",name:"Jogatina",room_type:"org.matrix.msc3417.call",topic:"Canal de voz da comunidade."}]}};
     case "matrix_chat_create_channel": throw new Error("Prévia visual: nenhum canal é criado no Matrix.");
     case "matrix_chat_delete_channel": throw new Error("Prévia visual: nenhum canal é apagado no Matrix.");

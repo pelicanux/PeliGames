@@ -86,3 +86,14 @@
 .backend-inline-controls progress { display:block; width:100%; height:5px; margin-top:10px; accent-color:var(--accent); }
 .modern-ui .settings-page .backend-inline-status { margin:9px 0 0; font-size:.8125rem; overflow-wrap:anywhere; }
 .modern-ui .settings-page .backend-inline-status.error { color:#f8a2a2; }
+
+/* Tabbed categories keep the global search at the right edge of their tab row. */
+.settings-tab-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; margin-bottom: 18px; }
+.settings-tab-toolbar > .preference-mod-tabs { margin-bottom: 0; min-width: 0; }
+.modern-ui .settings-page .settings-page-search[data-tabbed] { flex: 0 0 auto; width: auto; height: 36px; margin-left: auto; padding: 0; background: transparent; border: 1px solid var(--modern-line); border-radius: 12px; }
+.modern-ui .settings-page .settings-page-search[data-tabbed] > button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: auto; height: 100%; min-height: 34px; padding: 0 12px; border: 0; border-radius: inherit; background: transparent !important; box-shadow: none !important; color: var(--modern-muted); font: inherit; font-size: .8125rem; font-weight: 500; }
+.settings-page-search[data-tabbed] > button::before, .settings-page-search[data-tabbed] > button::after { content: none !important; }
+.settings-page-search[data-tabbed] > button:hover:not(:disabled) { color: var(--modern-text); }
+.settings-page-search[data-tabbed] > button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.modern-ui .settings-page .settings-page-search[data-tabbed] input[type="search"] { display: none; }
+.modern-ui .settings-page .settings-page-search[data-tabbed][data-expanded] input[type="search"] { display: block; position: absolute; z-index: 85; right: 0; top: 42px; width: min(280px,calc(100vw - 40px)); height: 38px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--modern-line) !important; border-radius: 12px !important; background: var(--modern-overlay) !important; box-shadow: 0 8px 24px #0003; }

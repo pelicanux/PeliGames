@@ -2,7 +2,7 @@
   <img src="public/images/readme-header.svg" alt="PeliGames" width="900" />
 </p>
 
-> **0.4.5 experimental:** MAKO frame generation and the new PeliGames in-game overlay are available for testing, with per-game opt-in. Mouse capture, focus, shortcuts and compatibility with some games/Proton versions may still have issues. See the [usage and limitations guide](docs/overlay.md).
+> **0.4.6 experimental:** MAKO frame generation and the new PeliGames in-game overlay are available for testing, with per-game opt-in. Mouse capture, focus, shortcuts and compatibility with some games/Proton versions may still have issues. See the [usage and limitations guide](docs/overlay.md).
 
 <p align="center"><a href="README.md">Português</a> · <strong>English</strong></p>
 
