@@ -300,18 +300,49 @@ pub fn apply(command: &mut Command, enabled: bool, limit: Option<u32>) -> Result
     apply_with_override(command, enabled, limit, None)
 }
 pub fn apply_with_override(command: &mut Command, enabled: bool, limit: Option<u32>, display_override: Option<bool>) -> Result<(), String> {
+    apply_with_preset(command, enabled, limit, display_override, None)
+}
+pub fn apply_with_preset(command: &mut Command, enabled: bool, limit: Option<u32>, display_override: Option<bool>, preset: Option<&super::mangohud_presets::Preset>) -> Result<(), String> {
     if limit.is_some_and(|fps| fps > 1000) { return Err("Informe um limite de FPS entre 0 e 1000.".into()); }
     let display = match display_override { Some(value) => value, None => enabled || global_enabled()? };
     let background=command.get_envs().any(|(k,v)|k=="PELI_OVERLAY_BACKGROUND_FPS" && v.is_some());
     if display || limit.unwrap_or(0) > 0 || background {
         let profile = load()?;
-        write(&profile.settings, false)?;
-        apply_environment(command, Path::new(&profile.config_path), display, limit);
+        let config = if let Some(preset) = preset {
+            let settings = selected_settings(&profile.settings, Some(preset))?;
+            let text = render(&settings, &directory()?.join("logs"))?;
+            use sha2::{Digest, Sha256};
+            let fingerprint = format!("{:x}", Sha256::digest(text.as_bytes()));
+            let folder = directory()?.join("game-presets");
+            safe_directory(&folder)?;
+            let path = folder.join(format!("{}-{}.conf", game_folder(&preset.name), &fingerprint[..16]));
+            atomic_write(&path, text.as_bytes())?;
+            path
+        } else {
+            write(&profile.settings, false)?;
+            PathBuf::from(&profile.config_path)
+        };
+        apply_environment(command, &config, display, limit);
         if background && !display {let config=command.get_envs().find(|(k,_)|*k=="MANGOHUD_CONFIG").and_then(|(_,v)|v).map(|v|v.to_string_lossy().into_owned()).unwrap_or_else(||"read_cfg".into());command.env("MANGOHUD_CONFIG",format!("{config},no_display=1"));}
     } else if display_override == Some(false) {
         command.env("MANGOHUD", "0").env("MANGOHUD_CONFIG", "no_display=1");
     }
     Ok(())
+}
+/// A per-game snapshot changes appearance, not activation, FPS caps or VSync.
+pub fn selected_settings(global: &Settings, preset: Option<&super::mangohud_presets::Preset>) -> Result<Settings, String> {
+    let Some(preset) = preset else {return Ok(global.clone());};
+    if preset.name.trim().is_empty() || preset.name.chars().count() > 64 || preset.name.chars().any(char::is_control) {
+        return Err("Nome de preset MangoHUD inválido.".into());
+    }
+    let mut settings = defaults();
+    settings.extend(preset.settings.clone());
+    validate(&settings)?;
+    for key in ["launcher_enabled", "launcher_sync_system", "fps_limit", "fps_limit_method", "vsync", "gl_vsync", "no_display"] {
+        if let Some(value) = global.get(key) {settings.insert(key.into(), value.clone());}
+        else {settings.remove(key);}
+    }
+    Ok(settings)
 }
 /// Keep global appearance and shortcuts; only the output destination is per game.
 pub fn game_folder(name: &str) -> String {
@@ -321,9 +352,9 @@ pub fn game_folder(name: &str) -> String {
     let clean = clean.trim().trim_matches('.').trim();
     if clean.is_empty() { "Jogo".into() } else { clean.into() }
 }
-pub fn apply_game_logs(command: &mut Command, name: &str) -> Result<(), String> {
+pub fn apply_game_logs(command: &mut Command, name: &str, preset: Option<&super::mangohud_presets::Preset>) -> Result<(), String> {
     if !command.get_envs().any(|(key,value)| key == "MANGOHUD_CONFIGFILE" && value.is_some()) { return Ok(()); }
-    apply_game_logs_in(command, &directory()?, name, &load()?.settings)
+    apply_game_logs_in(command, &directory()?, name, &selected_settings(&load()?.settings, preset)?)
 }
 fn apply_game_logs_in(command: &mut Command, root: &Path, name: &str, settings: &Settings) -> Result<(), String> {
     let folder = game_folder(name);
@@ -640,5 +671,40 @@ mod per_game_display_tests {
         let value = |key: &str| command.get_envs().find(|(k, _)| *k == key).and_then(|(_, v)| v).map(|v| v.to_string_lossy().into_owned());
         assert_eq!(value("MANGOHUD"), Some("0".into()));
         assert_eq!(value("MANGOHUD_CONFIG"), Some("no_display=1".into()));
+    }
+}
+
+#[cfg(test)]
+mod game_preset_tests {
+    use super::*;
+    #[test]
+    fn game_snapshot_changes_appearance_without_changing_global_controls() {
+        let global = defaults();
+        let mut snapshot = global.clone();
+        snapshot.insert("gpu_color".into(), "112233".into());
+        snapshot.insert("fps_limit".into(), 30.into());
+        snapshot.remove("launcher_enabled");
+        snapshot.remove("launcher_sync_system");
+        let preset = super::super::mangohud_presets::Preset {name:"Meu jogo".into(),settings:snapshot};
+        let selected = selected_settings(&global, Some(&preset)).unwrap();
+        assert_eq!(selected["gpu_color"], "112233");
+        for key in ["fps_limit", "vsync", "gl_vsync", "launcher_enabled"] {
+            assert_eq!(selected.get(key), global.get(key));
+        }
+        assert_eq!(global, defaults());
+        assert_eq!(selected_settings(&global, None).unwrap(), global);
+        assert!(render(&selected, Path::new("/tmp/logs")).unwrap().contains("112233"));
+    }
+    #[test]
+    fn saved_snapshot_survives_roundtrip_and_rejects_unknown_options() {
+        let mut advanced = crate::core::advanced_settings::AdvancedSettings::default();
+        advanced.mangohud_preset=Some(super::super::mangohud_presets::Preset {name:"Cópia independente".into(),settings:defaults()});
+        let restored:crate::core::advanced_settings::AdvancedSettings=serde_json::from_value(serde_json::to_value(&advanced).unwrap()).unwrap();
+        assert_eq!(restored.mangohud_preset.as_ref().unwrap().name,"Cópia independente");
+        restored.validate().unwrap();
+        let reset=crate::core::game_reset::settings(restored,crate::core::game_reset::Section::All);
+        assert!(reset.mangohud_preset.is_some());
+        advanced.mangohud_preset.as_mut().unwrap().settings.insert("unknown_setting".into(),true.into());
+        assert!(advanced.validate().is_err());
     }
 }

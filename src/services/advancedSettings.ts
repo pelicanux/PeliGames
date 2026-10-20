@@ -14,6 +14,7 @@ export interface LaunchWrapper { program: string; arguments: string; enabled: bo
 /** Recognize both existing SHA-256 paths and readable per-game profile names. */
 export const isFrameGenerationWrapper = (w: LaunchWrapper): boolean => /\/FrameGeneration\/profiles\/(?:[a-f0-9]{64}|[a-z0-9]+(?:-[a-z0-9]+)*-[a-f0-9]{8,64})\.sh$/.test(w.program);
 export interface AdvancedSettings {
+  mangohud_preset?: import("./mangohud").MangoHudPreset | null;
   overlay_enabled?: boolean | null; background_fps?: number | null; mangohud_enabled?: boolean | null; mangohud_fps_limit?: number | null; schema_version?: number; launch_options?: string | null; options: Record<string, boolean>; dll_overrides: string;
   wrappers?: LaunchWrapper[]; launch_backend: "system" | "gamescope"; gamescope?: GamescopeSettings;
 }
@@ -21,7 +22,7 @@ export const defaultGamescope: GamescopeSettings = { model_version: 2, enable_up
 export function normalizeAdvanced(value?: AdvancedSettings): AdvancedSettings {
   // Version 1 accidentally enabled screenshot selections by default. Reset once.
   const saved = value?.schema_version === 2 ? value : undefined;
-  return { overlay_enabled: saved?.overlay_enabled ?? null, background_fps: saved?.background_fps ?? null, mangohud_enabled: saved?.mangohud_enabled ?? null, mangohud_fps_limit: saved?.mangohud_fps_limit ?? null, schema_version: 2, launch_options: saved?.launch_options ?? null, wrappers: saved?.wrappers ?? [], options: Object.fromEntries(catalog.map(option => [option.id, saved?.options[option.id] ?? false])), dll_overrides: saved?.options.dll_overrides ? saved.dll_overrides ?? "" : "", launch_backend: saved?.launch_backend ?? "system", gamescope: { ...defaultGamescope, ...(saved?.gamescope?.model_version === 2 ? saved.gamescope : {}) } };
+  return { mangohud_preset: saved?.mangohud_preset ?? null, overlay_enabled: saved?.overlay_enabled ?? null, background_fps: saved?.background_fps ?? null, mangohud_enabled: saved?.mangohud_enabled ?? null, mangohud_fps_limit: saved?.mangohud_fps_limit ?? null, schema_version: 2, launch_options: saved?.launch_options ?? null, wrappers: saved?.wrappers ?? [], options: Object.fromEntries(catalog.map(option => [option.id, saved?.options[option.id] ?? false])), dll_overrides: saved?.options.dll_overrides ? saved.dll_overrides ?? "" : "", launch_backend: saved?.launch_backend ?? "system", gamescope: { ...defaultGamescope, ...(saved?.gamescope?.model_version === 2 ? saved.gamescope : {}) } };
 }
 export function toggleAdvanced(settings: AdvancedSettings, id: string): AdvancedSettings {
   return { ...settings, options: { ...settings.options, [id]: !settings.options[id] } };

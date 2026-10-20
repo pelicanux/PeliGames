@@ -294,8 +294,8 @@ pub(super) fn advanced_command(game: &NexusGame, original: Command) -> Result<Co
             command.env("PROTONPATH", crate::core::steam_client::runner(Path::new(&game.proton))?);
         }
     }
-    crate::core::mangohud_config::apply_with_override(&mut command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit, game.advanced.mangohud_enabled)?;
-    crate::core::mangohud_config::apply_game_logs(&mut command, game.game["name"].as_str().unwrap_or("Jogo"))?;
+    crate::core::mangohud_config::apply_with_preset(&mut command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit, game.advanced.mangohud_enabled, game.advanced.mangohud_preset.as_ref())?;
+    crate::core::mangohud_config::apply_game_logs(&mut command, game.game["name"].as_str().unwrap_or("Jogo"), game.advanced.mangohud_preset.as_ref())?;
     Ok(command)
 }
 

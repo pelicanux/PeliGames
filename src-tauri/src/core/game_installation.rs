@@ -267,8 +267,8 @@ pub(crate) fn prepare_launch_program(
         // Another program of the prefix (a shortcut's arguments, e.g. Battle.net `--exec`).
         prepared.command.args(arguments);
     }
-    super::mangohud_config::apply_with_override(&mut prepared.command, entry.advanced.options.get("mangohud") == Some(&true) || entry.advanced.options.get("mangohud_env") == Some(&true), entry.advanced.mangohud_fps_limit, entry.advanced.mangohud_enabled)?;
-    super::mangohud_config::apply_game_logs(&mut prepared.command, &entry.name)?;
+    super::mangohud_config::apply_with_preset(&mut prepared.command, entry.advanced.options.get("mangohud") == Some(&true) || entry.advanced.options.get("mangohud_env") == Some(&true), entry.advanced.mangohud_fps_limit, entry.advanced.mangohud_enabled, entry.advanced.mangohud_preset.as_ref())?;
+    super::mangohud_config::apply_game_logs(&mut prepared.command, &entry.name, entry.advanced.mangohud_preset.as_ref())?;
     Ok(prepared)
 }
 pub fn launch(path: String) -> Result<(), String> {

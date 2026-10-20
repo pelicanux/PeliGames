@@ -21,6 +21,7 @@ pub fn settings(mut value: AdvancedSettings, section: Section) -> AdvancedSettin
         for enabled in clean.options.values_mut() {
             *enabled = false;
         }
+        clean.mangohud_preset = value.mangohud_preset.clone();
         clean.overlay_enabled = Some(false);
         clean.background_fps = None;
         clean.mangohud_enabled = Some(false);

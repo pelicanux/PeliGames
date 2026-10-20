@@ -1333,3 +1333,5 @@ html, body, #root { overflow: clip !important; }
 .installed-advanced-heading > .modern-game-save-status { flex: 0 0 136px; }
 @keyframes modern-save-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .modern-game-save-icon { animation: none !important; } }
+
+.modern-game-preset-select { width: min(230px, 100%); flex-shrink: 0; }

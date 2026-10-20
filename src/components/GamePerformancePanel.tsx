@@ -1,3 +1,6 @@
+import {SelectionMenu} from "./SelectionMenu";
+import {PRESETS, applyPreset} from "./preferences/mangoHudPresets";
+import {listMangoHudPresets, type MangoHudPreset} from "../services/mangohud";
 import {useGameSaveStatus, GameSaveStatusIndicator} from "./GameSaveStatus";
 import {invoke} from "@tauri-apps/api/core";
 import {FrameOverlaySettings} from "../modules/frameGeneration/FrameOverlaySettings";
@@ -17,6 +20,9 @@ export function GamePerformancePanel({value, disabled, onChange, game}: {
 }) {
   const openBenchmarks = useContext(GameBenchmarkNavigationContext);
   const {language} = useI18n(), pt = language === "pt", id = useId();
+  const [presets, setPresets] = useState<MangoHudPreset[]>([]);
+  const [presetError, setPresetError] = useState("");
+  useEffect(()=>{let active=true;void listMangoHudPresets().then(items=>{if(active)setPresets(items);}).catch(e=>{if(active)setPresetError(String(e));});return()=>{active=false};},[]);
   const [profile, setProfile] = useState<MangoHudSettings>(mangoHudDefaults);
   const [loaded, setLoaded] = useState(false), [profileError, setProfileError] = useState("");
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
@@ -65,6 +71,21 @@ export function GamePerformancePanel({value, disabled, onChange, game}: {
       <div className="modern-performance-row"><div><label htmlFor={`${id}-hud`}>{pt ? "Mostrar monitoramento (MangoHUD)" : "Show monitoring (MangoHUD)"}</label><p>{pt ? "FPS, temperatura e uso de hardware" : "FPS, temperature and hardware usage"}</p></div>
         <button id={`${id}-hud`} type="button" role="switch" aria-checked={enabled} aria-label={pt ? "Mostrar monitoramento (MangoHUD)" : "Show monitoring (MangoHUD)"} className={`neural-startup-switch mod-option-switch${enabled ? " enabled" : ""}`} disabled={blocked} onClick={() => void commit({...settings, mangohud_enabled:!enabled, options:{...settings.options,mangohud:!enabled,mangohud_env:false}})}><span className="neural-switch-track"><span/></span></button>
       </div>
+      <div className="modern-performance-row"><div><label>{pt ? "Preset do MangoHUD" : "MangoHUD preset"}</label><p>{pt ? "Aparência exclusiva deste jogo. Não altera o perfil global nem os limites de FPS." : "Appearance for this game only. Does not change the global profile or FPS limits."}</p></div>
+        <SelectionMenu label={pt ? "Preset do MangoHUD" : "MangoHUD preset"} className="modern-game-preset-select" minMenuWidth={240} value={settings.mangohud_preset ? "selected" : "global"} disabled={blocked} onChange={choice=>{
+          if(choice==="global"){void commit({...settings,mangohud_preset:null});return;}
+          const builtin=choice.startsWith("builtin:")?PRESETS.find(p=>p.id===choice.slice(8)):undefined;
+          const preset=builtin?{name:builtin.name,settings:applyPreset(builtin.id,profile)}:presets.find(p=>`custom:${p.name}`===choice);
+          if(preset)void commit({...settings,mangohud_preset:{name:preset.name,settings:{...preset.settings}}});
+        }} options={[
+          {value:"global",label:pt ? "Usar perfil global" : "Use global profile"},
+          ...(settings.mangohud_preset?[{value:"selected",label:settings.mangohud_preset.name}]:[]),
+          ...PRESETS.map(p=>({value:`builtin:${p.id}`,label:p.name})),
+          ...presets.map(p=>({value:`custom:${p.name}`,label:p.name})),
+        ]}/>
+
+      </div>
+      {presetError&&<p role="alert">{presetError}</p>}
       <div className="modern-performance-row"><label htmlFor={`${id}-fps`}>{pt ? "Limitar FPS" : "Limit FPS"}</label><div className="modern-performance-limits">
         <div className="modern-dlss-segments" role="group" aria-label={pt ? "Limitar FPS" : "Limit FPS"}>{[0,60,120,144].map(n => <button type="button" key={n} disabled={blocked} aria-pressed={settings.mangohud_fps_limit === n} onClick={()=>limit(n)}>{n || (pt ? "Sem limite" : "Unlimited")}</button>)}</div>
         <input id={`${id}-fps`} type="number" min="0" max="1000" step="1" value={fps} placeholder={pt ? "Padrão" : "Default"} aria-label={pt ? "Limite de FPS personalizado" : "Custom FPS limit"} disabled={blocked} onChange={e=>setFps(e.target.value)} onBlur={()=>{if(fps !== String(settings.mangohud_fps_limit ?? ""))limit(fps.trim() ? Number(fps) : null);}} onKeyDown={e=>{if(e.key === "Enter")e.currentTarget.blur();}}/>
@@ -82,7 +103,7 @@ export function GamePerformancePanel({value, disabled, onChange, game}: {
       {busy && !headerStatus && <p role="status">{pt ? "Salvando…" : "Saving…"}</p>}
       {(error || profileError) && <p role="alert">{error || profileError}</p>}
     </section>
-    <section className="modern-performance-card mango-modern modern-performance-preview"><h3>{pt ? "Aparência do monitoramento" : "Monitoring appearance"}</h3>{loaded ? <MonitoringPreview settings={profile}/> : <p role="status">{pt ? "Carregando prévia…" : "Loading preview…"}</p>}</section>
+    <section className="modern-performance-card mango-modern modern-performance-preview"><h3>{pt ? "Aparência do monitoramento" : "Monitoring appearance"}</h3>{loaded ? <MonitoringPreview settings={settings.mangohud_preset ? {...mangoHudDefaults(),...settings.mangohud_preset.settings} : profile}/> : <p role="status">{pt ? "Carregando prévia…" : "Loading preview…"}</p>}</section>
   </div>;
 }
 function MonitoringPreview({settings}:{settings:MangoHudSettings}) {

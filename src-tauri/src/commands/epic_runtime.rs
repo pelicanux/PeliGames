@@ -95,7 +95,7 @@ fn route(
         Path::new(SENTINEL),
         Some(&game.advanced),
     )?;
-    crate::core::mangohud_config::apply_game_logs(&mut command, &game.name)?;
+    crate::core::mangohud_config::apply_game_logs(&mut command, &game.name, game.advanced.mangohud_preset.as_ref())?;
     let custom = super::custom_options(&game.advanced)?;
     let mut environment: BTreeMap<String, Option<String>> = command
         .get_envs()

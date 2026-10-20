@@ -460,7 +460,7 @@ fn invocation(game: &ExternalGame) -> Result<(String, Vec<String>), String> {
             env_command.env(key, value);
         }
     }
-    crate::core::mangohud_config::apply_with_override(&mut env_command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit, game.advanced.mangohud_enabled)?;
+    crate::core::mangohud_config::apply_with_preset(&mut env_command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit, game.advanced.mangohud_enabled, game.advanced.mangohud_preset.as_ref())?;
     for (key, value) in env_command.get_envs() {
         if let Some(value) = value {
             flatpak.push(format!(
@@ -679,7 +679,7 @@ pub async fn launch_external_game(external_id: String) -> Result<(), String> {
         command.args(args).env_remove("LD_LIBRARY_PATH").env_remove("LD_PRELOAD").stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
         if !matches!(game.launcher.as_str(), "Steam" | "Epic Games") {
         for (key,value) in custom_options(&game.advanced)?.get_envs() {if let Some(value)=value {command.env(key,value);} }
-        crate::core::mangohud_config::apply_with_override(&mut command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit, game.advanced.mangohud_enabled)?;
+        crate::core::mangohud_config::apply_with_preset(&mut command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit, game.advanced.mangohud_enabled, game.advanced.mangohud_preset.as_ref())?;
         }
         #[cfg(target_os = "linux")]
         if game.launcher == "Steam" {

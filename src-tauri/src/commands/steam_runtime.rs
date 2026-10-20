@@ -141,7 +141,7 @@ fn build(app: u32, source: &Source) -> Result<Profile, String> {
         Path::new(MARKER),
         Some(&advanced),
     )?;
-    crate::core::mangohud_config::apply_game_logs(&mut command, &source.name)?;
+    crate::core::mangohud_config::apply_game_logs(&mut command, &source.name, advanced.mangohud_preset.as_ref())?;
     let mut custom = Command::new("true");
     if let Some(line) = &advanced.launch_options {
         super::nexus_launch_options::apply_custom(&mut custom, line)?;

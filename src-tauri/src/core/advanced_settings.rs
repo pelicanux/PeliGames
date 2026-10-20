@@ -23,6 +23,7 @@ pub struct AdvancedSettings {
     pub schema_version: u32,
     pub launch_options: Option<String>,
     pub mangohud_fps_limit: Option<u32>,
+    pub mangohud_preset: Option<super::mangohud_presets::Preset>,
     pub overlay_enabled: Option<bool>,
     pub background_fps: Option<u32>,
     pub mangohud_enabled: Option<bool>,
@@ -84,6 +85,7 @@ struct SavedSettings {
     schema_version: u32,
     launch_options: Option<String>,
     mangohud_fps_limit: Option<u32>,
+    mangohud_preset: Option<super::mangohud_presets::Preset>,
     overlay_enabled: Option<bool>,
     background_fps: Option<u32>,
     mangohud_enabled: Option<bool>,
@@ -99,6 +101,7 @@ impl From<SavedSettings> for AdvancedSettings {
         if saved.schema_version == 2 {
             settings.launch_options = saved.launch_options;
             settings.mangohud_fps_limit = saved.mangohud_fps_limit;
+            settings.mangohud_preset = saved.mangohud_preset;
             settings.overlay_enabled = saved.overlay_enabled;
             settings.background_fps = saved.background_fps;
             settings.mangohud_enabled = saved.mangohud_enabled;
@@ -124,6 +127,7 @@ impl Default for AdvancedSettings {
             schema_version: 2,
             launch_options: None,
             mangohud_fps_limit: None,
+            mangohud_preset: None,
             overlay_enabled: None,
             background_fps: None,
             mangohud_enabled: None,
@@ -140,6 +144,7 @@ impl Default for AdvancedSettings {
 }
 impl AdvancedSettings {
     pub fn validate(&self) -> Result<(), String> {
+        if let Some(preset) = &self.mangohud_preset { super::mangohud_config::selected_settings(&super::mangohud_config::defaults(), Some(preset))?; }
         if self.background_fps.is_some_and(|fps| fps > 1000) { return Err("Informe FPS sem foco entre 1 e 1000, ou use Automático.".into()); }
         if self.background_fps.is_some() && self.overlay_enabled != Some(true) { return Err("Ative o Overlay PeliGames para limitar FPS sem foco.".into()); }
         if self.mangohud_fps_limit.is_some_and(|fps| fps > 1000) { return Err("Informe um limite de FPS entre 0 e 1000.".into()); }
@@ -413,7 +418,7 @@ pub(crate) fn configured_launch_command(umu: &Path, settings: Option<&AdvancedSe
     }
     if effective.overlay_enabled == Some(true) { crate::commands::frame_overlay_runtime::install_standalone()?; }
     let mut command = launch_command_with_tools(umu, Some(&effective), executable)?;
-    super::mangohud_config::apply_with_override(&mut command, settings.is_some_and(|s| s.on("mangohud") || s.on("mangohud_env")), effective.mangohud_fps_limit, effective.mangohud_enabled)?;
+    super::mangohud_config::apply_with_preset(&mut command, settings.is_some_and(|s| s.on("mangohud") || s.on("mangohud_env")), effective.mangohud_fps_limit, effective.mangohud_enabled, effective.mangohud_preset.as_ref())?;
     if super::release_features::enabled() {
         crate::commands::frame_generation::configure_monitoring(&mut command, &effective)?;
     }
