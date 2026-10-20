@@ -77,6 +77,7 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
   const location = useInstallationLocation(name.trim(), mode !== null);
   const directory = mode === "repair" ? repairPrefix : location.directory;
   const directorySelected = mode === "repair" ? Boolean(repairPrefix.trim()) : location.selected;
+  const canResolveDirectory = mode === "repair" ? directorySelected : location.hasSelection;
   const validFile = Boolean(file && (mode !== "add" || file.toLowerCase().endsWith(".exe")));
   const stateRef = useRef({ busy, dirty: false, installing: false });
   const closing = useRef(false);
@@ -210,7 +211,7 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
     catch (error) { setError(String(error)); }
   };
   const install = async () => {
-    if (busy || (mode === "repair" && (shortcutChecking || shortcutCheckFailed)) || !validFile || !directorySelected || !proton || !name.trim() || !mode) return;
+    if (busy || (mode === "repair" && (shortcutChecking || shortcutCheckFailed)) || !validFile || !canResolveDirectory || !proton || !name.trim() || !mode) return;
     if (preview) { setError("A prévia permite testar as etapas. Execute o binário Pelinstall para iniciar uma instalação real."); return; }
     setBusy(true); setError("");
     if (mode !== "add" && (mode !== "repair" || proton !== target?.entry.proton || repairPrefix !== target?.entry.prefix)) setStep(3);
@@ -223,8 +224,10 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
           setStep(2); setError("Os atalhos foram alterados. Confira a opção de atalho antes de reparar."); return;
         }
       }
+      // Renaming a game after choosing the default location needs a new, unique reservation.
+      const installationDirectory = mode === "repair" ? directory : await location.resolveDirectory();
       const cover = await resolveCover(name);
-      const request = { name: name.trim(), directory, executable: file, proton, cover_url: cover || undefined };
+      const request = { name: name.trim(), directory: installationDirectory, executable: file, proton, cover_url: cover || undefined };
       if (mode === "add") {
         const entry = await addPeliGamesEntry(request);
         installed = true;
@@ -314,7 +317,7 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
   }, [step, error, result, shortcut, location.selected, checking, matches.length, choosingExecutable, entries.length]);
   // Which of the two location cards produced the current folder.
   const [placeKind, setPlaceKind] = useState<"default" | "custom" | null>(null);
-  useEffect(() => { if (!location.selected) setPlaceKind(null); }, [location.selected]);
+  useEffect(() => { if (!location.hasSelection) setPlaceKind(null); }, [location.hasSelection]);
   const backToStart = () => { if (embedded) { requestClose(); return; } setMode(null); setName(""); setProton(""); location.reset(); setRepairPrefix(""); setFile(startup.executable || ""); setError(""); setStep(-1); };
   const back = () => { setError(""); if (step === 0 || (mode === "repair" && step === 1)) backToStart(); else setStep(step - 1); };
   const fileName = file.split(/[\\/]/).pop() || "";
@@ -335,7 +338,7 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
   const card = (key: string, iconNode: ReactNode, title: string, hint: string, onClick: () => void, options: { pressed?: boolean; danger?: boolean; disabled?: boolean } = {}) =>
     <button type="button" key={key} className={`pi-card${options.danger ? " danger" : ""}`} aria-pressed={options.pressed} disabled={options.disabled} onClick={onClick}>{iconNode}<strong>{title}</strong><small>{hint}</small></button>;
   const nextDisabled = busy || (step === 0 ? !validFile || !directorySelected || !directory.trim() : !proton);
-  const finishDisabled = busy || (mode === "repair" && (shortcutChecking || shortcutCheckFailed)) || !name.trim() || !validFile || !proton || !directory.trim();
+  const finishDisabled = busy || (mode === "repair" && (shortcutChecking || shortcutCheckFailed)) || !name.trim() || !validFile || !proton || !directory.trim() || !canResolveDirectory;
   const repairShortcuts = mode === "repair" && existingShortcuts.length > 0;
   const launchChosen = () => { if (preview) { setError("Execute o binário Pelinstall para iniciar o programa."); return; } setBusy(true); setError(""); void invoke("launch_pelinstall_entry", { path: chosen }).then(() => close()).catch(error => setError(String(error))).finally(() => setBusy(false)); };
   const shownInPrefix = (path?: string | null) => (result?.prefix && path?.startsWith(result.prefix) ? path.slice(result.prefix.length).replace(/^\/drive_c\//, "C:/") : path) ?? "";

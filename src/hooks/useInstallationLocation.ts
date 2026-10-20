@@ -26,9 +26,16 @@ export function useInstallationLocation(confirmedName: string, open: boolean) {
       setReserved({ folder: folder || "", path });
       setRoot(folder ? path.slice(0, path.lastIndexOf("/")) : path);
       setCustom(null); setSelected(true); setError(false);
+      return path;
     } catch (error) { setError(true); throw error; }
   };
-  return { directory: custom ?? suggested, selected: selected && (custom !== null || reserved?.folder === folderName), selectDefault,
+  return { directory: custom ?? suggested, selected: selected && (custom !== null || reserved?.folder === folderName),
+    hasSelection: selected,
+    resolveDirectory: async () => {
+      if (!selected) throw new Error("Selecione a pasta de instalação antes de continuar.");
+      return custom ?? await selectDefault();
+    },
+    selectDefault: async () => { await selectDefault(); },
     setDirectory: (path: string) => { setCustom(path); setSelected(true); },
     reset: () => { setCustom(null); setReserved(null); setSelected(false); }, error: error && custom === null };
 }
