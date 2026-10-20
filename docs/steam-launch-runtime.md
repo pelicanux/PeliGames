@@ -116,9 +116,7 @@ execução dentro do sandbox.
 
 ## Referências da arquitetura
 
-- [MangoHUD: peligames-run](https://github.com/flightlessmango/mangohud/blob/main/peligames-run.lpr):
-  referência do fluxo de executável fixo e configuração externa. A implementação
-  do PeliGames é em Rust e usa seu próprio contrato; não incorpora código Pascal.
+- Fluxo de executável wrapper fixo e desacoplamento de configuração externa implementado nativamente em Rust pelo PeliGames (`peligames-run`).
 - [Valve: runtimes Steam Linux](https://github.com/ValveSoftware/steam-runtime/blob/master/doc/reporting-steamlinuxruntime-bugs.md).
 - [Flatpak: permissões de sandbox](https://docs.flatpak.org/en/latest/sandbox-permissions.html).
 
