@@ -22,7 +22,7 @@ O alvo inicial é Linux x86_64 com Vulkan SDR. A compatibilidade depende do jogo
 
 Jogos nativos Linux recebem teclado e mouse no painel apenas com Wayland nativo. Em X11 ou XWayland, o atalho funciona nos jogos executados pelo Wine ou Proton.
 
-Na Steam Flatpak, o PeliGames copia o overlay para a pasta do PeliRun dentro do sandbox da Steam; abra a Steam Flatpak uma vez antes de ativá-lo. Outros launchers Flatpak e o MAKO no Flatpak ainda não carregam o overlay.
+Na Steam Flatpak, o PeliGames copia o overlay para a pasta do PeliRun dentro do sandbox da Steam; abra a Steam Flatpak uma vez antes de ativá-lo. A geração de quadros do MAKO funciona no Flatpak pela extensão Vulkan própria, mas o painel de controles do MAKO no overlay e os outros launchers Flatpak ainda não carregam o overlay.
 
 Enquanto o painel estiver aberto, a interação deve ficar exclusiva dele. Se o jogo continuar recebendo movimentos ou cliques, feche o painel pelo atalho e desative o overlay antes de reabrir o jogo. Depois de cada execução, **Desempenho** mostra o resultado da última sessão do overlay: se ele carregou, se o jogo criou uma tela compatível e se o teclado e o mouse foram reconhecidos. Abra **Etapas registradas** e informe esse conteúdo, o jogo, o Proton, o compositor e o modo Wayland/XWayland ao reportar um problema.
 
