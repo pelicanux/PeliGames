@@ -1,0 +1,74 @@
+/* Shared rounded-square proportions; each theme keeps its own finish. */
+:root .app-titlebar .btn-titlebar.window-control.retro-window-control {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 28px;
+  border-radius: 8px !important;
+}
+
+/* Raised arcade keycaps, scoped to the main window controls. */
+:root[data-interface-theme="neon-wave"] .app-titlebar .btn-titlebar.window-control.retro-window-control {
+  --control-ink: #c4a1ff;
+  position: relative;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--control-ink) 42%, transparent) !important;
+  border-top-color: color-mix(in srgb, var(--control-ink) 70%, transparent) !important;
+  border-radius: 8px !important;
+  background: linear-gradient(180deg, rgba(42, 33, 63, .94), rgba(22, 20, 34, .98)) !important;
+  color: var(--control-ink) !important;
+  box-shadow: inset 1px 1px 0 rgba(255,255,255,.1), inset -1px -2px 0 rgba(0,0,0,.32), 0 2px 0 #080911;
+  transform: none;
+  transition: background .12s ease, border-color .12s ease, box-shadow .12s ease, transform .12s ease;
+}
+:root[data-interface-theme="neon-wave"] .app-titlebar .btn-titlebar.window-control.retro-window-control.maximize { --control-ink: #88ded6; }
+:root[data-interface-theme="neon-wave"] .app-titlebar .btn-titlebar.window-control.retro-window-control.close { --control-ink: #ff9ba8; }
+:root[data-interface-theme="neon-wave"] .app-titlebar .btn-titlebar.window-control.retro-window-control::before,
+:root[data-interface-theme="neon-wave"] .app-titlebar .btn-titlebar.window-control.retro-window-control::after { content: none !important; }
+:root[data-interface-theme="neon-wave"] .app-titlebar .btn-titlebar.window-control.retro-window-control svg { width: 14px; height: 14px; stroke-width: 2; stroke-linecap: square; stroke-linejoin: miter; transition: none; }
+:root[data-interface-theme="neon-wave"] .app-titlebar .btn-titlebar.window-control.retro-window-control:hover:not(:disabled) {
+  background: linear-gradient(180deg, #43305e, #2a213d) !important;
+  border-color: var(--control-ink) !important;
+  box-shadow: inset 1px 1px 0 rgba(255,255,255,.16), inset -1px -2px 0 rgba(0,0,0,.28), 0 3px 0 #080911, 0 0 9px color-mix(in srgb, var(--control-ink) 26%, transparent);
+  transform: translateY(-1px);
+}
+:root[data-interface-theme="neon-wave"] .app-titlebar .btn-titlebar.window-control.retro-window-control.close:hover:not(:disabled) { background: linear-gradient(180deg, #823e59, #55273d) !important; color: #fff !important; }
+:root[data-interface-theme="neon-wave"] .app-titlebar .btn-titlebar.window-control.retro-window-control:active:not(:disabled) { transform: translateY(2px); transition-duration: .05s; box-shadow: inset 1px 2px 0 rgba(0,0,0,.4), 0 0 5px color-mix(in srgb, var(--control-ink) 20%, transparent); }
+:root[data-interface-theme="neon-wave"] .app-titlebar .btn-titlebar.window-control.retro-window-control:focus-visible { outline: 2px solid var(--control-ink); outline-offset: 3px; }
+:root[data-interface-theme="neon-wave"] .app-titlebar .btn-titlebar.window-control.retro-window-control:disabled { opacity: .65; cursor: default; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-interface-theme="neon-wave"] .app-titlebar .btn-titlebar.window-control.retro-window-control { transition: none; }
+  :root[data-interface-theme="neon-wave"] .app-titlebar .btn-titlebar.window-control.retro-window-control:hover:not(:disabled),
+  :root[data-interface-theme="neon-wave"] .app-titlebar .btn-titlebar.window-control.retro-window-control:active:not(:disabled) { transform: none; }
+}
+
+/* Hackerman: monochrome terminal keys, with the shared rounded-square frame. */
+:root[data-interface-theme="hackerman"] .app-titlebar .btn-titlebar.window-control.retro-window-control {
+  background:repeating-linear-gradient(0deg,rgba(100,204,125,.035) 0 1px,transparent 1px 4px),#07130c !important;
+  color:#8bd6a0 !important;
+  border:1px solid #326343 !important;
+  box-shadow:inset 0 0 0 2px rgba(61,145,84,.07),0 1px 0 #010603;
+  transform:none;
+}
+:root[data-interface-theme="hackerman"] .app-titlebar .btn-titlebar.window-control.retro-window-control svg {
+  width:14px;height:14px;stroke-linecap:square;stroke-linejoin:miter;stroke-width:2;
+}
+:root[data-interface-theme="hackerman"] .app-titlebar .btn-titlebar.window-control.retro-window-control::before,
+:root[data-interface-theme="hackerman"] .app-titlebar .btn-titlebar.window-control.retro-window-control::after { content:none!important; }
+:root[data-interface-theme="hackerman"] .app-titlebar .btn-titlebar.window-control.retro-window-control:hover:not(:disabled) {
+  background:#123820 !important;color:#bcffd0 !important;border-color:#71d493 !important;
+  box-shadow:inset 0 0 8px rgba(74,189,107,.12),0 0 8px rgba(74,189,107,.2);
+  transform:none;
+}
+:root[data-interface-theme="hackerman"] .app-titlebar .btn-titlebar.window-control.retro-window-control.close:hover:not(:disabled) {
+  background:#332018 !important;color:#ffd0a6 !important;border-color:#c19566 !important;
+  box-shadow:inset 0 0 8px rgba(193,149,102,.1),0 0 8px rgba(193,149,102,.18);
+}
+:root[data-interface-theme="hackerman"] .app-titlebar .btn-titlebar.window-control.retro-window-control:active:not(:disabled) { transform:translateY(1px);box-shadow:inset 0 1px 4px rgba(0,0,0,.5); }
+:root[data-interface-theme="hackerman"] .app-titlebar .btn-titlebar.window-control.retro-window-control:focus-visible { outline:2px solid #8bd6a0;outline-offset:3px; }
+@media(prefers-reduced-motion:reduce) {
+ :root[data-interface-theme="hackerman"] .app-titlebar .btn-titlebar.window-control.retro-window-control:active:not(:disabled) { transform:none; }
+}

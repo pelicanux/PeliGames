@@ -6,7 +6,7 @@ import { NexusPopup } from "../../modules/nexus/NexusPopup";
 import { notifyError } from "../../services/notifications";
 
 type ModGame = { id: string; name: string; directory: string; device: string; available: boolean; portable: boolean; mods: number };
-type Plan = { action: "reset" | "uninstall"; paths: string[]; mod_games?: ModGame[]; installed_games?: {name: string; directory: string; available: boolean}[]; mod_revision?: string };
+type Plan = { action: "reset" | "uninstall"; paths: string[]; mod_games?: ModGame[]; installed_games?: {name: string; directory: string; available: boolean}[]; mod_revision?: string; pelirun?: string[] };
 export function MaintenancePreferences({ uninstall = false }: { uninstall?: boolean }) {
   const pt = useI18n().language === "pt";
   const [plan, setPlan] = useState<Plan | null>(null);
@@ -15,6 +15,7 @@ export function MaintenancePreferences({ uninstall = false }: { uninstall?: bool
   const [removeMods, setRemoveMods] = useState(false);
   const [preserveAccounts, setPreserveAccounts] = useState(false);
   const [preserveGames, setPreserveGames] = useState(false);
+  const [removePelirun, setRemovePelirun] = useState(false);
   const [restartRequired, setRestartRequired] = useState(false);
   const lock = useRef(false);
   useLayoutEffect(() => {
@@ -36,7 +37,7 @@ export function MaintenancePreferences({ uninstall = false }: { uninstall?: bool
   const review = async () => {
     if (lock.current) return;
     lock.current = true; setBusy(true);
-    try { setPlan(await invoke<Plan>("launcher_maintenance_plan", { action: uninstall ? "uninstall" : "reset" })); setAccepted(false); setRemoveMods(false); setPreserveAccounts(false); setPreserveGames(false); }
+    try { setPlan(await invoke<Plan>("launcher_maintenance_plan", { action: uninstall ? "uninstall" : "reset" })); setAccepted(false); setRemoveMods(false); setPreserveAccounts(false); setPreserveGames(false); setRemovePelirun(false); }
     catch (error) { notifyError(title, String(error)); }
     finally { lock.current = false; setBusy(false); }
   };
@@ -49,7 +50,7 @@ export function MaintenancePreferences({ uninstall = false }: { uninstall?: bool
         if (plan.action === "reset") setRestartRequired(true);
         else throw new Error(pt ? "Demonstração: nenhuma conta ou arquivo foi removido." : "Preview: no accounts or files were removed.");
       } else {
-        await invoke("launcher_maintenance_apply", { action: plan.action, confirmedPaths: plan.paths, removeMods, preserveAccounts, preserveGames, confirmedModRevision: plan.mod_revision });
+        await invoke("launcher_maintenance_apply", { action: plan.action, confirmedPaths: plan.paths, removeMods, preserveAccounts, preserveGames, confirmedModRevision: plan.mod_revision, removePelirun });
         if (plan.action === "reset") setRestartRequired(true);
       }
     } catch (error) { notifyError(title, String(error)); }
@@ -96,6 +97,16 @@ export function MaintenancePreferences({ uninstall = false }: { uninstall?: bool
           ? (pt ? "Remove os mods de todos os jogos listados e restaura os originais preservados. Os jogos e saves permanecem. Arquivos antigos sem registro não são apagados automaticamente." : "Removes mods from every listed game and restores preserved originals. Games and saves remain. Untracked older files are not deleted automatically.")
           : (pt ? "Os registros, pacotes e originais preservados serão mantidos na pasta de cada jogo. Após redefinir, o PeliGames recupera o gerenciamento automaticamente. O índice de localização dos mods é preservado." : "Records, packages and preserved originals stay beside each game. After resetting, PeliGames automatically recovers mod management. The mod location index is preserved.")}</p>
         {Boolean(plan.mod_games?.length) && <ul className="maintenance-paths maintenance-game-list" tabIndex={0} aria-label={pt ? "Jogos com mods gerenciados" : "Games with managed mods"}>{plan.mod_games!.map(game => <li key={game.id}><strong>{game.name}</strong> · {game.mods} mods<br/><code>{game.directory}</code>{!game.available && <p role="alert">{pt ? `Não foi possível acessar este jogo. Dispositivo registrado: ${game.device}. Verifique se o dispositivo está conectado e montado no caminho original antes de remover os mods ou migrar seus registros.` : `This game cannot be accessed. Recorded device: ${game.device}. Check that it is connected and mounted at the original path before removing mods or migrating records.`}</p>}</li>)}</ul>}
+      </section>}
+      {!uninstall && <section className="maintenance-pelirun-review">
+        <label className="maintenance-confirm"><input type="checkbox" checked={removePelirun} disabled={busy || !plan.pelirun?.length} onChange={event => { setRemovePelirun(event.target.checked); setAccepted(false); }}/><span>{pt ? "Remover também o PeliRun" : "Also remove PeliRun"}</span></label>
+        <p>{pt ? "O PeliRun é o pequeno programa do PeliGames que aplica as configurações de cada jogo (MangoHUD, Proton, opções de inicialização, mods) quando o jogo é aberto pela Steam ou por outro launcher. Ele fica fora das pastas do PeliGames para que esses jogos continuem abrindo mesmo depois de redefinir." : "PeliRun is PeliGames' small program that applies each game's settings (MangoHUD, Proton, launch options, mods) when the game is opened from Steam or another launcher. It lives outside PeliGames' folders so those games keep opening after a reset."}</p>
+        <p>{!plan.pelirun?.length
+          ? (pt ? "O PeliRun não está instalado neste computador." : "PeliRun is not installed on this computer.")
+          : removePelirun
+            ? (pt ? "Feche a Steam antes de continuar. O PeliGames tira a chamada do PeliRun das opções de inicialização dos jogos na Steam, mantendo o restante da linha, e apaga as pastas abaixo. Linhas copiadas à mão para outros launchers (Heroic, Lutris) precisam ser apagadas por você." : "Close Steam before continuing. PeliGames removes the PeliRun call from the games' Steam launch options, keeping the rest of the line, and deletes the folders below. Lines you copied by hand into other launchers (Heroic, Lutris) must be removed by you.")
+            : (pt ? "Sem esta opção, só os perfis de configuração do PeliRun são apagados; o programa continua, e os jogos da Steam abrem sem os ajustes do PeliGames." : "Without this option, only PeliRun's settings profiles are deleted; the program stays, and Steam games open without PeliGames' adjustments.")}</p>
+        {removePelirun && Boolean(plan.pelirun?.length) && <ul className="maintenance-paths" aria-label={pt ? "Pastas do PeliRun" : "PeliRun folders"}>{plan.pelirun!.map(path => <li key={path}><code>{path}</code></li>)}</ul>}
       </section>}
       <label className="maintenance-confirm"><input type="checkbox" checked={accepted} disabled={busy} onChange={event => setAccepted(event.target.checked)}/><span>{pt ? "Conferi os caminhos e entendo que esta remoção é permanente." : "I reviewed the paths and understand this removal is permanent."}</span></label>
     </NexusPopup>}

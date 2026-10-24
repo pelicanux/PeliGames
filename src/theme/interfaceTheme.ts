@@ -1,9 +1,9 @@
-export type InterfaceTheme = "standard" | "hackerman";
+export type InterfaceTheme = "standard" | "hackerman" | "neon-wave";
 export const INTERFACE_THEME_STORAGE_KEY = "peligames.interfaceTheme";
 /** Only the standard theme is free; every other theme (Hackerman and any
  *  added later) needs the Discord benefit: YouTube member or server booster. */
 export const isFreeInterfaceTheme = (theme: InterfaceTheme) => theme === "standard";
-export const readInterfaceTheme = (value: string | null): InterfaceTheme => value === "hackerman" ? "hackerman" : "standard";
+export const readInterfaceTheme = (value: string | null): InterfaceTheme => value === "hackerman" || value === "neon-wave" ? value : "standard";
 export const HACKERMAN_ACCENT: Record<string, string> = {
   "--accent": "#269b54", "--accent-rgb": "38, 155, 84", "--accent-soft": "#8fc69e", "--accent-light": "#b1d9ba",
   "--accent-button": "#188445", "--accent-deep": "#125833", "--accent-hover": "#239855", "--accent-deeper": "#0e3b28",

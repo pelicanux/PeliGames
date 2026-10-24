@@ -84,6 +84,14 @@ html {
   background-color: transparent;
 }
 
+/* Opaque window (WebKitGTK 2.54): the page paints the corners in the theme's
+   base colour and the frame goes square, instead of black corner tips. */
+:root[data-opaque-window] { background-color: #101119; }
+:root[data-opaque-window][data-appearance="light"] { background-color: #f4f5f9; }
+html.log-monitor-window[data-opaque-window] { background: #101119 !important; }
+html.log-monitor-window[data-opaque-window][data-appearance="light"] { background: #f4f5f9 !important; }
+:root[data-opaque-window] .app-wrapper { border-radius: 0; box-shadow: none; }
+
 body {
   margin: 0;
   min-width: 320px;
@@ -816,7 +824,7 @@ select option {
   .game-cover-column img:not([alt="Icon"]), .game-cover-column > div > div:not(.glare) { width: 120px !important; }
   .menu-glass-panel { min-height: 0; }
 }
-body.performance-mode { background-image: none; background-color: var(--tone-12121b, #12121b); }
+body.performance-mode { background-image: none; background-color: transparent; }
 .performance-mode *, .performance-mode *::before, .performance-mode *::after {
   animation: none !important; transition: none !important;
   backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
@@ -1307,8 +1315,9 @@ button.advanced-toggle.enabled { background: rgba(var(--accent-rgb), .4); border
 .gamescope-help .menu-icon { width: 14px; height: 14px; }
 .gamescope-extra-label { display: block; padding: 12px 8px; color: var(--tone-e2e8f0); font-size: .8rem; }
 .gamescope-extra-label input { display: block; box-sizing: border-box; width: 100%; margin-top: 8px; padding: 8px; border: 1px solid rgba(var(--accent-rgb), .25); border-radius: 6px; color: var(--tone-e2e8f0); background: rgba(var(--surface-20-20-25, 20,20,25), .8); }
-.installed-advanced-heading { flex-wrap: wrap; position: relative; padding-bottom: 22px; }
-.advanced-heading-feedback { position: absolute; right: 0; bottom: 0; height: 18px; max-width: 100%; pointer-events: none; text-align: right; color: var(--accent-soft); font-size: .75rem; font-weight: normal; }
+.installed-advanced-heading { flex-wrap: wrap; position: relative; }
+.advanced-heading-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-left: auto; flex: 0 1 488px; min-width: 0; }
+.advanced-heading-feedback { display: flex; align-items: center; justify-content: flex-end; flex: 0 0 176px; height: 40px; min-width: 0; pointer-events: none; text-align: right; color: var(--accent-soft); font-size: .75rem; font-weight: normal; }
 .advanced-saved-feedback { margin: 0; padding: 0; font: inherit; color: inherit; }
 .advanced-option-requirement { display: block; margin: 6px 0; color: var(--accent-soft); font-size: .75rem; line-height: 1.4; }
 .installed-advanced-heading > span { flex: 1; }
@@ -2070,3 +2079,14 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
 .pelirun-export-field input { flex:1; min-width:0; padding:9px 10px; border:1px solid #ffffff20; border-radius:8px; background:#0003; color:inherit; font-size:12px; }
 .pelirun-export-note { font-size:12px; opacity:.8; line-height:1.5; }
 @media (max-width:640px) { .pelirun-export { align-items:flex-start; flex-direction:column; } }
+
+.log-view-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.log-delete-button { color:var(--tone-ef4444, #ef4444); }
+.log-folder-actions { flex-wrap:wrap; gap:8px; }
+
+.log-level-legend { display:flex; gap:14px; flex-wrap:wrap; padding:6px 10px; font-size:.73rem; color:var(--text-secondary); flex-shrink:0; }
+.log-level-legend .log-line-error {color:#ff7070;}
+.log-level-legend .log-line-warning {color:#efc66c;}
+.log-level-legend .log-line-success,.log-delete-success {color:#65d98b;}
+.log-view-actions {flex-shrink:0; padding:0 8px 6px;}
+.launcher-log-dialog .log-output-panel .game-log-output { padding-top:48px; }

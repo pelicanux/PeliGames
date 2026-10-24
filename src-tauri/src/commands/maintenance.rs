@@ -8,6 +8,7 @@ use std::{
 };
 use tauri::Manager;
 pub mod reset;
+mod pelirun;
 static BUSY: AtomicBool = AtomicBool::new(false);
 static RESET_READY: std::sync::Mutex<Option<(Vec<String>, bool, bool)>> = std::sync::Mutex::new(None);
 #[derive(Serialize)]
@@ -17,6 +18,8 @@ pub struct Plan {
     mod_games: Vec<super::nexus_durable::Review>,
     mod_revision: Option<String>,
     installed_games: Vec<crate::core::installed_library::ResetGame>,
+    /// PeliRun folders, deleted only when the person also asks to remove it.
+    pelirun: Vec<String>,
 }
 
 fn base(path: Option<PathBuf>) -> Result<PathBuf, String> {
@@ -187,6 +190,7 @@ pub fn launcher_maintenance_plan(action: String) -> Result<Plan, String> {
         mod_games: if action == "reset" {super::nexus_durable::review()?} else {vec![]},
         mod_revision: if action == "reset" {Some(super::nexus_durable::reset_revision()?)}else{None},
         installed_games: if action == "reset" { crate::core::installed_library::reset_inventory(&[])? } else {vec![]},
+        pelirun: if action == "reset" { strings(pelirun::folders()?) } else { vec![] },
         action,
     })
 }
@@ -262,6 +266,7 @@ pub async fn launcher_maintenance_apply(
     preserve_accounts: Option<bool>,
     preserve_games: Option<bool>,
     confirmed_mod_revision: Option<String>,
+    remove_pelirun: Option<bool>,
 ) -> Result<(), String> {
     if BUSY.swap(true, Ordering::AcqRel) {
         return Err("Manutenção já em andamento.".into());
@@ -298,6 +303,8 @@ pub async fn launcher_maintenance_apply(
         if let Some(game)=super::nexus_durable::review()?.into_iter().find(|g| !g.available && (remove || !g.portable)) {
             return Err(format!("Não foi possível acessar “{}”, em {}. Dispositivo registrado: {}. Verifique se o dispositivo está conectado e montado no caminho original. A redefinição foi interrompida para preservar os mods.",game.name,game.directory,game.device));
         }
+        // First of the irreversible steps: it refuses with Steam open before anything else changes.
+        if remove_pelirun.unwrap_or(false) { tauri::async_runtime::spawn_blocking(pelirun::remove).await.map_err(|e| e.to_string())??; }
         if preserve_games.unwrap_or(false) { crate::core::installed_library::reset_inventory(&paths)?; }
         if !preserve_accounts.unwrap_or(false) {
             // Revoke where possible; local keyring deletion is mandatory.

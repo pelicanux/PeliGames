@@ -123,7 +123,6 @@
 .matrix-message-report input { flex:1; min-width:160px; background:#080d11; color:#d3e3db; border:1px solid #355440; padding:6px 8px; font:1.0625rem "Jersey 10",monospace; }
 .matrix-terminal-older { display:block; margin:0 auto 14px; background:transparent; border:1px dashed #355440; color:#7ba88e; font:1.0625rem "Jersey 10",monospace; padding:4px 12px; cursor:pointer; }
 .matrix-terminal-rooms .matrix-terminal-join { border-color:#4e8a6c; color:#b4ffcd; }
-.matrix-terminal-rooms .matrix-terminal-ignored { font-size:0.9375rem; color:#8fa59a; }
 .matrix-message-report > strong { flex-basis:100%; color:#b4ffcd; font:1.0625rem "Jersey 10",monospace; }
 .matrix-message-report.is-moderation > strong, .matrix-message-actions button.is-moderation { color:#ffb4bc; }
 
@@ -490,3 +489,46 @@ body.is-dragging-dock, body.is-dragging-dock * { user-select:none !important; -w
 .matrix-call-controls .matrix-share-menu .matrix-share-quality button { padding:4px 6px; text-align:center; color:#d6e8de; background:transparent; border:1px solid #2d4a3c; font:1rem "Jersey 10",monospace; cursor:pointer; }
 .matrix-call-controls .matrix-share-menu .matrix-share-quality button.is-chosen { color:#071009; background:#62d694; border-color:#62d694; }
 .matrix-call-controls .matrix-share-menu .matrix-share-quality button:disabled { opacity:.4; cursor:default; }
+
+.matrix-shortcut-settings {display:grid;gap:14px;min-width:0;}
+.matrix-shortcut-settings p {margin:0;font-size:.875rem;line-height:1.5;}
+.matrix-shortcut-settings [role="alert"] {color:#ffb4bc;}
+.matrix-shortcut-settings [role="status"] {color:#62d694;}
+.matrix-shortcut-row {display:grid;grid-template-columns:minmax(0,1fr) auto 30px;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #264333;}
+.matrix-shortcut-row>span {font-size:.875rem;}
+.matrix-shortcut-actions {display:flex;gap:8px;flex-wrap:wrap;}
+@media(max-width:650px){.matrix-shortcut-row {grid-template-columns:minmax(0,1fr) 30px;}.matrix-shortcut-row>span{grid-column:1/-1;}}
+/* Person menu (volume, mute) and profile card, in the channel menu's style. */
+.matrix-channel-menu-check { display:flex; justify-content:space-between; gap:12px; }
+.matrix-channel-menu-check > span { color:#62d694; }
+.matrix-channel-menu-check:hover > span, .matrix-channel-menu-check:focus-visible > span { color:inherit; }
+.matrix-channel-menu-slider { display:grid; gap:4px; padding:5px 8px; color:#d6e8de; }
+.matrix-channel-menu-slider > span { display:flex; justify-content:space-between; gap:12px; }
+.matrix-channel-menu-slider b { color:#9fe8bf; font-weight:400; }
+.matrix-channel-menu-slider input { width:100%; accent-color:#62d694; }
+.matrix-profile-card { position:fixed; width:260px; display:grid; justify-items:center; gap:4px; padding:14px 12px 10px; background:#0b1410; border:1px solid #38644f; box-shadow:0 10px 30px #000c, 0 0 18px #62d69418; font:1.0625rem "Jersey 10",monospace; color:#d6e8de; }
+.matrix-profile-card.is-large { width:320px; }
+.matrix-profile-avatar { position:relative; width:84px; height:84px; padding:0; display:grid; place-items:center; background:#0d1713; border:1px solid #38644f; border-radius:50%; color:#9fe8bf; font:2rem "Jersey 10",monospace; cursor:zoom-in; transition:width .15s, height .15s; }
+.matrix-profile-card.is-large .matrix-profile-avatar { width:240px; height:240px; border-radius:6px; cursor:zoom-out; }
+.matrix-profile-avatar img { width:100%; height:100%; object-fit:cover; border-radius:inherit; }
+.matrix-profile-avatar:focus-visible { outline:1px solid #62d694; outline-offset:2px; }
+.matrix-profile-avatar .matrix-avatar-presence { width:14px; height:14px; right:4px; bottom:4px; }
+.matrix-profile-card.is-large .matrix-profile-avatar .matrix-avatar-presence { right:-4px; bottom:-4px; }
+.matrix-profile-card > strong { max-width:100%; color:#d6e562; font-weight:400; font-size:1.375rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.matrix-profile-card > code { max-width:100%; color:#7ba88e; font:0.9375rem "Jersey 10",monospace; overflow-wrap:anywhere; text-align:center; }
+.matrix-profile-card dl { width:100%; margin:8px 0 0; padding-top:8px; border-top:1px solid #24473b; display:grid; grid-template-columns:auto 1fr; gap:4px 10px; }
+.matrix-profile-card dt { color:#7ba88e; }
+.matrix-profile-card dd { margin:0; min-width:0; overflow-wrap:anywhere; }
+@media (prefers-reduced-motion:reduce) { .matrix-profile-avatar { transition:none; } }
+/* Collapses the people strip under a watched screen, as in Discord. */
+.matrix-call-members-toggle { align-self:center; flex-shrink:0; display:flex; align-items:center; gap:4px; padding:2px 10px; color:#9fe8bf; background:#0d1713; border:1px solid #38644f; border-radius:12px; font:1rem "Jersey 10",monospace; cursor:pointer; }
+.matrix-call-members-toggle:hover, .matrix-call-members-toggle:focus-visible { color:#d4ffe6; border-color:#62d694; background:#123024; outline:none; }
+/* Blocked users in the Matrix settings. */
+.matrix-settings-blocked { list-style:none; margin:0; padding:0; display:grid; gap:6px; }
+.matrix-settings-blocked li { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 8px; background:#0d1713; border:1px solid #24473b; }
+.matrix-settings-blocked li > span { display:grid; min-width:0; }
+.matrix-settings-blocked b { color:#d3e3db; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.matrix-settings-blocked code { font-size:0.875rem !important; color:#7ba88e !important; }
+/* The "⋯" of a message keeps its actions shown while its menu is open. */
+.matrix-message-actions:has([aria-expanded="true"]) { opacity:1; }
+.matrix-message-actions .matrix-message-more { padding:1px 9px; letter-spacing:1px; }

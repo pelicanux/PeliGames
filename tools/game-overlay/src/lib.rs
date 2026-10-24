@@ -177,8 +177,24 @@ pub(crate) fn report(message: &str) {
     if let Ok(mut last) = LAST.get_or_init(Default::default).lock() {
         if *last != message {
             eprintln!("[PeliGames overlay] {message}");
+            session_note(message);
             *last = message.into();
         }
+    }
+}
+/// Appends to the launch's diagnosis file (created by the runner), which the
+/// app reads for any launcher, Flatpak Steam included.
+fn session_note(message: &str) {
+    use std::{io::Write, os::unix::fs::OpenOptionsExt};
+    static LOG: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
+    let Some(path) = LOG
+        .get_or_init(|| std::env::var_os("PELI_OVERLAY_LOG").map(Into::into).filter(|p: &std::path::PathBuf| p.is_absolute()))
+    else {
+        return;
+    };
+    let process = std::fs::read_to_string("/proc/self/comm").unwrap_or_default();
+    if let Ok(mut file) = std::fs::OpenOptions::new().append(true).custom_flags(libc::O_NOFOLLOW).open(path) {
+        let _ = file.write_all(format!("{}\t{}\n", process.trim().replace('\t', " "), message.replace(['\n', '\t'], " ")).as_bytes());
     }
 }
 pub(crate) fn nonce() -> String {

@@ -138,7 +138,7 @@ fn read_at(directory: &Path) -> Result<String, String> {
     let mut paths: Vec<_> = entries.flatten().filter(|e|e.file_type().is_ok_and(|t|t.is_file()) && e.path().extension().is_some_and(|x|x=="log")).map(|e|e.path()).collect();
     paths.sort();
     let mut output = String::new();
-    let mut budget = 1024 * 1024;
+    let mut budget = super::bounded_logs::MAX_BYTES;
     for path in paths.into_iter().take(16) {
         if budget == 0 { break; }
         let mut options = fs::OpenOptions::new(); options.read(true);
@@ -226,5 +226,38 @@ mod tests {
         let dir=Temp::new();let source=dir.0.join("source");let target=dir.0.join("target");
         fs::create_dir(&source).unwrap();fs::create_dir(&target).unwrap();
         assert!(rename_exclusive(&source,&target).is_err());assert!(source.exists());assert!(target.exists());
+    }
+}
+
+/// Remove all retained sessions for one identity, including its identity folder.
+/// Callers performing uninstall may already have removed the library entry.
+pub(crate) fn remove(path: &str) -> Result<(), String> {
+    remove_at(&super::paths::app_root()?.join("game-logs"),path)
+}
+fn remove_at(base: &Path,path: &str) -> Result<(),String> {
+    let id=digest(path);
+    let roots:Vec<PathBuf>=match fs::read_dir(base){Ok(entries)=>entries.filter_map(Result::ok).map(|e|e.path()).collect(),Err(e)if e.kind()==std::io::ErrorKind::NotFound=>return Ok(()),Err(e)=>return Err(e.to_string())};
+    for root in roots {
+        if !belongs(&root,path,&id) && !(root.file_name().is_some_and(|n|n==id.as_str()) && plain_directory(&root)) {continue;}
+        if let Some(meta)=identity_at(&root) {
+            if super::game_execution::prefix_in_use(Path::new(&meta.prefix)) {return Err("Encerre o jogo antes de excluir seus logs.".into());}
+        }
+        super::bounded_logs::remove_directory(&root).map_err(|e|format!("Não foi possível excluir a pasta de logs; encerre o jogo e tente novamente: {e}"))?;
+    }
+    Ok(())
+}
+#[cfg(test)]
+mod removal_tests {
+    use super::*;
+    #[test]
+    fn removal_deletes_the_whole_identity_but_preserves_other_games() {
+        let base=std::env::temp_dir().join(format!("peligames-log-delete-{}",uuid::Uuid::new_v4()));
+        let first=prepare_root_at(&base,"game-a","A",Path::new("/fixture/a.exe"),Path::new("/fixture/prefix-a")).unwrap();
+        let other=prepare_root_at(&base,"game-b","B",Path::new("/fixture/b.exe"),Path::new("/fixture/prefix-b")).unwrap();
+        for name in ["current","previous"] {fs::create_dir_all(first.join(name)).unwrap();fs::write(first.join(name).join("execution.log"),"message").unwrap();}
+        let active=super::super::bounded_logs::LogWriter::create(&first.join("current/execution.log")).unwrap();
+        assert!(remove_at(&base,"game-a").is_err());assert!(first.is_dir());drop(active);
+        remove_at(&base,"game-a").unwrap();assert!(!first.exists());assert!(other.join("game.json").is_file());
+        remove_at(&base,"game-a").unwrap();fs::remove_dir_all(base).unwrap();
     }
 }

@@ -31,21 +31,6 @@ mod tls_tests {
         let _ = rustls::ClientConfig::builder();
     }
 }
-/// WebKitGTK 2.42+ draws pages through DMABUF buffers; with the NVIDIA
-/// driver this often leaves heavy pages (Nexus sign-in, Cloudflare check)
-/// black or frozen. Fall back to its shared-memory renderer on NVIDIA. Set
-/// before GTK starts; a value the user already set is kept.
-fn webkit_graphics_workaround() {
-    #[cfg(target_os = "linux")]
-    if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() && nvidia_driver() {
-        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
-    }
-}
-/// The NVIDIA kernel driver (proprietary or open modules); not nouveau.
-#[cfg(target_os = "linux")]
-fn nvidia_driver() -> bool {
-    std::path::Path::new("/proc/driver/nvidia/version").exists() || std::path::Path::new("/sys/module/nvidia").exists()
-}
 fn run_mode(installer: bool) {
     if std::env::args_os().nth(1).as_deref() == Some(std::ffi::OsStr::new(core::bounded_logs::FLAG)) {
         let result = std::env::args_os().nth(2).ok_or_else(|| std::io::Error::other("Log path missing")).and_then(|path|core::bounded_logs::collect(std::path::Path::new(&path)));
@@ -67,7 +52,8 @@ fn run_mode(installer: bool) {
     }
     choose_tls_backend();
     crate::core::env_utils::drop_bundle_python();
-    webkit_graphics_workaround();
+    #[cfg(target_os = "linux")]
+    core::webkit_graphics::configure();
     #[cfg(unix)]
     if let Err(error) = core::launcher_instance::wait_for_restart_parent() { eprintln!("{error}"); return; }
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -118,6 +104,14 @@ fn run_mode(installer: bool) {
     // Before any webview opens: its storage moves with the rest of the launcher data.
     for error in core::paths::migrate_scattered_data() { eprintln!("Migração de dados: {error}"); }
     let mut context = app_context();
+    #[cfg(target_os = "linux")]
+    if core::webkit_graphics::opaque_window() {
+        for window in context.config_mut().app.windows.iter_mut() {
+            window.transparent = false;
+            let (r, g, b) = core::webkit_graphics::OPAQUE_BACKGROUND;
+            window.background_color = Some(tauri::utils::config::Color(r, g, b, 255));
+        }
+    }
     if startup.module != "launcher" {
         if let Some(window) = context.config_mut().app.windows.first_mut() {
             window.title = if startup.module == "launch-error" { "PeliGames — execução" } else { "Pelinstall" }.into();
@@ -148,6 +142,24 @@ fn run_mode(installer: bool) {
         .setup(move |app| {
             std::thread::spawn(core::bounded_logs::startup_cleanup);
             core::logger::startup();
+            #[cfg(target_os = "linux")]
+            {
+                use tauri::Manager;
+                if let Some(window) = app.get_webview_window("main") {
+                    if let Err(error) = window.with_webview(|native| {
+                        use webkit2gtk::WebViewExt;
+                        let view = native.inner();
+                        if let Err(error) = core::webkit_graphics::configure_webview(&view) {
+                            core::logger::event("ERROR", &error);
+                        }
+                        view.connect_web_process_terminated(|_, reason| {
+                            core::logger::event("ERROR", &format!("O processo da interface WebKit foi encerrado: {reason:?}"));
+                        });
+                    }) {
+                        core::logger::event("ERROR", &format!("Não foi possível configurar a composição da interface: {error}"));
+                    }
+                }
+            }
             if launcher_window { commands::frame_overlay_shortcut::startup(); }
             #[cfg(unix)]
             if let Some(instance) = launcher_instance {
@@ -184,7 +196,6 @@ fn run_mode(installer: bool) {
             commands::nexus_progress::init(&app_handle);
             commands::mod_backup::init(&app_handle);
             // Launch logs start empty on every launcher start (disk work off the UI thread).
-            if launcher_window { std::thread::spawn(commands::nexus_local::reset_session_logs_at_startup); }
             Ok(())
         })
         .invoke_handler({
@@ -230,6 +241,11 @@ fn run_mode(installer: bool) {
             commands::matrix_call::matrix_room_call_key,
             commands::matrix_call::matrix_call_stop,
             commands::matrix_call::matrix_call_controls,
+            commands::matrix_call::matrix_call_user_volume,
+            commands::matrix_shortcuts::configure_matrix_voice_shortcuts,
+            commands::neon_wave::set_neon_wave_audio,
+            commands::openrgb::read_openrgb,
+            commands::openrgb::disconnect_openrgb,
             commands::matrix_call::matrix_screen_share,
             commands::matrix_call::matrix_screen_watch,
             commands::matrix_screen::matrix_screen_view,
@@ -272,6 +288,7 @@ fn run_mode(installer: bool) {
             commands::mod_backup::set_mod_backup_settings,
             commands::mod_backup::set_nexus_game_backup,
             commands::mod_backup::delete_nexus_game_backup,
+            commands::mod_backup::delete_all_mod_backups,
             commands::mod_backup::create_mod_backup,
             commands::mod_backup::restore_mod_backup,
             commands::mod_backup::recover_mods_from_disk,
@@ -332,6 +349,7 @@ fn run_mode(installer: bool) {
             commands::nexus_local::set_nexus_mod_enabled,
             commands::nexus_launch_options::get_nexus_launch_options,
             commands::mod_launch_options::apply_mod_launch_options,
+            commands::mod_launch_options::mod_launch_options_for,
             commands::nexus_launch_options::configure_nexus_advanced,
             commands::nexus_launch_options::configure_nexus_launch_options,
             commands::nexus_local::launch_nexus_game,
@@ -481,6 +499,7 @@ fn run_mode(installer: bool) {
             commands::config::get_launcher_log,
             commands::log_windows::open_game_log_window,
             commands::log_windows::open_log_folder,
+            commands::log_windows::delete_game_logs,
             commands::log_windows::set_log_window_on_top,
             commands::config::save_app_config,
             commands::config::migrate_neural_preferences,
@@ -501,6 +520,9 @@ fn run_mode(installer: bool) {
             commands::frame_generation::flatpak::frame_generation_flatpak_status,
             commands::frame_overlay_shortcut::frame_overlay_preferences,
             commands::frame_overlay_runtime::frame_overlay_support,
+            commands::frame_overlay_runtime::frame_overlay_last_session,
+            #[cfg(target_os = "linux")]
+            core::webkit_graphics::window_opaque,
             commands::frame_overlay_shortcut::configure_frame_overlay,
             commands::frame_generation::resolve_game_mod_paths,
             commands::frame_generation::set_game_mod_destination,

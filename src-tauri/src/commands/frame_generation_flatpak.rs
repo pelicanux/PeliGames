@@ -223,6 +223,7 @@ pub(super) fn wrapper(config: &Path) -> String {
 
 #[cfg(test)]
 mod tests {
+    use crate::core::test_support::RetryOutput;
     use super::*;
     #[test]
     fn selects_extension_abi_instead_of_desktop_runtime_version() {
@@ -257,7 +258,7 @@ mod tests {
         let config = root.join("config with ' quote.toml");
         fs::write(&path, wrapper(&config)).unwrap();
         fs::set_permissions(&path, fs::Permissions::from_mode(0o700)).unwrap();
-        let output=Command::new(&path).args(["/usr/bin/python3","-c","import os,sys,json; print(json.dumps([sys.argv[1:],os.environ['MAKO_CONFIG'],os.environ['VK_IMPLICIT_LAYER_PATH']]))","arg with spaces","$(not-a-command)"]).output().unwrap();
+        let output=Command::new(&path).args(["/usr/bin/python3","-c","import os,sys,json; print(json.dumps([sys.argv[1:],os.environ['MAKO_CONFIG'],os.environ['VK_IMPLICIT_LAYER_PATH']]))","arg with spaces","$(not-a-command)"]).output_retrying();
         assert!(output.status.success());
         let data: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
         assert_eq!(
@@ -272,8 +273,7 @@ mod tests {
         let output = Command::new(&path)
             .arg(fake)
             .args(["run", "com.valvesoftware.Steam", "arg with spaces"])
-            .output()
-            .unwrap();
+            .output_retrying();
         assert!(output.status.success());
         let output = String::from_utf8(output.stdout).unwrap();
         assert!(output

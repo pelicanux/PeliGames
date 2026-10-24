@@ -176,8 +176,11 @@ pub(super) fn build(game: &NexusGame) -> Result<String, String> {
                 total = total
                     .checked_add(entry.size())
                     .ok_or("Arquivo grande demais.")?;
-                if entry.size() > 100 * 1024 * 1024 || total > 512 * 1024 * 1024 {
-                    return Err("O perfil excede o limite de extração de 512 MB.".into());
+                if entry.size() > super::nexus_archive::FILE_LIMIT {
+                    return Err(format!("{output} excede o limite de 512 MB por arquivo."));
+                }
+                if total > super::nexus_archive::TOTAL_LIMIT {
+                    return Err("O perfil excede o limite de extração de 2 GB.".into());
                 }
                 if !written.insert(output.clone()) {
                     return Err(format!(
@@ -299,22 +302,6 @@ pub(super) fn launch(game: &NexusGame) -> Result<(), String> {
     super::nexus_launch_options::apply(game, &mut command, exe.parent().ok_or("Pasta inválida.")?)?;
     spawn(game, command)
 }
-/// Files of the launch sessions shown by the log window (not the event history).
-const SESSION_FILES: [&str; 5] = ["current.log", "previous.log", "tool.log", "session-started.txt", "session-started-ms.txt"];
-/// Starts the launcher with empty logs: the next launch begins a new session.
-pub(super) fn clear_session_logs(game: &NexusGame) -> Result<(), String> {
-    clear_session_files(&directory(game)?.join("logs"))
-}
-fn clear_session_files(logs: &Path) -> Result<(), String> {
-    for name in SESSION_FILES {
-        let file = logs.join(name);
-        // Only regular files; a link is never followed or removed here.
-        if fs::symlink_metadata(&file).is_ok_and(|meta| meta.is_file()) {
-            fs::remove_file(&file).map_err(|e| e.to_string())?;
-        }
-    }
-    Ok(())
-}
 fn rotate_execution(logs: &Path) -> Result<(), String> {
     let current = logs.join("current.log");
     let previous = logs.join("previous.log");
@@ -416,53 +403,11 @@ pub(super) fn logs(game: &NexusGame, previous: bool) -> Result<String, String> {
     read_log_file(&file)
 }
 pub(super) fn read_log_file(file: &Path) -> Result<String, String> {
-    let mut input = match fs::File::open(file) {
-        Ok(f) => f,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            return Ok("Nenhum log disponível.".into())
-        }
-        Err(e) => return Err(e.to_string()),
-    };
-    let len = input.metadata().map_err(|e| e.to_string())?.len();
-    let mut bytes = Vec::new();
-    // Keep startup failures as well as the latest output; a noisy session must not
-    // hide the exception that prevented a loader from starting.
-    if len > 256 * 1024 {
-        (&mut input).take(64 * 1024).read_to_end(&mut bytes).map_err(|e| e.to_string())?;
-        bytes.extend_from_slice(b"\n[... trecho intermediario omitido ...]\n");
-        input.seek(SeekFrom::Start(len.saturating_sub(192 * 1024))).map_err(|e|e.to_string())?;
-        input.take(192 * 1024).read_to_end(&mut bytes).map_err(|e|e.to_string())?;
-    } else {
-        input.take(256 * 1024).read_to_end(&mut bytes).map_err(|e|e.to_string())?;
-    }
-    let text = String::from_utf8_lossy(&bytes);
-    let lines: Vec<_> = text.lines().collect();
-    if lines.len() <= 1500 {return Ok(text.into_owned());}
-    Ok(format!("{}\n[... linhas intermediárias omitidas ...]\n{}",
-        lines[..300].join("\n"),lines[lines.len()-1200..].join("\n")))
+    crate::core::bounded_logs::read(file).map_err(|e|e.to_string())
 }
 #[cfg(test)]
 mod diagnostic_tests {
     use super::*;
-    #[test]
-    fn launcher_start_clears_launch_logs_but_keeps_events_and_links() {
-        let root = std::env::temp_dir().join(format!("peligames-session-logs-{}", uuid::Uuid::new_v4()));
-        fs::create_dir_all(&root).unwrap();
-        for name in SESSION_FILES { fs::write(root.join(name), "old").unwrap(); }
-        fs::write(root.join("events.log"), "history").unwrap();
-        clear_session_files(&root).unwrap();
-        assert!(SESSION_FILES.iter().all(|name| !root.join(name).exists()));
-        assert!(root.join("events.log").exists());
-        #[cfg(unix)] {
-            let outside = root.with_extension("outside");
-            fs::write(&outside, "keep").unwrap();
-            std::os::unix::fs::symlink(&outside, root.join("current.log")).unwrap();
-            clear_session_files(&root).unwrap();
-            assert!(root.join("current.log").is_symlink() && outside.exists());
-            fs::remove_file(outside).unwrap();
-        }
-        fs::remove_dir_all(root).unwrap();
-    }
     #[test]
     fn each_launch_retains_only_one_previous_execution() {
         let root = std::env::temp_dir().join(format!("log-rotation-{}", uuid::Uuid::new_v4()));
@@ -483,10 +428,10 @@ mod diagnostic_tests {
         let mut data=String::from("STARTUP_EXCEPTION important loader failure\n");
         for _ in 0..10_000 {data.push_str("repeated runtime output that must not hide startup failures\n");}
         data.push_str("LATEST_OUTPUT\n");
-        fs::write(&file,data).unwrap();
+        fs::write(&file,&data).unwrap();
         let text=read_log_file(&file).unwrap();
         fs::remove_file(file).unwrap();
         assert!(text.contains("STARTUP_EXCEPTION"));assert!(text.contains("LATEST_OUTPUT"));
-        assert!(text.len()<256*1024+1024);assert!(text.contains("omitid"));
+        assert_eq!(text,data);assert!(text.len()<=crate::core::bounded_logs::MAX_BYTES);
     }
 }

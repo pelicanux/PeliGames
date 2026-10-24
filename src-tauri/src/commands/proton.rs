@@ -45,6 +45,20 @@ fn scan_roots(roots: impl IntoIterator<Item = PathBuf>) -> Vec<InstalledProton> 
     result
 }
 
+fn system_wines(paths: impl IntoIterator<Item = PathBuf>) -> Vec<InstalledProton> {
+    let mut seen=BTreeSet::new();let mut found=Vec::new();
+    for directory in paths {
+        if !directory.is_absolute() { continue; }
+        for name in ["wine","wine64"] {
+            let path=directory.join(name);
+            if crate::core::game_installation::native_wine(&path).is_none() { continue; }
+            let Ok(real)=path.canonicalize() else { continue };
+            if seen.insert(real) {found.push(InstalledProton{name:format!("Wine do sistema ({name})"),path:path.to_string_lossy().into_owned()});}
+        }
+    }
+    found
+}
+
 fn steam_libraries(home: &Path) -> BTreeSet<PathBuf> {
     let mut libraries = BTreeSet::from([
         dirs::data_dir().unwrap_or_else(|| home.join(".local/share")).join("Steam"),
@@ -95,7 +109,13 @@ pub async fn scan_installed_protons() -> Result<Vec<InstalledProton>, String> {
                 roots.push(library.join("steamapps/common"));
             }
         }
-        Ok(scan_roots(roots))
+        let mut found=scan_roots(roots);
+        { // System Wine is always included when installed.
+            let mut paths:Vec<PathBuf>=std::env::var_os("PATH").map(|path|std::env::split_paths(&path).collect()).unwrap_or_default();
+            paths.extend([PathBuf::from("/usr/bin"),PathBuf::from("/usr/local/bin")]);
+            found.extend(system_wines(paths));
+        }
+        Ok(found)
     })
     .await
     .map_err(|error| error.to_string())?
@@ -178,6 +198,23 @@ pub async fn uninstall_proton(
 #[cfg(test)]
 mod discovery_tests {
     use super::*;
+    #[test]
+    fn system_wine_discovery_deduplicates_links_and_preserves_the_command_path() {
+        use std::os::unix::fs::{PermissionsExt,symlink};
+        let root=std::env::temp_dir().join(format!("peligames-system-wine-{}",uuid::Uuid::new_v4()));
+        let bin=root.join("bin");let lib=root.join("lib");std::fs::create_dir_all(&bin).unwrap();std::fs::create_dir_all(&lib).unwrap();
+        let real=lib.join("wine-loader");std::fs::write(&real,"#!/bin/sh\nexit 99\n").unwrap();std::fs::set_permissions(&real,std::fs::Permissions::from_mode(0o755)).unwrap();
+        symlink(&real,bin.join("wine")).unwrap();symlink(&real,bin.join("wine64")).unwrap();
+        assert!(system_wines([bin.clone()]).is_empty(),"no wineserver means an unusable runner");
+        std::fs::write(bin.join("wineserver"),"fixture").unwrap();std::fs::set_permissions(bin.join("wineserver"),std::fs::Permissions::from_mode(0o755)).unwrap();
+        let found=system_wines([bin.clone(),bin.clone()]);assert_eq!(found.len(),1);
+        assert_eq!(found[0].path,bin.join("wine").to_string_lossy());
+        let runner=crate::core::game_installation::validate_proton(&found[0].path).unwrap();assert_eq!(runner,bin.join("wine"));
+        assert_eq!(crate::core::game_installation::runner_backend(&found[0].path).unwrap(),runner);
+        let mut command=std::process::Command::new(&runner);crate::core::game_installation::wine_environment(&mut command,&runner,&root.join("prefix"));
+        assert!(command.get_envs().any(|(key,value)|key=="WINESERVER" && value==Some(bin.join("wineserver").as_os_str())));
+        std::fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn steam_aliases_are_hidden_without_removing_or_renaming_real_runners(){
         let root=std::env::temp_dir().join(format!("peligames-proton-discovery-{}",uuid::Uuid::new_v4()));

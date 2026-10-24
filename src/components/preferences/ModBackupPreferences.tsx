@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
+import { ConfirmModal } from "../ConfirmModal";
 import { MenuIcon } from "../MenuIcon";
 import { useI18n } from "../../i18n/I18nContext";
 import { backupDate, type GameBackupStatus } from "../../modules/nexus/NexusGameBackup";
@@ -11,6 +12,7 @@ export function ModBackupPreferences({ onError, onBusy, onRestored }: { onError:
   const { language } = useI18n(), pt = language === "pt";
   const [settings, setSettings] = useState<Settings | null>(null), [busy, setBusy] = useState(false), [notice, setNotice] = useState("");
   const [copies, setCopies] = useState<GameBackupStatus[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const lock = useRef(false);
   useEffect(() => {
     let mounted = true;
@@ -53,12 +55,22 @@ export function ModBackupPreferences({ onError, onBusy, onRestored }: { onError:
     await onRestored();
     window.dispatchEvent(new Event("refreshGames"));
   });
+  const deleteBackups = () => run(async () => {
+    try {
+      setSettings(await invoke<Settings>("delete_all_mod_backups"));
+      setNotice(pt ? "Backups internos excluídos. A recuperação automática foi desativada." : "Internal backups deleted. Automatic recovery has been disabled.");
+    } finally {
+      setConfirmDelete(false);
+      window.dispatchEvent(new Event("modBackupSettingsChanged"));
+    }
+  });
   return <section className="mod-workspace mod-backup-workspace mod-backup-card">
     <header className="mod-intro"><h3>{pt?"Backup e recuperação":"Backup and recovery"}</h3><p>{pt?"Guarde uma cópia ou recupere uma instalação existente. As contas ficam fora do backup.":"Keep a copy or recover an existing installation. Accounts are excluded from backups."}</p></header>
     <div className="mod-backup-actions">
       <div data-preference-id="backup-create" className="mod-setting-row"><div className="mod-row-copy"><span className="mod-component-icon"><MenuIcon name="floppy"/></span><div><strong>{pt?"Guardar uma cópia":"Keep a copy"}</strong><small>{pt?"Cria um ZIP com pacotes, perfis e registros de todos os jogos com mods.":"Creates a ZIP with packages, profiles and records for all modded games."}</small></div></div><button type="button" className="mod-action-primary" disabled={busy} onClick={backup}>{pt?"Criar backup":"Create backup"}</button></div>
       <div data-preference-id="backup-restore" className="mod-setting-row"><div className="mod-row-copy"><span className="mod-component-icon"><MenuIcon name="download"/></span><div><strong>{pt?"Voltar de um backup":"Restore from a backup"}</strong><small>{pt?"Importa seu ZIP. Jogos já configurados são preservados.":"Imports your ZIP. Already configured games are preserved."}</small></div></div><button type="button" className="mod-action-secondary" disabled={busy} onClick={restore}>{pt?"Restaurar":"Restore"}</button></div>
       <div data-preference-id="backup-discover" className="mod-setting-row"><div className="mod-row-copy"><span className="mod-component-icon"><MenuIcon name="folderSearch"/></span><div><strong>{pt?"Encontrar uma instalação anterior":"Find a previous installation"}</strong><small>{pt?"Procura registros de recuperação do PeliGames na pasta dos jogos.":"Finds PeliGames recovery records in your game folders."}</small></div></div><button type="button" className="mod-action-secondary" disabled={busy} onClick={recoverDisk}>{pt?"Procurar no disco":"Search drive"}</button></div>
+      <div data-preference-id="backup-delete-all" className="mod-setting-row"><div className="mod-row-copy"><span className="mod-component-icon"><MenuIcon name="trash"/></span><div><strong>{pt?"Apagar todos os backups de mods":"Delete all mod backups"}</strong><small>{pt?"Exclui as cópias internas de recuperação, inclusive as preservadas após desinstalar jogos. Mantém os mods instalados e os ZIPs exportados.":"Deletes internal recovery copies, including copies preserved after uninstalling games. Keeps installed mods and exported ZIPs."}</small></div></div><button type="button" className="mod-action-secondary" disabled={busy || !settings} onClick={()=>setConfirmDelete(true)}>{pt?"Apagar backups":"Delete backups"}</button></div>
     </div>
     <div className="mod-backup-policy"><h4>{pt?"Recuperação por jogo":"Per-game recovery"}</h4>
     <label data-preference-id="backup-per-game" className="preference-switch" style={{ marginTop: 20 }}>
@@ -80,5 +92,6 @@ export function ModBackupPreferences({ onError, onBusy, onRestored }: { onError:
     {busy && <p role="status">{pt ? "Processando os arquivos…" : "Processing files…"}</p>}
     {notice && <p role="status" style={{ overflowWrap: "anywhere" }}>{notice}</p>}
     {settings?.last_error && <p role="alert" className="preferences-error" style={{ whiteSpace: "pre-wrap" }}>{settings.last_error}</p>}
+    {confirmDelete && <ConfirmModal title={pt?"Apagar todos os backups de mods?":"Delete all mod backups?"} message={pt?"Esta ação exclui permanentemente as cópias internas de recuperação de todos os jogos e desativa sua criação automática, inclusive as escolhas por jogo. Os mods instalados e os ZIPs exportados serão preservados. Discos desconectados não podem ser limpos; conecte-os antes de continuar.":"This permanently deletes internal recovery copies for all games and disables automatic copies, including per-game choices. Installed mods and exported ZIPs are preserved. Disconnected drives cannot be cleaned; connect them before continuing."} confirmText={pt?"Apagar backups":"Delete backups"} cancelText={pt?"Cancelar":"Cancel"} isDanger busy={busy} onCancel={()=>{if(!busy)setConfirmDelete(false);}} onConfirm={()=>void deleteBackups()}/>}
   </section>;
 }

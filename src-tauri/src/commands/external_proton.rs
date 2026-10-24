@@ -183,9 +183,10 @@ fn apply_in(home:&Path,game:&ExternalGame,proton:&Path)->Result<(),String> {
             let path=base.join("GamesConfig").join(format!("{id}.json")); let before=read(&path)?;
             let mut config:Value=serde_json::from_str(&before).map_err(|_|"Configuração Heroic inválida.")?;
             let settings=config.get_mut(id).and_then(Value::as_object_mut).ok_or("Configuração deste jogo Heroic indisponível.")?;
-            settings.insert("wineVersion".into(),json!({"bin":proton.join("proton"),"name":proton.file_name().unwrap().to_string_lossy(),"type":"proton"}));
+            let wine = crate::core::game_installation::native_wine(proton);
+            settings.insert("wineVersion".into(),json!({"bin":wine.clone().unwrap_or_else(||proton.join("proton")),"name":proton.file_name().unwrap().to_string_lossy(),"type":if wine.is_some() {"wine"} else {"proton"}}));
             // UMU is the supported backend for the selected standalone Proton.
-            settings.insert("disableUMU".into(),Value::Bool(false));
+            settings.insert("disableUMU".into(),Value::Bool(wine.is_some()));
             save(&path,&before,&serde_json::to_string_pretty(&config).map_err(|e|e.to_string())?)
         },
         "Faugus"=>{
@@ -205,6 +206,9 @@ fn apply_in(home:&Path,game:&ExternalGame,proton:&Path)->Result<(),String> {
             let candidates=[data.join("games").join(format!("{stem}.yml")),config_dir.join(format!("{stem}.yml"))];
             let existing:Vec<_>=candidates.iter().filter(|p|p.is_file()).collect();
             if existing.len()!=1 {return Err("Configuração Lutris ausente ou ambígua.".into());}
+            if let Some(wine) = crate::core::game_installation::native_wine(proton) {
+                return yaml_update(existing[0],&[(&["wine","version"],"custom".into()),(&["wine","custom_wine_path"],wine.to_string_lossy().into_owned()),(&["system","env","PROTONPATH"],String::new())]);
+            }
             let umu=crate::core::game_installation::find_umu()?;
             yaml_update(existing[0],&[(&["wine","version"],"custom".into()),(&["wine","custom_wine_path"],umu.to_string_lossy().into_owned()),(&["system","env","PROTONPATH"],proton.to_string_lossy().into_owned())])
         },
@@ -261,6 +265,22 @@ mod tests {
         assert_eq!(fs::read_link(root.join("compatibilitytools.d").join(tool).join("proton")).unwrap(),runner.join("proton"));
         assert_eq!(read(&runner.join("proton")).unwrap(),"original script");assert!(!runner.join("compatibilitytool.vdf").exists());
         assert_eq!(fs::read_dir(root.join("config/.peligames-backups")).unwrap().count(),1);
+        fs::remove_dir_all(home).unwrap();
+    }
+    #[test]
+    fn heroic_wine_runner_keeps_prefix_and_disables_umu() {
+        use std::os::unix::fs::PermissionsExt;
+        let home=std::env::temp_dir().join(format!("peligames-heroic-wine-{}",uuid::Uuid::new_v4()));
+        let folder=home.join(".config/heroic/GamesConfig");fs::create_dir_all(&folder).unwrap();
+        let path=folder.join("epic-id.json");fs::write(&path,r#"{"epic-id":{"winePrefix":"/keep-prefix","targetExe":"game.exe"},"other":{"keep":true}}"#).unwrap();
+        let runner=home.join("Wine Staging");fs::create_dir_all(runner.join("bin")).unwrap();
+        for binary in ["wine","wineserver"] {let path=runner.join("bin").join(binary);fs::write(&path,"fixture").unwrap();fs::set_permissions(path,fs::Permissions::from_mode(0o755)).unwrap();}
+        apply_in(&home,&super::super::tests::game("Heroic","epic-id"),&runner).unwrap();
+        let result:Value=serde_json::from_str(&read(&path).unwrap()).unwrap();
+        assert_eq!(result["epic-id"]["wineVersion"]["type"],"wine");
+        assert_eq!(result["epic-id"]["wineVersion"]["bin"],runner.join("bin/wine").to_string_lossy().as_ref());
+        assert_eq!(result["epic-id"]["disableUMU"],true);
+        assert_eq!(result["epic-id"]["winePrefix"],"/keep-prefix");assert_eq!(result["other"]["keep"],true);
         fs::remove_dir_all(home).unwrap();
     }
     #[test]

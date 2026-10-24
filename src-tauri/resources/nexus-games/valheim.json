@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "domain": "valheim",
   "name": "Valheim",
   "platform": "native",
@@ -23,6 +23,10 @@
   ],
   "allowed_files": [
     "start_game_bepinex.sh"
+  ],
+  "ignored_files": [
+    "winhttp.dll",
+    "doorstop_config.ini"
   ],
   "routes": [
     {
@@ -54,6 +58,26 @@
       "kind": "prefix",
       "source": "Jotunn/",
       "target": "BepInEx/plugins/Jotunn/"
+    },
+    {
+      "kind": "prefix",
+      "source": "BepInEx/patchers/",
+      "target": "BepInEx/patchers/"
+    },
+    {
+      "kind": "prefix",
+      "source": "plugins/",
+      "target": "BepInEx/plugins/{mod_id}/"
+    },
+    {
+      "kind": "prefix",
+      "source": "patchers/",
+      "target": "BepInEx/patchers/{mod_id}/"
+    },
+    {
+      "kind": "prefix",
+      "source": "config/",
+      "target": "BepInEx/config/"
     },
     {
       "kind": "extension",

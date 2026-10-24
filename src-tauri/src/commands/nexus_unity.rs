@@ -159,10 +159,10 @@ pub(super) fn retarget_from_archive(
             .find(|i| archive.by_index(*i).is_ok_and(|e| e.name().replace('\\', "/") == source))
             .ok_or("DLL não encontrada no pacote.")?;
         let entry = archive.by_index(index).map_err(|e| e.to_string())?;
-        // Managed plugins are small; refuse oversized inputs instead of buffering them.
-        if entry.size() > 64 * 1024 * 1024 { return Err(format!("DLL grande demais para análise: {source}")); }
+        // Plugins may embed large resources; one DLL is buffered at a time, up to the per-file limit.
+        if entry.size() > super::nexus_archive::FILE_LIMIT { return Err(format!("{source} excede o limite de 512 MB por arquivo.")); }
         let mut bytes = Vec::with_capacity(entry.size() as usize);
-        entry.take(64 * 1024 * 1024).read_to_end(&mut bytes).map_err(|e| e.to_string())?;
+        entry.take(super::nexus_archive::FILE_LIMIT).read_to_end(&mut bytes).map_err(|e| e.to_string())?;
         Ok(bytes)
     })
 }

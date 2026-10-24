@@ -1,3 +1,4 @@
+import { LogText } from "./LogText";
 import { TimedFeedback } from "./TimedFeedback";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -138,7 +139,7 @@ export function WinetricksModal({ path, name, proton, onClose }: { path: string;
       </section>}
       <details className="winetricks-log" open={Boolean(error) || undefined}>
         <summary>{pt ? "Registro técnico" : "Technical log"}</summary>
-        <pre ref={terminal} className="wine-tool-terminal" aria-label={pt ? "Log do Winetricks" : "Winetricks log"} role="log">{lines.join("\n") || (pt ? "Preparando Winetricks…" : "Preparing Winetricks…")}</pre>
+        <pre ref={terminal} className="wine-tool-terminal game-log-output" aria-label={pt ? "Log do Winetricks" : "Winetricks log"} role="log"><LogText content={lines.join("\n") || (pt ? "Preparando Winetricks…" : "Preparing Winetricks…")}/></pre>
       </details>
       {error && <TimedFeedback role="alert" className="advanced-validation-error">{error}</TimedFeedback>}{complete && <TimedFeedback><span title={complete}>{pt ? "Componentes instalados. O registro foi salvo no disco." : "Components installed. The log was saved to disk."}</span></TimedFeedback>}
       <div className="winetricks-actions">

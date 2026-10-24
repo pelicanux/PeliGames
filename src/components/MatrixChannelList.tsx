@@ -6,6 +6,7 @@ import { joinMatrixVoice, leaveMatrixVoice, useMatrixVoice } from "../services/m
 import { matrixSdkClient } from "../services/matrixSdk";
 import { isVoiceRoom, useVoiceChannelMembers } from "../services/matrixVoiceChannels";
 import { MatrixChannelMenu, channelLink, copyText } from "./MatrixChannelMenu";
+import { MatrixUserMenu, type UserMenuTarget } from "./MatrixUserMenu";
 
 /** Tabs of the channel editor that the right-click menu opens directly. */
 export type ChannelEditTab = "overview" | "permissions" | "roles" | "invite";
@@ -41,6 +42,7 @@ export function MatrixChannelList({ pt, rooms, room, onSelect, me, names, joined
   const [deleting, setDeleting] = useState<string | null>(null), [removing, setRemoving] = useState(false);
   const switching = useRef(false);
   const [menu, setMenu] = useState<{ item: RoomInfo; x: number; y: number } | null>(null);
+  const [userMenu, setUserMenu] = useState<UserMenuTarget | null>(null);
   const openMenu = (item: RoomInfo) => (event: React.MouseEvent) => { event.preventDefault(); event.stopPropagation(); setMenu({ item, x: event.clientX, y: event.clientY }); };
   const lastError = useRef("");
   useEffect(() => {
@@ -58,7 +60,7 @@ export function MatrixChannelList({ pt, rooms, room, onSelect, me, names, joined
       if (voice.phase !== "idle") await leaveMatrixVoice();
       if (!joined.has(id)) {
         if (!await onJoinRoom(id)) return;
-        await sdkRoomJoined(id);
+        if (!("__PELI_UI_PREVIEW__" in window)) await sdkRoomJoined(id);
       }
       await joinMatrixVoice(id);
     } finally { switching.current = false; }
@@ -113,10 +115,11 @@ export function MatrixChannelList({ pt, rooms, room, onSelect, me, names, joined
         <div className="matrix-channel-line"><button type="button" className={inCall ? "is-in-call" : ""} aria-current={room === item.room_id ? "page" : undefined} onContextMenu={openMenu(item)} disabled={callBusy && !inCall} title={inCall ? (pt ? "Você está neste canal de voz" : "You are in this voice channel") : (pt ? "Entrar no canal de voz" : "Join voice channel")} onClick={() => void enterVoice(item.room_id)}><Speaker/><span className="matrix-channel-name">{item.name || item.room_id}{lockLabel(item.room_id)}</span></button></div>
         {confirmDelete(item)}
         {people.length > 0 && <ul className="matrix-voice-members" aria-label={pt ? `Na chamada de ${item.name}` : `In ${item.name}'s call`}>
-          {people.map(person => <li key={person.userId} className={[person.userId === me ? "is-me" : "", inCall && voice.speaking.includes(person.userId) ? "is-speaking" : ""].join(" ").trim() || undefined}><span className="matrix-voice-member-dot" aria-hidden="true"/>{displayName(person.userId, names)}{person.userId === me && inCall && (voice.muted || voice.deafened) ? <small>{voice.deafened ? (pt ? " (sem áudio)" : " (deafened)") : (pt ? " (mudo)" : " (muted)")}</small> : null}</li>)}
+          {people.map(person => <li key={person.userId} onContextMenu={event => { event.preventDefault(); event.stopPropagation(); setUserMenu({ user: person.userId, x: event.clientX, y: event.clientY }); }} className={[person.userId === me ? "is-me" : "", inCall && voice.speaking.includes(person.userId) ? "is-speaking" : ""].join(" ").trim() || undefined}><span className="matrix-voice-member-dot" aria-hidden="true"/>{displayName(person.userId, names)}{person.userId === me && inCall && (voice.muted || voice.deafened) ? <small>{voice.deafened ? (pt ? " (sem áudio)" : " (deafened)") : (pt ? " (mudo)" : " (muted)")}</small> : null}</li>)}
         </ul>}
       </div>;
     })}
+    {userMenu && <MatrixUserMenu pt={pt} target={userMenu} onClose={() => setUserMenu(null)}/>}
     {menu && (() => {
       const { item } = menu, id = item.room_id, isVoice = isVoiceRoom(item);
       const inThisCall = voice.phase !== "idle" && voice.room === id;

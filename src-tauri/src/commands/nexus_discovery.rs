@@ -17,6 +17,16 @@ fn file_header(path: &Path, expected: &[u8]) -> bool {
 /// path does not exist (module paths come from Windows, which ignores case).
 /// Each segment must match exactly one entry; the result stays inside `root`.
 pub(super) fn locate(root: &Path, relative: &str) -> Option<PathBuf> {
+    // A `*` in the file name (`DMM*.exe`) picks the highest matching name, as
+    // Vortex does for tools that carry their version in the file name.
+    let (parent, file) = relative.rsplit_once('/').map(|(parent, file)| (format!("{parent}/"), file)).unwrap_or((String::new(), relative));
+    if let Some((head, tail)) = file.to_ascii_lowercase().split_once('*') {
+        let folder = if parent.is_empty() { root.to_path_buf() } else { locate(root, parent.trim_end_matches('/'))? };
+        let newest = fs::read_dir(folder).ok()?.flatten().take(20_000).map(|entry| entry.file_name().to_string_lossy().into_owned())
+            .filter(|name| { let lower = name.to_ascii_lowercase(); !name.contains('*') && lower.len() >= head.len() + tail.len() && lower.starts_with(head) && lower.ends_with(tail) })
+            .max()?;
+        return locate(root, &format!("{parent}{newest}"));
+    }
     let exact = root.join(relative);
     let located = if exact.exists() { exact } else {
         let mut current = root.to_path_buf();
@@ -153,6 +163,18 @@ mod tests {
             assert_eq!(locate(&root, "GAME.EXE"), None, "link para fora da pasta");
             fs::remove_dir_all(outside).unwrap();
         }
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn locate_wildcard_picks_the_highest_matching_name() {
+        let root = std::env::temp_dir().join(format!("locate-wildcard-{}", uuid::Uuid::new_v4()));
+        assert_eq!(locate_relative(&root, "DMM*.exe"), None);
+        put(&root, "DMM_1.4.exe", b"MZ");
+        put(&root, "DMM_2.0.exe", b"MZ");
+        put(&root, "DMM_2.0.txt", b"x");
+        put(&root, "Tools/dmm_3.exe", b"MZ");
+        assert_eq!(locate_relative(&root, "DMM*.exe").as_deref(), Some("DMM_2.0.exe"));
+        assert_eq!(locate_relative(&root, "tools/DMM*.exe").as_deref(), Some("Tools/dmm_3.exe"));
         fs::remove_dir_all(root).unwrap();
     }
     #[test]

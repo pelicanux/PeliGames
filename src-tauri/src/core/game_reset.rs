@@ -21,11 +21,8 @@ pub fn settings(mut value: AdvancedSettings, section: Section) -> AdvancedSettin
         for enabled in clean.options.values_mut() {
             *enabled = false;
         }
+        // The state of a newly added game: per-game monitoring follows the global switches again.
         clean.mangohud_preset = value.mangohud_preset.clone();
-        clean.overlay_enabled = Some(false);
-        clean.background_fps = None;
-        clean.mangohud_enabled = Some(false);
-        clean.mangohud_fps_limit = Some(0);
         return clean;
     }
 
@@ -36,10 +33,11 @@ pub fn settings(mut value: AdvancedSettings, section: Section) -> AdvancedSettin
         value.options.insert("steam_client".into(), false);
     }
     if matches!(section, Section::All | Section::Performance) {
-        value.overlay_enabled = Some(false);
+        // Back to the defaults (None): the game follows the global MangoHUD and overlay switches again.
+        value.overlay_enabled = None;
         value.background_fps = None;
-        value.mangohud_enabled = Some(false);
-        value.mangohud_fps_limit = Some(0);
+        value.mangohud_enabled = None;
+        value.mangohud_fps_limit = None;
         value.options.insert("mangohud".into(), false);
         value.options.insert("mangohud_env".into(), false);
         value.gamescope.enable_limiter = false;
@@ -47,6 +45,9 @@ pub fn settings(mut value: AdvancedSettings, section: Section) -> AdvancedSettin
         value.gamescope.fps_unfocused = 0;
         if !value.gamescope.enabled() {
             value.launch_backend = "system".into();
+        } else {
+            // The global MangoHUD cannot run inside this Gamescope mode; the launch would be refused.
+            value.mangohud_enabled = Some(false);
         }
     }
     if matches!(section, Section::All | Section::FrameGeneration) {
@@ -116,8 +117,8 @@ mod tests {
         assert_eq!(advanced.wrappers.len(), 1);
         assert!(frame_wrapper(&advanced.wrappers[0].program));
         let performance = settings(original.clone(), Section::Performance);
-        assert_eq!(performance.mangohud_enabled, Some(false));
-        assert_eq!(performance.mangohud_fps_limit, Some(0));assert_eq!(performance.overlay_enabled,Some(false));assert_eq!(performance.background_fps,None);
+        assert_eq!(performance.mangohud_enabled, None, "follows the global switch again");
+        assert_eq!(performance.mangohud_fps_limit, None);assert_eq!(performance.overlay_enabled,None);assert_eq!(performance.background_fps,None);
         assert_eq!(performance.launch_options, original.launch_options);
         assert_eq!(performance.options["wayland"], true);
         let fg = settings(original.clone(), Section::FrameGeneration);
@@ -127,7 +128,9 @@ mod tests {
         assert!(all.wrappers.is_empty());
         assert!(all.options.values().all(|v| !*v));
         assert!(all.launch_options.is_none());
-        assert_eq!(all.mangohud_fps_limit, Some(0));
+        assert_eq!(all.mangohud_fps_limit, None);
+        assert_eq!(all.mangohud_enabled, None);
+        assert_eq!(all.overlay_enabled, None);
     }
     #[test]
     fn performance_keeps_upscaling_but_removes_its_limiter() {
@@ -145,6 +148,7 @@ mod tests {
         assert_eq!(next.gamescope.fps, 0);
         assert_eq!(next.gamescope.fps_unfocused, 0);
         assert_eq!(next.launch_backend, "gamescope");
+        assert_eq!(next.mangohud_enabled, Some(false), "global MangoHUD is refused with this Gamescope mode");
     }
     #[test]
     fn file_only_resets_preserve_settings_and_full_reset_drops_obsolete_flags() {

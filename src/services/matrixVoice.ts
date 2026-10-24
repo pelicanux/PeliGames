@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { pushMatrixUserVolumes } from "./matrixUserVolumes";
 import { matrixSdkClient, setMatrixSdkVoiceRoom } from "./matrixSdk";
 import type { MatrixRTCSession } from "matrix-js-sdk/lib/matrixrtc";
 
@@ -91,6 +92,9 @@ function attachNative() {
   return nativeListeners;
 }
 export function leaveMatrixVoice(error = ""): Promise<void> {
+  if ("__PELI_UI_PREVIEW__" in window) {
+    ++generation;set({phase:"idle",room:null,participants:[],speaking:[],screen:"off",shares:[],watching:null,error});return Promise.resolve();
+  }
   if (leaving) return leaving;
   ++generation;
   set({ phase: "leaving", error });
@@ -115,6 +119,13 @@ export async function joinMatrixVoice(roomId: string, mode: NoiseMode = state.no
   const run = ++generation;
   const callId = crypto.randomUUID();
   currentCallId = callId;
+  if ("__PELI_UI_PREVIEW__" in window) {
+    if(!["!preview-voice:matrix.org","!preview-voice-test:matrix.org"].includes(roomId))throw new Error("Escolha uma sala fictícia de voz da prévia.");
+    set({phase:"joining",room:roomId,error:"",speaking:[]});
+    await new Promise(resolve=>setTimeout(resolve,300));
+    if(run===generation)set({phase:"connected",participants:[{id:"@demo-preview:matrix.org",name:"Você (prévia)"},{id:"@linux_gamer:matrix.org",name:"Linux Gamer (simulado)"}]});
+    return;
+  }
   setMatrixSdkVoiceRoom(roomId);
   set({ phase: "joining", room: roomId, error: "", speaking: [] });
   const current = () => run === generation;
@@ -189,6 +200,7 @@ export async function joinMatrixVoice(roomId: string, mode: NoiseMode = state.no
     nativeStarted = true;
     // The call starts muted; then the saved microphone, volumes and filters apply.
     await pushControls();
+    await pushMatrixUserVolumes();
     if (encrypted) for (const key of keys.values()) await invoke("matrix_room_call_key", { callId, key });
     updateParticipants();
   } catch (error) {
@@ -237,3 +249,13 @@ window.addEventListener("peligamesMatrixSignedOut", () => {
   if (state.phase !== "idle") void leaveMatrixVoice();
 });
 window.addEventListener("pagehide", () => { if (state.phase !== "idle") void leaveMatrixVoice(); });
+
+/** Shared by the title bar and shortcuts; idle calls never activate a microphone. */
+export async function toggleMatrixMicrophone(){
+  if(state.phase!=="connected"&&state.phase!=="reconnecting")return;
+  await setMatrixVoiceControls(state.deafened?{muted:false,deafened:false}:{muted:!state.muted});
+}
+export async function toggleMatrixDeafen(){
+  if(state.phase!=="connected"&&state.phase!=="reconnecting")return;
+  await setMatrixVoiceControls({deafened:!state.deafened});
+}

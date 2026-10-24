@@ -171,9 +171,31 @@ fn build(app: u32, source: &Source) -> Result<Profile, String> {
             .collect(),
         source: serde_json::to_value(source).map_err(|error| error.to_string())?,
     };
+    if source.flatpak { sandboxed_overlay(&mut profile)?; }
     crate::core::release_features::restrict(&mut profile.command, &mut profile.environment, crate::core::release_features::enabled());
     profile.validate(app)?;
     Ok(profile)
+}
+
+/// Inside Flatpak Steam the overlay must run from a folder the sandbox sees:
+/// the one holding its PeliRun. Other commands stay as they were.
+fn sandboxed_overlay(profile: &mut Profile) -> Result<(), String> {
+    let host = super::frame_overlay_runtime::standalone_runner()?;
+    let host_canonical = host.canonicalize().ok();
+    let is_host = |word: &str| Path::new(word) == host || host_canonical.as_deref().is_some_and(|c| Path::new(word) == c);
+    if !profile.command.iter().any(|word| is_host(word)) { return Ok(()); }
+    let root = directory(true)?;
+    private_directory(&root)?;
+    let runner = super::frame_overlay_runtime::install_sandboxed(&root)?;
+    let runner = runner.to_str().ok_or("O caminho da Steam não usa UTF-8.")?.to_string();
+    for word in profile.command.iter_mut() { if is_host(word) { *word = runner.clone(); } }
+    profile.environment.insert("PELI_OVERLAY_CONFIG_ROOT".into(), Some(root.to_string_lossy().into_owned()));
+    Ok(())
+}
+
+/// The PeliRun folder of Flatpak Steam, when it exists.
+pub(super) fn flatpak_directory() -> Option<PathBuf> {
+    directory(true).ok().filter(|path| path.is_dir())
 }
 
 pub(super) fn build_for(name: &str, advanced: &AdvancedSettings, mods: Option<String>) -> Result<Profile, String> {

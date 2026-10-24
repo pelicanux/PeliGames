@@ -91,6 +91,7 @@ fn game_overlay() {
                 ] {
                     command.env_remove(key);
                 }
+                command.env("CARGO_ENCODED_RUSTFLAGS", remapped_rustflags());
                 assert!(
                     command.status().expect("build game overlay").success(),
                     "Falha ao compilar a camada interna do PeliGames."
@@ -154,6 +155,7 @@ fn launch_helper() {
                 .env_remove("CARGO_MAKEFLAGS")
                 .env_remove("MAKEFLAGS")
                 .env_remove("MFLAGS")
+                .env("CARGO_ENCODED_RUSTFLAGS", remapped_rustflags())
                 .status()
                 .expect("iniciar compilação do auxiliar Steam");
             assert!(status.success(), "Não foi possível compilar o auxiliar Steam. Instale antes o alvo Rust com: rustup target add {target}");
@@ -205,4 +207,19 @@ fn static_elf(bytes: &[u8], architecture: &str) -> bool {
         // PT_INTERP would require the host/Steam runtime's dynamic loader.
         u32::from_le_bytes(header[..4].try_into().unwrap()) != 3
     })
+}
+
+/// Embedded payloads must not carry build-machine paths (panic locations).
+/// Later prefixes take precedence, so the general home folder comes first.
+fn remapped_rustflags() -> String {
+    use std::{env, path::PathBuf};
+    let home = env::var_os("HOME").map(PathBuf::from);
+    let mut prefixes: Vec<(PathBuf, &str)> = Vec::new();
+    if let Some(home) = &home { prefixes.push((home.clone(), "/home")); }
+    let cargo = env::var_os("CARGO_HOME").map(PathBuf::from).or_else(|| home.as_ref().map(|h| h.join(".cargo")));
+    let rustup = env::var_os("RUSTUP_HOME").map(PathBuf::from).or_else(|| home.as_ref().map(|h| h.join(".rustup")));
+    if let Some(cargo) = cargo { prefixes.push((cargo, "/cargo")); }
+    if let Some(rustup) = rustup { prefixes.push((rustup, "/rustup")); }
+    if let Ok(root) = PathBuf::from("..").canonicalize() { prefixes.push((root, "/peligames")); }
+    prefixes.iter().map(|(from, to)| format!("--remap-path-prefix={}={to}", from.display())).collect::<Vec<_>>().join("\x1f")
 }

@@ -1,3 +1,6 @@
+import { ConfirmModal } from "./ConfirmModal";
+import { LogText, logSuffix } from "./LogText";
+export { logLineTone } from "./LogText";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -85,17 +88,10 @@ export function LogWindowActions({ onClose }: { onClose: () => void }) {
 }
 export function LogOutput({ content }: { content: string }) {
   const output = useRef<HTMLPreElement>(null);
-  const lines = useMemo(() => {
-    // One span per consecutive tone, rather than thousands of React nodes per poll.
-    const runs: { tone: string | undefined; lines: string[] }[] = [];
-    for (const line of content.split("\n")) {
-      const tone = logLineTone(line);
-      const previous = runs[runs.length - 1];
-      if (previous && previous.tone === tone) previous.lines.push(line);
-      else runs.push({ tone, lines: [line] });
-    }
-    return runs.map((run, index) => <span key={index} className={run.tone}>{run.lines.join("\n")}{index < runs.length - 1 ? "\n" : ""}</span>);
-  }, [content]);
+  const [visibleLines,setVisibleLines]=useState(1000);
+  const follow=useRef(true);
+  const shown=useMemo(()=>logSuffix(content,visibleLines),[content,visibleLines]);
+  useEffect(()=>{if(follow.current && output.current)output.current.scrollTop=output.current.scrollHeight;},[shown]);
   useEffect(() => {
     const select = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== "a" || !output.current) return;
@@ -107,23 +103,27 @@ export function LogOutput({ content }: { content: string }) {
     window.addEventListener("keydown", select, true);
     return () => window.removeEventListener("keydown", select, true);
   }, []);
-  return <div className="log-output-panel"><pre ref={output} className="game-log-output" tabIndex={0} aria-label="Conteúdo do log">{lines}</pre><CopyLogButton content={content} /></div>;
+  return <div className="log-output-panel"><pre ref={output} className="game-log-output" onScroll={()=>{const element=output.current;if(element)follow.current=element.scrollHeight-element.scrollTop-element.clientHeight<32;}} tabIndex={0} aria-label="Conteúdo do log"><LogText content={shown}/></pre><div className="log-level-legend" aria-label="Cores dos logs"><span className="log-line-error">Erro</span><span className="log-line-warning">Alerta</span><span className="log-line-success">Sucesso</span><span>Informação</span></div><div className="log-view-actions">{shown.length<content.length && <button type="button" className="modern-mini-btn" onClick={()=>{follow.current=false;setVisibleLines(value=>value+1000);}}>Carregar mais 1.000 linhas</button>}{visibleLines>1000 && <button type="button" className="modern-mini-btn" onClick={()=>{follow.current=true;setVisibleLines(1000);}}>Mostrar últimas 1.000</button>}<CopyLogButton content={content} /></div></div>;
 }
 export { WindowResizeHandles as LogResizeHandles } from "./WindowResizeHandles";
 export function dragLogWindow(event: React.MouseEvent) {
   if (event.button === 0 && !(event.target as HTMLElement).closest("button") && !("__PELI_UI_PREVIEW__" in window)) void getCurrentWindow().startDragging();
 }
 
-// Color each event independently: a later failure must not repaint earlier successes.
-export function logLineTone(line: string): string | undefined {
-  if (/^CrashType:\s*Crash\b|\b(?:error|fatal|panic|crashed|exception_access_violation|unhandled exception|segmentation fault|failed|failure)\b|\[(?:err|erro)\]|\b(?:falha|falhou)\b|not valid|path not found/i.test(line)) return "log-line-error";
-  if (/\b(?:warning|warn)\b|ANTERIOR à última execução/i.test(line)) return "log-line-warning";
-  if (/successfully|\bhas been (?:loaded|initialized|started)\b|\b\d+ plugin\(s\) loaded|\b(?:loaded successfully|compilation succeeded|import completed|concluído)\b/i.test(line)) return "log-line-success";
-  return undefined;
-}
-
 export function OpenLogFolderButton({kind, target}: {kind: "game" | "nexus" | "launcher"; target?: string}) {
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
+  const [confirmDelete,setConfirmDelete]=useState(false);
+  const [deleted,setDeleted]=useState(false);
+  const remove = async () => {
+    if (busy || !target || kind === "launcher") return;
+    setBusy(true);setError("");setDeleted(false);
+    try {
+      if ("__PELI_UI_PREVIEW__" in window) {setError("Prévia: nenhuma pasta real foi excluída.");setConfirmDelete(false);return;}
+      await invoke("delete_game_logs",{kind,target});
+      setConfirmDelete(false);setDeleted(true);window.dispatchEvent(new Event("gameLogsDeleted"));
+    } catch (failure) {setConfirmDelete(false);setError(String(failure));}
+    finally {setBusy(false);}
+  };
   const open = async () => {
     if (busy) return;
     setBusy(true); setError("");
@@ -133,5 +133,6 @@ export function OpenLogFolderButton({kind, target}: {kind: "game" | "nexus" | "l
     } catch (failure) { setError(String(failure)); }
     finally { setBusy(false); }
   };
-  return <div className="log-folder-actions"><button type="button" className="modern-mini-btn log-folder-button" disabled={busy} onClick={() => void open()} title="Abrir a pasta destes logs no gerenciador de arquivos"><MenuIcon name="folder"/>{busy ? "Abrindo…" : "Abrir pasta dos logs"}</button>{error && <span role="alert">{error}</span>}</div>;
+  return <><div className="log-folder-actions"><button type="button" className="modern-mini-btn log-folder-button" disabled={busy} onClick={() => void open()} title="Abrir a pasta destes logs no gerenciador de arquivos"><MenuIcon name="folder"/>{busy ? "Aguarde…" : "Abrir pasta dos logs"}</button>{kind!=="launcher" && <button type="button" className="modern-mini-btn log-delete-button" disabled={busy || !target} onClick={()=>setConfirmDelete(true)} aria-label="Excluir pasta de logs do jogo" title="Excluir a pasta de logs deste jogo"><MenuIcon name="trash"/></button>}{deleted && <span className="log-delete-success" role="status">Pasta de logs excluída.</span>}{error && <span role="alert">{error}</span>}</div>
+    {confirmDelete && <ConfirmModal title="Excluir logs deste jogo?" message="A pasta de logs deste jogo será apagada por completo, incluindo os registros atuais e anteriores. O jogo, os saves, os perfis e os backups serão preservados. Novos logs serão criados na próxima execução." confirmText="Excluir logs" cancelText="Cancelar" isDanger busy={busy} onCancel={()=>{if(!busy)setConfirmDelete(false);}} onConfirm={()=>void remove()}/>}</>;
 }

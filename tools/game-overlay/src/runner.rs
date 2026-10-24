@@ -161,20 +161,72 @@ fn run() -> Result<(), String> {
         return Err("Uso: peligames-overlay-run -- COMANDO [ARGUMENTOS].".into());
     }
     let program = args.next().ok_or("Informe o comando real do jogo.")?;
+    let rest: Vec<OsString> = args.collect();
+    let words: Vec<OsString> = std::iter::once(program.clone()).chain(rest.iter().cloned()).collect();
     let mut command = Command::new(program);
-    command.args(args);
+    command.args(rest);
     if env::var("PELI_OVERLAY_DISABLED").ok().as_deref()==Some("1"){return Err(command.exec().to_string());}
+    let log = config_root().and_then(|root| session_log(&root, &words));
     match prepare() {
         Ok(environment) => {
             command.envs(environment);
+            note(log.as_deref(), "Runner: camada Vulkan e entrada preparadas.");
         }
         Err(error) => {
             // No partial LD_*/Vulkan activation: an unavailable overlay must
             // not stop the user's game or replace MAKO's launch boundary.
             eprintln!("PeliGames: overlay não carregado: {error}");
+            note(log.as_deref(), &format!("Runner: overlay não carregado: {error}"));
         }
     }
+    if let Some(log) = &log { command.env("PELI_OVERLAY_LOG", log); }
     Err(command.exec().to_string())
+}
+
+/// The PeliGames folder this launch belongs to (general overlay or MAKO profile).
+fn config_root() -> Option<PathBuf> {
+    let root = if env::var("PELI_OVERLAY_GENERAL").ok().as_deref() == Some("1") {
+        PathBuf::from(env::var_os("PELI_OVERLAY_CONFIG_ROOT")?)
+    } else {
+        PathBuf::from(env::var_os("MAKO_CONFIG")?).parent()?.parent()?.parent()?.to_owned()
+    };
+    root.is_absolute().then_some(root)
+}
+const SESSIONS_KEPT: usize = 30;
+/// One diagnosis file per launch, read by the app to explain why the overlay
+/// did (not) appear. The command words let it find the game's folder.
+/// Any failure only disables the diagnosis, never the game.
+fn session_log(root: &Path, words: &[OsString]) -> Option<PathBuf> {
+    let directory = root.join("overlay-logs");
+    match fs::create_dir(&directory) {
+        Ok(()) => fs::set_permissions(&directory, fs::Permissions::from_mode(0o700)).ok()?,
+        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
+        Err(_) => return None,
+    }
+    let meta = fs::symlink_metadata(&directory).ok()?;
+    if !meta.is_dir() || meta.uid() != unsafe { libc::geteuid() } || meta.mode() & 0o077 != 0 {
+        return None;
+    }
+    let mut old: Vec<PathBuf> = fs::read_dir(&directory).ok()?.flatten().map(|e| e.path())
+        .filter(|p| p.extension().is_some_and(|e| e == "log")).collect();
+    old.sort();
+    for path in old.iter().take(old.len().saturating_sub(SESSIONS_KEPT - 1)) {
+        let _ = fs::remove_file(path);
+    }
+    let seconds = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).ok()?.as_secs();
+    let path = directory.join(format!("{seconds:012}-{}.log", std::process::id()));
+    let mut file = fs::OpenOptions::new().write(true).create_new(true).mode(0o600)
+        .custom_flags(libc::O_NOFOLLOW).open(&path).ok()?;
+    let text: String = words.iter().map(|w| w.to_string_lossy().replace(['\n', '\t'], " "))
+        .map(|w| format!("cmd\t{w}\n")).collect();
+    file.write_all(text.as_bytes()).ok()?;
+    Some(path)
+}
+fn note(log: Option<&Path>, message: &str) {
+    let Some(log) = log else { return };
+    if let Ok(mut file) = fs::OpenOptions::new().append(true).custom_flags(libc::O_NOFOLLOW).open(log) {
+        let _ = file.write_all(format!("runner\t{}\n", message.replace(['\n', '\t'], " ")).as_bytes());
+    }
 }
 
 fn shortcut() -> Result<String, String> {
@@ -329,6 +381,22 @@ mod tests {
             order(original, false).unwrap()
         );
         assert!(order("invalid-layer", true).is_err());
+    }
+    #[test]
+    fn each_launch_gets_a_private_diagnosis_and_old_ones_are_pruned() {
+        let root = env::temp_dir().join(format!("peli-overlay-session-{}", std::process::id()));
+        let logs = root.join("overlay-logs");
+        fs::create_dir_all(&logs).unwrap();
+        fs::set_permissions(&logs, fs::Permissions::from_mode(0o700)).unwrap();
+        for n in 0..SESSIONS_KEPT + 5 { fs::write(logs.join(format!("{n:012}-1.log")), "").unwrap(); }
+        let path = session_log(&root, &["/games/Hades/Hades.exe".into(), "two\nlines".into()]).unwrap();
+        note(Some(&path), "Runner: camada Vulkan e entrada preparadas.");
+        assert_eq!(fs::read_to_string(&path).unwrap(),
+            "cmd\t/games/Hades/Hades.exe\ncmd\ttwo lines\nrunner\tRunner: camada Vulkan e entrada preparadas.\n");
+        assert_eq!(fs::metadata(&path).unwrap().mode() & 0o777, 0o600);
+        assert_eq!(fs::read_dir(&logs).unwrap().count(), SESSIONS_KEPT);
+        assert!(!logs.join(format!("{:012}-1.log", 0)).exists());
+        fs::remove_dir_all(root).unwrap();
     }
     #[test]
     fn rejects_unrepresentable_loader_paths() {

@@ -20,11 +20,16 @@ pub async fn open_game_log_window(app: tauri::AppHandle, kind: String, target: S
                 window.unminimize().map_err(|e| e.to_string())?;
                 return window.set_focus().map_err(|e| e.to_string());
             }
+            #[cfg(target_os = "linux")]
+            let opaque = crate::core::webkit_graphics::opaque_window();
+            #[cfg(not(target_os = "linux"))]
+            let opaque = false;
+            let (r, g, b, a) = if opaque { let (r, g, b) = crate::core::webkit_graphics::OPAQUE_BACKGROUND; (r, g, b, 255) } else { (0, 0, 0, 0) };
             WebviewWindowBuilder::new(&handle, &label, WebviewUrl::App(route.into()))
                 .title(format!("Logs · {}", title.chars().take(160).collect::<String>()))
                 .inner_size(900., 620.).min_inner_size(480., 320.)
-                .decorations(false).resizable(true).transparent(true).shadow(false)
-                .background_color(tauri::webview::Color(0, 0, 0, 0))
+                .decorations(false).resizable(true).transparent(!opaque).shadow(false)
+                .background_color(tauri::webview::Color(r, g, b, a))
                 // Shown by the page once it has drawn, so it never opens empty or see-through;
                 // shown here anyway if the page does not get that far.
                 .visible(false)
@@ -123,4 +128,26 @@ pub async fn open_log_folder(kind: String, target: Option<String>) -> Result<(),
         if !folder.is_dir() { return Err("Ainda não há pasta de logs para esta execução.".into()); }
         super::updater::backend_folder::open(&folder)
     }).await.map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+pub async fn delete_game_logs(kind: String, target: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        match kind.as_str() {
+            "game" => {
+                let entry=crate::core::installed_library::list(false)?.into_iter().find(|entry|entry.path==target).ok_or("Jogo não registrado na biblioteca.")?;
+                if crate::core::game_execution::prefix_in_use(std::path::Path::new(&entry.prefix)){return Err("Encerre o jogo antes de excluir seus logs.".into());}
+                crate::core::game_logs::remove(&entry.path)
+            },
+            "nexus" => {
+                let _lock=super::nexus_local::STORAGE.lock().map_err(|e|e.to_string())?;
+                let game=super::nexus_local::log_game(&target)?;
+                super::nexus_profile::idle(&game)?;
+                crate::core::game_logs::remove(game.game["path"].as_str().unwrap_or(&target))?;
+                let logs=super::nexus_profile::directory(&game)?.join("logs");
+                crate::core::bounded_logs::remove_directory(&logs).map_err(|e|format!("Encerre o jogo antes de excluir seus logs: {e}"))
+            },
+            _ => Err("Destino de logs inválido.".into()),
+        }
+    }).await.map_err(|e|e.to_string())?
 }

@@ -1,4 +1,4 @@
-.game-reset-panel {margin-top:18px;}
+.game-reset-panel {margin-top:0;}
 .game-reset-header {display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
 .game-reset-header h3 {margin:0;font-size:.95rem;}
 .game-reset-pills {display:flex;align-items:center;flex-wrap:wrap;gap:4px;padding:4px;border:1px solid rgba(160,177,204,.14);border-radius:14px;background:rgba(0,0,0,.15);}

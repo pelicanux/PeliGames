@@ -201,6 +201,7 @@ fi
 
 #[cfg(test)]
 mod tests {
+    use crate::core::test_support::RetryOutput;
     use super::*;
     use std::os::unix::fs::PermissionsExt;
 
@@ -279,7 +280,7 @@ mod tests {
                 .env("ENABLE_VKBASALT", if vkbasalt { "1" } else { "0" })
                 .env("VK_INSTANCE_LAYERS", layers).env("VK_ADD_IMPLICIT_LAYER_PATH", "/unrelated")
                 .env("VK_ADD_LAYER_PATH", "/game/dlssnr/control:/game/dlssnr/int4")
-                .env("MANGOHUD_CONFIGFILE", "/own profile/game.conf").output().unwrap()
+                .env("MANGOHUD_CONFIGFILE", "/own profile/game.conf").output_retrying()
         }
     }
     impl Drop for Fixture {
@@ -302,7 +303,7 @@ mod tests {
             .arg(script).args(["/bin/echo", "argument with spaces"])
             .env("PELI_OVERLAY_GENERAL", "1")
             .env(ENABLE_ENV, "0")
-            .output().unwrap();
+            .output_retrying();
         assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
         assert_eq!(result.stdout, b"argument with spaces\n");
     }

@@ -819,6 +819,7 @@ pub async fn set_game_mod_destination(
 }
 #[cfg(test)]
 mod tests {
+    use crate::core::test_support::RetryOutput;
     use super::*;
     #[test]
     fn live_edits_preserve_pause_dll_runtime_and_unknown_options() {
@@ -887,7 +888,7 @@ mod tests {
         )
         .unwrap();
         fs::set_permissions(&script, fs::Permissions::from_mode(0o700)).unwrap();
-        let result=std::process::Command::new(&script).args(["/usr/bin/python3","-c","import os,sys,json; print(json.dumps([sys.argv[1:],os.environ['MAKO_CONFIG'],os.environ['DISABLE_LSFGVK']]))","arg with spaces","$(do-not-execute)"]).output().unwrap();
+        let result=std::process::Command::new(&script).args(["/usr/bin/python3","-c","import os,sys,json; print(json.dumps([sys.argv[1:],os.environ['MAKO_CONFIG'],os.environ['DISABLE_LSFGVK']]))","arg with spaces","$(do-not-execute)"]).output_retrying();
         assert!(result.status.success());
         let data: serde_json::Value = serde_json::from_slice(&result.stdout).unwrap();
         assert_eq!(
@@ -944,8 +945,7 @@ mod tests {
             let result = std::process::Command::new(binary)
                 .args(["validate", "--config"])
                 .arg(path)
-                .output()
-                .unwrap();
+                .output_retrying();
             assert!(
                 result.status.success(),
                 "{}",
@@ -1038,8 +1038,7 @@ mod tests {
                 let result = std::process::Command::new(runtime.join("bin/mako-cli"))
                     .args(["validate", "--config"])
                     .arg(&cfg)
-                    .output()
-                    .unwrap();
+                    .output_retrying();
                 assert!(
                     result.status.success(),
                     "{}",
@@ -1057,7 +1056,7 @@ mod tests {
         )
         .unwrap();
         fs::set_permissions(&launch, fs::Permissions::from_mode(0o700)).unwrap();
-        let result=std::process::Command::new(launch).args(["/usr/bin/python3","-c","import os,sys,json; print(json.dumps([os.environ['MAKO_CONFIG'],os.environ['MAKO_PROFILE'],os.environ['VK_IMPLICIT_LAYER_PATH'],sys.argv[1:]]))","arg with spaces"]).output().unwrap();
+        let result=std::process::Command::new(launch).args(["/usr/bin/python3","-c","import os,sys,json; print(json.dumps([os.environ['MAKO_CONFIG'],os.environ['MAKO_PROFILE'],os.environ['VK_IMPLICIT_LAYER_PATH'],sys.argv[1:]]))","arg with spaces"]).output_retrying();
         assert!(
             result.status.success(),
             "{}",

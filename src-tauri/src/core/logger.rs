@@ -60,7 +60,7 @@ pub fn event(level: &str, message: &str) {
 pub fn startup() {
     let desktop = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_else(|_| "não informado".into());
     let session = std::env::var("XDG_SESSION_TYPE").unwrap_or_else(|_| "não informada".into());
-    event("INFO",&format!("PeliGames {} iniciado; sistema={}/{}; interface={}; sessão={}; logs: últimas 1000 linhas, máximo 1 MiB",env!("CARGO_PKG_VERSION"),std::env::consts::OS,std::env::consts::ARCH,desktop.chars().take(64).collect::<String>(),session.chars().take(32).collect::<String>()));
+    event("INFO",&format!("PeliGames {} iniciado; sistema={}/{}; interface={}; sessão={}; logs: até 2 MiB por arquivo, retenção por tamanho",env!("CARGO_PKG_VERSION"),std::env::consts::OS,std::env::consts::ARCH,desktop.chars().take(64).collect::<String>(),session.chars().take(32).collect::<String>()));
 }
 pub fn log_result<T>(app: &tauri::AppHandle, operation: &str, result: &Result<T, String>) {
     match result {
@@ -79,14 +79,7 @@ pub fn read_launcher_log() -> Result<LauncherLog, String> {
     let root = super::paths::app_root()?;
     let _guard = LOG_LOCK.lock().unwrap_or_else(|error| error.into_inner());
     let path = root.join("launcher.log");
-    if path.exists() {
-        super::bounded_logs::compact(&path).map_err(|e| e.to_string())?;
-    }
-    let content = match std::fs::read_to_string(&path) {
-        Ok(content) => content,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => String::new(),
-        Err(error) => return Err(format!("{}: {error}", path.display())),
-    };
+    let content=super::bounded_logs::read(&path).map_err(|e|e.to_string())?;
     Ok(LauncherLog {
         path: path.to_string_lossy().into_owned(),
         content,
@@ -107,8 +100,8 @@ mod tests {
         }
         append_log(&root, "ERROR", "failure\nnext line").unwrap();
         let text = std::fs::read_to_string(root.join("launcher.log")).unwrap();
-        assert_eq!(text.lines().count(), 1000);
-        assert!(!text.contains("event 0\n"));
+        assert_eq!(text.lines().count(), 1006);
+        assert!(text.contains("event 0\n"));
         assert!(text.ends_with("[ERROR] failure next line\n"));
         assert!(text.lines().next().unwrap().as_bytes()[5] == b'-');
         assert!(text.len() <= super::super::bounded_logs::MAX_BYTES);

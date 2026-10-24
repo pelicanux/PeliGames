@@ -14,8 +14,12 @@ A camada precisa ser carregada no início do processo. Ativá-la com o jogo aber
 
 ## Compatibilidade e problemas
 
-O alvo inicial é Linux x86_64 com Vulkan SDR. A compatibilidade depende do jogo, do Proton e do caminho Wayland/XWayland. HDR, OpenGL, processos gráficos Linux de 32 bits e sandbox Flatpak não têm suporte declarado. Executáveis Windows de 32 bits podem ser testados com o novo WoW64 e processo gráfico Linux de 64 bits.
+O alvo inicial é Linux x86_64 com Vulkan SDR. A compatibilidade depende do jogo, do Proton e do caminho Wayland/XWayland. HDR, OpenGL e processos gráficos Linux de 32 bits não têm suporte declarado. Executáveis Windows de 32 bits podem ser testados com o novo WoW64 e processo gráfico Linux de 64 bits.
 
-Enquanto o painel estiver aberto, a interação deve ficar exclusiva dele. Se o jogo continuar recebendo movimentos ou cliques, feche o painel pelo atalho e desative o overlay antes de reabrir o jogo. Consulte os logs e informe jogo, Proton, compositor e modo Wayland/XWayland ao reportar um problema.
+Jogos nativos Linux recebem teclado e mouse no painel apenas com Wayland nativo. Em X11 ou XWayland, o atalho funciona nos jogos executados pelo Wine ou Proton.
+
+Na Steam Flatpak, o PeliGames copia o overlay para a pasta do PeliRun dentro do sandbox da Steam; abra a Steam Flatpak uma vez antes de ativá-lo. Outros launchers Flatpak e o MAKO no Flatpak ainda não carregam o overlay.
+
+Enquanto o painel estiver aberto, a interação deve ficar exclusiva dele. Se o jogo continuar recebendo movimentos ou cliques, feche o painel pelo atalho e desative o overlay antes de reabrir o jogo. Depois de cada execução, **Desempenho** mostra o resultado da última sessão do overlay: se ele carregou, se o jogo criou uma tela compatível e se o teclado e o mouse foram reconhecidos. Abra **Etapas registradas** e informe esse conteúdo, o jogo, o Proton, o compositor e o modo Wayland/XWayland ao reportar um problema.
 
 Veja o [guia MAKO e overlay](overlay.md) para requisitos e os [avisos de terceiros](../tools/game-overlay/NOTICES.md) para licenças e créditos.

@@ -95,7 +95,7 @@
   --surface-64-52-76: 208, 217, 230;
   --surface-7-10-20: 208, 217, 230;
 }
-:root[data-appearance="light"] body { background-color: #c4d0e0; color: #1e293b; }
+:root[data-appearance="light"] body { background-color: transparent; color: #1e293b; }
 :root[data-appearance="light"] .app-wrapper { background: rgba(208,217,230,.6); }
 :root[data-appearance="light"] .app-titlebar { background: rgba(208,217,230,.64) !important; }
 :root[data-appearance="light"] .modal-content,
@@ -124,7 +124,7 @@
 }
 :root[data-appearance="light"] input::placeholder { color: #44546b; opacity: 1; }
 :root[data-appearance="light"] pre { background: rgba(204,216,230,.62); color: #334155; }
-:root[data-appearance="light"] body.performance-mode { background-color: #c4d0e0; }
+:root[data-appearance="light"] body.performance-mode { background-color: transparent; }
 :root[data-appearance="light"] .performance-mode .menu-glass-panel,
 :root[data-appearance="light"] .performance-mode .modal-content,
 :root[data-appearance="light"] .performance-mode .dialog-popover { background: #cdd7e5 !important; }

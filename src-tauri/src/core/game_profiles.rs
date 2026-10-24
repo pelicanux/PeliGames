@@ -28,11 +28,33 @@ pub struct GameProfile {
     pub base: String,
     /// `<launcher folder>/profiles/<id>`: everything of this profile.
     pub root: String,
+    /// New copied overlays expose the prefix beside the installation metadata.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub flat_copy: bool,
+}
+
+fn validate_flat_copy(profile: &GameProfile) -> Result<(), String> {
+    if profile.flat_copy {
+        let root = Path::new(&profile.root);
+        let expected = profile.prefix().join(".peligames-overlay/profiles");
+        if profile.kind != ProfileKind::Overlay || root.parent() != Some(expected.as_path())
+            || root.file_name().and_then(|s|s.to_str()).is_none_or(|s|uuid::Uuid::parse_str(s).is_err()) {
+            return Err("Estrutura da cópia overlay inválida.".into());
+        }
+    }
+    Ok(())
 }
 
 impl GameProfile {
     /// The profile's Wine prefix (the merged view for an overlay).
     pub fn prefix(&self) -> PathBuf {
+        if self.flat_copy {
+            Path::new(&self.root).ancestors().nth(3).unwrap_or(Path::new(&self.root)).to_path_buf()
+        } else {
+            self.mount_prefix()
+        }
+    }
+    fn mount_prefix(&self) -> PathBuf {
         Path::new(&self.root).join("prefix")
     }
     /// A path of the launcher's prefix, seen inside this profile.
@@ -96,7 +118,8 @@ fn unmount(path: &Path) -> Result<(), String> {
 /// Makes the profile's prefix usable: mounts an overlay that is not mounted
 /// (after a reboot) or whose mount was left behind by a stopped process.
 pub fn ensure_ready(profile: &GameProfile) -> Result<(), String> {
-    let prefix = profile.prefix();
+    validate_flat_copy(profile)?;
+    let prefix = profile.mount_prefix();
     match profile.kind {
         ProfileKind::Reflink => {
             if prefix.join("drive_c").is_dir() { Ok(()) } else { Err(format!("Perfil reflink sem prefixo: {}", prefix.display())) }
@@ -104,7 +127,7 @@ pub fn ensure_ready(profile: &GameProfile) -> Result<(), String> {
         ProfileKind::Overlay => {
             if mounted(&prefix) {
                 if fs::read_dir(&prefix).is_ok() {
-                    return Ok(());
+                    return expose_copy_prefix(profile);
                 }
                 // A mount whose fuse-overlayfs process ended ("transport endpoint is not connected").
                 unmount(&prefix)?;
@@ -115,11 +138,12 @@ pub fn ensure_ready(profile: &GameProfile) -> Result<(), String> {
 }
 
 fn mount(profile: &GameProfile) -> Result<(), String> {
+    validate_flat_copy(profile)?;
     if !overlay_available() {
         return Err("Perfis overlay precisam de fuse-overlayfs, fusermount3 e acesso a /dev/fuse.".into());
     }
     let root = Path::new(&profile.root);
-    let (upper, work, prefix) = (root.join("upper"), root.join("work"), profile.prefix());
+    let (upper, work, prefix) = (root.join("upper"), root.join("work"), profile.mount_prefix());
     for path in [&upper, &work, &prefix] {
         fs::create_dir_all(path).map_err(|e| e.to_string())?;
     }
@@ -133,7 +157,52 @@ fn mount(profile: &GameProfile) -> Result<(), String> {
     if !output.status.success() || !mounted(&prefix) {
         return Err(format!("Não foi possível montar o perfil: {}", String::from_utf8_lossy(&output.stderr).trim()));
     }
-    Ok(())
+    expose_copy_prefix(profile)
+}
+
+// Keep launcher metadata outside the mounted view. Directories point into this
+// copy's private merged view; root files (including Wine registries) are private
+// regular files, so atomic registry replacements remain in the visible prefix.
+fn expose_copy_prefix(profile: &GameProfile) -> Result<(), String> {
+    if !profile.flat_copy { return Ok(()); }
+    validate_flat_copy(profile)?;
+    let marker = Path::new(&profile.root).join("exposed");
+    if marker.is_file() { return Ok(()); }
+    let destination = profile.prefix();
+    let relative = Path::new(&profile.root).strip_prefix(&destination).map_err(|e|e.to_string())?.join("prefix");
+    for entry in fs::read_dir(profile.mount_prefix()).map_err(|e|e.to_string())? {
+        let entry = entry.map_err(|e|e.to_string())?;
+        let name = entry.file_name();
+        if ["installation.json", "copy.json", "logs", "profiles", ".peligames", ".peligames-overlay", ".peligames-prefix"].iter().any(|skip| name == *skip) { continue; }
+        let target = destination.join(&name);
+        match fs::symlink_metadata(&target) {
+            Ok(_) => continue,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {},
+            Err(e) => return Err(e.to_string()),
+        }
+        let kind = entry.file_type().map_err(|e|e.to_string())?;
+        if kind.is_dir() {
+            std::os::unix::fs::symlink(relative.join(&name), &target).map_err(|e|e.to_string())?;
+        } else if kind.is_symlink() {
+            let link = fs::read_link(entry.path()).map_err(|e|e.to_string())?;
+            let link = link.strip_prefix(&profile.base).map(|p|destination.join(p)).unwrap_or(link.clone());
+            std::os::unix::fs::symlink(link, &target).map_err(|e|e.to_string())?;
+        } else if kind.is_file() {
+            fs::copy(entry.path(), &target).map_err(|e|e.to_string())?;
+        }
+    }
+    fs::write(marker, b"PeliGames\n").map_err(|e|e.to_string())
+}
+
+pub fn create_copy_overlay(base: &Path, destination: &Path) -> Result<GameProfile, String> {
+    if !base.join("drive_c").is_dir() { return Err("O prefixo original não foi encontrado.".into()); }
+    let root = destination.join(".peligames-overlay/profiles").join(uuid::Uuid::new_v4().to_string());
+    let profile = GameProfile { kind: ProfileKind::Overlay, base: base.to_string_lossy().into_owned(), root: root.to_string_lossy().into_owned(), flat_copy: true };
+    if let Err(error) = mount(&profile) {
+        remove(&profile)?;
+        return Err(error);
+    }
+    Ok(profile)
 }
 
 /// Creates a profile of `base` in `profiles/<new id>`.
@@ -143,7 +212,7 @@ pub fn create(base: &Path, profiles: &Path, kind: ProfileKind) -> Result<GamePro
     }
     fs::create_dir_all(profiles).map_err(|e| e.to_string())?;
     let root = profiles.join(uuid::Uuid::new_v4().to_string());
-    let profile = GameProfile { kind, base: base.to_string_lossy().into_owned(), root: root.to_string_lossy().into_owned() };
+    let profile = GameProfile { kind, base: base.to_string_lossy().into_owned(), root: root.to_string_lossy().into_owned(), flat_copy: false };
     let result = match kind {
         ProfileKind::Overlay => mount(&profile),
         ProfileKind::Reflink => {
@@ -167,6 +236,7 @@ pub fn create(base: &Path, profiles: &Path, kind: ProfileKind) -> Result<GamePro
 /// Deletes the profile: its changes (overlay) or its copy (reflink). The
 /// launcher's prefix is never touched.
 pub fn remove(profile: &GameProfile) -> Result<(), String> {
+    validate_flat_copy(profile)?;
     let root = Path::new(&profile.root);
     // Only a `profiles/<uuid>` folder is ever removed.
     let named = root.file_name().and_then(|n| n.to_str()).is_some_and(|n| uuid::Uuid::parse_str(n).is_ok());
@@ -174,7 +244,7 @@ pub fn remove(profile: &GameProfile) -> Result<(), String> {
         return Err("Pasta de perfil inválida.".into());
     }
     if profile.kind == ProfileKind::Overlay {
-        unmount(&profile.prefix())?;
+        unmount(&profile.mount_prefix())?;
     }
     match fs::symlink_metadata(root) {
         Ok(meta) if meta.is_dir() && !meta.file_type().is_symlink() => fs::remove_dir_all(root).map_err(|e| e.to_string()),
@@ -188,8 +258,36 @@ pub fn remove(profile: &GameProfile) -> Result<(), String> {
 mod tests {
     use super::*;
     #[test]
+    fn flat_copy_exposes_private_directories_and_keeps_metadata_outside_mount() {
+        let temp = std::env::temp_dir().join(format!("peligames-flat-overlay-{}", uuid::Uuid::new_v4()));
+        let destination = temp.join("Game copy");
+        let root = destination.join(".peligames-overlay/profiles").join(uuid::Uuid::new_v4().to_string());
+        let profile = GameProfile { kind: ProfileKind::Overlay, base: temp.join("Original").to_string_lossy().into_owned(), root: root.to_string_lossy().into_owned(), flat_copy: true };
+        let merged = profile.mount_prefix();
+        fs::create_dir_all(merged.join("drive_c")).unwrap();
+        fs::write(merged.join("drive_c/game.exe"), b"MZ").unwrap();
+        fs::write(merged.join("user.reg"), b"original").unwrap();
+        fs::write(merged.join("installation.json"), b"base metadata").unwrap();
+        expose_copy_prefix(&profile).unwrap();
+        assert_eq!(profile.prefix(), destination);
+        assert!(destination.join("drive_c/game.exe").is_file());
+        assert!(!destination.join("prefix").exists());
+        assert!(!destination.join("installation.json").exists());
+        fs::write(destination.join("user.reg"), b"private").unwrap();
+        fs::write(destination.join("installation.json"), b"copy metadata").unwrap();
+        expose_copy_prefix(&profile).unwrap();
+        assert_eq!(fs::read(destination.join("user.reg")).unwrap(), b"private");
+        assert_eq!(fs::read(merged.join("user.reg")).unwrap(), b"original");
+        let moved = temp.join("Moved copy");
+        fs::rename(&destination, &moved).unwrap();
+        assert!(moved.join("drive_c/game.exe").is_file(), "relative links survive moving the library");
+        let legacy: GameProfile = serde_json::from_value(serde_json::json!({"kind":"overlay","base":"/original","root":"/copy/profiles/id"})).unwrap();
+        assert_eq!(legacy.prefix(), Path::new("/copy/profiles/id/prefix"));
+        fs::remove_dir_all(temp).unwrap();
+    }
+    #[test]
     fn paths_move_into_the_profile_and_removal_stays_inside_profiles() {
-        let profile = GameProfile { kind: ProfileKind::Reflink, base: "/games/ea/prefix".into(), root: "/games/ea/profiles/00000000-0000-4000-8000-000000000001".into() };
+        let profile = GameProfile { kind: ProfileKind::Reflink, base: "/games/ea/prefix".into(), root: "/games/ea/profiles/00000000-0000-4000-8000-000000000001".into(), flat_copy: false };
         assert_eq!(profile.translate("/games/ea/prefix/drive_c/Program Files/EA Games/BF/bf.exe"), "/games/ea/profiles/00000000-0000-4000-8000-000000000001/prefix/drive_c/Program Files/EA Games/BF/bf.exe");
         assert_eq!(profile.translate("/elsewhere/x.exe"), "/elsewhere/x.exe");
         let outside = GameProfile { root: "/games/ea/prefix".into(), ..profile.clone() };

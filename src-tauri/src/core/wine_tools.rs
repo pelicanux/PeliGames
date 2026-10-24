@@ -149,12 +149,24 @@ async fn catalog(
 fn validate_winetricks_runner(proton: &Path, action: &str) -> Result<(), String> {
     // UMU starts its Winetricks subprocess in this exact directory, including
     // when it falls back to a Winetricks executable from PATH.
+    if super::game_installation::native_wine(proton).is_some() { return Ok(()); }
     if matches!(action, "install" | "winetricks-gui") && !proton.join("protonfixes").is_dir() {
         return Err("O Proton selecionado não possui a pasta protonfixes exigida pelo UMU para executar o Winetricks. Nenhum instalador de componente foi iniciado. Use um runner compatível, como GE-Proton ou UMU-Proton; o launcher não trocará o Proton nem modificará o prefixo automaticamente.".into());
     }
     Ok(())
 }
 fn prepare(umu: &Path, proton: &Path, prefix: &Path, action: &str, packages: &[String], join_running: bool) -> Command {
+    if let Some(wine) = super::game_installation::native_wine(proton) {
+        let component = matches!(action, "install" | "winetricks-gui");
+        let mut cmd = Command::new(if component { Path::new("winetricks") } else { &wine });
+        super::env_utils::host_environment(&mut cmd);
+        super::game_installation::wine_environment(&mut cmd, proton, prefix);
+        if action == "install" { cmd.args(packages); }
+        else if action == "winetricks-gui" { cmd.arg("--gui"); }
+        else { cmd.arg(action); }
+        cmd.current_dir(prefix).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
+        return cmd;
+    }
     let mut cmd = Command::new(umu);
     super::env_utils::host_environment(&mut cmd);
     cmd.arg(if matches!(action, "winecfg" | "regedit" | "explorer" | "uninstaller") {
@@ -242,11 +254,12 @@ pub async fn execute(request: ToolRequest, id: String, progress: Progress) -> Re
     }
     let _prefix_lease = if join_running {None} else {Some(super::game_installation::lock_prefix(&prefix)?)};
     if cancel.load(Ordering::Acquire) {return Err("PELIGAMES_WINE_TOOL_CANCELLED".into());}
-    progress("Preparando UMU (o download automático será feito se necessário)…".into());
+    if super::game_installation::native_wine(&proton).is_none() { progress("Preparando UMU (o download automático será feito se necessário)…".into()); }
     // The shared UMU cache preparation may finish in the background; cancellation
     // stops waiting here and never starts a component installer afterward.
     let umu = cancellable(async {
-        tokio::task::spawn_blocking(super::game_installation::find_umu).await.map_err(|e|e.to_string())?
+        let selected = proton.to_string_lossy().into_owned();
+        tokio::task::spawn_blocking(move || super::game_installation::runner_backend(&selected)).await.map_err(|e|e.to_string())?
     }, &cancel).await?;
     if cancel.load(Ordering::Acquire) {return Err("PELIGAMES_WINE_TOOL_CANCELLED".into());}
     let logs = super::installation_layout::destination_of(&prefix)

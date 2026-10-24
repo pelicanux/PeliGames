@@ -85,7 +85,12 @@ pub async fn configure_frame_overlay(preferences: Preferences) -> Result<(), Str
         &path()?,
         &serde_json::to_vec(&preferences).map_err(|e| e.to_string())?,
         0o600,
-    )
+    )?;
+    // Flatpak Steam reads its own copy, kept beside its PeliRun.
+    if let Some(root) = super::steam_runtime::flatpak_directory().filter(|root| root.join("overlay").is_dir()) {
+        super::frame_overlay_runtime::mirror_preferences(&root)?;
+    }
+    Ok(())
 }
 /// Migrate only our previous KDE action. Its persistent global grab would
 /// otherwise swallow F8 before the game receives it. Never edit system key files

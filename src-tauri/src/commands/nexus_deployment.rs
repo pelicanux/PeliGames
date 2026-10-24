@@ -20,6 +20,11 @@ pub(super) fn definition(game: &NexusGame) -> Option<super::nexus_modules::Defin
 pub(super) fn supports(game: &NexusGame) -> bool { definition(game).is_some() }
 // Crimson Desert plugins and proxy loaders must be Windows x64 DLL images.
 // This checks architecture/structure, not compatibility with a game update.
+/// Plugins the game loads from bin64; tools in the game root may be 32-bit .NET.
+fn crimson_plugin(target: &str) -> bool {
+    let lower = target.to_ascii_lowercase();
+    lower.starts_with("bin64/") && [".asi", ".dll", ".addon64"].iter().any(|ext| lower.ends_with(ext))
+}
 fn crimson_plugin_header(mut reader: impl Read, name: &str) -> Result<(), String> {
     let invalid = || format!("Plugin/carregador de Crimson Desert inválido ou não x64: {name}. É necessário um DLL PE x64; nenhum arquivo foi aplicado ao jogo.");
     let mut dos = [0u8; 64];
@@ -160,8 +165,8 @@ pub(super) fn detect(game: &mut NexusGame) {
 }
 pub(super) fn validate_runner(prefix: &str, proton: &str) -> Result<(PathBuf, PathBuf), String> {
     let (prefix, _) = super::nexus_prefix::resolve(Path::new(prefix))?;
-    let proton = fs::canonicalize(proton).map_err(|e| format!("Proton: {e}"))?;
-    if !proton.join("proton").is_file() {
+    let proton = crate::core::game_installation::validate_proton(proton)?;
+    if !(proton.join("proton").is_file() || crate::core::game_installation::native_wine(&proton).is_some()) {
         return Err("Selecione uma instalação do Proton.".into());
     }
     Ok((prefix, proton))
@@ -479,8 +484,11 @@ fn build_inner(game: &NexusGame, require_dependencies: bool, revision: Option<St
                 total = total
                     .checked_add(entry.size())
                     .ok_or("Arquivo grande demais.")?;
-                if entry.size() > 512 * 1024 * 1024 || total > 2 * 1024 * 1024 * 1024 {
-                    return Err("O perfil excede 2 GB de extração.".into());
+                if entry.size() > super::nexus_archive::FILE_LIMIT {
+                    return Err(format!("{target} excede o limite de 512 MB por arquivo."));
+                }
+                if total > super::nexus_archive::TOTAL_LIMIT {
+                    return Err("O perfil excede o limite de extração de 2 GB.".into());
                 }
                 if let Some((previous, owner)) = written.get(&target.to_lowercase()).cloned() {
                     // The same package mapping two files to one place is ambiguous, not a priority.
@@ -505,7 +513,7 @@ fn build_inner(game: &NexusGame, require_dependencies: bool, revision: Option<St
                 if copied != declared {
                     return Err("Tamanho inválido no ZIP.".into());
                 }
-                if module.domain == "crimsondesert" && (target.to_ascii_lowercase().ends_with(".asi") || target.to_ascii_lowercase().ends_with(".dll")) {
+                if module.domain == "crimsondesert" && crimson_plugin(&target) {
                     crimson_plugin_header(fs::File::open(&path).map_err(|e|e.to_string())?, &name)?;
                 }
                 }
@@ -825,7 +833,12 @@ fn launch_with(game: &NexusGame, tool: Option<&super::nexus_modules::GameTool>) 
         .iter().map(|relative| home.join(relative)).find(|path| path.is_dir());
     // Steam-style prefixes (also Heroic/Faugus with Proton) run through Proton when a
     // Steam client folder exists; otherwise umu runs the same compatdata folder.
-    let mut command = if let Some(steam) = steam.filter(|_| prefix.join("pfx/system.reg").is_file()) {
+    let mut command = if let Some(wine) = crate::core::game_installation::native_wine(&proton) {
+        let mut command = Command::new(wine);
+        crate::core::env_utils::host_environment(&mut command);
+        crate::core::game_installation::wine_environment(&mut command, &proton, &prefix);
+        command
+    } else if let Some(steam) = steam.filter(|_| prefix.join("pfx/system.reg").is_file()) {
         let mut command = Command::new(proton.join("proton"));
         command.arg("run").env("STEAM_COMPAT_CLIENT_INSTALL_PATH", steam)
             .env("STEAM_COMPAT_DATA_PATH", &prefix);
@@ -940,7 +953,7 @@ pub(super) fn plan(game: &NexusGame, mod_id: &str) -> Result<InstallationPlan,St
     if module.domain == "crimsondesert" {
         for (source, target) in &files {
             module.route_package(source, mod_id, &entries)?;
-            if target.to_ascii_lowercase().ends_with(".asi") || target.to_ascii_lowercase().ends_with(".dll") {
+            if crimson_plugin(target) {
                 let index = (0..archive.len()).find(|index| archive.by_index(*index).is_ok_and(|entry| entry.name().replace('\\', "/") == *source)).ok_or("Plugin não encontrado no pacote.")?;
                 crimson_plugin_header(archive.by_index(index).map_err(|e|e.to_string())?, source)?;
             }

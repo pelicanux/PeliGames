@@ -2836,7 +2836,7 @@
     {
       "domain": "valheim",
       "name": "Valheim",
-      "module_version": "1.0.1",
+      "module_version": "1.0.2",
       "nexus_game_id": 3667,
       "vortex_status": "confirmed",
       "vortex_evidence": [
@@ -2854,13 +2854,26 @@
         {
           "source": "BepInEx/config/Example.cfg",
           "target": "BepInEx/config/Example.cfg"
+        },
+        {
+          "source": "plugins/Example.dll",
+          "target": "BepInEx/plugins/00000000-0000-4000-8000-000000000001/Example.dll"
+        },
+        {
+          "source": "config/Example.cfg",
+          "target": "BepInEx/config/Example.cfg"
+        },
+        {
+          "source": "patchers/Example.Patcher.dll",
+          "target": "BepInEx/patchers/00000000-0000-4000-8000-000000000001/Example.Patcher.dll"
         }
       ],
       "findings": [
         "Conferir versão e plataforma BepInEx e dependências dos plugins. QMod/SML antigos, conversões e todos os formatos da extensão não são certificados por esta revisão.",
         "O perfil nativo usa um caminho de instalação próprio. A proteção de conteúdo não mapeado acrescentada ao deploy genérico não o cobre; é necessário distinguir acompanhantes essenciais de arquivos Windows presentes em pacotes multiplataforma antes de estender essa proteção.",
         "Reconhecimento conservador de pasta externa comum ao pacote completo; não achata variantes irmãs nem autoriza arquivos acompanhantes sem rota.",
-        "Recursos permitidos acompanham uma única DLL reconhecida na pasta exclusiva do mod; executáveis desconhecidos e associação ambígua continuam sem rota."
+        "Recursos permitidos acompanham uma única DLL reconhecida na pasta exclusiva do mod; executáveis desconhecidos e associação ambígua continuam sem rota.",
+        "Pacotes no formato Thunderstore (manifest.json com plugins/, patchers/ e config/ na raiz) seguem a extensão do Vortex: plugins/ e patchers/ vão para BepInEx/, cada mod na sua subpasta; config/ vai para BepInEx/config/."
       ],
       "pending_checks": [
         "Amostragem atual dos mais baixados/endossados e dos novos/atualizados.",
@@ -2977,7 +2990,7 @@
     {
       "domain": "crimsondesert",
       "name": "Crimson Desert",
-      "module_version": "1.0.0",
+      "module_version": "1.1.0",
       "nexus_game_id": 8969,
       "vortex_status": "confirmed",
       "vortex_evidence": [

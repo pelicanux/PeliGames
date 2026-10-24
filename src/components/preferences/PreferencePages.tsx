@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState, useMemo, type RefObject, type CSSProperties } from "react";
+import {useOpenRGB} from "../../theme/openrgbSync";
+import {OpenRGBPreferences} from "./OpenRGBPreferences";
+import { useEffect, useLayoutEffect, useRef, useState, useMemo, type RefObject, type CSSProperties, type ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { AppConfig } from "../SetupWizard";
@@ -7,6 +9,7 @@ import { BrandName } from "../BrandName";
 import { useI18n } from "../../i18n/I18nContext";
 import { useAccentTheme } from "../../theme/ThemeProvider";
 import { ACCENT_THEMES } from "../../theme/accentTheme";
+import {NeonWavePreferences} from "../../theme/NeonWavePreferences";
 import { isFreeInterfaceTheme } from "../../theme/interfaceTheme";
 import { ProtonDistributionCards } from "./ProtonDistributionCards";
 import { LaunchEffectIcon } from "./LaunchEffectIcon";
@@ -17,10 +20,19 @@ import { BackendUpdaterModal } from "../BackendUpdaterModal";
 import { MaintenancePreferences } from "./MaintenancePreferences";
 
 type ConfigProps = { config: AppConfig; disabled: boolean; save: (patch: Partial<AppConfig>) => void };
-export function ThemePreferences({ onApplied, onOpenConnections }: { onApplied: () => void; onOpenConnections: () => void }) {
+type InterfaceTab="themes"|"appearance"|"effects";
+const interfaceTabFor=(id?:string|null):InterfaceTab=>id==="launch-effect"?"effects":["themes","accent","blur-windows","openrgb"].includes(id||"")?"appearance":"themes";
+export function ThemePreferences({ onApplied, onOpenConnections, searchMode=false, focusTarget, searchControl }: { onApplied: () => void; onOpenConnections: () => void; searchMode?:boolean; focusTarget?:string|null; searchControl?:ReactNode }) {
   const text = usePreferencesText(), { t, language } = useI18n();
   const pt = language === "pt";
   const { interfaceTheme, setInterfaceTheme, themeTransitioning, accent, appearance, setAccent, setAppearance, glassEffects, setGlassEffects, exclusiveEffects, launchEffect, setLaunchEffect } = useAccentTheme();
+  const [tab,setTab]=useState<InterfaceTab>(()=>interfaceTabFor(focusTarget));
+  useLayoutEffect(()=>{if(focusTarget)setTab(interfaceTabFor(focusTarget));},[focusTarget]);
+  const tabs=[{id:"themes",label:pt?"Temas":"Themes"},{id:"appearance",label:pt?"Aparência":"Appearance"},{id:"effects",label:pt?"Efeitos":"Effects"}] as const;
+  const rgbSync=useOpenRGB();
+  const syncedPalette=rgbSync.preferences.enabled&&interfaceTheme!=="hackerman";
+  const lockedPalette=interfaceTheme!=="standard";
+  const currentTheme=interfaceTheme==="hackerman"?"Hackerman":interfaceTheme==="neon-wave"?"Neon Wave":pt?"Padrão":"Standard";
   const launchEffects = [
     { id: "smooth", name: text.smoothEffect, hint: text.smoothHint },
     { id: "shrink", name: text.shrinkEffect, hint: text.shrinkHint },
@@ -30,35 +42,43 @@ export function ThemePreferences({ onApplied, onOpenConnections }: { onApplied: 
     { id: "aquarium", name: text.aquariumEffect, hint: text.aquariumHint },
     { id: "penguin", name: text.penguinEffect, hint: text.penguinHint },
   ] as const;
-  return <>
-    <section data-preference-id="interface-theme" className="preference-panel">
-      <h2>{pt ? "Temas da interface" : "Interface themes"}</h2>
-      <p>{pt ? "Escolha uma identidade visual para todo o launcher." : "Choose a visual identity for the entire launcher."}</p>
+  return <div className="interface-workspace mod-workspace">
+    {!searchMode&&<><header className="mod-intro"><h3>{pt?"Seu launcher, do seu jeito":"Make the launcher yours"}</h3><p>{pt?"Escolha um tema, ajuste a aparência e personalize os efeitos ao iniciar seus jogos.":"Choose a theme, adjust the appearance and customize effects when launching games."}</p></header>
+    <div className="settings-tab-toolbar"><div className="preference-mod-tabs interface-tabs" role="tablist" aria-label={pt?"Personalização da interface":"Interface customization"} data-active={tab} onKeyDown={event=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;event.preventDefault();const index=tabs.findIndex(item=>item.id===tab);const next=tabs[event.key==="Home"?0:event.key==="End"?2:(index+(event.key==="ArrowLeft"?-1:1)+3)%3].id;setTab(next);requestAnimationFrame(()=>document.getElementById(`interface-tab-${next}`)?.focus());}}>{tabs.map(item=><button key={item.id} type="button" role="tab" id={`interface-tab-${item.id}`} aria-controls={`interface-panel-${item.id}`} aria-selected={tab===item.id} tabIndex={tab===item.id?0:-1} onClick={()=>setTab(item.id)}>{item.label}</button>)}</div>{searchControl}</div></>}
+    <div className="interface-tab-panel" hidden={!searchMode&&tab!=="themes"} role={searchMode?undefined:"tabpanel"} id="interface-panel-themes" aria-labelledby={searchMode?undefined:"interface-tab-themes"}>
+    <section data-preference-id="interface-theme" className="interface-theme-gallery">
+      <header className="interface-section-heading"><span className="mod-component-icon"><MenuIcon name="image"/></span><div><h3>{pt?"Temas da interface":"Interface themes"}</h3><p>{pt?"Uma identidade visual para toda a sua biblioteca.":"A visual identity for your entire library."}</p></div><span className="mod-status-badge" data-ready="true">{currentTheme}</span></header>
       {!exclusiveEffects && <p className="preference-effects-locked">{text.exclusiveThemesBeforeLink}{" "}<button type="button" className="preference-connections-link" onClick={onOpenConnections}>{text.connections}</button>{" "}{text.exclusiveEffectsAfterLink}</p>}
       <div className="interface-theme-cards" role="group" aria-label={pt ? "Temas da interface" : "Interface themes"}>
-        {(["standard", "hackerman"] as const).map(theme => { const locked = !exclusiveEffects && !isFreeInterfaceTheme(theme); return <button type="button" key={theme} disabled={themeTransitioning || locked} title={locked ? text.exclusiveThemesHint : undefined} className={`preference-choice interface-theme-card ${interfaceTheme === theme ? "selected" : ""}`} aria-pressed={interfaceTheme === theme} onClick={() => { setInterfaceTheme(theme); onApplied(); }}>
-          <span className={`interface-theme-sample ${theme}`} aria-hidden="true">{theme === "hackerman" ? ">_ HACKERMAN" : <><img className="interface-theme-brand-logo" src="/peligames.svg" alt=""/><span className="interface-theme-brand-name"><BrandName/></span></>}</span>
-          <strong>{theme === "hackerman" ? "Hackerman" : pt ? "Padrão" : "Standard"}{locked && <svg className="preference-effect-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-label={text.lockedTheme}><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>}</strong>
-          <small>{theme === "hackerman" ? pt ? "Preto e verde terminal, chuva digital e tela retrô." : "Black and terminal green, digital rain and a retro screen." : pt ? "Interface original com suas cores e aparência favoritas." : "Original interface with your preferred colors and appearance."}</small>
+        {(["standard", "hackerman", "neon-wave"] as const).map(theme => { const locked = !exclusiveEffects && !isFreeInterfaceTheme(theme); return <button type="button" key={theme} disabled={themeTransitioning || locked} title={locked ? text.exclusiveThemesHint : undefined} className={`preference-choice interface-theme-card ${interfaceTheme === theme ? "selected" : ""}`} aria-pressed={interfaceTheme === theme} onClick={() => { setInterfaceTheme(theme); onApplied(); }}>
+          <span className={`interface-theme-sample ${theme}`} aria-hidden="true">{theme === "hackerman" ? ">_ HACKERMAN" : theme === "neon-wave" ? <span className="neon-wave-sample-title">NEON WAVE <small>♫</small></span> : <><img className="interface-theme-brand-logo" src="/peligames.svg" alt=""/><span className="interface-theme-brand-name"><BrandName/></span></>}</span>
+          <span className="interface-theme-label"><strong>{theme === "hackerman" ? "Hackerman" : theme === "neon-wave" ? "Neon Wave" : pt ? "Padrão" : "Standard"}{locked && <svg className="preference-effect-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-label={text.lockedTheme}><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>}</strong><span className="interface-theme-selection" aria-hidden="true">{interfaceTheme===theme&&<MenuIcon name="check"/>}</span></span>
+          <small>{theme === "neon-wave" ? pt ? "Lava de neon que pulsa com a música e o áudio dos jogos." : "Neon lava pulsing with music and game audio." : theme === "hackerman" ? pt ? "Preto e verde terminal, chuva digital e tela retrô." : "Black and terminal green, digital rain and a retro screen." : pt ? "Interface original com suas cores e aparência favoritas." : "Original interface with your preferred colors and appearance."}</small>
         </button>; })}
       </div>
       {interfaceTheme === "hackerman" && <p>{pt ? "Hackerman usa sua própria paleta escura. Suas cores e aparência anteriores ficam guardadas no tema Padrão." : "Hackerman uses its own dark palette. Your previous colors and appearance are preserved in Standard."}</p>}
     </section>
-    <section className="preference-panel">
-    <h2>{text.themes}</h2><p>{text.themesHint}</p>
+    {interfaceTheme === "neon-wave" && <NeonWavePreferences pt={pt}/>}
+    </div>
+    <div className="interface-tab-panel" hidden={!searchMode&&tab!=="appearance"} role={searchMode?undefined:"tabpanel"} id="interface-panel-appearance" aria-labelledby={searchMode?undefined:"interface-tab-appearance"}>
+    {lockedPalette&&<p className="interface-palette-note"><MenuIcon name="info"/>{pt?`${currentTheme} usa uma paleta própria. Para escolher cores ou o modo claro, selecione o tema Padrão.`:`${currentTheme} uses its own palette. Select Standard to choose colors or light mode.`}</p>}
+    <div className="interface-appearance-grid">
+    <section className="interface-settings-card">
+    <header className="interface-section-heading"><span className="mod-component-icon"><MenuIcon name="eye"/></span><div><h3>{pt?"Modo de cor":"Color mode"}</h3><p>{pt?"Uma aparência confortável para o seu ambiente.":"A comfortable appearance for your surroundings."}</p></div></header>
     <div data-preference-id="themes" className="preference-theme-options">
-      {(["dark", "light"] as const).map(theme => <button type="button" key={theme} disabled={interfaceTheme === "hackerman" || themeTransitioning} className={`preference-choice ${appearance === theme ? "selected" : ""}`} aria-pressed={appearance === theme} onClick={() => { setAppearance(theme); onApplied(); }}>
+      {(["dark", "light"] as const).map(theme => <button type="button" key={theme} disabled={interfaceTheme !== "standard" || themeTransitioning} className={`preference-choice ${appearance === theme ? "selected" : ""}`} aria-pressed={appearance === theme} onClick={() => { setAppearance(theme); onApplied(); }}>
         <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">{theme === "dark" ? <path d="M20.9 13a9 9 0 0 1-9.9-9.9A9 9 0 1 0 20.9 13Z"/> : <><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l2 2m10 10 2 2M5 19l2-2m10-10 2-2"/></>}</svg>
         <span><strong>{t("theme", theme)}</strong><small>{theme === "dark" ? text.darkHint : text.lightHint}</small></span><i className="preference-radio"/>
       </button>)}
     </div>
     </section>
-    <section className="preference-panel preference-personalization">
-      <h3>{text.accentAndBlur}</h3>
+    <section className="interface-settings-card preference-personalization">
+      <header className="interface-section-heading"><span className="mod-component-icon"><MenuIcon name="sliders"/></span><div><h3>{text.accentAndBlur}</h3><p>{pt?"Ajuste a cor de destaque e o acabamento dos painéis.":"Adjust the accent color and panel finish."}</p></div></header>
       <div className="preference-accent-blur">
         <div data-preference-id="accent" className="preference-swatches" role="group" aria-label={text.accent}>
-          {ACCENT_THEMES.map(theme => <button type="button" key={theme.id} disabled={interfaceTheme === "hackerman" || themeTransitioning} aria-label={t("theme", theme.id)} title={t("theme", theme.id)} aria-pressed={accent === theme.id} style={{ background: theme.color }} onClick={() => { setAccent(theme.id); onApplied(); }}>{accent === theme.id && <MenuIcon name="check"/>}</button>)}
+          {ACCENT_THEMES.map(theme => <button type="button" key={theme.id} disabled={interfaceTheme !== "standard" || themeTransitioning || syncedPalette} aria-label={t("theme", theme.id)} title={t("theme", theme.id)} aria-pressed={!syncedPalette && accent === theme.id} style={{ background: theme.color }} onClick={() => { setAccent(theme.id); onApplied(); }}>{!syncedPalette && accent === theme.id && <MenuIcon name="check"/>}</button>)}
         </div>
+        {syncedPalette&&<small>{pt?"Cor controlada pelo OpenRGB. Desative a sincronização abaixo para escolher uma cor manualmente.":"Color controlled by OpenRGB. Disable sync below to choose a color manually."}</small>}
         <span className="preference-accent-blur-divider" aria-hidden="true" />
         <div data-preference-id="blur-windows" className="preference-glass-slider">
           <div><label htmlFor="glass-effect-windows">{text.windowsEffect}</label><output htmlFor="glass-effect-windows">{glassEffects.windows === 100 ? text.opaque : `${glassEffects.windows}%`}</output></div>
@@ -68,8 +88,10 @@ export function ThemePreferences({ onApplied, onOpenConnections }: { onApplied: 
         </div>
       </div>
     </section>
-    <section data-preference-id="launch-effect" className="preference-section">
-      <h3>{text.launchEffect}</h3><p>{text.launchEffectHint}</p>
+    </div><OpenRGBPreferences pt={pt}/></div>
+    <div className="interface-tab-panel" hidden={!searchMode&&tab!=="effects"} role={searchMode?undefined:"tabpanel"} id="interface-panel-effects" aria-labelledby={searchMode?undefined:"interface-tab-effects"}>
+    <section data-preference-id="launch-effect" className="interface-effects-gallery">
+      <header className="interface-section-heading"><span className="mod-component-icon"><MenuIcon name="bolt"/></span><div><h3>{text.launchEffect}</h3><p>{text.launchEffectHint}</p></div></header>
       {!exclusiveEffects && <p className="preference-effects-locked">{text.exclusiveEffectsBeforeLink}{" "}<button type="button" className="preference-connections-link" onClick={onOpenConnections}>{text.connections}</button>{" "}{text.exclusiveEffectsAfterLink}</p>}
       <div role="group" aria-label={text.launchEffect}>
         <div className="preference-launch-effects">
@@ -84,7 +106,7 @@ export function ThemePreferences({ onApplied, onOpenConnections }: { onApplied: 
         </div>
       </div>
     </section>
-  </>;
+  </div></div>;
 }
 export function ModPreferences({ disabled, onBusy, onWizard, onClear }: { disabled: boolean; onBusy: (busy: boolean) => void; onWizard: () => void; onClear: () => void }) {
   const text = usePreferencesText(), { t, language } = useI18n();

@@ -161,6 +161,8 @@ fn examine(found: &Found, map: &[(PathBuf, PathBuf)], known: &BTreeSet<String>) 
                 "Instalação sem jogos cadastrados; pode ter sido removida da biblioteca.".into(),
             );
         }
+        let shared_game_directory = found.copy.as_ref().and_then(|bytes|serde_json::from_slice::<serde_json::Value>(bytes).ok())
+            .and_then(|value|value["shared_game_directory"].as_str().map(|value|translate(value,map)));
         let mut overlay = false;
         for e in &r.entries {
             if e.launcher != "PeliGames" || !valid_path(&e.executable) || !valid_path(&e.prefix) {
@@ -181,7 +183,7 @@ fn examine(found: &Found, map: &[(PathBuf, PathBuf)], known: &BTreeSet<String>) 
                     if !Path::new(&p.root).join("upper").is_dir() {
                         return Err("Pasta de alterações do overlay não encontrada.".into());
                     }
-                    if !Path::new(&e.executable).starts_with(p.prefix()) {
+                    if !Path::new(&e.executable).starts_with(p.prefix()) && !shared_game_directory.as_ref().is_some_and(|folder|valid_path(folder)&&Path::new(&e.executable).starts_with(folder)&&Path::new(&e.executable).is_file()) {
                         return Err("Executável do overlay está fora do próprio perfil.".into());
                     }
                 } else if !Path::new(&e.executable).is_file() {
@@ -340,6 +342,7 @@ fn discover_at(index: &Path, roots: Vec<String>) -> Result<Discovery, String> {
             let name = name.to_string_lossy();
             if [
                 ".peligames",
+                ".peligames-overlay",
                 "prefix",
                 "pfx",
                 "drive_c",
@@ -543,6 +546,9 @@ fn restore_at(index: &Path, token: String, selected: Vec<String>) -> Result<Impo
             }
             let mut v: serde_json::Value =
                 serde_json::from_slice(original).map_err(|_| "Registro da cópia inválido.")?;
+            if let Some(folder) = v["shared_game_directory"].as_str() {
+                v["shared_game_directory"] = serde_json::json!(translate(folder, &plan.map));
+            }
             if let Some(source) = v["source"].as_str() {
                 v["source"] = serde_json::json!(translate(source, &plan.map));
             }

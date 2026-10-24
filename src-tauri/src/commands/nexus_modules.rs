@@ -908,11 +908,8 @@ impl Definition {
     }
     pub(super) fn allowed(&self, path: &str) -> bool {
         if self.domain == "crimsondesert" {
-            let path = path.to_ascii_lowercase();
-            let Some(file) = path.strip_prefix("bin64/") else { return false; };
-            return relative(&path) && (matches!(file, "winmm.dll" | "version.dll")
-                || (!file.contains('/') || file.starts_with("plugins/"))
-                    && (file.ends_with(".asi") || file.ends_with(".ini")));
+            // As Vortex: game root, bin64 and mods/; originals replaced only after confirmation.
+            return relative(path) && !self.protected_files.iter().any(|file| file.eq_ignore_ascii_case(path));
         }
         let (parent, file) = path.rsplit_once('/').unwrap_or(("", path));
         if self.script_extender.as_ref().is_some_and(|extender| extender.folder == parent && extender.owns(file)) && relative(path) {
@@ -1020,24 +1017,7 @@ impl Definition {
         // the Xbox build next to the Steam one, and the author's source code.
         if xbox_variant(source) && entries.iter().any(|entry| entry.to_ascii_lowercase().contains("/binaries/win64/")) { return Ok(None); }
         if source_tree(source) && entries.iter().any(|entry| !entry.ends_with('/') && !source_tree(entry)) { return Ok(None); }
-        if self.domain == "crimsondesert" {
-            let lower = source.to_ascii_lowercase();
-            let extension = Path::new(&lower).extension().and_then(|e| e.to_str()).unwrap_or("");
-            if ["json", "modpatch", "cdmod", "paz", "pamt", "papgt", "pathc", "pabgb", "xml", "dds", "bnk", "bat", "cmd", "ps1", "py", "bsdiff", "xdelta", "pak", "lua", "addon64", "exe"].contains(&extension) {
-                return Err(format!("Este pacote de Crimson Desert exige processamento especializado (CDUMM/DMM ou instalador do autor): {source}. O módulo atual instala apenas plugins ASI e seus INIs; nenhum arquivo foi aplicado."));
-            }
-            if extension == "ini" && !entries.iter().any(|entry| entry.to_ascii_lowercase() == format!("{}.asi", lower.trim_end_matches(".ini"))) {
-                let loader_config = lower.rsplit('/').next() == Some("global.ini") && entries.iter().any(|entry| matches!(entry.to_ascii_lowercase().rsplit('/').next(), Some("winmm.dll" | "version.dll")));
-                if !loader_config { return Err(format!("INI sem plugin ASI correspondente: {source}. Presets ReShade e configurações avulsas não são instalados por este módulo.")); }
-            }
-            // Bare wrapper folders may be flattened only when they contain a
-            // single plugin directory, never several variants at once.
-            if matches!(extension, "asi" | "ini") && !lower.split('/').any(|part| part == "bin64") {
-                let parents: std::collections::BTreeSet<_> = entries.iter().filter(|entry| entry.to_ascii_lowercase().ends_with(".asi"))
-                    .map(|entry| entry.rsplit_once('/').map(|(parent, _)| parent.to_ascii_lowercase()).unwrap_or_default()).collect();
-                if parents.len() > 1 { return Err("O pacote ASI contém várias pastas/variantes. Importe somente a variante desejada; nenhuma foi aplicada.".into()); }
-            }
-        }
+        if self.domain == "crimsondesert" { return super::nexus_crimson::target(self, source, mod_id, entries); }
         if self.domain == "masseffectlegendaryedition" && entries.iter().any(|entry| entry.rsplit('/').next().is_some_and(|name| name.eq_ignore_ascii_case("moddesc.ini") || name.to_ascii_lowercase().ends_with(".mem"))) {return Err("Este pacote requer processamento pelo ME3Tweaks/Mass Effect Modder; use o gerenciador especializado.".into());}
         // Unreal plugin mods: the folder holding a `.uplugin` goes whole to the plugin
         // folder, named after the plugin (`Mods/<Name>/` for `Name.uplugin`), as Vortex does.
@@ -1368,7 +1348,7 @@ mod tests {
         assert_eq!(game.route_package("archive/pc/mod/example.archive", ID, &[]).unwrap().as_deref(), Some("archive/pc/mod/example.archive"));
     }
     #[test]
-    fn crimson_routes_asi_packages_and_blocks_unprocessed_game_data() {
+    fn crimson_routes_packages_like_the_vortex_installers() {
         let game = builtins().into_iter().find(|m|m.domain == "crimsondesert").unwrap();
         for prefix in ["", "AutoLoot/", "Release/bin64/", "Release/bin64/plugins/"] {
             let entries = vec![format!("{prefix}autoloot.asi"), format!("{prefix}autoloot.ini")];
@@ -1378,19 +1358,16 @@ mod tests {
             }
         }
         assert_eq!(game.route_package("winmm-x64/winmm.dll",ID,&["winmm-x64/winmm.dll".into()]).unwrap().as_deref(),Some("bin64/winmm.dll"));
-        for source in ["data/stamina.json", "Mods/appearance.cdmod", "0008/1.paz", "meta/0.papgt", "meta/1.pamt", "overlay/0.pathc", "install.bat", "patch.py", "skin.dds", "sound.bnk", "main.lua", "skin.pak", "OG_model.xml"] {
-            assert!(game.route_package(source,ID,&[source.into()]).is_err(),"{source}");
-        }
-        assert!(game.route_package("preset.ini",ID,&["preset.ini".into()]).is_err());
-        assert!(game.route_package("bin64/CrimsonDesert.exe",ID,&[]).is_err());
-        assert!(game.route("bin64/unknown.dll",ID).is_err());
-        assert!(!game.allowed("bin64/CrimsonDesert.exe"));
-        assert!(!game.allowed("meta/0.papgt"));
+        assert_eq!(game.route_package("winmm-x64.SHA512",ID,&["winmm.dll".into(),"winmm-x64.SHA512".into()]).unwrap(),None);
+        assert_eq!(game.route_package("data/stamina.json",ID,&["data/stamina.json".into()]).unwrap().as_deref(),Some("mods/stamina.json"));
+        assert_eq!(game.route_package("Mod/0036/0.paz",ID,&["Mod/0036/0.paz".into()]).unwrap().as_deref(),Some("mods/Mod/0036/0.paz"));
+        assert!(game.route_package("bin64/CrimsonDesert.exe",ID,&["bin64/CrimsonDesert.exe".into()]).is_err());
+        assert!(!game.allowed("bin64/CrimsonDesert.exe") && !game.allowed("BIN64/crimsondesert.exe"));
+        assert!(game.allowed("mods/x/0036/0.paz") && game.allowed("DMM.exe"));
         assert!(game.route("../bin64/plugin.asi",ID).is_err());
-        let entries: Vec<String> = vec!["Fast/plugin.asi".into(),"Slow/plugin.asi".into()];
-        assert!(game.route_package(&entries[0],ID,&entries).is_err());
         assert_eq!(game.steam_id.as_deref(),Some("3321460"));
         assert!(game.dll_overrides.iter().any(|o|o.name == "winmm" && o.file == "bin64/winmm.dll"));
+        assert!(game.tools.iter().any(|tool| tool.executable == "DMM*.exe"));
     }
     #[test]
     fn crimson_loader_accepts_alternatives_but_not_empty_requirements() {
@@ -1505,6 +1482,34 @@ mod tests {
         let val = &definitions[1];
         assert_eq!(val.route("plugin.dll", ID).unwrap(), Some(format!("BepInEx/plugins/{ID}/plugin.dll")));
         assert_eq!(val.route("BepInExPack_Valheim/doorstop_libs/libdoorstop_x64.so", ID).unwrap().as_deref(), Some("doorstop_libs/libdoorstop_x64.so"));
+    }
+    #[test]
+    fn valheim_installs_thunderstore_layout_packages_and_keeps_the_pack_intact() {
+        let val = builtins().into_iter().find(|m| m.domain == "valheim").unwrap();
+        // A plugin published in the Thunderstore layout (also common on Nexus).
+        let mod_entries: Vec<String> = ["manifest.json", "icon.png", "README.md", "CHANGELOG.md", "plugins/Example.dll", "plugins/Assets/items.bundle", "patchers/Example.Patcher.dll", "config/author.Example.cfg"].map(String::from).to_vec();
+        let routed = |source: &str, entries: &[String]| val.route_package(source, ID, entries).unwrap();
+        assert_eq!(routed("plugins/Example.dll", &mod_entries), Some(format!("BepInEx/plugins/{ID}/Example.dll")));
+        assert_eq!(routed("plugins/Assets/items.bundle", &mod_entries), Some(format!("BepInEx/plugins/{ID}/Assets/items.bundle")));
+        assert_eq!(routed("patchers/Example.Patcher.dll", &mod_entries), Some(format!("BepInEx/patchers/{ID}/Example.Patcher.dll")));
+        assert_eq!(routed("config/author.Example.cfg", &mod_entries).as_deref(), Some("BepInEx/config/author.Example.cfg"));
+        for metadata in ["manifest.json", "icon.png", "README.md", "CHANGELOG.md"] { assert!(routed(metadata, &mod_entries).is_none(), "{metadata}"); }
+        // The same package inside an author folder is unwrapped.
+        let wrapped: Vec<String> = mod_entries.iter().map(|entry| format!("Author-Example-1.0.0/{entry}")).collect();
+        assert_eq!(routed("Author-Example-1.0.0/plugins/Example.dll", &wrapped), Some(format!("BepInEx/plugins/{ID}/Example.dll")));
+        // BepInExPack_Valheim 5.4.2351 (Thunderstore layout): the Linux loader and the
+        // preloader keep their places; the Windows proxy and metadata stay out.
+        let pack: Vec<String> = ["manifest.json", "icon.png", "BepInExPack_Valheim/winhttp.dll", "BepInExPack_Valheim/doorstop_config.ini", "BepInExPack_Valheim/start_game_bepinex.sh", "BepInExPack_Valheim/doorstop_libs/libdoorstop_x64.so", "BepInExPack_Valheim/BepInEx/core/BepInEx.Preloader.dll", "BepInExPack_Valheim/BepInEx/config/BepInEx.cfg"].map(String::from).to_vec();
+        assert_eq!(routed("BepInExPack_Valheim/start_game_bepinex.sh", &pack).as_deref(), Some("start_game_bepinex.sh"));
+        assert_eq!(routed("BepInExPack_Valheim/doorstop_libs/libdoorstop_x64.so", &pack).as_deref(), Some("doorstop_libs/libdoorstop_x64.so"));
+        assert_eq!(routed("BepInExPack_Valheim/BepInEx/core/BepInEx.Preloader.dll", &pack).as_deref(), Some("BepInEx/core/BepInEx.Preloader.dll"));
+        assert_eq!(routed("BepInExPack_Valheim/BepInEx/config/BepInEx.cfg", &pack).as_deref(), Some("BepInEx/config/BepInEx.cfg"));
+        assert!(routed("BepInExPack_Valheim/winhttp.dll", &pack).is_none());
+        assert!(routed("BepInExPack_Valheim/doorstop_config.ini", &pack).is_none());
+        // The pack folder alone (no metadata beside it): the Windows proxy is still no plugin.
+        let folder: Vec<String> = pack.iter().filter(|entry| entry.starts_with("BepInExPack_Valheim/")).cloned().collect();
+        assert!(routed("BepInExPack_Valheim/winhttp.dll", &folder).is_none());
+        assert_eq!(routed("BepInExPack_Valheim/start_game_bepinex.sh", &folder).as_deref(), Some("start_game_bepinex.sh"));
     }
     #[test]
     fn ff12_routes_data_scripts_loaders_and_rejects_game_archive() {

@@ -1,0 +1,80 @@
+/* Interface settings use the same flat module workspace as Mods and Connections. */
+.interface-workspace { min-width:0; }
+.interface-tabs::before { background:rgba(var(--accent-rgb),.18);box-shadow:none; }
+.interface-tabs[data-active="themes"]::before { transform:translateX(0); }
+.interface-tabs[data-active="appearance"]::before { transform:translateX(calc(100% + 3px)); }
+.interface-tabs[data-active="effects"]::before { transform:translateX(calc(200% + 6px)); }
+.interface-tab-panel[hidden] { display:none!important; }
+.interface-section-heading { display:flex;align-items:center;gap:12px;margin:0 0 20px;min-width:0; }
+.interface-section-heading>div { flex:1;min-width:0; }
+.modern-ui .settings-page .interface-section-heading h3 { margin:0 0 4px;font-size:.9375rem;line-height:1.4;font-weight:600; }
+.modern-ui .settings-page .interface-section-heading p { margin:0;line-height:1.5;font-size:.8125rem; }
+.interface-section-heading .mod-status-badge { margin-left:auto; }
+.interface-workspace .interface-theme-cards { grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0; }
+.interface-workspace .interface-theme-card { padding:0;gap:0;overflow:hidden;border-radius:16px!important;min-width:0; }
+.interface-workspace .interface-theme-card .interface-theme-sample { margin:8px 8px 0;height:112px;border-radius:10px;border:0; }
+.interface-workspace .interface-theme-label { display:flex;align-items:center;justify-content:space-between;gap:8px;padding:16px 16px 0;min-width:0; }
+.interface-theme-label>strong { display:flex;align-items:center;gap:8px;min-width:0;font-size:.9375rem;line-height:1.5; }
+.interface-theme-selection { display:grid;place-items:center;width:21px;height:21px;flex-shrink:0;border:1px solid var(--mod-line);border-radius:50%;color:var(--modern-text); }
+.interface-theme-card.selected .interface-theme-selection { background:var(--accent);border-color:var(--accent);color:var(--accent-foreground,#fff); }
+.interface-theme-selection .menu-icon { width:13px;height:13px; }
+.interface-workspace .interface-theme-card>small { padding:8px 16px 17px;min-height:44px;color:var(--mod-muted);font-size:.75rem;line-height:1.55; }
+.interface-workspace .interface-theme-card:focus-visible { outline:2px solid var(--accent);outline-offset:3px; }
+.interface-workspace .interface-theme-card:not(:disabled):hover { border-color:rgba(var(--accent-rgb),.55)!important; }
+.interface-workspace .interface-theme-card:disabled { opacity:.65; }
+.interface-workspace .interface-theme-sample.hackerman { background:radial-gradient(ellipse at 50% 120%,rgba(39,126,67,.2),transparent 75%),repeating-linear-gradient(0deg,transparent 0px,transparent 3px,rgba(68,181,97,.06) 4px),#060f0a; }
+.interface-appearance-grid { display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:16px;align-items:start; }
+.interface-settings-card { min-width:0;padding:18px;border:1px solid var(--mod-line);border-radius:16px;background:var(--modern-card,#171a22);box-sizing:border-box; }
+.interface-workspace .preference-personalization { padding:18px!important; }
+.interface-workspace .preference-theme-options { display:grid;grid-template-columns:1fr;gap:10px; }
+.interface-workspace .preference-theme-options .preference-choice { min-height:76px;padding:13px;gap:12px; }
+.interface-workspace .preference-theme-options .preference-choice>svg { flex-shrink:0;width:22px;height:22px; }
+.interface-workspace .preference-theme-options .preference-choice>span { flex:1;min-width:0; }
+.interface-workspace .preference-theme-options strong { font-size:.875rem; }
+.interface-workspace .preference-theme-options small { line-height:1.5;font-size:.75rem; }
+.interface-workspace .preference-accent-blur { display:flex;flex-direction:column;align-items:stretch;gap:20px; }
+.interface-workspace .preference-accent-blur-divider { display:none; }
+.interface-workspace .preference-swatches { display:flex;flex-wrap:wrap;gap:10px; }
+.interface-workspace .preference-swatches button { width:28px;height:28px; }
+.interface-workspace .preference-glass-slider { min-width:0;width:auto;padding-top:18px;border-top:1px solid var(--mod-line); }
+.interface-palette-note { display:flex;align-items:flex-start;gap:9px;padding:12px 14px;margin:0 0 16px;border:1px solid var(--mod-line);border-radius:10px;color:var(--mod-muted);font-size:.8125rem;line-height:1.55; }
+.interface-palette-note>.menu-icon { flex-shrink:0;margin-top:2px; }
+.interface-workspace .preference-launch-effects { grid-template-columns:repeat(3,minmax(0,1fr));gap:12px; }
+.interface-workspace .preference-launch-effect { min-height:118px!important;padding:16px!important;border-radius:14px!important; }
+.interface-workspace .preference-launch-effect-heading { gap:10px; }
+.interface-workspace .preference-launch-effect-icon { width:34px;height:34px;border-radius:9px;background:var(--modern-card-2);color:var(--mod-text); }
+.interface-workspace .preference-launch-effect small { margin-top:7px;color:var(--mod-muted);font-size:.75rem;line-height:1.55; }
+.interface-workspace .neon-wave-preferences { margin-top:18px; }
+@container settings-page (max-width:760px) {
+ .interface-workspace .interface-theme-cards { gap:10px; }
+ .interface-workspace .interface-theme-card .interface-theme-sample { height:90px; }
+ .interface-workspace .interface-theme-label { padding:12px 12px 0; }
+ .interface-workspace .interface-theme-card>small { padding:8px 12px 14px; }
+ .interface-workspace .interface-theme-sample.standard .interface-theme-brand-logo { width:26px;height:26px; }
+ .interface-workspace .interface-theme-sample.standard .interface-theme-brand-name,.interface-workspace .interface-theme-sample.standard .titlebar-games { font-size:1.5rem!important; }
+ .interface-workspace .interface-theme-sample.hackerman { font-size:1.25rem;letter-spacing:1px; }
+ .interface-workspace .neon-wave-sample-title { font-size:13px;letter-spacing:.08em; }
+ .interface-workspace .neon-wave-sample-title small { font-size:16px; }
+ .interface-workspace .preference-launch-effects { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@container settings-page (max-width:560px) {
+ .interface-appearance-grid { grid-template-columns:1fr; }
+ .interface-workspace .interface-theme-cards { grid-template-columns:1fr; }
+ .interface-workspace .interface-theme-card>small { min-height:0; }
+ .interface-section-heading { flex-wrap:wrap; }
+ .interface-tabs { width:100%; }
+ .interface-tabs button { padding:7px 9px; }
+}
+@container settings-page (max-width:400px) { .interface-workspace .preference-launch-effects { grid-template-columns:1fr; } }
+.openrgb-preferences { margin-top:16px; }
+.openrgb-connection-row { display:flex;align-items:end;gap:12px;margin:18px 0; }
+.openrgb-connection-row label,.openrgb-device-fields label { display:grid;gap:7px;min-width:0;font-size:.8125rem; }
+.openrgb-connection-row input { width:110px;box-sizing:border-box;padding:8px 10px; }
+.openrgb-device-fields { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0; }
+.openrgb-device-fields select { width:100%;min-width:0;padding:9px 10px; }
+.openrgb-color { display:flex;align-items:center;gap:10px;font-size:.8125rem; }
+.openrgb-color i { width:22px;height:22px;border-radius:6px;border:1px solid var(--mod-line); }
+.openrgb-color small,.openrgb-help { color:var(--mod-muted); }
+.openrgb-demo { display:flex;align-items:center;gap:12px;margin-top:16px;font-size:.8125rem; }
+.openrgb-demo input { width:46px;height:30px;padding:2px;cursor:pointer; }
+@container settings-page (max-width:560px){.openrgb-device-fields{grid-template-columns:1fr}.openrgb-connection-row{flex-wrap:wrap}}

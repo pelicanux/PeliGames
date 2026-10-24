@@ -1,0 +1,19 @@
+/* Specific selectors keep the Matrix terminal's general span clipping off the track. */
+:root .matrix-chat .matrix-playing-ticker {
+ display:block;width:100%;max-width:100%;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:clip;line-height:1.4;
+}
+:root .matrix-chat .matrix-playing-ticker .matrix-playing-track {
+ display:flex;width:max-content;max-width:none;gap:28px;overflow:visible;white-space:nowrap;text-overflow:clip;
+ font:inherit;color:inherit;animation:matrix-playing-scroll var(--playing-duration,10s) linear infinite;
+}
+:root .matrix-chat .matrix-playing-track>span {
+ display:block;flex:none;overflow:visible;white-space:nowrap;text-overflow:clip;font:inherit;color:inherit;
+}
+@keyframes matrix-playing-scroll { to{transform:translateX(var(--playing-distance,-180px));} }
+:root .matrix-chat .matrix-playing-ticker[data-paused="true"] .matrix-playing-track,
+:root .performance-mode .matrix-playing-ticker .matrix-playing-track { animation-play-state:paused; }
+@media(prefers-reduced-motion:reduce){
+ :root .matrix-chat .matrix-playing-ticker .matrix-playing-track{animation:none;}
+ :root .matrix-chat .matrix-playing-track>span+span{display:none;}
+ :root .matrix-chat .matrix-playing-ticker{text-overflow:ellipsis;}
+}

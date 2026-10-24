@@ -1,6 +1,7 @@
+import { LogText } from "./LogText";
 import { ModalSurface } from "./ModalSurface";
 import { createPortal } from "react-dom";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useI18n } from "../i18n/I18nContext";
 import "../App.css";
 
@@ -12,9 +13,10 @@ interface Props {
   onClose: () => void;
   onOpenSetup?: () => void;
   showLogButton?: boolean;
+  children?: ReactNode;
 }
 
-export const ResultModal: React.FC<Props> = ({ title, message, type, logs, onClose, onOpenSetup, showLogButton = true }) => {
+export const ResultModal: React.FC<Props> = ({ title, message, type, logs, onClose, onOpenSetup, showLogButton = true, children }) => {
   const [showLogs, setShowLogs] = useState(false);
   const { t } = useI18n();
 
@@ -44,9 +46,10 @@ export const ResultModal: React.FC<Props> = ({ title, message, type, logs, onClo
             );
           })}
           
+          {children}
           {showLogs && (
-            <div className="console" style={{ marginTop: '1.5rem', maxHeight: '300px', overflowY: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word', textAlign: 'left' }}>
-              {logs}
+            <div className="console game-log-output" style={{ marginTop: '1.5rem', maxHeight: '300px', overflowY: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word', textAlign: 'left' }}>
+              <LogText content={logs}/>
             </div>
           )}
         </div>

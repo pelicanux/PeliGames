@@ -772,11 +772,26 @@ fn restore_game_at(
     result
 }
 pub(super) fn recover(directory: &Path, workspace: &mut Workspace) -> Result<bool, String> {
-    let path = directory.join(".peligames/mod-recovery");
-    if !path.exists() {
-        return Ok(false);
-    }
-    existing_directory(&directory.join(".peligames"))?;
+    let local = directory.join(".peligames/mod-recovery");
+    let path = if local.exists() {
+        existing_directory(&directory.join(".peligames"))?;
+        local
+    } else {
+        let preserved=preserved_recoveries()?;
+        if !preserved.exists(){return Ok(false);}
+        existing_directory(&preserved)?;
+        let mut matches=Vec::new();
+        for entry in fs::read_dir(preserved).map_err(error)? {
+            let entry=entry.map_err(error)?;
+            let snapshot=read_snapshot_with(&entry.path(),false)?;
+            if snapshot.game.game["directory"].as_str().is_some_and(|root|Path::new(root)==directory) {
+                matches.push((entry.metadata().map_err(error)?.modified().map_err(error)?,entry.path()));
+            }
+        }
+        matches.sort_by_key(|(modified,_)|*modified);
+        let Some((_,path))=matches.pop() else{return Ok(false);};
+        path
+    };
     let marker = read_snapshot(&path)?;
     if let Some(game) = workspace.games.iter_mut().find(|g| g.id == marker.game.id) {
         let old = PathBuf::from(game.game["directory"].as_str().unwrap_or(""));
@@ -906,6 +921,69 @@ pub async fn delete_nexus_game_backup(game_id: String) -> Result<BackupSettings,
         s.last_error.clear();
         json(&settings_path()?, &s)?;
         delete_game_copy(root)?;
+        Ok(s)
+    }).await.map_err(error)?
+}
+
+fn preserved_recoveries() -> Result<PathBuf,String> {
+    Ok(crate::core::paths::app_root()?.join("mod-recovery-preserved"))
+}
+pub(super) fn preserve_recovery(game:&NexusGame)->Result<(),String>{
+    let Some(root)=game.game["directory"].as_str() else{return Ok(());};
+    let source=Path::new(root).join(".peligames/mod-recovery");
+    if !source.try_exists().map_err(error)? {return Ok(());}
+    let parent=preserved_recoveries()?;
+    fs::create_dir_all(&parent).map_err(error)?;
+    preserve_recovery_at(&source,&parent)?;
+    Ok(())
+}
+fn preserve_recovery_at(source:&Path,parent:&Path)->Result<PathBuf,String>{
+    let snapshot=read_snapshot(source)?;
+    let stage=staging(parent)?;
+    copy_tree(&source.join("data"),&stage.0.join("data"),false,None)?;
+    json(&stage.0.join("snapshot.json"),&snapshot)?;
+    read_snapshot(&stage.0)?;
+    let target=parent.join(format!("{}-{}",snapshot.game.id,uuid::Uuid::new_v4()));
+    fs::rename(&stage.0,&target).map_err(error)?;
+    Ok(target)
+}
+fn delete_recovery_copies(roots:&std::collections::BTreeSet<PathBuf>,preserved:&Path)->Result<(),String>{
+    let mut failures=Vec::new();
+    for root in roots {
+        if !root.exists(){failures.push(format!("Pasta indisponível: {}",root.display()));continue;}
+        if let Err(e)=delete_game_copy(root){failures.push(e);}
+    }
+    if let Err(e)=crate::core::bounded_logs::remove_directory(preserved){failures.push(e.to_string());}
+    if !failures.is_empty(){return Err(format!("Algumas cópias não puderam ser excluídas. A recuperação automática foi desativada.\n{}",failures.join("\n")));}
+    Ok(())
+}
+#[tauri::command]
+pub async fn delete_all_mod_backups()->Result<BackupSettings,String>{
+    tauri::async_runtime::spawn_blocking(||{
+        let _op=OPERATIONS.lock().map_err(error)?;
+        let _lock=nexus_local::STORAGE.lock().map_err(error)?;
+        let data=nexus_local::load()?;
+        let mut s=settings()?;
+        // Persist disabled choices before deleting so queued workers cannot recreate copies.
+        s.per_game=false;
+        for enabled in s.game_overrides.values_mut(){*enabled=false;}
+        for game in &data.games{s.game_overrides.insert(game.id.clone(),false);}
+        s.game_errors.clear();s.last_error.clear();
+        json(&settings_path()?,&s)?;
+        let mut roots:std::collections::BTreeSet<_>=data.games.iter().filter_map(|game|game.game["directory"].as_str().map(PathBuf::from)).collect();
+        let preserved=preserved_recoveries()?;
+        // Uninstalled games may still have an original recovery on an external drive.
+        // Only the confirmed backup action visits their managed recovery subfolder.
+        if preserved.exists() {
+            existing_directory(&preserved)?;
+            for entry in fs::read_dir(&preserved).map_err(error)? {
+                let snapshot=read_snapshot_with(&entry.map_err(error)?.path(),false)?;
+                if let Some(root)=snapshot.game.game["directory"].as_str(){
+                    if Path::new(root).is_dir(){roots.insert(PathBuf::from(root));}
+                }
+            }
+        }
+        delete_recovery_copies(&roots,&preserved)?;
         Ok(s)
     }).await.map_err(error)?
 }
@@ -1052,6 +1130,33 @@ mod tests {
             std::env::temp_dir().join(format!("peligames-backup-test-{}", uuid::Uuid::new_v4()));
         fs::create_dir(&p).unwrap();
         p
+    }
+    #[test]
+    fn uninstall_preserved_recovery_survives_source_removal_and_restores() {
+        let base=base();let (game,storage)=fixture(&base);
+        let source=base.join("original-recovery");
+        write_snapshot_from(&game,&storage,&source,false,None).unwrap();
+        let preserved=base.join("preserved");fs::create_dir(&preserved).unwrap();
+        let copy=preserve_recovery_at(&source,&preserved).unwrap();
+        fs::remove_dir_all(&source).unwrap();fs::remove_dir_all(&storage).unwrap();
+        assert_eq!(fs::read(copy.join("data/archives/mod.zip")).unwrap(),b"package");
+        assert!(restore_game_at(&copy,Some(&base.join("new-game")),&mut Workspace::default(),Some(&base.join("new-storage"))).unwrap());
+        fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
+    fn delete_all_recoveries_keeps_installed_mods_and_exported_zips() {
+        let base=base();let root=base.join("game");
+        fs::create_dir_all(root.join(".peligames/mod-recovery/data")).unwrap();
+        fs::create_dir_all(root.join(".peligames/mods")).unwrap();
+        fs::write(root.join(".peligames/mods/package.zip"),b"installed").unwrap();
+        fs::write(root.join("game.exe"),b"game").unwrap();
+        let exported=base.join("exported.zip");fs::write(&exported,b"backup").unwrap();
+        let preserved=base.join("preserved");fs::create_dir(&preserved).unwrap();
+        fs::write(preserved.join("copy"),b"internal").unwrap();
+        delete_recovery_copies(&[root.clone()].into_iter().collect(),&preserved).unwrap();
+        assert!(!root.join(".peligames/mod-recovery").exists());assert!(!preserved.exists());
+        assert!(root.join(".peligames/mods/package.zip").is_file());assert!(root.join("game.exe").is_file());assert!(exported.is_file());
+        fs::remove_dir_all(base).unwrap();
     }
     #[test]
     fn eligibility_requires_an_installed_nexus_mod() {
@@ -1392,4 +1497,14 @@ pub async fn recover_mods_from_disk(directory: String) -> Result<Report, String>
         }
         Ok(report)
     }).await.map_err(error)?
+}
+
+/// Called with the operation/storage locks held by complete uninstall.
+pub(super) fn forget_uninstalled(ids:&std::collections::BTreeSet<String>)->Result<(),String>{
+    if ids.is_empty(){return Ok(());}
+    let mut s=settings()?;
+    for id in ids{s.game_errors.remove(id);s.game_overrides.insert(id.clone(),false);}
+    json(&settings_path()?,&s)?;
+    if let Ok(mut pending)=PENDING.lock(){if let Some(games)=pending.as_mut(){games.retain(|game|!ids.contains(&game.id));}}
+    Ok(())
 }

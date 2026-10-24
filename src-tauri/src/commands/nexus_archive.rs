@@ -312,7 +312,7 @@ pub(super) fn open(game: &NexusGame, item: &LocalMod) -> Result<zip::ZipArchive<
             .checked_add(entry.size())
             .ok_or("Pacote grande demais.")?;
         if entry.size() > FILE_LIMIT || total > TOTAL_LIMIT {
-            return Err("O pacote excede o limite de extração de 2 GB.".into());
+            return Err("O pacote excede os limites de extração (512 MB por arquivo, 2 GB no total).".into());
         }
     }
     super::nexus_smapi::prepare(game, item, zip)

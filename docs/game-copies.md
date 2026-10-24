@@ -8,6 +8,8 @@ Na biblioteca PeliGames, clique com o botão direito na capa e escolha **Criar c
 
 A interface oferece cópia completa e o método econômico disponível: reflink quando suportado; caso contrário, overlay. Para duplicar as alterações de um overlay existente, use cópia completa ou reflink. Crie novos overlays pela instalação de referência.
 
+Nas novas cópias, a pasta escolhida é o próprio prefixo: `drive_c`, `dosdevices`, registros do Wine, `installation.json`, `copy.json` e logs ficam no mesmo nível, sem uma subpasta visível chamada `prefix`. No overlay, as pastas do Wine apontam para a montagem privada em `.peligames-overlay`; os registros ficam diretamente na pasta da cópia. Preserve a pasta oculta ao transportar ou fazer backup da cópia. Cópias antigas continuam usando sua estrutura original.
+
 ## Base dos overlays
 
 Ao criar o primeiro overlay, a instalação original fica **reservada como base**, no mesmo caminho. O PeliGames impede executá-la, alterar suas configurações, abrir ferramentas Wine ou remover seu registro e seus arquivos enquanto existirem cópias vinculadas. Nos detalhes do jogo, **Prefixo de referência** permite localizar essa pasta e a indicação **Base reservada** mostra quais cópias a utilizam.
@@ -24,9 +26,9 @@ Cada cópia recebe identidade e prefixo próprios. Inicie cada uma pela respecti
 
 As informações locais de login existentes são copiadas. Troque de conta em cada instância quando necessário; o jogo ou seu servidor podem restringir acessos simultâneos. Arquivos gravados fora do prefixo, pastas externas ligadas por links e serviços de rede podem continuar compartilhados: cópias não são sandboxes.
 
-Comandos personalizados de inicialização e wrappers são limpos para não apontarem à instalação original; configure-os novamente se necessário. As configurações da cópia devem manter seu próprio prefixo e um executável dentro dele.
+Comandos personalizados de inicialização e wrappers são limpos para não apontarem à instalação original; configure-os novamente se necessário. Cada cópia mantém seu próprio prefixo; um executável externo continua compartilhado, conforme explicado abaixo.
 
-O recurso atende instalações registradas no PeliGames com o executável dentro do prefixo. Jogos externos de Steam, Heroic ou outras lojas e executáveis fora do prefixo não são duplicados por este recurso.
+O recurso atende instalações registradas no PeliGames. Instalações gerenciadas por Steam, Heroic ou outras lojas não são duplicadas por este recurso.
 
 ## Recuperar uma biblioteca existente
 
@@ -44,3 +46,9 @@ O Proton antigo pode precisar ser instalado ou substituído nos detalhes do jogo
 
 **Esses registros não são um backup dos jogos ou dos saves.** Formatar um disco sem preservar os arquivos elimina também as instalações e as alterações dos perfis. Para transportar reflinks mantendo a economia de espaço, o método de backup também precisa preservar o compartilhamento de blocos; uma cópia convencional pode ocupar o tamanho completo.
 
+
+## Executável fora do prefixo
+
+Se o executável estiver em outra pasta ou disco, a operação copia somente o prefixo Wine. A nova entrada usa o mesmo executável externo. Reflink é verificado entre o disco do prefixo original e o destino; a partição do executável não precisa oferecer reflink.
+
+Registro do Windows, componentes e arquivos dentro de cada prefixo ficam separados. Configurações, atualizações e logs gravados na pasta externa do jogo permanecem compartilhados. Não mova nem apague essa pasta enquanto as cópias forem usadas. Desinstalar uma cópia pelo PeliGames preserva os arquivos externos. No modo overlay, a dependência da base do prefixo também permanece.

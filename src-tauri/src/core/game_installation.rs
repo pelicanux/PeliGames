@@ -120,7 +120,7 @@ fn run_inner(request: InstallationRequest, repair: Option<(super::installed_libr
         if Path::new(&entry.proton).canonicalize().ok().as_ref() == Some(&proton) && prefix == Path::new(&entry.prefix) {
             InstallationResult { prefix: prefix.to_string_lossy().into_owned(), log: String::new(), registered_count: 0, library_error: None }
         } else {
-            let prepared = prepare_run_mode(request.clone(), &find_umu()?, Some(prefix), None, true)?;
+            let prepared = prepare_run_mode(request.clone(), &runner_backend(&request.proton)?, Some(prefix), None, true)?;
             let prefix = prepared.prefix.to_string_lossy().into_owned(); let log = prepared.log.to_string_lossy().into_owned();
             let status = super::game_execution::wait_for_prefix_update(prepared, &cancel)?;
             if status.state == "cancelled" || cancel.load(Ordering::Acquire) { return Err(format!("Atualização do prefixo cancelada. Log: {log}")); }
@@ -129,14 +129,16 @@ fn run_inner(request: InstallationRequest, repair: Option<(super::installed_libr
             InstallationResult { prefix, log, registered_count: 0, library_error: None }
         }
     } else {
-        let umu = find_umu()?;
+        let umu = runner_backend(&request.proton)?;
         baseline = prefix_baseline(&request, &umu, &cancel)?;
         if let Some(plan) = &launcher {
             if !plan.dependencies.is_empty() {
                 let mut prepared=prepare_run_mode(request.clone(), &umu, None, None, true)?;
-                let mut command=Command::new(&umu);
+                let wine = native_wine(&validate_proton(&request.proton)?);
+                let mut command=Command::new(if wine.is_some() {Path::new("winetricks")} else {&umu});
                 super::env_utils::host_environment(&mut command);
-                command.arg("winetricks").args(&plan.dependencies);
+                if wine.is_none() { command.arg("winetricks"); }
+                command.args(&plan.dependencies);
                 for (key,value) in prepared.command.get_envs() { if let Some(value)=value { command.env(key,value); } else { command.env_remove(key); } }
                 command.current_dir(&prepared.prefix).stdin(Stdio::null());
                 prepared.command=command;
@@ -226,10 +228,11 @@ pub(crate) fn prepare_launch_program(
         let prefix = PathBuf::from(prefix).canonicalize().map_err(|_| "Prefixo do jogo indisponível.")?;
         if !prefix.join("drive_c").is_dir() { return Err("O prefixo Wine ainda não foi inicializado.".into()); }
         let executable = executable.ok_or("Selecione um programa para executar neste prefixo.")?;
+        let backend = runner_backend(&proton)?;
         let mut prepared = prepare_run_in_prefix(InstallationRequest {
             name, directory: prefix.parent().ok_or("Prefixo inválido.")?.to_string_lossy().into_owned(),
             executable, proton, cover_url: None,
-        }, &find_umu()?, Some(&prefix), None)?;
+        }, &backend, Some(&prefix), None)?;
         prepared.command.args(extra_arguments);
         return Ok(prepared);
     }
@@ -243,6 +246,7 @@ pub(crate) fn prepare_launch_program(
     // This launches the registered executable without replacing the installation manifest.
     let registered_program = executable.is_none();
     let arguments = if registered_program { entry.launch_arguments.clone() } else { extra_arguments };
+    let backend = runner_backend(&entry.proton)?;
     let mut prepared = prepare_run_in_prefix(
         InstallationRequest {
             name: entry.name.clone(),
@@ -255,7 +259,7 @@ pub(crate) fn prepare_launch_program(
             proton: entry.proton,
             cover_url: entry.cover_url,
         },
-        &find_umu()?,
+        &backend,
         Some(Path::new(&entry.prefix)),
         Some(&entry.advanced),
     )?;
@@ -332,14 +336,45 @@ pub(crate) fn lock_prefix(prefix: &Path) -> Result<File,String> {
     #[cfg(unix)] { use std::os::fd::AsRawFd; if unsafe {libc::flock(file.as_raw_fd(),libc::LOCK_EX|libc::LOCK_NB)} != 0 { return Err("Outra sessão do PeliGames ou Pelinstall já usa este prefixo.".into()); } }
     Ok(file)
 }
+/// Standalone Wine uses its own prefix and never goes through the Proton/UMU protocol.
+pub(crate) fn runner_backend(value: &str) -> Result<PathBuf, String> {
+    let runner = validate_proton(value)?;
+    if let Some(wine) = native_wine(&runner) { Ok(wine) } else { find_umu() }
+}
+pub(crate) fn wine_server(runner: &Path) -> Option<PathBuf> {
+    let bin = if runner.is_file() { runner.parent()?.to_path_buf() } else { runner.join("bin") };
+    ["wineserver", "wineserver64"].into_iter().map(|name|bin.join(name)).find(|path|executable_file(path))
+}
+pub(crate) fn native_wine(runner: &Path) -> Option<PathBuf> {
+    if runner.is_file() {
+        let name=runner.file_name()?.to_str()?;
+        return (["wine","wine64","wine-stable","wine-staging"].contains(&name) && executable_file(runner) && wine_server(runner).is_some()).then(||runner.to_path_buf());
+    }
+    let wine = runner.join("bin/wine");
+    (!runner.join("proton").is_file() && executable_file(&wine) && wine_server(runner).is_some()).then_some(wine)
+}
+pub(crate) fn wine_environment(command: &mut Command, runner: &Path, prefix: &Path) {
+    let prefix = if prefix.join("pfx/system.reg").is_file() { prefix.join("pfx") } else { prefix.to_path_buf() };
+    let wine=native_wine(runner).unwrap_or_else(||runner.join("bin/wine"));
+    command.env("WINEPREFIX", prefix).env("WINE", &wine)
+        .env("WINESERVER", wine_server(runner).unwrap_or_else(||runner.join("bin/wineserver")))
+        .env_remove("PROTONPATH").env_remove("PROTON_VERB").env_remove("STEAM_COMPAT_DATA_PATH");
+    let mut paths = vec![wine.parent().unwrap_or(runner).to_path_buf()];
+    if let Some(path) = std::env::var_os("PATH") { paths.extend(std::env::split_paths(&path)); }
+    if let Ok(path) = std::env::join_paths(paths) { command.env("PATH", path); }
+}
 pub(crate) fn validate_proton(value: &str) -> Result<PathBuf, String> {
     let migrated = super::paths::migrated_runner_path(value);
     let value = migrated.as_str();
-    let proton = absolute(value)?
+    let path = absolute(value)?;
+    // Preserve a system command's symlink path: its sibling wineserver is often
+    // in /usr/bin while the real Wine executable lives under /usr/lib.
+    if path.is_file() && native_wine(&path).is_some() { return Ok(path); }
+    let proton = path
         .canonicalize()
         .map_err(|e| format!("Proton não encontrado: {e}"))?;
-    if !executable_file(&proton.join("proton")) {
-        return Err("A versão selecionada não contém um Proton executável.".into());
+    if !executable_file(&proton.join("proton")) && native_wine(&proton).is_none() {
+        return Err("A versão selecionada não contém um executável Proton ou Wine.".into());
     }
     Ok(proton)
 }
@@ -454,7 +489,8 @@ fn prepare_run_mode(
     )
     .map_err(|e| e.to_string())?;
     let stderr = log.try_clone().map_err(|e| e.to_string())?;
-    let mut command = super::advanced_settings::launch_command(umu, advanced)?;
+    let wine = native_wine(&proton);
+    let mut command = super::advanced_settings::launch_command(wine.as_deref().unwrap_or(umu), advanced)?;
     if prefix_update {
         command.arg("wineboot").arg("-u").current_dir(&prefix);
     } else {
@@ -481,6 +517,7 @@ fn prepare_run_mode(
         .env_remove("UMU_NO_PROTON")
         .env_remove("UMU_NO_RUNTIME")
         .stdin(Stdio::null());
+    if wine.is_some() { wine_environment(&mut command, &proton, &prefix); }
     drop(log);drop(stderr);
     Ok(PreparedRun {
         name: request.name,
@@ -512,6 +549,52 @@ mod prefix_proton_tests {
         assert_eq!(proton_from_prefix(&compat), expected);
         fs::write(compat.join("config_info"), "Test-1.0\n/missing/Proton/files/share/fonts/\n").unwrap();
         assert_eq!(proton_from_prefix(&compat.join("pfx")), None);
+        fs::remove_dir_all(root).unwrap();
+    }
+}
+
+#[cfg(test)]
+mod wine_runner_tests {
+    use super::*;
+    use crate::core::test_support::RetryOutput;
+    #[test]
+    fn empty_prefix_is_initialized_by_the_selected_runner_only_when_launched() {
+        for standalone in [true,false] {
+            let root=std::env::temp_dir().join(format!("peligames-lazy-prefix-{}",uuid::Uuid::new_v4()));
+            let runner=root.join("runner");fs::create_dir_all(runner.join("bin")).unwrap();
+            let executable=root.join("external/game.exe");fs::create_dir_all(executable.parent().unwrap()).unwrap();fs::write(&executable,b"MZfixture").unwrap();
+            let prefix=root.join("prefix");fs::create_dir(&prefix).unwrap();
+            let backend=root.join("mock-umu");
+            let script=b"#!/bin/sh\nmkdir -p \"$WINEPREFIX/drive_c\"\nprintf registry > \"$WINEPREFIX/system.reg\"\nprintf '%s|%s' \"$WINEPREFIX\" \"$*\"\n";
+            for file in if standalone {vec![runner.join("bin/wine"),runner.join("bin/wineserver")]} else {vec![runner.join("proton"),backend.clone()]} {
+                fs::write(&file,script).unwrap();fs::set_permissions(file,fs::Permissions::from_mode(0o755)).unwrap();
+            }
+            let mut prepared=prepare_run_in_prefix(InstallationRequest{name:"Lazy prefix".into(),directory:root.to_string_lossy().into_owned(),executable:executable.to_string_lossy().into_owned(),proton:runner.to_string_lossy().into_owned(),cover_url:None},&backend,Some(&prefix),None).unwrap();
+            assert!(fs::read_dir(&prefix).unwrap().next().is_none(),"preparing a launch must not execute Wine");
+            assert_eq!(prepared.command.get_current_dir(),executable.parent());
+            let output=prepared.command.output_retrying();assert!(output.status.success());
+            assert_eq!(String::from_utf8(output.stdout).unwrap(),format!("{}|{}",prefix.display(),executable.display()));
+            assert!(prefix.join("drive_c").is_dir());assert!(prefix.join("system.reg").is_file());
+            assert!(executable.is_file());fs::remove_dir_all(root).unwrap();
+        }
+    }
+    #[test]
+    fn standalone_wine_executes_the_selected_program_with_its_prefix() {
+        let root=std::env::temp_dir().join(format!("peligames-native-wine-{}",uuid::Uuid::new_v4()));
+        let runner=root.join("Wine Staging");fs::create_dir_all(runner.join("bin")).unwrap();
+        for binary in ["wine","wineserver"] {
+            let path=runner.join("bin").join(binary);fs::write(&path,"#!/bin/sh\nprintf '%s|%s' \"$WINEPREFIX\" \"$*\"\n").unwrap();
+            fs::set_permissions(path,fs::Permissions::from_mode(0o755)).unwrap();
+        }
+        assert_eq!(validate_proton(runner.to_str().unwrap()).unwrap(),runner.canonicalize().unwrap());
+        let prefix=root.join("prefix");fs::create_dir_all(&prefix).unwrap();
+        let exe=root.join("game.exe");fs::write(&exe,b"MZfixture").unwrap();
+        let mut settings=super::super::advanced_settings::AdvancedSettings::default();settings.mangohud_enabled=Some(false);
+        let prepared=prepare_run_in_prefix(InstallationRequest{name:"Fixture".into(),directory:root.join("game").to_string_lossy().into_owned(),executable:exe.to_string_lossy().into_owned(),proton:runner.to_string_lossy().into_owned(),cover_url:None},Path::new("/must-not-use-umu"),Some(&prefix),Some(&settings)).unwrap();
+        let mut command=prepared.command;
+        assert_eq!(command.get_program(),runner.join("bin/wine"));
+        let output=command.output_retrying();assert!(output.status.success());
+        assert_eq!(String::from_utf8(output.stdout).unwrap(),format!("{}|{}",prefix.display(),exe.display()));
         fs::remove_dir_all(root).unwrap();
     }
 }

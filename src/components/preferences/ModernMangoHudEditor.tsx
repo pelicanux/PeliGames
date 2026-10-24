@@ -13,7 +13,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { gpuLoadColor } from "./gpuLoadColor";
 import catalog from "../../config/mangohudOptions.json";
 import { loadMangoHudProfile, saveMangoHudProfile, updateMangoHudPreview, mangoHudPreview, getMangoHudStatus, notifyMangoHudMissing, type MangoHudSettings } from "../../services/mangohud";
-import { mangoHudDefaults } from "./mangoHudDefaults";
+import { mangoHudAppearanceDefaults, mangoHudDefaults } from "./mangoHudDefaults";
 import { PRESETS, applyPreset } from "./mangoHudPresets";
 import "./modernMangoHud.css";
 
@@ -351,7 +351,7 @@ export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=
         <div className="mm-preview-foot">
           <span>Posição: {(POSITIONS.find(([id]) => id === settings.position) ?? ["", "Superior esquerdo"])[1]}</span><span className="mm-spacer" />
           <button type="button" className="mm-ghost" disabled={previewBusy} onClick={() => void preview()} title="Abre o MangoHUD de verdade numa janela de teste">{previewBusy ? "Aguarde…" : running ? "Fechar teste" : "Testar no sistema"}</button>
-          <button type="button" className="mm-ghost" onClick={() => update({ ...mangoHudDefaults(), launcher_enabled: settings.launcher_enabled, launcher_sync_system: settings.launcher_sync_system })}>Restaurar padrão</button>
+          <button type="button" className="mm-ghost" onClick={() => update(mangoHudAppearanceDefaults(settings))} title="Volta o visual e as informações exibidas ao padrão. Atalhos, limite de FPS, gravação de logs e as chaves do launcher são mantidos.">Restaurar aparência</button>
         </div>
         {running && <small className="mm-running">Janela de teste aberta · atualização ao vivo</small>}
       </aside>

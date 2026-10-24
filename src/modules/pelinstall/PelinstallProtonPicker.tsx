@@ -3,12 +3,13 @@ import { invoke } from "@tauri-apps/api/core";
 import type { InstalledProton } from "../../components/ProtonSelector";
 import { useInstallerText } from "./installerText";
 
-type Family = "GE" | "CachyOS" | "Steam" | "Outros";
-const FAMILIES: Family[] = ["GE", "CachyOS", "Steam", "Outros"];
+type Family = "GE" | "CachyOS" | "Wine" | "Steam" | "Outros";
+const FAMILIES: Family[] = ["GE", "CachyOS", "Wine", "Steam", "Outros"];
 const familyOf = (proton: InstalledProton): Family => {
   const text = `${proton.name} ${proton.path}`.toLowerCase();
   if (text.includes("ge-proton") || text.includes("/ge-proton/")) return "GE";
   if (text.includes("cachyos")) return "CachyOS";
+  if (/^wine[ -]/i.test(proton.name)) return "Wine";
   if (text.includes("steamapps/common") || /^proton[\s\d]|experimental/i.test(proton.name)) return "Steam";
   return "Outros";
 };

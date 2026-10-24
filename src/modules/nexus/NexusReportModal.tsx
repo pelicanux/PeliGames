@@ -1,3 +1,4 @@
+import { LogText } from "../../components/LogText";
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -78,7 +79,7 @@ export function NexusReportModal({gameId,onClose}: {gameId: string; onClose: () 
     {loading ? <p role="status">{text.loading}</p> : report && <>
       <div className="nexus-report-summary"><span>relatorio-nexus.txt · {(report.bytes/1024).toFixed(1)} KB</span><div className="nexus-report-actions"><HoverTooltip text={copied ? text.reportCopied : text.reportCopy}><button type="button" className="btn btn-secondary nexus-report-copy" aria-label={text.reportCopy} disabled={copying} onClick={()=>void copy()}><MenuIcon name={copied ? "check" : "copy"} /></button></HoverTooltip><button type="button" className="btn btn-secondary" onClick={()=>setRevision(v=>v+1)}><MenuIcon name="repair" />{text.reportRefresh}</button></div></div>
       {copied && <p className="nexus-hint" role="status">{text.reportCopied}</p>}
-      <pre className="game-log-output nexus-report-preview" tabIndex={0}>{report.content}</pre>
+      <pre className="game-log-output nexus-report-preview" tabIndex={0}><LogText content={report.content}/></pre>
     </>}
   </NexusPopup>;
 }

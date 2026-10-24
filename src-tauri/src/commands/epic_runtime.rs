@@ -289,6 +289,7 @@ pub(super) fn configure(
 
 #[cfg(test)]
 mod tests {
+    use crate::core::test_support::RetryOutput;
     use super::*;
     use serde_json::json;
     use std::process::Command;
@@ -363,8 +364,7 @@ mod tests {
                         .join("pfx"),
                 )
                 .env_remove("PG_EPIC_TEST")
-                .output()
-                .unwrap();
+                .output_retrying();
             assert!(
                 output.status.success(),
                 "{}",
@@ -466,8 +466,7 @@ mod tests {
                 "STEAM_COMPAT_DATA_PATH",
                 f.root.join("compat/compatdata/game"),
             )
-            .output()
-            .unwrap();
+            .output_retrying();
         let text = String::from_utf8(output.stdout).unwrap();
         assert!(output.status.success());
         assert!(!text.contains("%command%"));

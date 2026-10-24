@@ -1,3 +1,4 @@
+import {MatrixPlayingTicker} from "./MatrixPlayingTicker";
 // Account identity lives beside the members; audio controls stay below channels.
 import { useEffect, useState } from "react";
 import { SelectionMenu } from "./SelectionMenu";
@@ -47,7 +48,7 @@ export function MatrixUserProfile({ pt, me, names, avatarVersion, connected }: {
       {connected ? <SelectionMenu className="matrix-user-presence" menuClassName="matrix-select-menu matrix-presence-menu" minMenuWidth={180} label={pt ? "Alterar status" : "Change status"} value={presence} options={options}
         onChange={value => setMatrixPresenceChoice(me, value as MatrixPresenceChoice)}/>
         : <small>{pt ? "Desconectado" : "Disconnected"}</small>}
-      {activity.sharing && activity.name && presence !== "invisible" && <small className="matrix-own-game" title={activity.name}>{pt ? "Jogando" : "Playing"} · {activity.name}</small>}
+      {activity.sharing && activity.name && presence !== "invisible" && <MatrixPlayingTicker className="matrix-own-game" text={`${pt ? "Jogando" : "Playing"} · ${activity.name}`}/>}
     </div>
   </div>;
 }

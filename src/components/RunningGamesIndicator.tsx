@@ -49,12 +49,12 @@ const RunningGameMarquee = memo(function RunningGameMarquee({ games, pt }: { gam
       <span className="titlebar-running-status">
         {labels.map(label => <span className="titlebar-running-status-size" key={label}>{label}</span>)}
         <span>{labels[game.state === "starting" ? 0 : game.state === "stopping" ? 2 : 1]}</span>
-      </span>{" "}{game.name} · {game.library}
+      </span>{" "}{game.name}
     </span>)}</span>)}
   </span></span>;
 }, (before, after) => before.pt === after.pt && before.games.length === after.games.length && before.games.every((game, index) => {
   const next = after.games[index];
-  return game.id === next.id && game.name === next.name && game.library === next.library && game.state === next.state;
+  return game.id === next.id && game.name === next.name && game.state === next.state;
 }));
 
 export function RunningGamesIndicator({ games }: { games: RunningGameSummary[] }) {
@@ -66,7 +66,7 @@ export function RunningGamesIndicator({ games }: { games: RunningGameSummary[] }
   const pinned = useRef(false);
   const panelId = useId();
   const label = (game: RunningGameSummary) => game.state === "starting" ? pt ? "Preparando" : "Preparing" : game.state === "stopping" ? pt ? "Encerrando" : "Stopping" : pt ? "Em execução" : "Running";
-  const message = games.map(game => `${label(game)}: ${game.name} · ${game.library}`).join("   /   ");
+  const message = games.map(game => `${label(game)}: ${game.name}`).join("   /   ");
   const close = () => { clearTimeout(hideTimer.current); pinned.current = false; setOpen(false); };
   const show = () => { clearTimeout(hideTimer.current); setOpen(true); };
   const scheduleClose = () => { clearTimeout(hideTimer.current); hideTimer.current = setTimeout(() => { if (!pinned.current && !popup.current?.contains(document.activeElement)) setOpen(false); }, 180); };
@@ -104,7 +104,7 @@ export function RunningGamesIndicator({ games }: { games: RunningGameSummary[] }
           <button type="button" className="titlebar-running-details" aria-label={pt ? "Detalhes" : "Details"} disabled={!game.onDetails} onClick={() => { close(); game.onDetails?.(); }}><MenuIcon name="externalLink" /></button>
         </HoverTooltip>
         <img src={game.cover || "/peligames.svg"} alt="" onError={event => { if (!event.currentTarget.src.endsWith("/peligames.svg")) event.currentTarget.src = "/peligames.svg"; }} />
-        <div><strong>{game.name}</strong><small>{game.library} · {label(game)}</small></div>
+        <div><strong>{game.name}</strong><small>{label(game)}</small></div>
         <button type="button" className="btn btn-secondary" disabled={Boolean(stopping) || game.stopDisabled || game.state === "stopping"} onClick={() => void stop(game)}><MenuIcon name="stop" />{game.state === "stopping" || stopping === game.id ? pt ? "Encerrando…" : "Stopping…" : pt ? "Parar" : "Stop"}</button>
       </article>)}
       {error && <p className="titlebar-running-error" role="alert">{error}</p>}

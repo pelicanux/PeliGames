@@ -3,7 +3,7 @@
   <img src="public/images/readme-header.svg" alt="PeliGames" width="900" />
 </p>
 
-> **0.4.7 experimental:** overlay PeliGames independente do MAKO, limite de FPS sem foco por jogo, cópias de instalações e melhorias no monitoramento. Veja as [notas da versão](docs/releases/0.4.7.md). O overlay ainda pode apresentar falhas de captura do mouse, foco, atalhos ou compatibilidade com determinados jogos/Protons. Consulte o [guia de uso e limitações](docs/overlay.md).
+> **0.4.8 experimental:** tema Neon Wave, sincronização com OpenRGB, novas funções no chat Matrix, overlay na Steam Flatpak com diagnóstico da última execução e correções para o WebKitGTK 2.54. Veja as [notas da versão](docs/releases/0.4.8.md). O overlay ainda pode apresentar falhas de captura do mouse, foco, atalhos ou compatibilidade com determinados jogos/Protons. Consulte o [guia de uso e limitações](docs/overlay.md).
 
 <p align="center"><strong>Português</strong> · <a href="README.en.md">English</a></p>
 

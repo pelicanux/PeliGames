@@ -1,3 +1,5 @@
+import "./titlebarControls.css";
+import {MatrixCallIndicator} from "./MatrixCallIndicator";
 import { OPEN_DISCORD_PANEL_EVENT } from "../services/communityLinks";
 import React, { useEffect, useState } from 'react';
 import { DiscordPanel } from './DiscordPanel';
@@ -23,8 +25,9 @@ interface TitleBarProps {
 }
 
 export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeDisabled, settingsMenu, updateIndicator, notificationIndicator, disabled, runningGames = [] }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const appWindow = isTauri() ? getCurrentWindow() : null;
+  const preview = "__PELI_UI_PREVIEW__" in window;
 
   const [showDiscord, setShowDiscord] = useState(false);
   const [showMatrix, setShowMatrix] = useState(false);
@@ -79,6 +82,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
 
       {/* Right section: Links and Window Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '100%' }}>
+        <MatrixCallIndicator onOpen={()=>setShowMatrix(true)}/>
         <div className="titlebar-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         
         {updateIndicator}
@@ -106,24 +110,30 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
 
         <button 
           data-tauri-drag-region="false"
-          className="btn-titlebar window-control"
-          disabled={disabled || !appWindow}
+          className="btn-titlebar window-control retro-window-control minimize"
+          aria-label={language === "pt" ? "Minimizar" : "Minimize"}
+          title={language === "pt" ? "Minimizar" : "Minimize"}
+          disabled={disabled || (!appWindow && !preview)}
           onClick={() => appWindow?.minimize()}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><line x1="6" y1="17" x2="18" y2="17"></line></svg>
         </button>
         <button 
           data-tauri-drag-region="false"
-          className="btn-titlebar window-control"
-          disabled={disabled || !appWindow}
+          className="btn-titlebar window-control retro-window-control maximize"
+          aria-label={language === "pt" ? "Maximizar ou restaurar" : "Maximize or restore"}
+          title={language === "pt" ? "Maximizar ou restaurar" : "Maximize or restore"}
+          disabled={disabled || (!appWindow && !preview)}
           onClick={() => appWindow?.toggleMaximize()}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 9V5h14v14h-4M5 9h10v10H5Z"/></svg>
         </button>
         <button 
           data-tauri-drag-region="false"
-          className="btn-titlebar window-control close"
-          disabled={disabled || !appWindow}
+          className="btn-titlebar window-control close retro-window-control"
+          aria-label={language === "pt" ? "Fechar" : "Close"}
+          title={language === "pt" ? "Fechar" : "Close"}
+          disabled={disabled || (!appWindow && !preview)}
           onClick={() => appWindow?.close()}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>

@@ -254,7 +254,11 @@ pub async fn configure_external_game(settings: ExternalSettings) -> Result<Exter
         let proton = match settings.proton.as_deref() {
             Some(value) => {
                 if game.launcher == "Bottles" {return Err("O Bottles compartilha a versão entre os programas da mesma bottle. Altere o runner no Bottles.".into());}
-                Some(crate::core::game_installation::validate_proton(value)?.to_string_lossy().into_owned())
+                let runner = crate::core::game_installation::validate_proton(value)?;
+                if crate::core::game_installation::native_wine(&runner).is_some() && !matches!(game.launcher.as_str(), "Heroic" | "Lutris") {
+                    return Err("Este launcher exige um runner Proton. Use Wine nos jogos do PeliGames, Heroic ou Lutris.".into());
+                }
+                Some(runner.to_string_lossy().into_owned())
             },
             None => previous_proton,
         };

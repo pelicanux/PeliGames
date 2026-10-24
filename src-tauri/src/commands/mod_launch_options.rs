@@ -93,6 +93,17 @@ pub(crate) fn take_records_under(root: &str) -> Result<Vec<String>, String> {
     Ok(taken)
 }
 
+/// What the launch options of the game in `game_dir` are reset to: only the
+/// lines that installed mods (recorded below that folder) need, nothing typed by hand.
+#[tauri::command]
+pub fn mod_launch_options_for(game_dir: String) -> Result<Option<String>, String> {
+    restored(&read_records()?, &key(&game_dir))
+}
+fn restored(records: &BTreeMap<String, String>, root: &str) -> Result<Option<String>, String> {
+    records.iter().filter(|(path, _)| path.as_str() == root || path.starts_with(&format!("{root}/")))
+        .try_fold(None, |current: Option<String>, (_, line)| merge(current.as_deref(), None, Some(line)))
+}
+
 /// Updates a game's launch options after the mod was installed (`line`: the
 /// options the backend printed) or removed (`line` empty) in `game_dir`.
 /// Returns the new launch options; the caller saves them in the game's settings.
@@ -110,6 +121,15 @@ pub fn apply_mod_launch_options(game_dir: String, current: Option<String>, line:
 #[cfg(test)]
 mod tests {
     use super::merge;
+    #[test]
+    fn reset_keeps_only_the_lines_of_mods_installed_in_the_game() {
+        let records = std::collections::BTreeMap::from([
+            ("/games/Hades/bin".to_string(), "WINEDLLOVERRIDES=dxgi=n,b %command%".to_string()),
+            ("/games/Hades2".to_string(), "OTHER=1 %command%".to_string()),
+        ]);
+        assert_eq!(super::restored(&records, "/games/Hades").unwrap().as_deref(), Some(r#"WINEDLLOVERRIDES="dxgi=n,b""#));
+        assert_eq!(super::restored(&records, "/games/Celeste").unwrap(), None);
+    }
 
     #[test]
     fn int4_layers_are_added_kept_apart_from_user_options_and_removed() {

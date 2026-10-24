@@ -1,3 +1,5 @@
+#[cfg(test)]
+pub(crate) mod test_support;
 pub mod script_runner;
 #[path = "../../launch-runtime/src/release_features.rs"]
 pub mod release_features;
@@ -52,3 +54,12 @@ pub mod game_copies;
 pub mod mangohud_presets;
 pub mod bounded_logs;
 pub mod game_reset;
+
+pub mod neon_wave_bands;
+#[cfg(target_os = "linux")]
+pub mod neon_wave_audio;
+
+pub mod openrgb;
+
+#[cfg(target_os = "linux")]
+pub mod webkit_graphics;

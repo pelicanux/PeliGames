@@ -97,3 +97,11 @@
 .settings-page-search[data-tabbed] > button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .modern-ui .settings-page .settings-page-search[data-tabbed] input[type="search"] { display: none; }
 .modern-ui .settings-page .settings-page-search[data-tabbed][data-expanded] input[type="search"] { display: block; position: absolute; z-index: 85; right: 0; top: 42px; width: min(280px,calc(100vw - 40px)); height: 38px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--modern-line) !important; border-radius: 12px !important; background: var(--modern-overlay) !important; box-shadow: 0 8px 24px #0003; }
+
+/* Keep the active query in the header instead of floating over result actions. */
+.modern-ui .settings-page.settings-searching .settings-page-head .settings-page-search {
+  flex:0 1 260px;width:260px;min-width:100px;padding:0 9px;
+}
+.modern-ui .settings-page.settings-searching .settings-page-head .settings-page-search input[type="search"] {
+  display:block;position:static;width:100%;height:auto;padding:0;border:0!important;border-radius:0!important;background:transparent!important;backdrop-filter:none;box-shadow:none;
+}

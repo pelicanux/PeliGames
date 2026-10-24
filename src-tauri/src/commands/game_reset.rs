@@ -205,6 +205,11 @@ pub async fn reset_game_details(
         }
     };
     let mut next = game_reset::settings(target.advanced(), request.section);
+    // Options go back to zero, but a mod that stays installed (DLSSNR) keeps the line it needs;
+    // "All" removes those mods too.
+    if request.section == Section::Options {
+        next.launch_options = super::mod_launch_options::mod_launch_options_for(root.to_string_lossy().into_owned())?;
+    }
     if request.section != Section::Mods {
         next.validate()?;
     }

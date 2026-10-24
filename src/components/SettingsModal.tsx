@@ -24,6 +24,7 @@ import "./preferences/modernPreferences.css";
 import "./preferences/modSettings.css";
 import "./preferences/connections.css";
 import "./preferences/protonPreferences.css";
+import "./preferences/interfacePreferences.css";
 
 const MOD_PREFERENCE_TABS=[{id:"dlss",label:"DLSSNR-AMD"},{id:"nexus",label:"Nexus Mods"},{id:"mako",label:"MAKO"}] as const;
 type ModPreferenceTab=typeof MOD_PREFERENCE_TABS[number]["id"];
@@ -112,14 +113,16 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
   const query = normalize(search.trim());
   // Index each real control separately; category names provide context.
   const options = [
-    { id: "interface-theme", page: "interface", title: "Hackerman", keywords: "temas theme Matrix Fallout retro hacker terminal verde green pixel" },
+    { id: "interface-theme", page: "interface", title: language === "pt" ? "Temas da interface" : "Interface themes", keywords: "Hackerman Neon Wave padrão standard temas theme Matrix Fallout retro hacker terminal verde green pixel música music áudio audio synthwave" },
     { id: "connection-nexus", page: "connections", title: "Nexus Mods", keywords: text.connectionsSearch },
     { id: "connection-discord", page: "connections", title: "Discord", keywords: `${text.connectionsSearch} YouTube` },
     { id: "connection-matrix", page: "connections", title: "Matrix", keywords: `${text.connectionsSearch} atividade presença som notificação áudio capas` },
     { id: "themes", page: "interface", title: text.themes, keywords: `${text.darkHint} ${text.lightHint}` },
     { id: "accent", page: "interface", title: text.accentAndBlur, keywords: "accent color cores vermelho laranja amarelo verde azul anil violeta red orange yellow green blue indigo violet" },
+    { id:"openrgb",page:"interface",title:"OpenRGB",keywords:"RGB LED sincronizar iluminação cor hardware gabinete sync lighting" },
     { id: "blur-windows", page: "interface", title: text.windowsEffect, keywords: text.blurSearch },
     { id: "launch-effect", page: "interface", title: text.launchEffect, keywords: `${text.freezeEffect} ${text.freezeHint} ${text.shatterEffect} ${text.smoothEffect} ${text.aquariumEffect} ${text.aquariumHint} ${text.particlesEffect} ${text.particlesHint} ${text.penguinEffect} ${text.penguinHint} ${text.shrinkEffect} ${text.shrinkHint} ${text.noLaunchEffect} ${text.launchEffectHint}` },
+    { id: "backup-delete-all", page: "mods", title: "Apagar todos os backups de mods", keywords: "backup recuperação excluir remover apagar cópias Nexus" },
     { id: "runtime-mako", page: "mods", title: "MAKO", keywords: "frame generation geração quadros Lossless Scaling download instalação atualização versões backups" },
     { id: "backend-project", page: "mods", title: text.project, keywords: `${text.rdna4} ${text.rdna3} DLSSNR AMD OptiScaler` },
     { id: "backend-update", page: "mods", title: text.backendUpdate, keywords: text.backendHint },
@@ -159,7 +162,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
   const configProps = { config: preferences.config, disabled: !preferences.ready || busy, save: preferences.save };
   const openSearchPage=(target:Page,id:string)=>{if(!preferences.isPending()){if(target==="mods")setModsTab(modPreferenceTabFor(id));setPage(target);setSearch("");setSearchTarget(id);setActionError("");}};
   const renderSearchControls=(target:Page,ids:string[])=>{
-    if(target==="interface")return <ThemePreferences onApplied={()=>setNotice(text.applied)} onOpenConnections={()=>{setSearch("");setPage("connections");setSearchTarget(null)}}/>;
+    if(target==="interface")return <ThemePreferences searchMode onApplied={()=>setNotice(text.applied)} onOpenConnections={()=>{setSearch("");setPage("connections");setSearchTarget(null)}}/>;
     if(target==="connections")return <ConnectionsPreferences searchMode/>;
     if(target==="mods")return <>{ids.some(id=>["backend-project","backend-update","setup","clear-cache"].includes(id))&&<ModPreferences {...configProps} onBusy={searchBusyHandlers.mods} onWizard={()=>{if(!preferences.isPending()){onOpenWizard();onClose()}}} onClear={()=>setCacheDialog("confirm")}/>} {ids.some(id=>id.startsWith("backup-"))&&<ModBackupPreferences onError={setActionError} onBusy={searchBusyHandlers.mods} onRestored={async()=>onConfigUpdated(await invoke<AppConfig|null>("load_app_config"))}/>} {(["mako"] as const).filter(backend=>ids.includes(`runtime-${backend}`)).map(backend=><div data-preference-id={`runtime-${backend}`} key={backend}><h3>{"MAKO"}</h3><FrameRuntimePreferences backend={backend} disabled={busy} onBusy={searchBusyHandlers.mods}/></div>)}</>;
     if(target==="protons")return <ProtonPreferences {...configProps} onBusy={searchBusyHandlers.protons} focusRef={steamRef} onConfirmationChange={setProtonConfirmationOpen}/>;
@@ -168,7 +171,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
     if(target==="diskAutomount")return <div data-preference-id="disk-automount"><DiskAutomountPreferences onBusy={searchBusyHandlers.diskAutomount} onDialogChange={setStorageDialogOpen}/></div>;
     return null;
   };
-  const tabbedSearch = ["mods", "connections", "monitoring"].includes(displayedPage);
+  const tabbedSearch = ["interface", "mods", "connections", "monitoring"].includes(displayedPage);
   const searchControl = <div className="settings-page-search" data-tabbed={tabbedSearch || undefined} data-expanded={searchExpanded || undefined}
     onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) { searchFocused.current = false; setSearchExpanded(false); } }}>
     <button type="button" disabled={busy} aria-label={text.searchSettings} aria-expanded={searchExpanded} onClick={() => { setSearchExpanded(true); requestAnimationFrame(() => searchInput.current?.focus()); }}><MenuIcon name="search"/>{tabbedSearch && <span>{language === "en" ? "Search" : "Buscar"}</span>}</button>
@@ -182,7 +185,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
           {!searchResults.length&&!mangoMatches.length&&<p role="status">{text.searchEmpty}</p>}
           {(preferences.error||actionError)&&<p className="preferences-error" role="alert">{preferences.error||actionError}</p>}
         </> : <>
-        {displayedPage === "interface" && <ThemePreferences onApplied={() => setNotice(text.applied)} onOpenConnections={() => { if (!busy && !preferences.isPending()) { setPage("connections"); setSearch(""); setSearchTarget(null); setActionError(""); } }}/>}
+        {displayedPage === "interface" && <ThemePreferences focusTarget={searchTarget} searchControl={searchControl} onApplied={() => setNotice(text.applied)} onOpenConnections={() => { if (!busy && !preferences.isPending()) { setPage("connections"); setSearch(""); setSearchTarget(null); setActionError(""); } }}/>}
         {displayedPage === "connections" && <ConnectionsPreferences focusTarget={searchTarget} searchControl={searchControl}/>}
         {displayedPage === "mods" && <><h2>{text.mods}</h2><div className="settings-tab-toolbar"><div className="preference-mod-tabs" data-active={modsTab} role="tablist" aria-label={text.mods} onKeyDown={event => { if (busy || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const index=MOD_PREFERENCE_TABS.findIndex(tab=>tab.id===modsTab);const next=MOD_PREFERENCE_TABS[event.key==="Home"?0:event.key==="End"?MOD_PREFERENCE_TABS.length-1:(index+(event.key==="ArrowLeft"?-1:1)+MOD_PREFERENCE_TABS.length)%MOD_PREFERENCE_TABS.length].id; setModsTab(next); requestAnimationFrame(() => document.getElementById(`mod-preferences-tab-${next}`)?.focus()); }}>{MOD_PREFERENCE_TABS.map(tab => <button type="button" key={tab.id} role="tab" id={`mod-preferences-tab-${tab.id}`} aria-controls={`mod-preferences-panel-${tab.id}`} aria-selected={modsTab === tab.id} tabIndex={modsTab === tab.id ? 0 : -1} disabled={busy || (tab.id === "mako" && !experimentalFrameGeneration)} title={tab.id === "mako" && !experimentalFrameGeneration ? "Em desenvolvimento" : undefined} onClick={() => { if (!preferences.isPending()) { setModsTab(tab.id); setActionError(""); } }}>{tab.label}</button>)}</div>{searchControl}</div><div className="mod-preferences-content" role="tabpanel" id={`mod-preferences-panel-${modsTab}`} aria-labelledby={`mod-preferences-tab-${modsTab}`}>{modsTab === "dlss" ? <ModPreferences {...configProps} onBusy={setDownloadBusy} onWizard={() => { if (!preferences.isPending()) { onOpenWizard(); onClose(); } }} onClear={() => setCacheDialog("confirm")}/> : modsTab==="nexus" ? <ModBackupPreferences onError={setActionError} onBusy={setDownloadBusy} onRestored={async () => onConfigUpdated(await invoke<AppConfig | null>("load_app_config"))}/> : <FrameRuntimePreferences backend={modsTab} disabled={busy} onBusy={setDownloadBusy}/>}</div></>}
         {displayedPage === "protons" && <ProtonPreferences {...configProps} onBusy={setDownloadBusy} focusRef={steamRef} onConfirmationChange={setProtonConfirmationOpen}/>}

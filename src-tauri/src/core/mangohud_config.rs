@@ -280,6 +280,8 @@ fn write_in(dir: &Path, settings: &Settings, preview: bool) -> Result<String, St
     Ok(path.to_string_lossy().into_owned())
 }
 pub fn global_enabled() -> Result<bool, String> {
+    // Tests must not depend on the user's launcher switch (shared home in containers).
+    if cfg!(test) { return Ok(false); }
     Ok(load()?
         .settings
         .get("launcher_enabled")

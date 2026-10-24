@@ -6,8 +6,8 @@ A coluna **Concluído** mostra o quanto do suporte está pronto:
 | Concluído | Significado | Jogos |
 |---|---|---|
 | 100% | Verificado em jogo real: instalado e aberto com mods pelo PeliGames. | 5 |
-| 90% | Paridade com a extensão Vortex: módulo feito à mão, comparado com o código da extensão e testado com pacotes de exemplo, sem lacunas registradas. | 67 |
-| 80% | Módulo feito à mão e testado com pacotes de exemplo; algum recurso da extensão Vortex ainda não foi feito (descrito nas notas do módulo). | 29 |
+| 90% | Paridade com a extensão Vortex: módulo feito à mão, comparado com o código da extensão e testado com pacotes de exemplo, sem lacunas registradas. | 66 |
+| 80% | Módulo feito à mão e testado com pacotes de exemplo; algum recurso da extensão Vortex ainda não foi feito (descrito nas notas do módulo). | 30 |
 | 70% | Gerado do template da família (Unreal, Unity ou RE Engine) e testado com pacotes de exemplo; ainda não revisado em jogo. | 113 |
 | 60% | Módulo disponível, mas sem suporte Vortex confirmado para o jogo. | 1 |
 
@@ -39,7 +39,7 @@ Os módulos seguem as regras das extensões do Vortex (oficiais, da comunidade e
 | Code Vein | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão oficial do Vortex | [codevein](https://www.nexusmods.com/codevein) |
 | CODE VEIN II | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [codevein2](https://www.nexusmods.com/codevein2) |
 | Conan Exiles | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão oficial do Vortex | [conanexiles](https://www.nexusmods.com/conanexiles) |
-| Crimson Desert | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Extensão da comunidade | [crimsondesert](https://www.nexusmods.com/crimsondesert) |
+| Crimson Desert | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ 80% | Extensão da comunidade | [crimsondesert](https://www.nexusmods.com/crimsondesert) |
 | Crisis Core Final Fantasy VII Reunion | 🟩🟩🟩🟩🟩🟩🟩🟩🟩⬜ 90% | Regras próprias | [crisiscoreff7reunion](https://www.nexusmods.com/crisiscoreff7reunion) |
 | Crisol: Theater of Idols | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [crisoltheaterofidols](https://www.nexusmods.com/crisoltheaterofidols) |
 | Cronos: The New Dawn | 🟩🟩🟩🟩🟩🟩🟩⬜⬜⬜ 70% | Template Unreal (ChemBoy) | [cronosthenewdawn](https://www.nexusmods.com/cronosthenewdawn) |

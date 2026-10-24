@@ -276,3 +276,8 @@ export async function loadOlderMessages(room: string) {
 export function useMatrixChat() {
   return useSyncExternalStore(listener => { listeners.add(listener); return () => listeners.delete(listener); }, () => state);
 }
+/** Blocks (Matrix "ignore") or unblocks a person: their messages disappear from every room. */
+export async function setMatrixUserBlocked(user: string, blocked: boolean) {
+  await invoke("matrix_chat_ignore", { user, ignore: blocked });
+  set({ ignored: blocked ? [...new Set([...state.ignored, user])] : state.ignored.filter(item => item !== user) });
+}

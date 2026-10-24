@@ -1,8 +1,8 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { ModernNavIcon, type ModernIconName } from "./ModernNavIcon";
 
-export type ModernSection = "library" | "install" | "dlss" | "nexus" | "downloads" | "community" | "discord" | "donate" | "settings";
+export type ModernSection = "library" | "install" | "dlss" | "nexus" | "downloads" | "community" | "discord" | "donate" | "youtube" | "settings";
 /** Settings pages listed in the side menu while Settings is open. */
 export type ModernSettingsPage = "interface" | "mods" | "protons" | "covers" | "connections" | "monitoring" | "diskAutomount" | "tools";
 
@@ -30,6 +30,24 @@ export function ModernShell({ active, disabled = false, onNavigate, activeDownlo
   const [width, setWidth] = useState(() => window.innerWidth);
   const [collapsed, setCollapsed] = useState<boolean | null>(() => { try { const value = localStorage.getItem(COLLAPSED_KEY); return value === null ? null : value === "1"; } catch { return null; } });
   const [animate, setAnimate] = useState(false);
+  const [pointerInside, setPointerInside] = useState(false);
+  const [keyboardInside, setKeyboardInside] = useState(false);
+  useEffect(() => {
+    const close = () => { setPointerInside(false); setKeyboardInside(false); };
+    const leaveWindow = (event: MouseEvent) => { if (!event.relatedTarget) close(); };
+    const visibility = () => { if (document.hidden) close(); };
+    // WebKit can retain CSS :hover when the pointer leaves the native window.
+    window.addEventListener("blur", close);
+    window.addEventListener("mouseout", leaveWindow);
+    document.documentElement.addEventListener("pointerleave", close);
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      window.removeEventListener("blur", close);
+      window.removeEventListener("mouseout", leaveWindow);
+      document.documentElement.removeEventListener("pointerleave", close);
+      document.removeEventListener("visibilitychange", visibility);
+    };
+  }, []);
   useLayoutEffect(() => {
     const element = frame.current;
     if (!element) return;
@@ -59,7 +77,11 @@ export function ModernShell({ active, disabled = false, onNavigate, activeDownlo
 
   return <div ref={frame} className={`modern-shell modern-menu-${mode}${animate ? " modern-animate" : ""}`}>
     <div className="modern-side-slot">
-      <nav className="modern-sidebar" aria-label="PeliGames">
+      <nav className={`modern-sidebar${pointerInside || keyboardInside ? " modern-peek-open" : ""}`} aria-label="PeliGames"
+        onPointerEnter={() => setPointerInside(true)} onPointerMove={() => setPointerInside(true)} onPointerLeave={() => setPointerInside(false)}
+        onFocusCapture={event => setKeyboardInside(event.target.matches(":focus-visible"))}
+        onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setKeyboardInside(false); }}
+        onKeyDownCapture={event => { if (event.key === "Tab") setKeyboardInside(true); }}>
         {settingsPage ? <>
           {button("back", false, "library", t("modern", "library"), t("modern", "backToGames"), () => onNavigate("library"))}
           <h6><span>{t("modern", "settings")}</span></h6>
@@ -82,6 +104,7 @@ export function ModernShell({ active, disabled = false, onNavigate, activeDownlo
         {item("discord", "discord", "Discord", t("modern", "discordHint"))}
         {item("community", "matrix", t("modern", "matrixChat"), t("modern", "matrixHint"))}
         {item("donate", "donate", t("credits", "support"), "LivePix")}
+        {item("youtube", "youtube", t("modern", "membership"), "YouTube")}
         {!settingsPage && <><h6><span>{t("modern", "peligamesGroup")}</span></h6>{item("settings", "settings", t("modern", "settings"), t("modern", "settingsHint"))}</>}
         <div className="modern-side-foot">
           <button type="button" className="modern-nav modern-collapse" onClick={toggleCollapsed}

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "domain": "crimsondesert",
   "name": "Crimson Desert",
   "platform": "proton",
@@ -15,7 +15,8 @@
   ],
   "steam_id": "3321460",
   "destinations": [
-    "bin64"
+    "bin64",
+    "mods"
   ],
   "protected_files": [
     "bin64/CrimsonDesert.exe"
@@ -91,14 +92,76 @@
     "https://github.com/faisalkindi/CrimsonDesert-UltimateModsManager#supported-formats",
     "https://github.com/ThirteenAG/Ultimate-ASI-Loader",
     "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-crimsondesert/index.js",
-    "https://www.nexusmods.com/site/mods/1746"
+    "https://www.nexusmods.com/site/mods/1746",
+    "https://www.nexusmods.com/crimsondesert/mods/633"
   ],
   "credits": [
-    "Regras factuais pesquisadas nas instruções dos autores; implementação independente PeliGames. Nenhum código dos gerenciadores foi incorporado."
+    "Regras de classificação e destinos baseados no comportamento da extensão Vortex de Crimson Desert (ChemBoy1); implementação independente PeliGames."
   ],
   "notes": [
-    "Suporte inicial a plugins ASI x64 e seus INIs em bin64 (incluindo plugins/ com caminho explícito). Requer Ultimate ASI Loader x64 como winmm.dll ou version.dll.",
-    "JSON/modpatch/CDMOD, PAZ/PAMT/PAPGT/PATHC, XML, texturas, áudio, scripts instaladores e ReShade exigem processamento ou instalação especializados; este módulo não os aplica.",
-    "A identificação da pasta e das dependências não garante que o plugin funcione na versão atual do jogo. Validar cada mod no jogo, especialmente após atualizações."
-  ]
+    "Pacotes classificados na mesma ordem dos instaladores da extensão Vortex: pasta bin64 (raiz do jogo), DMM e ferramentas (raiz), pastas de patch 00XX e pastas files/ do Crimson Sharp (mods/), texturas em meta/ (mods/), patches JSON/CDMOD (mods/, com escolha quando há vários), plugins ASI/DLL/ADDON64 (bin64/) e, por último, a raiz do jogo como está.",
+    "Os patches em mods/ são aplicados pelo Definitive Mod Manager (DMM), Crimson Sharp ou CD Mod Manager: depois de ativar os mods, abra o gerenciador pelo botão da aba Mods e aplique-os antes de jogar.",
+    "Plugins ASI precisam do Ultimate ASI Loader x64 (winmm.dll ou version.dll em bin64), que pode ser baixado pelo aviso da aba Mods.",
+    "Arquivos originais do jogo só são substituídos com confirmação e ficam guardados para restauração. Valide cada mod no jogo, especialmente após atualizações.",
+    "A configuração automática do Crimson Sharp (caminho do jogo em config.txt e Python dentro do prefixo) não é feita; siga as instruções da página do mod."
+  ],
+  "ignored_files": [
+    "winmm-x64.SHA512",
+    "version-x64.SHA512"
+  ],
+  "tools": [
+    {
+      "name": "Definitive Mod Manager",
+      "executable": "DMM*.exe"
+    },
+    {
+      "name": "Crimson Sharp",
+      "executable": "CrimsonSharp.exe"
+    },
+    {
+      "name": "CD Mod Manager",
+      "executable": "CDModManager.exe"
+    },
+    {
+      "name": "Save Editor",
+      "executable": "CrimsonSaveEditorStandalone.exe"
+    }
+  ],
+  "downloads": [
+    {
+      "name": "Definitive Mod Manager",
+      "source": "nexus",
+      "mod_id": 633,
+      "prefix": "DMM",
+      "present": [
+        "DMM*.exe"
+      ],
+      "recommended": true
+    },
+    {
+      "name": "Ultimate ASI Loader (winmm)",
+      "repository": "ThirteenAG/Ultimate-ASI-Loader",
+      "tag": "x64-latest",
+      "prefix": "winmm-x64",
+      "present": [
+        "bin64/winmm.dll"
+      ],
+      "group": "ual"
+    },
+    {
+      "name": "Ultimate ASI Loader (version)",
+      "repository": "ThirteenAG/Ultimate-ASI-Loader",
+      "tag": "x64-latest",
+      "prefix": "version-x64",
+      "present": [
+        "bin64/version.dll"
+      ],
+      "group": "ual"
+    }
+  ],
+  "vortex_mod_types": {
+    "crimsondesert-patchmod": "mods",
+    "crimsondesert-browsermod": "mods",
+    "crimsondesert-binaries": "bin64"
+  }
 }

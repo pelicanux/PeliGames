@@ -44,11 +44,24 @@ struct SecureMedia {
     keys: std::sync::mpsc::Receiver<MediaKey>,
     local_key: MediaKey,
 }
-/// One remote speaker: its samples and whether playback has started.
+/// One remote speaker: its samples, whether playback has started and, for a
+/// voice, the listener's volume for that person (shares play at full volume).
 #[derive(Default)]
 struct Speaker {
     samples: VecDeque<i16>,
     playing: bool,
+    gain: Option<Arc<AtomicU32>>,
+}
+/// Volume per Matrix user (percent, 0 = muted), kept for the whole session.
+static USER_GAINS: OnceLock<Mutex<HashMap<String, Arc<AtomicU32>>>> = OnceLock::new();
+fn user_gain(user: &str) -> Arc<AtomicU32> {
+    let gains = USER_GAINS.get_or_init(|| Mutex::new(HashMap::new()));
+    let mut gains = gains.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    gains.entry(user.to_string()).or_insert_with(|| Arc::new(AtomicU32::new(100))).clone()
+}
+/// `@user:server` of a LiveKit identity (`@user:server:DEVICE`), as the call view reads it.
+fn user_of(identity: &str) -> &str {
+    match identity.match_indices(':').nth(1) { Some((index, _)) => &identity[..index], None => identity }
 }
 type Mixer = HashMap<String, Speaker>;
 static PREPARATION: AtomicU64 = AtomicU64::new(0);
@@ -120,7 +133,10 @@ fn mix_sample(queues: &mut Mixer) -> f32 {
     let mut sum = 0i64;
     for speaker in queues.values_mut().filter(|s| s.playing) {
         match speaker.samples.pop_front() {
-            Some(sample) => sum += i64::from(sample),
+            Some(sample) => sum += match &speaker.gain {
+                Some(gain) => i64::from(sample) * i64::from(gain.load(Ordering::Relaxed)) / 100,
+                None => i64::from(sample),
+            },
             None => speaker.playing = false,
         }
     }
@@ -349,7 +365,8 @@ fn run(
                             let loud=loud.clone();
                             let mut stream=NativeAudioStream::new(audio.rtc_track(),48000,1);
                             let queue=queue.clone();let track_id=sid.clone();
-                            if let Ok(mut q)=queue.lock(){q.insert(sid.clone(),Speaker::default());}
+                            let gain=(!screen_sound).then(||user_gain(user_of(&identity)));
+                            if let Ok(mut q)=queue.lock(){q.insert(sid.clone(),Speaker{gain,..Speaker::default()});}
                             remote_tasks.insert(sid,tokio::spawn(async move {
                                 while let Some(frame)=stream.next().await {
                                     if !screen_sound && frame_level(&frame.data) > SPEAKING_LEVEL { if let Ok(mut loud)=loud.lock(){loud.insert(identity.clone(),Instant::now());} }
@@ -607,6 +624,17 @@ pub async fn matrix_room_call_start(
     });
     Ok(())
 }
+/// The listener's volume for one person in calls (0 mutes them), applied at once.
+#[tauri::command]
+pub fn matrix_call_user_volume(window: WebviewWindow, user: String, volume: u32) -> Result<(), String> {
+    guard(&window)?;
+    if volume > 200 { return Err("Volume inválido.".into()); }
+    if !user.starts_with('@') || user.len() > 255 || user.matches(':').count() != 1 || user.chars().any(char::is_control) {
+        return Err("Usuário inválido.".into());
+    }
+    user_gain(&user).store(volume, Ordering::Release);
+    Ok(())
+}
 #[tauri::command]
 pub fn matrix_room_call_key(
     window: WebviewWindow,
@@ -632,6 +660,18 @@ pub fn matrix_room_call_key(
 mod tests {
     use super::*;
     #[test]
+    fn each_person_is_mixed_at_the_listener_volume() {
+        let mut queues = Mixer::new();
+        let (quiet, silent) = (Arc::new(AtomicU32::new(50)), Arc::new(AtomicU32::new(0)));
+        queues.insert("a".into(), Speaker { samples: VecDeque::from([10000]), playing: true, gain: Some(quiet) });
+        queues.insert("b".into(), Speaker { samples: VecDeque::from([10000]), playing: true, gain: Some(silent) });
+        queues.insert("share".into(), Speaker { samples: VecDeque::from([2000]), playing: true, gain: None });
+        assert_eq!(mix_sample(&mut queues), 7000. / 32768.);
+        assert_eq!(user_of("@ana:matrix.org:DEVICE"), "@ana:matrix.org");
+        assert_eq!(user_of("@ana:matrix.org"), "@ana:matrix.org");
+        assert!(Arc::ptr_eq(&user_gain("@test-volume:example.org"), &user_gain("@test-volume:example.org")));
+    }
+    #[test]
     fn playback_backlog_is_bounded() {
         let mut speaker = Speaker::default();
         enqueue(&mut speaker, &vec![1; MAX_BACKLOG]);
@@ -656,7 +696,7 @@ mod tests {
     #[test]
     fn mixer_combines_speakers_without_overflow_or_stale_audio() {
         let mut queues = Mixer::new();
-        let speaker = |samples: [i16; 2]| Speaker { samples: VecDeque::from(samples), playing: true };
+        let speaker = |samples: [i16; 2]| Speaker { samples: VecDeque::from(samples), playing: true, ..Speaker::default() };
         queues.insert("a".into(), speaker([30000, 100]));
         queues.insert("b".into(), speaker([30000, -100]));
         assert_eq!(mix_sample(&mut queues), 1.);

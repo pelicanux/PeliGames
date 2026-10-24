@@ -437,8 +437,8 @@ fn add_nexus_game_inner(mut game: serde_json::Value, platform: String) -> Result
             compat_data = prefix.to_string_lossy().into();
         }
         if let Some(value) = game["proton"].as_str().map(str::trim).filter(|value| !value.is_empty()) {
-            let runner = fs::canonicalize(value).map_err(|error| format!("Proton: {error}"))?;
-            if !runner.join("proton").is_file() {
+            let runner = crate::core::game_installation::validate_proton(value)?;
+            if !(runner.join("proton").is_file() || crate::core::game_installation::native_wine(&runner).is_some()) {
                 return Err("Selecione uma instalação do Proton.".into());
             }
             proton = runner.to_string_lossy().into();
@@ -1071,17 +1071,6 @@ pub async fn stop_nexus_game(game_id: String) -> Result<Workspace, String> {
 }
 // library.json is replaced atomically by save(). Log monitors can read its last
 // committed snapshot without waiting for deployment or rescanning every game.
-/// Clears the launch logs of every Nexus game that is not running, so each
-/// launcher start begins with empty logs. Runs off the window thread.
-pub fn reset_session_logs_at_startup() {
-    let games = match workspace() { Ok(data) => data.games, Err(_) => return };
-    for game in games {
-        if super::nexus_profile::idle(&game).is_err() { continue; }
-        if let Err(error) = super::nexus_profile::clear_session_logs(&game) {
-            super::nexus_reports::event(&game, "WARN", "limpar logs ao abrir", &error);
-        }
-    }
-}
 pub(super) fn log_game(game_id: &str) -> Result<NexusGame, String> {
     uuid::Uuid::parse_str(game_id).map_err(|_| "Identificador de jogo inválido.")?;
     let bytes = fs::read(root()?.join("library.json")).map_err(|e| e.to_string())?;

@@ -1,3 +1,5 @@
+import {useOpenRGBConnection} from "./openrgbSync";
+import {openrgbVariables} from "./openrgbColor";
 import { createContext, useContext, useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 import { useSurfaceNeonLighting } from "../hooks/useSurfaceNeonLighting";
 import { DEFAULT_GLASS_EFFECTS, GLASS_STORAGE_KEY, readGlassEffects, type GlassEffects } from "./glassPreferences";
@@ -8,6 +10,8 @@ import { flushSync } from "react-dom";
 import { InterfaceThemeEffects } from "./InterfaceThemeEffects";
 import { animateThemeSurfaces, captureThemeSurfaces, HACKERMAN_ACCENT, INTERFACE_THEME_STORAGE_KEY, isFreeInterfaceTheme, readInterfaceTheme, type InterfaceTheme } from "./interfaceTheme";
 import "./hackerman.css";
+import "./neonWave.css";
+import {NeonWaveBackground} from "./NeonWaveBackground";
 
 export type LaunchEffect = "shatter" | "smooth" | "aquarium" | "particles" | "penguin" | "shrink" | "freeze" | "disabled";
 export const DEFAULT_LAUNCH_EFFECT: LaunchEffect = "smooth";
@@ -75,7 +79,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       return isAccentTheme(saved) ? saved : DEFAULT_ACCENT;
     } catch { return DEFAULT_ACCENT; }
   });
-  const effectiveAppearance = interfaceTheme === "hackerman" ? "dark" : appearance;
+  const openrgb=useOpenRGBConnection();
+  const effectiveAppearance = interfaceTheme !== "standard" ? "dark" : appearance;
   useSurfaceNeonLighting(effectiveAppearance);
   useLayoutEffect(() => {
     const opaque = glassEffects.windows === 100;
@@ -84,13 +89,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.style.setProperty("--backdrop-blur-factor", "1");
   }, [glassEffects]);
   useLayoutEffect(() => {
-    for (const [property, value] of Object.entries({ ...accentVariables(accent, effectiveAppearance), ...(interfaceTheme === "hackerman" ? HACKERMAN_ACCENT : {}) })) {
+    for (const [property, value] of Object.entries({ ...accentVariables(interfaceTheme === "neon-wave" ? "violet" : accent, effectiveAppearance), ...(openrgb.preferences.enabled && openrgb.color && interfaceTheme !== "hackerman" ? openrgbVariables(openrgb.color,effectiveAppearance) : {}), ...(interfaceTheme === "hackerman" ? HACKERMAN_ACCENT : {}) })) {
       document.documentElement.style.setProperty(property, value);
     }
     document.documentElement.dataset.accentTheme = accent;
     document.documentElement.dataset.appearance = effectiveAppearance;
     document.documentElement.dataset.interfaceTheme = interfaceTheme;
-  }, [accent, effectiveAppearance, interfaceTheme]);
+  }, [accent, effectiveAppearance, interfaceTheme,openrgb.color,openrgb.preferences.enabled]);
   useEffect(() => {
     const sync = (event: StorageEvent) => {
       if (event.key === INTERFACE_THEME_STORAGE_KEY) updateInterfaceTheme(readInterfaceTheme(event.newValue));
@@ -114,7 +119,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setGlassEffects(next);
     try { localStorage.setItem(GLASS_STORAGE_KEY, JSON.stringify(next)); } catch { /* Keep the active visual adjustment. */ }
   };
-  return <ThemeContext.Provider value={{ interfaceTheme, setInterfaceTheme: chooseInterfaceTheme, themeTransitioning, exclusiveEffects, benefitExpiresAt, launchEffect, setLaunchEffect: chooseLaunchEffect, accent, setAccent: chooseAccent, appearance, setAppearance: chooseAppearance, glassEffects, setGlassEffects: chooseGlassEffects, resetGlassEffects: () => chooseGlassEffects(DEFAULT_GLASS_EFFECTS) }}>{children}<InterfaceThemeEffects active={interfaceTheme === "hackerman"} transitioning={themeTransitioning}/></ThemeContext.Provider>;
+  return <ThemeContext.Provider value={{ interfaceTheme, setInterfaceTheme: chooseInterfaceTheme, themeTransitioning, exclusiveEffects, benefitExpiresAt, launchEffect, setLaunchEffect: chooseLaunchEffect, accent, setAccent: chooseAccent, appearance, setAppearance: chooseAppearance, glassEffects, setGlassEffects: chooseGlassEffects, resetGlassEffects: () => chooseGlassEffects(DEFAULT_GLASS_EFFECTS) }}>{children}<NeonWaveBackground active={interfaceTheme === "neon-wave"}/><InterfaceThemeEffects active={interfaceTheme === "hackerman"} transitioning={themeTransitioning}/></ThemeContext.Provider>;
 }
 
 export function useAccentTheme() {

@@ -280,6 +280,15 @@ fn shortcut_targets(prefix: &Path) -> BTreeMap<String, String> {
         .map(|(path, target)| { let name = target.label.unwrap_or_else(|| path.file_stem().unwrap_or_default().to_string_lossy().into_owned()); (path.to_string_lossy().into_owned(), name) })
         .collect()
 }
+/// A copied prefix already contains installed shortcuts, not new installations.
+fn initialize_copy_shortcuts(record: &mut InstallationRecord) {
+    let prefix = Path::new(&record.prefix);
+    record.known_shortcuts = Some(shortcut_targets(prefix).into_keys()
+        .chain(record.entries.iter().map(|entry| entry.executable.clone()))
+        .collect::<BTreeSet<_>>().into_iter().collect());
+    record.install_shortcuts = Some(super::installation_targets::shortcut_files(prefix)
+        .into_iter().map(|item| item.file.to_string_lossy().into_owned()).collect());
+}
 /// A shortcut a launcher created for a game it installed (Programs panel).
 #[derive(Clone, Serialize, Deserialize)]
 pub struct LauncherShortcut { pub id: String, pub name: String, pub executable: Option<String>, pub url: Option<String>, pub icon: Option<String>, pub in_library: bool }
@@ -435,6 +444,17 @@ fn new_launcher_games_at(index: &Path, path: &str) -> Result<Vec<LauncherGame>, 
     let _process_guard = process_lock(index)?;
     let Some((manifest, mut record)) = record_of(index, path)? else { return Ok(vec![]); };
     if record.entries.iter().any(|entry| entry.path == path && entry.profile.is_some()) { return Ok(vec![]); }
+    // Upgrade copies created before the shortcut baseline was recorded.
+    // Include their selected executable even when there are no shortcuts, so
+    // this initialization cannot suppress genuinely new shortcuts next time.
+    if record.known_shortcuts.as_ref().is_some_and(Vec::is_empty)
+        && record.install_shortcuts.as_ref().is_some_and(Vec::is_empty)
+        && manifest.parent().is_some_and(|root| root.join("copy.json").is_file())
+    {
+        initialize_copy_shortcuts(&mut record);
+        write_json(&manifest, &record)?;
+        return Ok(vec![]);
+    }
     let current = shortcut_targets(Path::new(&record.prefix));
     let Some(known) = record.known_shortcuts.clone() else {
         record.known_shortcuts = Some(current.into_keys().collect());
@@ -558,10 +578,10 @@ fn rank(entries: &mut [InstalledEntry], game: &str) {
     }
 }
 // Older choices hid individual files rather than recording the selection itself.
-// Migrate only an unambiguous choice accompanied by hidden alternatives.
+// Restore an unambiguous explicit choice, including older records that did not
+// save hidden alternatives until the first rescan.
 fn restore_executable_selection(record: &mut InstallationRecord) -> bool {
-    if record.selected_executable.is_some() || record.installer.is_empty()
-        || !record.overrides.iter().any(|item| item.executable.is_empty()) { return false; }
+    if record.selected_executable.is_some() || record.installer.is_empty() { return false; }
     let choices: Vec<_> = record.overrides.iter().filter(|item|
         !item.executable.is_empty() && !item.source.starts_with("peligames:")
         && item.name == record.name && !record.launcher_games.contains(&item.source)
@@ -804,19 +824,29 @@ fn find_executable_at(index: &Path, executable: &str) -> Result<Vec<ExecutableMa
 }
 
 pub(crate) fn validate_selected_prefix(path: &str) -> Result<PathBuf, String> {
+    validate_prefix_selection(path, false)
+}
+/// A replacement can also be an empty folder: Wine/Proton initializes it when launched.
+fn validate_replacement_prefix(path: &str) -> Result<PathBuf, String> {
+    validate_prefix_selection(path, true)
+}
+fn validate_prefix_selection(path: &str, allow_empty: bool) -> Result<PathBuf, String> {
     let path = super::game_installation::absolute(path)?;
     let metadata = fs::symlink_metadata(&path).map_err(|e| format!("Prefixo indisponível: {e}"))?;
     if metadata.file_type().is_symlink() || !metadata.is_dir() {
         return Err("Escolha uma pasta real de prefixo Wine/Proton.".into());
     }
     let canonical = path.canonicalize().map_err(|e| e.to_string())?;
-    if canonical.parent().is_none()
-        || !fs::symlink_metadata(canonical.join("drive_c"))
-            .is_ok_and(|m| m.is_dir() && !m.file_type().is_symlink())
-        || !fs::symlink_metadata(canonical.join("system.reg"))
-            .is_ok_and(|m| m.is_file() && !m.file_type().is_symlink())
-    {
-        return Err("Selecione o prefixo Wine/Proton que contém drive_c e system.reg.".into());
+    if canonical.parent().is_none() {return Err("Não use a raiz do sistema como prefixo.".into());}
+    let initialized=fs::symlink_metadata(canonical.join("drive_c"))
+        .is_ok_and(|m| m.is_dir() && !m.file_type().is_symlink())
+        && fs::symlink_metadata(canonical.join("system.reg"))
+            .is_ok_and(|m| m.is_file() && !m.file_type().is_symlink());
+    let empty=allow_empty && fs::read_dir(&canonical).map_err(|e|e.to_string())?.next().transpose().map_err(|e|e.to_string())?.is_none();
+    if !initialized && !empty {
+        return Err(if allow_empty {
+            "Selecione um prefixo com drive_c e system.reg ou uma pasta vazia para criar um novo ao jogar. A pasta escolhida contém outros arquivos.".into()
+        } else {"Selecione o prefixo Wine/Proton que contém drive_c e system.reg.".into()});
     }
     if super::game_execution::prefix_in_use(&canonical) {
         return Err("Encerre os programas deste prefixo antes de alterá-lo.".into());
@@ -875,7 +905,10 @@ fn update_at(index: &Path, settings: EntrySettings) -> Result<InstalledEntry, St
 
             if let Some(prefix) = settings.prefix.as_deref() {
                 if prefix != entry.prefix {
-                    entry.prefix = validate_selected_prefix(prefix)?
+                    if super::game_execution::prefix_in_use(Path::new(&entry.prefix)) {
+                        return Err("Encerre os programas do prefixo atual antes de alterá-lo.".into());
+                    }
+                    entry.prefix = validate_replacement_prefix(prefix)?
                         .to_string_lossy()
                         .into_owned();
                 }
@@ -931,6 +964,7 @@ fn record_executable_choices(record: &InstallationRecord, path: &str) -> Vec<Ins
         let mut entry = template.clone();
         entry.path = hidden.source.clone();
         entry.executable = hidden.source.clone();
+        entry.recommended = false;
         entry.discovery_source = None;
         entry.launch_arguments.clear();
         choices.push(entry);
@@ -1019,7 +1053,24 @@ fn add_at(
     }
     let executable = super::game_installation::validate_executable(&request.executable)?;
     let proton = super::game_installation::validate_proton(&request.proton)?;
-    let directory = super::game_installation::absolute(&request.directory)?;
+    let mut directory = super::game_installation::absolute(&request.directory)?;
+    // The add form may point at an older installation's prefix subfolder.
+    // Resolve its recorded owner before applying new-destination validation.
+    if directory.is_dir() && !directory.join("installation.json").exists() {
+        let selected = directory.canonicalize().map_err(|e|e.to_string())?;
+        if let Some(parent) = selected.parent() {
+            let manifest = parent.join("installation.json");
+            if manifest.is_file() {
+                let record: InstallationRecord = serde_json::from_slice(&fs::read(&manifest).map_err(|e|e.to_string())?)
+                    .map_err(|e|format!("Registro de instalação inválido: {e}"))?;
+                if Path::new(&record.directory).canonicalize().ok().as_deref() == Some(parent)
+                    && Path::new(&record.prefix).canonicalize().ok().as_ref() == Some(&selected)
+                    && super::installation_layout::prefix_for(parent).canonicalize().ok().as_ref() == Some(&selected) {
+                    directory = parent.to_path_buf();
+                }
+            }
+        }
+    }
     super::installation_layout::check_new_destination(&directory)?;
     fs::create_dir_all(&directory).map_err(|e| e.to_string())?;
     let directory = directory.canonicalize().map_err(|e| e.to_string())?;
@@ -1070,6 +1121,9 @@ fn add_at(
     if let Some(existing) = record.entries.iter().find(|existing|
         Path::new(&existing.executable).canonicalize().ok().as_ref() == Some(&executable)
         && Path::new(&existing.prefix).canonicalize().ok().as_ref() == Some(&prefix)) {
+        let mut roots = destinations(index)?;
+        roots.insert(record.directory.clone());
+        write_json(index, &roots)?;
         return Ok(existing.clone());
     }
     record.entries.push(entry.clone());
@@ -1102,13 +1156,19 @@ fn register_copy_at(index:&Path,entry:InstalledEntry,directory:&Path)->Result<In
     let directory=directory.canonicalize().map_err(|e|e.to_string())?;
     let prefix=Path::new(&entry.prefix).canonicalize().map_err(|e|e.to_string())?;
     let executable=Path::new(&entry.executable).canonicalize().map_err(|e|e.to_string())?;
-    if !prefix.starts_with(&directory)||!executable.starts_with(&prefix)||directory.join("installation.json").exists(){return Err("Destino da cópia inválido ou já registrado.".into());}
-    let record=InstallationRecord {
+    let shared_external = fs::read(directory.join("copy.json")).ok()
+        .and_then(|bytes|serde_json::from_slice::<serde_json::Value>(&bytes).ok())
+        .and_then(|value|value["shared_game_directory"].as_str().map(PathBuf::from))
+        .and_then(|path|path.canonicalize().ok())
+        .is_some_and(|root|executable.starts_with(root));
+    if !prefix.starts_with(&directory)||(!executable.starts_with(&prefix)&&!shared_external)||!executable.is_file()||directory.join("installation.json").exists(){return Err("Destino da cópia inválido ou já registrado.".into());}
+    let mut record=InstallationRecord {
         name:entry.name.clone(),directory:directory.to_string_lossy().into_owned(),prefix:entry.prefix.clone(),proton:entry.proton.clone(),installer:String::new(),cover_url:entry.cover_url.clone(),
         entries:vec![entry.clone()],selected_executable:Some(entry.executable.clone()),
         overrides:vec![EntryOverride{cover_url:entry.cover_url.clone(),advanced:Some(entry.advanced.clone()),prefix:None,source:entry.path.clone(),name:entry.name.clone(),proton:entry.proton.clone(),executable:entry.executable.clone()}],
         baseline:vec![],known_shortcuts:Some(vec![]),launcher_games:vec![],install_shortcuts:Some(vec![]),profile_kind:Default::default(),
     };
+    initialize_copy_shortcuts(&mut record);
     write_json(&directory.join("installation.json"),&record)?;
     let mut roots=destinations(&index)?;roots.insert(record.directory.clone());write_json(&index,&roots)?;
     Ok(entry)
@@ -1280,7 +1340,23 @@ impl Default for UninstallOptions {
     fn default() -> Self { UninstallOptions { remove_prefix: true, remove_settings: true } }
 }
 pub fn uninstall(path: String, options: UninstallOptions) -> Result<(), String> {
-    uninstall_with_shortcuts_at(&library_file()?, &path, &super::pelinstall::shortcut_directories(), options)
+    let index=library_file()?;
+    // Keep metadata for entries whose executable is missing as well: their logs
+    // and saved profiles still belong to the prefix being uninstalled.
+    let mut entries=Vec::new();
+    for directory in destinations(&index)? {
+        let manifest=Path::new(&directory).join("installation.json");
+        if !manifest.is_file(){continue;}
+        let record:InstallationRecord=serde_json::from_slice(&fs::read(&manifest).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;
+        entries.extend(record.entries);
+    }
+    let selected=entries.iter().find(|entry|entry.path==path).ok_or("Jogo não registrado.")?;
+    let targets=if selected.profile.is_some(){vec![selected.clone()]}else{entries.iter().filter(|entry|entry.prefix==selected.prefix || entry.profile.as_ref().is_some_and(|profile|profile.base==selected.prefix)).cloned().collect()};
+    if options.remove_prefix {crate::commands::game_data_cleanup::preserve_backups(&targets)?;}
+    let cleanup=if options.remove_settings {Some(crate::commands::game_data_cleanup::Cleanup::prepare(targets,options.remove_prefix)?)}else{None};
+    uninstall_with_shortcuts_at(&index, &path, &super::pelinstall::shortcut_directories(), options)?;
+    if let Some(cleanup)=cleanup{cleanup.finish()?;}
+    Ok(())
 }
 fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &[PathBuf], options: UninstallOptions) -> Result<(), String> {
     // A launcher game's profile: only the profile goes, never the launcher's prefix.
@@ -1379,7 +1455,7 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
                     return Err("Não é permitido remover um prefixo redirecionado.".into());
                 }
                 if !managed
-                    && validate_selected_prefix(
+                    && validate_replacement_prefix(
                         &record
                             .entries
                             .iter()
@@ -1572,6 +1648,45 @@ mod tests {
         assert!(!old.exists(), "sem sobras do formato antigo");
         fs::remove_dir_all(base).unwrap();
     }
+    #[test]
+    fn replacement_prefix_accepts_empty_or_initialized_without_touching_files() {
+        let base=std::env::temp_dir().join(format!("peligames-prefix-selection-{}",uuid::Uuid::new_v4()));
+        fs::create_dir_all(&base).unwrap();let empty=base.join("fresh");fs::create_dir(&empty).unwrap();
+        assert_eq!(validate_replacement_prefix(empty.to_str().unwrap()).unwrap(),empty.canonicalize().unwrap());
+        assert!(fs::read_dir(&empty).unwrap().next().is_none());
+        assert!(validate_selected_prefix(empty.to_str().unwrap()).is_err(),"existing-prefix imports remain strict");
+        let existing=base.join("existing");fs::create_dir_all(existing.join("drive_c")).unwrap();fs::write(existing.join("system.reg"),b"registry").unwrap();
+        assert_eq!(validate_replacement_prefix(existing.to_str().unwrap()).unwrap(),existing.canonicalize().unwrap());
+        let invalid=base.join("other-files");fs::create_dir(&invalid).unwrap();fs::write(invalid.join("save.dat"),b"keep").unwrap();
+        assert!(validate_replacement_prefix(invalid.to_str().unwrap()).is_err());
+        assert_eq!(fs::read(invalid.join("save.dat")).unwrap(),b"keep");
+        assert!(validate_replacement_prefix("/").is_err());
+        #[cfg(unix)] {let link=base.join("link");std::os::unix::fs::symlink(&empty,&link).unwrap();assert!(validate_replacement_prefix(link.to_str().unwrap()).is_err());}
+        fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
+    fn switching_to_empty_prefix_preserves_external_executable_and_original_prefix() {
+        use std::os::unix::fs::PermissionsExt;
+        let base=std::env::temp_dir().join(format!("peligames-prefix-switch-{}",uuid::Uuid::new_v4()));
+        fs::create_dir_all(&base).unwrap();let index=base.join("library.json");
+        let proton=base.join("Proton");fs::create_dir(&proton).unwrap();fs::write(proton.join("proton"),b"#!/bin/sh\n").unwrap();fs::set_permissions(proton.join("proton"),fs::Permissions::from_mode(0o755)).unwrap();
+        let exe=base.join("external-game.exe");fs::write(&exe,b"MZfixture").unwrap();
+        let old=base.join("original");let entry=add_at(&index,super::super::game_installation::InstallationRequest{name:"Game".into(),directory:old.to_string_lossy().into_owned(),executable:exe.to_string_lossy().into_owned(),proton:proton.to_string_lossy().into_owned(),cover_url:None}).unwrap();
+        fs::create_dir(old.join("drive_c")).unwrap();fs::write(old.join("system.reg"),b"old registry").unwrap();
+        let fresh=base.join("fresh");fs::create_dir(&fresh).unwrap();
+        let request=|prefix:&Path|EntrySettings{path:entry.path.clone(),name:entry.name.clone(),executable:entry.executable.clone(),proton:entry.proton.clone(),prefix:Some(prefix.to_string_lossy().into_owned()),advanced:None};
+        let updated=update_at(&index,request(&fresh)).unwrap();
+        assert_eq!(updated.executable,entry.executable);assert_eq!(updated.path,entry.path);assert_eq!(Path::new(&updated.prefix),fresh);
+        assert!(fs::read_dir(&fresh).unwrap().next().is_none(),"saving does not initialize Wine");
+        let rescanned=list_at(&index,true).unwrap();assert_eq!(rescanned.len(),1);assert_eq!(rescanned[0].prefix,updated.prefix);
+        assert_eq!(fs::read(old.join("system.reg")).unwrap(),b"old registry");
+        assert_eq!(fs::read(&exe).unwrap(),b"MZfixture");
+        assert_eq!(update_at(&index,request(&old)).unwrap().prefix,old.to_string_lossy());
+        update_at(&index,request(&fresh)).unwrap();
+        uninstall_with_shortcuts_at(&index,&entry.path,&[],UninstallOptions::default()).unwrap();
+        assert!(!fresh.exists());assert!(old.join("system.reg").is_file());assert!(exe.is_file());
+        fs::remove_dir_all(base).unwrap();
+    }
     /// Like Heroic: the prefix and the settings/logs are removed separately.
     #[test]
     fn uninstall_options_keep_the_prefix_or_the_settings() {
@@ -1672,6 +1787,60 @@ mod tests {
         bytes
     }
     #[test]
+    fn external_executable_copy_registration_and_removal_preserve_game_files() {
+        let root=std::env::temp_dir().join(format!("peligames-external-registration-{}",uuid::Uuid::new_v4()));
+        let folder=root.join("Copy");let prefix=folder.clone();let game=root.join("ExternalGame");
+        fs::create_dir_all(prefix.join("drive_c")).unwrap();fs::create_dir_all(&game).unwrap();
+        fs::write(folder.join(super::super::installation_layout::OWNED_MARKER), b"PeliGames\n").unwrap();
+        let executable=game.join("Game.exe");fs::write(&executable,b"MZ").unwrap();
+        let mut copied=entry(&executable,None);copied.path=format!("peligames:{}",uuid::Uuid::new_v4());
+        copied.prefix=prefix.to_string_lossy().into_owned();copied.directory=game.to_string_lossy().into_owned();
+        let index=root.join("destinations.json");
+        assert!(register_copy_at(&index,copied.clone(),&folder).is_err(),"external files require an explicit shared reference");
+        write_json(&folder.join("copy.json"),&serde_json::json!({"version":2,"kind":"reflink","source":root.join("Original"),"shared_game_directory":game})).unwrap();
+        register_copy_at(&index,copied.clone(),&folder).unwrap();
+        uninstall_with_shortcuts_at(&index,&copied.path,&[],UninstallOptions {remove_prefix:true,remove_settings:true}).unwrap();
+        assert!(executable.is_file(),"removing the copied prefix must never delete the external game");
+        assert!(!prefix.exists());
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn copy_shortcuts_are_inherited_not_new_but_later_installations_are_detected() {
+        let base=std::env::temp_dir().join(format!("peligames-copy-shortcuts-{}",uuid::Uuid::new_v4()));
+        fs::create_dir_all(&base).unwrap();
+        let index=base.join("destinations.json");
+        for legacy in [false,true] {
+            let folder=base.join(if legacy {"Existing copy"} else {"New copy"});
+            let drive=folder.join("prefix/drive_c");
+            let desktop=drive.join("users/steamuser/Desktop");
+            fs::create_dir_all(&desktop).unwrap();
+            let main=drive.join("Game.exe");
+            fs::write(&main,b"MZ").unwrap();
+            fs::write(drive.join("Dashboard.exe"),b"MZ").unwrap();
+            fs::write(desktop.join("Dashboard.lnk"),shortcut("C:\\Dashboard.exe","C:\\")).unwrap();
+            let mut copied=entry(&main,None);
+            copied.path=format!("peligames:{}",uuid::Uuid::new_v4());
+            copied.name="Copy".into();copied.prefix=folder.join("prefix").to_string_lossy().into_owned();
+            copied.directory=drive.to_string_lossy().into_owned();
+            register_copy_at(&index,copied.clone(),&folder).unwrap();
+            if legacy {
+                let manifest=folder.join("installation.json");
+                let mut saved:InstallationRecord=serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+                saved.known_shortcuts=Some(vec![]);saved.install_shortcuts=Some(vec![]);
+                write_json(&manifest,&saved).unwrap();
+                write_json(&folder.join("copy.json"),&serde_json::json!({"kind":"reflink"})).unwrap();
+            }
+            assert!(new_launcher_games_at(&index,&copied.path).unwrap().is_empty(),"inherited Dashboard is not a new installation");
+            fs::write(drive.join("NewGame.exe"),b"MZ").unwrap();
+            fs::write(desktop.join("New Game.lnk"),shortcut("C:\\NewGame.exe","C:\\")).unwrap();
+            let found=new_launcher_games_at(&index,&copied.path).unwrap();
+            assert_eq!(found.len(),1);
+            assert!(found[0].executable.ends_with("NewGame.exe"));
+            assert!(new_launcher_games_at(&index,&copied.path).unwrap().is_empty());
+        }
+        fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
     fn launcher_games_are_offered_once_and_added_with_their_shortcut_name() {
         let base = std::env::temp_dir().join(format!("peligames-launcher-{}", uuid::Uuid::new_v4()));
         let drive = base.join("prefix/drive_c");
@@ -1767,7 +1936,7 @@ mod tests {
         let fake = |base: &Path, profiles: &Path, _kind| {
             let root = profiles.join(uuid::Uuid::new_v4().to_string());
             fs::create_dir_all(root.join("prefix")).unwrap();
-            Ok(super::super::game_profiles::GameProfile { kind: super::super::game_profiles::ProfileKind::Reflink, base: base.to_string_lossy().into_owned(), root: root.to_string_lossy().into_owned() })
+            Ok(super::super::game_profiles::GameProfile { kind: super::super::game_profiles::ProfileKind::Reflink, base: base.to_string_lossy().into_owned(), root: root.to_string_lossy().into_owned(), flat_copy: false })
         };
         let added = add_shortcut_to_library_at(&index, &path, &overwatch, fake).unwrap();
         assert_eq!((added.name.as_str(), added.launch_arguments.clone()), ("Overwatch", vec!["--exec=launch Pro".to_string()]));
@@ -1815,6 +1984,21 @@ mod tests {
         fs::remove_dir_all(base).unwrap();
     }
     #[test]
+    fn hidden_executables_do_not_inherit_the_main_recommendation() {
+        let base=std::env::temp_dir().join(format!("peligames-choice-recommendation-{}",uuid::Uuid::new_v4()));
+        let game=base.join("prefix/drive_c/Game/Game.exe");let backup=game.parent().unwrap().join("bkp/Game.exe");
+        fs::create_dir_all(backup.parent().unwrap()).unwrap();fs::write(&game,b"MZ").unwrap();fs::write(&backup,b"MZ").unwrap();
+        let mut saved=record(&base,vec![]);let mut main=entry(&game,Some("Atalho do Windows"));main.recommended=true;
+        saved.entries=vec![main];
+        saved.overrides.push(EntryOverride{source:backup.to_string_lossy().into_owned(),name:String::new(),executable:String::new(),proton:String::new(),prefix:None,advanced:None,cover_url:None});
+        let choices=record_executable_choices(&saved,&game.to_string_lossy());
+        assert_eq!(choices.len(),2);
+        assert_eq!(choices.iter().filter(|entry|entry.recommended).count(),1);
+        let alternative=choices.iter().find(|entry|entry.executable==backup.to_string_lossy()).unwrap();
+        assert!(!alternative.recommended);assert!(alternative.discovery_source.is_none());
+        fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
     fn selected_executable_survives_new_components_and_legacy_reload() {
         let base = std::env::temp_dir().join(format!("peligames-choice-{}", uuid::Uuid::new_v4()));
         let mut saved = record(&base, vec![]);
@@ -1835,7 +2019,8 @@ mod tests {
             fs::create_dir_all(&tools).unwrap();
             for file in ["DW20.EXE", "DWTRIG20.EXE"] { fs::write(tools.join(file), b"MZ").unwrap(); }
         }
-        // Simulate the old manifest and the polluted entries it stored.
+        // Older records kept only the chosen override, without hidden alternatives.
+        saved.overrides.retain(|item| !item.executable.is_empty());
         saved.selected_executable = None;
         saved.entries.push(entry(&client, None));
         write_json(&base.join("installation.json"), &saved).unwrap();
@@ -1907,3 +2092,37 @@ mod tests {
 
 #[path="library_recovery.rs"]
 pub mod recovery;
+
+#[cfg(test)]
+mod readd_prefix_tests {
+    use super::*;
+    use std::os::unix::fs::PermissionsExt;
+    #[test]
+    fn readding_a_legacy_prefix_restores_the_index_without_nesting_or_replacing_files() {
+        let root=std::env::temp_dir().join(format!("peligames-readd-prefix-{}",uuid::Uuid::new_v4()));
+        let index=root.join("library.json");let runner=root.join("Proton");
+        fs::create_dir_all(&runner).unwrap();fs::write(runner.join("proton"),"#!/bin/sh\n").unwrap();
+        fs::set_permissions(runner.join("proton"),fs::Permissions::from_mode(0o755)).unwrap();
+        let owner=root.join("Game");let prefix=owner.join("prefix");let exe=prefix.join("drive_c/Games/Game.exe");
+        fs::create_dir_all(exe.parent().unwrap()).unwrap();fs::write(&exe,b"MZfixture").unwrap();
+        fs::write(prefix.join("system.reg"),b"original registry").unwrap();
+        let request=|directory: &Path|super::super::game_installation::InstallationRequest{name:"Game".into(),directory:directory.to_string_lossy().into_owned(),executable:exe.to_string_lossy().into_owned(),proton:runner.to_string_lossy().into_owned(),cover_url:None};
+        let first=add_at(&index,request(&owner)).unwrap();
+        let original=fs::read(owner.join("installation.json")).unwrap();
+        fs::remove_file(&index).unwrap();
+        let restored=add_at(&index,request(&prefix)).unwrap();
+        assert_eq!(restored.path,first.path);
+        assert_eq!(restored.prefix,prefix.to_string_lossy());
+        assert_eq!(destinations(&index).unwrap(),BTreeSet::from([owner.to_string_lossy().into_owned()]));
+        assert_eq!(list_at(&index,false).unwrap().len(),1);
+        assert_eq!(fs::read(owner.join("installation.json")).unwrap(),original);
+        assert_eq!(fs::read(prefix.join("system.reg")).unwrap(),b"original registry");
+        assert!(!prefix.join("prefix").exists());assert!(!prefix.join("installation.json").exists());
+        // An unregistered prefix remains protected against accidental ownership.
+        let foreign=root.join("foreign");fs::create_dir_all(foreign.join("drive_c")).unwrap();
+        fs::write(foreign.join("system.reg"),b"other").unwrap();
+        assert!(add_at(&index,request(&foreign)).is_err());
+        assert!(!foreign.join(".peligames-prefix").exists());
+        fs::remove_dir_all(root).unwrap();
+    }
+}

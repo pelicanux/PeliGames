@@ -1,0 +1,114 @@
+/* Soft gradients render on a small canvas; no full-window blur or particle DOM. */
+:root[data-interface-theme="neon-wave"] body { background:transparent; }
+:root[data-interface-theme="neon-wave"][data-appearance] .app-wrapper,
+:root[data-interface-theme="neon-wave"][data-appearance] .app-wrapper.modern-ui { background:rgba(8,9,24,.22); backdrop-filter:none; -webkit-backdrop-filter:none; }
+:root[data-interface-theme="neon-wave"] .modern-sidebar { background:rgba(12,12,29,.48); }
+:root[data-interface-theme="neon-wave"] .app-titlebar { border-bottom-color:rgba(169,110,255,.18)!important; }
+.neon-wave-background { position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;border-radius:16px; }
+:root .interface-theme-sample.neon-wave { overflow:hidden;position:relative;background:radial-gradient(ellipse at 20% 70%,#7d206d,transparent 65%),radial-gradient(ellipse at 80% 30%,#146f88,transparent 70%),#14152f;border:1px solid rgba(179,118,255,.3);color:#f3dbff; }
+.neon-wave-sample-title { font-size:17px;font-weight:700;letter-spacing:.15em; }.neon-wave-sample-title small{font-size:24px;color:#79d8e9;margin-left:8px;}
+.neon-wave-preferences .neon-wave-option { display:flex;align-items:center;gap:10px;margin:14px 0 8px;cursor:pointer; }
+.neon-wave-preferences .neon-wave-option input { width:17px;height:17px;accent-color:var(--accent); }
+.neon-wave-preferences>small { display:block;color:var(--modern-muted);line-height:1.6; }
+.neon-wave-intensity { display:flex;justify-content:space-between;margin:20px 0 8px; }.neon-wave-preferences input[type="range"]{width:100%;accent-color:var(--accent);}
+.neon-wave-audio-status { font-size:12px;color:var(--accent-soft); }
+
+@font-face {
+  font-family:"Oxanium";
+  src:url('/fonts/oxanium/Oxanium-Variable.ttf') format('truetype');
+  font-style:normal;
+  font-weight:200 800;
+  font-display:swap;
+}
+
+/* Synthwave skin: the library grid, cover sizes and navigation stay in place. */
+:root[data-interface-theme="neon-wave"] {
+  --wave-pink:#ff80c8;
+  --wave-cyan:#7fe5ed;
+  --wave-line:rgba(188,126,243,.3);
+}
+:root[data-interface-theme="neon-wave"] .modern-ui :is(h1,h2,h3,.modern-nav-label,.modern-card-caption p,.modern-continue-text strong,.modern-details-title,.modern-mini-btn,.modern-lib-button,.modern-lib-icon) {
+  font-family:"Oxanium",system-ui,sans-serif;
+  font-synthesis:none;
+}
+:root[data-interface-theme="neon-wave"] .modern-section-title h2 {
+  font-weight:650;
+  letter-spacing:.025em;
+  color:#f9ddf6;
+  background:none;
+  -webkit-text-fill-color:currentColor;
+  text-shadow:0 0 16px rgba(238,104,203,.2);
+}
+:root[data-interface-theme="neon-wave"] .modern-section-title small {
+  color:#aaa9c5;
+  font-variant-numeric:tabular-nums;
+}
+:root[data-interface-theme="neon-wave"] .modern-grid-container .library-game-card,
+:root[data-interface-theme="neon-wave"] .modern-continue-card {
+  border-radius:12px 5px 12px 5px !important;
+  border:1px solid var(--wave-line) !important;
+  border-top-color:rgba(255,128,200,.5) !important;
+  border-bottom-color:rgba(127,229,237,.35) !important;
+  box-shadow:0 8px 20px rgba(3,3,16,.32),0 1px 0 rgba(127,229,237,.1);
+}
+:root[data-interface-theme="neon-wave"] .modern-grid-container .library-game-card:not(.is-away):is(:hover,:focus-within),
+:root[data-interface-theme="neon-wave"] .modern-continue-card:is(:hover,:focus-visible) {
+  border-color:var(--wave-pink) !important;
+  border-bottom-color:var(--wave-cyan) !important;
+  box-shadow:0 0 0 1px rgba(255,128,200,.14),0 0 18px rgba(190,76,219,.21),0 7px 20px rgba(2,3,14,.42);
+}
+:root[data-interface-theme="neon-wave"] .modern-card-caption p {
+  color:#eae0f5;
+  font-weight:600;
+  letter-spacing:.015em;
+}
+:root[data-interface-theme="neon-wave"] .modern-card-caption small { color:#a8a3bd; }
+:root[data-interface-theme="neon-wave"] .modern-ui :is(.modern-card-store,.game-platform-badge) {
+  border:1px solid rgba(156,131,199,.3);
+  background:rgba(12,10,29,.88);
+  border-radius:5px;
+}
+:root[data-interface-theme="neon-wave"] .modern-ui :is(.modern-card-play,.modern-continue-play):not(.running):not(.preparing) {
+  border-radius:9px;
+  background:linear-gradient(145deg,#a6f4f1,#56c8e6);
+  color:#111329;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 3px 0 #17435b,0 0 12px rgba(74,202,227,.24);
+}
+:root[data-interface-theme="neon-wave"] .modern-ui :is(.modern-card-play,.modern-continue-play):not(.running):not(.preparing):is(:hover,:focus-visible) {
+  background:linear-gradient(145deg,#e1ffff,#84e9f0);
+  color:#111329;
+}
+:root[data-interface-theme="neon-wave"] .modern-ui .modern-card-fav {
+  border-radius:8px;
+  color:#ffacda;
+  background:rgba(25,13,35,.88);
+  border-color:rgba(255,128,200,.4);
+}
+:root[data-interface-theme="neon-wave"] .modern-ui .modern-nav[aria-current="page"] {
+  background:linear-gradient(100deg,rgba(180,75,204,.24),rgba(72,131,182,.12));
+  border-color:rgba(205,125,239,.28);
+}
+:root[data-interface-theme="neon-wave"] .modern-ui .modern-nav[aria-current="page"] .modern-nav-icon {
+  border-radius:9px 4px 9px 4px;
+  background:linear-gradient(140deg,#8c58ca,#3d3f85);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 2px #111329,0 0 0 3px rgba(255,128,200,.55);
+  color:#ffe2f5;
+}
+:root[data-interface-theme="neon-wave"] .modern-ui .modern-lib-toolbar :is(.modern-lib-search,.modern-lib-icon,.modern-lib-view,.modern-lib-button) {
+  border-color:rgba(170,132,209,.3);
+  background:rgba(17,15,36,.66);
+  border-radius:10px;
+}
+:root[data-interface-theme="neon-wave"] .modern-ui :is(.modern-lib-button.primary):not(:disabled) {
+  border:1px solid rgba(241,163,245,.45);
+  background:linear-gradient(150deg,#6d3f8d,#452958) !important;
+  color:#ffe9fb;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 2px 0 rgba(14,10,30,.8) !important;
+}
+:root[data-interface-theme="neon-wave"] .modern-ui :is(.modern-nav-icon,.modern-card-play,.modern-continue-play) svg { stroke-linejoin:miter; }
+:root[data-interface-theme="neon-wave"] .modern-ui .modern-tabs [role="tab"][aria-selected="true"] {
+  color:#ffd2ef;
+  border-bottom-color:var(--wave-pink);
+}
+:root[data-interface-theme="neon-wave"] .performance-mode .modern-grid-container .library-game-card,
+:root[data-interface-theme="neon-wave"] .performance-mode .modern-continue-card { box-shadow:none; }

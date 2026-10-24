@@ -1,6 +1,6 @@
 import {GameSaveStatusProvider} from "../GameSaveStatus";
 import { CatalogNavigationContext } from "./CatalogNavigationContext";
-import { HoverTooltip } from "../HoverTooltip";
+import {GameDetailsTabs} from "./GameDetailsTabs";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 export interface ModernTab { id: string; label: string; content: ReactNode; count?: number; disabled?: boolean; disabledHint?: string }
@@ -55,7 +55,9 @@ export function ModernGameDetails({ artwork, artSharp = false, cover, eyebrow, t
   const [tab, setTab] = useState(tabs[0]?.id);
   useEffect(() => { setTab(tabs[0]?.id); }, [resetKey]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (requestedTab && tabs.some(item => item.id === requestedTab)) { setTab(requestedTab); onTabChange?.(requestedTab); } }, [requestedTab, resetKey]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (tabRequest?.revision && tabs.some(item => item.id === tabRequest.tab)) { setTab(tabRequest.tab); onTabChange?.(tabRequest.tab); } }, [tabRequest]); // eslint-disable-line react-hooks/exhaustive-deps
+  // A navigation request is identified by its values. The parent recreates the
+  // object on render; its identity must not override later tab selections.
+  useEffect(() => { if (tabRequest?.revision && tabs.some(item => item.id === tabRequest.tab)) { setTab(tabRequest.tab); onTabChange?.(tabRequest.tab); } }, [tabRequest?.tab, tabRequest?.revision, resetKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const current = tabs.find(item => !item.disabled && item.id === (activeTab ?? tab)) ?? tabs.find(item => !item.disabled);
   return <GameSaveStatusProvider key={resetKey}><section ref={frame} className={`modern-details${contentView ? " modern-details-secondary" : ""}${catalog ? " modern-details-browsing" : ""}${tabs[0]?.id === "installation" ? " modern-details-installation" : ""}`} aria-label={typeof title === "string" ? title : undefined}>
     <div className={`modern-details-art${artSharp ? " sharp" : ""}`} style={{
@@ -75,11 +77,7 @@ export function ModernGameDetails({ artwork, artSharp = false, cover, eyebrow, t
       </div>
       {actions && <div className="modern-details-actions" hidden={Boolean(catalog)}>{actions}</div>}
     </div>}
-    {!catalog && tabs.length > 1 && <div className="modern-tabs" role="tablist">
-      {tabs.map(item => item.disabled ? <HoverTooltip key={item.id} text={item.disabledHint || "Em desenvolvimento"}><button type="button" role="tab" disabled aria-selected={false} style={{opacity:0.45,cursor:"not-allowed"}}>{item.label}</button></HoverTooltip> : <button type="button" key={item.id} role="tab" aria-selected={current?.id === item.id} onClick={() => { setTab(item.id); onTabChange?.(item.id); }}>
-        {item.label}{item.count ? <span className="modern-tab-count">{item.count}</span> : null}
-      </button>)}
-    </div>}
+    {!catalog && tabs.length > 1 && <GameDetailsTabs tabs={tabs} activeId={current?.id} onChange={id=>{setTab(id);onTabChange?.(id);}}/>}
     {catalog ? <CatalogNavigationContext.Provider value={navigationHost}><div className="modern-catalog-scroll modern-details-catalog" data-scrollbar-persistent="true">{catalog}</div></CatalogNavigationContext.Provider> : <div className="modern-tab-body" role={tabs.length > 1 ? "tabpanel" : undefined}>{current?.content}</div>}
     </>}
   </section></GameSaveStatusProvider>;

@@ -1,3 +1,4 @@
+import {notifyError} from "../services/notifications";
 import {LibraryRecoveryDialog} from "./LibraryRecoveryDialog";
 import { sameGameInstallation } from "../services/integrationGameIdentity";
 import { GameBannerImage } from "./GameBannerImage";
@@ -373,8 +374,8 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const coverPress = useRef<{ key: string; startedAt: number } | null>(null);
   const launchBlocked = useRef(coverHoldBlocked ?? coverActionsBlocked);
   launchBlocked.current = coverHoldBlocked ?? coverActionsBlocked;
-  const runningSnapshot = useRef({ paths: runningGamePaths, path: runningGamePath, games: managedLibrary?.games });
-  runningSnapshot.current = { paths: runningGamePaths, path: runningGamePath, games: managedLibrary?.games };
+  const runningSnapshot = useRef({ paths: runningGamePaths, path: runningGamePath, games: managedLibrary?.games ?? supplementalGames });
+  runningSnapshot.current = { paths: runningGamePaths, path: runningGamePath, games: managedLibrary?.games ?? supplementalGames };
   const isRunning = (game: GameInfo) => runningSnapshot.current.paths.includes(game.path) || game.path === runningSnapshot.current.path || Boolean(runningSnapshot.current.games?.find(entry => entry.path === game.path && entry.launcher === game.launcher)?.nexus_running);
   const launchFromHold = useRef(onCoverAction);
   launchFromHold.current = onCoverAction;
@@ -494,8 +495,21 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     const when = days < 0 ? "" : days === 0 ? t("modern", "playedToday") : days === 1 ? t("modern", "playedYesterday") : t("modern", "playedDaysAgo").replace("{n}", String(days));
     return [when, formatPlaytime(record.minutes)].filter(Boolean).join(" · ");
   };
-  const isPreparing = (game: GameInfo) => (game.nexus_starting || (game.path === startingGamePath || startingGamePaths.includes(game.path))) && !(game.nexus_running || (game.path === runningGamePath || runningGamePaths.includes(game.path)));
-  const runningBadge = (game: GameInfo) => (game.nexus_running || (game.path === runningGamePath || runningGamePaths.includes(game.path))) && <span className="library-running-badge" role="status"><i aria-hidden="true" />{t("gameExecution", "running")}</span>;
+  const [coverStarts,setCoverStarts]=useState<Set<string>>(()=>new Set());
+  const coverStartLock=useRef(new Set<string>());
+  const isPreparing = (game: GameInfo) => Boolean(coverStarts.has(game.path)||game.nexus_starting||game.path===startingGamePath||startingGamePaths.includes(game.path))&&!isRunning(game);
+  const coverPlay = async(game:GameInfo)=>{
+    if(coverStartLock.current.has(game.path)||isPreparing(game))return;
+    if(isRunning(game)){await onCoverAction("stop",game);return;}
+    if(coverActionsBlocked)return;
+    coverStartLock.current.add(game.path);setCoverStarts(new Set(coverStartLock.current));
+    try{await onCoverAction("start",game);}catch(error){notifyError(t("gameExecution","start"),String(error));}
+    finally{coverStartLock.current.delete(game.path);setCoverStarts(new Set(coverStartLock.current));}
+  };
+  const runningBadge = (game: GameInfo) => (isRunning(game)||isPreparing(game))&&<>
+    {isPreparing(game)&&<span className="cover-preparation-glow" aria-hidden="true"/>}
+    <span className={`library-running-badge${isPreparing(game)?" library-preparing-badge":""}`} role="status"><i aria-hidden="true"/>{t("gameExecution",isPreparing(game)?"preparing":"running")}</span>
+  </>;
   const renderCardContent = (game: GameInfo) => {
     if (brokenCards.has(gameViewKey(game))) return null;
     // List view: a separate "selected" row. Grid view keeps the same card and image
@@ -654,9 +668,9 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         <button type="button" className={`modern-card-fav${favorites.has(gameViewKey(game)) ? " on" : ""}`} aria-pressed={favorites.has(gameViewKey(game))}
           aria-label={t("gameGrid", favorites.has(gameViewKey(game)) ? "unfavorite" : "favorite")} title={t("gameGrid", favorites.has(gameViewKey(game)) ? "unfavorite" : "favorite")}
           onPointerDown={event => event.stopPropagation()} onClick={event => { event.stopPropagation(); toggleFavorite(game); }}><MenuIcon name="heart" /></button>
-        {launchable(game) && <button type="button" className={`modern-card-play${isRunning(game) ? " running" : ""}`} disabled={!isRunning(game) && coverActionsBlocked}
-          aria-label={isRunning(game) ? t("gameExecution", "cancel") : t("gameExecution", "start")} title={isRunning(game) ? t("gameExecution", "cancel") : t("gameExecution", "start")}
-          onPointerDown={event => event.stopPropagation()} onClick={event => { event.stopPropagation(); void onCoverAction(isRunning(game) ? "stop" : "start", game); }}>
+        {launchable(game) && <button type="button" className={`modern-card-play${isRunning(game) ? " running" : ""}${isPreparing(game)?" preparing":""}`} aria-busy={isPreparing(game)} disabled={isPreparing(game)||(!isRunning(game) && coverActionsBlocked)}
+          aria-label={t("gameExecution",isPreparing(game)?"preparing":isRunning(game)?"cancel":"start")} title={t("gameExecution",isPreparing(game)?"preparing":isRunning(game)?"cancel":"start")}
+          onPointerDown={event => event.stopPropagation()} onClick={event => { event.stopPropagation(); void coverPlay(game).catch(error=>notifyError(t("gameExecution","cancel"),String(error))); }}>
           <MenuIcon name={isRunning(game) ? "stop" : "play"} /></button>}
       </>
       <div className="game-list-details"><span>{game.name}</span></div>
@@ -670,7 +684,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       {renderCardContent(game)}
       {!brokenCards.has(gameViewKey(game)) && <div className="modern-card-caption">
         <p>{game.name}</p>
-        <small>{game.nexus_running || (game.path === runningGamePath || runningGamePaths.includes(game.path)) ? t("gameExecution", "running") : playedLabel(game) || (game.launcher === "PeliGames" && game.executable ? game.executable.split(/[\\/]/).pop() : game.library_category === "launchers" ? "Launcher" : game.launcher)}</small>
+        <small>{isPreparing(game)?t("gameExecution","preparing"):isRunning(game) ? t("gameExecution", "running") : playedLabel(game) || (game.launcher === "PeliGames" && game.executable ? game.executable.split(/[\\/]/).pop() : game.library_category === "launchers" ? "Launcher" : game.launcher)}</small>
       </div>}
     </div>
   );
@@ -818,15 +832,16 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
           <div className="modern-section-title"><h2>{t("modern", "continuePlaying")}</h2><small>{t("modern", "recent")}</small></div>
           <div key={cacheScope} className="modern-continue-row">{recentGames.map(game => {
             const cover = !imageErrors.has(game.path) ? game.cover_url : undefined;
-            return <div key={gameViewKey(game)} role="button" tabIndex={0} className="modern-continue-card"
+            return <div key={gameViewKey(game)} role="button" tabIndex={0} className={`modern-continue-card${isPreparing(game)?" is-preparing-game":""}`}
               onClick={() => onSelectGame(game, document.querySelector<HTMLElement>(`[data-cover-key="${CSS.escape(gameViewKey(game))}"] .library-cover-thumbnail`) ?? undefined)}
-              onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); event.currentTarget.click(); } }}>
+              onKeyDown={event => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); event.currentTarget.click(); } }}>
               <GameBannerImage game={game} cover={cover} />
+              {runningBadge(game)}
               <GamePlatformBadge game={game} />
-              {launchable(game) && <button type="button" className={`modern-continue-play${isRunning(game) ? " running" : ""}`} disabled={!isRunning(game) && coverActionsBlocked}
-                aria-label={isRunning(game) ? t("gameExecution", "cancel") : t("gameExecution", "start")} title={isRunning(game) ? t("gameExecution", "cancel") : t("gameExecution", "start")}
-                onClick={event => { event.stopPropagation(); void onCoverAction(isRunning(game) ? "stop" : "start", game); }}><MenuIcon name={isRunning(game) ? "stop" : "play"} /></button>}
-              <div className="modern-continue-text"><strong>{game.name}</strong><small><LauncherIcon launcher={game.launcher} size={12} />{isRunning(game) ? t("gameExecution", "running") : playedLabel(game)}</small></div>
+              {launchable(game) && <button type="button" className={`modern-continue-play${isRunning(game) ? " running" : ""}${isPreparing(game)?" preparing":""}`} aria-busy={isPreparing(game)} disabled={isPreparing(game)||(!isRunning(game) && coverActionsBlocked)}
+                aria-label={t("gameExecution",isPreparing(game)?"preparing":isRunning(game)?"cancel":"start")} title={t("gameExecution",isPreparing(game)?"preparing":isRunning(game)?"cancel":"start")}
+                onClick={event => { event.stopPropagation(); void coverPlay(game).catch(error=>notifyError(t("gameExecution","cancel"),String(error))); }}><MenuIcon name={isRunning(game) ? "stop" : "play"} /></button>}
+              <div className="modern-continue-text"><strong>{game.name}</strong><small><LauncherIcon launcher={game.launcher} size={12} />{isPreparing(game)?t("gameExecution","preparing"):isRunning(game) ? t("gameExecution", "running") : playedLabel(game)}</small></div>
             </div>;
           })}</div>
         </section>}

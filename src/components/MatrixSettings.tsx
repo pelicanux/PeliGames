@@ -1,16 +1,17 @@
 // Settings behind the gear: profile (name, picture), voice and audio
 // (devices, volumes, filters) and account, in the Matrix terminal look.
+import {MatrixShortcutSettings} from "./MatrixShortcutSettings";
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { SelectionMenu } from "./SelectionMenu";
 import { MatrixOwnAvatar, noiseOptions } from "./MatrixUserPanel";
-import { displayName } from "../services/matrixChat";
+import { displayName, setMatrixUserBlocked, useMatrixChat } from "../services/matrixChat";
 import { forgetMatrixAvatar } from "../services/matrixMedia";
 import { setMatrixVoiceControls, useMatrixVoice, type NoiseMode } from "../services/matrixVoice";
 import { setMatrixScreenFit, useMatrixScreenFit, type ScreenFit } from "../services/matrixScreenView";
 
-type Tab = "profile" | "audio" | "screen" | "account";
+type Tab = "profile" | "audio" | "screen" | "shortcuts" | "blocked" | "account";
 type Device = { id: string; name: string };
 const SYSTEM = "__system__";
 
@@ -22,6 +23,14 @@ export function MatrixSettings({ pt, me, names, onClose, onError, onDisconnect, 
   const voice = useMatrixVoice();
   const screenFit = useMatrixScreenFit();
   const [tab, setTab] = useState<Tab>("profile");
+  const chat = useMatrixChat();
+  const [unblocking, setUnblocking] = useState<string | null>(null);
+  const unblock = async (user: string) => {
+    setUnblocking(user);
+    try { await setMatrixUserBlocked(user, false); }
+    catch (error) { onError(error, pt ? "Não foi possível desbloquear." : "Could not unblock."); }
+    finally { setUnblocking(null); }
+  };
   const [name, setName] = useState(displayName(me, names));
   const [saving, setSaving] = useState<"" | "name" | "avatar">("");
   const [notice, setNotice] = useState("");
@@ -70,13 +79,22 @@ export function MatrixSettings({ pt, me, names, onClose, onError, onDisconnect, 
     <span>{label}<b>{value}%</b></span>
     <input type="range" min="0" max="200" step="5" value={value} onChange={event => void change(Number(event.target.value))}/>
   </label>;
-  const tabs: [Tab, string][] = [["profile", pt ? "# perfil" : "# profile"], ["audio", pt ? "# voz e áudio" : "# voice & audio"], ["screen", pt ? "# transmissão" : "# screen"], ["account", pt ? "# conta" : "# account"]];
+  const tabs: [Tab, string][] = [["profile", pt ? "# perfil" : "# profile"], ["audio", pt ? "# voz e áudio" : "# voice & audio"], ["screen", pt ? "# transmissão" : "# screen"], ["shortcuts", pt ? "# atalhos" : "# shortcuts"], ["blocked", pt ? "# bloqueados" : "# blocked"], ["account", pt ? "# conta" : "# account"]];
   return <div className="matrix-settings-overlay" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}
     onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onClose(); } }}>
     <div ref={frame} className="matrix-settings" role="dialog" aria-modal="true" aria-label={pt ? "Configurações" : "Settings"}>
       <header><strong>{pt ? "> configurações" : "> settings"}</strong><button type="button" className="matrix-settings-close" onClick={onClose} aria-label={pt ? "Fechar configurações" : "Close settings"}>[x]</button></header>
       <nav role="tablist">{tabs.map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => { setTab(id); setNotice(""); }}>{label}</button>)}</nav>
       <div className="matrix-settings-body" role="tabpanel">
+        {tab === "shortcuts" && <MatrixShortcutSettings pt={pt}/>}
+        {tab === "blocked" && <div className="matrix-settings-field">
+          <span>{pt ? "> usuários bloqueados" : "> blocked users"}</span>
+          <small>{pt ? "As mensagens de quem você bloqueia somem de todas as salas. A lista fica na sua conta Matrix e vale também no Element." : "Messages from people you block disappear from every room. The list is kept in your Matrix account and also applies in Element."}</small>
+          {chat.ignored.length ? <ul className="matrix-settings-blocked">{chat.ignored.map(user => <li key={user}>
+            <span><b>{displayName(user, chat.names)}</b><code>{user}</code></span>
+            <button type="button" disabled={unblocking === user} onClick={() => void unblock(user)}>{unblocking === user ? (pt ? "[desbloqueando…]" : "[unblocking…]") : (pt ? "[desbloquear]" : "[unblock]")}</button>
+          </li>)}</ul> : <p className="matrix-settings-hint">{pt ? "> ninguém bloqueado" : "> nobody blocked"}</p>}
+        </div>}
         {tab === "profile" && <>
           <div className="matrix-settings-profile">
             <MatrixOwnAvatar user={me} name={displayName(me, names)} version={avatarVersion}/>

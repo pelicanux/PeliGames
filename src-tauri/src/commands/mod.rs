@@ -48,6 +48,7 @@ mod nexus_activation;
 mod nexus_bg3;
 mod nexus_fomod;
 mod nexus_bain;
+mod nexus_crimson;
 pub mod nexus_progress;
 pub mod nexus_loot;
 pub mod nexus_load_order;
@@ -131,3 +132,11 @@ pub mod frame_overlay_runtime;
 
 pub mod credential_storage;
 pub mod game_reset;
+
+pub(crate) mod game_data_cleanup;
+
+pub mod matrix_shortcuts;
+
+pub mod neon_wave;
+
+pub mod openrgb;

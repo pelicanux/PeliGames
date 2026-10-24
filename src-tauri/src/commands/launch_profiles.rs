@@ -206,3 +206,16 @@ pub async fn export_launch_profile(name: String, path: String, advanced: Advance
         save_at(&root, key.to_str().ok_or("Instalação não usa UTF-8.")?, steam_runtime::build_for(&name, &advanced, mods)?)
     }).await.map_err(|e| e.to_string())?
 }
+
+pub(super) fn remove_installation(installation:&Path)->Result<(),String>{
+    let _guard=LOCK.lock().map_err(|e|e.to_string())?;
+    let directory=profiles_directory()?;
+    if !directory.is_dir(){return Ok(());}
+    for entry in fs::read_dir(&directory).map_err(|e|e.to_string())?{
+        let path=entry.map_err(|e|e.to_string())?.path();
+        let Some(id)=path.file_stem().and_then(|s|s.to_str()).filter(|id|steam_runtime::contract::profile_id(id).is_ok()) else{continue};
+        if path.extension().and_then(|s|s.to_str())!=Some("json"){continue;}
+        if let Some(profile)=profile_io::universal(&directory,id)?{if profile.installation.as_deref()==installation.to_str(){fs::remove_file(&path).map_err(|e|e.to_string())?;}}
+    }
+    Ok(())
+}

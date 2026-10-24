@@ -19,6 +19,12 @@ if (["game", "nexus"].includes(new URLSearchParams(window.location.search).get("
   document.documentElement.classList.add("log-monitor-window");
 }
 
+// WebKitGTK 2.54 loses parts of a transparent window, so the window may be
+// opaque: square the frame so its corners do not show the window background.
+void import("@tauri-apps/api/core").then(({ invoke }) => invoke<boolean>("window_opaque"))
+  .then(opaque => { if (opaque) document.documentElement.dataset.opaqueWindow = "1"; })
+  .catch(() => {});
+
 
 // The window's outer boxes never scroll; WebKitGTK may still scroll them (a focus,
 // an overflowing transform), which slides the title bar out of view. Put them back.

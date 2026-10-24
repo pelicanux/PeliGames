@@ -100,7 +100,7 @@
   --surface-64-52-76: 8, 22, 14;
   --surface-7-10-20: 8, 22, 14;
 }
-:root[data-interface-theme="hackerman"] body { background:#020905; }
+:root[data-interface-theme="hackerman"] body { background:transparent; }
 :root[data-interface-theme="hackerman"] .app-wrapper { background:rgba(3,12,7,.64); backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px); }
 :root[data-interface-theme="hackerman"][data-appearance="dark"] :is(.menu-glass-panel,.dialog-popover,.modal-content) {
   --glass-base-start:4,16,10; --glass-base-end:5,12,8; --glass-neutral-border:72,116,83;
@@ -149,11 +149,11 @@
 :root[data-interface-theme="hackerman"] .neural-switch-track { background:#35523e; }
 :root[data-interface-theme="hackerman"] .enabled .neural-switch-track { background:var(--accent-button); }
 :root[data-interface-theme="hackerman"] :is(.app-title,.game-title,.dialog-titlebar-title) { color:#b5d8bf; }
-.hackerman-rain { position:fixed; inset:0; width:100%; height:100%; z-index:-1; pointer-events:none; opacity:.7; }
+.hackerman-rain { position:fixed; inset:0; width:100%; height:100%; z-index:-1; pointer-events:none; opacity:1; border-radius:16px; }
 .hackerman-crt { position:fixed; inset:0; z-index:2147483600; pointer-events:none; border-radius:16px;
   background:repeating-linear-gradient(to bottom,transparent 0 3px,rgba(0,0,0,.045) 3px 4px),radial-gradient(ellipse at center,transparent 65%,rgba(0,0,0,.24) 100%);
 }
-.hackerman-crt::after { content:""; position:absolute; inset:0; background:url('/textures/matrix-crt-noise.svg') repeat; background-size:180px 180px; opacity:.035; }
+.hackerman-crt::after { content:""; position:absolute; inset:0; border-radius:inherit; background:url('/textures/matrix-crt-noise.svg') repeat; background-size:180px 180px; opacity:.035; }
 /* Matrix supplies its own scanlines. Two differently spaced patterns create
    broad interference bands, which become more visible at webview scaling. */
 body:has(.matrix-chat-overlay) .hackerman-crt {

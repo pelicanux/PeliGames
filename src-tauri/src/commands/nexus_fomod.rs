@@ -401,6 +401,9 @@ pub(super) fn resolve(
         if let Some(bain) = super::nexus_bain::resolve(&entries, module, mod_id, choices)? {
             return Ok(bain);
         }
+        if let Some(crimson) = super::nexus_crimson::resolve(&entries, module, mod_id, choices)? {
+            return Ok(crimson);
+        }
         return Ok(Resolution {
             installer: None,
             selection: Vec::new(),

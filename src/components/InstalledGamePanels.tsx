@@ -161,6 +161,7 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
                   </div>
                 </HoverTooltip>
                 {prefixChanged && Boolean(prefix.trim()) && <button type="submit" className="installation-name-confirm" disabled={blocked}><MenuIcon name="check" />{t("gameModes", "confirmName")}</button>}
+                <small className="installed-prefix-hint">{pt ? "Selecione um prefixo existente ou uma pasta vazia. Uma pasta vazia será inicializada com o Wine/Proton selecionado ao clicar em Jogar. O prefixo anterior é preservado." : "Select an existing prefix or an empty folder. An empty folder is initialized with the selected Wine/Proton when you click Play. The previous prefix is preserved."}</small>
               </form>
           <form className="installation-field" onSubmit={event => { event.preventDefault(); if (executableChanged && executable.trim()) void save({ executable: executable.trim() }); }}>
             <label htmlFor={`${id}-exe`}>{t("gameModes", "executable")}</label>

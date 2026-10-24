@@ -8,9 +8,20 @@ import { MatrixShareButton } from "./MatrixShareButton";
 import { setCallFullscreen, setCallStageShown, useCallFullscreen, useNativeVideo, useMatrixScreenFit, setMatrixScreenFit, type ScreenFit } from "../services/matrixScreenView";
 import { matrixAvatar } from "../services/matrixMedia";
 import { HeadphonesIcon, MicIcon } from "./MatrixUserPanel";
+import { MatrixUserMenu, type UserMenuTarget } from "./MatrixUserMenu";
+import { useMatrixUserVolume } from "../services/matrixUserVolumes";
 
 export const ScreenIcon = ({ off }: { off?: boolean }) => <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/>{off ? <path d="M4 3l16 16"/> : <path d="M12 13V7M9.5 9.5 12 7l2.5 2.5"/>}</svg>;
-const LeaveIcon = () => <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 14.5c4.7-4.2 12.3-4.2 17 0l-2.2 2.6-3.1-1.6v-2.6a12 12 0 0 0-6.4 0v2.6l-3.1 1.6-2.2-2.6Z"/></svg>;
+export const LeaveIcon = () => <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 14.5c4.7-4.2 12.3-4.2 17 0l-2.2 2.6-3.1-1.6v-2.6a12 12 0 0 0-6.4 0v2.6l-3.1 1.6-2.2-2.6Z"/></svg>;
+
+const PeopleIcon = () => <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.4"/><path d="M16.5 13.6c2.7.2 4.5 2.1 4.5 4.9"/></svg>;
+/** Whether the people strip under a watched screen is collapsed; kept between calls. */
+const MEMBERS_HIDDEN = "peligames.matrix.callMembersHidden";
+/** Marks on a tile a person this listener muted. */
+function MutedForMe({ user, pt }: { user: string; pt: boolean }) {
+  const { muted } = useMatrixUserVolume(user);
+  return muted ? <small>{pt ? " · silenciado" : " · muted for you"}</small> : null;
+}
 
 function Avatar({ user, name }: { user: string; name: string }) {
   const [src, setSrc] = useState<string | null>(null);
@@ -29,6 +40,13 @@ export function MatrixCallStage({ pt, me, roomName, videoHidden, onShowChat }: {
   const video = useRef<HTMLDivElement>(null), fullVideo = useRef<HTMLDivElement>(null), stage = useRef<HTMLElement>(null);
   const fullscreen = useCallFullscreen();
   const fit = useMatrixScreenFit();
+  const [menu, setMenu] = useState<UserMenuTarget | null>(null);
+  const [membersHidden, setMembersHidden] = useState(() => { try { return localStorage.getItem(MEMBERS_HIDDEN) === "1"; } catch { return false; } });
+  const toggleMembers = () => {
+    const hidden = !membersHidden;
+    setMembersHidden(hidden);
+    try { localStorage.setItem(MEMBERS_HIDDEN, hidden ? "1" : "0"); } catch { /* This session only. */ }
+  };
   const fullControls = useRef<HTMLDivElement>(null);
   const [controlsVisible, setControlsVisible] = useState(true);
   const controlsHovered = useRef(false);
@@ -89,18 +107,22 @@ export function MatrixCallStage({ pt, me, roomName, videoHidden, onShowChat }: {
           <button type="button" onClick={onShowChat}>{pt ? "[minimizar]" : "[minimize]"}</button>
           <button type="button" onClick={() => void watchMatrixScreen(null)}>{focused === "local" ? (pt ? "[fechar prévia]" : "[close preview]") : (pt ? "[parar de assistir]" : "[stop watching]")}</button></div>
       </div>}
-      <ul className={focused ? "matrix-call-strip" : "matrix-call-grid"}>
+      {focused && <button type="button" className="matrix-call-members-toggle" aria-expanded={!membersHidden} onClick={toggleMembers}
+        title={membersHidden ? (pt ? "Mostrar membros" : "Show members") : (pt ? "Ocultar membros" : "Hide members")}
+        aria-label={membersHidden ? (pt ? "Mostrar membros" : "Show members") : (pt ? "Ocultar membros" : "Hide members")}>
+        <span aria-hidden="true">{membersHidden ? "▴" : "▾"}</span><PeopleIcon/></button>}
+      {!(focused && membersHidden) && <ul className={focused ? "matrix-call-strip" : "matrix-call-grid"}>
         {tiles.map(tile => {
           const speaking = connected && voice.speaking.includes(tile.user);
           const watching = tile.share !== null && tile.share === focused;
-          return <li key={tile.id} className={[speaking ? "is-speaking" : "", tile.share ? "is-sharing" : "", watching ? "is-watched" : ""].join(" ").trim() || undefined}>
+          return <li key={tile.id} onContextMenu={event => { event.preventDefault(); setMenu({ user: tile.user, x: event.clientX, y: event.clientY }); }} className={[speaking ? "is-speaking" : "", tile.share ? "is-sharing" : "", watching ? "is-watched" : ""].join(" ").trim() || undefined}>
             <Avatar user={tile.user} name={tile.name}/>
-            <span className="matrix-call-name">{tile.name}{tile.own ? (pt ? " (você)" : " (you)") : ""}{tile.own && (voice.muted || voice.deafened) ? <small>{voice.deafened ? (pt ? " · sem áudio" : " · deafened") : (pt ? " · mudo" : " · muted")}</small> : null}</span>
+            <span className="matrix-call-name">{tile.name}{tile.own ? (pt ? " (você)" : " (you)") : ""}{tile.own && (voice.muted || voice.deafened) ? <small>{voice.deafened ? (pt ? " · sem áudio" : " · deafened") : (pt ? " · mudo" : " · muted")}</small> : null}{!tile.own && <MutedForMe user={tile.user} pt={pt}/>}</span>
             {tile.share && <span className="matrix-call-live">{pt ? "AO VIVO" : "LIVE"}</span>}
             {tile.share && !watching && <button type="button" className="matrix-call-watch" onClick={() => void watchMatrixScreen(tile.share)}>{tile.share === "local" ? (pt ? "[ver prévia]" : "[preview]") : (pt ? "[assistir]" : "[watch]")}</button>}
           </li>;
         })}
-      </ul>
+      </ul>}
     </div>
     <div className="matrix-call-controls" role="toolbar" aria-label={pt ? "Controles da chamada" : "Call controls"}>
       <button type="button" className={voice.muted || voice.deafened ? "is-off" : ""} aria-pressed={!voice.muted} disabled={busy} title={voice.muted ? (pt ? "Ativar microfone" : "Unmute") : (pt ? "Silenciar microfone" : "Mute")} aria-label={voice.muted ? (pt ? "Ativar microfone" : "Unmute") : (pt ? "Silenciar microfone" : "Mute")}
@@ -110,6 +132,7 @@ export function MatrixCallStage({ pt, me, roomName, videoHidden, onShowChat }: {
       <MatrixShareButton pt={pt} icon={<ScreenIcon off={voice.screen === "live"}/>}/>
       <button type="button" className="matrix-call-leave" disabled={voice.phase === "leaving"} title={pt ? "Sair da chamada" : "Leave call"} aria-label={pt ? "Sair da chamada" : "Leave call"} onClick={() => void leaveMatrixVoice()}><LeaveIcon/></button>
     </div>
+    {menu && <MatrixUserMenu pt={pt} target={menu} onClose={() => setMenu(null)}/>}
     {full && frame && createPortal(<div className={`matrix-call-fullscreen${controlsVisible ? " is-controls-visible" : ""}`} role="dialog" aria-label={pt ? `Transmissão de ${focusedName} em tela cheia` : `${focusedName}'s stream in full screen`}
       onPointerEnter={wakeControls} onPointerMove={wakeControls} onPointerDown={wakeControls} onKeyDown={wakeControls}>
       <div ref={fullVideo} className="matrix-call-video" onDoubleClick={() => setCallFullscreen(false)}><span>{pt ? "> carregando transmissão…" : "> loading stream…"}</span></div>

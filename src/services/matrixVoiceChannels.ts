@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import type { MatrixClient } from "matrix-js-sdk";
 import { matrixSdkClient } from "./matrixSdk";
-import { matrixVoiceRoom } from "./matrixVoice";
+import { useMatrixVoice, matrixVoiceRoom } from "./matrixVoice";
 import type { RoomInfo } from "./matrixChat";
 
 export const VOICE_ROOM_TYPES = ["org.matrix.msc3417.call", "io.element.video"];
@@ -37,6 +37,7 @@ function endStaleOwnMembership(client: MatrixClient, roomId: string) {
 export function useVoiceChannelMembers(roomIds: string[], ready: boolean) {
   const [members, setMembers] = useState<Record<string, VoiceMember[]>>({});
   const key = roomIds.join("|");
+  const voice=useMatrixVoice();
   useEffect(() => {
     if (!ready || !roomIds.length || "__PELI_UI_PREVIEW__" in window) { setMembers({}); return; }
     let active = true;
@@ -72,5 +73,6 @@ export function useVoiceChannelMembers(roomIds: string[], ready: boolean) {
     })().catch(() => {});
     return () => { active = false; cleanups.forEach(cleanup => cleanup()); };
   }, [key, ready]);
+  if("__PELI_UI_PREVIEW__" in window)return Object.fromEntries(roomIds.map(id=>[id,voice.room===id&&voice.phase!=="idle"?voice.participants.map(person=>({userId:person.id,deviceId:"preview"})):[]]));
   return members;
 }

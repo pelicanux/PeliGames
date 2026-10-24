@@ -281,7 +281,10 @@ mod saved_options_tests {
         fn new(opti: bool) -> Self {
             let root = std::env::temp_dir().join(format!("peligames-neural-{}", uuid::Uuid::new_v4()));
             fs::create_dir(&root).unwrap();
-            fs::write(root.join("dlssnr-amd.ini"), "[DlssNr]\r\nEnabled=true\r\n[RenoDX]\r\nEnabled=1\r\nNeuralUplift=1\r\nNRIntensity=0.7\r\n[Network]\r\nModel=custom\r\n").unwrap();
+            // Detection needs the proxy DLL and, for ReShade, the add-on, as in a real installation.
+            fs::write(root.join("dxgi.dll"), b"MZ").unwrap();
+            if !opti { fs::write(root.join("dlssnr_amd.addon64"), b"MZ").unwrap(); }
+            fs::write(root.join("dlssnr-amd.ini"),"[DlssNr]\r\nEnabled=true\r\n[RenoDX]\r\nEnabled=1\r\nNeuralUplift=1\r\nNRIntensity=0.7\r\n[Network]\r\nModel=custom\r\n").unwrap();
             if opti {
                 fs::write(root.join("OptiScaler.ini"), "[DlssNr]\nEnabled=true\nIntensity=0.6\n").unwrap();
             } else {

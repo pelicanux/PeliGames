@@ -1,6 +1,6 @@
 [package]
 name = "peligames"
-version = "0.4.7"
+version = "0.4.8"
 description = "A Tauri App"
 authors = ["Pelicano"]
 license = "GPL-3.0-only"

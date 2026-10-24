@@ -1,3 +1,6 @@
+import {MatrixPlayingTicker} from "./MatrixPlayingTicker";
+import {recentMatrixMembers,visibleOwnGame} from "../services/matrixMemberActivity";
+import {useMatrixPresenceChoice} from "../services/matrixPresencePreferences";
 import { MatrixSupporterBadge } from "./MatrixSupporterBadge";
 import { invoke } from "@tauri-apps/api/core";
 import { usePerformanceMode } from "./EffectsContext";
@@ -32,14 +35,16 @@ function Activity({ user, name, avatar, visible, supporter }: { supporter: boole
   return <div className="matrix-game-activity" data-member={user}>
     <div className="matrix-member-avatar">{avatar && !avatarFailed ? <img src={avatar} alt="" onError={() => setAvatarFailed(true)} /> : <span aria-hidden="true">{memberName.slice(0,2).toUpperCase()}</span>}<MatrixPresenceBadge status={chat.memberPresence[user]} pt={language === "pt"}/></div>
     {name && activity.covers && cover && failed !== cover && <img src={cover} alt="" onError={() => setFailed(cover)}/>}
-    <div className="matrix-member-details"><div className="matrix-member-name"><strong title={user}>{memberName}</strong>{supporter && <MatrixSupporterBadge/>}</div>{name && <span title={name}>{language === "pt" ? "Jogando" : "Playing"} · {name}</span>}</div>
+    <div className="matrix-member-details"><div className="matrix-member-name"><strong title={user}>{memberName}</strong>{supporter && <MatrixSupporterBadge/>}</div>{name && <MatrixPlayingTicker text={`${language === "pt" ? "Jogando" : "Playing"} · ${name}`}/>}</div>
   </div>;
 }
-export function MatrixGameActivities({ users, supporters }: { users: Set<string>; supporters: Set<string> }) {
+export function MatrixGameActivities({ users, supporters, messages }: { users: Set<string>; supporters: Set<string>; messages: readonly {sender:string;ts:number}[] }) {
   const chat = useMatrixChat();
   const { language } = useI18n();
   const performance = usePerformanceMode();
-  const entries = useMemo(() => [...users].filter(user => !chat.ignored.includes(user)).sort((a,b) => a === chat.userId ? -1 : b === chat.userId ? 1 : a.localeCompare(b)), [users, chat.ignored, chat.userId]);
+  const activity=useMatrixActivityPreferences(), presence=useMatrixPresenceChoice(chat.userId);
+  const ownGame=visibleOwnGame(activity.sharing,presence==="invisible",activity.name);
+  const entries = useMemo(() => recentMatrixMembers(users,messages,chat.ignored), [users,messages,chat.ignored]);
   const viewport = useRef<HTMLDivElement>(null);
   const requested = useRef(new Set<string>());
   const mounted = useRef(false);
@@ -91,7 +96,7 @@ export function MatrixGameActivities({ users, supporters }: { users: Set<string>
   return <section className="matrix-members-carousel" aria-label={language === "pt" ? "Membros da sala" : "Room members"}>
     <div ref={viewport} className="matrix-game-activities" tabIndex={0} aria-label={language === "pt" ? "Lista de membros: use a barra de rolagem, a roda do mouse ou as setas do teclado" : "Member list: use the scrollbar, mouse wheel or keyboard arrows"}
       onKeyDown={event => { if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); move(event.key === "ArrowLeft" ? -1 : 1); } }}>
-      {entries.map(user => <Activity key={user} user={user} name={gameActivityName(chat.presence[user] ?? "")} avatar={avatars[user]} supporter={supporters.has(user)} visible={visible.has(user)} />)}
+      {entries.map(user => <Activity key={user} user={user} name={user===chat.userId ? ownGame : gameActivityName(chat.presence[user] ?? "")} avatar={avatars[user]} supporter={supporters.has(user)} visible={visible.has(user)} />)}
     </div>
   </section>;
 }
