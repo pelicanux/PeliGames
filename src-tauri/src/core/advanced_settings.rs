@@ -420,6 +420,13 @@ fn executable(name: &str) -> Result<PathBuf, String> {
 /// the host's environment rather than the AppImage's.
 pub fn launch_command(umu: &Path, settings: Option<&AdvancedSettings>) -> Result<Command, String> {
     let mut command = configured_launch_command(umu, settings)?;
+    // Launch time, not profile time: a Flatpak/Snap Discord needs a top-level
+    // socket link in this session for Proton's bridge. Steam games get it from PeliRun.
+    if settings.is_some_and(|s| s.on("discord")) {
+        if let Err(error) = super::discord_socket::link_sandboxed(&super::discord_socket::runtime_dir()) {
+            super::logger::event("WARN", &error);
+        }
+    }
     super::env_utils::host_environment(&mut command);
     Ok(command)
 }

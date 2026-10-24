@@ -12,6 +12,10 @@ O overlay reúne ferramentas dentro do jogo em uma única camada. É experimenta
 
 A camada precisa ser carregada no início do processo. Ativá-la com o jogo aberto só terá efeito na próxima execução. O mesmo painel e atalho atendem às funções habilitadas. Os controles do MAKO aparecem quando ele está ativo; o limite sem foco trabalha mesmo com o painel fechado. Desligar a chave geral desativa o overlay e seu limite sem foco, mas não desliga a geração de quadros do MAKO. Trocar bibliotecas ou runtime exige reabrir o jogo.
 
+## Jogos online
+
+O overlay foi feito para jogos offline. Ele carrega bibliotecas no processo do jogo e intercepta teclado e mouse para o painel interativo. Em jogos online com anti-cheat ou proteção própria, isso pode ser interpretado como trapaça e levar a bloqueio ou banimento da conta. O uso em jogos online é por conta e risco de quem joga.
+
 ## Compatibilidade e problemas
 
 O alvo inicial é Linux x86_64 com Vulkan SDR. A compatibilidade depende do jogo, do Proton e do caminho Wayland/XWayland. HDR, OpenGL e processos gráficos Linux de 32 bits não têm suporte declarado. Executáveis Windows de 32 bits podem ser testados com o novo WoW64 e processo gráfico Linux de 64 bits.

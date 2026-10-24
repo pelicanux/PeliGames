@@ -3,6 +3,9 @@ pub(crate) mod test_support;
 pub mod script_runner;
 #[path = "../../launch-runtime/src/release_features.rs"]
 pub mod release_features;
+#[cfg(target_os = "linux")]
+#[path = "../../launch-runtime/src/discord_socket.rs"]
+pub mod discord_socket;
 pub mod file_manager;
 pub mod env_utils;
 pub mod config_manager;

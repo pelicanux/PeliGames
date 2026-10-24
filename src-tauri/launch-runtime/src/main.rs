@@ -1,5 +1,6 @@
 mod profile;
 mod release_features;
+mod discord_socket;
 
 mod profile_io;
 use profile::app_id;
@@ -44,6 +45,10 @@ fn run() -> Result<(), String> {
     let mut command = Command::new(&words[0]);
     command.args(&words[1..]);
     if let Some(profile) = profile {
+        // Proton's Discord bridge reaches a Flatpak/Snap client only through a top-level socket.
+        if profile.environment.get("PROTON_DISCORD_BRIDGE").is_some_and(|value| value.as_deref() == Some("1")) {
+            if let Err(error) = discord_socket::link_sandboxed(&discord_socket::runtime_dir()) { eprintln!("PeliGames: {error}"); }
+        }
         for (key, value) in profile.environment {
             match value {
                 Some(value) => {

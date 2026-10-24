@@ -116,7 +116,7 @@
     "key": "PROTON_DISCORD_BRIDGE",
     "value": "1",
     "enabled": false,
-    "description": "Permite ao jogo atualizar a presença no Discord através da ponte incluída no Proton.",
+    "description": "Permite ao jogo ou ao launcher usar a presença e a vinculação de conta do Discord pela ponte do GE-Proton ou do Proton-CachyOS. Funciona com o Discord nativo, Flatpak ou Snap, que deve estar aberto antes do jogo.",
     "kind": "env"
   },
   {

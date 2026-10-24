@@ -221,21 +221,28 @@ pub struct Session {
 }
 /// What one diagnosis file says, in plain terms.
 fn diagnose(text: &str) -> (&'static str, String, Vec<String>) {
-    let mut lines: Vec<String> = Vec::new();
+    // Every process of the launch appends here (a launcher, then the game): keep
+    // who said what, and let one process's success outweigh another's refusal.
+    let mut entries: Vec<(String, String)> = Vec::new();
     for line in text.lines().filter(|l| !l.starts_with("cmd\t")) {
-        let message = line.split_once('\t').map_or(line, |(_, m)| m).trim().to_string();
-        if !message.is_empty() && !lines.contains(&message) && lines.len() < 40 { lines.push(message); }
+        let (process, message) = line.split_once('\t').unwrap_or(("", line));
+        let entry = (process.trim().to_string(), message.trim().to_string());
+        if !entry.1.is_empty() && !entries.contains(&entry) && entries.len() < 40 { entries.push(entry); }
     }
-    let has = |needle: &str| lines.iter().any(|l| l.contains(needle));
-    if let Some(error) = lines.iter().find_map(|l| l.strip_prefix("Runner: overlay não carregado: ")) {
+    let lines: Vec<String> = entries.iter().map(|(process, message)| match process.as_str() {
+        "" | "runner" => message.clone(),
+        process => format!("{process}: {message}"),
+    }).collect();
+    let has = |needle: &str| entries.iter().any(|(_, m)| m.contains(needle));
+    if let Some(error) = entries.iter().find_map(|(_, m)| m.strip_prefix("Runner: overlay não carregado: ")) {
         return ("error", format!("O overlay não foi carregado: {error}"), lines);
-    }
-    if let Some(reason) = lines.iter().find_map(|l| l.strip_prefix("Swapchain: ").filter(|r| !r.starts_with("compatível")).and_then(|r| r.split(';').next())) {
-        let hint = if reason.contains("rota de entrada") { " Jogos nativos Linux só têm entrada no Wayland nativo; em X11/XWayland, o overlay atende jogos executados pelo Wine/Proton." } else { "" };
-        return ("error", format!("O jogo usa uma imagem que o overlay ainda não cobre ({reason}).{hint}"), lines);
     }
     if has("Entrada do jogo reconhecida") {
         return ("ok", "Funcionou na última execução: painel pronto e atalho disponível.".into(), lines);
+    }
+    if let Some(reason) = entries.iter().find_map(|(_, m)| m.strip_prefix("Swapchain: ").filter(|r| !r.starts_with("compatível")).and_then(|r| r.split(';').next())) {
+        let hint = if reason.contains("rota de entrada") { " Jogos nativos Linux só têm entrada no Wayland nativo; em X11/XWayland, o overlay atende jogos executados pelo Wine/Proton." } else { "" };
+        return ("error", format!("O jogo usa uma imagem que o overlay ainda não cobre ({reason}).{hint}"), lines);
     }
     if has("Renderer preparado") || has("Aguardando uma rota de entrada") {
         return ("warning", "O painel foi desenhado, mas o overlay não recebeu teclado e mouse do jogo. Em X11/XWayland isso só funciona com jogos executados pelo Wine/Proton; jogos nativos Linux precisam do Wayland nativo.".into(), lines);
@@ -304,6 +311,10 @@ mod tests {
         assert_eq!(last_session_in(&roots, Path::new("/games/Celeste")), None);
         // OpenGL or 32-bit without WoW64: prepared, but no Vulkan swapchain.
         assert!(diagnose("runner\tRunner: camada Vulkan e entrada preparadas.\n").1.contains("OpenGL"));
+        // A launcher window refused, then the game it opens works: the launch succeeded.
+        let (level, _, lines) = diagnose("runner\tRunner: camada Vulkan e entrada preparadas.\nLauncher.exe\tSwapchain: flags de criação da swapchain ainda não cobertas; superfície=Xlib(1)\nGame.exe\tRenderer preparado; painel inicia oculto.\nGame.exe\tEntrada do jogo reconhecida; atalho do overlay disponível com o jogo em foco.\n");
+        assert_eq!(level, "ok");
+        assert!(lines.iter().any(|l| l.starts_with("Launcher.exe: Swapchain")) && lines.iter().any(|l| l.starts_with("Game.exe: Entrada")));
         fs::remove_dir_all(root).unwrap();
     }
 

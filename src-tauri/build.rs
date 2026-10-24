@@ -116,6 +116,7 @@ fn launch_helper() {
         println!("cargo:rerun-if-changed=launch-runtime/{file}");
     }
     println!("cargo:rerun-if-changed=launch-runtime/src/release_features.rs");
+    println!("cargo:rerun-if-changed=launch-runtime/src/discord_socket.rs");
     println!("cargo:rerun-if-env-changed=PELIGAMES_LAUNCH_HELPER");
     let output = PathBuf::from(env::var_os("OUT_DIR").expect("OUT_DIR"));
     let embedded = output.join("pelirun");
