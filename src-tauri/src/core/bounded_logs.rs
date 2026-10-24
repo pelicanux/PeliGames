@@ -207,7 +207,9 @@ pub fn capture(command: &mut std::process::Command, path: &Path) -> Result<(), S
         }
     }
     let (reader, writer) = UnixStream::pair().map_err(|e| e.to_string())?;
-    let mut helper = Command::new(std::env::current_exe().map_err(|e| e.to_string())?);
+    // /proc/self/exe still runs this binary after an update replaced its file
+    // (current_exe() then names a deleted path and spawning fails with ENOENT).
+    let mut helper = Command::new("/proc/self/exe");
     helper
         .arg(FLAG)
         .arg(path)

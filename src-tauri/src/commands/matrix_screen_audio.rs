@@ -100,6 +100,8 @@ fn streams() -> Vec<Stream> {
     let binary = std::env::current_exe()
         .ok()
         .and_then(|path| path.file_name().map(|name| name.to_string_lossy().into_owned()))
+        // Replaced by an update while running, the link reads "peligames (deleted)".
+        .map(|name| name.trim_end_matches(" (deleted)").to_string())
         .unwrap_or_else(|| "peligames".into());
     streams_of(&list, &std::process::id().to_string(), &binary)
 }

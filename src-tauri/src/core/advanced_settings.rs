@@ -9,6 +9,8 @@ use std::{
 struct OptionSpec {
     id: String,
     key: String,
+    #[serde(default)]
+    title: String,
     value: String,
     enabled: bool,
     kind: String,
@@ -219,13 +221,16 @@ impl AdvancedSettings {
         {
             return Ok(());
         }
-        let script = std::fs::read_to_string(proton.join("proton")).map_err(|_| {
-            "Não foi possível verificar os recursos do Proton selecionado.".to_string()
-        })?;
-        for spec in catalog() {
-            if (spec.key.starts_with("PROTON_") || spec.id == "steam_client") && self.on(&spec.id) && !script.contains(&spec.key) {
-                return Err(format!("O Proton selecionado não declara suporte a {}. Escolha um runner compatível ou desative essa opção.", spec.key));
+        let proton_only = || catalog().into_iter().filter(|spec| (spec.key.starts_with("PROTON_") || spec.id == "steam_client") && self.on(&spec.id));
+        let Ok(script) = std::fs::read_to_string(proton.join("proton")) else {
+            // A plain Wine runner has no Proton features at all; say so instead of "cannot verify".
+            if let Some(spec) = proton_only().next().filter(|_| proton.join("bin/wine").is_file()) {
+                return Err(format!("“{}” é um recurso do Proton e não funciona com Wine. Escolha um Proton compatível, como GE-Proton ou Proton-CachyOS, ou desative essa opção.", spec.title));
             }
+            return Err("Não foi possível verificar os recursos do Proton selecionado.".into());
+        };
+        if let Some(spec) = proton_only().find(|spec| !script.contains(&spec.key) && !ships_feature(proton, &spec.id)) {
+            return Err(format!("O Proton selecionado não tem suporte a “{}” ({}). Escolha um Proton compatível, como GE-Proton ou Proton-CachyOS, ou desative essa opção.", spec.title, spec.key));
         }
         Ok(())
     }
@@ -234,6 +239,15 @@ impl AdvancedSettings {
             .get(id)
             .copied()
             .unwrap_or_else(|| catalog().iter().any(|s| s.id == id && s.enabled))
+    }
+}
+/// Features a runner reads outside its `proton` script. GE-Proton and
+/// Proton-CachyOS check PROTON_DISCORD_BRIDGE inside steam.exe; the script only
+/// copies the bridge into the prefix, so the bridge itself is the evidence.
+fn ships_feature(proton: &Path, id: &str) -> bool {
+    match id {
+        "discord" => ["files", "dist"].iter().any(|dir| proton.join(dir).join("lib/wine/discord-rpc-bridge/bridge.exe").is_file()),
+        _ => false,
     }
 }
 fn valid_dlls(value: &str) -> bool {
@@ -524,6 +538,26 @@ mod steam_bridge_tests {
         assert!(settings.validate_runner(&root).is_ok());
         let restored: AdvancedSettings = serde_json::from_slice(&serde_json::to_vec(&settings).unwrap()).unwrap();
         assert!(restored.on("steam_client"));
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn discord_bridge_is_recognized_by_the_bridge_the_runner_ships() {
+        // GE-Proton/CachyOS read PROTON_DISCORD_BRIDGE in steam.exe, not in the script.
+        let mut settings = AdvancedSettings::default();
+        settings.options.insert("discord".into(), true);
+        let root = std::env::temp_dir().join(format!("peligames-discord-bridge-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(root.join("proton"), "copies wine/discord-rpc-bridge/bridge.exe").unwrap();
+        assert!(settings.validate_runner(&root).unwrap_err().contains("PROTON_DISCORD_BRIDGE"));
+        let bridge = root.join("files/lib/wine/discord-rpc-bridge");
+        std::fs::create_dir_all(&bridge).unwrap();
+        std::fs::write(bridge.join("bridge.exe"), b"MZ").unwrap();
+        assert!(settings.validate_runner(&root).is_ok());
+        // A plain Wine runner says the option belongs to Proton, not "cannot verify".
+        let wine = root.join("wine-runner");
+        std::fs::create_dir_all(wine.join("bin")).unwrap();
+        std::fs::write(wine.join("bin/wine"), "#!/bin/sh\n").unwrap();
+        assert!(settings.validate_runner(&wine).unwrap_err().contains("não funciona com Wine"));
         std::fs::remove_dir_all(root).unwrap();
     }
 }

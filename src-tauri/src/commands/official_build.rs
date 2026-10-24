@@ -34,7 +34,8 @@ fn listed(sums: &str, hash: &str) -> bool {
     sums.lines().any(|line| line.split_whitespace().next().is_some_and(|value| value.eq_ignore_ascii_case(hash)))
 }
 fn executable_hash() -> Result<String, String> {
-    let mut file = std::fs::File::open(std::env::current_exe().map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+    // The running binary, even after an update replaced its file on disk.
+    let mut file = std::fs::File::open("/proc/self/exe").map_err(|e| e.to_string())?;
     let mut hash = Sha256::new();
     let mut buffer = vec![0u8; 1 << 16];
     loop {

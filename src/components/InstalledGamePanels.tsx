@@ -101,6 +101,8 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
     try { await persist(patch); return true; }
     catch (error) {
       setError(String(error));
+      // The header only says "Falha ao salvar"; the reason goes to the notification centre.
+      notifyError(pt ? "Configurações do jogo" : "Game settings", error);
       if (patch.proton !== undefined) setProton(currentGame.current?.proton || "");
       return false;
     } finally { saving.current = false; setBusy(false); }
