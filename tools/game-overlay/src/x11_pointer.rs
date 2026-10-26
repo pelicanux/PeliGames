@@ -6,6 +6,7 @@ use libc::{c_int, c_uint, c_ulong, c_void};
 use std::{
     collections::HashMap,
     sync::{Mutex, OnceLock},
+    time::{Duration, Instant},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -248,6 +249,7 @@ struct Lease {
     saved: Position,
     size: (u32, u32),
     warp_requested: bool,
+    focus_checked_at: Instant,
 }
 struct Pointer<A> {
     api: A,
@@ -368,9 +370,24 @@ impl<A: Api> Pointer<A> {
             saved,
             size,
             warp_requested: false,
+            focus_checked_at: Instant::now(),
         });
         self.api.flush(display);
         Ok(Some(saved))
+    }
+    // Focus notifications can be missed or filtered by another input hook.
+    // Revalidate an active lease without a round trip for every queued event.
+    fn refresh_focus(&mut self, now: Instant) -> Option<c_ulong> {
+        let lease = self.lease.as_mut()?;
+        if now.duration_since(lease.focus_checked_at) < Duration::from_millis(16) {
+            return None;
+        }
+        lease.focus_checked_at = now;
+        let focus = self.api.focus(lease.display);
+        if !lease.ancestors.contains(&focus) {
+            self.close(false);
+        }
+        Some(focus)
     }
     fn close(&mut self, restore: bool) {
         let Some(s) = self.lease.take() else {
@@ -507,6 +524,14 @@ pub(super) fn available() -> bool {
     }
 }
 pub(super) fn reconcile(display: *mut c_void) {
+    // Query on the owning Wine connection, outside the input-state lock.
+    let focus = pointer()
+        .lock()
+        .ok()
+        .and_then(|mut p| p.refresh_focus(Instant::now()));
+    if let Some(window) = focus {
+        super::focus(window);
+    }
     let (capture, restore) = crate::state()
         .lock()
         .map(|s| (s.capturing(), s.focused && s.ready))
@@ -606,6 +631,7 @@ pub unsafe extern "C" fn XGrabPointer(
         cursor,
         time,
     };
+    if !crate::process_scope::enabled() { return Native.grab(request); }
     if let Ok(mut p) = pointer().lock() {
         p.game_grab(request)
     } else {
@@ -614,6 +640,7 @@ pub unsafe extern "C" fn XGrabPointer(
 }
 #[no_mangle]
 pub unsafe extern "C" fn XUngrabPointer(display: *mut c_void, time: c_ulong) -> c_int {
+    if !crate::process_scope::enabled() { return Native.ungrab(display as usize, time); }
     if let Ok(mut p) = pointer().lock() {
         p.game_ungrab(display as usize, time)
     } else {
@@ -627,6 +654,7 @@ pub unsafe extern "C" fn XChangeActivePointerGrab(
     cursor: c_ulong,
     time: c_ulong,
 ) -> c_int {
+    if !crate::process_scope::enabled() { return Native.change(display as usize, mask, cursor, time); }
     if let Ok(mut p) = pointer().lock() {
         p.game_change(display as usize, mask, cursor, time)
     } else {
@@ -645,7 +673,7 @@ pub unsafe extern "C" fn XWarpPointer(
     dx: c_int,
     dy: c_int,
 ) -> c_int {
-    if pointer().lock().is_ok_and(|mut p| p.suppress_warp()) {
+    if crate::process_scope::enabled() && pointer().lock().is_ok_and(|mut p| p.suppress_warp()) {
         return 1;
     }
     symbol::<WarpFn>(b"XWarpPointer\0")
@@ -668,7 +696,7 @@ pub unsafe extern "C" fn XQueryPointer(
         return 0;
     };
     let result = real(display, window, root, child, root_x, root_y, x, y, mask);
-    if result != 0 {
+    if result != 0 && crate::process_scope::enabled() {
         let saved = pointer()
             .lock()
             .ok()
@@ -859,6 +887,34 @@ mod tests {
             assert!(p.api.warps.is_empty());
             assert!(p.lease.is_none());
         }
+    }
+    #[test]
+    fn missed_focus_notification_releases_lease_without_restoring_game_grab() {
+        let mut p = ready();
+        p.game_grab(request(7));
+        p.open(8, 10, &[10, 20]).unwrap();
+        let opened = p.lease.as_ref().unwrap().focus_checked_at;
+        p.api.focus = 99;
+        assert_eq!(p.refresh_focus(opened + Duration::from_millis(8)), None);
+        assert!(p.lease.is_some());
+        assert_eq!(p.refresh_focus(opened + Duration::from_millis(16)), Some(99));
+        assert!(p.lease.is_none());
+        assert_eq!(p.api.ungrabs, vec![7]);
+        assert_eq!(p.api.grabs.len(), 2); // never re-grab the desktop for the game
+        assert!(p.api.warps.is_empty());
+        assert_eq!(p.api.freed, vec![900]);
+        assert_eq!(p.refresh_focus(opened + Duration::from_millis(32)), None);
+    }
+    #[test]
+    fn polling_focus_keeps_lease_when_game_still_has_focus() {
+        let mut p = ready();
+        p.game_grab(request(7));
+        p.open(7, 10, &[10, 20]).unwrap();
+        let opened = p.lease.as_ref().unwrap().focus_checked_at;
+        assert_eq!(p.refresh_focus(opened + Duration::from_millis(16)), Some(20));
+        assert!(p.lease.is_some());
+        assert!(p.api.ungrabs.is_empty());
+        assert_eq!(p.refresh_focus(opened + Duration::from_millis(17)), None);
     }
     #[test]
     fn failed_capture_does_not_ungrab_another_client_or_leave_a_native_cursor() {

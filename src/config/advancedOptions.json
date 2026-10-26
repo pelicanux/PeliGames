@@ -1,5 +1,15 @@
 [
   {
+    "group": "hardware",
+    "id": "zink",
+    "title": "Zink · OpenGL sobre Vulkan",
+    "key": "MESA_LOADER_DRIVER_OVERRIDE",
+    "value": "zink",
+    "enabled": false,
+    "description": "Usa o Zink do Mesa para renderizar OpenGL por Vulkan neste jogo. Requer Mesa com Zink e driver Vulkan compatível no ambiente de execução; jogos de 32 bits também precisam das bibliotecas de 32 bits. Não substitui DXVK ou VKD3D e não instala drivers.",
+    "kind": "env"
+  },
+  {
     "group": "cachyos",
     "id": "dxvk_latency",
     "title": "DX9–11 com menor latência",
@@ -207,6 +217,264 @@
     "value": "1",
     "enabled": false,
     "description": "Solicita um cache próprio para este jogo nas versões do Proton que aceitam essa opção.",
+    "kind": "env"
+  },
+  {
+    "group": "hardware",
+    "id": "gpu_prime",
+    "title": "GPU dedicada · Mesa (AMD/Intel)",
+    "key": "DRI_PRIME",
+    "value": "1",
+    "enabled": false,
+    "description": "Usa a GPU alternativa em sistemas híbridos com Mesa. Requer pelo menos duas GPUs; não seleciona um modelo específico.",
+    "kind": "env",
+    "vendor": "mesa"
+  },
+  {
+    "group": "nvidia",
+    "id": "nvidia_offload",
+    "title": "GPU dedicada · NVIDIA PRIME",
+    "key": "__NV_PRIME_RENDER_OFFLOAD",
+    "value": "1",
+    "enabled": false,
+    "description": "Usa offload do driver NVIDIA em sistemas híbridos. Requer GPU NVIDIA e driver PRIME configurado.",
+    "kind": "env",
+    "extra_env": {
+      "__GLX_VENDOR_LIBRARY_NAME": "nvidia"
+    },
+    "vendor": "nvidia"
+  },
+  {
+    "group": "hardware",
+    "id": "glthread",
+    "title": "Mesa GLThread",
+    "key": "mesa_glthread",
+    "value": "true",
+    "enabled": false,
+    "description": "Testa processamento paralelo de OpenGL no Mesa. O resultado depende do jogo e do driver; não é uma otimização universal.",
+    "kind": "env",
+    "vendor": "mesa"
+  },
+  {
+    "group": "compatibility",
+    "id": "wined3d",
+    "title": "WineD3D · alternativa OpenGL",
+    "key": "PROTON_USE_WINED3D",
+    "value": "1",
+    "enabled": false,
+    "description": "Usa WineD3D em vez do DXVK para Direct3D 9–11. Útil para compatibilidade; pode reduzir desempenho e não substitui VKD3D para Direct3D 12.",
+    "kind": "env"
+  },
+  {
+    "group": "compatibility",
+    "id": "d7vk",
+    "title": "D7VK · Direct3D antigo",
+    "key": "PROTON_USE_D7VK",
+    "value": "1",
+    "enabled": false,
+    "description": "Habilita D7VK para jogos antigos apenas quando o runner selecionado oferece esse recurso.",
+    "kind": "env"
+  },
+  {
+    "group": "compatibility",
+    "id": "large_address",
+    "title": "Mais memória para jogos de 32 bits",
+    "key": "PROTON_FORCE_LARGE_ADDRESS_AWARE",
+    "value": "1",
+    "enabled": false,
+    "description": "Solicita Large Address Aware para executáveis de 32 bits compatíveis. Não transforma o jogo em 64 bits nem garante correção de falta de memória.",
+    "kind": "env"
+  },
+  {
+    "group": "input_audio",
+    "id": "prefer_sdl",
+    "title": "Preferir entrada SDL para controles",
+    "key": "PROTON_PREFER_SDL",
+    "value": "1",
+    "enabled": false,
+    "description": "Alternativa para problemas de reconhecimento de controles. Requer suporte do Proton selecionado.",
+    "kind": "env"
+  },
+  {
+    "group": "input_audio",
+    "id": "no_steam_input",
+    "title": "Desativar Steam Input",
+    "key": "PROTON_NO_STEAMINPUT",
+    "value": "1",
+    "enabled": false,
+    "description": "Desativa a integração Steam Input no runner compatível. Útil para testar entrada duplicada; controles que dependem dela podem parar de funcionar.",
+    "kind": "env"
+  },
+  {
+    "group": "input_audio",
+    "id": "pulse_latency",
+    "title": "Latência alvo do áudio",
+    "key": "PULSE_LATENCY_MSEC",
+    "value": "60",
+    "enabled": false,
+    "description": "Define a latência alvo, em milissegundos, para PulseAudio ou PipeWire-Pulse. Valores baixos podem causar estalos.",
+    "kind": "env",
+    "min": 10,
+    "max": 500
+  },
+  {
+    "group": "display",
+    "id": "vkbasalt",
+    "title": "Filtros visuais vkBasalt",
+    "key": "ENABLE_VKBASALT",
+    "value": "1",
+    "enabled": false,
+    "description": "Carrega a camada vkBasalt instalada no ambiente de execução. Não instala filtros e não substitui o ReShade.",
+    "kind": "env"
+  },
+  {
+    "group": "performance",
+    "id": "dxvk_limit",
+    "title": "Limitador de FPS do DXVK",
+    "key": "DXVK_FRAME_RATE",
+    "value": "60",
+    "enabled": false,
+    "description": "Limita o FPS de jogos que usam DXVK. Escolha apenas um limitador; o limite global do MangoHUD fica desativado somente nesta execução. Não se aplica a OpenGL ou Direct3D 12.",
+    "kind": "env",
+    "min": 1,
+    "max": 1000
+  },
+  {
+    "group": "diagnostics",
+    "id": "wine_diagnostics",
+    "title": "Diagnóstico Proton/Wine",
+    "key": "WINEDEBUG",
+    "value": "-all,err+all,warn+all",
+    "enabled": false,
+    "description": "Inclui erros e alertas do Wine nos logs de execução do PeliGames. Pode aumentar o trabalho de registro; desative após investigar. Não cria um log Proton separado e ilimitado.",
+    "kind": "env"
+  },
+  {
+    "group": "diagnostics",
+    "id": "dxvk_log",
+    "title": "Nível dos logs DXVK",
+    "key": "DXVK_LOG_LEVEL",
+    "value": "warn",
+    "enabled": false,
+    "description": "Define o nível de mensagens do componente. Trace gera muito mais saída; use somente para diagnóstico.",
+    "kind": "env",
+    "choices": [
+      {
+        "value": "none",
+        "label": "Desligado"
+      },
+      {
+        "value": "error",
+        "label": "Erros"
+      },
+      {
+        "value": "warn",
+        "label": "Alertas e erros"
+      },
+      {
+        "value": "info",
+        "label": "Informações"
+      },
+      {
+        "value": "debug",
+        "label": "Depuração"
+      }
+    ]
+  },
+  {
+    "group": "diagnostics",
+    "id": "vkd3d_log",
+    "title": "Nível dos logs VKD3D",
+    "key": "VKD3D_DEBUG",
+    "value": "warn",
+    "enabled": false,
+    "description": "Define o nível de mensagens do componente. Trace gera muito mais saída; use somente para diagnóstico.",
+    "kind": "env",
+    "choices": [
+      {
+        "value": "none",
+        "label": "Desligado"
+      },
+      {
+        "value": "err",
+        "label": "Erros"
+      },
+      {
+        "value": "warn",
+        "label": "Alertas e erros"
+      },
+      {
+        "value": "info",
+        "label": "Informações"
+      },
+      {
+        "value": "trace",
+        "label": "Rastreamento detalhado"
+      }
+    ]
+  },
+  {
+    "group": "display",
+    "id": "dxvk_hdr",
+    "title": "Expor HDR pelo DXVK",
+    "key": "DXVK_HDR",
+    "value": "1",
+    "enabled": false,
+    "description": "Habilita a exposição HDR no DXVK compatível. Requer jogo, monitor, compositor e driver com HDR; não converte conteúdo SDR em HDR.",
+    "kind": "env"
+  },
+  {
+    "group": "display",
+    "id": "no_hdr",
+    "title": "Desativar HDR automático do Proton",
+    "key": "DXVK_NO_HDR",
+    "value": "1",
+    "enabled": false,
+    "description": "Solicita desativar HDR automático apenas em versões do Proton que reconhecem essa opção. Não combine com opções de habilitar HDR.",
+    "kind": "env",
+    "runner_probe": true
+  },
+  {
+    "group": "nvidia",
+    "id": "nvapi",
+    "title": "NVAPI para recursos NVIDIA",
+    "key": "PROTON_ENABLE_NVAPI",
+    "value": "1",
+    "enabled": false,
+    "description": "Habilita NVAPI no Proton compatível para jogos com recursos NVIDIA.",
+    "kind": "env",
+    "vendor": "nvidia"
+  },
+  {
+    "group": "nvidia",
+    "id": "dlss_updater",
+    "title": "Atualização de componentes DLSS",
+    "key": "PROTON_ENABLE_NGX_UPDATER",
+    "value": "1",
+    "enabled": false,
+    "description": "Permite ao runner atualizar componentes DLSS em jogos compatíveis. Não deve ser combinado com substituições de DLSS gerenciadas manualmente.",
+    "kind": "env",
+    "vendor": "nvidia"
+  },
+  {
+    "group": "nvidia",
+    "id": "dlss_indicator",
+    "title": "Indicador de DLSS no jogo",
+    "key": "PROTON_DLSS_INDICATOR",
+    "value": "1",
+    "enabled": false,
+    "description": "Exibe o indicador de diagnóstico DLSS quando suportado pelo runner e pelo jogo.",
+    "kind": "env",
+    "vendor": "nvidia"
+  },
+  {
+    "group": "intel",
+    "id": "xess_upgrade",
+    "title": "Atualização de componentes XeSS",
+    "key": "PROTON_XESS_UPGRADE",
+    "value": "1",
+    "enabled": false,
+    "description": "Atualiza XeSS em jogos compatíveis, quando o runner oferece esse recurso. A disponibilidade depende da versão do runner e do jogo.",
     "kind": "env"
   }
 ]

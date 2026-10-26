@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-export type ProtonFamily = "ge-proton" | "cachyos-proton";
+export type ProtonFamily = "ge-proton" | "cachyos-proton" | "cachyos-wineland" | "wine-staging" | "wine-proton";
 export interface RunnerRelease {
   family: ProtonFamily; latest: string; current: string | null; installed_path: string | null;
   needs_update: boolean; release_url: string; asset: { name: string; size: number };

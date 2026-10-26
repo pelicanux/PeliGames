@@ -61,6 +61,11 @@ impl Render {
         }
         let context = egui::Context::default();
         context.set_visuals(egui::Visuals::dark());
+        context.style_mut(|style| {
+            for font in style.text_styles.values_mut() {
+                font.size *= 1.2;
+            }
+        });
         let mut out = Self {
             device,
             pool: vk::CommandPool::null(),

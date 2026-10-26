@@ -1,5 +1,14 @@
 [
   {
+    "id": "custom_text_center",
+    "label": "Título personalizado",
+    "keys": [
+      "custom_text_center"
+    ],
+    "hint": "",
+    "hardware_order": -1
+  },
+  {
     "id": "fps",
     "label": "FPS e tempo de quadro",
     "keys": [
@@ -246,15 +255,6 @@
     ],
     "hint": "",
     "hardware_order": 23
-  },
-  {
-    "id": "custom_text_center",
-    "label": "Título personalizado",
-    "keys": [
-      "custom_text_center"
-    ],
-    "hint": "",
-    "hardware_order": 24
   },
   {
     "id": "time",

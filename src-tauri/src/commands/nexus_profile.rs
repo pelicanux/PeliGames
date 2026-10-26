@@ -327,7 +327,7 @@ fn spawn_with_session(game: &NexusGame, command: Command, new_session: bool) -> 
     if new_session { super::nexus_loader_logs::reset(game)?; }
     let mut log = fs::File::create(&current).map_err(|e| e.to_string())?;
     // Wine exposes DLL load provenance and exception frames without the full Proton trace.
-    if game.platform != "native" {
+    if game.platform != "native" && game.advanced.options.get("wine_diagnostics") != Some(&true) {
         command.env("WINEDEBUG", "-all,err+all,warn+seh,trace+loaddll");
     }
     let context = super::nexus_reports::launch_context(game, &command);

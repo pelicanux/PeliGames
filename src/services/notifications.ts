@@ -1,5 +1,5 @@
 /** A launcher error for the notification center (bell): `source` names where it happened. */
-export interface LauncherErrorDetail { source: string; message: string; action?: "nexus-account" | "mangohud-install" | "frame-mako" }
+export interface LauncherErrorDetail { source: string; message: string; action?: "nexus-account" | "mangohud-install" | "frame-mako" | "frame-afmf" }
 /** A new occurrence takes priority, while the bell keeps one entry per source/message. */
 export function repeatNotification<T extends { target: string; source?: string; message?: string }>(items: T[], notice: T): T[] {
   return [notice, ...items.filter(item => item.target !== notice.target || item.source !== notice.source || item.message !== notice.message)];

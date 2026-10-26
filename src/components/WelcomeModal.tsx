@@ -32,7 +32,7 @@ export function WelcomeModal({ onStart, onNavigate }: { onStart: () => void; onN
   useEffect(() => {
     if (!status || !import.meta.env.DEV || !("__PELI_UI_PREVIEW__" in window)) return;
     const requested = Number(new URLSearchParams(location.search).get("welcomeStep"));
-    if (Number.isInteger(requested) && requested >= 1) setStep(Math.min(requested, status.appimage && !status.installed ? 9 : 8) - 1);
+    if (Number.isInteger(requested) && requested >= 1) setStep(Math.min(requested, slides.length) - 1);
   }, [status]);
   const install = async () => {
     if (installing) return;

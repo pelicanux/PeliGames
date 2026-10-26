@@ -7,6 +7,7 @@ Esta é uma adaptação inicial em Rust do PeliGames. Não é uma versão oficia
 - **MAKO Renderer 4.5.0**: código estável em `81d398508592d339da9f4287ea844e695f427630`, especialmente `engine/scripts/mako-launch` e `engine/mako-render/src/swapchain/present/{generated_frames,real_frames}.cpp`. Referência para respeitar o limite privado das camadas e distinguir quadros reais/gerados. O renderer MAKO não está incorporado neste crate.
 - **ReShade / OptiScaler**: referências de comportamento do menu e da captura de entrada. Não são dependências nem foram incorporados como DLLs.
 - **Wine / X.Org / libXi**: referências para o contrato de consumo da fila Xlib e layouts públicos XInput2 no adaptador Wine/XWayland. A implementação Rust é própria; não incorpora o código do driver Wine ou a implementação C de Xlib/libXi. Consultados `winex11.drv/event.c`, `winex11.drv/mouse.c`, o manual Xlib e `XInput2.h`; fontes na documentação da arquitetura.
+- **MangoHUD**: o cálculo de FPS em `present_metrics.rs` adapta para Rust o método de contagem de apresentações por intervalo monotônico de `src/overlay.cpp` e a amostragem padrão de 500 ms de `src/overlay_params.cpp`, revisão `992103e`. Os dois fluxos do PeliGames compartilham a janela de medição; não há dependência da biblioteca do MangoHUD. Licença MIT, aviso preservado abaixo. Fonte: [MangoHUD](https://github.com/flightlessmango/MangoHud).
 - **ash**, **egui** e **egui-ash-renderer**: dependências Rust obtidas pelo Cargo, com versões e checksums no lockfile. `ash`: MIT OR Apache-2.0; `egui`: MIT OR Apache-2.0; `egui-ash-renderer`: MIT. Seus avisos e os das dependências transitivas estão no inventário Rust do launcher; os grafos de dependências dos crates isolados também devem ser incluídos ao regenerá-lo. A camada só é carregada mediante ativação por jogo.
 
 ## Aviso zlib da referência vkBasalt/vkDaedalus
@@ -30,3 +31,27 @@ freely, subject to the following restrictions:
    misrepresented as being the original software.
 
 3. This notice may not be removed or altered from any source distribution.
+
+## Aviso MIT do MangoHUD
+
+MIT License
+
+Copyright (c) 2020 flightlessmango
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

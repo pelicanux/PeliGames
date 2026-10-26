@@ -7,6 +7,18 @@ import type {ModernTab} from "./ModernGameDetails";
 export function GameDetailsTabs({tabs, activeId, onChange}: {tabs: ModernTab[]; activeId?: string; onChange: (id: string) => void}) {
   const pt=useI18n().language === "pt";
   const viewport=useRef<HTMLDivElement>(null);
+  const marker=useRef<HTMLDivElement>(null);
+  const [stuck,setStuck]=useState(false);
+  useLayoutEffect(()=>{
+    const element=marker.current;
+    if(!element)return;
+    const root=element.closest(".game-details-scroll, .container.modern-scroll");
+    const observer=new IntersectionObserver(([entry])=>{
+      setStuck(entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0));
+    },{root,threshold:[0,1]});
+    observer.observe(element);
+    return()=>observer.disconnect();
+  },[]);
   const [edges,setEdges]=useState({overflow:false,left:false,right:false});
   const signature=JSON.stringify(tabs.map(tab=>[tab.id,tab.label,tab.count,tab.disabled]));
   const reveal=(button:HTMLElement)=>{
@@ -46,11 +58,11 @@ export function GameDetailsTabs({tabs, activeId, onChange}: {tabs: ModernTab[]; 
     const next=buttons[event.key==='Home'?0:event.key==='End'?buttons.length-1:(index+(event.key==='ArrowRight'?1:-1)+buttons.length)%buttons.length];
     next?.focus({preventScroll:true});next?.click();if(next)reveal(next);
   };
-  return <div className="modern-game-tabs" data-overflow={edges.overflow || undefined}>
+  return <><div ref={marker} className="modern-game-tabs-marker" aria-hidden="true"/><div className="modern-game-tabs" data-stuck={stuck || undefined} data-overflow={edges.overflow || undefined}>
     <button type="button" className="modern-tab-scroll" aria-label={pt?"Mostrar abas anteriores":"Show previous tabs"} disabled={!edges.left} hidden={!edges.overflow} onClick={()=>move(-1)}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
     <div ref={viewport} className="modern-tabs" role="tablist" aria-label={pt?"Configurações do jogo":"Game settings"} onKeyDown={keyboard}>
       {tabs.map(item=>item.disabled?<HoverTooltip key={item.id} text={item.disabledHint || (pt?"Em desenvolvimento":"In development")}><button type="button" role="tab" disabled aria-selected={false} tabIndex={-1}>{item.label}</button></HoverTooltip>:<button type="button" key={item.id} role="tab" aria-selected={activeId===item.id} tabIndex={activeId===item.id?0:-1} onClick={()=>onChange(item.id)}>{item.label}{item.count?<span className="modern-tab-count">{item.count}</span>:null}</button>)}
     </div>
     <button type="button" className="modern-tab-scroll" aria-label={pt?"Mostrar próximas abas":"Show next tabs"} disabled={!edges.right} hidden={!edges.overflow} onClick={()=>move(1)}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
-  </div>;
+  </div></>;
 }

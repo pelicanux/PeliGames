@@ -131,6 +131,19 @@ pub(super) fn prepare(config: &Path) -> Result<(), String> {
     stage(&host_directories(), &directory(config))
 }
 
+/// AFMF is x86_64-only. Reuse the same validated host manifests as MAKO,
+/// while keeping its own discovery directory and launch boundary.
+pub(super) fn prepare_afmf(destination: &Path) -> Result<(), String> {
+    stage_afmf(&host_directories(), destination)
+}
+fn stage_afmf(sources: &[PathBuf], destination: &Path) -> Result<(), String> {
+    stage(sources, destination)?;
+    if !destination.join(LAYERS[0].0).is_file() {
+        return Err("A camada Vulkan de 64 bits do MangoHUD não foi encontrada. Instale ou repare o MangoHUD em Configurações → Monitoramento.".into());
+    }
+    Ok(())
+}
+
 pub(super) fn launch(runtime: &Path, config: &Path, overlay: Option<&Path>) -> String {
     let hud = directory(config);
     // Run after mako-launch: it deliberately replaces implicit search paths and
@@ -330,6 +343,19 @@ mod tests {
         assert_eq!(value["args"], json!(["arg with spaces", "$(not-code)"]));
         }
     }
+    #[test]
+    fn afmf_requires_host_64_bit_hud_and_drops_a_stale_copy() {
+        let f = Fixture::new();
+        let host64 = f.install("host64", 0);
+        let host32 = f.install("host32", 1);
+        let destination = f.0.join("afmf-hud");
+        stage_afmf(&[host64.clone(), host32.clone()], &destination).unwrap();
+        let value: Value = serde_json::from_slice(&fs::read(destination.join(LAYERS[0].0)).unwrap()).unwrap();
+        assert_eq!(value["layer"]["library_path"], host64.join("libMangoHud.so").to_string_lossy().as_ref());
+        assert!(stage_afmf(&[host32], &destination).unwrap_err().contains("64 bits"));
+        assert!(!destination.join(LAYERS[0].0).exists());
+    }
+
     #[test]
     fn stages_only_validated_architectures_and_resolves_relative_libraries() {
         let f = Fixture::new();

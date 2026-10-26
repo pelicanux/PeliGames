@@ -1,3 +1,4 @@
+import {useLinuxGpus,gpuChoices} from "../../hooks/useLinuxGpus";
 import { MangoHudCustomPresets } from "./MangoHudCustomPresets";
 import { MangoHudMetrics } from "./MangoHudMetrics";
 import { hudOrder } from "./mangoHudLayout";
@@ -5,7 +6,6 @@ import {mangoSearchOptions} from "./preferenceSearch";
 import { SelectionMenu } from "../SelectionMenu";
 import { shortcutConflict } from "./shortcutConflicts";
 import { notifyError } from "../../services/notifications";
-import { MangoHudBenchmarkComparison } from "./MangoHudBenchmarkComparison";
 import { MangoHudFpsCycle } from "./MangoHudFpsCycle";
 import { MangoHudShortcutRecorder } from "./MangoHudShortcutRecorder";
 import { shortcutLabel } from "./mangoHudShortcut";
@@ -101,13 +101,15 @@ export function Hud({ settings, tick, size, graph }: { settings: MangoHudSetting
 /** New interface: the MangoHUD profile in three plain steps beside a live
  *  preview, with every native option still reachable in "Todas as opções".
  *  Loads and saves the same profile as the classic editor. */
-export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=true, benchmarkOnly=false }: { onDirtyChange: (dirty: boolean) => void; searchQuery?:string; visible?:boolean; benchmarkOnly?:boolean }) {
+export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=true, advancedOnly=false }: { onDirtyChange: (dirty: boolean) => void; searchQuery?:string; visible?:boolean; advancedOnly?:boolean }) {
+  const {gpus,error:gpuError}=useLinuxGpus();
   const searching=Boolean(searchQuery.trim());
   const [settings, setSettings] = useState<MangoHudSettings>(mangoHudDefaults), [saved, setSaved] = useState("");
   const [ready, setReady] = useState(false), [saving, setSaving] = useState(false), [error, setError] = useState(""), [saveError, setSaveError] = useState("");
   const [previewBusy, setPreviewBusy] = useState(false), [running, setRunning] = useState(false);
   const [checkingGlobal, setCheckingGlobal] = useState(false);
-  const [advancedOpen, setAdvancedOpen] = useState(false), [query, setQuery] = useState("");
+  const advancedOpen = advancedOnly;
+  const [query, setQuery] = useState("");
   const [tick, setTick] = useState(0), [graph, setGraph] = useState(() => Array.from({ length: 48 }, () => 16 + Math.random() * 3));
   const [screenWidth, setScreenWidth] = useState(480);
   const screen = useRef<HTMLDivElement>(null);
@@ -202,10 +204,12 @@ export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=
     const value = Number(settings[key]);
     return <><input type="range" aria-label={label} min={min} max={max} step={step} value={value} style={{ "--p": `${((value - min) / (max - min)) * 100}%` } as CSSProperties} onChange={event => set(key, Number(event.target.value))} /><span className="value">{format(value)}</span></>;
   };
-  const filtered = options.filter(option => option.section !== "launcher" && (!query.trim() || option.label.toLowerCase().includes(query.trim().toLowerCase()) || option.key.includes(query.trim().toLowerCase())));
+  const filtered = options.filter(option => option.key !== "gpu_list" && option.section !== "launcher" && (!query.trim() || option.label.toLowerCase().includes(query.trim().toLowerCase()) || option.key.includes(query.trim().toLowerCase())));
   const sections = [...new Set(filtered.map(option => option.section))];
   const advancedControl = (option: Spec) => {
     const value = settings[option.key];
+    if(option.key==="pci_dev")return <div className="mm-gpu-device"><SelectionMenu label="GPU monitorada" className="mm-setting-select" menuClassName="mm-setting-options" value={String(value||"")} options={gpuChoices(gpus,String(value||""))} onChange={pci_dev=>update({pci_dev,gpu_list:""})}/>{gpuError&&<small role="status">{gpuError}</small>}{settings.gpu_list&&<small>Seleção anterior por índice: {String(settings.gpu_list)}. Escolha uma placa pelo nome para substituí-la.</small>}</div>;
+
     if(option.kind==="hudorder")return <MangoHudMetrics settings={settings} onToggle={set} onOrder={value=>set(option.key,value)}/>;
     if(option.key==="launcher_enabled")return <button type="button" className="mango-switch sm" role="switch" aria-label={option.label} aria-checked={Boolean(value)} disabled={checkingGlobal} onClick={()=>void toggleGlobal()}/>;
     if(option.kind==="fpslimits")return <MangoHudFpsCycle value={String(value||"")} onChange={value=>set(option.key,value)}/>;
@@ -219,7 +223,7 @@ export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=
   const status = saveError ? "Falha ao salvar" : saving ? "Salvando…" : dirty ? "Aguardando salvamento…" : "Salvo automaticamente";
 
   if(searching){
-    const matches=mangoSearchOptions(searchQuery);if(!matches.length)return null;const groups=[...new Set(matches.map(option=>option.section))];
+    const matches=mangoSearchOptions(searchQuery).filter(option=>option.key!=="gpu_list");if(!matches.length)return null;const groups=[...new Set(matches.map(option=>option.section))];
     return <section className="preference-search-group mango-modern mango-search-results" aria-label="MangoHUD"><header><h2>MangoHUD</h2><span className="mm-saved" role="status">{ready?status:"Carregando configuração…"}</span></header>
       {error&&<p role="alert" className="preferences-error">{error}<button type="button" onClick={()=>void load()}>Tentar novamente</button></p>}
       {saveError&&<div role="alert" className="preferences-error"><p>{saveError}</p><button type="button" disabled={saving} onClick={()=>setSaveError("")}>Tentar novamente</button><button type="button" onClick={()=>{setSettings(JSON.parse(saved));setSaveError("")}}>Desfazer alterações</button></div>}
@@ -228,17 +232,15 @@ export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=
   }
   if (!ready) return <div className="mango-modern"><section className="mm-card"><p>{error || "Carregando configuração…"}</p>{error && <button type="button" className="mm-ghost" onClick={() => void load()}>Tentar novamente</button>}</section></div>;
   return <div className="mango-modern">
-    <div className="monitoring-benchmark-screen" hidden={!benchmarkOnly}><MangoHudBenchmarkComparison shortcut={keyLabel(String(settings.toggle_logging))} fullPage /></div>
-    <div className="monitoring-editor-screen" hidden={benchmarkOnly}>
+    <div className="monitoring-editor-screen">
     <div className="mm-head">
       <div className="mm-head-copy"><h2>{advancedOpen?"Configuração avançada":"Configuração simples"}</h2><p>{advancedOpen?"Todas as opções do MangoHUD, organizadas por categoria.":"Estilos prontos e ajustes essenciais para o seu painel."}</p></div>
-      <div className="mm-head-controls"><div className="mm-segmented" role="tablist" aria-label="Modo de configuração" onKeyDown={event=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;event.preventDefault();const next=event.key==="Home"?false:event.key==="End"?true:!advancedOpen;setAdvancedOpen(next);requestAnimationFrame(()=>document.getElementById(next?"mango-mode-advanced":"mango-mode-simple")?.focus())}}><button type="button" role="tab" id="mango-mode-simple" aria-controls="mango-mode-panel" aria-selected={!advancedOpen} tabIndex={advancedOpen?-1:0} onClick={() => setAdvancedOpen(false)}>Simples</button><button type="button" role="tab" id="mango-mode-advanced" aria-controls="mango-mode-panel" aria-selected={advancedOpen} tabIndex={advancedOpen?0:-1} onClick={() => setAdvancedOpen(true)}>Avançado</button></div>
-      <span className={`mm-saved${saveError ? " failed" : dirty || saving ? " pending" : ""}`} role="status"><i />{status}</span></div>
+
     </div>
     {saveError && <div role="alert" className="preferences-error"><p>Não foi possível salvar automaticamente: {saveError}</p><div className="monitoring-actions"><button type="button" disabled={saving} onClick={() => setSaveError("")}>Tentar novamente</button><button type="button" disabled={saving} onClick={() => { setSettings(JSON.parse(saved)); setSaveError(""); }}>Desfazer alterações</button></div></div>}
     {error && <p role="alert" className="preferences-error">{error}</p>}
     <div className="mm-grid">
-      <div className="mm-stack" id="mango-mode-panel" role="tabpanel" aria-labelledby={advancedOpen?"mango-mode-advanced":"mango-mode-simple"}>
+      <div className="mm-stack">
         <section className="mm-card mm-master">
           <div className="mm-big-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M3 12h4l3-8 4 16 3-8h4" /></svg></div>
           <div><strong>Mostrar nos jogos</strong><small>Em todos os jogos abertos pelo PeliGames. No jogo, <kbd>{keyLabel(String(settings.toggle_hud || "Shift_R+F12"))}</kbd> mostra ou esconde.</small>
@@ -278,6 +280,7 @@ export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=
         <section className="mm-card">
           <h2><span className="mm-step">2</span>O que mostrar</h2>
           <p className="mm-hint">Clique para ligar ou desligar. Arraste o título para mover a categoria; arraste as pílulas móveis para ordenar seus blocos. Salva automaticamente.</p>
+          <div className="mm-row"><span>GPU monitorada<small>Selecionada pelo nome e endereço PCI.</small></span>{advancedControl(options.find(option=>option.key==="pci_dev")!)}</div>
           <MangoHudMetrics settings={settings} onToggle={set} onOrder={value=>set("launcher_hud_custom_order",value)}/>
         </section>
 
@@ -351,9 +354,10 @@ export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=
         <div className="mm-preview-foot">
           <span>Posição: {(POSITIONS.find(([id]) => id === settings.position) ?? ["", "Superior esquerdo"])[1]}</span><span className="mm-spacer" />
           <button type="button" className="mm-ghost" disabled={previewBusy} onClick={() => void preview()} title="Abre o MangoHUD de verdade numa janela de teste">{previewBusy ? "Aguarde…" : running ? "Fechar teste" : "Testar no sistema"}</button>
-          <button type="button" className="mm-ghost" onClick={() => update(mangoHudAppearanceDefaults(settings))} title="Volta o visual e as informações exibidas ao padrão. Atalhos, limite de FPS, gravação de logs e as chaves do launcher são mantidos.">Restaurar aparência</button>
         </div>
         {running && <small className="mm-running">Janela de teste aberta · atualização ao vivo</small>}
+      <div className="mm-head-controls mm-preview-controls"><button type="button" className="mm-ghost" onClick={() => update(mangoHudAppearanceDefaults(settings))} title="Volta o visual e as informações exibidas ao padrão. Atalhos, limite de FPS, gravação de logs e as chaves do launcher são mantidos.">Restaurar aparência</button>
+      <span className={`mm-saved${saveError ? " failed" : dirty || saving ? " pending" : ""}`} role="status"><i />{status}</span></div>
       </aside>
       </div>
     </div>

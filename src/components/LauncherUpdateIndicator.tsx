@@ -12,7 +12,7 @@ export function LauncherUpdateIndicator({ status, disabled, onOpen, onCheck, dow
 }) {
   const { t, language } = useI18n();
   const available = status === "available";
-  const tip = downloadProgress ? `${t("launcherUpdate", "downloading")} ${downloadProgress.percent}% · ${formatDownloadSpeed(downloadProgress.bytesPerSecond, language)}` : t("launcherUpdate", status === "checking" ? "checking" : status === "error" ? "checkFailed" : available ? "updateNotification" : "noneAvailable");
+  const tip = downloadProgress ? `${t("launcherUpdate", "downloading")} ${downloadProgress.percent}% · ${formatDownloadSpeed(downloadProgress.bytesPerSecond, language)}` : t("launcherUpdate", status === "checking" ? "checking" : status === "error" ? "checkFailed" : available ? "updateNotification" : status === "idle" ? "notChecked" : "noneAvailable");
   return <div data-tauri-drag-region="false"
     className={`launcher-update-indicator launcher-update-${status} ${downloadProgress ? "launcher-update-downloading" : ""}`}
     style={{ opacity: disabled && !downloadProgress && status !== "checking" ? .3 : 1 }}>

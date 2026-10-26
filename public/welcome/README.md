@@ -3,7 +3,9 @@
 Capturas reais da interface moderna, feitas na prévia com dados de demonstração e tema padrão azul. Não contêm mensagens privadas nem discos reais. Os JPEGs ficam disponíveis localmente, inclusive sem internet.
 
 - `library.jpg`: `/preview.html?demo=launcher&tour=library&account=owner&layout=modern` — biblioteca e jogos recentes.
-- `dlssnr.jpg`: `/preview.html?demo=dlss&account=owner&layout=modern` → Cyberpunk 2077 → DLSS 5 NR.
+- `dlssnr.jpg`: `/preview.html?demo=dlss&account=owner&layout=modern` → Cyberpunk 2077 → Mods → DLSSNR-AMD.
+- `complements.jpg`: Configurações → Complementos, com as abas DLSSNR-AMD, Nexus Mods, MAKO e AFMF.
+- `game-details.jpg`: detalhes de um jogo e suas abas de configuração.
 - `themes.jpg`: Configurações → Interface → Cor de destaque e blur.
 - `monitoring.jpg`: Configurações → Monitoramento, com a prévia do MangoHUD.
 - `storage.jpg`: Configurações → Discos, com armazenamentos simulados.
@@ -13,9 +15,9 @@ Capturas reais da interface moderna, feitas na prévia com dados de demonstraç�
 
 O empilhamento da abertura, a sombra de flutuação e o degradê inferior são aplicados por CSS, sem alterar as capturas. A animação respeita a preferência de movimento reduzido.
 
-Tour normal, com oito etapas: `/preview.html?demo=welcome&account=owner&layout=modern`.
+Tour normal, com dez etapas: `/preview.html?demo=welcome&account=owner&layout=modern`.
 
-Etapa exclusiva do AppImage, com nove etapas: `/preview.html?demo=welcome&account=owner&layout=modern&appimage=1`. O botão da prévia não realiza instalações.
+Tour com a etapa exclusiva do AppImage, com onze etapas: `/preview.html?demo=welcome&account=owner&layout=modern&appimage=1`. O botão da prévia não realiza instalações.
 
 Pergunta separada após as boas-vindas: `/preview.html?demo=welcome&account=owner&layout=modern&appimage=1&appimagePrompt=1`. Saia com “Explorar por conta própria” ou conclua com “Começar” para visualizar “Instalar o PeliGames?”. Nenhuma instalação é executada pela prévia.
 

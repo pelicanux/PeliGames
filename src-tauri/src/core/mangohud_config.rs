@@ -29,7 +29,7 @@ pub fn defaults() -> Settings {
     catalog().into_iter().map(|o| (o.key, o.default)).collect()
 }
 #[derive(Deserialize)]
-struct LayoutBlock { id: String, keys: Vec<String>, hardware_order: usize }
+struct LayoutBlock { id: String, keys: Vec<String>, hardware_order: i32 }
 fn layout_blocks() -> Vec<LayoutBlock> {
     serde_json::from_str(include_str!("../../../src/config/mangohudLayout.json")).expect("MangoHUD layout catalog")
 }
@@ -90,6 +90,7 @@ pub fn validate(settings: &Settings) -> Result<(), String> {
             "color" => value
                 .as_str()
                 .is_some_and(|s| s.len() == 6 && s.bytes().all(|c| c.is_ascii_hexdigit())),
+            "text" if spec.key == "pci_dev" => value.as_str().is_some_and(crate::commands::gpu::valid_pci_address),
             "text" => value
                 .as_str()
                 .is_some_and(|s| s.chars().count() <= 64 && !s.chars().any(|c| c.is_control())),
@@ -381,6 +382,36 @@ pub(super) fn safe_directory(path: &Path) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn embedded_layout_accepts_title_priority_and_renders_all_orders() {
+        let mut blocks = layout_blocks();
+        blocks.sort_by_key(|block| block.hardware_order);
+        assert_eq!(blocks.first().unwrap().id, "custom_text_center");
+        assert!(blocks.first().unwrap().hardware_order < 0);
+        for order in ["fps-first", "hardware-first"] {
+            let mut settings = defaults();
+            settings.insert("launcher_hud_order".into(), serde_json::json!(order));
+            settings.insert("custom_text_center".into(), serde_json::json!("PeliGames"));
+            let config = render(&settings, Path::new("/tmp/test-hud-logs")).unwrap();
+            let title = config.find("\ncustom_text_center=PeliGames\n").unwrap();
+            for metric in ["fps", "gpu_stats", "cpu_stats"] {
+                assert!(title < config.find(&format!("\n{metric}=")).unwrap());
+            }
+        }
+    }
+
+    #[test]
+    fn monitoring_gpu_uses_valid_pci_identity_and_preserves_legacy_settings() {
+        let mut settings=defaults();
+        settings.insert("gpu_list".into(),Value::String("0,1".into()));
+        assert!(validate(&settings).is_ok());
+        settings.insert("pci_dev".into(),Value::String("0000:01:00.0".into()));
+        settings.insert("gpu_list".into(),Value::String(String::new()));
+        let config=render(&settings,Path::new("/tmp/test-monitoring-logs")).unwrap();
+        assert!(config.contains("pci_dev=0000:01:00.0"));
+        settings.insert("pci_dev".into(),Value::String("0000:01:00.0\nexec=bad".into()));
+        assert!(validate(&settings).is_err());
+    }
     #[test]
     fn custom_layout_is_validated_and_exported_as_native_config_order() {
         let mut s = defaults();

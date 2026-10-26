@@ -9,7 +9,7 @@ Disponíveis para testes, com ativação individual por jogo. A camada do overla
 3. Abra **Biblioteca → detalhes do jogo → Geração de quadros** e ligue **Ativar neste jogo**. Ajuste o multiplicador e as demais opções. As alterações são salvas automaticamente; aguarde a confirmação de salvamento ou confira a mensagem de erro.
 4. Na aba **Desempenho**, ligue **Overlay PeliGames** se quiser os controles dentro do jogo. A camada é independente do MAKO e também permite limitar FPS sem foco pelo MangoHUD. Escolha o atalho (padrão **F8**) antes de iniciar a partida. O carregamento da camada, a troca de atalho/DLL/runtime e a ativação exigem reabrir o jogo.
 5. Na primeira configuração de um launcher externo, siga o comando fornecido pelo PeliRun. Na Steam, cole a linha nas opções de inicialização e use a verificação, ou escolha aplicação automática, que fecha e reabre a Steam. No Heroic use os campos de Wrapper; no Lutris, Prefixo de comando. Use o executável e os argumentos fornecidos pela interface; `%command%` pertence ao formato Steam, não aos campos de wrapper do Heroic/Lutris. Outros launchers exigem campos que aceitem encadear o comando real.
-6. Abra o jogo. Com ele em foco, F8 abre e fecha o painel. Arraste pelo cabeçalho para mudar sua posição. Esc continua reservado ao jogo. O painel só fica disponível se a camada tiver sido carregada nesse processo.
+6. Abra o jogo. Com ele em foco, o atalho escolhido abre e fecha o painel. Arraste pelo cabeçalho para mudar sua posição e pelo canto inferior direito para ajustar largura e altura. Esc continua reservado ao jogo. O painel só fica disponível se a camada tiver sido carregada nesse processo.
 
 A configuração é por instalação. Vincular o PeliRun uma vez permite modificar o perfil e reabrir o jogo sem editar repetidamente a linha da Steam ou reiniciar o cliente. O PeliGames aplica seus próprios perfis ao abrir os jogos que gerencia; o uso direto por outro launcher exige o vínculo nesse launcher. Proton da Steam continua sendo escolhido na aba Compatibilidade da própria Steam.
 
@@ -34,3 +34,9 @@ O painel deve consumir a interação do mouse enquanto aberto e devolvê-la ao j
 Runtimes, versões anteriores e perfis ficam em `~/.config/PeliGames/FrameGeneration`. O PeliRun mantém um executável compartilhado e um JSON por perfil em `~/.local/share/pelirun`; cada perfil tem identificador curto. Atualizações não devem substituir runtimes ainda vinculados a outros jogos. Os detalhes técnicos estão em [PeliRun](steam-launch-runtime.md) e na [camada experimental](in-game-overlay.md).
 
 Ao reportar problemas, inclua versão do PeliGames, nome do jogo, Proton, compositor e se usa Wayland nativo ou XWayland. Consulte os logs do jogo e, para execuções diretas pela Steam, o console da Steam; procure mensagens `[PeliGames overlay]`. Nunca publique credenciais ou dados de conta junto dos logs.
+
+## Desinstalar o componente
+
+Em **Configurações → Complementos**, abra **MAKO** ou **AFMF** e use **Desinstalar MAKO** ou **Desinstalar AFMF**. A ação remove o componente e suas versões locais, incluindo a atual, após confirmação. Configurações dos jogos e a DLL do Lossless Scaling são preservadas. A exclusão individual de backups continua em **Versões e backups**.
+
+A desinstalação é bloqueada enquanto houver perfil ativo ou alteração pendente referenciando a versão, ou um processo usando bibliotecas do componente. Desative a geração nos jogos, aplique as alterações dos launchers externos e encerre os jogos antes de tentar novamente.

@@ -1,5 +1,5 @@
 import { cloneElement, useId, useLayoutEffect, useRef, useState, type ReactElement, type HTMLAttributes } from "react";
-import { createPortal } from "react-dom";
+import {TooltipBubble} from "./TooltipBubble";
 
 interface Props {
   text: string;
@@ -15,57 +15,29 @@ interface Props {
 export function HoverTooltip({ text, children, anchorClassName = "", tooltipClassName = "", showOnFocus = true, align = "right", hoverDelay = 0 }: Props) {
   const id = useId();
   const anchor = useRef<HTMLSpanElement>(null);
-  const tooltip = useRef<HTMLDivElement>(null);
   const suppressRestoredFocus = useRef(false);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hovered, setHovered] = useState(false);
-  const [position, setPosition] = useState<{ left: number; top: number; zIndex: number } | null>(null);
 
   useLayoutEffect(() => {
     return () => { if (hoverTimer.current !== null) clearTimeout(hoverTimer.current); };
   }, [text, hoverDelay]);
 
   useLayoutEffect(() => {
-    if (!text.trim()) { setHovered(false); setPosition(null); }
+    if (!text.trim()) { setHovered(false); }
   }, [text]);
 
+  const cancelHover = () => { if (hoverTimer.current !== null) clearTimeout(hoverTimer.current); hoverTimer.current = null; };
+  const close = () => { cancelHover(); setHovered(false); };
+  const activate = () => { suppressRestoredFocus.current = true; close(); };
   useLayoutEffect(() => {
     if (!hovered) return;
-    const place = () => {
-      if (!anchor.current || !tooltip.current) return;
-      const bounds = anchor.current.getBoundingClientRect();
-      const hint = tooltip.current.getBoundingClientRect();
-      const margin = 8;
-      const titlebarBottom = document.querySelector(".app-titlebar")?.getBoundingClientRect().bottom ?? margin;
-      const minTop = titlebarBottom + margin;
-      const above = bounds.top - hint.height - margin;
-      const top = above >= minTop ? above : bounds.bottom + margin;
-      let zIndex = 1100;
-      for (let parent = anchor.current.parentElement; parent; parent = parent.parentElement) {
-        const layer = Number.parseInt(getComputedStyle(parent).zIndex, 10);
-        if (Number.isFinite(layer)) zIndex = Math.max(zIndex, layer + 1);
-      }
-      setPosition({
-        zIndex,
-        left: Math.max(margin, Math.min(align === "left" ? bounds.left : bounds.right - hint.width, window.innerWidth - hint.width - margin)),
-        top: Math.max(minTop, Math.min(top, window.innerHeight - hint.height - margin)),
-      });
-    };
-    place();
-    const observer = new ResizeObserver(place);
-    if (tooltip.current) observer.observe(tooltip.current);
-    window.addEventListener("resize", place);
-    window.addEventListener("scroll", place, true);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", place);
-      window.removeEventListener("scroll", place, true);
-    };
-  }, [hovered, text, align]);
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") {event.stopPropagation(); close();} };
+    document.addEventListener("keydown", escape, true);
+    window.addEventListener("blur", close);
+    return () => { document.removeEventListener("keydown", escape, true); window.removeEventListener("blur", close); };
+  }, [hovered]);
 
-  const cancelHover = () => { if (hoverTimer.current !== null) clearTimeout(hoverTimer.current); hoverTimer.current = null; };
-  const close = () => { cancelHover(); setHovered(false); setPosition(null); };
-  const activate = () => { suppressRestoredFocus.current = true; close(); };
   return <span ref={anchor} className={`hover-tooltip-anchor ${anchorClassName}`}
     onMouseEnter={() => {
       suppressRestoredFocus.current = false;
@@ -84,11 +56,8 @@ export function HoverTooltip({ text, children, anchorClassName = "", tooltipClas
       if (!suppressRestoredFocus.current && showOnFocus && text.trim()) setHovered(true);
     }}
     onBlur={close} onPointerDown={activate} onClickCapture={activate}
-    onKeyDownCapture={event => { if (event.key === "Enter" || event.key === " ") activate(); }}>
+    onKeyDownCapture={event => { if (event.key === "Escape" && hovered) {event.stopPropagation();close();} else if (event.key === "Enter" || event.key === " ") activate(); }}>
     {cloneElement(children, { "aria-describedby": hovered ? id : undefined })}
-    {hovered && text.trim() && createPortal(<div ref={tooltip} id={id} role="tooltip" className={`ui-hover-tooltip ${tooltipClassName}`}
-      style={{ zIndex: position?.zIndex, left: position?.left ?? 0, top: position?.top ?? 0, visibility: position ? "visible" : "hidden" }}>
-      {text}
-    </div>, document.body)}
+    {hovered && text.trim() && anchor.current && <TooltipBubble id={id} text={text} anchor={anchor.current} align={align} className={tooltipClassName}/>}
   </span>;
 }

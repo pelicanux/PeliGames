@@ -11,7 +11,7 @@ import { consumeMangoHudInstallationRequest, getMangoHudRelease, getMangoHudStat
 export function MonitoringPreferences({ onDirtyChange, searchControl, searchQuery }: { onDirtyChange:(dirty:boolean)=>void; searchControl?: ReactNode; searchQuery?:string }) {
   const { language } = useI18n(); const pt = language === "pt";
   const [editorDirty,setEditorDirty]=useState(false);
-  const [tab,setTab]=useState<"installation"|"monitoring"|"benchmark">("monitoring");
+  const [tab,setTab]=useState<"installation"|"monitoring"|"advanced">("monitoring");
   const [operation,setOperation]=useState<"download"|"install"|null>(null);
   const [ready,setReady]=useState<MangoHudReady|null>(null),[progress,setProgress]=useState<MangoHudProgress|null>(null);
   const [message,setMessage]=useState(""),[cancelling,setCancelling]=useState(false);
@@ -77,13 +77,13 @@ export function MonitoringPreferences({ onDirtyChange, searchControl, searchQuer
   </section>;
   const searching=Boolean(searchQuery?.trim());
   return <div className="monitoring-workspace">
-    <div className="monitoring-navigation" hidden={searching}><header className="settings-page-head"><div><h1>{pt?"Monitoramento":"Monitoring"}</h1><p>{pt?"Instale o MangoHUD, personalize o painel e compare seus testes.":"Install MangoHUD, customize your HUD and compare your tests."}</p></div></header>
-    <div className="settings-tab-toolbar"><div className="preference-mod-tabs monitoring-tabs" role="tablist" aria-label={pt?"MangoHUD":"MangoHUD"} data-active={tab} onKeyDown={event=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key)||operation||editorDirty)return;event.preventDefault();const tabs=["installation","monitoring","benchmark"] as const;const next=tabs[event.key==="Home"?0:event.key==="End"?2:(tabs.indexOf(tab)+(event.key==="ArrowRight"?1:2))%3];setTab(next);requestAnimationFrame(()=>document.getElementById(`mango-tab-${next}`)?.focus())}}>
+    <div className="monitoring-navigation" hidden={searching}><header className="settings-page-head"><div><h1>{pt?"Monitoramento":"Monitoring"}</h1><p>{pt?"Instale o MangoHUD e personalize o painel dos seus jogos.":"Install MangoHUD and customize the HUD for your games."}</p></div></header>
+    <div className="settings-tab-toolbar"><div className="preference-mod-tabs monitoring-tabs" role="tablist" aria-label={pt?"MangoHUD":"MangoHUD"} data-active={tab} onKeyDown={event=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key)||operation||editorDirty)return;event.preventDefault();const tabs=["installation","monitoring","advanced"] as const;const next=tabs[event.key==="Home"?0:event.key==="End"?tabs.length-1:(tabs.indexOf(tab)+(event.key==="ArrowRight"?1:tabs.length-1))%tabs.length];setTab(next);requestAnimationFrame(()=>document.getElementById(`mango-tab-${next}`)?.focus())}}>
       <button ref={installationRef} type="button" id="mango-tab-installation" role="tab" aria-selected={tab==="installation"} aria-controls="mango-panel-installation" tabIndex={tab==="installation"?0:-1} disabled={Boolean(operation)||editorDirty} onClick={()=>setTab("installation")}>{pt?"Instalação do MangoHUD":"MangoHUD installation"}</button>
       <button type="button" id="mango-tab-monitoring" role="tab" aria-selected={tab==="monitoring"} aria-controls="mango-panel-monitoring" tabIndex={tab==="monitoring"?0:-1} disabled={Boolean(operation)||editorDirty} onClick={()=>setTab("monitoring")}>{pt?"Monitoramento do MangoHUD":"MangoHUD monitoring"}</button>
-      <button type="button" id="mango-tab-benchmark" role="tab" aria-selected={tab==="benchmark"} aria-controls="mango-panel-monitoring" tabIndex={tab==="benchmark"?0:-1} disabled={Boolean(operation)||editorDirty} onClick={()=>setTab("benchmark")}>{pt?"Comparação de benchmarks":"Benchmark comparison"}</button>
+      <button type="button" id="mango-tab-advanced" role="tab" aria-selected={tab==="advanced"} aria-controls="mango-panel-monitoring" tabIndex={tab==="advanced"?0:-1} disabled={Boolean(operation)||editorDirty} onClick={()=>setTab("advanced")}>{pt?"Monitoramento avançado":"Advanced monitoring"}</button>
     </div>{searchControl}</div></div>
     <div className="monitoring-tab-panel" id="mango-panel-installation" role="tabpanel" aria-labelledby="mango-tab-installation" hidden={searching||tab!=="installation"}>{installation}</div>
-    <div className="monitoring-tab-panel" id="mango-panel-monitoring" role={searching?undefined:"tabpanel"} aria-labelledby={searching?undefined:`mango-tab-${tab==="benchmark"?"benchmark":"monitoring"}`} hidden={!searching&&tab==="installation"}><ModernMangoHudEditor onDirtyChange={setEditorDirty} searchQuery={searchQuery} benchmarkOnly={tab==="benchmark"} visible={!searching&&tab==="monitoring"}/></div>
+    <div className="monitoring-tab-panel" id="mango-panel-monitoring" role={searching?undefined:"tabpanel"} aria-labelledby={searching?undefined:`mango-tab-${tab==="installation"?"monitoring":tab}`} hidden={!searching&&tab==="installation"}><ModernMangoHudEditor onDirtyChange={setEditorDirty} searchQuery={searchQuery} advancedOnly={tab==="advanced"} visible={!searching&&(tab==="monitoring"||tab==="advanced")}/></div>
   </div>;
 }

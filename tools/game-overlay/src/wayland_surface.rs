@@ -121,6 +121,7 @@ pub unsafe extern "C" fn wl_proxy_marshal_array_flags(
         return std::ptr::null_mut();
     }
     let real: Marshal = std::mem::transmute(real);
+    if !crate::process_scope::enabled() { return real(proxy, opcode, interface, version, flags, arguments); }
     let get_class = crate::symbols::resolve(b"wl_proxy_get_class\0");
     let observed = if !proxy.is_null() && !get_class.is_null() {
         let get_class: unsafe extern "C" fn(*mut c_void) -> *const libc::c_char =

@@ -41,6 +41,7 @@ pub(super) fn check_mangohud_shortcuts(
     let p = load();
     physical_key::parse(&p.shortcut)?;
     for (key, value) in settings {
+        if (key.starts_with("toggle_")||key=="reset_fps_metrics") {if let Some(value)=value.as_str(){super::capture::check_shortcut_conflict(value)?;}}
         if (key.starts_with("toggle_") || key == "reset_fps_metrics")
             && value
                 .as_str()
@@ -65,6 +66,7 @@ pub fn frame_overlay_preferences() -> Status {
 pub async fn configure_frame_overlay(preferences: Preferences) -> Result<(), String> {
     crate::core::release_features::require()?;
     physical_key::parse(&preferences.shortcut)?;
+    super::capture::check_shortcut_conflict(&preferences.shortcut)?;
     if same_shortcut(&preferences.shortcut, "Control_L+k")
         || same_shortcut(&preferences.shortcut, "Super_L+k")
     {

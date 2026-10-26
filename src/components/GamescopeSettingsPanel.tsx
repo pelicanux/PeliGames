@@ -6,8 +6,8 @@ export function GamescopeSettingsPanel({ value, onChange }: { value: GamescopeSe
   const [extra, setExtra] = useState(value.additional_options);
   useEffect(() => setExtra(value.additional_options), [value.additional_options]);
   const update = (patch: Partial<GamescopeSettings>) => onChange({ ...value, ...patch });
-  const toggle = (key: "enable_upscaling" | "enable_limiter" | "force_grab_cursor", title: string, help?: string) => <div className="advanced-option gamescope-toggle-row">
-    <button type="button" role="switch" aria-label={title} aria-checked={value[key]} className={`advanced-toggle ${value[key] ? "enabled" : ""}`} onClick={() => update({ [key]: !value[key] })}><span /></button>
+  const toggle = (key: "enable_upscaling" | "enable_limiter" | "force_grab_cursor" | "hdr" | "adaptive_sync", title: string, help?: string) => <div className="advanced-option gamescope-toggle-row">
+    <button type="button" role="switch" aria-label={title} aria-checked={Boolean(value[key])} className={`advanced-toggle ${value[key] ? "enabled" : ""}`} onClick={() => update({ [key]: !value[key] })}><span /></button>
     <span>{title}</span>{help && <span className="gamescope-help" title={help}><MenuIcon name="info" /></span>}
   </div>;
   const number = (key: "width" | "height" | "output_width" | "output_height" | "fps" | "fps_unfocused", title: string) => <label key={key}>{title}<input type="number" aria-label={title} min="0" max={key.startsWith("fps") ? 1000 : 16384} placeholder="Padrão" defaultValue={value[key] || ""} onBlur={e => update({ [key]: Number(e.target.value) })} onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }} /></label>;
@@ -24,6 +24,8 @@ export function GamescopeSettingsPanel({ value, onChange }: { value: GamescopeSe
     {toggle("enable_limiter", "Habilitar limitador de FPS")}
     {value.enable_limiter && <div className="gamescope-fields">{number("fps", "Limite de FPS")}{number("fps_unfocused", "FPS sem foco")}</div>}
     {toggle("force_grab_cursor", "Habilitar captura forçada do cursor", "Mantém o mouse capturado dentro do jogo. Útil quando o cursor escapa ou o jogo perde o foco.")}
+    {toggle("hdr", "HDR pelo Gamescope", "Requer monitor, sessão HDR e versão do Gamescope compatíveis. Não converte qualquer jogo SDR em HDR.")}
+    {toggle("adaptive_sync", "VRR pelo Gamescope", "Requer VRR habilitado na tela e no compositor. Não garante ativação em qualquer sessão.")}
     <label className="gamescope-extra-label">Opções adicionais <span className="gamescope-help" title="Argumentos extras do Gamescope. Use aspas para valores com espaços. Não inclua comandos, %command% ou o separador --."><MenuIcon name="info" /></span>
       <input aria-label="Opções adicionais" value={extra} onChange={e => setExtra(e.target.value)} onBlur={() => { if (extra !== value.additional_options) update({ additional_options: extra.trim() }); }} onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }} />
     </label>

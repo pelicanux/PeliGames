@@ -3,11 +3,10 @@ import { openMangoHudInstallation } from "../services/mangohud";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { createPortal } from "react-dom";
-import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "../i18n/I18nContext";
 import { MenuIcon } from "./MenuIcon";
 import type { LauncherUpdateInfo } from "../services/launcherUpdates";
-import { checkRunner, type ProtonFamily } from "../services/protonService";
+import type { ProtonFamily } from "../services/protonService";
 import "./notifications.css";
 import { LAUNCHER_ERROR_EVENT, LAUNCHER_NOTICE_EVENT, repeatNotification, type LauncherErrorDetail } from "../services/notifications";
 import { MATRIX_MENTION_EVENT, OPEN_MATRIX_CHAT_EVENT, type MatrixMentionDetail } from "../services/matrixChat";
@@ -28,14 +27,6 @@ function readStore(): Store {
     };
   } catch { /* Storage may be unavailable; notifications still work in memory. */ }
   return { items: [], seen: [] };
-}
-// StrictMode remounts share the asynchronous startup checks.
-let componentChecks: Promise<PromiseSettledResult<{ target: UpdateTarget; status: BackendStatus }>[]> | undefined;
-function checkComponents() {
-  return componentChecks ??= Promise.allSettled([
-    ...(["rdna4", "rdna3"] as const).map(async target => ({ target, status: await invoke<BackendStatus>("check_backend_version", { gpuArch: target }) })),
-    ...(["ge-proton", "cachyos-proton"] as const).map(async target => ({ target, status: await checkRunner(target) })),
-  ]);
 }
 const Bell = () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>;
 
@@ -128,24 +119,8 @@ export function NotificationCenter({ launcherUpdate, onNavigate, onNexusAccount,
   useEffect(() => {
     if (launcherUpdate) reconcile("launcher", launcherUpdate.available ? launcherUpdate.latest : null);
   }, [launcherUpdate]); // One response per startup or manual refresh.
-  useEffect(() => {
-    let active = true;
-    void checkComponents().then(results => {
-      if (!active) return;
-      for (const result of results) {
-        if (result.status === "fulfilled") {
-          const { target, status } = result.value;
-          if (target === "ge-proton" || target === "cachyos-proton") {
-            if (!protonResponses.current.has(target)) reconcile(target, status?.current && status.needs_update && status.current !== status.latest ? status.latest : null);
-          } else {
-            // First installations do not count as updates.
-            reconcile(target, status?.current && status.needs_update ? status.latest : null);
-          }
-        } else console.debug("Update notification check unavailable", result.reason);
-      }
-    });
-    return () => { active = false; };
-  }, []);
+  // Backends and runners are checked in their own panels (or on request), never at
+  // start; their results arrive here through the events below.
   useEffect(() => {
     const updated = (event: Event) => {
       const { target, status } = (event as CustomEvent<{ target: UpdateTarget; status: BackendStatus }>).detail;
@@ -266,7 +241,7 @@ export function NotificationCenter({ launcherUpdate, onNavigate, onNexusAccount,
     if (navigationBusy) return;
     commit({ ...storeRef.current, items: storeRef.current.items.map(n => n.id === notice.id ? { ...n, unread: false } : n) });
     setToasts(queue => queue.filter(n => n.id !== notice.id));
-    close(); if (notice.action === "nexus-account") onNexusAccount(); else if (notice.action === "mangohud-install") openMangoHudInstallation(); else if (notice.action === "frame-mako") openFrameGenerationPreferences("mako"); else if (notice.target === "matrix") window.dispatchEvent(new Event(OPEN_MATRIX_CHAT_EVENT)); else if (notice.target !== "nexus" && notice.target !== "error" && notice.target !== "info") onNavigate(notice.target);
+    close(); if (notice.action === "nexus-account") onNexusAccount(); else if (notice.action === "mangohud-install") openMangoHudInstallation(); else if (notice.action === "frame-mako") openFrameGenerationPreferences("mako"); else if (notice.action === "frame-afmf") openFrameGenerationPreferences("afmf"); else if (notice.target === "matrix") window.dispatchEvent(new Event(OPEN_MATRIX_CHAT_EVENT)); else if (notice.target !== "nexus" && notice.target !== "error" && notice.target !== "info") onNavigate(notice.target);
   };
   return <>
     <button ref={bellRef} type="button" data-tauri-drag-region="false" className="btn-titlebar notification-bell" title={en ? "Notifications" : "Notificações"} aria-label={en ? "Notifications" : "Notificações"} aria-expanded={open} aria-controls="update-notifications" onClick={() => {

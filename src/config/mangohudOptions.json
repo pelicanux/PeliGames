@@ -411,8 +411,15 @@
   },
   {
     "section": "gpu",
-    "key": "gpu_list",
+    "key": "pci_dev",
     "label": "GPU monitorada",
+    "kind": "text",
+    "default": ""
+  },
+  {
+    "section": "gpu",
+    "key": "gpu_list",
+    "label": "Seleção antiga de GPU por índice",
     "kind": "select",
     "default": "",
     "values": [

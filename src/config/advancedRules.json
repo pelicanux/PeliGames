@@ -41,6 +41,41 @@
       "mangohud",
       "mangohud_env",
       "Escolha apenas um modo de MangoHud: painel ou ambiente Vulkan."
+    ],
+    [
+      "wined3d",
+      "d7vk",
+      "WineD3D não pode ser combinado com este recurso de tradução Vulkan/DXVK."
+    ],
+    [
+      "wined3d",
+      "dxvk_limit",
+      "WineD3D não pode ser combinado com este recurso de tradução Vulkan/DXVK."
+    ],
+    [
+      "wined3d",
+      "dxvk_latency",
+      "WineD3D não pode ser combinado com este recurso de tradução Vulkan/DXVK."
+    ],
+    [
+      "wined3d",
+      "dxvk_hdr",
+      "WineD3D não pode ser combinado com este recurso de tradução Vulkan/DXVK."
+    ],
+    [
+      "gpu_prime",
+      "nvidia_offload",
+      "Escolha apenas um método de seleção de GPU: Mesa PRIME ou NVIDIA PRIME."
+    ],
+    [
+      "no_hdr",
+      "hdr",
+      "Desative a opção de desligar HDR antes de habilitar HDR."
+    ],
+    [
+      "no_hdr",
+      "dxvk_hdr",
+      "Desative a opção de desligar HDR antes de habilitar HDR."
     ]
   ]
 }

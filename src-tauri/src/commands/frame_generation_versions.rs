@@ -46,10 +46,11 @@ fn valid(backend: &str, r: &Release) -> bool {
     if semver(&r.version).is_none() {
         return false;
     }
-    if backend != "mako" {
-        return false;
-    }
-    let expected = format!("https://github.com/eugeniosegala/MAKO/releases/download/render-v{0}/MAKO-Renderer-v{0}-linux.tar.xz", r.version);
+    let expected = match backend {
+        "mako" => format!("https://github.com/eugeniosegala/MAKO/releases/download/render-v{0}/MAKO-Renderer-v{0}-linux.tar.xz", r.version),
+        "afmf" => format!("https://github.com/serialexperimentslainnnn/afmf-linux/releases/download/v{0}/afmf-linux-{0}-x86_64.tar.xz", r.version),
+        _ => return false,
+    };
     r.url == expected
         && r.hash
             .as_ref()
@@ -121,14 +122,23 @@ fn now() -> u64 {
         .unwrap_or_default()
         .as_secs()
 }
-fn parse_mako(json: &serde_json::Value) -> Option<Release> {
+/// Each backend's official catalog and how its stable packages are named.
+fn catalog(backend: &str) -> Option<(&'static str, &'static str, fn(&str) -> String)> {
+    match backend {
+        "mako" => Some(("https://api.github.com/repos/eugeniosegala/MAKO/releases?per_page=50", "render-v", |v| format!("MAKO-Renderer-v{v}-linux.tar.xz"))),
+        "afmf" => Some(("https://api.github.com/repos/serialexperimentslainnnn/afmf-linux/releases?per_page=30", "v", |v| format!("afmf-linux-{v}-x86_64.tar.xz"))),
+        _ => None,
+    }
+}
+fn parse_release(backend: &str, json: &serde_json::Value) -> Option<Release> {
+    let (_, prefix, package) = catalog(backend)?;
     json.as_array()?
         .iter()
         .filter(|r| r["prerelease"] == false && r["draft"] == false)
         .filter_map(|r| {
-            let version = r["tag_name"].as_str()?.strip_prefix("render-v")?;
+            let version = r["tag_name"].as_str()?.strip_prefix(prefix)?;
             let v = semver(version)?;
-            let name = format!("MAKO-Renderer-v{version}-linux.tar.xz");
+            let name = package(version);
             let a = r["assets"]
                 .as_array()?
                 .iter()
@@ -180,7 +190,7 @@ pub async fn frame_generation_check_updates(
             .user_agent("PeliGames-frame-generation")
             .build()
             .map_err(|e| e.to_string())?;
-        let url = "https://api.github.com/repos/eugeniosegala/MAKO/releases?per_page=50";
+        let (url, _, _) = catalog(&backend).ok_or("Tecnologia de geração de quadros inválida.")?;
         let response = client
             .get(url)
             .send()
@@ -198,7 +208,7 @@ pub async fn frame_generation_check_updates(
         }
         let found = serde_json::from_slice(&data)
             .ok()
-            .and_then(|j| parse_mako(&j))
+            .and_then(|j| parse_release(&backend, &j))
             .ok_or("Não foi possível identificar uma versão estável oficial.")?;
         if !valid(&backend, &found) {
             return Err("O endereço do pacote oficial não corresponde ao esperado.".into());
@@ -302,6 +312,18 @@ pub async fn frame_generation_remove_backup(
         fs::remove_dir_all(p).map_err(|e|e.to_string())
     }).await.map_err(|e|e.to_string())?
 }
+/// Explicit uninstall includes the current runtime, unlike backup cleanup.
+#[tauri::command]
+pub async fn frame_generation_uninstall(backend:String)->Result<(),String>{
+ crate::core::release_features::require()?;
+ tauri::async_runtime::spawn_blocking(move||{
+  release(&backend)?;
+  if INSTALLING.swap(true,Ordering::AcqRel){return Err("Aguarde a operação no componente em andamento.".into());}
+  struct Guard;impl Drop for Guard{fn drop(&mut self){INSTALLING.store(false,Ordering::Release);}}let _guard=Guard;
+  for runtime in installed(&backend)?{if referenced(&backend,&runtime.version)?{return Err("Este componente ainda está ativado em um perfil de jogo ou alteração pendente. Desative-o nos jogos e aplique as alterações antes de desinstalar.".into());}}
+  crate::core::component_uninstall::remove_runtime(&root()?,&backend)
+ }).await.map_err(|e|e.to_string())?
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -391,6 +413,16 @@ mod tests {
     #[test]
     fn mako_releases_filter_prereleases_and_assets() {
         let j = serde_json::json!([{"tag_name":"render-v4.6.0","prerelease":true,"draft":false,"assets":[]},{"tag_name":"v9.0.0","prerelease":false,"draft":false,"assets":[]},{"tag_name":"render-v4.5.0","prerelease":false,"draft":false,"assets":[{"name":"MAKO-Renderer-v4.5.0-linux.tar.xz","browser_download_url":builtin("mako").unwrap().url}]}]);
-        assert_eq!(parse_mako(&j).unwrap().version, "4.5.0");
+        assert_eq!(parse_release("mako", &j).unwrap().version, "4.5.0");
+    }
+    #[test]
+    fn afmf_releases_use_their_own_tags_package_and_checks() {
+        // A MAKO-style tag must not be read as an AFMF release, nor the other way around.
+        let j = serde_json::json!([{"tag_name":"v1.4.0","prerelease":true,"draft":false,"assets":[]},{"tag_name":"render-v9.0.0","prerelease":false,"draft":false,"assets":[]},{"tag_name":"v1.3.1","prerelease":false,"draft":false,"assets":[{"name":"afmf-linux-1.3.1-1.fc44.x86_64.rpm","browser_download_url":"x"},{"name":"afmf-linux-1.3.1-x86_64.tar.xz","browser_download_url":builtin("afmf").unwrap().url,"digest":"sha256:7fafa09021ee94dc5ec8da694cb02fe298b54c114b486611bb24b1e1500edb18"}]}]);
+        let found = parse_release("afmf", &j).unwrap();
+        assert_eq!(found.version, "1.3.1");
+        assert!(valid("afmf", &found) && !valid("mako", &found));
+        assert!(parse_release("mako", &j).is_none());
+        assert!(compatible("afmf", "1.4.2") && !compatible("afmf", "2.0.0") && !compatible("afmf", "1.2.0"));
     }
 }

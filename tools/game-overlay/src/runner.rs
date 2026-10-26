@@ -14,7 +14,12 @@ use std::{
 };
 #[path = "../shortcut.rs"]
 mod shortcut_key;
+mod preload;
+mod present_routing;
+use present_routing::Generator;
+use preload::prepend as append_dso;
 const LAYER: &str = "VK_LAYER_PELIGAMES_overlay";
+const COUNTER_LAYER: &str = "VK_LAYER_PELIGAMES_present_counter";
 fn layer_manifest(library: &Path) -> String {
     // pressure-vessel parses implementation_version as a JSON string. The
     // host Vulkan loader also accepts a number, which hides this error in
@@ -24,6 +29,27 @@ fn layer_manifest(library: &Path) -> String {
         "implementation_version":"1","description":"PeliGames interactive overlay",
         "library_arch":"64",
         "functions":{"vkNegotiateLoaderLayerInterfaceVersion":"peliNegotiateLoaderLayerInterfaceVersion"}}}).to_string()
+}
+fn counter_manifest(library:&Path)->String {
+    let mut manifest:serde_json::Value=serde_json::from_str(&layer_manifest(library)).expect("static layer manifest");
+    manifest["layer"]["name"]=COUNTER_LAYER.into();
+    manifest["layer"]["description"]="PeliGames passive frame generation counter".into();
+    manifest["layer"]["functions"]["vkNegotiateLoaderLayerInterfaceVersion"]="peliCounterNegotiateLoaderLayerInterfaceVersion".into();
+    manifest.to_string()
+}
+fn counter_order(existing: String, generator: Option<Generator>) -> String {
+    let mut layers: Vec<_> = existing.split(':').filter(|s| !s.is_empty() && *s != COUNTER_LAYER).collect();
+    match generator {
+        Some(Generator::Afmf) if layers.contains(&"VK_LAYER_AFMF") => layers.push(COUNTER_LAYER),
+        Some(Generator::Mako) if layers.contains(&"VK_LAYER_MAKO_render") => {
+            // Only this passive observer goes above MAKO. The renderer/input
+            // boundary and all vendor/Steam/MangoHUD ordering stay unchanged.
+            let index = layers.iter().position(|name| *name == "VK_LAYER_MAKO_render").unwrap();
+            layers.insert(index, COUNTER_LAYER);
+        }
+        _ => {}
+    }
+    layers.join(":")
 }
 // An explicit override must include the game's additive NR Control/int4/ReShade paths.
 fn explicit_paths(mut current: Option<OsString>, additional: Option<OsString>) -> Result<Option<OsString>, String> {
@@ -61,7 +87,7 @@ fn prepend(path: &Path, previous: Option<OsString>) -> Result<OsString, String> 
 fn order(existing: &str, mako_enabled: bool) -> Result<String, String> {
     let mut names: Vec<&str> = existing
         .split(':')
-        .filter(|n| !n.is_empty() && *n != LAYER)
+        .filter(|n| !n.is_empty() && *n != LAYER && *n != COUNTER_LAYER)
         .collect();
     if names
         .iter()
@@ -141,11 +167,28 @@ fn prepare() -> Result<Vec<(&'static str, OsString)>, String> {
         }
     }
     let paths = prepend(&manifests, layer_paths)?;
-    let layers = order(
-        &env::var("VK_INSTANCE_LAYERS").unwrap_or_default(),
-        env::var("ENABLE_MAKO").ok().as_deref() == Some("1"),
+    let afmf=env::var("AFMF_ENABLE").ok().as_deref()==Some("1");
+    let ordered = order(&env::var("VK_INSTANCE_LAYERS").unwrap_or_default(),
+        env::var("ENABLE_MAKO").ok().as_deref() == Some("1"))?;
+    let generator = present_routing::detect(afmf, &ordered);
+    if generator.is_some() {
+        let path=manifests.join("VkLayer_PELIGAMES_present_counter.json");
+        let content=counter_manifest(&library);
+        let intact=fs::symlink_metadata(&path).is_ok_and(|m|m.is_file()&&m.uid()==unsafe{libc::geteuid()}&&m.mode()&0o077==0)
+            && fs::read_to_string(&path).ok().as_deref()==Some(content.as_str());
+        if !intact {
+            let temporary=manifests.join(format!(".counter-{}.json",std::process::id()));
+            let result=(||{fs::OpenOptions::new().write(true).create_new(true).mode(0o600).open(&temporary)?.write_all(content.as_bytes())?;fs::rename(&temporary,&path)})();
+            if let Err(error)=result {let _=fs::remove_file(&temporary);return Err(error.to_string());}
+        }
+    }
+    let layers = counter_order(ordered, generator);
+    let preload = preload::input(
+        &library,
+        env::var_os("LD_PRELOAD"),
+        env::var_os("PROTON_ENABLE_WAYLAND").as_deref(),
+        env::var_os("PROTON_USE_WAYLAND").as_deref(),
     )?;
-    let preload = append_dso(&library, env::var_os("LD_PRELOAD"))?;
     let audit_path = append_dso(&audit, env::var_os("LD_AUDIT"))?;
     Ok(vec![
         ("VK_LAYER_PATH", paths),
@@ -288,34 +331,7 @@ fn shortcut() -> Result<String, String> {
     shortcut_key::parse(key)?;
     Ok(key.into())
 }
-fn append_dso(path: &Path, existing: Option<OsString>) -> Result<OsString, String> {
-    use std::os::unix::ffi::{OsStrExt, OsStringExt};
-    if path
-        .as_os_str()
-        .as_bytes()
-        .iter()
-        .any(|b| b.is_ascii_whitespace() || *b == b':')
-    {
-        return Err("O diretório do overlay não pode conter espaços ou dois-pontos.".into());
-    }
-    let mut value = path.as_os_str().to_owned();
-    if let Some(old) = existing {
-        // Nested legacy/general runners can refer to different installations
-        // of this payload. Keep one copy across exec, preserving other DSOs.
-        for entry in old.as_bytes().split(|b| *b == b':' || b.is_ascii_whitespace()) {
-            if entry.is_empty() {
-                continue;
-            }
-            let entry = OsString::from_vec(entry.to_vec());
-            if Path::new(&entry).file_name() == path.file_name() {
-                continue;
-            }
-            value.push(":");
-            value.push(entry);
-        }
-    }
-    Ok(value)
-}
+
 fn main() {
     if let Err(e) = run() {
         eprintln!("PeliGames overlay: {e}");
@@ -326,6 +342,39 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn afmf_hud_stays_between_generation_and_passive_counter() {
+        let original = "VK_LAYER_NR:VK_LAYER_AFMF:VK_LAYER_MANGOHUD_overlay_x86_64";
+        let layers = counter_order(order(original, false).unwrap(), Some(Generator::Afmf));
+        assert_eq!(layers, format!("{LAYER}:VK_LAYER_NR:VK_LAYER_AFMF:VK_LAYER_MANGOHUD_overlay_x86_64:{COUNTER_LAYER}"));
+        assert_eq!(counter_order(layers.clone(), Some(Generator::Afmf)), layers);
+    }
+
+    #[test]
+    fn passive_counter_is_after_afmf_and_absent_without_a_generator() {
+        let layers=counter_order(order("VK_LAYER_NR:VK_LAYER_AFMF",false).unwrap(),Some(Generator::Afmf));
+        assert_eq!(layers,format!("{LAYER}:VK_LAYER_NR:VK_LAYER_AFMF:{COUNTER_LAYER}"));
+        assert_eq!(counter_order(layers.clone(),Some(Generator::Afmf)),layers);
+        assert!(!counter_order(order("VK_LAYER_NR",false).unwrap(),None).contains(COUNTER_LAYER));
+        let manifest:serde_json::Value=serde_json::from_str(&counter_manifest(Path::new("/fixture/liboverlay.so"))).unwrap();
+        assert_eq!(manifest["layer"]["functions"]["vkNegotiateLoaderLayerInterfaceVersion"],"peliCounterNegotiateLoaderLayerInterfaceVersion");
+    }
+    #[test]
+    fn mako_source_counter_keeps_the_existing_renderer_and_vendor_order() {
+        for original in [
+            "VK_LAYER_MAKO_render:VK_LAYER_VALVE_steam_overlay_64",
+            "VK_LAYER_MAKO_render:VK_LAYER_MANGOHUD_overlay_x86_64:VK_LAYER_MANGOHUD_overlay_x86:VK_LAYER_VALVE_steam_overlay_64",
+            "VK_LAYER_MAKO_render:VK_LAYER_VKBASALT_post_processing:VK_LAYER_VALVE_steam_overlay_64",
+        ] {
+            let previous = order(original, false).unwrap();
+            let generator = present_routing::detect(false, &previous);
+            let layers = counter_order(previous.clone(), generator);
+            assert_eq!(layers, format!("{COUNTER_LAYER}:{previous}"));
+            assert_eq!(counter_order(order(&layers, false).unwrap(), generator), layers,
+                "nested runners must not move the renderer above MangoHUD/shaders");
+        }
+    }
+
     #[test]
     fn additive_mod_layers_remain_discoverable_under_an_explicit_override() {
         let paths = explicit_paths(Some("/steam:/mako".into()), Some("/game/control:/game/int4".into())).unwrap().unwrap();

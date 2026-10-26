@@ -198,6 +198,13 @@ pub(super) fn flatpak_directory() -> Option<PathBuf> {
     directory(true).ok().filter(|path| path.is_dir())
 }
 
+/// Rebuild from the complete saved source, including Steam Flatpak routing.
+pub(super) fn rebuild(previous: &Profile) -> Result<Profile, String> {
+    let mut next = build(previous.app_id.max(1), &source(previous)?)?;
+    next.installation = previous.installation.clone();
+    Ok(next)
+}
+
 pub(super) fn build_for(name: &str, advanced: &AdvancedSettings, mods: Option<String>) -> Result<Profile, String> {
     build(1, &Source { kind: KIND.into(), name: name.into(), flatpak: false, advanced: advanced.clone(), mod_options: mods })
 }
@@ -340,7 +347,7 @@ pub(super) fn profile_directories() -> Result<Vec<PathBuf>, String> {
 /// Refresh the shared helper before opening the public launcher. Old profile
 /// sources remain intact so development builds can restore them on save.
 pub(crate) fn enforce_release_policy() -> Result<(), String> {
-    if crate::core::release_features::enabled() { return Ok(()); }
+    if crate::core::release_features::enabled() { return refresh_monitoring(); }
     let _lock = LOCK.lock().map_err(|_| "Perfil Steam ocupado.")?;
     for profiles in profile_directories()? {
         let directory = profiles.parent().ok_or("Diretório do perfil inválido")?;
@@ -367,6 +374,7 @@ pub(super) fn refresh_monitoring() -> Result<(), String> {
             continue;
         }
         private_directory(&profiles)?;
+        atomic_write(&profiles.parent().ok_or("Perfil sem diretório.")?.join("pelirun"), HELPER, 0o700)?;
         for entry in fs::read_dir(&profiles).map_err(|error| error.to_string())? {
             let path = entry.map_err(|error| error.to_string())?.path();
             if path.extension().and_then(|value| value.to_str()) != Some("json") {
@@ -382,8 +390,7 @@ pub(super) fn refresh_monitoring() -> Result<(), String> {
             let Some(previous) = read_at(&path, app)? else {
                 continue;
             };
-            let mut next = build(app, &source(&previous)?)?;
-            next.installation = previous.installation;
+            let next = rebuild(&previous)?;
             publish_at(profiles.parent().ok_or("Perfil sem diretório.")?, &next)?;
         }
     }

@@ -45,6 +45,38 @@ fn scan_roots(roots: impl IntoIterator<Item = PathBuf>) -> Vec<InstalledProton> 
     result
 }
 
+/// `root` and its grouping folders (e.g. ge-proton/, cachyos-proton/ or one
+/// the user made): a runner copied anywhere one level down is found, as in
+/// Steam's compatibilitytools.d or Heroic's tools folders.
+fn grouped(root: PathBuf) -> Vec<PathBuf> {
+    let mut roots = vec![root.clone()];
+    if let Ok(entries) = std::fs::read_dir(&root) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() && !path.join("proton").exists() && !path.join("bin/wine").exists()
+                && !entry.file_name().to_string_lossy().starts_with('.') {
+                roots.push(path);
+            }
+        }
+    }
+    roots
+}
+/// Standalone Wine builds (a folder with bin/wine and bin/wineserver), as
+/// Lutris and Heroic keep them and as a user copies one into PeliGames.
+fn wine_builds(roots: impl IntoIterator<Item = PathBuf>) -> Vec<InstalledProton> {
+    let mut found = BTreeMap::new();
+    for root in roots {
+        let Ok(entries) = std::fs::read_dir(root) else { continue };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if entry.file_name().to_string_lossy().starts_with('.') || crate::core::game_installation::native_wine(&path).is_none() { continue; }
+            let Ok(canonical) = path.canonicalize() else { continue };
+            found.entry(canonical.to_string_lossy().into_owned())
+                .or_insert_with(|| format!("{} (Wine)", entry.file_name().to_string_lossy()));
+        }
+    }
+    found.into_iter().map(|(path, name)| InstalledProton { name, path }).collect()
+}
 fn system_wines(paths: impl IntoIterator<Item = PathBuf>) -> Vec<InstalledProton> {
     let mut seen=BTreeSet::new();let mut found=Vec::new();
     for directory in paths {
@@ -87,15 +119,18 @@ fn steam_libraries(home: &Path) -> BTreeSet<PathBuf> {
 pub async fn scan_installed_protons() -> Result<Vec<InstalledProton>, String> {
     tauri::async_runtime::spawn_blocking(|| {
         let home = dirs::home_dir().ok_or("Não foi possível localizar a pasta pessoal.")?;
-        let mut roots = vec![
-            crate::core::proton_manager::runners_dir()?.join("ge-proton"),
-            crate::core::proton_manager::runners_dir()?.join("cachyos-proton"),
+        let protons = crate::core::proton_manager::runners_dir()?;
+        let wines = protons.parent().ok_or("Pasta de runners inválida.")?.join("wine");
+        // Both folders exist so a user can drop a runner in without guessing the layout.
+        for folder in [&protons, &wines] { let _ = std::fs::create_dir_all(folder); }
+        let mut roots = grouped(protons);
+        roots.extend([
             home.join(".local/share/compatibilitytools.d"),
             home.join(".local/share/lutris/runners/proton"),
             home.join(".config/heroic/tools/proton"),
             home.join(".var/app/com.heroicgameslauncher.hgl/config/heroic/tools/proton"),
             PathBuf::from("/opt/proton"),
-        ];
+        ]);
         if let Some(data) = dirs::data_dir() {
             roots.push(data.join("lutris/runners/proton"));
         }
@@ -114,6 +149,14 @@ pub async fn scan_installed_protons() -> Result<Vec<InstalledProton>, String> {
             let mut paths:Vec<PathBuf>=std::env::var_os("PATH").map(|path|std::env::split_paths(&path).collect()).unwrap_or_default();
             paths.extend([PathBuf::from("/usr/bin"),PathBuf::from("/usr/local/bin")]);
             found.extend(system_wines(paths));
+        }
+        { // Standalone Wine builds: PeliGames' own folder, Lutris and Heroic.
+            let mut wine_roots = grouped(wines);
+            wine_roots.extend([home.join(".local/share/lutris/runners/wine"),
+                home.join(".config/heroic/tools/wine"),
+                home.join(".var/app/com.heroicgameslauncher.hgl/config/heroic/tools/wine")]);
+            if let Some(data) = dirs::data_dir() { wine_roots.push(data.join("lutris/runners/wine")); }
+            found.extend(wine_builds(wine_roots));
         }
         Ok(found)
     })
@@ -213,6 +256,25 @@ mod discovery_tests {
         assert_eq!(crate::core::game_installation::runner_backend(&found[0].path).unwrap(),runner);
         let mut command=std::process::Command::new(&runner);crate::core::game_installation::wine_environment(&mut command,&runner,&root.join("prefix"));
         assert!(command.get_envs().any(|(key,value)|key=="WINESERVER" && value==Some(bin.join("wineserver").as_os_str())));
+        std::fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn runners_dropped_into_peligames_folders_are_found_like_steam_and_heroic() {
+        use std::os::unix::fs::PermissionsExt;
+        let root=std::env::temp_dir().join(format!("peligames-runner-drop-{}",uuid::Uuid::new_v4()));
+        let protons=root.join("runners/proton");let wines=root.join("runners/wine");
+        let proton=|dir:PathBuf|{std::fs::create_dir_all(&dir).unwrap();std::fs::write(dir.join("proton"),"#!/bin/sh\n").unwrap();};
+        proton(protons.join("Proton-Copied-Directly"));
+        proton(protons.join("ge-proton/GE-Proton11-7"));
+        proton(protons.join("my-group/Proton-In-A-Group"));
+        let executable=|path:PathBuf|{std::fs::create_dir_all(path.parent().unwrap()).unwrap();std::fs::write(&path,"#!/bin/sh\n").unwrap();std::fs::set_permissions(&path,std::fs::Permissions::from_mode(0o755)).unwrap();};
+        executable(wines.join("wine-staging-11/bin/wine"));executable(wines.join("wine-staging-11/bin/wineserver"));
+        executable(wines.join("broken-wine/bin/wine")); // no wineserver: not usable
+        let mut names:Vec<String>=scan_roots(grouped(protons)).into_iter().map(|p|p.name).collect();names.sort();
+        assert_eq!(names,["GE-Proton11-7","Proton-Copied-Directly","Proton-In-A-Group"]);
+        let found=wine_builds([wines.clone(),root.join("missing")]);
+        assert_eq!(found.len(),1);assert_eq!(found[0].name,"wine-staging-11 (Wine)");
+        assert_eq!(crate::core::game_installation::validate_proton(&found[0].path).unwrap(),wines.join("wine-staging-11").canonicalize().unwrap());
         std::fs::remove_dir_all(root).unwrap();
     }
     #[test]

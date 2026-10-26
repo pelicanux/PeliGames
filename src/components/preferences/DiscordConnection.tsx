@@ -1,3 +1,4 @@
+import {DiscordPresencePreferences} from "./DiscordPresencePreferences";
 import { ConnectionStorageChoice } from "../ConnectionStorageChoice";
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
@@ -97,5 +98,6 @@ export function DiscordConnection() {
       {valid&&<div className="connection-info-row"><MenuIcon name="calendar"/><div><strong>{pt?"Validade da verificação":"Verification valid until"}</strong><p>{new Date(account.valid_until!).toLocaleDateString(pt?"pt-BR":"en-US")}</p></div></div>}
       {status?.offline&&<p role="status">{pt?"Sem validação online. Exibindo a última verificação salva.":"Online validation unavailable. Showing the last saved verification."}</p>}
     </section>
+    <DiscordPresencePreferences/>
   </div></section>;
 }

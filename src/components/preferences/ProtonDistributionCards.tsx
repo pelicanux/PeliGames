@@ -8,10 +8,15 @@ import { MenuIcon } from "../MenuIcon";
 import { useI18n } from "../../i18n/I18nContext";
 import { checkRunner, installRunner, cancelRunner, uninstallRunner, type ProtonFamily, type RunnerRelease, type RunnerProgress } from "../../services/protonService";
 
-const distributions = [
+const WINE_NOTE = { pt: "Wine puro (wow64), sem o contêiner do Steam Runtime: usa as bibliotecas do sistema. Para jogos, prefira um Proton.", en: "Plain Wine (wow64), without the Steam Runtime container: it uses the system's libraries. For games, prefer a Proton." };
+const distributions: readonly { family: ProtonFamily; name: string; author: string; icon: string; note?: { pt: string; en: string } }[] = [
   { family: "ge-proton", name: "Proton-GE Latest", author: "GloriousEggroll", icon: "/icons/ge-proton.png" },
   { family: "cachyos-proton", name: "Proton-CachyOS Latest", author: "CachyOS", icon: "/icons/cachyos.svg" },
-] as const;
+  { family: "cachyos-wineland", name: "Proton-CachyOS Wineland Latest", author: "nanomatters", icon: "/icons/cachyos.svg",
+    note: { pt: "Fork comunitário do Proton-CachyOS com melhorias para Wayland; não é publicado pelo CachyOS.", en: "Community fork of Proton-CachyOS with Wayland improvements; not published by CachyOS." } },
+  { family: "wine-staging", name: "Wine-Staging Latest", author: "Kron4ek", icon: "/icons/wine.svg", note: WINE_NOTE },
+  { family: "wine-proton", name: "Wine-Proton Latest", author: "Kron4ek", icon: "/icons/wine.svg", note: WINE_NOTE },
+];
 
 export function ProtonDistributionCards({ disabled, onBusy }: {
   disabled: boolean; onBusy: (busy: boolean) => void;
@@ -85,6 +90,7 @@ export function ProtonDistributionCards({ disabled, onBusy }: {
       const currentProgress=progress||{phase:"connecting",downloaded:0,total:null,speed_bytes_per_sec:0};
       return <section key={d.family} className="proton-runtime-card mod-workspace" aria-label={d.name} aria-busy={downloading}>
         <header className="proton-runtime-heading"><span className="proton-runtime-icon"><img src={d.icon} alt=""/></span><div><h4>{d.name.replace(" Latest","")}</h4><span>{d.author}</span></div><span className="mod-status-badge" data-ready={Boolean(release?.current&&!release.needs_update)} role="status">{stateLabel}</span></header>
+        {d.note&&<p className="proton-runtime-note">{pt?d.note.pt:d.note.en}</p>}
         <dl className="proton-runtime-versions"><div><dt>{pt?"Instalada":"Installed"}</dt><dd>{release?.current||(pt?"Nenhuma":"None")}</dd></div><div><dt>{pt?"Disponível":"Available"}</dt><dd>{release?.latest||"—"}{release&&release.asset.size>0&&<small>{formatTransferBytes(release.asset.size)}</small>}</dd></div></dl>
         <div className="proton-runtime-actions">
           {downloading?<button type="button" className="mod-action-secondary" disabled={cancelling||progress?.phase==="complete"} onClick={()=>void cancel()}><MenuIcon name="stop"/>{t("runners",cancelling?"cancelling":"cancel")}</button>:<>

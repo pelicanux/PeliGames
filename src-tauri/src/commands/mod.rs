@@ -1,3 +1,5 @@
+pub mod discord_presence;
+pub mod capture;
 pub mod installer;
 pub mod updater;
 pub mod scanner;

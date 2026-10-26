@@ -14,30 +14,66 @@ use std::{
     time::{Duration, Instant},
 };
 
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Family {
     GeProton,
     CachyosProton,
+    /// Community fork of Proton-CachyOS with Wayland work (also offered by ProtonPlus).
+    CachyosWineland,
+    /// Kron4ek's standalone Wine builds: they use the host's libraries.
+    WineStaging,
+    WineProton,
 }
 impl Family {
+    pub const ALL: [Family; 5] = [Self::GeProton, Self::CachyosProton, Self::CachyosWineland, Self::WineStaging, Self::WineProton];
     pub fn id(self) -> &'static str {
         match self {
             Self::GeProton => "ge-proton",
             Self::CachyosProton => "cachyos-proton",
+            Self::CachyosWineland => "cachyos-wineland",
+            Self::WineStaging => "wine-staging",
+            Self::WineProton => "wine-proton",
         }
     }
     pub fn latest_name(self) -> &'static str {
         match self {
             Self::GeProton => "Proton-GE Latest",
             Self::CachyosProton => "Proton-CachyOS Latest",
+            Self::CachyosWineland => "Proton-CachyOS Wineland Latest",
+            Self::WineStaging => "Wine-Staging Latest",
+            Self::WineProton => "Wine-Proton Latest",
         }
     }
     fn repo(self) -> &'static str {
         match self {
             Self::GeProton => "GloriousEggroll/proton-ge-custom",
             Self::CachyosProton => "CachyOS/proton-cachyos",
+            // Renamed from nanomatters/proton-cachyos; packages are served from the new name.
+            Self::CachyosWineland => "nanomatters/proton-salkim",
+            Self::WineStaging | Self::WineProton => "Kron4ek/Wine-Builds",
         }
+    }
+    /// A plain Wine build (bin/wine) rather than a Proton (proton script).
+    pub fn is_wine(self) -> bool {
+        matches!(self, Self::WineStaging | Self::WineProton)
+    }
+    /// Kron4ek publishes every flavour in one repository: the newest release
+    /// overall may belong to another one, so the release is chosen by its tag.
+    fn tag_matches(self, tag: &str) -> bool {
+        match self {
+            Self::WineStaging => tag.starts_with(|c: char| c.is_ascii_digit()),
+            Self::WineProton => tag.starts_with("proton-"),
+            _ => true,
+        }
+    }
+    /// Where this family's managed runners live: Protons in `runners/proton`
+    /// (`root`), Wine builds beside it in `runners/wine`.
+    pub fn base(self, root: &Path) -> PathBuf {
+        if self.is_wine() { root.parent().unwrap_or(root).join("wine").join(self.id()) } else { root.join(self.id()) }
+    }
+    fn valid_runner(self, dir: &Path) -> bool {
+        if self.is_wine() { super::game_installation::native_wine(dir).is_some() } else { dir.join("proton").is_file() }
     }
 }
 #[derive(Clone, Deserialize, Serialize)]
@@ -52,6 +88,10 @@ struct Release {
     tag_name: String,
     html_url: String,
     assets: Vec<Asset>,
+    #[serde(default)]
+    prerelease: bool,
+    #[serde(default)]
+    draft: bool,
 }
 #[derive(Clone, Deserialize, Serialize)]
 pub struct RunnerRelease {
@@ -123,6 +163,39 @@ fn select_asset(assets: &[Asset], arch: &str) -> Result<Asset, String> {
     }
     Err("O release não contém um pacote compatível com esta arquitetura.".into())
 }
+/// The package of `family` in `release`. Kron4ek names it from the tag; the
+/// wow64 build is chosen as it runs 32-bit games without the host's 32-bit libraries.
+fn select_for(family: Family, release: &Release, arch: &str) -> Result<Asset, String> {
+    if !family.is_wine() {
+        return select_asset(&release.assets, arch);
+    }
+    if arch != "x86_64" {
+        return Err("Os builds de Wine do Kron4ek são publicados para x86_64.".into());
+    }
+    let flavour = if family == Family::WineStaging { "-staging" } else { "" };
+    let name = format!("wine-{}{flavour}-amd64-wow64.tar.xz", release.tag_name);
+    release.assets.iter().find(|a| a.name == name).cloned()
+        .ok_or_else(|| format!("O release {} não contém {name}.", release.tag_name))
+}
+/// The checksum published beside `asset`: a per-package `.sha512sum` (Proton)
+/// or Kron4ek's `sha256sums.txt` listing every package of the release.
+fn checksum_for(release: &Release, asset: &Asset) -> Option<Asset> {
+    let stem = asset.name.trim_end_matches(".tar.gz").trim_end_matches(".tar.xz");
+    release.assets.iter()
+        .find(|a| a.name == format!("{stem}.sha512sum") || a.name == "sha256sums.txt")
+        .cloned()
+}
+/// The expected hash of `package` in a checksum file, and whether it is SHA-512.
+fn expected_hash(text: &str, checksum_name: &str, package: &str) -> Result<(String, bool), String> {
+    if checksum_name == "sha256sums.txt" {
+        return text.lines()
+            .filter_map(|line| line.split_once(char::is_whitespace))
+            .find(|(_, file)| file.trim().trim_start_matches('*').rsplit('/').next() == Some(package))
+            .map(|(hash, _)| (hash.to_string(), false))
+            .ok_or_else(|| format!("{package} não está listado em sha256sums.txt."));
+    }
+    Ok((text.split_whitespace().next().ok_or("Checksum vazio.")?.to_string(), true))
+}
 fn validate_url(family: Family, url: &str) -> Result<(), String> {
     if url.starts_with(&format!(
         "https://github.com/{}/releases/download/",
@@ -134,7 +207,7 @@ fn validate_url(family: Family, url: &str) -> Result<(), String> {
     }
 }
 pub async fn check_at(family: Family, root: &Path) -> Result<RunnerRelease, String> {
-    let base = root.join(family.id());
+    let base = family.base(root);
     let recovery_base = base.clone();
     tokio::task::spawn_blocking(move || {
         let _lock = PUBLICATION_LOCK.lock().map_err(|e| e.to_string())?;
@@ -142,11 +215,10 @@ pub async fn check_at(family: Family, root: &Path) -> Result<RunnerRelease, Stri
     })
     .await
     .map_err(|e| e.to_string())??;
+    // Shared repositories list several flavours: pick the newest one of this family.
+    let endpoint = if family.is_wine() { "releases?per_page=40" } else { "releases/latest" };
     let response = client()?
-        .get(format!(
-            "https://api.github.com/repos/{}/releases/latest",
-            family.repo()
-        ))
+        .get(format!("https://api.github.com/repos/{}/{endpoint}", family.repo()))
         .header("Accept", "application/vnd.github+json")
         .send()
         .await
@@ -157,25 +229,22 @@ pub async fn check_at(family: Family, root: &Path) -> Result<RunnerRelease, Stri
             response.status()
         ));
     }
-    let release: Release = response.json().await.map_err(|e| e.to_string())?;
+    let release: Release = if family.is_wine() {
+        let releases: Vec<Release> = response.json().await.map_err(|e| e.to_string())?;
+        newest_of(family, releases).ok_or("Nenhum release estável desta variante foi encontrado.")?
+    } else {
+        response.json().await.map_err(|e| e.to_string())?
+    };
     if !safe_name(&release.tag_name) {
         return Err("Nome de versão inválido.".into());
     }
-    let asset = select_asset(&release.assets, std::env::consts::ARCH)?;
+    let asset = select_for(family, &release, std::env::consts::ARCH)?;
     validate_url(family, &asset.browser_download_url)?;
-    let stem = asset
-        .name
-        .trim_end_matches(".tar.gz")
-        .trim_end_matches(".tar.xz");
-    let checksum = release
-        .assets
-        .iter()
-        .find(|a| a.name == format!("{stem}.sha512sum"))
-        .cloned();
+    let checksum = checksum_for(&release, &asset);
     if let Some(a) = &checksum {
         validate_url(family, &a.browser_download_url)?;
     }
-    let installed = read_manifest(&base);
+    let installed = read_manifest(family, &base);
     let current = installed.as_ref().map(|m| m.version.clone());
     let legacy_directory = installed
         .as_ref()
@@ -192,10 +261,14 @@ pub async fn check_at(family: Family, root: &Path) -> Result<RunnerRelease, Stri
         installed_path,
     })
 }
+/// GitHub lists releases newest first; drafts and pre-releases are skipped.
+fn newest_of(family: Family, releases: Vec<Release>) -> Option<Release> {
+    releases.into_iter().find(|r| !r.draft && !r.prerelease && family.tag_matches(&r.tag_name))
+}
 static PUBLICATION_LOCK: Mutex<()> = Mutex::new(());
 
 fn managed_directory(name: &str) -> bool {
-    safe_name(name) || name == "Proton-GE Latest" || name == "Proton-CachyOS Latest"
+    safe_name(name) || Family::ALL.iter().any(|family| family.latest_name() == name)
 }
 
 fn validate_managed_folder(base: &Path, target: &Path) -> Result<(), String> {
@@ -221,7 +294,7 @@ fn recover_latest(family: Family, base: &Path) -> Result<(), String> {
         fs::read(backup.join(".peligames-previous.json")).map_err(|e| e.to_string())?;
     let previous: Manifest = serde_json::from_slice(&old_manifest).map_err(|e| e.to_string())?;
     let target = base.join(family.latest_name());
-    let committed = read_manifest(base)
+    let committed = read_manifest(family, base)
         .map(|m| m.directory == family.latest_name() && m.version != previous.version)
         .unwrap_or(false);
     if committed {
@@ -332,7 +405,7 @@ fn publish_latest(
     recover_latest(family, base)?;
     let target = base.join(family.latest_name());
     ensure_runner_idle(&target)?;
-    let previous = read_manifest(base);
+    let previous = read_manifest(family, base);
     if target.exists() {
         validate_managed_folder(base, &target)?;
         if previous.as_ref().map(|m| m.directory.as_str()) != Some(family.latest_name()) {
@@ -403,9 +476,9 @@ fn publish_latest(
     Ok(target)
 }
 
-fn read_manifest(base: &Path) -> Option<Manifest> {
+fn read_manifest(family: Family, base: &Path) -> Option<Manifest> {
     let m: Manifest = serde_json::from_slice(&fs::read(base.join("current.json")).ok()?).ok()?;
-    if !managed_directory(&m.directory) || !base.join(&m.directory).join("proton").is_file() {
+    if !managed_directory(&m.directory) || !family.valid_runner(&base.join(&m.directory)) {
         return None;
     }
     Some(m)
@@ -413,9 +486,9 @@ fn read_manifest(base: &Path) -> Option<Manifest> {
 /// Remove only the confirmed version managed by PeliGames, preserving older runners.
 pub fn uninstall_at(family: Family, root: &Path, version: &str) -> Result<(), String> {
     let _lock = PUBLICATION_LOCK.lock().map_err(|e| e.to_string())?;
-    let base = root.join(family.id());
+    let base = family.base(root);
     recover_latest(family, &base)?;
-    let installed = read_manifest(&base).ok_or("Nenhuma versão gerenciada instalada.")?;
+    let installed = read_manifest(family, &base).ok_or("Nenhuma versão gerenciada instalada.")?;
     if installed.version != version {
         return Err("A versão instalada mudou. Verifique novamente antes de desinstalar.".into());
     }
@@ -473,7 +546,7 @@ fn digest_matches(file: &Path, expected: &str, sha512: bool) -> Result<(), Strin
         Err("A verificação de integridade do pacote falhou.".into())
     }
 }
-fn extract(file: &Path, name: &str, dest: &Path, cancel: &AtomicBool) -> Result<PathBuf, String> {
+fn extract(family: Family, file: &Path, name: &str, dest: &Path, cancel: &AtomicBool) -> Result<PathBuf, String> {
     fs::create_dir_all(dest).map_err(|e| e.to_string())?;
     let file = fs::File::open(file).map_err(|e| e.to_string())?;
     let decoder: Box<dyn Read> = if name.ends_with(".tar.gz") {
@@ -514,8 +587,8 @@ fn extract(file: &Path, name: &str, dest: &Path, cancel: &AtomicBool) -> Result<
         }
     }
     let runner = dest.join(root.ok_or("Pacote vazio.")?);
-    if !runner.join("proton").is_file() {
-        return Err("O pacote não contém o executável proton.".into());
+    if !family.valid_runner(&runner) {
+        return Err(if family.is_wine() { "O pacote não contém bin/wine e bin/wineserver utilizáveis." } else { "O pacote não contém o executável proton." }.into());
     }
     Ok(runner)
 }
@@ -541,7 +614,7 @@ pub async fn install_at(
             .installed_path
             .ok_or("Instalação não encontrada.".into());
     }
-    let base = root.join(family.id());
+    let base = family.base(&root);
     fs::create_dir_all(&base).map_err(|e| e.to_string())?;
     let staging = Staging(base.join(format!(".download-{}", uuid::Uuid::new_v4())));
     fs::create_dir(&staging.0).map_err(|e| e.to_string())?;
@@ -615,13 +688,7 @@ pub async fn install_at(
             .text()
             .await
             .map_err(|e| e.to_string())?;
-        (
-            text.split_whitespace()
-                .next()
-                .ok_or("Checksum vazio.")?
-                .to_string(),
-            true,
-        )
+        expected_hash(&text, &checksum.name, &release.asset.name)?
     } else {
         return Err("O release não fornece checksum para validar o pacote.".into());
     };
@@ -641,7 +708,7 @@ pub async fn install_at(
     let asset_name = release.asset.name.clone();
     let flag = cancel.clone();
     let runner = tokio::task::spawn_blocking(move || {
-        extract(&archive_path, &asset_name, &unpack_path, &flag)
+        extract(family, &archive_path, &asset_name, &unpack_path, &flag)
     })
     .await
     .map_err(|e| e.to_string())??;
@@ -751,7 +818,7 @@ mod latest_tests {
             );
             assert!(!second.join("obsolete").exists());
             assert!(!base.join(".latest-previous").exists());
-            assert_eq!(read_manifest(&base).unwrap().version, "v2");
+            assert_eq!(read_manifest(family, &base).unwrap().version, "v2");
             let vdf = fs::read_to_string(second.join("compatibilitytool.vdf")).unwrap();
             assert_eq!(vdf.matches(family.latest_name()).count(), 2);
             assert!(vdf.contains("install_path"));
@@ -768,7 +835,7 @@ mod latest_tests {
         fs::write(runner.join("compatibilitytool.vdf"), "invalid").unwrap();
         assert!(publish_latest(Family::GeProton, &base, &runner, &stage, "v2").is_err());
         assert_eq!(fs::read_to_string(target.join("proton")).unwrap(), "v1");
-        assert_eq!(read_manifest(&base).unwrap().version, "v1");
+        assert_eq!(read_manifest(Family::GeProton, &base).unwrap().version, "v1");
         fs::remove_dir_all(root).unwrap();
     }
     #[test]
@@ -788,7 +855,7 @@ mod latest_tests {
         )
         .is_err());
         assert_eq!(fs::read_to_string(target.join("proton")).unwrap(), "v1");
-        assert_eq!(read_manifest(&base).unwrap().version, "v1");
+        assert_eq!(read_manifest(Family::GeProton, &base).unwrap().version, "v1");
         assert!(!base.join(".latest-previous").exists());
         fs::remove_dir_all(root).unwrap();
     }
@@ -822,5 +889,94 @@ mod latest_tests {
             assert!(!target.exists());
             fs::remove_dir_all(root).unwrap();
         }
+    }
+}
+
+#[cfg(test)]
+mod family_tests {
+    use super::*;
+    fn release(tag: &str, prerelease: bool, names: &[&str]) -> Release {
+        Release { tag_name: tag.into(), html_url: String::new(), prerelease, draft: false,
+            assets: names.iter().map(|name| Asset { name: (*name).into(), size: 1, digest: None,
+                browser_download_url: format!("https://github.com/Kron4ek/Wine-Builds/releases/download/{tag}/{name}") }).collect() }
+    }
+    #[test]
+    fn kron4ek_flavours_share_a_repository_and_are_chosen_by_tag() {
+        let feed = || vec![
+            release("proton-11.0-3", true, &["wine-proton-11.0-3-amd64-wow64.tar.xz"]),
+            release("11.20", false, &["sha256sums.txt", "wine-11.20-amd64-wow64.tar.xz", "wine-11.20-staging-amd64.tar.xz",
+                "wine-11.20-staging-amd64-wow64.tar.xz", "wine-11.20-staging-tkg-amd64-wow64.tar.xz"]),
+            release("proton-11.0-2", false, &["sha256sums.txt", "wine-proton-11.0-2-amd64.tar.xz", "wine-proton-11.0-2-amd64-wow64.tar.xz"]),
+        ];
+        let staging = newest_of(Family::WineStaging, feed()).unwrap();
+        assert_eq!(staging.tag_name, "11.20");
+        assert_eq!(select_for(Family::WineStaging, &staging, "x86_64").unwrap().name, "wine-11.20-staging-amd64-wow64.tar.xz");
+        // The pre-release is skipped; the stable Wine-Proton below the newest Staging is found.
+        let proton = newest_of(Family::WineProton, feed()).unwrap();
+        assert_eq!(proton.tag_name, "proton-11.0-2");
+        let asset = select_for(Family::WineProton, &proton, "x86_64").unwrap();
+        assert_eq!(asset.name, "wine-proton-11.0-2-amd64-wow64.tar.xz");
+        assert_eq!(checksum_for(&proton, &asset).unwrap().name, "sha256sums.txt");
+        assert!(select_for(Family::WineProton, &proton, "aarch64").is_err());
+    }
+    #[test]
+    fn sha256sums_lists_every_package_and_sha512sum_holds_one() {
+        let sums = "aaa  wine-11.20-staging-amd64.tar.xz\nbbb *wine-11.20-staging-amd64-wow64.tar.xz\n";
+        assert_eq!(expected_hash(sums, "sha256sums.txt", "wine-11.20-staging-amd64-wow64.tar.xz").unwrap(), ("bbb".to_string(), false));
+        assert!(expected_hash(sums, "sha256sums.txt", "wine-other.tar.xz").is_err());
+        assert_eq!(expected_hash("ccc  proton.tar.xz\n", "proton.sha512sum", "proton.tar.xz").unwrap(), ("ccc".to_string(), true));
+    }
+    #[tokio::test]
+    #[ignore = "consults the GitHub API; run by hand"]
+    async fn every_family_resolves_a_package_from_its_official_repository() {
+        let root = std::env::temp_dir().join(format!("peligames-live-{}", uuid::Uuid::new_v4())).join("runners/proton");
+        for family in Family::ALL {
+            let release = check_at(family, &root).await.unwrap_or_else(|e| panic!("{}: {e}", family.id()));
+            println!("{}: {} -> {} ({} MB, checksum: {})", family.id(), release.latest, release.asset.name, release.asset.size / 1_048_576,
+                release.asset.digest.as_deref().map(|_| "digest").or(release.checksum.as_ref().map(|c| c.name.as_str())).unwrap_or("nenhum"));
+            assert!(release.asset.digest.is_some() || release.checksum.is_some(), "{} sem verificação de integridade", family.id());
+        }
+        let _ = fs::remove_dir_all(root.parent().unwrap().parent().unwrap());
+    }
+    #[tokio::test]
+    #[ignore = "downloads about 100 MB from GitHub; run by hand"]
+    async fn wine_staging_installs_end_to_end() {
+        let root = std::env::temp_dir().join(format!("peligames-live-install-{}", uuid::Uuid::new_v4())).join("runners/proton");
+        let emit: Arc<dyn Fn(Progress) + Send + Sync> = Arc::new(|p: Progress| if p.phase != "downloading" { println!("fase: {}", p.phase) });
+        let path = install_at(Family::WineStaging, root.clone(), Arc::new(AtomicBool::new(false)), emit).await.unwrap();
+        println!("instalado em {path}");
+        let wine = super::super::game_installation::native_wine(Path::new(&path)).expect("bin/wine utilizável");
+        let version = std::process::Command::new(&wine).arg("--version").output().unwrap();
+        println!("{}", String::from_utf8_lossy(&version.stdout).trim());
+        let release = check_at(Family::WineStaging, &root).await.unwrap();
+        assert!(!release.needs_update, "a versão instalada deve ser a mais recente");
+        uninstall_at(Family::WineStaging, &root, &release.latest).unwrap();
+        assert!(!Path::new(&path).exists());
+        fs::remove_dir_all(root.parent().unwrap().parent().unwrap()).unwrap();
+    }
+    #[test]
+    fn wine_builds_live_beside_protons_and_need_a_working_wine() {
+        use std::os::unix::fs::PermissionsExt;
+        let root = std::env::temp_dir().join(format!("peligames-family-{}", uuid::Uuid::new_v4()));
+        let protons = root.join("runners/proton");
+        assert_eq!(Family::CachyosWineland.base(&protons), protons.join("cachyos-wineland"));
+        assert_eq!(Family::WineStaging.base(&protons), root.join("runners/wine/wine-staging"));
+        // A Wine package is published, recognised and uninstalled like a Proton one.
+        let base = Family::WineStaging.base(&protons);
+        let stage = base.join(".test-stage");
+        let runner = stage.join("wine-11.20-staging-amd64-wow64");
+        for file in ["bin/wine", "bin/wineserver"] {
+            let path = runner.join(file);
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            fs::write(&path, "#!/bin/sh\n").unwrap();
+            fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+        }
+        assert!(Family::WineStaging.valid_runner(&runner) && !Family::GeProton.valid_runner(&runner));
+        let target = publish_latest(Family::WineStaging, &base, &runner, &stage, "11.20").unwrap();
+        assert_eq!(target, base.join("Wine-Staging Latest"));
+        assert_eq!(read_manifest(Family::WineStaging, &base).unwrap().version, "11.20");
+        uninstall_at(Family::WineStaging, &protons, "11.20").unwrap();
+        assert!(!target.exists());
+        fs::remove_dir_all(root).unwrap();
     }
 }

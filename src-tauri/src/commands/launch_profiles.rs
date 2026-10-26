@@ -125,18 +125,15 @@ pub(super) fn refresh_all() -> Result<(), String> {
         if path.extension().and_then(|s| s.to_str()) != Some("json") { continue; }
         let Some(id) = path.file_stem().and_then(|s| s.to_str()) else { continue };
         let Some(previous) = profile_io::universal(&directory, id)? else { continue };
-        let advanced: AdvancedSettings = serde_json::from_value(previous.source["advanced"].clone()).map_err(|e| e.to_string())?;
-        let name = previous.source["name"].as_str().unwrap_or("Jogo");
-        let mods = previous.source["mod_options"].as_str().map(str::to_string);
-        save_at(&root, previous.installation.as_deref().ok_or("Perfil sem instalação.")?, steam_runtime::build_for(name, &advanced, mods)?)?;
+        save_at(&root, previous.installation.as_deref().ok_or("Perfil sem instalação.")?, steam_runtime::rebuild(&previous)?)?;
     }
     Ok(())
 }
 
 pub(crate) fn enforce_release_policy() -> Result<(), String> {
-    if crate::core::release_features::enabled() { return Ok(()); }
-    // Rebuilds effective commands through the same release restrictions, while
-    // keeping saved source preferences available to development builds.
+    // Rehydrate managed commands from their saved preferences on every startup.
+    // Overlay runners contain a payload hash: retaining the old command after an
+    // update would keep loading the previous renderer indefinitely.
     refresh_all()
 }
 

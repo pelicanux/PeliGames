@@ -3,7 +3,7 @@
   <img src="public/images/readme-header.svg" alt="PeliGames" width="900" />
 </p>
 
-> **0.4.9 experimental:** presença no Discord com GE-Proton e Proton-CachyOS e correções sobre a 0.4.8: tema Neon Wave, sincronização com OpenRGB, novas funções no chat Matrix, overlay na Steam Flatpak com diagnóstico da última execução e correções para o WebKitGTK 2.54. Veja as notas da [0.4.9](docs/releases/0.4.9.md) e da [0.4.8](docs/releases/0.4.8.md). O overlay ainda pode apresentar falhas de captura do mouse, foco, atalhos ou compatibilidade com determinados jogos/Protons. Consulte o [guia de uso e limitações](docs/overlay.md).
+> **0.5.0 experimental:** gravação de gameplay e replay instantâneo, biblioteca de vídeos, integração opcional de atividade com Discord, novos controles de geração de quadros e melhorias na organização das configurações. Veja as [notas da 0.5.0](docs/releases/0.5.0.md). Captura, geração de quadros e overlay são experimentais e dependem do jogo, GPU, Proton e ambiente gráfico. Consulte o [guia de uso e limitações](docs/overlay.md).
 
 <p align="center"><strong>Português</strong> · <a href="README.en.md">English</a></p>
 

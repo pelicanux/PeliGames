@@ -7,6 +7,7 @@
 .proton-runtime-icon img { width:29px; height:29px; object-fit:contain; }
 .modern-ui .settings-page .proton-runtime-heading h4 { margin:0 0 3px; font-size:.9375rem; font-weight:600; }
 .proton-runtime-heading > div > span { color:var(--mod-muted); font-size:.75rem; }
+.proton-runtime-note { margin:10px 0 0; color:var(--mod-muted); font-size:.75rem; line-height:1.5; }
 .proton-runtime-versions { display:grid; gap:10px; margin:16px 0; font-size:.8125rem; }
 .proton-runtime-versions > div { display:grid; grid-template-columns:80px minmax(0,1fr); gap:12px; }
 .proton-runtime-versions dt { color:var(--mod-muted); }

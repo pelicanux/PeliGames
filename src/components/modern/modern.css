@@ -753,11 +753,11 @@
   padding-inline: 9.5px;
 }
 
-.modern-performance-panels { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 16px; align-items: start; }
+.modern-performance-panels { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; align-items: start; }
 .modern-performance-card { min-width: 0; padding: 18px; border: 1px solid var(--modern-line); border-radius: 17px; background: var(--modern-card); color: var(--modern-text); }
 .modern-performance-card h3 { font-size: 0.9375rem; margin: 0 0 14px; }
 .modern-performance-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 54px; padding: 8px 0; border-bottom: 1px solid var(--modern-line); font-size: 0.875rem; }
-.modern-performance-row p, .modern-performance-hint, .modern-performance-visual p { margin: 4px 0 0; color: var(--modern-muted); font-size: 0.75rem; line-height: 1.5; }
+.modern-performance-row p, .modern-performance-hint { margin: 4px 0 0; color: var(--modern-muted); font-size: 0.75rem; line-height: 1.5; }
 .modern-overlay-session { margin: 6px 0 0; padding: 8px 10px; border-left: 3px solid #f0b46e; border-radius: 6px; background: rgb(240 180 110 / 8%); font-size: 0.75rem; line-height: 1.5; }
 .modern-overlay-session[data-level="ok"] { border-color: #6fcf97; background: rgb(111 207 151 / 8%); }
 .modern-overlay-session[data-level="error"] { border-color: #eb6f6f; background: rgb(235 111 111 / 8%); }
@@ -769,10 +769,6 @@
 .modern-performance-row .enabled .neural-switch-track { background: var(--accent); }
 .modern-performance-limits { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .modern-performance-limits input { width: 76px; min-width: 0; padding: 6px 8px; border: 1px solid var(--modern-line); border-radius: 9px; background: var(--modern-card-2); color: var(--modern-text); font: inherit; box-sizing: border-box; }
-.modern-performance-visual { margin-top: 18px; }
-.modern-performance-visual .modern-mini-btn { margin-top: 12px; }
-.modern-performance-preview .mm-screen { width: 100%; }
-@container game-spotlight (max-width: 800px) { .modern-performance-panels { grid-template-columns: minmax(0,1fr); } }
 .modern-ui .modern-performance-row .neural-startup-switch { width: auto; min-height: 30px; padding: 0; border: 0; background: transparent; box-shadow: none; }
 .modern-performance-row .neural-switch-track { flex: 0 0 44px; display: block; }
 .modern-performance-row .enabled .neural-switch-track > span { transform: translateX(18px); }
@@ -1265,7 +1261,6 @@ html, body, #root { overflow: clip !important; }
 .modern-dlss-model-label { min-width: 0; }
 .modern-dlss-model-label > small { display: block; margin-top: 4px; color: var(--modern-muted, var(--text-secondary)); font-size: 0.75rem; line-height: 1.4; }
 
-.modern-performance-actions { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; }
 .modern-details-secondary > .modern-details-art { display: none; }
 .modern-details-secondary::before { display: none; }
 
@@ -1359,7 +1354,7 @@ html, body, #root { overflow: clip !important; }
 .modern-ui .modern-details-actions > .steam-action-slot:has(.steam-pending-actions) { height: 142px; }
 /* The primary action keeps its own width, right-aligned; room for "Parar" plus a
    10:00:00 timer or "Base reservada" without wrapping, label centred. */
-.modern-ui .modern-details-actions > .steam-action-slot > .modern-play { position: static; width: min(100%, 230px); margin-left: auto; padding: 0 20px !important; box-sizing: border-box; min-width: 0; white-space: nowrap; }
+.modern-ui .modern-details-actions > .steam-action-slot > .modern-play { position: relative; inset: auto; width: min(100%, 230px); margin-left: auto; padding: 0 20px !important; box-sizing: border-box; min-width: 0; white-space: nowrap; }
 .modern-ui .modern-details-actions > .modern-quick { min-width: 0; width: max-content; max-width: 100%; justify-self: end; flex-wrap: nowrap; }
 /* Fixed cells: WebKit 2.54 sizes a wrapping max-content row by its narrowest
    item and stacks the shortcuts. Wrapping is left to narrow panels only. */
@@ -1377,13 +1372,12 @@ html, body, #root { overflow: clip !important; }
   .modern-ui .modern-details-actions { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .modern-ui .modern-details-actions > .modern-quick { width: auto; justify-self: stretch; flex-wrap: wrap; }
 }
-/* Scroll arrows reserve their cells while overflowing; the visible bar also
-   supports touchpads, touch, the mouse wheel and keyboard tab navigation. */
+/* Scroll arrows reserve their cells; scrolling also supports touchpads,
+   touch, the mouse wheel and keyboard navigation without a visible track. */
 .modern-game-tabs { display: grid; grid-template-columns: minmax(0, 1fr); align-items: center; min-width: 0; padding: 0 22px; gap: 6px; border-bottom: 1px solid var(--modern-line); }
 .modern-game-tabs[data-overflow] { grid-template-columns: 30px minmax(0, 1fr) 30px; }
-.modern-game-tabs .modern-tabs { min-width: 0; padding: 0; border-bottom: 0; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: rgba(var(--accent-rgb), .45) transparent; }
-.modern-game-tabs .modern-tabs::-webkit-scrollbar { display: block; height: 4px; }
-.modern-game-tabs .modern-tabs::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb), .45); border-radius: 4px; }
+.modern-game-tabs .modern-tabs { min-width: 0; padding: 0; border-bottom: 0; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+.modern-game-tabs .modern-tabs::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .modern-game-tabs .modern-tabs > button, .modern-game-tabs .modern-tabs > .hover-tooltip-anchor { flex-shrink: 0; }
 .modern-game-tabs .modern-tabs > button:disabled { opacity: .45; cursor: not-allowed; }
 .modern-ui .modern-tab-scroll { display: grid; place-items: center; width: 30px; height: 32px; padding: 0; border-radius: 9px; border: 1px solid var(--modern-line); background: var(--modern-card-2); color: var(--modern-text); box-shadow: none; cursor: pointer; }
@@ -1410,3 +1404,44 @@ html, body, #root { overflow: clip !important; }
 @media(prefers-reduced-motion:reduce) {
  :root .modern-ui :is(.modern-card-play,.modern-continue-play).preparing,.cover-preparation-glow { animation:none; }
 }
+
+.modern-game-benchmark-card { display:flex; flex-direction:column; align-items:flex-start; gap:18px; }
+.modern-game-benchmark-copy { min-width:0; }
+.modern-game-benchmark-card h3 { margin:0 0 8px; font-size:1rem; }
+.modern-game-benchmark-copy p { margin:0; color:var(--modern-text); font-size:.875rem; line-height:1.5; }
+.modern-game-benchmark-copy small { display:block; margin-top:8px; color:var(--modern-muted); font-size:.75rem; line-height:1.5; }
+.modern-game-benchmark-card .modern-benchmark-action { flex-shrink:0; min-height:42px; padding:10px 16px; border:1px solid rgba(var(--accent-rgb),.45); background:rgba(var(--accent-rgb),.16); font-weight:600; }
+.modern-game-benchmark-card .modern-benchmark-action:hover { background:rgba(var(--accent-rgb),.25); }
+.modern-performance-settings-link { display:flex; justify-content:flex-end; margin-top:16px; }
+@container game-spotlight (max-width:700px) { .modern-game-benchmark-card { flex-direction:column; align-items:flex-start; gap:14px; } }
+
+@container game-spotlight (max-width:800px) { .modern-performance-panels { grid-template-columns:minmax(0,1fr); } }
+
+.modern-performance-tools { width:100%; min-width:0; box-sizing:border-box; border-top:1px solid var(--modern-line); padding-top:16px; }
+.modern-performance-tools .modern-performance-row > div:first-child { min-width:0; }
+.modern-performance-tools .modern-performance-hint { font-size:.75rem; color:var(--modern-muted); }
+
+/* Keep game navigation available while the header and content scroll away. */
+.modern-details > .modern-game-tabs { position:sticky; top:0; z-index:8; background:transparent; backdrop-filter:none; -webkit-backdrop-filter:none; }
+.game-details-dialog .modern-game-tabs { padding-right:64px; }
+
+.modern-game-tabs-marker { height:1px; margin-bottom:-1px; pointer-events:none; }
+.modern-details > .modern-game-tabs[data-stuck] { background:rgba(12,13,21,.82); backdrop-filter:blur(calc(18px * var(--window-blur-factor,1))); -webkit-backdrop-filter:blur(calc(18px * var(--window-blur-factor,1))); }
+/* Clip the sticky backdrop itself: WebKit may paint its blur beyond the
+   dialog's rounded clipping layer. Keep the separator's lower corners square. */
+.game-details-dialog .modern-game-tabs[data-stuck] { border-radius:23px 23px 0 0; clip-path:inset(0 round 23px 23px 0 0); }
+@media (max-width:600px) { .game-details-dialog .modern-game-tabs[data-stuck] { border-radius:17px 17px 0 0; clip-path:inset(0 round 17px 17px 0 0); } }
+
+.modern-meta-chip.configuration { border-color:rgba(var(--accent-rgb),.3); background:rgba(var(--accent-rgb),.1); white-space:nowrap; }
+
+.modern-nav-label .modern-nav-subtitle { overflow:hidden; white-space:nowrap; }
+.modern-nav-subtitle > span { display:inline-block; width:max-content; max-width:none; transform:translateX(0); }
+.modern-nav:is(:hover,:focus-visible) .modern-nav-subtitle[data-overflow=true] > span { animation:modern-subtitle-pan var(--subtitle-duration) linear infinite; }
+@keyframes modern-subtitle-pan {
+ 0%,15% { transform:translateX(0); opacity:1; }
+ 78%,90% { transform:translateX(calc(-1 * var(--subtitle-travel))); opacity:1; }
+ 94% { transform:translateX(calc(-1 * var(--subtitle-travel))); opacity:0; }
+ 94.01% { transform:translateX(0); opacity:0; }
+ 100% { transform:translateX(0); opacity:1; }
+}
+@media(prefers-reduced-motion:reduce) { .modern-nav:is(:hover,:focus-visible) .modern-nav-subtitle[data-overflow=true] > span { animation:none; } }

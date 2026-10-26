@@ -104,6 +104,14 @@ fn game_overlay() {
             bytes.len() >= 64 && &bytes[..7] == b"\x7fELF\x02\x01\x01" && bytes[18..20] == [62, 0],
             "Payload do overlay não é ELF Linux x86_64."
         );
+        if index == 1 {
+            assert!(bytes.windows(b"peligames_overlay_capture_api_v1".len()).any(|v| v == b"peligames_overlay_capture_api_v1"),
+                "Overlay desatualizado: recompile tools/game-overlay antes de empacotar os atalhos de captura.");
+            assert!(bytes.windows(b"peligames_overlay_mako_fps_api_v1".len()).any(|v| v == b"peligames_overlay_mako_fps_api_v1"),
+                "Overlay desatualizado: recompile tools/game-overlay para incluir os FPS separados do MAKO.");
+            assert!(bytes.windows(b"peligames_overlay_present_counter_api_v1".len()).any(|v| v == b"peligames_overlay_present_counter_api_v1"),
+                "Overlay desatualizado: recompile tools/game-overlay para incluir o contador de quadros AFMF.");
+        }
         fs::write(embedded.join(name), bytes).expect("embed game overlay");
     }
 }

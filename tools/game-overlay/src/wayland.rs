@@ -44,7 +44,7 @@ pub unsafe fn symbol(name: &'static [u8]) -> *mut c_void {
     crate::symbols::resolve(name)
 }
 fn route(f: impl FnOnce(&mut crate::input::Input) -> Route) -> bool {
-    if !matches!(crate::target(), crate::Target::Wayland(_)) {
+    if !crate::process_scope::enabled() || !matches!(crate::target(), crate::Target::Wayland(_)) {
         return true;
     }
     state()
@@ -53,7 +53,7 @@ fn route(f: impl FnOnce(&mut crate::input::Input) -> Route) -> bool {
         .unwrap_or(true)
 }
 fn focus(surface: *mut c_void) {
-    crate::set_focus(surface as usize);
+    if crate::process_scope::enabled() { crate::set_focus(surface as usize); }
 }
 macro_rules! forward {
     ($data:expr,$proxy:expr,$index:expr,($($ty:ty),*),($($arg:expr),*)) => {
@@ -313,7 +313,7 @@ pub unsafe extern "C" fn wl_proxy_add_listener(
         return -1;
     }
     let real: Add = std::mem::transmute(real);
-    if proxy.is_null() || implementation.is_null() {
+    if !crate::process_scope::enabled() || proxy.is_null() || implementation.is_null() {
         return real(proxy, implementation, data);
     }
     let class = symbol(b"wl_proxy_get_class\0");
@@ -446,6 +446,7 @@ pub unsafe extern "C" fn wl_proxy_add_dispatcher(
         *const c_void,
         *mut c_void,
     ) -> c_int = std::mem::transmute(real);
+    if !crate::process_scope::enabled() { return real(proxy, dispatcher, implementation, data); }
     let class = symbol(b"wl_proxy_get_class\0");
     if !class.is_null() && !proxy.is_null() {
         let class: unsafe extern "C" fn(*mut c_void) -> *const c_char = std::mem::transmute(class);

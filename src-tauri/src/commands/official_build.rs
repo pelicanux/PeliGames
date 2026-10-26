@@ -45,9 +45,31 @@ fn executable_hash() -> Result<String, String> {
     }
     Ok(format!("{:x}", hash.finalize()))
 }
+fn cache_path() -> Option<std::path::PathBuf> {
+    crate::core::paths::app_root().ok().map(|root| root.join("official-build.json"))
+}
+/// The answer for this exact executable: it never changes, so GitHub is asked
+/// once per installed version, not at every start.
+fn cached(path: &std::path::Path, hash: &str) -> Option<BuildKind> {
+    let value: serde_json::Value = serde_json::from_slice(&std::fs::read(path).ok()?).ok()?;
+    if value["hash"] != hash { return None; }
+    match value["kind"].as_str()? { "official" => Some(BuildKind::Official), "local" => Some(BuildKind::Local), _ => None }
+}
+fn remember(path: &std::path::Path, hash: &str, kind: BuildKind) {
+    // "Unknown" (a release without the list) may change later: never stored.
+    let kind = match kind { BuildKind::Official => "official", BuildKind::Local => "local", _ => return };
+    let _ = std::fs::write(path, serde_json::json!({ "hash": hash, "kind": kind }).to_string());
+}
 async fn check() -> Result<BuildKind, String> {
-    let version = env!("CARGO_PKG_VERSION");
     let hash = tauri::async_runtime::spawn_blocking(executable_hash).await.map_err(|e| e.to_string())??;
+    let cache = cache_path();
+    if let Some(kind) = cache.as_deref().and_then(|path| cached(path, &hash)) { return Ok(kind); }
+    let kind = query(&hash).await?;
+    if let Some(path) = cache.as_deref() { remember(path, &hash, kind); }
+    Ok(kind)
+}
+async fn query(hash: &str) -> Result<BuildKind, String> {
+    let version = env!("CARGO_PKG_VERSION");
     let client = reqwest::Client::builder().user_agent("PeliGames").timeout(Duration::from_secs(20)).build().map_err(|e| e.to_string())?;
     let response = client.get(format!("{RELEASES}{version}")).header("Accept", "application/vnd.github+json").send().await.map_err(|e| e.to_string())?;
     // No release with this version: built from the sources.
@@ -86,6 +108,19 @@ pub fn official_build_status() -> BuildKind { current() }
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn the_answer_is_reused_for_the_same_executable_only() {
+        let path = std::env::temp_dir().join(format!("peligames-official-{}.json", uuid::Uuid::new_v4()));
+        assert_eq!(cached(&path, "abc"), None);
+        remember(&path, "abc", BuildKind::Official);
+        assert_eq!(cached(&path, "abc"), Some(BuildKind::Official));
+        // An updated executable asks again.
+        assert_eq!(cached(&path, "def"), None);
+        // "Unknown" is not stored: the previous answer stays.
+        remember(&path, "def", BuildKind::Unknown);
+        assert_eq!(cached(&path, "abc"), Some(BuildKind::Official));
+        std::fs::remove_file(path).unwrap();
+    }
     #[test]
     fn only_listed_hashes_count_as_official() {
         let sums = "ABCDEF0123  appimage/peligames\n0011223344  deb/opt/PeliGames/peligames\n";

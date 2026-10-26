@@ -5,6 +5,7 @@ use crate::controls::Controller;
 pub(crate) struct Tools {
     mako: Option<Controller>,
     mako_error: String,
+    capture: crate::capture::Controller,
 }
 impl Tools {
     fn load(
@@ -23,7 +24,7 @@ impl Tools {
         } else {
             return Err("Overlay PeliGames não habilitado.".into());
         };
-        Ok(Self { mako, mako_error })
+        Ok(Self { mako, mako_error, capture: crate::capture::Controller::new() })
     }
 
     pub(crate) fn new() -> Result<Self, String> {
@@ -49,16 +50,18 @@ impl Tools {
         Ok(tools)
     }
 
+    pub(crate) fn capture_shortcut(&self, action:&str){self.capture.send_action(action);}
+
     pub(crate) fn draw(&self, context: &egui::Context, extent: egui::Vec2) {
         let Some(controller) = self.mako.as_ref() else {
-            crate::panel::show_tools(context, extent, None, &self.mako_error);
+            crate::panel::show_with_capture(context, extent, None, &self.mako_error, Some(&self.capture));
             return;
         };
         let Ok((mut controls, error)) = controller.current.lock().map(|s| s.clone()) else {
-            crate::panel::show_tools(context, extent, None, "Controles do MAKO indisponíveis.");
+            crate::panel::show_with_capture(context, extent, None, "Controles do MAKO indisponíveis.", Some(&self.capture));
             return;
         };
-        if crate::panel::show_tools(context, extent, Some(&mut controls), &error).inner {
+        if crate::panel::show_with_capture(context, extent, Some(&mut controls), &error, Some(&self.capture)).inner {
             if controller.sender.try_send(controls.clone()).is_ok() {
                 if let Ok(mut state) = controller.current.lock() {
                     *state = (controls, String::new());
@@ -68,6 +71,25 @@ impl Tools {
             }
         }
     }
+}
+
+/// AFMF reads its settings once, when the game starts: the panel can only show
+/// them. Changing them needs the launcher and a new launch.
+pub(crate) fn afmf_status() -> Option<&'static str> {
+    static STATUS: std::sync::OnceLock<Option<String>> = std::sync::OnceLock::new();
+    STATUS.get_or_init(|| afmf_summary(|key| std::env::var(key).ok())).as_deref()
+}
+fn afmf_summary(var: impl Fn(&str) -> Option<String>) -> Option<String> {
+    if var("AFMF_ENABLE").as_deref() != Some("1") || var("DISABLE_AFMF").as_deref() == Some("1") {
+        return None;
+    }
+    let mode = match var("AFMF_PERFORMANCE_MODE").as_deref() {
+        Some("quality") => "qualidade",
+        Some("performance") => "desempenho",
+        _ => "automático",
+    };
+    let floor = var("AFMF_MIN_FPS").unwrap_or_else(|| "30".into());
+    Some(format!("AFMF configurado · 2× · modo {mode} · gera a partir de {floor} FPS. Ajustes no launcher, valem ao reabrir o jogo."))
 }
 
 /// Common event dispatch; modules do not need their own input hooks.
@@ -90,6 +112,16 @@ mod tests {
         assert!(tools.mako.is_none());
         assert!(tools.mako_error.contains("Perfil inválido"));
         assert!(Tools::load(false, true, || Err("Perfil inválido".into())).is_err());
+    }
+    #[test]
+    fn afmf_status_reflects_the_launch_settings() {
+        let env = |pairs: &'static [(&'static str, &'static str)]| move |key: &str| pairs.iter().find(|(k, _)| *k == key).map(|(_, v)| v.to_string());
+        assert_eq!(afmf_summary(env(&[])), None);
+        assert_eq!(afmf_summary(env(&[("AFMF_ENABLE", "1"), ("DISABLE_AFMF", "1")])), None);
+        let line = afmf_summary(env(&[("AFMF_ENABLE", "1"), ("AFMF_PERFORMANCE_MODE", "quality"), ("AFMF_MIN_FPS", "45")])).unwrap();
+        assert!(line.contains("modo qualidade") && line.contains("45 FPS"));
+        assert!(line.starts_with("AFMF configurado") && !line.contains("AFMF ativo"));
+        assert!(afmf_summary(env(&[("AFMF_ENABLE", "1")])).unwrap().contains("modo automático"));
     }
     #[test]
     fn disabled_host_does_not_initialize_modules() {

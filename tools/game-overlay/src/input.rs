@@ -27,6 +27,8 @@ pub struct Input {
     reset_ui: bool,
     shortcut: u32,
     shortcut_modifiers: u8,
+    capture_bindings: Vec<(u32,u8,&'static str)>,
+    capture_pending: Option<&'static str>,
     last_relative: Option<std::time::Instant>,
     last_toggle: Option<std::time::Instant>,
 }
@@ -50,6 +52,8 @@ impl Default for Input {
             reset_ui: true,
             shortcut: 66,
             shortcut_modifiers: 0,
+            capture_bindings: Vec::new(),
+            capture_pending: None,
             last_relative: None,
             last_toggle: None,
         } // evdev KEY_F8 (not an X11 keycode)
@@ -64,6 +68,13 @@ impl Input {
         Ok(())
     }
 
+    pub fn capture_shortcuts(&mut self, preferences:&crate::capture_shortcuts::Preferences)->Result<(),String>{
+        preferences.validate()?;
+        let bindings=preferences.parsed();
+        if bindings.iter().any(|(key,mods,_)|(*key,*mods)==(self.shortcut,self.shortcut_modifiers)){return Err("Atalho de captura em conflito com o overlay.".into());}
+        self.capture_bindings=bindings;Ok(())
+    }
+    pub fn take_capture_shortcut(&mut self)->Option<&'static str>{self.capture_pending.take()}
     pub fn seed_keys(&mut self, keys: &[u32]) {
         self.held_keys = keys.iter().copied().collect();
         self.game_keys = self.held_keys.clone();
@@ -135,6 +146,7 @@ impl Input {
         }
         self.focused = focused;
         if !focused {
+            self.capture_pending=None;
             // Alt+Tab releases input ownership, not the user's requested menu.
             // Returning to the game restores the same panel; Esc never closes.
             self.events.clear();
@@ -222,6 +234,13 @@ impl Input {
         }
         if !down && self.captured_keys.remove(&key) {
             return Route::Overlay;
+        }
+        if down && self.ready && self.focused {
+            if let Some((_,_,action))=self.capture_bindings.iter().find(|(bound,mods,_)|*bound==key && *mods==self.modifiers()) {
+                if self.game_keys.contains(&key){return Route::Game;}
+                if first && self.capture_pending.is_none(){self.capture_pending=Some(*action);}
+                self.captured_keys.insert(key);return Route::Overlay;
+            }
         }
         if key == self.shortcut
             && down
@@ -612,5 +631,37 @@ mod tests {
             .iter()
             .any(|e| matches!(e, Event::PointerButton { .. })));
         assert!(!context.input(|i| i.pointer.any_down()));
+    }
+}
+
+#[cfg(test)] mod capture_shortcut_tests {
+    use super::*;
+    #[test] fn default_alt_function_keys_dispatch_the_three_capture_actions(){
+        let mut input=Input::default();
+        input.capture_shortcuts(&crate::capture_shortcuts::Preferences::default()).unwrap();
+        input.ready=true;input.focus(true);
+        input.key(56,true);
+        for (key,action) in [(64,"toggle-recording"),(65,"toggle-replay"),(66,"save-replay")] {
+            assert_eq!(input.key(key,true),Route::Overlay);
+            assert_eq!(input.take_capture_shortcut(),Some(action));
+            input.key(key,false);
+        }
+        input.key(56,false);
+        assert_eq!(input.key(64,true),Route::Game);
+        assert!(input.take_capture_shortcut().is_none());
+        assert!(!input.visible);
+    }
+
+    #[test] fn capture_keys_work_hidden_once_per_press_and_only_in_the_focused_game(){
+        let mut input=Input::default();
+        let p=crate::capture_shortcuts::Preferences{recording:"Control_L+F9".into(),..Default::default()};
+        input.capture_shortcuts(&p).unwrap();input.ready=true;input.focus(true);
+        assert!(!input.visible);assert_eq!(input.key(29,true),Route::Game);
+        assert_eq!(input.key(67,true),Route::Overlay);assert_eq!(input.take_capture_shortcut(),Some("toggle-recording"));
+        input.key(67,true);assert_eq!(input.take_capture_shortcut(),None);
+        assert_eq!(input.key(67,false),Route::Overlay);assert!(!input.visible);
+        input.key(67,true);input.focus(false);assert_eq!(input.take_capture_shortcut(),None);
+        assert_eq!(input.key(67,true),Route::Game);assert_eq!(input.take_capture_shortcut(),None);
+        let conflict=crate::capture_shortcuts::Preferences{recording:"F8".into(),..Default::default()};assert!(input.capture_shortcuts(&conflict).is_err());
     }
 }

@@ -69,7 +69,7 @@ fn hex_file(path: &Path, name: &str) -> Option<u32> {
     u32::from_str_radix(value.trim().trim_start_matches("0x"), 16).ok()
 }
 
-fn detect() -> Result<Vec<GpuInfo>, String> {
+pub(crate) fn detect() -> Result<Vec<GpuInfo>, String> {
     let devices = fs::read_dir("/sys/bus/pci/devices").map_err(|e| e.to_string())?;
     let ids = ["/usr/share/libdrm/amdgpu.ids", "/usr/share/hwdata/amdgpu.ids"]
         .iter().find_map(|path| fs::read_to_string(path).ok()).unwrap_or_default();
@@ -100,4 +100,20 @@ fn detect() -> Result<Vec<GpuInfo>, String> {
 #[tauri::command]
 pub async fn detect_linux_gpus() -> Result<Vec<GpuInfo>, String> {
     tauri::async_runtime::spawn_blocking(detect).await.map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn get_advanced_capabilities(runner:Option<String>) -> Result<std::collections::BTreeMap<String,String>,String> {
+    tauri::async_runtime::spawn_blocking(move|| {
+        let mut issues=crate::core::advanced_capabilities::host();
+        if let Some(root)=runner.as_deref().filter(|value|!value.is_empty()).map(std::path::Path::new).filter(|path|path.is_dir()) {
+            issues.extend(crate::core::advanced_settings::AdvancedSettings::runner_issues(root));
+        }
+        issues
+    }).await.map_err(|error|error.to_string())
+}
+
+/// Empty means automatic; otherwise a canonical Linux PCI BDF, never an ordinal.
+pub(crate) fn valid_pci_address(value: &str) -> bool {
+    value.is_empty() || (value.len()==12 && value.bytes().enumerate().all(|(i,b)| match i {4|7=>b==b':',10=>b==b'.',_=>b.is_ascii_hexdigit()}) && value.as_bytes()[11]<=b'7')
 }

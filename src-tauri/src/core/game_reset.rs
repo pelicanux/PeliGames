@@ -62,6 +62,7 @@ pub fn settings(mut value: AdvancedSettings, section: Section) -> AdvancedSettin
                 *enabled = false;
             }
         }
+        value.option_values.clear();
         value.gamescope = GamescopeSettings {
             model_version: 2,
             ..Default::default()

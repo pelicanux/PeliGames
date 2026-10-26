@@ -200,6 +200,31 @@ fn run_mode(installer: bool) {
         })
         .invoke_handler({
             let handler: Box<dyn Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync> = Box::new(tauri::generate_handler![
+            commands::discord_presence::discord_presence_status,
+            commands::discord_presence::discord_presence_preferences,
+            commands::discord_presence::discord_presence_game,
+            commands::capture::capture_prepare_overlay,
+            commands::capture::capture_runtime_status,
+            commands::capture::capture_runtime_install,
+            commands::capture::capture_runtime_remove,
+            commands::capture::capture_encoder_support,
+            commands::capture::capture_selection,
+            commands::capture::capture_settings,
+            commands::capture::capture_audio_sources,
+            commands::capture::capture_support,
+            commands::capture::capture_status,
+            commands::capture::capture_shortcut_preferences,
+            commands::capture::configure_capture_shortcuts,
+            commands::capture::capture_start,
+            commands::capture::capture_action,
+            commands::capture::capture_clips,
+            commands::capture::capture_clip_details,
+            commands::capture::capture_clip_title,
+            commands::capture::capture_clip_open,
+            commands::capture::capture_folder,
+            commands::capture::capture_storage_preferences,
+            commands::capture::configure_capture_storage,
+            commands::gpu::get_advanced_capabilities,
             commands::nexus_downloads::list_nexus_downloads,
             commands::nexus_local::refresh_nexus_mod_labels,
             commands::nexus_browser::open_nexus_browser,
@@ -511,8 +536,10 @@ fn run_mode(installer: bool) {
             commands::maintenance::launcher_maintenance_plan,
             commands::maintenance::launcher_maintenance_apply,
             commands::frame_generation::frame_generation_state,
+            commands::frame_generation::afmf_support,
             commands::frame_generation::versions::frame_generation_check_updates,
             commands::frame_generation::versions::frame_generation_remove_backup,
+            commands::frame_generation::versions::frame_generation_uninstall,
             commands::frame_generation::frame_generation_dll_external_filesystem,
             commands::frame_generation::install_frame_generation,
             commands::frame_generation::prepare_frame_generation,
@@ -547,6 +574,6 @@ fn run_mode(installer: bool) {
             if matches!(&event, tauri::RunEvent::WindowEvent { label, event: tauri::WindowEvent::Destroyed, .. } if label == "main") {
                 handle.exit(0);
             }
-            if matches!(event, tauri::RunEvent::Exit) { commands::mangohud::stop_preview(); commands::matrix_call::stop(); }
+            if matches!(event, tauri::RunEvent::Exit) { commands::mangohud::stop_preview(); commands::matrix_call::stop(); commands::capture::shutdown(); commands::discord_presence::shutdown(); }
         });
 }

@@ -34,3 +34,8 @@
 .selection-options { bottom: auto; }
 .gamescope-full-row > .selection-menu { margin-top: 6px; }
 .nexus-plugin-rule > .selection-menu { flex: 1 1 150px; width: auto; }
+
+/* Keep the glass border outside the viewport that scrolls the choices. */
+:root .custom-select-menu.selection-options{overflow:hidden}
+.selection-options>.selection-options-scroll{position:relative;display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.selection-options-scroll>.custom-select-option{flex-shrink:0}

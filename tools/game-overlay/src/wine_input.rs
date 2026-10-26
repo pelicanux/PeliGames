@@ -22,7 +22,8 @@ unsafe fn original<T: Copy>(name: &'static [u8]) -> Option<T> {
 }
 fn capturing() -> bool {
     // A stalled renderer must never leave the camera blocked indefinitely.
-    crate::last_present_age() < std::time::Duration::from_secs(1)
+    crate::process_scope::enabled()
+        && crate::last_present_age() < std::time::Duration::from_secs(1)
         && crate::state().lock().is_ok_and(|s| s.capturing())
 }
 
@@ -75,7 +76,7 @@ pub unsafe extern "C" fn KeAddSystemServiceTable(
     let Some(real) = original::<Register>(b"KeAddSystemServiceTable\0") else {
         return 0;
     };
-    if index != 1 || table.is_null() || args.is_null() || count == 0 || count > 4096 {
+    if !crate::process_scope::enabled() || index != 1 || table.is_null() || args.is_null() || count == 0 || count > 4096 {
         return real(table, counters, count, args, index);
     }
     let originals = [
@@ -113,8 +114,8 @@ fn read_u32(bytes: &[u8], at: usize) -> Option<u32> {
         bytes.get(at..at.checked_add(4)?)?.try_into().ok()?,
     ))
 }
-/// Keep button transitions, wheel, keyboard and HID intact. Only motion is
-/// neutralized; clearing absolute/virtual flags prevents an absolute jump to 0.
+/// Keep held-button transitions, keyboard and HID intact. Suppress motion and
+/// wheel while the overlay owns input; native events already scroll its UI.
 fn filter_packet(packet: &mut [u8]) {
     if read_u32(packet, 0) != Some(0) || packet.len() < HEADER + MOUSE {
         return;
@@ -122,6 +123,12 @@ fn filter_packet(packet: &mut [u8]) {
     let flags = u16::from_le_bytes([packet[HEADER], packet[HEADER + 1]]) & !3;
     packet[HEADER..HEADER + 2].copy_from_slice(&flags.to_le_bytes());
     packet[HEADER + 12..HEADER + 20].fill(0);
+    // RAWMOUSE.usButtonFlags includes vertical (0x0400) and horizontal (0x0800)
+    // wheel events. Leave click/release bits intact so held buttons cannot stick.
+    let buttons=u16::from_le_bytes([packet[HEADER+4],packet[HEADER+5]]);
+    packet[HEADER+4..HEADER+6].copy_from_slice(&(buttons & !0x0c00).to_le_bytes());
+    if buttons & 0x0c00 != 0 {packet[HEADER+6..HEADER+8].fill(0);}
+
 }
 fn filter_batch(bytes: &mut [u8], count: u32) {
     // First validate every block, including alignment, before changing any data.
@@ -239,15 +246,29 @@ mod tests {
         p
     }
     #[test]
-    fn raw_mouse_loses_only_motion_including_absolute_mode() {
+    fn raw_mouse_filters_motion_and_wheel_preserving_button_transitions() {
         let mut p = packet(0, 48);
         let before = p.clone();
         filter_packet(&mut p);
         assert_eq!(&p[36..44], &[0; 8]);
         assert_eq!(p[24] & 3, 0);
         assert_eq!(&p[..24], &before[..24]);
-        assert_eq!(&p[26..36], &before[26..36]); // held-button releases/wheel
+        assert_eq!(&p[26..28], &before[26..28]);
+        assert_eq!(u16::from_le_bytes([p[28],p[29]]),0x5555 & !0x0c00);
+        assert_eq!(&p[30..32], &[0;2]);
+        assert_eq!(&p[32..36], &before[32..36]);
         assert_eq!(&p[44..], &before[44..]);
+    }
+    #[test]
+    fn both_wheel_axes_are_removed_without_losing_held_button_releases(){
+        for wheel in [0x0400u16,0x0800,0x0c00] {
+            let mut p=packet(0,48);
+            p[28..30].copy_from_slice(&(wheel|0x0002|0x0008).to_le_bytes());
+            p[30..32].copy_from_slice(&120i16.to_le_bytes());
+            filter_packet(&mut p);
+            assert_eq!(u16::from_le_bytes([p[28],p[29]]),0x000a);
+            assert_eq!(&p[30..32],&[0;2]);
+        }
     }
     #[test]
     fn buffered_mouse_keyboard_and_hid_keep_sizes_and_alignment() {

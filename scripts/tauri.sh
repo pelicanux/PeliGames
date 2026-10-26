@@ -38,7 +38,8 @@ output="$target_root/${build_target:+$build_target/}$profile"
 if [[ "$(uname -s)" == Linux && ( -z "$build_target" || "$build_target" == *linux* ) ]]; then
   layout_config=$(mktemp /tmp/peligames-package-layout-XXXXXX.json)
   bun -e 'const binary = process.argv[1]; const installer = process.argv[2]; const icon = process.argv[3]; const files = {"/opt/PeliGames/peligames": binary, "/opt/PeliGames/pelinstall": installer, "/usr/share/icons/hicolor/scalable/apps/peligames.svg": icon}; console.log(JSON.stringify({bundle:{linux:{deb:{files},rpm:{files},appimage:{files:{"usr/bin/pelinstall":installer,"usr/share/icons/hicolor/scalable/apps/peligames.svg":icon}}}}}))' "$output/peligames" "$output/pelinstall" "$root/public/peligames.svg" > "$layout_config"
-  bun "$root/node_modules/@tauri-apps/cli/tauri.js" "$@" --config "$layout_config"
+  # Preserve linuxdeploy diagnostics in the build log instead of a generic failure.
+  bun "$root/node_modules/@tauri-apps/cli/tauri.js" "$@" --verbose --config "$layout_config"
 else
   bun "$root/node_modules/@tauri-apps/cli/tauri.js" "$@"
 fi

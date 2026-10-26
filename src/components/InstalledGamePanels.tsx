@@ -177,7 +177,7 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
           </form>
             </fieldset>;
   const programsPanel = game && <LauncherProgramsPanel path={game.path} disabled={programsBlocked} onStart={id => onStartShortcut(game.path, id)} />;
-  const advancedPanel = <AdvancedGameSettings hideExecutionEditors key={game?.path} value={game?.advanced} disabled={blocked} reducedMotion={reducedMotion} saved={saved === "advanced"} onChange={value => void save({ advanced: value })} isSteam={game?.launcher === "Steam"} appId={game?.app_id} />;
+  const advancedPanel = <AdvancedGameSettings runner={game?.proton} hideExecutionEditors key={game?.path} value={game?.advanced} disabled={blocked} reducedMotion={reducedMotion} saved={saved === "advanced"} onChange={value => void save({ advanced: value })} isSteam={game?.launcher === "Steam"} appId={game?.app_id} />;
   if (section === "advanced") return <div className="modern-advanced-tab">{advancedPanel}{error && <TimedFeedback>{error}</TimedFeedback>}</div>;
   if (section === "performance") return <GamePerformancePanel game={game||undefined} key={game?.path} value={game?.advanced} disabled={blocked} onChange={value => save({advanced: value})} />;
   const isBottles = external && game?.launcher === "Bottles";

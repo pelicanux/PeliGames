@@ -24,11 +24,11 @@ pub fn restrict(command: &mut Vec<String>, environment: &mut BTreeMap<String, Op
         if experimental_program(word) { skip_separator = true; return false; }
         true
     });
-    environment.retain(|key, _| !(key.starts_with("MAKO_") || key.starts_with("LSFG_") || key.starts_with("PELI_OVERLAY_") || matches!(key.as_str(), "ENABLE_MAKO" | "ENABLE_LSFG" | "ENABLE_LSFGVK")));
-    for key in ["LD_PRELOAD", "LD_AUDIT", "VK_INSTANCE_LAYERS", "VK_LAYER_PATH", "VK_ADD_LAYER_PATH", "VK_IMPLICIT_LAYER_PATH"] {
+    environment.retain(|key, _| !(key.starts_with("MAKO_") || key.starts_with("LSFG_") || key.starts_with("AFMF_") || key.starts_with("PELI_OVERLAY_") || matches!(key.as_str(), "ENABLE_MAKO" | "ENABLE_LSFG" | "ENABLE_LSFGVK" | "DISABLE_AFMF")));
+    for key in ["LD_PRELOAD", "LD_AUDIT", "VK_INSTANCE_LAYERS", "VK_LAYER_PATH", "VK_ADD_LAYER_PATH", "VK_IMPLICIT_LAYER_PATH", "VK_ADD_IMPLICIT_LAYER_PATH"] {
         if let Some(Some(value)) = environment.get_mut(key) {
             let kept = value.split(|c: char| c == ':' || (key.starts_with("LD_") && c.is_ascii_whitespace()))
-                .filter(|s| !s.is_empty() && !s.contains("/FrameGeneration/") && !s.contains("peligames_game_overlay") && !s.contains("peligames_overlay_audit") && !s.starts_with("VK_LAYER_MAKO") && !s.starts_with("VK_LAYER_LSFG") && *s != "VK_LAYER_PELIGAMES_overlay")
+                .filter(|s| !s.is_empty() && !s.contains("/FrameGeneration/") && !s.contains("peligames_game_overlay") && !s.contains("peligames_overlay_audit") && !s.starts_with("VK_LAYER_MAKO") && !s.starts_with("VK_LAYER_LSFG") && !matches!(*s, "VK_LAYER_AFMF" | "VK_LAYER_PELIGAMES_overlay" | "VK_LAYER_PELIGAMES_present_counter"))
                 .collect::<Vec<_>>().join(":");
             if kept.is_empty() { *environment.get_mut(key).unwrap() = None; } else { *value = kept; }
         }
@@ -51,6 +51,17 @@ mod tests {
         assert_eq!(env["VK_INSTANCE_LAYERS"].as_deref(), Some("VK_LAYER_DLSSNR_int4:VK_LAYER_MANGOHUD_overlay_x86_64"));
         assert_eq!(env["LD_PRELOAD"].as_deref(), Some("/steam/gameoverlayrenderer.so"));
         assert_eq!(env["WINEDLLOVERRIDES"].as_deref(), Some("dxgi=n,b"));
+    }
+    #[test]
+    fn restricted_profile_removes_explicit_afmf_and_counter_but_keeps_other_mods() {
+        let mut command=vec!["marker".into()];
+        let mut env=BTreeMap::from([
+            ("AFMF_ASYNC".into(),Some("1".into())),
+            ("DISABLE_AFMF".into(),Some("1".into())),
+            ("VK_INSTANCE_LAYERS".into(),Some("VK_LAYER_NR:VK_LAYER_AFMF:VK_LAYER_PELIGAMES_present_counter".into()))]);
+        restrict(&mut command,&mut env,false);
+        assert_eq!(env["VK_INSTANCE_LAYERS"].as_deref(),Some("VK_LAYER_NR"));
+        assert!(!env.contains_key("AFMF_ASYNC") && !env.contains_key("DISABLE_AFMF"));
     }
     #[test]
     fn local_switch_preserves_experimental_settings() {

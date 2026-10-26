@@ -8,6 +8,7 @@ use std::{
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Controls {
     pub multiplier: u8,
     pub flow_scale: f32,
@@ -15,10 +16,22 @@ pub struct Controls {
     pub adaptive: bool,
     pub target_fps: u16,
     pub paused: bool,
+    pub base_fps_cap: u16,
+    pub refresh_threshold: u16,
+    pub scaling_enabled: bool,
+    pub scaling_method: String,
+    pub scaling_sharpness: f32,
+    pub ultra_performance: bool,
+}
+impl Default for Controls {
+    fn default() -> Self { Self {multiplier:2,flow_scale:1.,performance:false,adaptive:false,target_fps:60,paused:false,base_fps_cap:0,refresh_threshold:0,scaling_enabled:false,scaling_method:"native".into(),scaling_sharpness:0.8,ultra_performance:false} }
 }
 impl Controls {
     pub fn validate(&self) -> Result<(), String> {
-        if !(2..=5).contains(&self.multiplier)
+        if self.base_fps_cap>1000 || self.refresh_threshold>1000
+            || !self.scaling_sharpness.is_finite() || !(0.0..=1.).contains(&self.scaling_sharpness)
+            || !["native","mako","ls1","ls1-performance"].contains(&self.scaling_method.as_str())
+            || !(2..=5).contains(&self.multiplier)
             || !(10..=1000).contains(&self.target_fps)
             || !self.flow_scale.is_finite()
             || !(0.25..=1.).contains(&self.flow_scale)
@@ -85,28 +98,28 @@ fn initial(path: &Path) -> Result<Controls, String> {
             .as_u64()
             .and_then(|v| u16::try_from(v).ok())
             .ok_or("Alvo inválido")?,
-        paused: false,
+        paused: !value["live_enabled"].as_bool().unwrap_or(true),
+        ..Controls::default()
     };
-    controls.validate()?;
-    let live = path.with_extension("live.json");
-    if fs::metadata(&live)
-        .and_then(|m| m.modified())
-        .ok()
-        .zip(fs::metadata(path).and_then(|m| m.modified()).ok())
-        .is_some_and(|(a, b)| a >= b)
-    {
-        if let Ok(bytes) = read(&live) {
-            if let Ok(c) = serde_json::from_slice::<Controls>(&bytes) {
-                if c.validate().is_ok() {
-                    return Ok(c);
-                }
-            }
-        }
+    // The watched TOML is authoritative, including edits made by the launcher.
+    // live.json is an output/cache, never a second owner of MAKO settings.
+    let document: toml::Value=std::str::from_utf8(&read(path)?).map_err(|e|e.to_string())?.parse::<toml::Value>().map_err(|e|e.to_string())?;
+    let profile=document.get("profile").and_then(toml::Value::as_array).and_then(|profiles|profiles.iter().find(|p|p.get("name").and_then(toml::Value::as_str)==Some("PeliGames"))).ok_or("Perfil PeliGames ausente")?;
+    let mut merged=serde_json::to_value(controls).map_err(|e|e.to_string())?;
+    for (source,target) in [("multiplier","multiplier"),("flow_scale","flow_scale"),("performance_mode","performance"),("adaptive","adaptive"),("target_fps","target_fps"),("base_fps_cap","base_fps_cap"),("frame_generation_refresh_threshold","refresh_threshold"),("scaling_enabled","scaling_enabled"),("scaling_method","scaling_method"),("scaling_sharpness","scaling_sharpness"),("ultra_performance","ultra_performance")] {
+        if let Some(value)=profile.get(source) {merged[target]=serde_json::to_value(value).map_err(|e|e.to_string())?;}
     }
+    if let Some(value)=profile.get("frame_generation_enabled") {merged["paused"]=(!value.as_bool().ok_or("Estado de geração inválido")?).into();}
+    let controls:Controls=serde_json::from_value(merged).map_err(|e|e.to_string())?;
+    controls.validate()?;
     Ok(controls)
 }
 fn save(path: &Path, c: &Controls) -> Result<(), String> {
     c.validate()?;
+    let current=initial(path)?;
+    if !current.scaling_enabled && (c.scaling_method!=current.scaling_method || c.scaling_sharpness!=current.scaling_sharpness) {
+        return Err("Ative a escala no launcher e reinicie o jogo antes de ajustá-la no overlay.".into());
+    }
     let bytes = read(path)?;
     let mut document = std::str::from_utf8(&bytes)
         .map_err(|e| e.to_string())?
@@ -135,8 +148,14 @@ fn save(path: &Path, c: &Controls) -> Result<(), String> {
         ("performance_mode", toml::Value::Boolean(c.performance)),
         ("adaptive", toml::Value::Boolean(c.adaptive)),
         ("frame_generation_enabled", toml::Value::Boolean(!c.paused)),
+        ("base_fps_cap",toml::Value::Integer(c.base_fps_cap.into())),
+        ("frame_generation_refresh_threshold",toml::Value::Integer(c.refresh_threshold.into())),
     ] {
         profile.insert(key.into(), value);
+    }
+    if current.scaling_enabled {
+        profile.insert("scaling_method".into(),toml::Value::String(c.scaling_method.clone()));
+        profile.insert("scaling_sharpness".into(),toml::Value::Float(c.scaling_sharpness as f64));
     }
     // Re-read startup settings before every update; this is a live edit, not a
     // replacement of startup settings, DLL selection, runtime, or Steam options.
@@ -274,6 +293,7 @@ mod tests {
             adaptive: false,
             target_fps: 60,
             paused: false,
+            ..Controls::default()
         };
         assert!(c.validate().is_ok());
         c.flow_scale = f32::NAN;
@@ -315,6 +335,47 @@ mod tests {
         let live = initial(&fixture.config).unwrap();
         assert_eq!(live.multiplier, 4);
         assert!(live.paused);
+    }
+    #[test]
+    fn new_live_controls_preserve_startup_fields_and_ignore_stale_cache() {
+        let fixture=Fixture::new();
+        let startup=fs::read(fixture.config.with_extension("json")).unwrap();
+        let mut text=fs::read_to_string(&fixture.config).unwrap();
+        text.push_str("gpu='0000:01:00.0'\nultra_performance=true\nscaling_enabled=true\nscaling_factor=1.5\nscaling_method='ls1'\nscaling_sharpness=0.8\n");
+        fs::write(&fixture.config,text).unwrap();
+        let mut controls=initial(&fixture.config).unwrap();
+        assert!(controls.scaling_enabled && controls.ultra_performance);
+        controls.base_fps_cap=72;controls.refresh_threshold=120;
+        controls.scaling_method="mako".into();controls.scaling_sharpness=0.6;controls.paused=true;
+        save(&fixture.config,&controls).unwrap();
+        let document:toml::Value=fs::read_to_string(&fixture.config).unwrap().parse().unwrap();
+        let profile=&document["profile"][1];
+        assert_eq!(profile["base_fps_cap"].as_integer(),Some(72));
+        assert_eq!(profile["frame_generation_refresh_threshold"].as_integer(),Some(120));
+        assert_eq!(profile["gpu"].as_str(),Some("0000:01:00.0"));
+        assert_eq!(profile["scaling_factor"].as_float(),Some(1.5));
+        assert_eq!(profile["ultra_performance"].as_bool(),Some(true));
+        assert_eq!(profile["scaling_method"].as_str(),Some("mako"));
+        assert_eq!(fs::read(fixture.config.with_extension("json")).unwrap(),startup);
+        fs::write(fixture.config.with_extension("live.json"),serde_json::to_vec(&Controls::default()).unwrap()).unwrap();
+        let reread=initial(&fixture.config).unwrap();
+        assert_eq!(reread.base_fps_cap,72);assert_eq!(reread.refresh_threshold,120);assert!(reread.paused);
+        assert_eq!(reread.scaling_method,"mako");
+    }
+    #[test]
+    fn live_scale_needs_startup_enablement_and_values_are_bounded() {
+        let fixture=Fixture::new();
+        let before=fs::read(&fixture.config).unwrap();
+        let mut controls=initial(&fixture.config).unwrap();
+        controls.scaling_enabled=true;controls.scaling_method="mako".into();
+        assert!(save(&fixture.config,&controls).is_err());
+        assert_eq!(fs::read(&fixture.config).unwrap(),before);
+        controls=Controls::default();controls.base_fps_cap=1001;assert!(controls.validate().is_err());
+        controls=Controls::default();controls.refresh_threshold=1001;assert!(controls.validate().is_err());
+        controls=Controls::default();controls.scaling_sharpness=f32::NAN;assert!(controls.validate().is_err());
+        controls=Controls::default();controls.scaling_method="unknown".into();assert!(controls.validate().is_err());
+        let old:Controls=serde_json::from_str(r#"{"multiplier":2,"flow_scale":1.0,"performance":false,"adaptive":false,"target_fps":60,"paused":false}"#).unwrap();
+        assert_eq!(old.base_fps_cap,0);assert_eq!(old.scaling_method,"native");
     }
     #[test]
     fn unknown_mako_format_cannot_be_overwritten() {

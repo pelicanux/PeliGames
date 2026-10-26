@@ -1,3 +1,4 @@
+import {NavSubtitle} from "./NavSubtitle";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useI18n } from "../../i18n/I18nContext";
 import { ModernNavIcon, type ModernIconName } from "./ModernNavIcon";
@@ -67,7 +68,7 @@ export function ModernShell({ active, disabled = false, onNavigate, activeDownlo
   const button = (key: string, current: boolean, icon: ModernIconName, label: string, hint: string, onClick: () => void, badge?: number) =>
     <button type="button" key={key} className="modern-nav" title={label} aria-current={current ? "page" : undefined} disabled={disabled} onClick={onClick}>
       <ModernNavIcon name={icon} />
-      <span className="modern-nav-label">{label}<small>{hint}</small></span>
+      <span className="modern-nav-label">{label}<NavSubtitle text={hint}/></span>
       {badge ? <span className="modern-nav-badge">{badge}</span> : null}
     </button>;
   const item = (section: ModernSection, icon: ModernIconName, label: string, hint: string, badge?: number) =>

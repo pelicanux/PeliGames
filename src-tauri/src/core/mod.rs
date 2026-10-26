@@ -1,3 +1,6 @@
+pub mod discord_presence;
+pub mod capture;
+pub mod audio_denoise;
 #[cfg(test)]
 pub(crate) mod test_support;
 pub mod script_runner;
@@ -22,6 +25,7 @@ pub mod installation_layout;
 pub mod game_execution;
 
 pub mod advanced_settings;
+mod afmf_compatibility;
 
 pub mod wine_tools;
 
@@ -66,3 +70,11 @@ pub mod openrgb;
 
 #[cfg(target_os = "linux")]
 pub mod webkit_graphics;
+
+pub mod advanced_capabilities;
+
+pub mod capture_overlay;
+
+pub mod capture_runtime;
+
+pub mod component_uninstall;

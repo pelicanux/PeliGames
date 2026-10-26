@@ -4,7 +4,7 @@ set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 container=${PELIGAMES_BUILD_CONTAINER:-ubuntu-24-dev}
 mode=appimage
-jobs=${CARGO_BUILD_JOBS:-6}
+jobs=${CARGO_BUILD_JOBS:-12}
 usage() {
   cat <<'HELP'
 Uso: bash compilar.sh [--bin | --all] [--jobs N] [--container NOME]

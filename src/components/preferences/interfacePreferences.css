@@ -68,10 +68,10 @@
 @container settings-page (max-width:400px) { .interface-workspace .preference-launch-effects { grid-template-columns:1fr; } }
 .openrgb-preferences { margin-top:16px; }
 .openrgb-connection-row { display:flex;align-items:end;gap:12px;margin:18px 0; }
-.openrgb-connection-row label,.openrgb-device-fields label { display:grid;gap:7px;min-width:0;font-size:.8125rem; }
+.openrgb-connection-row label,.openrgb-device-field { display:grid;gap:7px;min-width:0;font-size:.8125rem; }
 .openrgb-connection-row input { width:110px;box-sizing:border-box;padding:8px 10px; }
 .openrgb-device-fields { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0; }
-.openrgb-device-fields select { width:100%;min-width:0;padding:9px 10px; }
+.openrgb-device-fields .selection-menu,.openrgb-device-fields .custom-select-trigger { width:100%;min-width:0; }
 .openrgb-color { display:flex;align-items:center;gap:10px;font-size:.8125rem; }
 .openrgb-color i { width:22px;height:22px;border-radius:6px;border:1px solid var(--mod-line); }
 .openrgb-color small,.openrgb-help { color:var(--mod-muted); }

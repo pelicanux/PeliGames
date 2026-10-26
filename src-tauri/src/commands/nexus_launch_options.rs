@@ -242,6 +242,7 @@ pub async fn configure_nexus_advanced(
 }
 /// Reuse the launcher wrappers and environment settings while preserving mod loader defaults.
 pub(super) fn advanced_command(game: &NexusGame, original: Command) -> Result<Command, String> {
+    if game.platform == "native" { game.advanced.validate_native()?; }
     if game.platform == "proton" {
         game.advanced.validate_runner(Path::new(&game.proton))?;
         if game.advanced.options.get("steam_client") == Some(&true) && !super::external_library::launcher_open("Steam") {

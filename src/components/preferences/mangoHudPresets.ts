@@ -2,16 +2,17 @@ import catalog from "../../config/mangohudOptions.json";
 import type { MangoHudSettings } from "../../services/mangohud";
 const options = catalog;
 
-// All presets share CPU, GPU, VRAM, RAM, FPS, averages, graph, system, clock order.
+// Presets start with the editable title, followed by the hardware and FPS blocks.
 export const PRESETS = [
   { id: "basic", name: "Essencial", description: "FPS, CPU, GPU e memória." },
   { id: "full", name: "Detalhado", description: "Sensores, frequências e gráfico." },
   { id: "horizontal", name: "Faixa", description: "Tudo numa linha no topo." },
-  { id: "fps", name: "Só FPS", description: "Discreto, só a taxa de quadros." },
+  { id: "fps", name: "Só FPS", description: "Discreto, com título e taxa de quadros." },
 ];
 export function applyPreset(kind: string, base: MangoHudSettings): MangoHudSettings {
   // Presets explicitly disable Vulkan and OpenGL VSync, including saved profiles.
   const next = { ...base, vsync: "1", gl_vsync: "0" } as MangoHudSettings;
+  next.custom_text_center = "PeliGames";
   next.launcher_hud_order = "hardware-first";
   next.launcher_hud_custom_order = "";
   for (const option of options) if (option.kind === "toggle" && option.key !== "gpu_load_change" && ["fps", "gpu", "cpu", "extras"].includes(option.section)) next[option.key] = false;
@@ -27,6 +28,6 @@ export function applyPreset(kind: string, base: MangoHudSettings): MangoHudSetti
   const [vertical, horizontal] = String(next.position || "top-left").split("-");
   next.offset_x = horizontal === "left" ? 20 : horizontal === "right" ? -20 : 0;
   next.offset_y = vertical === "top" ? 20 : vertical === "bottom" ? -20 : 0;
-  if (kind === "fps") { next.fps_metrics = ""; next.custom_text_center = ""; }
+  if (kind === "fps") next.fps_metrics = "";
   return next;
 }

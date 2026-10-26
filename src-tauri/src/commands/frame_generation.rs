@@ -32,6 +32,16 @@ pub struct Settings {
     pub target_fps: u16,
     pub flow_scale: f32,
     pub performance: bool,
+    pub gpu: String,
+    pub base_fps_cap: u16,
+    pub refresh_threshold: u16,
+    pub ultra_performance: bool,
+    pub allow_fp16: bool,
+    pub live_enabled: bool,
+    pub scaling_enabled: bool,
+    pub scaling_method: String,
+    pub scaling_factor: f32,
+    pub scaling_sharpness: f32,
 }
 impl Default for Settings {
     fn default() -> Self {
@@ -47,12 +57,53 @@ impl Default for Settings {
             target_fps: 60,
             flow_scale: 1.0,
             performance: false,
+            gpu: String::new(), base_fps_cap: 0, refresh_threshold: 0,
+            ultra_performance: false, allow_fp16: true, live_enabled: true,
+            scaling_enabled: false, scaling_method: "native".into(),
+            scaling_factor: 1.5, scaling_sharpness: 0.8,
         }
     }
 }
 fn release(backend: &str) -> Result<(&'static str, &'static str, &'static str), String> {
     match backend{
- "mako"=>Ok(("4.5.0","https://github.com/eugeniosegala/MAKO/releases/download/render-v4.5.0/MAKO-Renderer-v4.5.0-linux.tar.xz","4dd3e70743a08a0f2f0e6006d35d1e08dfcf751932678a6217cbdcf87c784305")),_=>Err("Tecnologia de geração de quadros inválida.".into())}
+ "mako"=>Ok(("4.5.0","https://github.com/eugeniosegala/MAKO/releases/download/render-v4.5.0/MAKO-Renderer-v4.5.0-linux.tar.xz","4dd3e70743a08a0f2f0e6006d35d1e08dfcf751932678a6217cbdcf87c784305")),
+ "afmf"=>Ok(("1.3.1","https://github.com/serialexperimentslainnnn/afmf-linux/releases/download/v1.3.1/afmf-linux-1.3.1-x86_64.tar.xz","7fafa09021ee94dc5ec8da694cb02fe298b54c114b486611bb24b1e1500edb18")),_=>Err("Tecnologia de geração de quadros inválida.".into())}
+}
+/// The installed AFMF layer folder (manifest beside its library) for a game launch.
+pub(crate) fn afmf_layer_dir() -> Result<PathBuf, String> {
+    let path = versions::location("afmf", &versions::current("afmf")?)?;
+    validate_runtime_at(&path, "afmf")
+        .map_err(|_| "O AFMF está ativado neste jogo, mas não está instalado. Instale-o em Configurações → Mods → AFMF ou na aba Geração de quadros do jogo.".to_string())?;
+    afmf_runtime_manifest(&path)
+}
+/// A bare filename is searched in ld.so's global paths, not beside the JSON.
+/// Keep the signed package unchanged and offer a private, adapted manifest.
+fn afmf_runtime_manifest(path: &Path) -> Result<PathBuf, String> {
+    use std::os::unix::fs::{DirBuilderExt, MetadataExt};
+    let path = path.canonicalize().map_err(|e|e.to_string())?;
+    let mut manifest: serde_json::Value = serde_json::from_slice(&fs::read(path.join("afmf-linux.json")).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;
+    manifest["layer"]["library_path"] = serde_json::Value::String(path.join("libafmf-linux.so").to_string_lossy().into_owned());
+    manifest["layer"]["library_arch"] = serde_json::Value::String("64".into());
+    // Explicit activation keeps GE/Steam above AFMF's native
+    // presentation threads. The package and older implicit adapter stay intact.
+    manifest["file_format_version"] = serde_json::Value::String("1.2.1".into());
+    let layer = manifest["layer"].as_object_mut().ok_or("Manifesto AFMF inválido")?;
+    layer.remove("enable_environment");
+    layer.remove("disable_environment");
+    let directory = path.join("peligames-explicit-layer");
+    match fs::DirBuilder::new().mode(0o700).create(&directory) {
+        Ok(()) => {},
+        Err(e) if e.kind()==std::io::ErrorKind::AlreadyExists => {},
+        Err(e) => return Err(e.to_string()),
+    }
+    let meta=fs::symlink_metadata(&directory).map_err(|e|e.to_string())?;
+    if !meta.is_dir() || meta.file_type().is_symlink() || meta.uid()!=unsafe{libc::geteuid()} || meta.mode()&0o077!=0 {
+        return Err("Pasta do manifesto AFMF sem permissões privadas.".into());
+    }
+    let destination=directory.join("afmf-linux.json");
+    let bytes=serde_json::to_vec_pretty(&manifest).map_err(|e|e.to_string())?;
+    if fs::read(&destination).ok().as_deref()!=Some(bytes.as_slice()) { write(&destination,&bytes,0o600)?; }
+    Ok(directory)
 }
 pub(super) fn root() -> Result<PathBuf, String> {
     Ok(crate::core::paths::app_root()?.join("FrameGeneration"))
@@ -62,6 +113,13 @@ fn profile_key(key: &str) -> String {
 }
 pub(super) fn check_settings(s: &Settings) -> Result<(), String> {
     release(&s.backend)?;
+    if s.base_fps_cap > 1000 || s.refresh_threshold > 1000
+        || !s.scaling_factor.is_finite() || !(1.0..=2.0).contains(&s.scaling_factor)
+        || !s.scaling_sharpness.is_finite() || !(0.0..=1.0).contains(&s.scaling_sharpness)
+        || !["native", "mako", "ls1", "ls1-performance"].contains(&s.scaling_method.as_str())
+        || !crate::commands::gpu::valid_pci_address(&s.gpu) {
+        return Err("Ajustes MAKO inválidos: confira GPU, limites (0–1000), escala (1–2×) e nitidez (0–1).".into());
+    }
     if !(2..=5).contains(&s.multiplier)
         || !(10..=1000).contains(&s.target_fps)
         || !s.flow_scale.is_finite()
@@ -119,8 +177,43 @@ fn detect_dll(backend: &str) -> Option<String> {
     }
     None
 }
+/// AFMF's layer: a relative manifest beside a self-contained x86_64 library,
+/// dormant until AFMF_ENABLE=1, so the folder can be offered per game.
+fn validate_afmf_at(path: &Path) -> Result<(), String> {
+    let incomplete = || "Runtime do AFMF incompleto. Instale novamente o componente.".to_string();
+    for file in ["libafmf-linux.so", "afmf-linux.json"] {
+        let p = path.join(file);
+        if !p.is_file() || p.is_symlink() { return Err(incomplete()); }
+    }
+    let mut header = [0u8; 20];
+    fs::File::open(path.join("libafmf-linux.so")).and_then(|mut f| f.read_exact(&mut header)).map_err(|_| incomplete())?;
+    if header[..5] != [0x7f, b'E', b'L', b'F', 2] || header[18..20] != [62, 0] {
+        return Err("A biblioteca do AFMF não é Linux x86_64.".into());
+    }
+    let manifest: serde_json::Value = serde_json::from_slice(&fs::read(path.join("afmf-linux.json")).map_err(|_| incomplete())?)
+        .map_err(|_| "Manifesto do AFMF inválido.".to_string())?;
+    let layer = &manifest["layer"];
+    if layer["name"] != "VK_LAYER_AFMF" || layer["library_path"] != "libafmf-linux.so" || layer["enable_environment"]["AFMF_ENABLE"] != "1" {
+        return Err("Manifesto do AFMF diferente do esperado. Nenhum runtime foi instalado.".into());
+    }
+    Ok(())
+}
+/// The AFMF archive keeps its files under one versioned folder: bring them to the stage root.
+fn flatten_single_root(stage: &Path) -> Result<(), String> {
+    let entries: Vec<_> = fs::read_dir(stage).map_err(|e| e.to_string())?.flatten().collect();
+    let [only] = entries.as_slice() else { return Ok(()) };
+    if !only.file_type().map_err(|e| e.to_string())?.is_dir() { return Ok(()); }
+    let root = only.path();
+    for child in fs::read_dir(&root).map_err(|e| e.to_string())?.flatten() {
+        fs::rename(child.path(), stage.join(child.file_name())).map_err(|e| e.to_string())?;
+    }
+    fs::remove_dir(root).map_err(|e| e.to_string())
+}
 fn validate_runtime_at(path: &Path, backend: &str) -> Result<(), String> {
     release(backend)?;
+    if backend == "afmf" {
+        return validate_afmf_at(path);
+    }
     let files = &[
         "bin/mako-launch",
         "bin/mako-cli",
@@ -317,6 +410,7 @@ pub async fn install_frame_generation(
         fs::create_dir(&stage).map_err(|e| e.to_string())?;
         let result = (|| {
             unpack(&bytes, &stage)?;
+            if backend == "afmf" { flatten_single_root(&stage)?; }
             validate_runtime_at(&stage, &backend)?;
             let _ = install_progress.send(InstallProgress {
                 phase: "installing",
@@ -411,10 +505,12 @@ fn toml(s: &str) -> String {
     serde_json::to_string(s).unwrap()
 }
 pub(super) fn config(s: &Settings) -> String {
-    let mut out=format!("version = 2\n[global]\ndll = {}\nallow_fp16 = true\n[[profile]]\nname = \"PeliGames\"\nmultiplier = {}\nflow_scale = {:.2}\nperformance_mode = {}\n",toml(&s.dll),s.multiplier,s.flow_scale,s.performance);
-    out.push_str(&format!("frame_generation_provisioned = true\nframe_generation_enabled = true\nadaptive = {}\ntarget_fps = {}\nadaptive_max_multiplier = {}\nscaling_enabled = false\n",s.adaptive,s.target_fps,s.multiplier));
+    let mut out=format!("version = 2\n[global]\ndll = {}\nallow_fp16 = {}\n[[profile]]\nname = \"PeliGames\"\nmultiplier = {}\nflow_scale = {:.2}\nperformance_mode = {}\n",toml(&s.dll),s.allow_fp16,s.multiplier,s.flow_scale,s.performance);
+    out.push_str(&format!("frame_generation_provisioned = true\nframe_generation_enabled = {}\nadaptive = {}\ntarget_fps = {}\nadaptive_max_multiplier = {}\nbase_fps_cap = {}\nframe_generation_refresh_threshold = {}\nultra_performance = {}\nscaling_enabled = {}\nscaling_method = {}\nscaling_factor = {:.2}\nscaling_sharpness = {:.2}\n",s.live_enabled,s.adaptive,s.target_fps,s.multiplier,s.base_fps_cap,s.refresh_threshold,s.ultra_performance,s.scaling_enabled,toml(&s.scaling_method),s.scaling_factor,s.scaling_sharpness));
+    if !s.gpu.is_empty() { out.push_str(&format!("gpu = {}\n",toml(&s.gpu))); }
     out
 }
+
 pub(crate) fn conflicts(advanced: &AdvancedSettings) -> Result<(), String> {
     let profiles = root()?.join("profiles");
     for wrapper in advanced.wrappers.iter().filter(|w| w.enabled) {
@@ -528,6 +624,11 @@ pub(crate) fn configure_monitoring(
     let enabled = ["mangohud", "mangohud_env"]
         .iter()
         .any(|key| advanced.options.get(*key) == Some(&true));
+    if enabled && advanced.afmf.as_ref().is_some_and(|afmf| afmf.enabled) {
+        let directory = root()?.join("layers/afmf-mangohud");
+        mangohud::prepare_afmf(&directory)?;
+        crate::core::afmf_compatibility::monitoring(command, &directory)?;
+    }
     let profiles = root()?.join("profiles");
     for wrapper in advanced.wrappers.iter().filter(|w| w.enabled) {
         let path = Path::new(&wrapper.program);
@@ -591,6 +692,12 @@ fn same_launch_profile(previous: &Settings, next: &Settings) -> bool {
         && previous.dll == next.dll
         && previous.enabled == next.enabled
         && previous.flatpak == next.flatpak
+        && previous.gpu == next.gpu && previous.allow_fp16 == next.allow_fp16
+        && previous.ultra_performance == next.ultra_performance
+        && previous.scaling_enabled == next.scaling_enabled
+        && previous.scaling_method == next.scaling_method
+        && previous.scaling_factor == next.scaling_factor
+        && previous.scaling_sharpness == next.scaling_sharpness
 }
 
 /// Edits only reloadable keys, retaining pause state and startup configuration.
@@ -615,6 +722,21 @@ fn live_config(text: &str, settings: &Settings) -> Result<String, String> {
         } else { output.push_str(line); output.push('\n'); }
     }
     if counts != [1; 6] { return Err("O perfil MAKO não tem um formato de recarga reconhecido. As configurações foram preservadas.".into()); }
+    for (key,value) in [("base_fps_cap",settings.base_fps_cap), ("frame_generation_refresh_threshold",settings.refresh_threshold)] {
+        let mut edited = String::new(); let mut in_profile=false; let mut found=false;
+        for line in output.lines() {
+            if line.trim().starts_with('[') {
+                if in_profile && !found { edited.push_str(&format!("{key} = {value}\n")); found=true; }
+                in_profile = line.trim() == "[[profile]]";
+            }
+            if in_profile && line.split_once('=').is_some_and(|(name,_)| name.trim()==key) {
+                if found { return Err("Chave MAKO duplicada; perfil preservado.".into()); }
+                edited.push_str(&format!("{key} = {value}\n")); found=true;
+            } else { edited.push_str(line); edited.push('\n'); }
+        }
+        if !found && in_profile { edited.push_str(&format!("{key} = {value}\n")); }
+        output=edited;
+    }
     Ok(output)
 }
 
@@ -643,17 +765,25 @@ pub async fn update_frame_generation_live(active_profile: String, settings: Sett
         if !previous.enabled || previous.backend!="mako" { return Err("O perfil precisa ter MAKO habilitado antes de iniciar o jogo.".into()); }
         // Ignore all non-live fields supplied by the UI. They cannot change the
         // DLL, runner, startup wrapper, overlay opt-in, or another launcher's state.
+        let switch_changed=previous.live_enabled!=settings.live_enabled;
+        previous.live_enabled=settings.live_enabled;
+        previous.base_fps_cap=settings.base_fps_cap; previous.refresh_threshold=settings.refresh_threshold;
         previous.multiplier=settings.multiplier; previous.adaptive=settings.adaptive;
         previous.target_fps=settings.target_fps; previous.flow_scale=settings.flow_scale; previous.performance=settings.performance;
         let toml=script.with_extension("toml");
         let old=fs::read_to_string(&toml).map_err(|e|e.to_string())?;
-        let updated=live_config(&old,&previous)?;
-        let paused=old.lines().any(|line|line.split_once('=').is_some_and(|(key,value)|key.trim()=="frame_generation_enabled"&&value.trim()=="false"));
+        let mut updated=live_config(&old,&previous)?;
+        if switch_changed {
+            updated=updated.lines().map(|line| if line.split_once('=').is_some_and(|(key,_)|key.trim()=="frame_generation_enabled") { format!("frame_generation_enabled = {}",previous.live_enabled) } else { line.to_owned() }).collect::<Vec<_>>().join("\n")+"\n";
+        }
+        let paused=updated.lines().any(|line|line.split_once('=').is_some_and(|(key,value)|key.trim()=="frame_generation_enabled"&&value.trim()=="false"));
         write(&path,&serde_json::to_vec(&previous).map_err(|e|e.to_string())?,0o600)?;
         write(&toml,updated.as_bytes(),0o600)?;
         write(&script.with_extension("live.json"),&serde_json::to_vec(&serde_json::json!({
             "multiplier":previous.multiplier,"adaptive":previous.adaptive,"target_fps":previous.target_fps,
-            "flow_scale":previous.flow_scale,"performance":previous.performance,"paused":paused
+            "flow_scale":previous.flow_scale,"performance":previous.performance,"paused":paused,
+            "base_fps_cap":previous.base_fps_cap,"refresh_threshold":previous.refresh_threshold,
+            "scaling_enabled":previous.scaling_enabled,"scaling_method":previous.scaling_method,"scaling_sharpness":previous.scaling_sharpness,"ultra_performance":previous.ultra_performance
         })).map_err(|e|e.to_string())?,0o600)
     }).await.map_err(|e|e.to_string())?
 }
@@ -831,6 +961,31 @@ mod tests {
         assert!(live_config(&(text.clone()+"multiplier = 2\n"),&next).is_err());
         assert!(live_config(&text.replace("target_fps = 60\n",""),&next).is_err());
     }
+
+    #[test]
+    fn additional_controls_validate_generate_and_preserve_launch_identity() {
+        let base=Settings::default();
+        let mut next=Settings { gpu:"0000:01:00.0".into(), base_fps_cap:60, refresh_threshold:90, allow_fp16:false, ultra_performance:true, live_enabled:false, scaling_enabled:true, scaling_method:"mako".into(), scaling_factor:1.5, scaling_sharpness:0.6, ..base.clone() };
+        assert!(check_settings(&next).is_ok());
+        let text=config(&next);
+        for expected in ["allow_fp16 = false", "base_fps_cap = 60", "frame_generation_refresh_threshold = 90", "ultra_performance = true", "frame_generation_enabled = false", "scaling_method = \"mako\"", "scaling_factor = 1.50", "scaling_sharpness = 0.60", "gpu = \"0000:01:00.0\""] { assert!(text.contains(expected),"{expected}"); }
+        assert!(!same_launch_profile(&base,&next));
+        next=base.clone();next.base_fps_cap=60;next.refresh_threshold=144;next.live_enabled=false;
+        assert!(same_launch_profile(&base,&next));
+        next.scaling_factor=f32::NAN;assert!(check_settings(&next).is_err());
+        next=base.clone();next.gpu="GPU 0\ninvalid".into();assert!(check_settings(&next).is_err());
+        next=base.clone();next.scaling_method="unknown".into();assert!(check_settings(&next).is_err());
+        next=base;next.base_fps_cap=1001;assert!(check_settings(&next).is_err());
+    }
+    #[test]
+    fn additional_live_controls_upgrade_legacy_profiles_without_unpausing() {
+        let settings=Settings {base_fps_cap:72,refresh_threshold:120,..Default::default()};
+        let old=config(&Settings::default()).lines().filter(|line| !line.starts_with("base_fps_cap")&&!line.starts_with("frame_generation_refresh_threshold")).collect::<Vec<_>>().join("\n").replace("frame_generation_enabled = true","frame_generation_enabled = false");
+        let text=live_config(&old,&settings).unwrap();
+        assert!(text.contains("base_fps_cap = 72"));assert!(text.contains("frame_generation_refresh_threshold = 120"));assert!(text.contains("frame_generation_enabled = false"));
+        assert_eq!(live_config(&text,&settings).unwrap(),text);
+    }
+
     #[test]
     fn existing_profiles_do_not_enable_the_internal_layer() {
         let old: Settings = serde_json::from_str(r#"{"backend":"mako","enabled":true}"#).unwrap();
@@ -1116,4 +1271,91 @@ pub(super) fn reset_selection(game_key:&str)->Result<(),String>{
     let selection=profiles.join(profile_key(game_key)+".selection.json");
     if selection.exists(){write(&selection,&serde_json::to_vec_pretty(&Settings::default()).map_err(|e|e.to_string())?,0o600)?;}
     Ok(())
+}
+
+#[derive(Serialize)]
+pub struct AfmfSupport { available: bool, reason: String }
+/// Whether AFMF can load in this game: a 64-bit graphics process (a 32-bit
+/// Windows game only with the new WoW64) outside a Flatpak sandbox.
+#[tauri::command]
+pub async fn afmf_support(directory: String, executable: Option<String>, flatpak: bool) -> Result<AfmfSupport, String> {
+    crate::core::release_features::require()?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let answer = |available: bool, reason: &str| AfmfSupport { available, reason: reason.into() };
+        if flatpak {
+            return Ok(answer(false, "O AFMF ainda não pode ser usado em jogos de launchers Flatpak: a camada fica numa pasta do PeliGames que o sandbox não acessa."));
+        }
+        let folder = Path::new(&directory).canonicalize().map_err(|_| "Pasta do jogo indisponível. Verifique a montagem do disco.".to_string())?;
+        let exe = executable.map(PathBuf::from).and_then(|p| p.canonicalize().ok()).filter(|p| p.is_file() && p.starts_with(&folder))
+            .or_else(|| crate::core::game_executable::best_executable_dir(&folder, 5).and_then(|d| super::analyzer::scan_directory_for_exe(&d)))
+            .or_else(|| super::analyzer::scan_directory_for_exe(&folder));
+        let windows = exe.as_deref().is_some_and(|p| { let mut magic = [0; 2]; fs::File::open(p).and_then(|mut f| f.read_exact(&mut magic)).is_ok() && magic == *b"MZ" });
+        Ok(match exe.as_deref().and_then(super::analyzer::analyze_pe_header).as_deref() {
+            Some("64-bits") => answer(true, "Compatível: processo gráfico de 64 bits. Precisa de Vulkan, diretamente ou pelo DXVK/VKD3D do Proton."),
+            Some("32-bits") if windows => answer(true, "Jogo Windows de 32 bits: o AFMF só funciona com o novo WoW64 (Compatibilidade WoW64, na aba Avançado) e um Proton que o suporte."),
+            Some("32-bits") => answer(false, "Jogos Linux de 32 bits não são suportados: o AFMF só é publicado para 64 bits."),
+            _ => answer(true, "Não foi possível confirmar a arquitetura do executável. O AFMF exige um processo gráfico de 64 bits com Vulkan."),
+        })
+    }).await.map_err(|e| e.to_string())?
+}
+
+#[cfg(test)]
+mod afmf_tests {
+    use super::*;
+    fn package(root: &Path, manifest: &str, elf: &[u8]) -> PathBuf {
+        let stage = root.join("stage");
+        let inner = stage.join("afmf-linux-1.3.1");
+        fs::create_dir_all(&inner).unwrap();
+        let mut library = elf.to_vec();
+        library.resize(64, 0);
+        fs::write(inner.join("libafmf-linux.so"), library).unwrap();
+        fs::write(inner.join("afmf-linux.json"), manifest).unwrap();
+        fs::write(inner.join("LICENSE"), "MIT").unwrap();
+        stage
+    }
+    const MANIFEST: &str = r#"{"layer":{"name":"VK_LAYER_AFMF","library_path":"libafmf-linux.so","enable_environment":{"AFMF_ENABLE":"1"}}}"#;
+    const ELF64: [u8; 20] = [0x7f, b'E', b'L', b'F', 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 62, 0];
+    #[test]
+    fn the_package_folder_is_flattened_and_its_layer_checked() {
+        let root = std::env::temp_dir().join(format!("peligames-afmf-{}", uuid::Uuid::new_v4()));
+        let stage = package(&root, MANIFEST, &ELF64);
+        assert!(validate_runtime_at(&stage, "afmf").is_err(), "files are still one folder down");
+        flatten_single_root(&stage).unwrap();
+        validate_runtime_at(&stage, "afmf").unwrap();
+        assert!(stage.join("LICENSE").is_file() && !stage.join("afmf-linux-1.3.1").exists());
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn private_manifest_resolves_the_library_without_modifying_the_package() {
+        let root=std::env::temp_dir().join(format!("peligames-afmf-manifest-{}",uuid::Uuid::new_v4()));
+        let stage=package(&root,MANIFEST,&ELF64);flatten_single_root(&stage).unwrap();
+        let before=fs::read(stage.join("afmf-linux.json")).unwrap();
+        let directory=afmf_runtime_manifest(&stage).unwrap();
+        let value:serde_json::Value=serde_json::from_slice(&fs::read(directory.join("afmf-linux.json")).unwrap()).unwrap();
+        let library=PathBuf::from(value["layer"]["library_path"].as_str().unwrap());
+        assert!(library.is_absolute()&&library.is_file());
+        assert_eq!(value["layer"]["library_arch"],"64");
+        assert_eq!(value["file_format_version"],"1.2.1");
+        assert!(value["layer"].get("enable_environment").is_none());
+        assert!(value["layer"].get("disable_environment").is_none());
+        assert_eq!(fs::read(stage.join("afmf-linux.json")).unwrap(),before);
+        validate_afmf_at(&stage).unwrap();
+        assert_eq!(afmf_runtime_manifest(&stage).unwrap(),directory);
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn a_layer_that_is_always_on_or_not_x86_64_is_refused() {
+        let root = std::env::temp_dir().join(format!("peligames-afmf-{}", uuid::Uuid::new_v4()));
+        let always_on = MANIFEST.replace(r#","enable_environment":{"AFMF_ENABLE":"1"}"#, "");
+        let stage = package(&root, &always_on, &ELF64);
+        flatten_single_root(&stage).unwrap();
+        assert!(validate_runtime_at(&stage, "afmf").unwrap_err().contains("Manifesto"));
+        fs::remove_dir_all(&root).unwrap();
+        let mut arm = ELF64;
+        arm[18] = 183;
+        let stage = package(&root, MANIFEST, &arm);
+        flatten_single_root(&stage).unwrap();
+        assert!(validate_runtime_at(&stage, "afmf").unwrap_err().contains("x86_64"));
+        fs::remove_dir_all(root).unwrap();
+    }
 }

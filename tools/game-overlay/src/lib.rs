@@ -2,15 +2,28 @@
 #![cfg(target_os = "linux")]
 #[cfg(not(target_arch = "x86_64"))]
 compile_error!("O renderer inicial suporta Linux x86_64.");
+#[no_mangle]
+pub extern "C" fn peligames_overlay_capture_api_v1() -> u32 { 1 }
+#[no_mangle]
+pub extern "C" fn peligames_overlay_present_counter_api_v1() -> u32 { 1 }
+#[no_mangle]
+pub extern "C" fn peligames_overlay_mako_fps_api_v1() -> u32 { 1 }
+mod process_scope;
 mod controls;
+mod capture;
 mod focus_fps;
 mod tools;
 mod input;
 mod layer;
+mod present_counter;
+mod present_routing;
+mod present_metrics;
 mod panel;
 mod render;
 #[path = "../shortcut.rs"]
 mod shortcut;
+#[path = "../capture_shortcuts.rs"]
+mod capture_shortcuts;
 mod symbols;
 mod wayland;
 mod wayland_surface;
@@ -77,6 +90,10 @@ pub(crate) fn watchdog() {
     }
     if release_pointer {
         x11::suspend_pointer();
+    }
+    let action=state().lock().ok().and_then(|mut state|state.take_capture_shortcut());
+    if let Some(action)=action {
+        if let Some(Some(tools))=CONTROLLER.get() {tools.capture_shortcut(action);}
     }
 }
 pub(crate) fn state() -> &'static Mutex<input::Input> {
@@ -148,6 +165,7 @@ pub(crate) fn refresh_wayland_focus() {
     }
 }
 pub(crate) fn controller() -> Option<&'static tools::Tools> {
+    if !process_scope::enabled() { return None; }
     CONTROLLER
         .get_or_init(|| {
             let shortcut = std::env::var("PELI_OVERLAY_SHORTCUT").unwrap_or_else(|_| "F8".into());
@@ -156,6 +174,9 @@ pub(crate) fn controller() -> Option<&'static tools::Tools> {
                     report(&e);
                     return None;
                 }
+            }
+            if let Ok(mut s) = state().lock() {
+                if let Err(error)=s.capture_shortcuts(&capture::load_shortcuts()) {report(&error);}
             }
             match tools::Tools::new() {
                 Ok(tools) => Some(tools),

@@ -10,9 +10,7 @@ import { useContext, useEffect, useId, useRef, useState } from "react";
 import { advancedError, normalizeAdvanced, type AdvancedSettings } from "../services/advancedSettings";
 import { notifyMangoHudMissing, getMangoHudStatus, loadMangoHudProfile, openMonitoringPreferences, type MangoHudSettings } from "../services/mangohud";
 import { mangoHudDefaults } from "./preferences/mangoHudDefaults";
-import { Hud } from "./preferences/ModernMangoHudEditor";
 import { useI18n } from "../i18n/I18nContext";
-import { usePerformanceMode } from "./EffectsContext";
 
 export function GamePerformancePanel({value, disabled, onChange, game}: {
   game?: {path:string;directory?:string;executable?:string;flatpak?:boolean;external_id?:string};
@@ -68,8 +66,9 @@ export function GamePerformancePanel({value, disabled, onChange, game}: {
   const limit = (n: number | null) => {setFps(n === null ? "" : String(n));void commit({...normalizeAdvanced(latest.current), mangohud_fps_limit:n});};
   const blocked = disabled || busy || !loaded;
   return <div className="modern-performance-panels">
+
     <section className="modern-performance-card">
-      <div className="modern-panel-heading"><h3>{pt ? "Neste jogo" : "For this game"}</h3><GameSaveStatusIndicator/></div>
+      <div className="modern-panel-heading"><h3>{pt ? "Monitoramento e FPS" : "Monitoring and FPS"}</h3><GameSaveStatusIndicator/></div>
       <div className="modern-performance-row"><div><label htmlFor={`${id}-hud`}>{pt ? "Mostrar monitoramento (MangoHUD)" : "Show monitoring (MangoHUD)"}</label><p>{pt ? "FPS, temperatura e uso de hardware" : "FPS, temperature and hardware usage"}</p></div>
         <button id={`${id}-hud`} type="button" role="switch" aria-checked={enabled} aria-label={pt ? "Mostrar monitoramento (MangoHUD)" : "Show monitoring (MangoHUD)"} className={`neural-startup-switch mod-option-switch${enabled ? " enabled" : ""}`} disabled={blocked} onClick={() => void commit({...settings, mangohud_enabled:!enabled, options:{...settings.options,mangohud:!enabled,mangohud_env:false}})}><span className="neural-switch-track"><span/></span></button>
       </div>
@@ -88,32 +87,34 @@ export function GamePerformancePanel({value, disabled, onChange, game}: {
 
       </div>
       {presetError&&<p role="alert">{presetError}</p>}
-      <div className="modern-performance-row"><label htmlFor={`${id}-fps`}>{pt ? "Limitar FPS" : "Limit FPS"}</label><div className="modern-performance-limits">
+      <div className="modern-performance-row"><label htmlFor={`${id}-fps`}>{settings.afmf?.enabled ? (pt ? "Limitar FPS total" : "Limit total FPS") : (pt ? "Limitar FPS" : "Limit FPS")}</label><div className="modern-performance-limits">
         <div className="modern-dlss-segments" role="group" aria-label={pt ? "Limitar FPS" : "Limit FPS"}>{[0,60,120,144].map(n => <button type="button" key={n} disabled={blocked} aria-pressed={settings.mangohud_fps_limit === n} onClick={()=>limit(n)}>{n || (pt ? "Sem limite" : "Unlimited")}</button>)}</div>
         <input id={`${id}-fps`} type="number" min="0" max="1000" step="1" value={fps} placeholder={pt ? "Padrão" : "Default"} aria-label={pt ? "Limite de FPS personalizado" : "Custom FPS limit"} disabled={blocked} onChange={e=>setFps(e.target.value)} onBlur={()=>{if(fps !== String(settings.mangohud_fps_limit ?? ""))limit(fps.trim() ? Number(fps) : null);}} onKeyDown={e=>{if(e.key === "Enter")e.currentTarget.blur();}}/>
       </div></div>
       <p className="modern-performance-hint">{pt ? "O limite vale só para este jogo, mesmo com o painel oculto. Campo vazio usa o limite geral." : "The limit applies only to this game, even with the HUD hidden. Leave blank to use the global limit."}</p>
+      {experimentalFrameGeneration && settings.afmf?.enabled && <p className="modern-performance-hint">{pt ? "Com AFMF, o MangoHUD mede e limita o total, incluindo os quadros gerados." : "With AFMF, MangoHUD measures and limits the total, including generated frames."}</p>}
       {experimentalFrameGeneration&&<>
-      <div className="modern-performance-row"><div><label htmlFor={`${id}-overlay`}>Overlay PeliGames</label><p>{pt?"Uma única camada para MAKO, FPS sem foco e outras ferramentas. Detecta as funções ativas e inicia oculta.":"One overlay for MAKO, unfocused FPS and other tools. Detects enabled features and starts hidden."}</p></div><button id={`${id}-overlay`} type="button" role="switch" aria-checked={overlayEnabled} className={`neural-startup-switch mod-option-switch${overlayEnabled?" enabled":""}`} disabled={blocked||(!overlayEnabled&&!overlaySupport?.available)} onClick={()=>void commit({...settings,overlay_enabled:!overlayEnabled,background_fps:overlayEnabled?null:settings.background_fps})}><span className="neural-switch-track"><span/></span></button></div>
-      <p className="modern-performance-hint">{overlaySupport?.reason}</p>
-      {overlayEnabled&&overlaySession&&<div className="modern-overlay-session" data-level={overlaySession.level} role="status"><strong>{pt?"Última execução":"Last launch"} · {new Date(overlaySession.started*1000).toLocaleString(pt?"pt-BR":undefined)}</strong><div>{overlaySession.summary}</div>{overlaySession.lines.length>0&&<details><summary>{pt?"Etapas registradas":"Recorded steps"}</summary><pre>{overlaySession.lines.join("\n")}</pre></details>}</div>}
       <div className="modern-performance-row"><div><label htmlFor={`${id}-background`}>{pt?"Limitar FPS sem foco":"Limit FPS when unfocused"}</label><p>{pt?"Usa o MangoHUD com o overlay carregado, mesmo com os painéis ocultos.":"Uses MangoHUD while the overlay is loaded, even with both panels hidden."}</p></div><button id={`${id}-background`} type="button" role="switch" aria-checked={settings.background_fps!=null} className={`neural-startup-switch mod-option-switch${settings.background_fps!=null?" enabled":""}`} disabled={blocked||!overlayEnabled} onClick={()=>void commit({...settings,overlay_enabled:true,background_fps:settings.background_fps==null?0:null})}><span className="neural-switch-track"><span/></span></button></div>
       {settings.background_fps!=null&&<div className="modern-performance-row"><label htmlFor={`${id}-background-fps`}>{pt?"FPS sem foco":"Background FPS"}</label><div className="modern-performance-limits"><div className="modern-dlss-segments">{[0,30,60].map(n=><button type="button" key={n} disabled={blocked} aria-pressed={settings.background_fps===n} onClick={()=>void commit({...normalizeAdvanced(latest.current),background_fps:n})}>{n||(pt?"Automático":"Automatic")}</button>)}</div><input id={`${id}-background-fps`} type="number" min="1" max="1000" step="1" value={backgroundFps==="0"?"":backgroundFps} placeholder={pt?"FPS personalizado":"Custom FPS"} disabled={blocked} aria-label={pt?"FPS sem foco personalizado":"Custom background FPS"} onChange={e=>setBackgroundFps(e.target.value)} onBlur={()=>{if(backgroundFps!==String(settings.background_fps)&&backgroundFps.trim())void commit({...normalizeAdvanced(latest.current),background_fps:Number(backgroundFps)});}} onKeyDown={e=>{if(e.key==="Enter")e.currentTarget.blur();}}/></div></div>}
       <p className="modern-performance-hint">{pt?"Automático usa o menor limite positivo do MangoHUD (ou 30 FPS se não houver). Ao voltar à janela, restaura o limite configurado. Cada processo tem seu próprio perfil temporário. Experimental: exige uma rota de foco compatível e Vulkan. Salva automaticamente; reinicie o jogo para aplicar.":"Automatic uses MangoHUD’s lowest positive limit (or 30 FPS if none). Restores the configured limit when returning. Each process has its own temporary profile. Experimental: requires compatible focus detection and Vulkan. Saves automatically; relaunch the game to apply."}</p>
-      <FrameOverlaySettings compact disabled={blocked}/>
       </>}
-      <div className="modern-performance-visual"><p>{pt ? "O visual do painel (cores, posição e o que mostrar) é o mesmo para todos os jogos." : "The panel appearance (colors, position and displayed metrics) is shared by all games."}</p><div className="modern-performance-actions"><button type="button" className="modern-mini-btn" onClick={openMonitoringPreferences}>{pt ? "Configurar visual" : "Configure appearance"}</button>{openBenchmarks && <button type="button" className="modern-mini-btn" data-game-benchmark-open onClick={openBenchmarks}>{pt ? "Comparar testes deste jogo" : "Compare this game’s tests"}</button>}</div></div>
+      <div className="modern-performance-settings-link"><button type="button" className="modern-mini-btn" onClick={openMonitoringPreferences}>{pt?"Configurar MangoHUD":"Configure MangoHUD"}</button></div>
       {busy && !headerStatus && <p role="status">{pt ? "Salvando…" : "Saving…"}</p>}
       {(error || profileError) && <p role="alert">{error || profileError}</p>}
     </section>
-    <section className="modern-performance-card mango-modern modern-performance-preview"><h3>{pt ? "Aparência do monitoramento" : "Monitoring appearance"}</h3>{loaded ? <MonitoringPreview settings={settings.mangohud_preset ? {...mangoHudDefaults(),...settings.mangohud_preset.settings} : profile}/> : <p role="status">{pt ? "Carregando prévia…" : "Loading preview…"}</p>}</section>
+
+    {(openBenchmarks || experimentalFrameGeneration) && <section className="modern-performance-card modern-game-benchmark-card" aria-label={pt?"Benchmarks e ferramentas":"Benchmarks and tools"}>
+      {openBenchmarks && <>
+      <div className="modern-game-benchmark-copy"><h3>{pt?"Benchmarks deste jogo":"Game benchmarks"}</h3><p>{pt?"Compare duas gravações do MangoHUD para avaliar o FPS e a fluidez deste jogo. Veja o resultado de mudanças no Proton, nos gráficos ou nos ajustes de desempenho.":"Compare two MangoHUD recordings to evaluate this game's FPS and smoothness. Check the effect of changes to Proton, graphics or performance settings."}</p><small>{pt?"Grave o mesmo trecho nas duas condições para uma comparação consistente.":"Record the same scene under both conditions for a consistent comparison."}</small></div>
+      <button type="button" className="modern-mini-btn modern-benchmark-action" data-game-benchmark-open onClick={openBenchmarks}>{pt?"Comparar testes deste jogo":"Compare this game’s tests"}</button>
+      </>}
+      {experimentalFrameGeneration && <div className="modern-performance-tools"><h3>{pt?"Ferramentas durante o jogo":"In-game tools"}</h3>
+      <div className="modern-performance-row"><div><label htmlFor={`${id}-overlay`}>Overlay PeliGames</label><p>{pt?"MAKO e FPS sem foco no jogo. Inicia oculto; abra pelo atalho abaixo.":"In-game MAKO and unfocused FPS controls. Starts hidden; open with the shortcut below."}</p></div><button id={`${id}-overlay`} type="button" role="switch" aria-checked={overlayEnabled} className={`neural-startup-switch mod-option-switch${overlayEnabled?" enabled":""}`} disabled={blocked||(!overlayEnabled&&!overlaySupport?.available)} onClick={()=>void commit({...settings,overlay_enabled:!overlayEnabled,background_fps:overlayEnabled?null:settings.background_fps})}><span className="neural-switch-track"><span/></span></button></div>
+      {overlaySupport?.reason && <p className="modern-performance-hint">{overlaySupport.available ? (pt?"Experimental: exige Vulkan de 64 bits. No Linux nativo, a interação requer Wayland. Windows de 32 bits pode exigir WoW64 em Avançado; se falhar, desative. Linux de 32 bits não é suportado.":"Experimental: requires 64-bit Vulkan. Native Linux input requires Wayland. 32-bit Windows games may need WoW64 in Advanced; disable it if it fails. 32-bit Linux is unsupported.") : overlaySupport.reason}{overlaySupport.available && game?.flatpak && (pt?" Na Steam Flatpak, o overlay é preparado dentro do sandbox.":" On Flatpak Steam, the overlay is prepared inside the sandbox.")}</p>}
+      {overlayEnabled&&overlaySession&&<div className="modern-overlay-session" data-level={overlaySession.level} role="status"><strong>{pt?"Última execução":"Last launch"} · {new Date(overlaySession.started*1000).toLocaleString(pt?"pt-BR":undefined)}</strong><div>{overlaySession.summary}</div>{overlaySession.lines.length>0&&<details><summary>{pt?"Etapas registradas":"Recorded steps"}</summary><pre>{overlaySession.lines.join("\n")}</pre></details>}</div>}
+      <FrameOverlaySettings compact disabled={blocked}/>
+      </div>}
+    </section>}
+
   </div>;
-}
-function MonitoringPreview({settings}:{settings:MangoHudSettings}) {
-  const screen = useRef<HTMLDivElement>(null), reduced = usePerformanceMode();
-  const [width,setWidth] = useState(480), [tick,setTick] = useState(0);
-  const [graph,setGraph] = useState(()=>Array.from({length:48},()=>16));
-  useEffect(()=>{if(!screen.current)return;const observer=new ResizeObserver(([e])=>setWidth(e.contentRect.width));observer.observe(screen.current);return()=>observer.disconnect();},[]);
-  useEffect(()=>{if(reduced || matchMedia("(prefers-reduced-motion: reduce)").matches)return;const timer=setInterval(()=>{setTick(t=>t+1);setGraph(g=>[...g.slice(1),16+Math.random()*3]);},450);return()=>clearInterval(timer);},[reduced]);
-  return <div ref={screen} className="mm-screen" aria-label="MangoHUD preview"><Hud settings={settings} tick={tick} size={Number(settings.font_size)*(width/2560)*2.6} graph={graph}/></div>;
 }

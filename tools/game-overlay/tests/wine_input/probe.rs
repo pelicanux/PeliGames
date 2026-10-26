@@ -20,6 +20,7 @@ unsafe fn symbol<T: Copy>(h: *mut c_void, name: &str) -> T {
 fn main() {
     unsafe {
         let dir = std::env::args().nth(1).unwrap();
+        let helper = std::env::args().nth(2).is_some();
         let renderer = open(&format!("{dir}/libpeligames_game_overlay.so"), 2 | 0x100);
         let ntdll = open(&format!("{dir}/ntdll.so"), 2 | 0x100);
         let win32u = open(&format!("{dir}/win32u.so"), 2);
@@ -27,6 +28,8 @@ fn main() {
         assert_eq!(register(), 1);
         let get: unsafe extern "C" fn() -> *const usize = symbol(ntdll, "probe_table");
         let table = get();
+        let raw_original: *const c_void = symbol(win32u, "NtUserGetRawInputData");
+        assert_eq!(*table == raw_original as usize, helper, "helper must retain its original service table");
         let data: unsafe extern "C" fn(usize, u32, *mut c_void, *mut u32, u32) -> u32 =
             std::mem::transmute(*table);
         let untouched: unsafe extern "C" fn() -> u32 = std::mem::transmute(*table.add(1));
@@ -56,17 +59,23 @@ fn main() {
         assert_eq!(point, [100, 101]);
         for active in [false, true, false, true, false] {
             capture(active);
+            let active = active && !helper;
             let mut bytes = [0u8; 48];
             let mut size = 48;
             assert_eq!(buffer(bytes.as_mut_ptr().cast(), &mut size, 24), 1);
             assert_eq!(&bytes[36..44], if active { &[0; 8] } else { &[0x55; 8] });
-            assert_eq!(&bytes[26..36], &[0x55; 10]);
+            assert_eq!(&bytes[26..28], &[0x55;2]);
+            assert_eq!(u16::from_le_bytes([bytes[28],bytes[29]]),if active {0x5555 & !0x0c00}else{0x5555});
+            assert_eq!(&bytes[30..32],if active{&[0;2]}else{&[0x55;2]});
+            assert_eq!(&bytes[32..36], &[0x55;4]);
             size = 48;
             assert_eq!(
                 data(1, 0x10000003, bytes.as_mut_ptr().cast(), &mut size, 24),
                 48
             );
             assert_eq!(&bytes[36..44], if active { &[0; 8] } else { &[0x55; 8] });
+            assert_eq!(u16::from_le_bytes([bytes[28],bytes[29]]),if active {0x5555 & !0x0c00}else{0x5555});
+            assert_eq!(&bytes[30..32],if active{&[0;2]}else{&[0x55;2]});
             if active {
                 assert_eq!(cursor(point.as_mut_ptr(), 200), 1);
                 assert_eq!(point, [100, 101]);

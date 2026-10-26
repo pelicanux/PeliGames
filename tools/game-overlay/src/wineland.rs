@@ -87,6 +87,7 @@ pub unsafe extern "C" fn __wine_wayland_vulkan_register_surface_v1(
     } // VK_ERROR_INITIALIZATION_FAILED
     let real: Register = std::mem::transmute(real);
     let result = real(instance, display, window, wl_display, surface);
+    if !crate::process_scope::enabled() { return result; }
     if let Ok(mut state) = registrations().lock() {
         state.update(
             instance as usize,

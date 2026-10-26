@@ -24,6 +24,6 @@ export function GameBenchmarkView({ game, onBack }: { game: BenchmarkGame; onBac
         {language === "pt" ? "← Voltar ao desempenho" : "← Back to performance"}
       </button>
     </div>
-    {ready ? <MangoHudBenchmarkComparison shortcut={shortcut} game={game} fullPage /> : <p role="status">Carregando comparação…</p>}
+    {ready ? <MangoHudBenchmarkComparison shortcut={shortcut} game={game} /> : <p role="status">Carregando comparação…</p>}
   </section>;
 }

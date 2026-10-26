@@ -224,8 +224,8 @@
 .monitoring-workspace .monitoring-tabs::before { width:calc((100% - 14px)/3); background:rgba(var(--accent-rgb),.18); box-shadow:none; }
 .monitoring-tabs[data-active=installation]::before { transform:translateX(0); }
 .monitoring-tabs[data-active=monitoring]::before { transform:translateX(calc(100% + 3px)); }
-.monitoring-tabs[data-active=benchmark]::before { transform:translateX(calc(200% + 6px)); }
-.monitoring-editor-screen[hidden], .monitoring-benchmark-screen[hidden], .monitoring-tab-panel[hidden] { display:none!important; }
+.monitoring-tabs[data-active=advanced]::before { transform:translateX(calc(200% + 6px)); }
+.monitoring-tab-panel[hidden] { display:none!important; }
 .mango-installation-view { max-width:920px; }
 .mango-installation-view .mod-destination { margin-top:16px; }
 .mango-installation-view .mod-destination code { font-size:.75rem; overflow-wrap:anywhere; }
@@ -261,3 +261,11 @@
 .mm-chip-grip { opacity: .65; font-size: .95rem; line-height: 1; }
 .mm-chip.mm-chip-linked { cursor: pointer; border-style: dashed; }
 .mm-chip svg.mm-chip-linked-icon { display: inline-block; margin: 0; width: 13px; height: 13px; color: var(--mm-muted); opacity: .75; }
+
+.mm-gpu-device { display:grid; gap:5px; min-width:0; max-width:100%; }
+.mm-gpu-device small { font-size:.75rem; color:var(--text-secondary); }
+.mm-gpu-device .custom-select-trigger { min-width:0; max-width:100%; }
+.mango-modern :is(.mm-row,.mm-advanced-row):has(.mm-gpu-device) { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; }
+.mm-gpu-device .mm-setting-select { width:100%; min-width:0; }
+
+.mm-preview .mm-preview-controls { margin:14px 0 0; padding-top:12px; border-top:1px solid var(--mm-line); justify-content:space-between; flex-wrap:wrap; gap:10px; }

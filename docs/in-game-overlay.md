@@ -8,7 +8,7 @@ O overlay reúne ferramentas dentro do jogo em uma única camada. É experimenta
 2. Para controles de geração de quadros, instale e configure o MAKO e sua cópia de `Lossless.dll`, depois habilite-o em **Geração de quadros**. Para FPS sem foco, ative a opção em **Desempenho**. O overlay identifica as funções habilitadas; nenhuma delas exige ativar a outra.
 3. Escolha o atalho, **F8** por padrão, e aguarde o salvamento automático.
 4. Se o jogo pertence a outro launcher, siga as instruções do PeliRun exibidas na configuração.
-5. Inicie ou reabra o jogo. Use o mesmo atalho para abrir e fechar o painel; arraste pelo cabeçalho para reposicioná-lo. Esc permanece reservado ao jogo.
+5. Inicie ou reabra o jogo. Use o mesmo atalho para abrir e fechar o painel; arraste pelo cabeçalho para reposicioná-lo e pelo canto inferior direito para ajustar largura e altura. Se reduzir o painel e o conteúdo não couber, use a roda do mouse para percorrê-lo, sem uma barra de rolagem visível. Esc permanece reservado ao jogo.
 
 A camada precisa ser carregada no início do processo. Ativá-la com o jogo aberto só terá efeito na próxima execução. O mesmo painel e atalho atendem às funções habilitadas. Os controles do MAKO aparecem quando ele está ativo; o limite sem foco trabalha mesmo com o painel fechado. Desligar a chave geral desativa o overlay e seu limite sem foco, mas não desliga a geração de quadros do MAKO. Trocar bibliotecas ou runtime exige reabrir o jogo.
 

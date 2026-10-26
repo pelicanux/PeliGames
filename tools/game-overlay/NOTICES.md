@@ -8,6 +8,7 @@ Esta é uma adaptação inicial em Rust do PeliGames. Não é uma versão oficia
 - **ReShade / OptiScaler**: referências de comportamento do menu e da captura de entrada. Não são dependências nem foram incorporados como DLLs.
 - **Wine / X.Org / libXi**: referências para o contrato de consumo da fila Xlib e layouts públicos XInput2 no adaptador Wine/XWayland. A implementação Rust é própria; não incorpora o código do driver Wine ou a implementação C de Xlib/libXi. Consultados `winex11.drv/event.c`, `winex11.drv/mouse.c`, o manual Xlib e `XInput2.h`; fontes na documentação da arquitetura.
 - **Proton Wineland / Wine-Wayland (nanomatters)**: referência de interoperabilidade para a função pública versionada `__wine_wayland_vulkan_register_surface_v1` e o ciclo de registro do proxy Vulkan. Consultados `vklayers/wineland_vk_translate.c` do tag `wineland-11.0-20260913` e `winewayland.drv/vulkan_x11_proxy.c` da revisão `9d3370ac8b985f3b10a46725f22ac238f6dd94fe`. O adaptador Rust é próprio; nenhum código C desses projetos foi incorporado. API pública: [Proton Wineland](https://github.com/nanomatters/Proton-Wineland).
+- **MangoHUD**: o cálculo de FPS em `present_metrics.rs` adapta para Rust o método de contagem de apresentações por intervalo monotônico de `src/overlay.cpp` e a amostragem padrão de 500 ms de `src/overlay_params.cpp`, revisão `992103e`. Os dois fluxos do PeliGames compartilham a janela de medição; não há dependência da biblioteca do MangoHUD. Licença MIT, aviso preservado abaixo. Fonte: [MangoHUD](https://github.com/flightlessmango/MangoHud).
 - **ash**, **egui** e **egui-ash-renderer**: dependências Rust obtidas pelo Cargo, com versões e checksums no lockfile. `ash`: MIT OR Apache-2.0; `egui`: MIT OR Apache-2.0; `egui-ash-renderer`: MIT. Seus avisos e os das dependências transitivas estão no inventário Rust do launcher; os grafos de dependências dos crates isolados também devem ser incluídos ao regenerá-lo. A camada só é carregada mediante ativação por jogo.
 
 ## Aviso zlib da referência vkBasalt/vkDaedalus
@@ -31,3 +32,27 @@ freely, subject to the following restrictions:
    misrepresented as being the original software.
 
 3. This notice may not be removed or altered from any source distribution.
+
+## Aviso MIT do MangoHUD
+
+MIT License
+
+Copyright (c) 2020 flightlessmango
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

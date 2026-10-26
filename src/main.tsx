@@ -1,3 +1,5 @@
+import {NativeTitleTooltips} from "./components/NativeTitleTooltips";
+import "./theme/tooltips.css";
 import React from "react";
 import { LogMonitorPage } from "./components/LogMonitorPage";
 import ReactDOM from "react-dom/client";
@@ -56,6 +58,7 @@ void migrateCoverPaths().finally(() => ReactDOM.createRoot(document.getElementBy
       <I18nProvider>
         <ThemeProvider>
         {["game", "nexus"].includes(new URLSearchParams(window.location.search).get("logWindow") || "") ? <LogMonitorPage /> : <React.Suspense fallback={<BootSplash />}><StartupRouter /></React.Suspense>}
+        <NativeTitleTooltips />
         <TextContextMenu />
         <FloatingScrollbars />
         </ThemeProvider>

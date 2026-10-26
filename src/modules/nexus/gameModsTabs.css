@@ -1,0 +1,6 @@
+.preference-mod-tabs.game-modules-tabs { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.preference-mod-tabs.game-modules-tabs::before { width:calc((100% - 9px)/2); }
+.preference-mod-tabs.game-modules-tabs[data-active=nexus]::before { transform:none; }
+.preference-mod-tabs.game-modules-tabs[data-active=dlss]::before { transform:translateX(calc(100% + 3px)); }
+
+.game-modules .modern-overview-paths + .modern-dlss-panels { margin-top:16px; }

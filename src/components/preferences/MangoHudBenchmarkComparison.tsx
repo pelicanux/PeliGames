@@ -12,7 +12,7 @@ import { type BenchmarkStats } from "./mangoHudBenchmarks";
 const pair = <T,>(values:[T,T], index:0|1, value:T):[T,T] => index===0 ? [value,values[1]] : [values[0],value];
 interface File { name: string; size: number; modified: number }
 export interface BenchmarkGame { name: string; executable?: string; directory?: string; path?: string }
-export function MangoHudBenchmarkComparison({ shortcut, game, fullPage = false }: { shortcut: string; game?: BenchmarkGame; fullPage?: boolean }) {
+export function MangoHudBenchmarkComparison({ shortcut, game }: { shortcut: string; game: BenchmarkGame }) {
   const id=useId();
   const [viewMode,setViewMode] = useState<"simple"|"detailed">("simple");
   const [testNames,setTestNames] = useState<[string,string]>(["Teste A","Teste B"]);
@@ -31,7 +31,7 @@ export function MangoHudBenchmarkComparison({ shortcut, game, fullPage = false }
     const current = ++listing.current;
     setBusy(true);
     try {
-      const values = await invoke<File[]>("list_mangohud_benchmarks", {gameName: game?.name, executable: game?.executable, gameDirectory: game?.directory || game?.path});
+      const values = await invoke<File[]>("list_mangohud_benchmarks", {gameName: game.name, executable: game.executable, gameDirectory: game.directory || game.path});
       if (current !== listing.current) return;
       values.sort((a,b) => b.modified-a.modified || a.name.localeCompare(b.name));
       setFiles(values);
@@ -42,9 +42,9 @@ export function MangoHudBenchmarkComparison({ shortcut, game, fullPage = false }
     finally { if (current === listing.current) setBusy(false); }
   };
   useEffect(() => {
-    if (game) void refresh(true);
+    void refresh(true);
     return () => { ++listing.current; ++pickRevision.current; };
-  }, [game?.name, game?.executable, game?.directory, game?.path]); // Only load on explicit game-comparison access.
+  }, [game.name, game.executable, game.directory, game.path]); // Only load on explicit game-comparison access.
   useEffect(() => {
     const current = ++request.current;
     setResults([null,null]);
@@ -84,14 +84,14 @@ export function MangoHudBenchmarkComparison({ shortcut, game, fullPage = false }
     if (!a || !b || busy || saveLock.current) return;
     saveLock.current=true;setSaving(true);
     try {
-      const saved=await saveBenchmarkComparison({game:game?.name,labels:[testLabel(testNames[0],0),testLabel(testNames[1],1)],names:[selectionName(0),selectionName(1)],dates:names.map((name,index)=>manual[index]?.id===name ? manual[index]!.modified : files.find(file=>file.name===name)?.modified) as [number|undefined,number|undefined],results:[a,b]});
+      const saved=await saveBenchmarkComparison({game:game.name,labels:[testLabel(testNames[0],0),testLabel(testNames[1],1)],names:[selectionName(0),selectionName(1)],dates:names.map((name,index)=>manual[index]?.id===name ? manual[index]!.modified : files.find(file=>file.name===name)?.modified) as [number|undefined,number|undefined],results:[a,b]});
       if(saved)notifyInfo("Benchmarks MangoHUD","Imagem da comparação salva.");
     } catch(error) { notifyError("Benchmarks MangoHUD",error); }
     finally { saveLock.current=false;setSaving(false); }
   };
-  return <section className={`mm-benchmarks${fullPage ? " mm-benchmarks-full-page" : " mm-card"}`}>
+  return <section className="mm-benchmarks mm-benchmarks-full-page">
     <div className="mm-benchmark-title">
-      <h2>Comparar benchmarks{game ? ` — ${game.name}` : ""}</h2>
+      <h2>Comparar benchmarks — {game.name}</h2>
       <div className="mm-segmented" role="group" aria-label="Modo de comparação">
         <button type="button" aria-pressed={viewMode==="simple"} onClick={()=>setViewMode("simple")}>Simples</button>
         <button type="button" aria-pressed={viewMode==="detailed"} onClick={()=>setViewMode("detailed")}>Detalhado</button>
@@ -99,13 +99,13 @@ export function MangoHudBenchmarkComparison({ shortcut, game, fullPage = false }
     </div>
     <p className="mm-hint">No jogo, use <kbd>{shortcut}</kbd> para iniciar e encerrar cada gravação. Repita o mesmo trecho com os mesmos gráficos e resolução.</p>
     <div className="mm-benchmark-toolbar">
-    {game && <button type="button" className="mm-ghost" disabled={busy || picking!==null} onClick={()=>void refresh(true)}>Comparar os dois últimos testes</button>}
+    <button type="button" className="mm-ghost" disabled={busy || picking!==null} onClick={()=>void refresh(true)}>Comparar os dois últimos testes</button>
     <button type="button" className="mm-ghost" disabled={busy || picking!==null} onClick={()=>void refresh()}>{busy ? "Lendo registros…" : "Atualizar registros"}</button>
     <button type="button" className="mm-ghost" disabled={saving || busy || picking!==null || !a || !b} onClick={()=>void saveImage()}>{saving ? "Salvando imagem…" : "Salvar comparação"}</button>
     </div>
-    {!ready && <p className="mm-hint">Atualize para listar os CSVs organizados por jogo. Registros gerais são agrupados pelo executável.</p>}
+    {!ready && <p className="mm-hint">Carregando os registros deste jogo…</p>}
     {ready && !files.length && !names.some(Boolean) && <p className="mm-hint">Nenhum benchmark encontrado. Grave um teste e atualize a lista ou procure um CSV manualmente.</p>}
-    {ready && game && files.length === 1 && names.every((name,index)=>manual[index]?.id!==name) && <p className="mm-hint">Só há um teste deste jogo. Grave mais um para comparar. Você também pode selecionar os registros manualmente abaixo.</p>}
+    {ready && files.length === 1 && names.every((name,index)=>manual[index]?.id!==name) && <p className="mm-hint">Só há um teste deste jogo. Grave mais um para comparar. Você também pode selecionar os registros manualmente abaixo.</p>}
       <div className="mm-benchmark-choices">{([0,1] as const).map(index=><div className="mm-benchmark-choice" key={index}>
         <div className={`mm-test-name mm-test-${index===0?"a":"b"}`}>
           <label htmlFor={`${id}-name-${index}`}>{index===0?"A · Referência":"B · Comparação"}</label>

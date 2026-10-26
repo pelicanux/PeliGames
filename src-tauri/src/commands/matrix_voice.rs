@@ -84,7 +84,7 @@ struct Processor {
     mode: NoiseMode,
     agc: bool,
     apm: AudioProcessingModule,
-    rnnoise: Box<nnnoiseless::DenoiseState<'static>>,
+    rnnoise: crate::core::audio_denoise::RnNoise,
 }
 impl Processor {
     fn new(mode: NoiseMode, agc: bool) -> Self {
@@ -93,18 +93,12 @@ impl Processor {
             mode,
             agc,
             apm: AudioProcessingModule::new(false, agc, false, mode == NoiseMode::Standard),
-            rnnoise: nnnoiseless::DenoiseState::new(),
+            rnnoise: crate::core::audio_denoise::RnNoise::new(),
         }
     }
     fn process(&mut self, frame: &mut [i16; FRAME]) -> Result<(), String> {
         if self.mode == NoiseMode::Rnnoise {
-            // nnnoiseless expects floating-point PCM in the i16 amplitude range.
-            let input = frame.map(f32::from);
-            let mut output = [0.; FRAME];
-            self.rnnoise.process_frame(&mut output, &input);
-            for (dst, value) in frame.iter_mut().zip(output) {
-                *dst = value.clamp(-32768., 32767.) as i16;
-            }
+            self.rnnoise.process(frame);
         }
         // WebRTC: its noise suppression (Standard) and/or gain control, after
         // RNNoise so the gain does not lift the noise RNNoise removes.

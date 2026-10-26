@@ -34,6 +34,15 @@ pub fn runtime_dir() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from(format!("/run/user/{}", unsafe { libc::geteuid() })))
 }
 
+/// Read-only endpoints for native and sandboxed desktop clients.
+pub fn candidates(runtime: &Path) -> Vec<PathBuf> {
+    let mut paths = Vec::new();
+    for folder in std::iter::once("").chain(SANDBOXED) {
+        for slot in 0..SLOTS { paths.push(runtime.join(folder).join(format!("discord-ipc-{slot}"))); }
+    }
+    paths
+}
+
 /// Links a sandboxed client's socket as `discord-ipc-N` in `runtime` when no
 /// top-level socket answers. Returns the link created, if any. Never replaces a
 /// real socket or a link it did not make (one pointing outside `SANDBOXED`).

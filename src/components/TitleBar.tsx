@@ -1,3 +1,4 @@
+import {CaptureIndicator} from "../modules/capture/CaptureIndicator";
 import "./titlebarControls.css";
 import {MatrixCallIndicator} from "./MatrixCallIndicator";
 import { OPEN_DISCORD_PANEL_EVENT } from "../services/communityLinks";
@@ -82,6 +83,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
 
       {/* Right section: Links and Window Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '100%' }}>
+        <CaptureIndicator />
         <MatrixCallIndicator onOpen={()=>setShowMatrix(true)}/>
         <div className="titlebar-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         

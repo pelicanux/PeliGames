@@ -45,6 +45,9 @@ static ORIGINALS: [AtomicUsize; abi::SYMBOLS.len()] =
     [const { AtomicUsize::new(0) }; abi::SYMBOLS.len()];
 static OWNERS: [AtomicUsize; abi::SYMBOLS.len()] =
     [const { AtomicUsize::new(0) }; abi::SYMBOLS.len()];
+// Other overlays must retain their own input/focus paths, including bridges
+// that do not export an X11/Wayland interposer. No loader calls or allocation.
+static INTERPOSERS: [AtomicUsize; 64] = [const { AtomicUsize::new(0) }; 64];
 static SHARED: AtomicUsize = AtomicUsize::new(0);
 static COOKIE: AtomicUsize = AtomicUsize::new(0);
 unsafe fn equals(p: *const c_char, name: &[u8]) -> bool {
@@ -57,6 +60,28 @@ unsafe fn equals(p: *const c_char, name: &[u8]) -> bool {
         }
     }
     *p.add(name.len()) == 0
+}
+// Match SONAME and versioned filenames without accepting a different suffix.
+unsafe fn versioned(p: *const c_char, name: &[u8]) -> bool {
+    if p.is_null() {
+        return false;
+    }
+    for (i, byte) in name.iter().enumerate() {
+        if *p.add(i) as u8 != *byte {
+            return false;
+        }
+    }
+    matches!(*p.add(name.len()) as u8, 0 | b'.')
+}
+unsafe fn independent_overlay(name: *const c_char) -> bool {
+    [
+        b"liblsteamclient_overlay_bridge.so".as_slice(),
+        b"libVkLayer_GE_Wayland_SteamOverlay.so",
+        b"libMangoHud_shim.so",
+        b"libMangoHud.so",
+    ]
+    .iter()
+    .any(|library| versioned(name, library))
 }
 unsafe fn basename(mut p: *const c_char) -> *const c_char {
     if p.is_null() {
@@ -191,6 +216,21 @@ pub unsafe extern "C" fn la_objopen(
         } else {
             0
         };
+        if library == 0
+            && (independent_overlay(name)
+                || abi::SYMBOLS
+                    .iter()
+                    .any(|(symbol, _, redirect)| *redirect && find(&*map, symbol) != 0))
+        {
+            for slot in &INTERPOSERS {
+                if slot
+                    .compare_exchange(0, *cookie, Ordering::AcqRel, Ordering::Acquire)
+                    .is_ok()
+                {
+                    break;
+                }
+            }
+        }
         if library != 0 {
             for (i, (symbol, owner, _)) in abi::SYMBOLS.iter().enumerate() {
                 if *owner == library {
@@ -218,6 +258,30 @@ pub unsafe extern "C" fn la_symbind64(
         return 0;
     }
     let owner = COOKIE.load(Ordering::Acquire);
+    if !from.is_null()
+        && INTERPOSERS
+            .iter()
+            .any(|slot| slot.load(Ordering::Acquire) == *from && *from != 0)
+    {
+        // Preserve Steam/GE/MangoHUD lookups and their separate input proxies.
+        // Redirecting these edges to us can create a cycle or attach our
+        // listeners to a foreign focus connection. A global preload binding
+        // must likewise preserve the foreign overlay's intended next hook.
+        if !to.is_null() && *to == owner && owner != 0 {
+            for (i, (symbol, _, redirect)) in abi::SYMBOLS.iter().enumerate() {
+                if !*redirect || !equals(name, symbol) {
+                    continue;
+                }
+                // Preserve foreign forwarding when a global preload binding
+                // would otherwise return our wrapper again.
+                let original = ORIGINALS[i].load(Ordering::Acquire);
+                if original != 0 {
+                    return original;
+                }
+            }
+        }
+        return (*sym).value;
+    }
     if owner != 0 && !from.is_null() && !to.is_null() && *from != owner && *to != owner {
         for (i, (symbol, _, redirect)) in abi::SYMBOLS.iter().enumerate() {
             let wrapper = WRAPPERS[i].load(Ordering::Acquire);
@@ -245,6 +309,9 @@ pub unsafe extern "C" fn la_objclose(cookie: *mut usize) -> u32 {
         COOKIE.store(0, Ordering::Release);
     }
     if !cookie.is_null() {
+        for interposer in &INTERPOSERS {
+            let _ = interposer.compare_exchange(*cookie, 0, Ordering::AcqRel, Ordering::Acquire);
+        }
         for (i, owner) in OWNERS.iter().enumerate() {
             if owner.load(Ordering::Acquire) == *cookie {
                 owner.store(0, Ordering::Release);

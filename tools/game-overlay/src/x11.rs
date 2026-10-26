@@ -135,6 +135,7 @@ fn windows() -> &'static Mutex<HashMap<u64, Window>> {
     WINDOWS.get_or_init(Default::default)
 }
 fn wine() -> bool {
+    if !crate::process_scope::enabled() { return false; }
     static WINE: OnceLock<bool> = OnceLock::new();
     *WINE.get_or_init(|| {
         let mut maps = String::new();
@@ -669,7 +670,7 @@ pub unsafe extern "C" fn XQueryKeymap(display: *mut c_void, keys: *mut c_char) -
         return 0;
     };
     let result = real(display, keys);
-    if !keys.is_null() && current().is_some() {
+    if crate::process_scope::enabled() && !keys.is_null() && current().is_some() {
         if let Ok(s) = state().lock() {
             s.filter_x11_keymap(&mut *keys.cast::<[u8; 32]>());
         }

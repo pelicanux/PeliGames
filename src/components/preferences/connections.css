@@ -50,3 +50,13 @@
 .modern-ui .settings-page .connections-workspace .matrix-notification-sound-controls > button { width:auto; min-height:30px; padding:5px 9px; font-size:.75rem; border-radius:8px!important; }
 @container settings-page (max-width:850px){.connection-grid{grid-template-columns:minmax(0,1fr)}}
 @container settings-page (max-width:480px){.connection-card{padding:14px}.connection-card .mod-setting-row{flex-wrap:wrap}.connection-card .mod-row-copy{flex-basis:100%}.connection-card .mod-setting-row>button{margin-left:auto!important}.connections-workspace .matrix-notification-sound-controls{grid-template-columns:1fr auto}.connections-workspace .matrix-notification-sound-controls>input{grid-column:1;grid-row:2}.connections-workspace .matrix-notification-sound-controls>button{grid-column:2;grid-row:1/3}}
+
+.discord-presence-card { grid-column:1/-1; min-width:0; }
+.discord-presence-card .mod-row-copy { min-width:0; }
+.discord-presence-status { margin-top:14px; font-size:.8125rem; color:var(--modern-muted,var(--text-secondary)); }
+
+.discord-presence-card .neural-startup-switch.mod-option-switch { flex:0 0 44px; width:44px; min-width:44px; min-height:32px; padding:0; border:0; background:transparent; box-shadow:none; }
+.discord-presence-card .neural-switch-track { flex:0 0 44px; width:44px; height:26px; padding:3px; box-sizing:border-box; border-radius:999px; }
+.discord-presence-card .neural-switch-track > span { width:20px; height:20px; }
+.discord-presence-card .enabled .neural-switch-track { background:var(--accent); }
+.discord-presence-card .enabled .neural-switch-track > span { transform:translateX(18px); }

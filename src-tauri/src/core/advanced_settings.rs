@@ -14,7 +14,15 @@ struct OptionSpec {
     value: String,
     enabled: bool,
     kind: String,
+    #[serde(default)] min: Option<u32>,
+    #[serde(default)] max: Option<u32>,
+    #[serde(default)] choices: Vec<OptionChoice>,
+    #[serde(default)] extra_env: BTreeMap<String,String>,
+    #[serde(default)] runner_probe: bool,
 }
+#[derive(Deserialize)]
+struct OptionChoice { value:String }
+
 fn catalog() -> Vec<OptionSpec> {
     serde_json::from_str(include_str!("../../../src/config/advancedOptions.json"))
         .expect("invalid bundled advanced options")
@@ -31,9 +39,62 @@ pub struct AdvancedSettings {
     pub mangohud_enabled: Option<bool>,
     pub gamescope: GamescopeSettings,
     pub options: BTreeMap<String, bool>,
+    pub option_values: BTreeMap<String, String>,
     pub dll_overrides: String,
     pub wrappers: Vec<LaunchWrapper>,
     pub launch_backend: String,
+    /// AFMF frame generation for this game (a Vulkan layer driven by environment variables).
+    pub afmf: Option<AfmfSettings>,
+}
+/// afmf-linux options. Read once at game start; there is no live control.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct AfmfSettings {
+    pub enabled: bool,
+    /// auto, quality or performance.
+    pub performance_mode: String,
+    /// auto, standard or high.
+    pub search_mode: String,
+    /// blend or repeat.
+    pub fast_motion: String,
+    /// Real frame rate below which no frame is generated; 0 always generates.
+    pub min_fps: u32,
+    pub hud_detect: bool,
+    pub pacing: bool,
+}
+impl Default for AfmfSettings {
+    fn default() -> Self {
+        Self { enabled: false, performance_mode: "auto".into(), search_mode: "auto".into(), fast_motion: "blend".into(), min_fps: 30, hud_detect: true, pacing: true }
+    }
+}
+impl AfmfSettings {
+    fn validate(&self) -> Result<(), String> {
+        if !["auto", "quality", "performance"].contains(&self.performance_mode.as_str())
+            || !["auto", "standard", "high"].contains(&self.search_mode.as_str())
+            || !["blend", "repeat"].contains(&self.fast_motion.as_str())
+        {
+            return Err("Opção do AFMF inválida.".into());
+        }
+        if self.min_fps > 240 { return Err("Informe o FPS mínimo do AFMF entre 0 e 240.".into()); }
+        Ok(())
+    }
+    /// The variables afmf-linux reads, without the layer path.
+    pub fn environment(&self, gamescope: bool) -> Vec<(&'static str, String)> {
+        let flag = |on: bool| if on { "1" } else { "0" }.to_string();
+        let mut env = vec![
+            ("AFMF_ENABLE", "1".to_string()),
+            ("AFMF_PERFORMANCE_MODE", self.performance_mode.clone()),
+            ("AFMF_SEARCH_MODE", self.search_mode.clone()),
+            ("AFMF_FAST_MOTION_RESPONSE", self.fast_motion.clone()),
+            ("AFMF_MIN_FPS", self.min_fps.to_string()),
+            ("AFMF_HUD_DETECT", flag(self.hud_detect)),
+            ("AFMF_PACING", flag(self.pacing)),
+            // Never stack another frame generator layer.
+            ("DISABLE_LSFGVK", "1".to_string()),
+        ];
+        if gamescope { env.push(("AFMF_GAMESCOPE", "1".to_string())); }
+        env
+    }
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct LaunchWrapper { pub program: String, pub arguments: String, pub enabled: bool }
@@ -44,6 +105,8 @@ pub struct GamescopeSettings {
     pub enable_upscaling: bool,
     pub enable_limiter: bool,
     pub force_grab_cursor: bool,
+    pub hdr: bool,
+    pub adaptive_sync: bool,
     pub width: u32,
     pub height: u32,
     pub output_width: u32,
@@ -61,6 +124,8 @@ impl Default for GamescopeSettings {
             enable_upscaling: false,
             enable_limiter: false,
             force_grab_cursor: false,
+            hdr: false,
+            adaptive_sync: false,
             width: 0,
             height: 0,
             output_width: 0,
@@ -78,6 +143,7 @@ impl GamescopeSettings {
         self.enable_upscaling
             || self.enable_limiter
             || self.force_grab_cursor
+            || self.hdr || self.adaptive_sync
             || !self.additional_options.trim().is_empty()
     }
 }
@@ -92,10 +158,12 @@ struct SavedSettings {
     background_fps: Option<u32>,
     mangohud_enabled: Option<bool>,
     options: BTreeMap<String, bool>,
+    option_values: BTreeMap<String, String>,
     dll_overrides: Option<String>,
     wrappers: Vec<LaunchWrapper>,
     launch_backend: Option<String>,
     gamescope: GamescopeSettings,
+    afmf: Option<AfmfSettings>,
 }
 impl From<SavedSettings> for AdvancedSettings {
     fn from(saved: SavedSettings) -> Self {
@@ -108,9 +176,11 @@ impl From<SavedSettings> for AdvancedSettings {
             settings.background_fps = saved.background_fps;
             settings.mangohud_enabled = saved.mangohud_enabled;
             settings.options = saved.options;
+            settings.option_values = saved.option_values;
             settings.wrappers = saved.wrappers;
             settings.dll_overrides = if settings.options.get("dll_overrides") == Some(&true) { saved.dll_overrides.unwrap_or_default() } else { String::new() };
             settings.launch_backend = saved.launch_backend.unwrap_or_else(|| "system".into());
+            settings.afmf = saved.afmf;
             if saved.gamescope.model_version == 2 {
                 settings.gamescope = saved.gamescope;
             }
@@ -138,9 +208,11 @@ impl Default for AdvancedSettings {
                 ..Default::default()
             },
             options: catalog().into_iter().map(|s| (s.id, s.enabled)).collect(),
+            option_values: BTreeMap::new(),
             dll_overrides: String::new(),
             wrappers: Vec::new(),
             launch_backend: "system".into(),
+            afmf: None,
         }
     }
 }
@@ -154,12 +226,37 @@ impl AdvancedSettings {
             crate::commands::frame_generation::conflicts(self)?;
         }
         if let Some(value) = &self.launch_options { crate::commands::nexus_launch_options::validate_custom(value)?; }
+        if let Some(afmf) = self.afmf.as_ref().filter(|a| a.enabled) {
+            afmf.validate()?;
+            if self.wrappers.iter().any(|w| w.enabled && w.program.contains("/FrameGeneration/profiles/") && w.program.ends_with(".sh")) {
+                return Err("MAKO e AFMF não podem ser usados juntos. Desative um deles na aba Geração de quadros.".into());
+            }
+            if self.on("mlfg") || self.on("optiscaler") {
+                return Err("Desative a geração de quadros por ML e o OptiScaler nas opções avançadas antes de usar o AFMF.".into());
+            }
+        }
         if self.wrappers.len() > 16 { return Err("Use até 16 wrappers.".into()); }
         for wrapper in &self.wrappers {
             if wrapper.program.trim().is_empty() || wrapper.program.len() > 4096 || wrapper.program.chars().any(|c| c.is_control()) { return Err("Informe o executável do wrapper.".into()); }
             wrapper_args(&wrapper.arguments)?;
         }
         let known = catalog();
+        for (id,value) in &self.option_values {
+            let spec=known.iter().find(|spec| &spec.id==id).ok_or("Campo avançado desconhecido")?;
+            if spec.min.is_none() && spec.choices.is_empty() { return Err("Campo avançado não configurável".into()); }
+            if !spec.choices.is_empty() && !spec.choices.iter().any(|choice| &choice.value==value) {
+                return Err(format!("Valor inválido para {}",spec.title));
+            }
+            if let Some(min)=spec.min {
+                let parsed=value.parse::<u32>().ok().filter(|_|!value.is_empty()&&value.bytes().all(|c|c.is_ascii_digit()));
+                if !parsed.is_some_and(|n|n>=min&&n<=spec.max.unwrap_or(min)) { return Err(format!("Informe {} entre {} e {}",spec.title,min,spec.max.unwrap_or(min))); }
+            }
+        }
+        if self.on("dxvk_limit") && (self.mangohud_fps_limit.unwrap_or(0)>0 || self.gamescope.enable_limiter) {
+            return Err("Escolha apenas um limitador de FPS: DXVK, MangoHUD ou Gamescope.".into());
+        }
+        if self.on("no_hdr") && self.gamescope.hdr { return Err("HDR do Gamescope conflita com a opção de desligar HDR.".into()); }
+
         if self
             .options
             .keys()
@@ -217,22 +314,42 @@ impl AdvancedSettings {
         self.validate()?;
         if !catalog()
             .iter()
-            .any(|spec| (spec.key.starts_with("PROTON_") || spec.id == "steam_client") && self.on(&spec.id))
+            .any(|spec| (spec.key.starts_with("PROTON_") || spec.id == "steam_client" || spec.runner_probe) && self.on(&spec.id))
         {
             return Ok(());
         }
-        let proton_only = || catalog().into_iter().filter(|spec| (spec.key.starts_with("PROTON_") || spec.id == "steam_client") && self.on(&spec.id));
-        let Ok(script) = std::fs::read_to_string(proton.join("proton")) else {
+        let proton_only = || catalog().into_iter().filter(|spec| (spec.key.starts_with("PROTON_") || spec.id == "steam_client" || spec.runner_probe) && self.on(&spec.id));
+        let Some(script) = read_runner_text(&proton.join("proton"), 2*1024*1024) else {
             // A plain Wine runner has no Proton features at all; say so instead of "cannot verify".
             if let Some(spec) = proton_only().next().filter(|_| proton.join("bin/wine").is_file()) {
                 return Err(format!("“{}” é um recurso do Proton e não funciona com Wine. Escolha um Proton compatível, como GE-Proton ou Proton-CachyOS, ou desative essa opção.", spec.title));
             }
             return Err("Não foi possível verificar os recursos do Proton selecionado.".into());
         };
-        if let Some(spec) = proton_only().find(|spec| !script.contains(&spec.key) && !ships_feature(proton, &spec.id)) {
+        let docs=runner_documentation(proton);
+        if let Some(spec) = proton_only().find(|spec| !runner_advertises(&script, &docs, &spec.key) && !ships_feature(proton, &spec.id)) {
             return Err(format!("O Proton selecionado não tem suporte a “{}” ({}). Escolha um Proton compatível, como GE-Proton ou Proton-CachyOS, ou desative essa opção.", spec.title, spec.key));
         }
         Ok(())
+    }
+    pub fn validate_native(&self)->Result<(),String> {
+        self.validate()?;
+        if let Some(spec)=catalog().into_iter().find(|spec|(spec.key.starts_with("PROTON_")||spec.id=="steam_client"||spec.runner_probe)&&self.on(&spec.id)) {
+            return Err(format!("“{}” requer Proton e não se aplica a um jogo Linux nativo.",spec.title));
+        }
+        Ok(())
+    }
+    pub fn runner_issues(root:&Path)->BTreeMap<String,String> {
+        let mut result=BTreeMap::new();
+        let script=read_runner_text(&root.join("proton"),2*1024*1024).unwrap_or_default();
+        let docs=runner_documentation(root);
+        for spec in catalog().into_iter().filter(|spec|spec.key.starts_with("PROTON_")||spec.id=="steam_client"||spec.runner_probe) {
+            // Check capability evidence independently of dependencies/conflicts.
+            if !runner_advertises(&script,&docs,&spec.key)&&!ships_feature(root,&spec.id) {
+                result.insert(spec.id,format!("O runner selecionado não anuncia {}. Escolha um runner compatível ou mantenha a opção desligada.",spec.key));
+            }
+        }
+        result
     }
     fn on(&self, id: &str) -> bool {
         self.options
@@ -240,6 +357,18 @@ impl AdvancedSettings {
             .copied()
             .unwrap_or_else(|| catalog().iter().any(|s| s.id == id && s.enabled))
     }
+}
+/// Bounded source/documentation probes; never infer support from version names.
+fn read_runner_text(path:&Path,limit:u64)->Option<String> {
+    use std::io::Read;
+    let mut text=String::new();std::fs::File::open(path).ok()?.take(limit).read_to_string(&mut text).ok()?;Some(text)
+}
+fn runner_documentation(root:&Path)->String {
+    ["README.md","CHANGELOG.md","user_settings.sample.py","docs/FSR4.md","docs/EM-ADDITIONS.md"].iter()
+        .filter_map(|name|read_runner_text(&root.join(name),512*1024)).collect::<Vec<_>>().join("\n")
+}
+fn runner_advertises(script:&str,docs:&str,key:&str)->bool {
+    script.contains(key)||docs.contains(&format!("{key}=1"))
 }
 /// Features a runner reads outside its `proton` script. GE-Proton and
 /// Proton-CachyOS check PROTON_DISCORD_BRIDGE inside steam.exe; the script only
@@ -344,7 +473,7 @@ fn additional_args(value: &str) -> Result<Vec<String>, String> {
         "--scaler",
         "--fullscreen",
         "--borderless",
-        "--expose-wayland",
+        "--expose-wayland", "--hdr-enabled", "--adaptive-sync",
     ];
     if tokens
         .iter()
@@ -393,6 +522,8 @@ fn gamescope_args(s: &AdvancedSettings) -> Vec<String> {
     if s.on("wayland") {
         args.push("--expose-wayland".into());
     }
+    if g.hdr { args.push("--hdr-enabled".into()); }
+    if g.adaptive_sync { args.push("--adaptive-sync".into()); }
     args.extend(additional_args(&g.additional_options).expect("validated additional options"));
     args
 }
@@ -431,6 +562,7 @@ pub fn launch_command(umu: &Path, settings: Option<&AdvancedSettings>) -> Result
     Ok(command)
 }
 pub(crate) fn configured_launch_command(umu: &Path, settings: Option<&AdvancedSettings>) -> Result<Command, String> {
+    if let Some(settings)=settings { super::advanced_capabilities::validate(settings)?; }
     let global = super::mangohud_config::global_enabled()?;
     if settings.is_none() && !global { return Ok(Command::new(umu)); }
     let effective = with_global_monitoring(settings, global);
@@ -440,8 +572,14 @@ pub(crate) fn configured_launch_command(umu: &Path, settings: Option<&AdvancedSe
     if effective.overlay_enabled == Some(true) { crate::commands::frame_overlay_runtime::install_standalone()?; }
     let mut command = launch_command_with_tools(umu, Some(&effective), executable)?;
     super::mangohud_config::apply_with_preset(&mut command, settings.is_some_and(|s| s.on("mangohud") || s.on("mangohud_env")), effective.mangohud_fps_limit, effective.mangohud_enabled, effective.mangohud_preset.as_ref())?;
+    // DXVK owns the cap for this invocation; retain MangoHUD's overlay but
+    // prevent a global MangoHUD profile from silently applying a second cap.
+    if effective.on("dxvk_limit") {
+        command.env("MANGOHUD_CONFIG", "read_cfg,fps_limit=0");
+    }
     if super::release_features::enabled() {
         crate::commands::frame_generation::configure_monitoring(&mut command, &effective)?;
+        super::afmf_compatibility::apply(&mut command);
     }
     if !super::release_features::enabled() {
         let mut words: Vec<String> = std::iter::once(command.get_program()).chain(command.get_args()).map(|s|s.to_string_lossy().into_owned()).collect();
@@ -503,11 +641,13 @@ fn launch_command_with_tools(
                 if spec.id == "dll_overrides" {
                     &settings.dll_overrides
                 } else {
-                    &spec.value
+                    settings.option_values.get(&spec.id).unwrap_or(&spec.value)
                 },
             );
+            for (key,value) in &spec.extra_env { command.env(key,value); }
         } else {
             command.env_remove(&spec.key);
+            for key in spec.extra_env.keys() { command.env_remove(key); }
         }
     }
     if let Some(enabled) = settings.overlay_enabled {
@@ -516,6 +656,15 @@ fn launch_command_with_tools(
     }
     command.env_remove("PELI_OVERLAY_BACKGROUND_FPS");
     if let Some(fps)=settings.background_fps {command.env("PELI_OVERLAY_BACKGROUND_FPS",fps.to_string());}
+    command.env_remove("AFMF_ENABLE").env_remove("AFMF_GAMESCOPE").env_remove("AFMF_ASYNC");
+    if let Some(afmf) = settings.afmf.as_ref().filter(|a| a.enabled) {
+        // The layer stays in PeliGames' folder and is offered only to this game.
+        super::afmf_compatibility::layer(&mut command,
+            &crate::commands::frame_generation::afmf_layer_dir()?,
+            std::env::var_os("VK_ADD_LAYER_PATH"), std::env::var_os("VK_INSTANCE_LAYERS"),
+            std::env::var_os("VK_LAYER_PATH"))?;
+        for (key, value) in afmf.environment(settings.gamescope.enabled()) { command.env(key, value); }
+    }
     if settings.on("hdr") {
         command.env("DXVK_HDR", "1");
     } else {
@@ -674,4 +823,101 @@ mod overlay_monitoring_tests {
         let old:AdvancedSettings=serde_json::from_str(r#"{"schema_version":2}"#).unwrap();assert_eq!(old.overlay_enabled,None);assert_eq!(old.background_fps,None);
         let mut next=old;next.overlay_enabled=Some(false);let restored:AdvancedSettings=serde_json::from_value(serde_json::to_value(next).unwrap()).unwrap();assert_eq!(restored.overlay_enabled,Some(false));
     }
+}
+
+#[cfg(test)]
+mod afmf_tests {
+    use super::*;
+    #[test]
+    fn afmf_variables_follow_the_game_settings() {
+        let afmf = AfmfSettings { enabled: true, performance_mode: "quality".into(), min_fps: 45, hud_detect: false, ..Default::default() };
+        let env: std::collections::BTreeMap<_, _> = afmf.environment(true).into_iter().collect();
+        assert_eq!(env["AFMF_ENABLE"], "1");
+        assert_eq!(env["AFMF_PERFORMANCE_MODE"], "quality");
+        assert_eq!(env["AFMF_MIN_FPS"], "45");
+        assert_eq!(env["AFMF_HUD_DETECT"], "0");
+        assert_eq!(env["AFMF_PACING"], "1");
+        assert_eq!(env["AFMF_GAMESCOPE"], "1");
+        assert_eq!(env["DISABLE_LSFGVK"], "1");
+        assert!(!afmf.environment(false).iter().any(|(k, _)| *k == "AFMF_GAMESCOPE"));
+    }
+    #[test]
+    fn afmf_never_runs_with_another_frame_generator() {
+        let mut settings = AdvancedSettings { afmf: Some(AfmfSettings { enabled: true, ..Default::default() }), ..Default::default() };
+        settings.validate().unwrap();
+        settings.wrappers.push(LaunchWrapper { program: "/home/u/.config/PeliGames/FrameGeneration/profiles/game.sh".into(), arguments: String::new(), enabled: true });
+        assert!(settings.validate().unwrap_err().contains("MAKO e AFMF"));
+        settings.wrappers.clear();
+        settings.options.insert("optiscaler".into(), true);
+        assert!(settings.validate().unwrap_err().contains("OptiScaler"));
+        settings.options.insert("optiscaler".into(), false);
+        settings.afmf.as_mut().unwrap().performance_mode = "turbo".into();
+        assert!(settings.validate().is_err());
+        // A disabled AFMF entry is kept but never checked or applied.
+        settings.afmf.as_mut().unwrap().enabled = false;
+        settings.validate().unwrap();
+    }
+    #[test]
+    fn saved_settings_keep_the_afmf_choice() {
+        let mut settings = AdvancedSettings::default();
+        settings.afmf = Some(AfmfSettings { enabled: true, min_fps: 0, ..Default::default() });
+        let restored: AdvancedSettings = serde_json::from_slice(&serde_json::to_vec(&settings).unwrap()).unwrap();
+        assert_eq!(restored.afmf, settings.afmf);
+    }
+    #[test]
+    fn configurable_values_are_bounded_and_survive_roundtrip() {
+        let mut settings=AdvancedSettings::default();
+        settings.options.insert("dxvk_limit".into(),true);
+        settings.option_values.insert("dxvk_limit".into(),"144".into());
+        let restored:AdvancedSettings=serde_json::from_slice(&serde_json::to_vec(&settings).unwrap()).unwrap();
+        let command=launch_command_with_tools(Path::new("umu"),Some(&restored),|name|Ok(PathBuf::from(name))).unwrap();
+        assert_eq!(command.get_envs().find(|(k,_)|*k=="DXVK_FRAME_RATE").unwrap().1.unwrap(),"144");
+        for value in ["0","1001","-1","60;echo bad",""] {
+            settings.option_values.insert("dxvk_limit".into(),value.into());assert!(settings.validate().is_err());
+        }
+        settings.option_values.clear();settings.option_values.insert("dxvk_log".into(),"trace".into());assert!(settings.validate().is_err());
+        settings.option_values.insert("dxvk_log".into(),"warn".into());settings.validate().unwrap();
+    }
+    #[test]
+    fn competing_limiters_and_hdr_paths_are_rejected() {
+        let mut settings=AdvancedSettings::default();settings.options.insert("dxvk_limit".into(),true);
+        settings.mangohud_fps_limit=Some(60);assert!(settings.validate().is_err());
+        settings.mangohud_fps_limit=None;settings.gamescope.enable_limiter=true;assert!(settings.validate().is_err());
+        settings.gamescope.enable_limiter=false;settings.options.insert("dxvk_limit".into(),false);
+        settings.gamescope.hdr=true;settings.options.insert("no_hdr".into(),true);assert!(settings.validate().is_err());
+        settings.options.insert("no_hdr".into(),false);settings.gamescope.adaptive_sync=true;settings.validate().unwrap();
+        assert!(gamescope_args(&settings).contains(&"--hdr-enabled".into()));
+        assert!(gamescope_args(&settings).contains(&"--adaptive-sync".into()));
+    }
+    #[test]
+    fn composite_gpu_preset_is_removed_completely_when_disabled() {
+        let mut settings=AdvancedSettings::default();settings.options.insert("nvidia_offload".into(),true);
+        let command=launch_command_with_tools(Path::new("umu"),Some(&settings),|name|Ok(PathBuf::from(name))).unwrap();
+        assert!(command.get_envs().any(|(key,value)|key=="__GLX_VENDOR_LIBRARY_NAME"&&value==Some(std::ffi::OsStr::new("nvidia"))));
+        settings.options.insert("nvidia_offload".into(),false);
+        let command=launch_command_with_tools(Path::new("umu"),Some(&settings),|name|Ok(PathBuf::from(name))).unwrap();
+        assert!(command.get_envs().any(|(key,value)|key=="__GLX_VENDOR_LIBRARY_NAME"&&value.is_none()));
+    }
+    #[test]
+    fn custom_runner_features_require_evidence_not_names() {
+        let root=std::env::temp_dir().join(format!("GE-Proton-999-{}",uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();std::fs::write(root.join("proton"),"unsupported").unwrap();
+        let mut settings=AdvancedSettings::default();settings.options.insert("d7vk".into(),true);
+        assert!(settings.validate_runner(&root).unwrap_err().contains("PROTON_USE_D7VK"));
+        std::fs::write(root.join("README.md"),"Supported: PROTON_USE_D7VK=1").unwrap();settings.validate_runner(&root).unwrap();
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn editor_capabilities_and_native_validation_match_runner_checks() {
+        let root=std::env::temp_dir().join(format!("advanced-runner-status-{}",uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();std::fs::write(root.join("proton"),"PROTON_USE_D7VK").unwrap();
+        let issues=AdvancedSettings::runner_issues(&root);
+        assert!(!issues.contains_key("d7vk"));assert!(issues.contains_key("prefer_sdl"));
+        let mut settings=AdvancedSettings::default();settings.options.insert("d7vk".into(),true);
+        assert!(settings.validate_native().unwrap_err().contains("Linux nativo"));
+        settings.options.insert("d7vk".into(),false);settings.options.insert("zink".into(),true);settings.validate_native().unwrap();
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
 }
