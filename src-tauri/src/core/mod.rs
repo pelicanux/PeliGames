@@ -25,7 +25,7 @@ pub mod installation_layout;
 pub mod game_execution;
 
 pub mod advanced_settings;
-mod afmf_compatibility;
+pub(crate) mod afmf_compatibility;
 
 pub mod wine_tools;
 
