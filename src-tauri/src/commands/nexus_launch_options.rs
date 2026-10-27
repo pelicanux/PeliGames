@@ -106,11 +106,12 @@ pub(super) fn apply_tool(game: &NexusGame, command: &mut Command, visible: &Path
 }
 fn apply_options(command: &mut Command, options: Options, customized: bool) {
     command.args(options.args);
+    let mut overrides = Command::new("options");
     for (key, value) in options.env {
         // Preserve inherited overrides for automatic mode; an edited value replaces them.
         if key == "WINEDLLOVERRIDES" && !customized {
             let current = std::env::var(&key).unwrap_or_default();
-            command.env(
+            overrides.env(
                 key,
                 if current.is_empty() {
                     value
@@ -119,9 +120,10 @@ fn apply_options(command: &mut Command, options: Options, customized: bool) {
                 },
             );
         } else {
-            command.env(key, value);
+            overrides.env(key, value);
         }
     }
+    crate::core::launch_environment::apply(command, &overrides);
 }
 #[derive(serde::Serialize)]
 pub struct LaunchOptions {
@@ -261,13 +263,7 @@ pub(super) fn advanced_command(game: &NexusGame, original: Command) -> Result<Co
     if let Some(dir) = original.get_current_dir() {
         command.current_dir(dir);
     }
-    for (key, value) in original.get_envs() {
-        if let Some(value) = value {
-            command.env(key, value);
-        } else {
-            command.env_remove(key);
-        }
-    }
+    crate::core::launch_environment::apply(&mut command, &original);
     for (key, value) in advanced_env {
         if key == "WINEDLLOVERRIDES" {
             let base = original
@@ -284,7 +280,7 @@ pub(super) fn advanced_command(game: &NexusGame, original: Command) -> Result<Co
                     merge_dll_overrides(&base, &value.to_string_lossy()).into()
                 },
             );
-        } else {
+        } else if !crate::core::launch_environment::is_vulkan_list(&key) {
             command.env(key, value);
         }
     }
@@ -373,4 +369,32 @@ fn merge_dll_overrides(base: &str, custom: &str) -> String {
         .map(|(name, order)| format!("{name}={order}"))
         .collect::<Vec<_>>()
         .join(";")
+}
+
+#[cfg(test)]
+mod vulkan_tests {
+    use super::*;
+    use crate::core::afmf_compatibility;
+
+    #[test]
+    fn installed_dlssnr_keeps_the_configured_afmf_and_monitoring_chain() {
+        let mut command = Command::new("fixture-game");
+        command.arg("original").env("AFMF_ENABLE", "1")
+            .env("MANGOHUD_CONFIGFILE", "/fixture/MangoHUD.conf")
+            .env("MANGOHUD_CONFIG", "read_cfg,fps_limit=144,no_display=1");
+        afmf_compatibility::layer(&mut command, Path::new("/fixture/afmf"), None,
+            Some("VK_LAYER_VALVE_steam_overlay_64:VK_LAYER_PELIGAMES_overlay".into()), None).unwrap();
+        afmf_compatibility::monitoring(&mut command, Path::new("/fixture/mango")).unwrap();
+        afmf_compatibility::apply(&mut command);
+        let options = r#"VK_ADD_LAYER_PATH="/fixture/game with spaces/int4/layer:/fixture/control/layer" VK_INSTANCE_LAYERS=VK_LAYER_DLSSNR_int4:VK_LAYER_DLSSNR_control WINEDLLOVERRIDES="dxgi=n,b" %command% -dx12"#;
+        apply_custom(&mut command, options).unwrap();
+        let environment: BTreeMap<_, _> = command.get_envs()
+            .map(|(key,value)| (key.to_string_lossy().into_owned(), value.map(|v|v.to_string_lossy().into_owned()))).collect();
+        assert_eq!(environment["VK_INSTANCE_LAYERS"].as_deref(), Some("VK_LAYER_DLSSNR_int4:VK_LAYER_DLSSNR_control:VK_LAYER_VALVE_steam_overlay_64:VK_LAYER_PELIGAMES_overlay:VK_LAYER_AFMF:VK_LAYER_MANGOHUD_overlay_x86_64"));
+        assert_eq!(environment["VK_ADD_LAYER_PATH"].as_deref(), Some("/fixture/game with spaces/int4/layer:/fixture/control/layer:/fixture/mango:/fixture/afmf"));
+        assert_eq!(environment["MANGOHUD_CONFIG"].as_deref(), Some("read_cfg,fps_limit=144,no_display=1,vsync=-1"));
+        assert_eq!(environment["AFMF_ASYNC"].as_deref(), Some("1"));
+        assert_eq!(environment["WINEDLLOVERRIDES"].as_deref(), Some("dxgi=n,b"));
+        assert_eq!(command.get_args().collect::<Vec<_>>(), ["original", "-dx12"]);
+    }
 }

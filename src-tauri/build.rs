@@ -112,6 +112,11 @@ fn game_overlay() {
             assert!(bytes.windows(b"peligames_overlay_present_counter_api_v1".len()).any(|v| v == b"peligames_overlay_present_counter_api_v1"),
                 "Overlay desatualizado: recompile tools/game-overlay para incluir o contador de quadros AFMF.");
         }
+        if index == 1 || index == 2 {
+            let marker = if index == 1 { b"peligames_overlay_cursor_api_v1".as_slice() } else { b"peligames_overlay_audit_cursor_api_v1".as_slice() };
+            assert!(bytes.windows(marker.len()).any(|value| value == marker),
+                "Overlay desatualizado: recompile o renderer e o audit juntos para incluir o cursor do painel.");
+        }
         fs::write(embedded.join(name), bytes).expect("embed game overlay");
     }
 }

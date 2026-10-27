@@ -203,11 +203,12 @@ pub(super) struct ManualOptions {
 /// New manual exports always reference the stable Rust helper instead.
 fn manual_line(settings: &AdvancedSettings) -> Result<String, String> {
     let marker = Path::new("__PELIGAMES_STEAM_COMMAND__");
-    let command =
+    let mut command =
         crate::core::advanced_settings::configured_launch_command(marker, Some(settings))?;
     let custom = custom_options(settings)?;
     let mut env = BTreeMap::new();
-    for (key, value) in command.get_envs().chain(custom.get_envs()) {
+    crate::core::launch_environment::apply(&mut command, &custom);
+    for (key, value) in command.get_envs() {
         if let Some(value) = value {
             env.insert(
                 key.to_string_lossy().into_owned(),

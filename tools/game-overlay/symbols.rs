@@ -6,7 +6,7 @@ pub const WINELAND: u8 = 3;
 pub const WINE_NTDLL: u8 = 4;
 pub const WINE_WIN32U: u8 = 5;
 // (symbol, defining DSO, redirect calls to the wrapper)
-pub const SYMBOLS: [(&[u8], u8, bool); 32] = [
+pub const SYMBOLS: [(&[u8], u8, bool); 35] = [
     (b"wl_proxy_add_listener", WAYLAND, true),
     (b"wl_proxy_destroy", WAYLAND, true),
     (b"wl_proxy_add_dispatcher", WAYLAND, true),
@@ -39,4 +39,7 @@ pub const SYMBOLS: [(&[u8], u8, bool); 32] = [
     (b"NtUserGetRawInputBuffer", WINE_WIN32U, false),
     (b"NtUserGetRawInputData", WINE_WIN32U, false),
     (b"NtUserGetCursorPos", WINE_WIN32U, false),
+    (b"XCreateBitmapFromData", X11, false),
+    (b"XCreatePixmapCursor", X11, false),
+    (b"XFreePixmap", X11, false),
 ];

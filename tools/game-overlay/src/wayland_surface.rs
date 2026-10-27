@@ -61,9 +61,9 @@ pub(crate) fn forget(proxy: usize) {
 /// Public wl_argument ABI. Only object slots of a known core request are read.
 #[repr(C)]
 pub union Argument {
-    object: *mut c_void,
-    integer: i32,
-    unsigned: u32,
+    pub(crate) object: *mut c_void,
+    pub(crate) integer: i32,
+    pub(crate) unsigned: u32,
 }
 #[derive(Clone, Copy)]
 enum Request {
@@ -97,8 +97,9 @@ fn complete(request: Request, result: usize) {
 }
 
 /// libwayland's variadic wl_proxy_marshal_flags delegates to this fixed-ABI
-/// public function. All six original arguments and the return value survive.
-/// No variadic shim, assembly, replacement connection or protocol request.
+/// public function. Surface observations preserve all arguments and results;
+/// cursor requests are deferred while the panel owns that game's cursor.
+/// No variadic shim, assembly or replacement Wayland connection.
 #[no_mangle]
 pub unsafe extern "C" fn wl_proxy_marshal_array_flags(
     proxy: *mut c_void,
@@ -123,6 +124,7 @@ pub unsafe extern "C" fn wl_proxy_marshal_array_flags(
     let real: Marshal = std::mem::transmute(real);
     if !crate::process_scope::enabled() { return real(proxy, opcode, interface, version, flags, arguments); }
     let get_class = crate::symbols::resolve(b"wl_proxy_get_class\0");
+    let mut cursor = crate::wayland_cursor::Observed::None;
     let observed = if !proxy.is_null() && !get_class.is_null() {
         let get_class: unsafe extern "C" fn(*mut c_void) -> *const libc::c_char =
             std::mem::transmute(get_class);
@@ -130,8 +132,10 @@ pub unsafe extern "C" fn wl_proxy_marshal_array_flags(
         if name.is_null() {
             Request::None
         } else {
+            let class = CStr::from_ptr(name).to_bytes();
+            cursor = crate::wayland_cursor::observe(class, proxy as usize, opcode, flags, arguments);
             request(
-                CStr::from_ptr(name).to_bytes(),
+                class,
                 proxy as usize,
                 opcode,
                 arguments,
@@ -141,7 +145,7 @@ pub unsafe extern "C" fn wl_proxy_marshal_array_flags(
         Request::None
     };
     // The destroy flag may free proxy: never inspect it after forwarding.
-    let result = real(proxy, opcode, interface, version, flags, arguments);
+    let result = crate::wayland_cursor::marshal(cursor, || real(proxy, opcode, interface, version, flags, arguments));
     complete(observed, result as usize);
     result
 }

@@ -3,7 +3,7 @@
   <img src="public/images/readme-header.svg" alt="PeliGames" width="900" />
 </p>
 
-> **0.5.0 experimental:** gravação de gameplay e replay instantâneo, biblioteca de vídeos, integração opcional de atividade com Discord, novos controles de geração de quadros e melhorias na organização das configurações. Veja as [notas da 0.5.0](docs/releases/0.5.0.md). Captura, geração de quadros e overlay são experimentais e dependem do jogo, GPU, Proton e ambiente gráfico. Consulte o [guia de uso e limitações](docs/overlay.md).
+> **0.5.1 experimental:** cursor próprio do overlay em Wayland e XWayland, correções ao combinar DLSS-NR com geração de quadros e MangoHUD e indicador opcional do FSR. Veja as [notas da 0.5.1](docs/releases/0.5.1.md). Captura, geração de quadros e overlay são experimentais e dependem do jogo, GPU, Proton e ambiente gráfico. Consulte o [guia de uso e limitações](docs/overlay.md).
 
 <p align="center"><strong>Português</strong> · <a href="README.en.md">English</a></p>
 

@@ -146,9 +146,9 @@ fn build(app: u32, source: &Source) -> Result<Profile, String> {
     if let Some(line) = &advanced.launch_options {
         super::nexus_launch_options::apply_custom(&mut custom, line)?;
     }
+    crate::core::launch_environment::apply(&mut command, &custom);
     let environment = command
         .get_envs()
-        .chain(custom.get_envs())
         .map(|(key, value)| {
             (
                 key.to_string_lossy().into_owned(),

@@ -4,6 +4,8 @@
 #![no_std]
 #[cfg(not(all(target_os = "linux", target_arch = "x86_64")))]
 compile_error!("O audit shim inicial suporta Linux/glibc x86_64.");
+#[no_mangle]
+pub extern "C" fn peligames_overlay_audit_cursor_api_v1() -> u32 { 1 }
 use core::{
     ffi::{c_char, c_void},
     sync::atomic::{AtomicUsize, Ordering},

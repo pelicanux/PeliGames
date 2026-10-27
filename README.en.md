@@ -2,7 +2,7 @@
   <img src="public/images/readme-header.svg" alt="PeliGames" width="900" />
 </p>
 
-> **0.4.6 experimental:** MAKO frame generation and the new PeliGames in-game overlay are available for testing, with per-game opt-in. Mouse capture, focus, shortcuts and compatibility with some games/Proton versions may still have issues. See the [usage and limitations guide](docs/overlay.md).
+> **0.5.1 experimental:** a dedicated overlay cursor on Wayland and XWayland, compatibility fixes for DLSS-NR with frame generation and MangoHUD, and an optional FSR indicator. See the [0.5.1 release notes (Portuguese)](docs/releases/0.5.1.md). Capture, frame generation and the overlay are experimental; compatibility depends on the game, GPU, Proton and desktop environment. See the [usage and limitations guide](docs/overlay.md).
 
 <p align="center"><a href="README.md">Português</a> · <strong>English</strong></p>
 

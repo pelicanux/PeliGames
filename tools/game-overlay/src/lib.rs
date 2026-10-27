@@ -8,6 +8,8 @@ pub extern "C" fn peligames_overlay_capture_api_v1() -> u32 { 1 }
 pub extern "C" fn peligames_overlay_present_counter_api_v1() -> u32 { 1 }
 #[no_mangle]
 pub extern "C" fn peligames_overlay_mako_fps_api_v1() -> u32 { 1 }
+#[no_mangle]
+pub extern "C" fn peligames_overlay_cursor_api_v1() -> u32 { 1 }
 mod process_scope;
 mod controls;
 mod capture;
@@ -26,6 +28,7 @@ mod shortcut;
 mod capture_shortcuts;
 mod symbols;
 mod wayland;
+mod wayland_cursor;
 mod wayland_surface;
 mod wineland;
 mod wine_input;
@@ -91,6 +94,7 @@ pub(crate) fn watchdog() {
     if release_pointer {
         x11::suspend_pointer();
     }
+    wayland_cursor::reconcile();
     let action=state().lock().ok().and_then(|mut state|state.take_capture_shortcut());
     if let Some(action)=action {
         if let Some(Some(tools))=CONTROLLER.get() {tools.capture_shortcut(action);}

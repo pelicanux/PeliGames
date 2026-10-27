@@ -224,6 +224,7 @@ impl Render {
             Ok(false) => return Ok(None),
             Err(e) => return Err(format!("{e:?}")),
         }
+        crate::wayland_cursor::reconcile();
         let raw = {
             let Ok(mut input) = crate::state().lock() else {
                 return Ok(None);
@@ -237,11 +238,16 @@ impl Render {
         };
         let output = self.context.run(raw, |ctx| {
             controller.draw(ctx, egui::vec2(self.extent.width as f32, self.extent.height as f32));
-            // Wine/XWayland uses the real server cursor, free in the game. Do not
-            // draw a second arrow at an unrelated relative-motion position.
-            // The native Wayland adapter still has its locked-pointer fallback.
-            if matches!(crate::target(), crate::Target::Wayland(_)) {
+            // Both adapters hide the native cursor before drawing the same
+            // panel cursor. A failed lease must never create a second arrow.
+            let cursor_hidden = match crate::target() {
+                crate::Target::Xlib(window) => crate::x11::cursor_hidden(window),
+                crate::Target::Wayland(_) => crate::wayland_cursor::hidden(),
+                _ => false,
+            };
+            if cursor_hidden {
                 if let Ok(input) = crate::state().lock() {
+                    if !input.capturing() { return; }
                     let p = input.position;
                     ctx.layer_painter(egui::LayerId::new(
                         egui::Order::Tooltip,

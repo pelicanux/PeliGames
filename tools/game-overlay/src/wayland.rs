@@ -71,6 +71,7 @@ unsafe extern "C" fn p_enter(
     x: i32,
     y: i32,
 ) {
+    crate::wayland_cursor::enter(p as usize, surface as usize, serial);
     forward!(
         data,
         p,
@@ -80,6 +81,7 @@ unsafe extern "C" fn p_enter(
     );
 }
 unsafe extern "C" fn p_leave(data: *mut c_void, p: *mut c_void, serial: u32, surface: *mut c_void) {
+    crate::wayland_cursor::leave(p as usize, surface as usize);
     forward!(data, p, 1, (u32, *mut c_void), (serial, surface));
 }
 unsafe extern "C" fn p_motion(data: *mut c_void, p: *mut c_void, time: u32, x: i32, y: i32) {
@@ -408,6 +410,7 @@ pub unsafe extern "C" fn wl_proxy_add_listener(
 
 #[no_mangle]
 pub unsafe extern "C" fn wl_proxy_destroy(proxy: *mut c_void) {
+    crate::wayland_cursor::forget(proxy as usize);
     crate::wayland_surface::forget(proxy as usize);
     if let Ok(mut map) = listeners().lock() {
         map.remove(&(proxy as usize));

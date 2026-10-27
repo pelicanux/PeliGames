@@ -165,6 +165,9 @@ pub fn available(window: u64) -> bool {
         && pointer::available()
         && windows().lock().is_ok_and(|w| w.contains_key(&window))
 }
+pub(crate) fn cursor_hidden(window: u64) -> bool {
+    pointer::hidden_for(window)
+}
 pub(crate) fn suspend_pointer() {
     pointer::suspend();
 }

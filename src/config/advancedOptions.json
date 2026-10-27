@@ -81,6 +81,16 @@
   },
   {
     "group": "hardware",
+    "id": "fsr4_indicator",
+    "title": "Mostrar indicador do FSR",
+    "key": "PROTON_FSR4_INDICATOR",
+    "value": "1",
+    "enabled": false,
+    "description": "Mostra no jogo a versão e o modo do FSR e da geração de quadros, quando disponíveis. Reabra o jogo para aplicar.",
+    "kind": "env"
+  },
+  {
+    "group": "hardware",
     "id": "rdna3_workaround",
     "title": "Ajuste de geração de quadros para RDNA3",
     "key": "DXIL_SPIRV_CONFIG",

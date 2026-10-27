@@ -97,9 +97,9 @@ fn route(
     )?;
     crate::core::mangohud_config::apply_game_logs(&mut command, &game.name, game.advanced.mangohud_preset.as_ref())?;
     let custom = super::custom_options(&game.advanced)?;
+    crate::core::launch_environment::apply(&mut command, &custom);
     let mut environment: BTreeMap<String, Option<String>> = command
         .get_envs()
-        .chain(custom.get_envs())
         .map(|(key, value)| {
             (
                 key.to_string_lossy().into_owned(),
