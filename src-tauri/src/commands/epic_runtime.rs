@@ -1,37 +1,16 @@
 //! Experimental Epic integration. The running client keeps owning authentication and launch.
 //! Its shared Proton entry point dispatches using immutable per-game prefix/executable metadata.
 use super::ExternalGame;
-use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
+#[path = "../../launch-runtime/src/epic_contract.rs"]
+mod native;
+use native::{hash, Route, Runtime, MARKER, SENTINEL};
 use std::{
     collections::BTreeMap,
     fs,
     path::{Path, PathBuf},
 };
-const MARKER: &str = "# PeliGames Epic runtime adapter v1";
-const DISPATCH: &str = include_str!("epic_runtime.py");
-const SENTINEL: &str = "__PELIGAMES_EPIC_PROTON__";
-#[derive(Serialize, Deserialize)]
-struct Route {
-    id: String,
-    compat: String,
-    prefix: String,
-    executable: Option<String>,
-    proton: Option<String>,
-    command: Vec<String>,
-    environment: BTreeMap<String, Option<String>>,
-    arguments: Vec<String>,
-    legacy_adapter: String,
-}
-#[derive(Serialize, Deserialize)]
-struct Runtime {
-    backup: String,
-    original_sha256: String,
-    shim_sha256: String,
-}
-fn hash(bytes: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(bytes))
-}
+const LEGACY_DISPATCH_SHA256: &str =
+    "4ac3cb8c1b90d2ede89ffed9b0ddc598b8e14126be051eb7cc9242be83783f5d";
 fn quote(value: &str) -> String {
     format!("'{}'", value.replace('\'', "'\\''"))
 }
@@ -95,7 +74,11 @@ fn route(
         Path::new(SENTINEL),
         Some(&game.advanced),
     )?;
-    crate::core::mangohud_config::apply_game_logs(&mut command, &game.name, game.advanced.mangohud_preset.as_ref())?;
+    crate::core::mangohud_config::apply_game_logs(
+        &mut command,
+        &game.name,
+        game.advanced.mangohud_preset.as_ref(),
+    )?;
     let custom = super::custom_options(&game.advanced)?;
     crate::core::launch_environment::apply(&mut command, &custom);
     let mut environment: BTreeMap<String, Option<String>> = command
@@ -190,7 +173,7 @@ fn install_runtime(directory: &Path, dispatch: &Path) -> Result<(), String> {
     let backup = quote(&directory.join(&state.backup).to_string_lossy());
     let dispatcher = quote(&dispatch.to_string_lossy());
     let routes = quote(&dispatch.with_file_name("routes.json").to_string_lossy());
-    let shim=format!("#!/bin/sh\n{MARKER}\nif [ -x /usr/bin/python3 ] && [ -r {dispatcher} ] && [ -r {routes} ]; then\n  exec /usr/bin/python3 {dispatcher} {backup} \"$@\"\nfi\nexec {backup} \"$@\"\n");
+    let shim=format!("#!/bin/sh\n{MARKER}\nif [ -x {dispatcher} ] && [ -r {routes} ]; then\n  exec {dispatcher} --epic-runtime {routes} -- {backup} \"$@\"\nfi\nexec {backup} \"$@\"\n");
     let state = Runtime {
         shim_sha256: hash(shim.as_bytes()),
         ..state
@@ -205,6 +188,15 @@ fn install_runtime(directory: &Path, dispatch: &Path) -> Result<(), String> {
     )?;
     atomic(&path, shim.as_bytes(), true)
 }
+fn remove_legacy_dispatch(integration: &Path) -> Result<(), String> {
+    let path = integration.join("dispatch.py");
+    if fs::symlink_metadata(&path).is_ok_and(|meta| meta.is_file() && meta.len() <= 4 * 1024 * 1024)
+        && fs::read(&path).is_ok_and(|bytes| hash(&bytes) == LEGACY_DISPATCH_SHA256)
+    {
+        fs::remove_file(path).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
 pub(super) fn configure(
     home: &Path,
     game: &ExternalGame,
@@ -212,9 +204,6 @@ pub(super) fn configure(
 ) -> Result<(), String> {
     if game.native_linux {
         return Ok(());
-    }
-    if !Path::new("/usr/bin/python3").is_file() {
-        return Err("Instale Python 3 para usar a integração experimental da Epic.".into());
     }
     let id = game
         .app_id
@@ -245,8 +234,8 @@ pub(super) fn configure(
     let prepared = route(game, proton, &compat, &legacy)?;
     let integration = root.join(".peligames-runtime");
     private_directory(&integration)?;
-    let dispatch = integration.join("dispatch.py");
-    atomic(&dispatch, DISPATCH.as_bytes(), false)?;
+    let dispatch = integration.join("pelirun");
+    atomic(&dispatch, super::super::steam_runtime::HELPER, true)?;
     let routes_file = integration.join("routes.json");
     if routes_file.is_symlink() {
         return Err("Mapa de jogos Epic não pode ser um link simbólico.".into());
@@ -284,13 +273,15 @@ pub(super) fn configure(
         &serde_json::to_vec(&routes).map_err(|e| e.to_string())?,
         false,
     )?;
+    // Remove only the exact legacy script after every runtime points to Rust.
+    remove_legacy_dispatch(&integration)?;
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::core::test_support::RetryOutput;
     use super::*;
+    use crate::core::test_support::RetryOutput;
     use serde_json::json;
     use std::process::Command;
     struct Fixture {
@@ -410,7 +401,8 @@ mod tests {
         assert!(!log.contains("with spaces"));
         fs::remove_file(f.root.join(".peligames-runtime/routes.json")).unwrap();
         assert!(f.run("game").starts_with("EPIC\nmissing\n"));
-        fs::remove_file(f.root.join(".peligames-runtime/dispatch.py")).unwrap();
+        configure(&f.home, &f.game, Some(&f.runner)).unwrap();
+        fs::remove_file(f.root.join(".peligames-runtime/pelirun")).unwrap();
         assert!(f.run("game").starts_with("EPIC\nmissing\n"));
     }
     #[test]
@@ -427,6 +419,31 @@ mod tests {
         assert!(configure(&f.home, &f.game, Some(&f.runner))
             .unwrap_err()
             .contains("integridade"));
+    }
+    #[test]
+    fn epic_dispatch_replaces_the_python_shim_without_losing_the_original() {
+        let f = Fixture::new();
+        configure(&f.home, &f.game, Some(&f.runner)).unwrap();
+        let manifest = f.runtime.join(".peligames-runtime.json");
+        let mut state: Runtime = serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+        let original = fs::read(f.runtime.join(&state.backup)).unwrap();
+        let legacy = format!("#!/bin/sh\n{MARKER}\nexec /usr/bin/python3 dispatch.py \"$@\"\n");
+        fs::write(f.runtime.join("proton"), &legacy).unwrap();
+        state.shim_sha256 = hash(legacy.as_bytes());
+        fs::write(&manifest, serde_json::to_vec(&state).unwrap()).unwrap();
+        let custom = f.root.join(".peligames-runtime/dispatch.py");
+        fs::write(&custom, "custom file; preserve it").unwrap();
+        configure(&f.home, &f.game, Some(&f.runner)).unwrap();
+        let shim = fs::read_to_string(f.runtime.join("proton")).unwrap();
+        assert!(shim.contains("--epic-runtime"));
+        assert!(!shim.contains("/usr/bin/python3"));
+        assert_eq!(fs::read(f.runtime.join(&state.backup)).unwrap(), original);
+        assert_eq!(
+            fs::read_to_string(custom).unwrap(),
+            "custom file; preserve it"
+        );
+        assert!(f.run("game").starts_with("SELECTED\nwith spaces\n"));
+        assert!(f.run("other").starts_with("EPIC\nmissing\n"));
     }
     #[test]
     fn epic_dispatch_protects_prefix_and_cleans_only_legacy_adapter() {

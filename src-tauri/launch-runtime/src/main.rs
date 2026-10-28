@@ -1,3 +1,5 @@
+mod epic;
+mod epic_contract;
 mod profile;
 mod release_features;
 mod discord_socket;
@@ -11,6 +13,7 @@ use std::process::Command;
 fn run() -> Result<(), String> {
     let mut args = std::env::args_os().skip(1);
     let mode = args.next().and_then(|v| v.into_string().ok()).ok_or("Use pelirun --profile ID -- comando [argumentos].")?;
+    if mode == "--epic-runtime" { return epic::run(args); }
     let identity = args.next().and_then(|v| v.into_string().ok()).ok_or("Identificador do perfil ausente.")?;
     match mode.as_str() {
         "--profile" => { profile::profile_id(&identity)?; }
