@@ -46,7 +46,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh api repos/pelicanux/PeliGames/releases --paginate --slurp > "$RUNNER_TEMP/releases.json"
-          python3 website/build.py --output "$RUNNER_TEMP/peligames-site" --releases "$RUNNER_TEMP/releases.json"
+          node website/build.mjs --output "$RUNNER_TEMP/peligames-site" --releases "$RUNNER_TEMP/releases.json"
       - name: Upload public site
         uses: actions/upload-pages-artifact@v4
         with:

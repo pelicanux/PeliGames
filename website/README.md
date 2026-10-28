@@ -7,8 +7,8 @@ Site estático publicado em https://pelicanux.github.io/PeliGames/. Usa as captu
 Na raiz do repositório, execute:
 
 ```sh
-python3 website/build.py --output /tmp/peligames-site
-python3 -m http.server 8080 --directory /tmp/peligames-site
+node website/build.mjs --output /tmp/peligames-site
+bunx vite /tmp/peligames-site --host 127.0.0.1 --port 8080
 ```
 
 Abra http://localhost:8080. Escolha outro diretório de saída se ele já existir. O montador não sobrescreve diretórios existentes.
@@ -19,4 +19,4 @@ O workflow `GitHub Pages` publica alterações de `website/`, de seus recursos p
 
 Os links usam a release pública de publicação mais recente, incluindo versões experimentais. Rascunhos são ignorados. Os três pacotes Linux precisam estar disponíveis antes de publicar a release. Os metadados são gerados durante a publicação; o navegador não precisa consultar a API do GitHub. Os mesmos links e a versão atual também são gravados no HTML para funcionar com JavaScript desativado.
 
-Somente os arquivos estáticos e os recursos listados explicitamente em `build.py` entram no site. Fontes Jersey 10 e Oxanium são distribuídas com suas licenças OFL. As capturas são demonstrações da interface; marcas e imagens dos jogos pertencem a seus respectivos titulares.
+Somente os arquivos estáticos e os recursos listados explicitamente em `build.mjs` entram no site. Fontes Jersey 10 e Oxanium são distribuídas com suas licenças OFL. As capturas são demonstrações da interface; marcas e imagens dos jogos pertencem a seus respectivos titulares.
