@@ -1,10 +1,23 @@
 fn main() {
+    println!("cargo:rerun-if-changed=../tools/storage_layout.rs");
+    println!("cargo:rerun-if-changed=../tools/storage_names.rs");
     println!("cargo:rerun-if-changed=../release-features.json");
     println!("cargo:rerun-if-env-changed=PELIGAMES_NEXUS_CLIENT_ID");
     println!("cargo:rerun-if-env-changed=PELIGAMES_DISCORD_RELAY");
     launch_helper();
     game_overlay();
+    export_webkit_vblank_getters();
     tauri_build::build()
+}
+
+/// WebKit must call the executable's GDK monitor size getters (core::webkit_vblank).
+fn export_webkit_vblank_getters() {
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("linux") {
+        return;
+    }
+    for symbol in ["gdk_monitor_get_width_mm", "gdk_monitor_get_height_mm"] {
+        println!("cargo:rustc-link-arg-bins=-Wl,--export-dynamic-symbol={symbol}");
+    }
 }
 
 /// Separate targets avoid Cargo's outer lock. No C/C++ or compositor service
@@ -111,6 +124,11 @@ fn game_overlay() {
                 "Overlay desatualizado: recompile tools/game-overlay para incluir os FPS separados do MAKO.");
             assert!(bytes.windows(b"peligames_overlay_present_counter_api_v1".len()).any(|v| v == b"peligames_overlay_present_counter_api_v1"),
                 "Overlay desatualizado: recompile tools/game-overlay para incluir o contador de quadros AFMF.");
+        }
+        if index == 0 || index == 1 {
+            let layout = if index == 0 { b"settings/frame-overlay.json".as_slice() } else { b"runtime/capture-overlay.json".as_slice() };
+            assert!(bytes.windows(layout.len()).any(|value|value==layout),
+                "Overlay desatualizado: recompile os auxiliares para a nova organização das configurações.");
         }
         if index == 1 || index == 2 {
             let marker = if index == 1 { b"peligames_overlay_cursor_api_v1".as_slice() } else { b"peligames_overlay_audit_cursor_api_v1".as_slice() };

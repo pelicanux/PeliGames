@@ -56,9 +56,8 @@ pub fn configure() {
     }
 }
 
-/// TextureMapper in 2.54 must not reuse the new compositor's partial-damage
-/// optimization: a settings page can otherwise clear the entire surface and
-/// repaint only hovered controls. Full composition is still event-driven/GPU.
+/// Let page updates follow the display, retaining the affected compositor's
+/// compatibility setting through WebKit's own feature API.
 pub fn configure_webview(view: &webkit2gtk::WebView) -> Result<(), String> {
     use webkit2gtk::{glib::translate::ToGlibPtr, WebViewExt};
     let (major, minor) = unsafe {
@@ -67,14 +66,11 @@ pub fn configure_webview(view: &webkit2gtk::WebView) -> Result<(), String> {
             webkit2gtk::ffi::webkit_get_minor_version(),
         )
     };
-    if !compositor_compatibility(major, minor)
-        || std::env::var("WEBKIT_USE_SKIA_FOR_COMPOSITION").as_deref() != Ok("0")
-    {
-        return Ok(());
-    }
+    let damage_compatibility = compositor_compatibility(major, minor)
+        && std::env::var("WEBKIT_USE_SKIA_FOR_COMPOSITION").as_deref() == Ok("0");
     let settings = view.settings().ok_or("Configuração WebKit indisponível")?;
     // Feature-list API arrived after our minimum link-time WebKit version.
-    // Resolve it only on the affected runtime, keeping older distributions loadable.
+    // Resolve it dynamically, keeping older distributions loadable.
     unsafe {
         use std::ffi::{c_char, c_void, CStr};
         let names = [
@@ -87,7 +83,11 @@ pub fn configure_webview(view: &webkit2gtk::WebView) -> Result<(), String> {
         ];
         let symbols = names.map(|name| libc::dlsym(libc::RTLD_DEFAULT, name.as_ptr()));
         if symbols.iter().any(|symbol| symbol.is_null()) {
-            return Err("API de compatibilidade gráfica do WebKit indisponível".into());
+            return if damage_compatibility {
+                Err("API de compatibilidade gráfica do WebKit indisponível".into())
+            } else {
+                Ok(())
+            };
         }
         let all: unsafe extern "C" fn() -> *mut c_void = std::mem::transmute(symbols[0]);
         let length: unsafe extern "C" fn(*mut c_void) -> u32 = std::mem::transmute(symbols[1]);
@@ -109,14 +109,19 @@ pub fn configure_webview(view: &webkit2gtk::WebView) -> Result<(), String> {
                 continue;
             }
             let id = identifier(feature);
-            if !id.is_null() && CStr::from_ptr(id) == c"UseDamagingInformationForCompositing" {
+            if id.is_null() {
+                continue;
+            }
+            let id = CStr::from_ptr(id);
+            if id == c"PreferPageRenderingUpdatesNear60FPS" {
+                set(settings.to_glib_none().0, feature, 0);
+            } else if damage_compatibility && id == c"UseDamagingInformationForCompositing" {
                 set(settings.to_glib_none().0, feature, 0);
                 applied = true;
-                break;
             }
         }
         unref(list);
-        if !applied {
+        if damage_compatibility && !applied {
             return Err("Recurso de composição parcial WebKit não encontrado".into());
         }
     }

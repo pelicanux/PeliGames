@@ -31,7 +31,7 @@ O painel deve consumir a interação do mouse enquanto aberto e devolvê-la ao j
 
 ## Runtimes e diagnóstico
 
-Runtimes, versões anteriores e perfis ficam em `~/.config/PeliGames/FrameGeneration`. O PeliRun mantém um executável compartilhado e um JSON por perfil em `~/.local/share/pelirun`; cada perfil tem identificador curto. Atualizações não devem substituir runtimes ainda vinculados a outros jogos. Os detalhes técnicos estão em [PeliRun](steam-launch-runtime.md) e na [camada experimental](in-game-overlay.md).
+Runtimes, versões anteriores e perfis ficam em `~/.config/PeliGames/components/FrameGeneration`. O PeliRun mantém um executável compartilhado e um JSON por perfil em `~/.local/share/pelirun`; cada perfil tem identificador curto. Atualizações não devem substituir runtimes ainda vinculados a outros jogos. Os detalhes técnicos estão em [PeliRun](steam-launch-runtime.md) e na [camada experimental](in-game-overlay.md).
 
 Ao reportar problemas, inclua versão do PeliGames, nome do jogo, Proton, compositor e se usa Wayland nativo ou XWayland. Consulte os logs do jogo e, para execuções diretas pela Steam, o console da Steam; procure mensagens `[PeliGames overlay]`. Nunca publique credenciais ou dados de conta junto dos logs.
 

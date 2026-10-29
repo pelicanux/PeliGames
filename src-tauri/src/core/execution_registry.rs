@@ -12,8 +12,9 @@ struct Record {
     status: ExecutionStatus,
 }
 pub(crate) fn directory() -> Result<PathBuf, String> {
-    Ok(super::paths::app_root()?.join("executions"))
+    Ok(super::paths::app_path("executions")?)
 }
+fn base(dir:&Path,id:&str)->PathBuf{super::paths::names::find(dir,id).unwrap_or_else(||dir.join(id))}
 fn valid_id(id: &str) -> bool {
     uuid::Uuid::parse_str(id).is_ok()
 }
@@ -57,9 +58,11 @@ pub(crate) fn publish(dir: &Path, status: &ExecutionStatus) -> Result<(), String
         birth: birth(std::process::id()).ok_or("Monitor de execução indisponível.")?,
         status: status.clone(),
     };
+    let label=Path::new(&status.path).file_name().and_then(|v|v.to_str()).unwrap_or("game");
+    let base=super::paths::names::allocate(dir,&format!("{label}-session"),&status.id)?;
     write(
         dir,
-        &format!("{}.json", status.id),
+        &format!("{}.json",base.file_name().unwrap().to_string_lossy()),
         &serde_json::to_vec(&record).map_err(|e| e.to_string())?,
     )
 }
@@ -68,7 +71,7 @@ fn record(dir: &Path, id: &str) -> Option<Record> {
     if !valid_id(id) {
         return None;
     }
-    let path = dir.join(format!("{id}.json"));
+    let path = base(dir,id).with_extension("json");
     let meta = fs::symlink_metadata(&path).ok()?;
     if !meta.is_file() || meta.len() > 65536 || meta.uid() != unsafe { libc::geteuid() } {
         return None;
@@ -82,25 +85,27 @@ pub(crate) fn statuses_at(dir:&Path)->Vec<ExecutionStatus>{
     entries.take(1024).flatten().filter_map(|entry|{
         let path=entry.path();
         if path.extension().is_none_or(|e|e!="json"){return None;}
-        record(dir,path.file_stem()?.to_str()?).map(|r|r.status)
+        let bytes=fs::read(&path).ok()?;if bytes.len()>65536{return None;}
+        let saved:Record=serde_json::from_slice(&bytes).ok()?;
+        record(dir,&saved.status.id).map(|r|r.status)
     }).collect()
 }
 pub(crate) fn status_at(dir:&Path)->Option<ExecutionStatus>{statuses_at(dir).into_iter().next()}
 pub(crate) fn cancel_at(dir: &Path, id: &str) -> Result<ExecutionStatus, String> {
     let mut record =
         record(dir, id).ok_or("Esta execução já terminou ou o monitor está indisponível.")?;
-    write(dir, &format!("{id}.cancel"), id.as_bytes())?;
+    write(dir, &format!("{}.cancel",base(dir,id).file_name().unwrap().to_string_lossy()), id.as_bytes())?;
     record.status.state = "stopping".into();
     Ok(record.status)
 }
 pub(crate) fn cancellation_requested(dir: &Path, id: &str) -> bool {
-    let path = dir.join(format!("{id}.cancel"));
+    let path = base(dir,id).with_extension("cancel");
     fs::symlink_metadata(&path).is_ok_and(|m| m.is_file() && m.len() == id.len() as u64)
         && fs::read(path).is_ok_and(|b| b == id.as_bytes())
 }
 pub(crate) fn finish(dir: &Path, id: &str) {
-    let _ = fs::remove_file(dir.join(format!("{id}.json")));
-    let _ = fs::remove_file(dir.join(format!("{id}.cancel")));
+    let file=base(dir,id);
+    for extension in ["json","cancel","identity"]{let _=fs::remove_file(file.with_extension(extension));}
 }
 
 #[cfg(test)]

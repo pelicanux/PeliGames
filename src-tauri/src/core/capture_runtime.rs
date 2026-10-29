@@ -29,7 +29,7 @@ pub struct Progress {
     pub total: Option<u64>,
 }
 fn base() -> Result<PathBuf, String> {
-    Ok(super::paths::app_root()?.join("CaptureRuntime"))
+    Ok(super::paths::app_path("CaptureRuntime")?)
 }
 fn location() -> Result<PathBuf, String> {
     Ok(base()?.join(VERSION))

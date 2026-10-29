@@ -106,7 +106,21 @@ fn afmf_runtime_manifest(path: &Path) -> Result<PathBuf, String> {
     Ok(directory)
 }
 pub(super) fn root() -> Result<PathBuf, String> {
-    Ok(crate::core::paths::app_root()?.join("FrameGeneration"))
+    Ok(crate::core::paths::app_path("FrameGeneration")?)
+}
+fn selection_file(profiles:&Path,key:&str,label:&str)->Result<PathBuf,String>{
+    let base=crate::core::paths::names::allocate(&profiles.join("selections"),label,&profile_key(key))?;
+    let path=base.with_extension("json");let old=profiles.join(profile_key(key)+".selection.json");
+    if !path.exists()&&old.is_file(){fs::rename(old,&path).map_err(|e|e.to_string())?;}
+    Ok(path)
+}
+fn module_file(key:&str,label:&str)->Result<PathBuf,String>{
+    let folder=crate::core::paths::app_path("GameModules")?;
+    let identity=profile_key(key);
+    let base=crate::core::paths::names::allocate(&folder,label,&identity)?;
+    let path=base.with_extension("json");let old=folder.join(identity+".json");
+    if !path.exists()&&old.is_file(){fs::rename(old,&path).map_err(|e|e.to_string())?;}
+    Ok(path)
 }
 fn profile_key(key: &str) -> String {
     format!("{:x}", Sha256::digest(key.as_bytes()))
@@ -254,7 +268,7 @@ pub async fn frame_generation_state(
 ) -> Result<State, String> {
     crate::core::release_features::require()?;
     tauri::async_runtime::spawn_blocking(move||{
- let had_profile=active_profile.is_some();let profiles=root()?.join("profiles");let selected=active_profile.map(PathBuf::from).filter(|p|p.parent()==Some(profiles.as_path()) && p.extension().is_some_and(|e|e=="sh")).map(|p|p.with_extension("json")).unwrap_or_else(||profiles.join(profile_key(&game_key)+".selection.json"));
+ let had_profile=active_profile.is_some();let profiles=root()?.join("profiles");let selected=active_profile.map(PathBuf::from).filter(|p|p.parent()==Some(profiles.as_path()) && p.extension().is_some_and(|e|e=="sh")).map(|p|p.with_extension("json")).map(Ok).unwrap_or_else(||selection_file(&profiles,&game_key,&game_key))?;
  let mut settings:Settings=match fs::read(selected){Ok(b)=>serde_json::from_slice(&b).map_err(|_|"Perfil de geração inválido.")?,Err(e) if e.kind()==std::io::ErrorKind::NotFound=>Settings::default(),Err(e)=>return Err(e.to_string())};
  let legacy_profile=settings.backend!="mako";if legacy_profile{settings=Settings::default();}
  let backend=if backend=="saved"{settings.backend.clone()}else{backend};if settings.backend!=backend{settings.dll.clear();settings.runtime_version.clear();}settings.backend=backend.clone();check_settings(&settings)?;
@@ -839,7 +853,7 @@ pub async fn prepare_frame_generation(
  let launcher_config=base.with_extension("launch.conf");if !reused{write(&launcher_config,b"version=1\ndisable_steam_overlay=0\n",0o600)?;}
  if settings.enabled && settings.overlay_enabled {super::frame_overlay_runtime::check_game(&directory,executable.as_deref(),flatpak)?;super::frame_overlay_runtime::install(&config_path)?;}
  let script=wrapper_script(&settings,&config_path,&runtime_path,&launcher_config);
- write(&config_path,config(&settings).as_bytes(),0o600)?;write(&script_path,script.as_bytes(),0o700)?;write(&base.with_extension("json"),&serialized,0o600)?;write(&root()?.join("profiles").join(profile_key(&game_key)+".selection.json"),&serialized,0o600)?;
+ write(&config_path,config(&settings).as_bytes(),0o600)?;write(&script_path,script.as_bytes(),0o700)?;write(&base.with_extension("json"),&serialized,0o600)?;write(&selection_file(&root()?.join("profiles"),&game_key,game_name.as_deref().unwrap_or(&game_key))?,&serialized,0o600)?;
  Ok(LaunchWrapper{program:script_path.to_string_lossy().into(),arguments:String::new(),enabled:settings.enabled})
  }).await.map_err(|e|e.to_string())?
 }
@@ -866,9 +880,7 @@ pub async fn resolve_game_mod_paths(
             .map(|(root, _)| root)
             .unwrap_or(root);
         if let Some(key) = game_key {
-            let file = crate::core::paths::app_root()?
-                .join("GameModules")
-                .join(profile_key(&key) + ".json");
+            let file = module_file(&key,root.file_name().and_then(|v|v.to_str()).unwrap_or("game"))?;
             if let Ok(bytes) = fs::read(file) {
                 if let Ok(saved) = serde_json::from_slice::<Paths>(&bytes) {
                     if Path::new(&saved.root) == root
@@ -936,9 +948,7 @@ pub async fn set_game_mod_destination(
             dlss_destination: Some(destination.to_string_lossy().into()),
         };
         write(
-            &crate::core::paths::app_root()?
-                .join("GameModules")
-                .join(profile_key(&game_key) + ".json"),
+            &module_file(&game_key,root.file_name().and_then(|v|v.to_str()).unwrap_or("game"))?,
             &serde_json::to_vec(&paths).map_err(|e| e.to_string())?,
             0o600,
         )?;
@@ -1268,7 +1278,7 @@ mod tests {
 /// No runtime files are installed into the game by MAKO. Leave shared runtimes intact.
 pub(super) fn reset_selection(game_key:&str)->Result<(),String>{
     let profiles=root()?.join("profiles");
-    let selection=profiles.join(profile_key(game_key)+".selection.json");
+    let selection=selection_file(&profiles,game_key,game_key)?;
     if selection.exists(){write(&selection,&serde_json::to_vec_pretty(&Settings::default()).map_err(|e|e.to_string())?,0o600)?;}
     Ok(())
 }

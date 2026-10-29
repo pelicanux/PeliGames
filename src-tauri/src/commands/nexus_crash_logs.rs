@@ -363,7 +363,8 @@ mod tests {
         assert!(read(&game).is_empty());
         let result = scan(&game, None);
         assert!(result.contains("CURRENT_FAILURE"));
-        assert!(result.contains("UEMinidump.dmp"));
+        assert!(result.contains("Dump binário encontrado"));
+        assert!(!result.contains(temp.to_str().unwrap()));
         for excluded in [
             "UNRELATED_FAILURE",
             "BINARY_NOT_TEXT",

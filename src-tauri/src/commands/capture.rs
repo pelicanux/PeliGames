@@ -244,7 +244,7 @@ pub fn configure_capture_shortcuts(preferences:capture::shortcuts::Preferences)-
     for (name,value) in super::mangohud::load_mangohud_profile()?.settings {
         if (name.starts_with("toggle_")||name=="reset_fps_metrics") && value.as_str().is_some_and(|v|preferences.conflict(v).is_some()){return Err(format!("Essa combinação já está atribuída ao MangoHUD ({name})."));}
     }
-    super::frame_generation::write(&crate::core::paths::app_root()?.join("capture-shortcuts.json"),&serde_json::to_vec(&preferences).map_err(|e|e.to_string())?,0o600)
+    super::frame_generation::write(&crate::core::paths::app_path("capture-shortcuts.json")?,&serde_json::to_vec(&preferences).map_err(|e|e.to_string())?,0o600)
 }
 
 #[tauri::command]

@@ -1,12 +1,14 @@
 //! General per-game overlay launch boundary, optionally alongside MAKO.
 //! Preparation failures preserve the original game invocation and environment.
+#[path = "../../storage_layout.rs"]
+mod storage_layout;
 use std::{
     env,
     ffi::OsString,
     fs,
     io::{Read, Write},
     os::unix::{
-        fs::{MetadataExt, OpenOptionsExt, PermissionsExt},
+        fs::{DirBuilderExt, MetadataExt, OpenOptionsExt, PermissionsExt},
         process::CommandExt,
     },
     path::{Path, PathBuf},
@@ -231,7 +233,7 @@ fn config_root() -> Option<PathBuf> {
     let root = if env::var("PELI_OVERLAY_GENERAL").ok().as_deref() == Some("1") {
         PathBuf::from(env::var_os("PELI_OVERLAY_CONFIG_ROOT")?)
     } else {
-        PathBuf::from(env::var_os("MAKO_CONFIG")?).parent()?.parent()?.parent()?.to_owned()
+        storage_layout::from_profile(&PathBuf::from(env::var_os("MAKO_CONFIG")?))?
     };
     root.is_absolute().then_some(root)
 }
@@ -240,8 +242,8 @@ const SESSIONS_KEPT: usize = 30;
 /// did (not) appear. The command words let it find the game's folder.
 /// Any failure only disables the diagnosis, never the game.
 fn session_log(root: &Path, words: &[OsString]) -> Option<PathBuf> {
-    let directory = root.join("overlay-logs");
-    match fs::create_dir(&directory) {
+    let directory = storage_layout::join(&root, "overlay-logs");
+    match fs::DirBuilder::new().recursive(true).mode(0o700).create(&directory) {
         Ok(()) => fs::set_permissions(&directory, fs::Permissions::from_mode(0o700)).ok()?,
         Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
         Err(_) => return None,
@@ -308,7 +310,8 @@ fn shortcut() -> Result<String, String> {
         root.to_owned()
     };
     if !root.is_absolute(){return Err("Pasta do overlay inválida".into());}
-    let preferences = root.join("frame-overlay.json");
+    let root=if root.file_name().is_some_and(|n|n=="components"){root.parent().ok_or("Pasta do overlay inválida")?.to_owned()}else{root};
+    let preferences = storage_layout::join(&root, "frame-overlay.json");
     let meta = match fs::symlink_metadata(&preferences) {
         Ok(m) => m,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok("F8".into()),
@@ -434,7 +437,7 @@ mod tests {
     #[test]
     fn each_launch_gets_a_private_diagnosis_and_old_ones_are_pruned() {
         let root = env::temp_dir().join(format!("peli-overlay-session-{}", std::process::id()));
-        let logs = root.join("overlay-logs");
+        let logs = storage_layout::join(&root, "overlay-logs");
         fs::create_dir_all(&logs).unwrap();
         fs::set_permissions(&logs, fs::Permissions::from_mode(0o700)).unwrap();
         for n in 0..SESSIONS_KEPT + 5 { fs::write(logs.join(format!("{n:012}-1.log")), "").unwrap(); }

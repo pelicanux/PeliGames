@@ -24,7 +24,7 @@ struct AnalysisCache {
 
 fn load_cache() -> AnalysisCache {
     let cache_dir = crate::core::paths::app_root().unwrap_or_else(|_| PathBuf::from("."));
-    let cache_file = cache_dir.join("analyzer_cache.json");
+    let cache_file = crate::core::paths::layout::join(&cache_dir, "analyzer_cache.json");
     if let Ok(data) = fs::read_to_string(cache_file) {
         if let Ok(cache) = serde_json::from_str(&data) {
             return cache;
@@ -36,8 +36,9 @@ fn load_cache() -> AnalysisCache {
 fn save_cache(cache: &AnalysisCache) {
     let cache_dir = crate::core::paths::app_root().unwrap_or_else(|_| PathBuf::from("."));
     fs::create_dir_all(&cache_dir).ok();
-    let cache_file = cache_dir.join("analyzer_cache.json");
+    let cache_file = crate::core::paths::layout::join(&cache_dir, "analyzer_cache.json");
     if let Ok(data) = serde_json::to_string(cache) {
+        fs::create_dir_all(cache_file.parent().unwrap()).ok();
         fs::write(cache_file, data).ok();
     }
 }

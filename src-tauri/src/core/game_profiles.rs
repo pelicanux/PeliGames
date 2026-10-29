@@ -196,7 +196,8 @@ fn expose_copy_prefix(profile: &GameProfile) -> Result<(), String> {
 
 pub fn create_copy_overlay(base: &Path, destination: &Path) -> Result<GameProfile, String> {
     if !base.join("drive_c").is_dir() { return Err("O prefixo original não foi encontrado.".into()); }
-    let root = destination.join(".peligames-overlay/profiles").join(uuid::Uuid::new_v4().to_string());
+    let label = destination.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| "copia".into());
+    let root = super::paths::names::unique_directory(&destination.join(".peligames-overlay/profiles"), &label)?;
     let profile = GameProfile { kind: ProfileKind::Overlay, base: base.to_string_lossy().into_owned(), root: root.to_string_lossy().into_owned(), flat_copy: true };
     if let Err(error) = mount(&profile) {
         remove(&profile)?;
@@ -205,13 +206,12 @@ pub fn create_copy_overlay(base: &Path, destination: &Path) -> Result<GameProfil
     Ok(profile)
 }
 
-/// Creates a profile of `base` in `profiles/<new id>`.
-pub fn create(base: &Path, profiles: &Path, kind: ProfileKind) -> Result<GameProfile, String> {
+/// Creates a profile of `base` in `profiles/<game>` (`-2`… for repeats).
+pub fn create(base: &Path, profiles: &Path, kind: ProfileKind, name: &str) -> Result<GameProfile, String> {
     if !base.join("drive_c").is_dir() {
         return Err("O prefixo do launcher não foi encontrado.".into());
     }
-    fs::create_dir_all(profiles).map_err(|e| e.to_string())?;
-    let root = profiles.join(uuid::Uuid::new_v4().to_string());
+    let root = super::paths::names::unique_directory(profiles, name)?;
     let profile = GameProfile { kind, base: base.to_string_lossy().into_owned(), root: root.to_string_lossy().into_owned(), flat_copy: false };
     let result = match kind {
         ProfileKind::Overlay => mount(&profile),
@@ -238,8 +238,8 @@ pub fn create(base: &Path, profiles: &Path, kind: ProfileKind) -> Result<GamePro
 pub fn remove(profile: &GameProfile) -> Result<(), String> {
     validate_flat_copy(profile)?;
     let root = Path::new(&profile.root);
-    // Only a `profiles/<uuid>` folder is ever removed.
-    let named = root.file_name().and_then(|n| n.to_str()).is_some_and(|n| uuid::Uuid::parse_str(n).is_ok());
+    // Only a `profiles/<game>` (or older `profiles/<uuid>`) folder is ever removed.
+    let named = root.file_name().and_then(|n| n.to_str()).is_some_and(|n| super::paths::names::valid(n) || uuid::Uuid::parse_str(n).is_ok());
     if !named || root.parent().and_then(|p| p.file_name()).is_none_or(|n| n != "profiles") || root.starts_with(&profile.base) {
         return Err("Pasta de perfil inválida.".into());
     }
@@ -300,7 +300,7 @@ mod tests {
         fs::create_dir_all(prefix.join("drive_c/Games")).unwrap();
         fs::write(prefix.join("drive_c/Games/game.exe"), b"MZ").unwrap();
         let profiles = base.join("profiles");
-        match create(&prefix, &profiles, ProfileKind::Reflink) {
+        match create(&prefix, &profiles, ProfileKind::Reflink, "Jogo de teste") {
             // Btrfs/XFS temporary folder: a real profile, removed again.
             Ok(profile) => {
                 assert!(profile.prefix().join("drive_c/Games/game.exe").is_file());

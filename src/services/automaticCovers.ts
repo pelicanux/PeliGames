@@ -16,13 +16,14 @@ export function automaticCoverFor(game: GameInfo, covers = readAutomaticCovers()
   const value = covers[automaticCoverKey(game)];
   return typeof value === "string" && value ? value : undefined;
 }
-export async function rememberAutomaticCover(game: GameInfo, remoteUrl: string): Promise<string> {
+export async function rememberAutomaticCover(game: GameInfo, remoteUrl: string, isCurrent: () => boolean = () => true): Promise<string> {
   let url = remoteUrl;
   // The preview retains its simulated URLs; only the native app downloads a copy.
-  if (!(import.meta.env?.DEV && (window as Window & { __PELI_UI_PREVIEW__?: boolean }).__PELI_UI_PREVIEW__)) {
-    try { url = await invoke<string>("cache_automatic_game_cover", { url: remoteUrl }); }
+  if (remoteUrl.startsWith("https://") && !(import.meta.env?.DEV && (window as Window & { __PELI_UI_PREVIEW__?: boolean }).__PELI_UI_PREVIEW__)) {
+    try { url = await invoke<string>("cache_automatic_game_cover", { url: remoteUrl, gameName: game.name }); }
     catch (error) { console.warn("Could not cache automatic artwork locally", error); }
   }
+  if (!isCurrent()) return url;
   try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ...readAutomaticCovers(), [automaticCoverKey(game)]: url })); }
   catch (error) { console.warn("Could not remember automatic artwork", error); }
   return url;

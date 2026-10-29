@@ -1,34 +1,11 @@
-//! Local per-game diagnostics. Reports are exported for manual sharing, never uploaded.
+//! Game-mod diagnostics; delivery and privacy are shared with feature reports.
 use super::nexus_local::NexusGame;
 use std::{fs, io::Write, path::{Path, PathBuf}, sync::Mutex};
 use serde::Serialize;
 static LOCK: Mutex<()> = Mutex::new(());
-const REPORT_LIMIT: usize = 19_000_000;
+const REPORT_LIMIT: usize = super::report_delivery::MAX_REPORT_BYTES;
 
-pub(super) fn sanitize(text: &str) -> String {
-    let home = std::env::var("HOME").unwrap_or_default();
-    text.lines().map(|line| {
-        let lower = line.to_ascii_lowercase();
-        if ["api_key", "apikey", "authorization:", "authorization=", "access_token", "refresh_token", "password", "passwd", "secret=", "nxm://", "signature=", "key="].iter().any(|key| lower.contains(key)) {
-            return "[linha com credenciais removida]".to_string();
-        }
-        let mut line = line.to_string();
-        if !home.is_empty() { line = line.replace(&home, "~"); }
-        for prefix in ["/home/", "/Users/", "drive_c/users/"] {
-            let mut offset = 0;
-            while let Some(index) = line[offset..].find(prefix) {
-                let start = offset + index + prefix.len();
-                let end = line[start..].find(|c: char| c == '/' || c.is_whitespace() || c == '"').map(|n| start+n).unwrap_or(line.len());
-                line.replace_range(start..end, "[usuario]"); offset = start + "[usuario]".len();
-            }
-        }
-        line.split_whitespace().map(|word| {
-            if word.contains('@') && word.contains('.') { "[email removido]".to_string() }
-            else if word.contains("http") && word.contains('?') { format!("{}?[parametros removidos]", word.split('?').next().unwrap_or("")) }
-            else { word.to_string() }
-        }).collect::<Vec<_>>().join(" ")
-    }).collect::<Vec<_>>().join("\n")
-}
+pub(super) use crate::core::report_privacy::sanitize;
 fn directory(game: &NexusGame) -> Result<PathBuf,String> {
     uuid::Uuid::parse_str(&game.id).map_err(|_| "Identificador de jogo inválido.")?;
     let name = game.game["name"].as_str().unwrap_or("jogo");
@@ -37,7 +14,7 @@ fn directory(game: &NexusGame) -> Result<PathBuf,String> {
     fs::create_dir_all(&root).map_err(|e|e.to_string())?;
     let root = fs::canonicalize(root).map_err(|e|e.to_string())?;
     let mut dir = root.clone();
-    for component in ["Logs".to_string(),"Nexus".to_string(),format!("{slug}-{}",game.id),"erro".to_string()] {
+    for component in ["logs".to_string(),"components".to_string(),"Nexus".to_string(),format!("{slug}-{}",game.id),"erro".to_string()] {
         dir.push(component);
         match fs::symlink_metadata(&dir) {
             Ok(meta) if meta.is_dir() && !meta.file_type().is_symlink() => {},
@@ -163,7 +140,7 @@ fn framework_logs(game: &NexusGame) -> String {
     sanitize(&super::nexus_loader_logs::read(game).unwrap_or_else(|e| format!("Falha ao ler logs dos mods: {e}")))
 }
 #[derive(Serialize)]
-pub struct Report {path: String, content: String, bytes: usize, truncated: bool}
+pub struct Report {pub path: String, pub content: String, pub bytes: usize, pub truncated: bool}
 fn limited(text: &mut String, limit: usize) -> bool {
     if text.len() <= limit {return false;}
     let mut end = limit.saturating_sub(100);while !text.is_char_boundary(end) {end-=1;}
@@ -213,45 +190,12 @@ pub fn export_nexus_report(game_id: String, build_label: String, description: St
     let path=dir.join("relatorio-nexus.txt");fs::rename(&temp,&path).map_err(|e|e.to_string())?;
     Ok(Report {path:path.to_string_lossy().into(),bytes:content.len(),content,truncated})
 }
-/// Report forum bridge (tools/report-relay): a public address, not a secret. Set
-/// it here or with PELIGAMES_REPORT_RELAY at build time.
-const DEFAULT_REPORT_RELAY: Option<&str> = Some("https://peligames-report.nairomarttins97.workers.dev");
-/// Discord accepts webhook attachments of up to 10 MB.
-const SEND_LIMIT: usize = 9_000_000;
-fn report_relay() -> Option<&'static str> {
-    option_env!("PELIGAMES_REPORT_RELAY").or(DEFAULT_REPORT_RELAY).filter(|url| url.starts_with("https://"))
-}
-#[tauri::command]
-pub fn nexus_report_relay_configured() -> bool { report_relay().is_some() }
-#[derive(serde::Deserialize)]
-struct RelayReply { #[serde(default)] url: Option<String>, #[serde(default)] error: Option<String> }
-/// Publishes the report as a new post of the Discord report forum, through the
-/// bridge that keeps the webhook. Returns the post address when known.
-#[tauri::command]
-pub async fn send_nexus_report(game_id: String, build_label: String, title: String, description: String, discord: String) -> Result<Option<String>, String> {
-    let relay = report_relay().ok_or("O envio direto não está configurado nesta versão. Use o canal do Discord.")?;
-    let label = build_label.clone();
-    let report = tauri::async_runtime::spawn_blocking(move || export_nexus_report(game_id, label, description.clone()).map(|report| (report, description)))
-        .await.map_err(|e| e.to_string())??;
-    let (report, description) = report;
-    let mut content = report.content;
-    limited(&mut content, SEND_LIMIT);
-    let client = reqwest::Client::builder().user_agent("PeliGames").timeout(std::time::Duration::from_secs(90)).build().map_err(|e| e.to_string())?;
-    let response = client.post(format!("{}/report", relay.trim_end_matches('/')))
-        .json(&serde_json::json!({"title": title.chars().take(100).collect::<String>(), "description": description.chars().take(1500).collect::<String>(),
-            "discord": discord.chars().take(40).collect::<String>(), "version": build_label.chars().take(64).collect::<String>(), "report": content}))
-        .send().await.map_err(|_| "Não foi possível falar com o servidor de relatórios. Verifique a conexão.".to_string())?;
-    let status = response.status();
-    let reply: RelayReply = response.json().await.unwrap_or(RelayReply { url: None, error: None });
-    if !status.is_success() { return Err(reply.error.unwrap_or_else(|| format!("O envio falhou ({status})."))); }
-    Ok(reply.url.filter(|url| url.starts_with("https://discord.com/")))
-}
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test] fn redacts_credentials_usernames_email_and_signed_urls() {
         let text=sanitize("api_key=private\nnxm://repo/mods/1?key=private\n/home/alice/Games/REPO\nuser@example.com\nhttps://cdn.example/file?token=private");
-        assert!(!text.contains("private"));assert!(!text.contains("alice"));assert!(!text.contains("user@example.com"));assert!(text.contains("REPO"));
+        assert!(!text.contains("private"));assert!(!text.contains("alice"));assert!(!text.contains("user@example.com"));assert!(text.contains("[caminho removido]"));
     }
     #[test] fn extracts_runtime_version_and_rejects_truncated_resource() {
         let mut resource=vec![0xbd,0x04,0xef,0xfe,0,0,1,0];

@@ -46,7 +46,7 @@ fn executable_hash() -> Result<String, String> {
     Ok(format!("{:x}", hash.finalize()))
 }
 fn cache_path() -> Option<std::path::PathBuf> {
-    crate::core::paths::app_root().ok().map(|root| root.join("official-build.json"))
+    crate::core::paths::app_path("official-build.json").ok()
 }
 /// The answer for this exact executable: it never changes, so GitHub is asked
 /// once per installed version, not at every start.
@@ -58,6 +58,7 @@ fn cached(path: &std::path::Path, hash: &str) -> Option<BuildKind> {
 fn remember(path: &std::path::Path, hash: &str, kind: BuildKind) {
     // "Unknown" (a release without the list) may change later: never stored.
     let kind = match kind { BuildKind::Official => "official", BuildKind::Local => "local", _ => return };
+    if let Some(parent)=path.parent(){let _=std::fs::create_dir_all(parent);}
     let _ = std::fs::write(path, serde_json::json!({ "hash": hash, "kind": kind }).to_string());
 }
 async fn check() -> Result<BuildKind, String> {

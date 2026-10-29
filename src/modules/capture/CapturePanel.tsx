@@ -1,7 +1,7 @@
 import {CaptureShortcutKeys} from "./CaptureShortcutKeys";
 import {ReplayDurationField} from "./ReplayDurationField";
 import {CaptureVideoLibrary,type CaptureClip} from "./CaptureVideoLibrary";
-import {CaptureQualityPresets} from "./CaptureQualityPresets";
+import {CaptureQualityPresets,defaultCaptureQualitySettings} from "./CaptureQualityPresets";
 import {CaptureShortcuts} from "./CaptureShortcuts";
 import {CaptureAudioFields,type AudioSelection} from "./CaptureAudioFields";
 import {useEffect, useId, useRef, useState} from "react";
@@ -19,7 +19,7 @@ type StoragePreferences={directory:string;default_directory:string};
 type CaptureTab="settings"|"capture"|"shortcuts"|"videos";
 const captureTabs:{id:CaptureTab;label:string}[]=[{id:"settings",label:"Configurações"},{id:"capture",label:"Gravação e replay"},{id:"shortcuts",label:"Atalhos"},{id:"videos",label:"Vídeos"}];
 type Settings=AudioSelection&{method:string;monitor:string;replay_seconds:number};
-const defaults:Settings={method:"portal",monitor:"",replay_seconds:60,fps:60,desktop_audio:true,microphone:false,microphone_noise_reduction:false,format:"mkv",codec:"auto",resolution:"1280x720",rate_control:"cbr",bitrate_kbps:5000,quality_preset:"very_high",output_source:"game:auto",input_source:"default_input"};
+const defaults:Settings={method:"portal",monitor:"",replay_seconds:60,desktop_audio:true,microphone:false,microphone_noise_reduction:false,format:"mkv",bitrate_kbps:5000,...defaultCaptureQualitySettings,output_source:"game:auto",input_source:"default_input"};
 function loadSettings(key:string):Settings {
   try {const v=JSON.parse(localStorage.getItem(`peligames-capture:${key}`)||"null");return {...defaults,...v,method:v?.method==="direct"?"direct":"portal",replay_seconds:Number.isInteger(v?.replay_seconds)&&v.replay_seconds>=1&&v.replay_seconds<=900?v.replay_seconds:60,fps:[24,30,60,90,120,144,165,240].includes(v?.fps)?v.fps:60};}catch{return defaults;}
 }

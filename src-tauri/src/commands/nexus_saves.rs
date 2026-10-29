@@ -352,8 +352,7 @@ pub async fn delete_nexus_saves(game_id: String, files: Vec<String>) -> Result<S
         let rules = rules(&module)?;
         let (active, _) = profile_saves(game)?;
         let dir = saves_dir(game, rules, active.as_deref())?;
-        let kept = super::nexus_profile::directory(game)?.join("deleted-saves").join(uuid::Uuid::new_v4().to_string());
-        fs::create_dir_all(&kept).map_err(|e| e.to_string())?;
+        let kept = crate::core::paths::names::dated(&super::nexus_profile::directory(game)?.join("deleted-saves"), "saves-apagados", None)?;
         for file in &files {
             valid_save(rules, file)?;
             for name in with_co_save(rules, file) {

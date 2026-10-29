@@ -27,9 +27,23 @@ fn document(path: &Path) -> Result<Option<serde_json::Value>, String> {
     serde_json::from_slice(&bytes).map(Some).map_err(|e| format!("Perfil PeliRun inválido: {e}"))
 }
 
+/// Former id → current id of renamed profiles, so launch options saved with the
+/// former id (in Steam or pasted in another launcher) keep finding them.
+pub const ALIASES: &str = ".aliases.json";
+pub fn aliases(directory: &Path) -> Result<std::collections::BTreeMap<String, String>, String> {
+    match document(&directory.join(ALIASES))? {
+        Some(value) => serde_json::from_value(value).map_err(|e| format!("Apelidos PeliRun inválidos: {e}")),
+        None => Ok(Default::default()),
+    }
+}
 pub fn universal(directory: &Path, id: &str) -> Result<Option<Profile>, String> {
     profile_id(id)?;
-    let Some(value) = document(&directory.join(format!("{id}.json")))? else { return Ok(None) };
+    let Some(value) = document(&directory.join(format!("{id}.json")))? else {
+        return match aliases(directory)?.get(id) {
+            Some(current) if current != id && profile_id(current).is_ok() && directory.join(format!("{current}.json")).exists() => universal(directory, current),
+            _ => Ok(None),
+        };
+    };
     let profile: Profile = serde_json::from_value(value).map_err(|e| e.to_string())?;
     profile.validate_id(id)?;
     Ok(Some(profile))

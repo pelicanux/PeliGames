@@ -119,7 +119,7 @@ struct Manifest {
 }
 
 pub fn runners_dir() -> Result<PathBuf, String> {
-    Ok(super::paths::app_root()?.join("runners/proton"))
+    Ok(super::paths::app_path("runners/proton")?)
 }
 fn safe_name(name: &str) -> bool {
     !name.is_empty()

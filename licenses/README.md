@@ -15,6 +15,7 @@ O código próprio do PeliGames usa [GNU GPL 3.0](../LICENSE) (`GPL-3.0-only`). 
 | SVG Nexus Mods copiado do Vortex | [GPL-3.0 do repositório de origem](upstream/Vortex-Nexus-Icon/LICENSE.md); [arquivo-fonte e origem](../public/nexus-mods.svg) |
 | MyMemory — Translated S.r.l. | [Serviço externo: atribuição, dados enviados, termos e cotas](MyMemory-Service.md); o motor não é redistribuído |
 | Bibliotecas nativas presentes no AppImage 0.3.0 | [Copyrights e avisos originais dos pacotes](AppImage-Native-Notices.txt) |
+| GDK modificada do AppImage | [Origem, reconstrução e distribuição da fonte correspondente](../scripts/gtk3-wayland/README.md); `COPYING` e `copyright` originais em `usr/share/doc/peligames-gtk3/` no pacote |
 | Extração de ícones de executáveis — ico e png | [Avisos preservados](Executable-Icon-LICENSES.txt) |
 
 O inventário Rust é conservador: inclui dependências de compilação e não afirma que todos os pacotes são redistribuídos no executável. Os documentos idênticos são deduplicados pelo hash SHA-256; cada componente aponta para os textos originais correspondentes. As expressões `OR` representam alternativas de licença, e `AND` exige a combinação indicada; preservamos os documentos disponibilizados pelo pacote, sem transformar essas expressões em uma licença única.

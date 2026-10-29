@@ -8,6 +8,8 @@ Com o container Ubuntu de desenvolvimento já preparado e o projeto acessível n
 
 O comando usa `ubuntu-24-dev`, iniciando-o se estiver parado. Gera os executáveis **PeliGames**, **PeliInstall** e o **AppImage** na pasta `Release/`. Não publica nada no GitHub. O container precisa ter as dependências de compilação, Clang 21 ou superior, Bun e Rust; os crates necessários devem estar disponíveis no cache, pois o build Rust usa modo offline. `/tmp` precisa estar em tmpfs no container.
 
+O AppImage também prepara sua biblioteca GDK com a correção de sincronização Wayland. Essa etapa usa até 12 tarefas e baixa fontes Ubuntu e, se necessário, Meson/Ninja, conferindo seus SHA-256. O contêiner precisa de `dpkg-dev`, `patch`, `xz-utils`, `binutils`, `patchelf` e das dependências de desenvolvimento GTK/X11/Wayland/GL. O arquivo `Release/PeliGames_<versão>_GTK-source.tar.xz` contém a fonte correspondente e deve acompanhar o AppImage na distribuição. Veja [a preparação da GDK](../scripts/gtk3-wayland/README.md). `--bin` não executa essa etapa.
+
 Outras opções:
 
 ```sh

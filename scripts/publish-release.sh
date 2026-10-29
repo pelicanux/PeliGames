@@ -28,10 +28,14 @@ done
 sums="$root/Release/PeliGames_${version}_binaries.sha256"
 [[ -f "$sums" ]] || { echo "Missing $(basename "$sums"). Run scripts/release-checksums.sh first." >&2; exit 1; }
 packages+=("$sums")
+# Modified GDK is dynamically linked inside the AppImage; distribute its source too.
+gtk_source="$root/Release/PeliGames_${version}_GTK-source.tar.xz"
+[[ -f "$gtk_source" ]] || { echo 'Missing GTK corresponding source. Rebuild the AppImage with compilar.sh.' >&2; exit 1; }
+packages+=("$gtk_source")
 # Refuse overwriting an existing version: every published update gets a new version.
 if gh release view "$tag" --repo "$repo" >/dev/null 2>&1; then
   echo "Release $tag already exists. Increase the version before publishing." >&2; exit 1
 fi
-gh release create "$tag" "${packages[@]}" --repo "$repo" --title "PeliGames $version" --notes-file "$notes" --draft --prerelease
+gh release create "$tag" "${packages[@]}" --repo "$repo" --target "$(git -C "$root" rev-parse HEAD)" --title "PeliGames $version" --notes-file "$notes" --draft --prerelease
 # The release becomes visible to the updater only after every package was uploaded.
 gh release edit "$tag" --repo "$repo" --draft=false --prerelease --latest

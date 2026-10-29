@@ -42,7 +42,7 @@ async function findBanner(game: GameInfo, key: string): Promise<string | undefin
   const accept = async (remote: string) => {
     let saved = remote;
     if (!preview) {
-      try { saved = await invoke<string>("cache_automatic_game_cover", { url: remote }); } catch { /* Remote artwork remains a fallback if local storage is unavailable. */ }
+      try { saved = await invoke<string>("cache_automatic_game_cover", { url: remote, gameName: `${game.name}-banner` }); } catch { /* Remote artwork remains a fallback if local storage is unavailable. */ }
     }
     const url = displayUrl(saved);
     if (!(await loadsAsBanner(url))) return;

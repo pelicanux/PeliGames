@@ -20,12 +20,16 @@ bun run icons
 
 profile=release
 build_target=
+bundle_selection=all
 previous=
 for argument in "$@"; do
   if [[ "$previous" == --target ]]; then build_target=$argument; fi
+  if [[ "$previous" == --bundles ]]; then bundle_selection=$argument; fi
   case "$argument" in
     --debug) profile=debug ;;
     --target=*) build_target=${argument#--target=} ;;
+    --bundles=*) bundle_selection=${argument#--bundles=} ;;
+    --no-bundle) bundle_selection=none ;;
   esac
   previous=$argument
 done
@@ -33,11 +37,28 @@ done
 # Cargo resolves custom target directories configured through the environment or .cargo.
 target_root=$(cargo metadata --offline --no-deps --format-version 1 --manifest-path "$root/src-tauri/Cargo.toml" | bun -e 'let input = ""; for await (const chunk of process.stdin) input += chunk; console.log(JSON.parse(input).target_directory)')
 output="$target_root/${build_target:+$build_target/}$profile"
+gtk_directory=
+gtk_source_name=
 # Resolve the compiled executable for release/debug and custom Cargo target directories.
 # Tauri patches its bundle type before reading these files for each DEB/RPM bundle.
 if [[ "$(uname -s)" == Linux && ( -z "$build_target" || "$build_target" == *linux* ) ]]; then
+  if [[ ",$bundle_selection," == *,appimage,* || ",$bundle_selection," == *,all,* ]]; then
+    gtk_directory="$target_root/peligames-gtk3-wayland"
+    version=$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).version)' "$root/src-tauri/tauri.conf.json")
+    gtk_source_name="PeliGames_${version}_GTK-source.tar.xz"
+    bash "$root/scripts/gtk3-wayland/build.sh" "$gtk_directory"
+  fi
   layout_config=$(mktemp /tmp/peligames-package-layout-XXXXXX.json)
-  bun -e 'const binary = process.argv[1]; const installer = process.argv[2]; const icon = process.argv[3]; const files = {"/opt/PeliGames/peligames": binary, "/opt/PeliGames/pelinstall": installer, "/usr/share/icons/hicolor/scalable/apps/peligames.svg": icon}; console.log(JSON.stringify({bundle:{linux:{deb:{files},rpm:{files},appimage:{files:{"usr/bin/pelinstall":installer,"usr/share/icons/hicolor/scalable/apps/peligames.svg":icon}}}}}))' "$output/peligames" "$output/pelinstall" "$root/public/peligames.svg" > "$layout_config"
+  bun -e '
+    const [binary, installer, icon, gtk] = process.argv.slice(1);
+    const files = {"/opt/PeliGames/peligames": binary, "/opt/PeliGames/pelinstall": installer, "/usr/share/icons/hicolor/scalable/apps/peligames.svg": icon};
+    const appimage = {"usr/bin/pelinstall": installer, "usr/share/icons/hicolor/scalable/apps/peligames.svg": icon};
+    if (gtk) {
+      appimage["usr/lib/libgdk-3.so.0"] = `${gtk}/libgdk-3.so.0`;
+      for (const notice of ["COPYING", "copyright", "README.md"]) appimage[`usr/share/doc/peligames-gtk3/${notice}`] = `${gtk}/${notice}`;
+    }
+    console.log(JSON.stringify({bundle:{linux:{deb:{files},rpm:{files},appimage:{files:appimage}}}}));
+  ' "$output/peligames" "$output/pelinstall" "$root/public/peligames.svg" "$gtk_directory" > "$layout_config"
   # Preserve linuxdeploy diagnostics in the build log instead of a generic failure.
   bun "$root/node_modules/@tauri-apps/cli/tauri.js" "$@" --verbose --config "$layout_config"
 else
@@ -67,7 +88,7 @@ mkdir -p "$root/Release"
 # Replace files atomically, including an executable that is currently running.
 copy_to_release() {
   local source=$1 temporary name
-  name=$(basename "$source")
+  name=${2:-$(basename "$source")}
   # The AppImage keeps one name across versions (PeliGames-x86_64.AppImage): updates
   # replace it in place, and the name still carries the architecture old updaters need.
   case "$name" in
@@ -82,6 +103,10 @@ copy_to_release() {
 
 if [[ -d "$output/bundle" ]]; then
   while IFS= read -r -d '' package; do
+    if [[ "$package" == *.AppImage && -n "$gtk_directory" ]]; then
+      bash "$root/scripts/gtk3-wayland/verify.sh" "$package" "$gtk_directory/libgdk-3.so.0"
+      copy_to_release "$gtk_directory/PeliGames-GTK-source.tar.xz" "$gtk_source_name"
+    fi
     copy_to_release "$package"
   done < <(find "$output/bundle" -maxdepth 2 -type f -newer "$marker" \( -name '*.AppImage' -o -name '*.AppImage.sig' -o -name '*.deb' -o -name '*.rpm' \) -print0)
 fi

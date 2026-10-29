@@ -1,3 +1,6 @@
+/* The loading background must stay behind the recovery choices. */
+.reset-recovery-screen { position: fixed; inset: 0; isolation: isolate; }
+.reset-recovery-screen > .boot-splash { z-index: 0; }
 .reset-recovery.modal-content {
   width: min(680px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);

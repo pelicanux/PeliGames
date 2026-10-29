@@ -97,7 +97,7 @@ impl AfmfSettings {
     }
 }
 #[derive(Clone, Serialize, Deserialize)]
-pub struct LaunchWrapper { pub program: String, pub arguments: String, pub enabled: bool }
+pub struct LaunchWrapper { #[serde(deserialize_with = "managed_program")] pub program: String, pub arguments: String, pub enabled: bool }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct GamescopeSettings {
@@ -920,4 +920,9 @@ mod afmf_tests {
         std::fs::remove_dir_all(root).unwrap();
     }
 
+}
+
+fn managed_program<'de,D:serde::Deserializer<'de>>(deserializer:D)->Result<String,D::Error>{
+    let value=<String as serde::Deserialize>::deserialize(deserializer)?;
+    Ok(super::paths::migrated_runner_path(&value))
 }

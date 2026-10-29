@@ -11,7 +11,7 @@ const RESOURCES = join(ROOT, "src-tauri", "resources", "nexus-games");
 const OUTPUT = join(ROOT, "docs", "supported-games.md");
 const MODULES = ["catalog.json", "palworld.json", "valheim.json", "finalfantasy12.json", "crimsondesert.json",
   "unreal-vortex.json", "unity-vortex.json", "re_engine-vortex.json"];
-const AUDITS = ["support-audit.json", "unreal-vortex-audit.json", "unity-vortex-audit.json", "re_engine-vortex-audit.json"];
+const AUDITS = ["support-route-cases.json", "unreal-vortex-route-cases.json", "unity-vortex-route-cases.json", "re_engine-vortex-route-cases.json"];
 const FAMILIES: Record<string, string> = { "unreal-vortex.json": "Unreal", "unity-vortex.json": "Unity", "re_engine-vortex.json": "RE Engine" };
 // Notas que registram recursos da extensão Vortex ainda não feitos no módulo.
 const GAP = /não (é|são) (feit|aplicad|instalad|reconhecid|recriad|convertid|mesclad|suportad)|ficam? de fora|Fora:|não implementad|exige[m]? (um )?(processamento|módulo|patching|instalador) especializad/i;

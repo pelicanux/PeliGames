@@ -5,6 +5,13 @@ fn label(name: &str) -> String {
     let value: String = name.chars().take(48).map(|c|if c.is_alphanumeric(){c.to_ascii_lowercase()}else{'-'}).collect();
     let value=value.trim_matches('-');if value.is_empty(){"jogo".into()}else{value.into()}
 }
+/// A mod storage folder a running game still uses: its session process is
+/// alive or its virtual file system is mounted inside. It must not move now.
+pub(super) fn in_use(folder: &Path) -> bool {
+    let session = fs::read_to_string(folder.join("session.pid")).ok().and_then(|s|s.trim().parse::<u32>().ok())
+        .is_some_and(|pid|pid>0 && Path::new("/proc").join(pid.to_string()).exists());
+    session || super::nexus_deploy_methods::mounted_below(folder)
+}
 fn regular_directory(path: &Path) -> Result<(),String> {
     match fs::symlink_metadata(path) {
         Ok(meta) if meta.is_dir() && !meta.file_type().is_symlink() => Ok(()),
@@ -22,7 +29,7 @@ pub(super) fn directory(game: &super::nexus_local::NexusGame) -> Result<PathBuf,
     if target.join("game.json").is_file() || (!old.exists() && Path::new(game.game["directory"].as_str().unwrap_or("")).is_dir()) {
         regular_directory(target.parent().unwrap().parent().unwrap())?;
         regular_directory(target.parent().unwrap())?;
-        return Ok(target);
+        return super::nexus_durable::reserve(game);
     }
     Ok(old)
 }
@@ -33,6 +40,8 @@ fn directory_at(base: &Path,id: &str,name: &str) -> Result<PathBuf,String> {
     uuid::Uuid::parse_str(id).map_err(|_|"Identificador de jogo inválido.")?;
     let _lock=MIGRATION.lock().map_err(|e|e.to_string())?;
     let parent=base.join("games");regular_directory(&parent)?;
+    // Renamed to the game's name (`nexus_durable::readable_storage`); the id is in `<name>.identity`.
+    if let Some(found)=crate::core::paths::names::find(&parent,id).filter(|p|fs::symlink_metadata(p).is_ok_and(|m|m.is_dir() && !m.file_type().is_symlink())) {return Ok(found);}
     let old=parent.join(id);let suffix=format!("--{id}");
     if fs::symlink_metadata(&old).is_ok_and(|m|m.file_type().is_symlink()) {
         let link=fs::read_link(&old).map_err(|e|e.to_string())?;
@@ -48,7 +57,7 @@ fn directory_at(base: &Path,id: &str,name: &str) -> Result<PathBuf,String> {
     match fs::symlink_metadata(&old) {
         Ok(meta) if meta.is_dir() && !meta.file_type().is_symlink() => {
             // A running process may reference the old profile in its environment.
-            if fs::read_to_string(old.join("session.pid")).ok().and_then(|s|s.trim().parse::<u32>().ok()).is_some_and(|pid|pid>0 && Path::new("/proc").join(pid.to_string()).exists()) {return Ok(old);}
+            if in_use(&old) {return Ok(old);}
             if target.exists(){return Err("Pastas antiga e nova coexistem. Nenhuma foi sobrescrita.".into());}
             #[cfg(unix)] {
                 fs::rename(&old,&target).map_err(|e|e.to_string())?;

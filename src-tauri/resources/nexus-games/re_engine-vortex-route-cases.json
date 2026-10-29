@@ -1,8 +1,8 @@
 {
   "schema": 1,
+  "description": "Synthetic package-routing fixtures and source provenance; not a runtime compatibility certification.",
   "generated_by": "tools/vortex-import --emit",
   "family": "re_engine",
-  "scope": "Módulos gerados por análise estática das extensões Vortex. Rotas verificadas por casos sintéticos; nenhum jogo foi executado.",
   "sources": {
     "chemboy1": "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72",
     "vortex": "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games"
@@ -12,13 +12,11 @@
       "domain": "deadrisingdeluxeremaster",
       "name": "Dead Rising Deluxe Remaster",
       "module_version": "1.0.0",
+      "nexus_game_id": 6837,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-deadrisingdeluxeremaster/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -38,28 +36,17 @@
           "target": "reframework/data/example.json"
         }
       ],
-      "findings": [
-        "Identificação (executável, Steam ID) extraída da extensão; rotas REFramework do perfil RE Engine compartilhado. Mods Fluffy, natives e presets da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 6837
+      "runtime_verified": false
     },
     {
       "domain": "monsterhunterstories3twistedreflection",
       "name": "Monster Hunter Stories 3: Twisted Reflection",
-      "module_version": "1.0.0",
+      "module_version": "1.1.0",
+      "nexus_game_id": 8810,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-monsterhunterstories3twistedreflection/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -77,30 +64,35 @@
         {
           "source": "Pack/reframework/data/example.json",
           "target": "reframework/data/example.json"
+        },
+        {
+          "source": "FluffyMod/modinfo.ini",
+          "target": "Games/Monster Hunter Stories 3/Mods/FluffyMod/modinfo.ini"
+        },
+        {
+          "source": "FluffyMod/natives/STM/example.tex",
+          "target": "Games/Monster Hunter Stories 3/Mods/FluffyMod/natives/STM/example.tex"
+        },
+        {
+          "source": "Example.prt",
+          "target": "Games/Monster Hunter Stories 3/Presets/Example.prt"
+        },
+        {
+          "source": "nvngx_dlss.dll",
+          "target": "nvngx_dlss.dll"
         }
       ],
-      "findings": [
-        "Identificação (executável, Steam ID) extraída da extensão; rotas REFramework do perfil RE Engine compartilhado. Mods Fluffy, natives e presets da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8810
+      "runtime_verified": false
     },
     {
       "domain": "onimushawayofthesword",
       "name": "Onimusha: Way of the Sword",
       "module_version": "1.0.0",
+      "nexus_game_id": 9356,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-onimushawayofthesword/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -120,28 +112,17 @@
           "target": "reframework/data/example.json"
         }
       ],
-      "findings": [
-        "Identificação (executável, Steam ID) extraída da extensão; rotas REFramework do perfil RE Engine compartilhado. Mods Fluffy, natives e presets da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 9356
+      "runtime_verified": false
     },
     {
       "domain": "pragmata",
       "name": "PRAGMATA",
       "module_version": "1.0.0",
+      "nexus_game_id": 8522,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-pragmata/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -161,28 +142,17 @@
           "target": "reframework/data/example.json"
         }
       ],
-      "findings": [
-        "Identificação (executável, Steam ID) extraída da extensão; rotas REFramework do perfil RE Engine compartilhado. Mods Fluffy, natives e presets da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8522
+      "runtime_verified": false
     },
     {
       "domain": "residentevil7",
       "name": "Resident Evil 7",
       "module_version": "1.0.0",
+      "nexus_game_id": 3111,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-residentevil7/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -202,17 +172,7 @@
           "target": "reframework/data/example.json"
         }
       ],
-      "findings": [
-        "Identificação (executável, Steam ID) extraída da extensão; rotas REFramework do perfil RE Engine compartilhado. Mods Fluffy, natives e presets da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 3111
+      "runtime_verified": false
     }
-  ],
-  "skipped": []
+  ]
 }

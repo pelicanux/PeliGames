@@ -18,3 +18,10 @@ test("Mauri RDNA3 0.0.6 preserves both int4 and NR Control layers", () => {
   const line = 'VK_ADD_LAYER_PATH="/games/a b/dlssnr-amd/int4/layer:/games/a b/dlssnr-amd/control/layer" VK_INSTANCE_LAYERS=VK_LAYER_DLSSNR_int4:VK_LAYER_DLSSNR_control WINEDLLOVERRIDES="dxgi=n,b" %command%';
   expect(launchOptionsFromInstallOutput(`Installed the optiscaler route into: /games/a b\nSteam launch options:  ${line}\nVK_ADD_LAYER_PATH and VK_INSTANCE_LAYERS in the launch options are needed by int4 mixed and the NR Control menu; copy the whole line.`)).toBe(line);
 });
+
+test("0.0.8 OptiScaler drops legacy NR Vulkan layers; ReShade keeps its optional int4 line",()=>{
+ const normal='WINEDLLOVERRIDES="dxgi=n,b" %command%';
+ expect(launchOptionsFromInstallOutput('Steam launch options:  '+normal+'\nIn game, End opens NR Control')).toBe(normal);
+ const all='VK_ADD_LAYER_PATH="/g/dlssnr-amd/int4/layer" VK_INSTANCE_LAYERS=VK_LAYER_DLSSNR_int4 '+normal;
+ expect(launchOptionsFromInstallOutput('Steam launch options:  '+normal+'\nTo use CC_SILVER_AARDWOLD_INT4_MIXED in game, use this line instead (every network can be switched to):\n '+all)).toBe(all);
+});

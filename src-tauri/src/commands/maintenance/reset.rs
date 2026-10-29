@@ -1,5 +1,5 @@
 //! Durable reset journal lives outside every reset target. Renames stay on the
-//! same filesystem; no recursive deletion is allowed before the UI health check.
+//! same filesystem; deletion follows successful staging and requested preservation.
 use super::*;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
@@ -35,6 +35,10 @@ struct Journal {
     preserve_accounts: bool,
     #[serde(default)]
     preserve_games: bool,
+    #[serde(default)]
+    preserve_mangohud: bool,
+    #[serde(default)]
+    finish_on_close: bool,
 }
 #[derive(Serialize)]
 pub struct Status {
@@ -147,6 +151,8 @@ fn new_journal(paths: &[String]) -> Journal {
         id,
         preserve_accounts: false,
         preserve_games: false,
+        preserve_mangohud: false,
+        finish_on_close: false,
         phase: Phase::Prepared,
         error: None,
     }
@@ -164,7 +170,11 @@ fn rename(from: &Path, to: &Path) -> Result<(), String> {
 // untouched for recovery. No keyring secret is exported into the reset journal.
 fn session_paths(root: &Path) -> Vec<PathBuf> {
     match root.file_name().and_then(|n| n.to_str()) {
-        Some("PeliGames" | "peligames") => vec!["nexus-browser".into()],
+        Some("PeliGames" | "peligames") => [
+            "webview/nexus-browser", "nexus-browser",
+            "webview/databases", "webview/IndexedDB", "webview/storage",
+            "webview/cookies.sqlite", "webview/cookies.sqlite-wal", "webview/cookies.sqlite-shm",
+        ].into_iter().map(PathBuf::from).collect(),
         Some("com.pelicano.peligames" | "com.pelicano.dlssnr-installer") => [
             "databases",
             "IndexedDB",
@@ -226,7 +236,25 @@ fn preserve_sessions(journal: &Journal) -> Result<(), String> {
                 .file_name()
                 .is_some_and(|n| n == "PeliGames" || n == "peligames")
         {
-            preserved.push("installed-destinations.json".into());
+            // Prefer the organized index, accepting backups made by older versions.
+            if let Some(relative) = ["library/installed-destinations.json", "installed-destinations.json"]
+                .into_iter().find(|relative| exists(&entry.backup.join(relative)))
+            {
+                preserved.push(relative.into());
+            }
+        }
+        if journal.preserve_mangohud && entry.original.file_name().is_some_and(|name| name == "PeliGames" || name == "peligames") {
+            // Keep only user profiles, never downloaded libraries or generated per-game configs.
+            for filename in ["profile.json", "custom-presets.json", "MangoHud.conf"] {
+                if let Some(relative) = [format!("components/MangoHUD/{filename}"), format!("MangoHUD/{filename}")]
+                    .into_iter().find(|relative| exists(&entry.backup.join(relative))) {
+                    let meta = fs::symlink_metadata(entry.backup.join(&relative)).map_err(|e|e.to_string())?;
+                    if !meta.is_file() || meta.file_type().is_symlink() {
+                        return Err("Perfil MangoHUD inválido; a cópia anterior foi preservada para recuperação.".into());
+                    }
+                    preserved.push(relative.into());
+                }
+            }
         }
         for relative in preserved {
             let from = entry.backup.join(&relative);
@@ -241,7 +269,16 @@ fn preserve_sessions(journal: &Journal) -> Result<(), String> {
                     .map_err(|e| e.to_string())?;
                 sync_parent(&entry.original)?;
             }
-            copy_session(&from, &entry.original.join(relative))?;
+            let to = if relative.file_name().is_some_and(|name| name == "installed-destinations.json") {
+                crate::core::paths::layout::join(&entry.original, "installed-destinations.json")
+            } else if relative.starts_with("components/MangoHUD") || relative.starts_with("MangoHUD") {
+                crate::core::paths::layout::join(&entry.original, "MangoHUD").join(relative.file_name().ok_or("Perfil MangoHUD inválido.")?)
+            } else { entry.original.join(relative) };
+            validate_ancestors(&to)?;
+            if let Some(parent) = to.parent() {
+                fs::DirBuilder::new().recursive(true).mode(0o700).create(parent).map_err(|e|e.to_string())?;
+            }
+            copy_session(&from, &to)?;
         }
     }
     Ok(())
@@ -250,7 +287,7 @@ fn stage(dir: &Path, journal: &mut Journal) -> Result<(), String> {
     for entry in &journal.entries {
         rename(&entry.original, &entry.backup)?;
     }
-    if journal.preserve_accounts || journal.preserve_games {
+    if journal.preserve_accounts || journal.preserve_games || journal.preserve_mangohud {
         preserve_sessions(journal)?;
     }
     journal.phase = Phase::Ready;
@@ -302,7 +339,58 @@ fn collect(dir: &Path, journal: &Journal) -> Result<(), String> {
     sync_parent(&dir.join("reset.json"))
 }
 
-fn mark_startup(dir: &Path, journal: &mut Journal) -> Result<bool, String> {
+// A confirmed close operation is complete once staging and preservation succeeded.
+// It does not need a GUI boot, and must not recreate a default profile.
+fn finish_closed_reset(dir: &Path, journal: &mut Journal) -> Result<(), String> {
+    if journal.phase == Phase::Ready {
+        if journal.entries.iter().any(|entry| !exists(&entry.backup)) {
+            return Err("A limpeza foi interrompida antes de preservar todos os arquivos.".into());
+        }
+        journal.phase = Phase::Committed;
+        save(dir, journal)?;
+    }
+    collect(dir, journal)
+}
+fn validate_installation_paths(paths: &[String]) -> Result<(), String> {
+    for target in paths {
+        let path = Path::new(target);
+        if !path.is_absolute() || path.parent().is_none() || path.components().any(|part| matches!(part, std::path::Component::ParentDir)) {
+            return Err("Destino de desinstalação inválido.".into());
+        }
+        validate_ancestors(path)?;
+    }
+    Ok(())
+}
+fn remove_installation_paths(paths: &[String]) -> Result<(), String> {
+    validate_installation_paths(paths)?;
+    for target in paths { delete(Path::new(target))?; }
+    Ok(())
+}
+fn complete_helper_operation(dir: &Path, journal: &mut Journal, mode: &str, uninstall_paths: &[String]) -> Result<bool, String> {
+    let closing = matches!(mode, "reset-close" | "uninstall-close");
+    if (!matches!(mode, "reset" | "restore" | "reset-close" | "uninstall-close"))
+        || (mode != "uninstall-close" && !uninstall_paths.is_empty())
+        || (closing && !journal.finish_on_close) {
+        return Err("Operação de manutenção inválida.".into());
+    }
+    if mode == "uninstall-close" { validate_installation_paths(uninstall_paths)?; }
+    let result = match (mode, &journal.phase) {
+        ("reset" | "reset-close" | "uninstall-close", Phase::Prepared) => stage(dir, journal),
+        ("restore", Phase::Restoring) => restore(dir, journal),
+        _ => Err("Operação de recuperação inválida.".into()),
+    }.and_then(|_| if closing { finish_closed_reset(dir, journal) } else { Ok(()) });
+    if let Err(error) = result {
+        // A partially collected transaction cannot be rolled back.
+        if journal.phase != Phase::Committed { journal.phase = Phase::Recovery; }
+        journal.error = Some(error.clone());
+        save(dir, journal)?;
+        return if closing { Err(error) } else { Ok(true) };
+    }
+    if mode == "uninstall-close" { remove_installation_paths(uninstall_paths)?; }
+    Ok(!closing)
+}
+fn mark_startup(dir: &Path, journal: &mut Journal, owns_launcher: bool) -> Result<bool, String> {
+    if !owns_launcher { return Ok(false); }
     match journal.phase {
         Phase::Ready | Phase::Restored => {
             journal.phase = Phase::Checking;
@@ -320,17 +408,22 @@ fn mark_startup(dir: &Path, journal: &mut Journal) -> Result<bool, String> {
 }
 /// Called before storage initialization and webviews. An interrupted validation
 /// never counts as success just because another process was started.
-pub fn begin_startup() -> Result<(), String> {
+pub fn begin_startup(owns_launcher: bool) -> Result<(), String> {
     let _lock = LOCK.lock().map_err(|e| e.to_string())?;
     let dir = directory()?;
     let _disk = disk_lock(&dir)?;
     let Some(mut journal) = load(&dir)? else {
         return Ok(());
     };
-    if mark_startup(&dir, &mut journal)? {
+    if owns_launcher && journal.finish_on_close && matches!(journal.phase, Phase::Ready | Phase::Committed) {
+        finish_closed_reset(&dir, &mut journal)?;
+        crate::core::paths::pause_migrations(false);
+        return Ok(());
+    }
+    if mark_startup(&dir, &mut journal, owns_launcher)? {
         *BOOT.lock().map_err(|e| e.to_string())? = Some((journal.id.clone(), Instant::now()));
     }
-    crate::core::paths::pause_migrations(journal.phase == Phase::Recovery);
+    crate::core::paths::pause_migrations(journal.phase == Phase::Recovery || (!owns_launcher && journal.phase != Phase::Committed));
     Ok(())
 }
 #[tauri::command]
@@ -416,8 +509,8 @@ pub fn launcher_reset_continue() -> Result<(), String> {
     if !matches!(journal.phase, Phase::Recovery | Phase::Checking) {
         return Err("Recuperação indisponível nesta etapa.".into());
     }
-    if (journal.preserve_accounts || journal.preserve_games) && journal.phase == Phase::Recovery {
-        return Err("A preservação de contas ou jogos pode ter sido interrompida. Restaure os arquivos anteriores e tente redefinir novamente para manter os dados com segurança.".into());
+    if (journal.preserve_accounts || journal.preserve_games || journal.preserve_mangohud) && journal.phase == Phase::Recovery {
+        return Err("A preservação de contas, jogos ou perfis pode ter sido interrompida. Restaure os arquivos anteriores e tente redefinir novamente para manter os dados com segurança.".into());
     }
     // A partially completed rename must be recovered, not treated as a clean profile.
     if journal.entries.iter().any(|e| !exists(&e.backup)) {
@@ -429,10 +522,13 @@ pub fn launcher_reset_continue() -> Result<(), String> {
     *BOOT.lock().map_err(|e| e.to_string())? = Some((journal.id, Instant::now()));
     crate::core::paths::pause_migrations(false);
     crate::core::paths::initialize()?;
+    crate::core::paths::organize(true)?;
     Ok(())
 }
-fn spawn_helper(app: &tauri::AppHandle, mode: &str) -> Result<(), String> {
-    let binary = tauri::process::current_binary(&app.env()).map_err(|e| e.to_string())?;
+fn spawn_helper(app: &tauri::AppHandle, mode: &str, uninstall_paths: &[String]) -> Result<(), String> {
+    // Run through AppRun/the installed command, not its internal ELF: the
+    // GTK/WebKit subprocess paths and bundled libraries need their normal setup.
+    let binary = crate::core::pelinstall::launcher_binary()?;
     let mut command = Command::new(&binary);
     crate::core::env_utils::host_environment(&mut command);
     command
@@ -442,6 +538,7 @@ fn spawn_helper(app: &tauri::AppHandle, mode: &str) -> Result<(), String> {
         .env_remove("LD_PRELOAD")
         .args([HELPER_FLAG, &std::process::id().to_string(), mode])
         .arg(&binary)
+        .args(uninstall_paths)
         .current_dir("/")
         .stdin(Stdio::null());
     let log = std::env::temp_dir().join("peligames-reset.log");
@@ -450,12 +547,15 @@ fn spawn_helper(app: &tauri::AppHandle, mode: &str) -> Result<(), String> {
     app.exit(0);
     Ok(())
 }
-pub fn restart(
+pub fn close(
     app: &tauri::AppHandle,
     paths: &[String],
     preserve_accounts: bool,
     preserve_games: bool,
+    preserve_mangohud: bool,
+    uninstall_paths: &[String],
 ) -> Result<(), String> {
+    validate_installation_paths(uninstall_paths)?;
     let _lock = LOCK.lock().map_err(|e| e.to_string())?;
     let dir = directory()?;
     let _disk = disk_lock(&dir)?;
@@ -493,8 +593,10 @@ pub fn restart(
     let mut journal = new_journal(&paths);
     journal.preserve_accounts = preserve_accounts;
     journal.preserve_games = preserve_games;
+    journal.preserve_mangohud = preserve_mangohud;
+    journal.finish_on_close = true;
     save(&dir, &journal)?;
-    if let Err(error) = spawn_helper(app, "reset") {
+    if let Err(error) = spawn_helper(app, if uninstall_paths.is_empty() { "reset-close" } else { "uninstall-close" }, uninstall_paths) {
         // No helper was started, so no rename can have happened yet. Permit retry.
         fs::remove_file(dir.join("reset.json")).map_err(|e| e.to_string())?;
         sync_parent(&dir.join("reset.json"))?;
@@ -514,7 +616,7 @@ pub fn launcher_reset_restore(app: tauri::AppHandle) -> Result<(), String> {
     }
     journal.phase = Phase::Restoring;
     save(&dir, &journal)?;
-    if let Err(error) = spawn_helper(&app, "restore") {
+    if let Err(error) = spawn_helper(&app, "restore", &[]) {
         journal.phase = Phase::Recovery;
         journal.error = Some(error.clone());
         save(&dir, &journal)?;
@@ -549,18 +651,12 @@ pub fn run_helper(args: &[String]) -> Result<(), String> {
     let dir = directory()?;
     let _disk = disk_lock(&dir)?;
     let mut journal = load(&dir)?.ok_or("Registro ausente.")?;
-    let result = match (mode.as_str(), &journal.phase) {
-        ("reset", Phase::Prepared) => stage(&dir, &mut journal),
-        ("restore", Phase::Restoring) => restore(&dir, &mut journal),
-        _ => Err("Operação de recuperação inválida.".into()),
-    };
-    if let Err(error) = result {
-        journal.phase = Phase::Recovery;
-        journal.error = Some(error);
-        save(&dir, &journal)?;
-    }
+    let reopen = complete_helper_operation(&dir, &mut journal, mode, &args[3..])?;
+    if !reopen { return Ok(()); }
     use std::os::unix::process::CommandExt;
-    Err(Command::new(binary).current_dir("/").exec().to_string())
+    let mut command = Command::new(binary);
+    crate::core::env_utils::host_environment(&mut command);
+    Err(command.current_dir("/").exec().to_string())
 }
 
 #[cfg(test)]
@@ -594,6 +690,151 @@ mod tests {
             let _ = fs::remove_dir_all(&self.root);
         }
     }
+
+    #[test]
+    fn close_reset_cleans_without_recreating_profiles_or_requesting_reopen() {
+        let mut f = Fixture::new();
+        f.journal.finish_on_close = true;
+        assert!(!complete_helper_operation(&f.root, &mut f.journal, "reset-close", &[]).unwrap());
+        assert_eq!(f.journal.phase, Phase::Committed);
+        assert!(!f.root.join("reset.json").exists());
+        for entry in &f.journal.entries {
+            assert!(!exists(&entry.original)); assert!(!exists(&entry.backup)); assert!(!exists(&entry.discarded));
+        }
+    }
+    #[test]
+    fn close_reset_preserves_only_selected_mangohud_files() {
+        let mut f = mangohud_fixture("MangoHUD", true);
+        f.journal.finish_on_close = true;
+        assert!(!complete_helper_operation(&f.root, &mut f.journal, "reset-close", &[]).unwrap());
+        let kept = f.journal.entries[0].original.join("components/MangoHUD");
+        assert!(kept.join("custom-presets.json").is_file());
+        assert!(!kept.join("libMangoHud.so").exists());
+        assert!(!f.journal.entries[1].original.exists());
+        assert!(!f.root.join("reset.json").exists());
+    }
+    #[test]
+    fn uninstall_close_removes_installation_and_data_but_keeps_external_games() {
+        let mut f = Fixture::new(); f.journal.finish_on_close = true;
+        let install=f.root.join("installation"); fs::create_dir(&install).unwrap();
+        fs::write(install.join("AppRun"), b"launcher").unwrap();
+        let game=f.root.join("external-game"); fs::create_dir(&game).unwrap();
+        fs::write(game.join("save"), b"keep").unwrap();
+        assert!(!complete_helper_operation(&f.root, &mut f.journal, "uninstall-close", &[install.to_string_lossy().into_owned()]).unwrap());
+        assert!(!install.exists()); assert_eq!(fs::read(game.join("save")).unwrap(), b"keep");
+        for entry in &f.journal.entries { assert!(!exists(&entry.original)); }
+    }
+    #[test]
+    fn invalid_uninstall_is_rejected_before_staging_or_removing_data() {
+        let mut f=Fixture::new(); f.journal.finish_on_close=true;
+        assert!(complete_helper_operation(&f.root, &mut f.journal, "uninstall-close", &["/".into()]).is_err());
+        assert_eq!(f.journal.phase, Phase::Prepared);
+        for entry in &f.journal.entries {assert!(entry.original.is_dir());assert!(!exists(&entry.backup));}
+    }
+    #[test]
+    fn close_preservation_failure_keeps_recoverable_backups_and_does_not_reopen() {
+        let mut f=mangohud_fixture("MangoHUD", true); f.journal.finish_on_close=true;
+        let profile=f.journal.entries[0].original.join("MangoHUD/profile.json");
+        fs::remove_file(&profile).unwrap(); std::os::unix::fs::symlink("missing", &profile).unwrap();
+        assert!(complete_helper_operation(&f.root, &mut f.journal,"reset-close",&[]).is_err());
+        assert_eq!(f.journal.phase,Phase::Recovery);
+        assert!(f.root.join("reset.json").exists());
+        restore(&f.root,&mut f.journal).unwrap();
+        assert!(profile.is_symlink());
+    }
+    #[test]
+    fn interrupted_closed_cleanup_can_finish_without_starting_gui() {
+        let mut f=Fixture::new(); f.journal.finish_on_close=true;
+        stage(&f.root,&mut f.journal).unwrap();
+        finish_closed_reset(&f.root,&mut f.journal).unwrap();
+        for entry in &f.journal.entries {assert!(!exists(&entry.original));assert!(!exists(&entry.backup));}
+        assert!(!f.root.join("reset.json").exists());
+    }
+    #[test]
+    fn legacy_reset_still_requests_recovery_startup_and_defaults_to_old_mode() {
+        let mut f=Fixture::new();
+        let mut value=serde_json::to_value(&f.journal).unwrap(); value.as_object_mut().unwrap().remove("finish_on_close");
+        assert!(!serde_json::from_value::<Journal>(value).unwrap().finish_on_close);
+        assert!(complete_helper_operation(&f.root,&mut f.journal,"reset",&[]).unwrap());
+        assert_eq!(f.journal.phase,Phase::Ready);
+        assert!(f.root.join("reset.json").exists());
+    }
+    fn mangohud_fixture(layout: &str, preserve: bool) -> Fixture {
+        let mut f = Fixture::new();
+        let entry = &mut f.journal.entries[0];
+        let original = entry.original.with_file_name("PeliGames");
+        fs::rename(&entry.original, &original).unwrap();
+        entry.original = original;
+        entry.backup = sibling(&entry.original, &f.journal.id, "reset");
+        entry.discarded = sibling(&entry.original, &f.journal.id, "replaced");
+        let folder = entry.original.join(layout);
+        fs::create_dir_all(folder.join("configs")).unwrap();
+        fs::write(folder.join("profile.json"), br#"{"fps":true}"#).unwrap();
+        fs::write(folder.join("custom-presets.json"), br#"[{"name":"Meu perfil","settings":{"fps":true}}]"#).unwrap();
+        fs::write(folder.join("MangoHud.conf"), b"fps\n").unwrap();
+        fs::write(folder.join("libMangoHud.so"), b"downloaded component").unwrap();
+        fs::write(folder.join("configs/game.conf"), b"generated").unwrap();
+        f.journal.preserve_mangohud = preserve;
+        f
+    }
+    #[test]
+    fn mangohud_profiles_survive_reset_without_accounts_or_games_in_both_layouts() {
+        for layout in ["MangoHUD", "components/MangoHUD"] {
+            let mut f = mangohud_fixture(layout, true);
+            stage(&f.root, &mut f.journal).unwrap();
+            let entry = &f.journal.entries[0];
+            let kept = entry.original.join("components/MangoHUD");
+            for file in ["profile.json", "custom-presets.json", "MangoHud.conf"] {
+                assert_eq!(fs::read(kept.join(file)).unwrap(), fs::read(entry.backup.join(layout).join(file)).unwrap());
+            }
+            assert!(!kept.join("libMangoHud.so").exists());
+            assert!(!kept.join("configs").exists());
+            assert!(!entry.original.join("mods").exists());
+            let saved: Journal = serde_json::from_slice(&fs::read(f.root.join("reset.json")).unwrap()).unwrap();
+            assert!(saved.preserve_mangohud);
+            f.journal.phase = Phase::Committed;
+            collect(&f.root, &f.journal).unwrap();
+            assert!(kept.join("custom-presets.json").is_file());
+        }
+    }
+    #[test]
+    fn mangohud_preservation_is_optional_and_originals_stay_recoverable() {
+        for layout in ["MangoHUD", "components/MangoHUD"] {
+            let mut f = mangohud_fixture(layout, false);
+            stage(&f.root, &mut f.journal).unwrap();
+            assert!(!f.journal.entries[0].original.exists());
+            assert!(f.journal.entries[0].backup.join(layout).join("custom-presets.json").is_file());
+            restore(&f.root, &mut f.journal).unwrap();
+            assert!(f.journal.entries[0].original.join(layout).join("custom-presets.json").is_file());
+            let mut old = serde_json::to_value(&f.journal).unwrap();
+            old.as_object_mut().unwrap().remove("preserve_mangohud");
+            assert!(!serde_json::from_value::<Journal>(old).unwrap().preserve_mangohud);
+        }
+    }
+    #[test]
+    fn mangohud_preservation_rejects_links_and_leaves_backups_for_recovery() {
+        let mut f = mangohud_fixture("MangoHUD", true);
+        let profile = f.journal.entries[0].original.join("MangoHUD/profile.json");
+        fs::remove_file(&profile).unwrap();
+        let external = f.root.join("external-profile.json");
+        fs::write(&external, b"do not touch").unwrap();
+        std::os::unix::fs::symlink(&external, &profile).unwrap();
+        assert!(stage(&f.root, &mut f.journal).unwrap_err().contains("MangoHUD"));
+        assert_eq!(fs::read(external).unwrap(), b"do not touch");
+        assert!(f.journal.entries[0].backup.join("MangoHUD/profile.json").is_symlink());
+        restore(&f.root, &mut f.journal).unwrap();
+        assert!(f.journal.entries[0].original.join("MangoHUD/profile.json").is_symlink());
+    }
+    #[test]
+    fn mangohud_organized_profiles_take_priority_over_legacy_files() {
+        let mut f = mangohud_fixture("MangoHUD", true);
+        let modern = f.journal.entries[0].original.join("components/MangoHUD");
+        fs::create_dir_all(&modern).unwrap();
+        fs::write(modern.join("profile.json"), b"modern profile").unwrap();
+        stage(&f.root, &mut f.journal).unwrap();
+        assert_eq!(fs::read(modern.join("profile.json")).unwrap(), b"modern profile");
+        assert!(modern.join("custom-presets.json").is_file());
+    }
     #[test]
     fn game_preservation_is_independent_of_accounts_and_keeps_only_the_index() {
         let mut f = Fixture::new();
@@ -614,7 +855,7 @@ mod tests {
         stage(&f.root, &mut f.journal).unwrap();
         let entry = &f.journal.entries[0];
         assert_eq!(
-            fs::read(entry.original.join("installed-destinations.json")).unwrap(),
+            fs::read(entry.original.join("library/installed-destinations.json")).unwrap(),
             b"[\"/offline/Game\"]"
         );
         assert!(!entry.original.join("nexus-browser").exists());
@@ -623,7 +864,7 @@ mod tests {
         collect(&f.root, &f.journal).unwrap();
         assert!(f.journal.entries[0]
             .original
-            .join("installed-destinations.json")
+            .join("library/installed-destinations.json")
             .is_file());
     }
     #[test]
@@ -675,6 +916,67 @@ mod tests {
             .exists());
     }
     #[test]
+    fn organized_reset_preserves_nested_sessions_and_the_registered_games() {
+        let mut f = Fixture::new();
+        let entry = &mut f.journal.entries[0];
+        let target = entry.original.with_file_name("PeliGames");
+        fs::rename(&entry.original, &target).unwrap();
+        entry.original = target;
+        entry.backup = sibling(&entry.original, &f.journal.id, "reset");
+        entry.discarded = sibling(&entry.original, &f.journal.id, "replaced");
+        for relative in ["webview/nexus-browser/cookie", "webview/storage/session", "library/installed-destinations.json"] {
+            let path = entry.original.join(relative);
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            fs::write(path, relative).unwrap();
+        }
+        fs::create_dir_all(entry.original.join("settings")).unwrap();
+        fs::write(entry.original.join("settings/config.json"), b"old preferences").unwrap();
+        f.journal.preserve_accounts = true;
+        f.journal.preserve_games = true;
+        stage(&f.root, &mut f.journal).unwrap();
+        let entry = &f.journal.entries[0];
+        for relative in ["webview/nexus-browser/cookie", "webview/storage/session", "library/installed-destinations.json"] {
+            assert_eq!(fs::read_to_string(entry.original.join(relative)).unwrap(), relative);
+            assert!(entry.backup.join(relative).is_file());
+        }
+        assert!(!entry.original.join("settings/config.json").exists());
+        assert!(mark_startup(&f.root, &mut f.journal, true).unwrap());
+        // A helper starting while the UI validates must not turn Checking into Recovery.
+        assert!(!mark_startup(&f.root, &mut f.journal, false).unwrap());
+        assert_eq!(f.journal.phase, Phase::Checking);
+        restore(&f.root, &mut f.journal).unwrap();
+        assert_eq!(fs::read(&f.journal.entries[0].original.join("settings/config.json")).unwrap(), b"old preferences");
+    }
+    #[test]
+    fn background_startup_does_not_consume_the_reset_boot_attempt() {
+        let mut f = Fixture::new();
+        stage(&f.root, &mut f.journal).unwrap();
+        assert!(!mark_startup(&f.root, &mut f.journal, false).unwrap());
+        assert_eq!(f.journal.phase, Phase::Ready);
+        let saved: Journal = serde_json::from_slice(&fs::read(f.root.join("reset.json")).unwrap()).unwrap();
+        assert_eq!(saved.phase, Phase::Ready);
+        assert!(mark_startup(&f.root, &mut f.journal, true).unwrap());
+    }
+    #[test]
+    fn nested_session_links_fail_without_touching_the_external_directory() {
+        let mut f = Fixture::new();
+        let entry = &mut f.journal.entries[0];
+        let target = entry.original.with_file_name("PeliGames");
+        fs::rename(&entry.original, &target).unwrap();
+        entry.original = target;
+        entry.backup = sibling(&entry.original, &f.journal.id, "reset");
+        entry.discarded = sibling(&entry.original, &f.journal.id, "replaced");
+        let outside = f.root.join("external-webview");
+        fs::create_dir_all(outside.join("nexus-browser")).unwrap();
+        fs::write(outside.join("nexus-browser/cookie"), b"untouched").unwrap();
+        std::os::unix::fs::symlink(&outside, entry.original.join("webview")).unwrap();
+        f.journal.preserve_accounts = true;
+        assert!(stage(&f.root, &mut f.journal).is_err());
+        assert_eq!(fs::read(outside.join("nexus-browser/cookie")).unwrap(), b"untouched");
+        assert!(f.journal.entries[0].backup.join("mods/nested/keep").is_file());
+        restore(&f.root, &mut f.journal).unwrap();
+    }
+    #[test]
     fn preserving_accounts_rejects_links_without_losing_original_data() {
         let f = Fixture::new();
         let source = f.root.join("session-source");
@@ -695,19 +997,19 @@ mod tests {
     fn a_crash_before_health_confirmation_offers_recovery_on_the_next_boot() {
         let mut f = Fixture::new();
         stage(&f.root, &mut f.journal).unwrap();
-        assert!(mark_startup(&f.root, &mut f.journal).unwrap());
+        assert!(mark_startup(&f.root, &mut f.journal, true).unwrap());
         // Re-read only the durable journal, as a fresh process after power loss would.
         let mut persisted: Journal =
             serde_json::from_slice(&fs::read(f.root.join("reset.json")).unwrap()).unwrap();
         assert_eq!(persisted.phase, Phase::Checking);
-        assert!(!mark_startup(&f.root, &mut persisted).unwrap());
+        assert!(!mark_startup(&f.root, &mut persisted, true).unwrap());
         assert_eq!(persisted.phase, Phase::Recovery);
         assert!(collect(&f.root, &persisted).is_err());
         for entry in &persisted.entries {
             assert!(entry.backup.join("mods/nested/keep").is_file());
         }
         restore(&f.root, &mut persisted).unwrap();
-        assert!(mark_startup(&f.root, &mut persisted).unwrap());
+        assert!(mark_startup(&f.root, &mut persisted, true).unwrap());
         assert_eq!(persisted.phase, Phase::Checking);
     }
     #[test]

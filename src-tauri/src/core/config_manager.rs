@@ -60,10 +60,10 @@ static STORAGE: std::sync::Mutex<()> = std::sync::Mutex::new(());
 const MOD_KEYS: [&str; 5] = ["backend", "dll_version", "shortcut_key", "game_shortcut_keys", "custom_game_paths"];
 
 pub fn get_config_path() -> PathBuf {
-    super::paths::app_root().unwrap_or_else(|_| dirs::config_dir().unwrap_or_else(|| PathBuf::from(".")).join(super::paths::APP_DIRECTORY)).join("config.json")
+    super::paths::app_path("config.json").unwrap_or_else(|_| dirs::config_dir().unwrap_or_else(|| PathBuf::from(".")).join(super::paths::APP_DIRECTORY).join("settings/config.json"))
 }
 pub fn get_mod_config_path() -> PathBuf {
-    get_config_path().parent().unwrap().join("Mod/DLSSNR/config.json")
+    super::paths::mod_root().unwrap_or_else(|_| get_config_path().parent().unwrap().parent().unwrap().join("components/Mods/DLSSNR")).join("config.json")
 }
 
 fn read_object(path: &std::path::Path) -> Result<serde_json::Map<String, serde_json::Value>, String> {
@@ -123,12 +123,13 @@ fn migrate_locked() -> Result<(), String> {
     // Backend files moved from the standalone application's root in paths.rs.
     if let Some(value) = mod_config.get_mut("dll_version") {
         if let Some(old) = value.as_str() {
-            let root = launcher_path.parent().unwrap();
+            let app_root = super::paths::app_root()?;
+            let root = app_root.as_path();
             let old_root = root.parent().unwrap().join("dlssnr-x-amd");
             let relative = std::path::Path::new(old).strip_prefix(&old_root).ok()
                 .or_else(|| std::path::Path::new(old).strip_prefix(root).ok().filter(|p| !p.starts_with("Mod")));
             if let Some(relative) = relative {
-                let relocated = root.join("Mod/DLSSNR").join(relative);
+                let relocated = super::paths::mod_root()?.join(relative);
                 if relocated.is_file() { *value = relocated.to_string_lossy().into_owned().into(); changed = true; }
             }
         }

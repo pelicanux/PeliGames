@@ -30,10 +30,22 @@ pub(super) fn vfs_available() -> bool {
         && helper("fuse-overlayfs").is_some() && helper("fusermount3").is_some() && helper("bwrap").is_some()
 }
 fn state(game: &NexusGame) -> Result<PathBuf, String> { Ok(directory(game)?.join("vfs")) }
+/// Mount points as `/proc/self/mountinfo` writes them: whitespace and backslashes escaped.
+fn mount_points() -> Vec<String> {
+    fs::read_to_string("/proc/self/mountinfo").unwrap_or_default().lines()
+        .filter_map(|line| line.split_whitespace().nth(4).map(str::to_string)).collect()
+}
+fn escaped(path: &Path) -> String {
+    path.to_string_lossy().replace('\\', "\\134").replace(' ', "\\040").replace('\t', "\\011").replace('\n', "\\012")
+}
 fn mounted(path: &Path) -> bool {
-    // mountinfo escapes whitespace and backslashes in mountpoint names.
-    let escaped = path.to_string_lossy().replace('\\', "\\134").replace(' ', "\\040").replace('\t', "\\011").replace('\n', "\\012");
-    fs::read_to_string("/proc/self/mountinfo").unwrap_or_default().lines().any(|line| line.split_whitespace().nth(4) == Some(escaped.as_str()))
+    let path = escaped(path);
+    mount_points().iter().any(|point| *point == path)
+}
+/// Something (a deployment's virtual file system) is mounted inside `path`.
+pub(super) fn mounted_below(path: &Path) -> bool {
+    let prefix = format!("{}/", escaped(path));
+    mount_points().iter().any(|point| point.starts_with(&prefix))
 }
 pub(super) fn unmount(game: &NexusGame) -> Result<(), String> {
     let merged = state(game)?.join("merged");

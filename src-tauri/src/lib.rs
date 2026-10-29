@@ -54,6 +54,8 @@ fn run_mode(installer: bool) {
     crate::core::env_utils::drop_bundle_python();
     #[cfg(target_os = "linux")]
     core::webkit_graphics::configure();
+    #[cfg(target_os = "linux")]
+    core::webkit_vblank::install();
     #[cfg(unix)]
     if let Err(error) = core::launcher_instance::wait_for_restart_parent() { eprintln!("{error}"); return; }
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -69,15 +71,44 @@ fn run_mode(installer: bool) {
         if !embedded { std::process::exit(1); }
         return;
     }
-    if let Err(error) = commands::maintenance::reset::begin_startup() { core::paths::pause_migrations(true); eprintln!("Recuperação PeliGames: {error}"); }
-    if let Err(error) = core::paths::initialize() { eprintln!("Migração PeliGames: {error}"); }
-    if let Err(error) = commands::launch_profiles::enforce_release_policy() { eprintln!("Política PeliRun: {error}"); }
-    if let Err(error) = commands::steam_runtime::enforce_release_policy() { eprintln!("Política de recursos PeliGames: {error}"); }
     let nxm_start = if args.len() == 1 && args[0].get(..4).is_some_and(|s| s.eq_ignore_ascii_case("nxm:")) { Some(args[0].clone()) } else { None };
     let launcher_args = if nxm_start.is_some() { Vec::new() } else { args };
     let mut startup = core::pelinstall::parse_args(&launcher_args, installer && nxm_start.is_none()).unwrap_or_else(|error| core::pelinstall::StartupInfo {
         module: "pelinstall".into(), error: Some(error), ..Default::default()
     });
+    #[cfg(unix)]
+    let launcher_instance = if startup.module == "launcher" {
+        match core::paths::launcher_root().and_then(|root| core::launcher_instance::LauncherInstance::claim_at(&root, nxm_start.as_deref().or(startup.entry.as_deref()))) {
+            Ok(Some(instance)) => Some(instance),
+            Ok(None) => return,
+            Err(error) => { eprintln!("Não foi possível abrir o launcher: {error}"); return; }
+        }
+    } else { None };
+    // Only the owning launcher advances reset validation. Second open requests
+    // forward first; Pelinstall/background helpers never mark a healthy boot interrupted.
+    if let Err(error) = commands::maintenance::reset::begin_startup(launcher_instance.is_some()) { core::paths::pause_migrations(true); eprintln!("Recuperação PeliGames: {error}"); }
+    if let Err(error) = core::paths::initialize() { eprintln!("Migração PeliGames: {error}"); }
+    // Claim the existing root lock before touching the storage layout. A second
+    // launcher forwards to the running instance without migrating its files.
+    for error in core::paths::migrate_scattered_data() { eprintln!("Migração de dados: {error}"); }
+    let blocked = match core::paths::organize(launcher_instance.is_some()) {
+        Ok(()) => false,
+        // The launcher explains why its files were not organized (another version
+        // open, a game running, a conflict) instead of closing; nothing else loads.
+        Err(error) if startup.module == "launcher" => {
+            eprintln!("Organização de dados: {error}");
+            startup.module = "storage-blocked".into();
+            startup.error = Some(error);
+            startup.log = core::paths::launcher_root().ok().map(|root| root.display().to_string());
+            true
+        }
+        Err(error) => { eprintln!("Organização de dados: {error}"); return; }
+    };
+    if !blocked {
+        for error in commands::external_library::organize_steam_tools() { core::logger::event("WARN", &format!("Integração Proton da Steam: {error}")); }
+        if let Err(error) = commands::launch_profiles::enforce_release_policy() { eprintln!("Política PeliRun: {error}"); }
+        if let Err(error) = commands::steam_runtime::enforce_release_policy() { eprintln!("Política de recursos PeliGames: {error}"); }
+    }
     if startup.module == "background" {
         let entry = startup.entry.clone().unwrap_or_default();
         match core::pelinstall::monitor_background(&entry) {
@@ -92,17 +123,7 @@ fn run_mode(installer: bool) {
             startup.error = Some(report.error); startup.log = report.log;
         }
     }
-    #[cfg(unix)]
-    let launcher_instance = if startup.module == "launcher" {
-        match core::paths::app_root().and_then(|root| core::launcher_instance::LauncherInstance::claim_at(&root, nxm_start.as_deref().or(startup.entry.as_deref()))) {
-            Ok(Some(instance)) => Some(instance),
-            Ok(None) => return,
-            Err(error) => { eprintln!("Não foi possível abrir o launcher: {error}"); return; }
-        }
-    } else { None };
     if let Err(error) = core::pelinstall::register_appimage() { eprintln!("Integração AppImage: {error}"); }
-    // Before any webview opens: its storage moves with the rest of the launcher data.
-    for error in core::paths::migrate_scattered_data() { eprintln!("Migração de dados: {error}"); }
     let mut context = app_context();
     #[cfg(target_os = "linux")]
     if core::webkit_graphics::opaque_window() {
@@ -114,7 +135,7 @@ fn run_mode(installer: bool) {
     }
     if startup.module != "launcher" {
         if let Some(window) = context.config_mut().app.windows.first_mut() {
-            window.title = if startup.module == "launch-error" { "PeliGames — execução" } else { "Pelinstall" }.into();
+            window.title = match startup.module.as_str() { "launch-error" => "PeliGames — execução", "storage-blocked" => "PeliGames — organização dos arquivos", _ => "Pelinstall" }.into();
             window.width = 560.; window.height = if startup.module == "pelinstall" { 340. } else { 490. };
             window.min_width = Some(480.); window.min_height = Some(if startup.module == "pelinstall" { 260. } else { 420. });
             // Pelinstall grows with its step (Proton list open, executable choice): see PELINSTALL_MAX_HEIGHT.
@@ -383,14 +404,17 @@ fn run_mode(installer: bool) {
             commands::nexus_local::read_nexus_logs,
             commands::nexus_local::read_nexus_mod_logs,
             commands::nexus_reports::export_nexus_report,
-            commands::nexus_reports::send_nexus_report,
-            commands::nexus_reports::nexus_report_relay_configured,
+            commands::feature_reports::export_feature_report,
+            commands::report_delivery::report_relay_configured,
+            commands::report_delivery::prepare_report_submission,
+            commands::report_delivery::send_reviewed_report,
             commands::browser::open_browser_url,
             commands::nexus_local::configure_nexus_proton,
             commands::nexus_local::configure_nexus_settings,
             commands::nexus_local::configure_nexus_deploy,
             commands::nexus_local::nexus_deploy_options,
             commands::pelinstall::get_startup_context,
+            commands::pelinstall::retry_storage_organization,
             commands::pelinstall::take_launcher_open_request,
             commands::pelinstall::find_pelinstall_matches,
             commands::game_installation::repair_peligames_entry,
@@ -553,7 +577,6 @@ fn run_mode(installer: bool) {
             commands::frame_overlay_shortcut::configure_frame_overlay,
             commands::frame_generation::resolve_game_mod_paths,
             commands::frame_generation::set_game_mod_destination,
-            commands::maintenance::launcher_maintenance_restart,
             commands::maintenance::reset::launcher_reset_status,
             commands::maintenance::reset::launcher_reset_confirm_health,
             commands::maintenance::reset::launcher_reset_continue,

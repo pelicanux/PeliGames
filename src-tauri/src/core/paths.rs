@@ -5,6 +5,21 @@ use std::{
     sync::OnceLock,
 };
 
+#[path = "../../../tools/storage_layout.rs"]
+pub mod layout;
+#[path = "../../../tools/storage_names.rs"]
+pub mod names;
+#[path = "storage_migration.rs"]
+mod storage_migration;
+
+pub fn app_path(relative: impl AsRef<Path>) -> Result<PathBuf, String> {
+    Ok(layout::join(&app_root()?, relative))
+}
+pub fn organize(owns_launcher: bool) -> Result<(), String> {
+    if MIGRATIONS_PAUSED.load(std::sync::atomic::Ordering::Acquire) { return Ok(()); }
+    storage_migration::organize(&app_root()?, owns_launcher)
+}
+
 pub const APP_DIRECTORY: &str = "PeliGames";
 pub const APP_IDENTIFIER: &str = "com.pelicano.peligames";
 static MIGRATION: OnceLock<Result<(), String>> = OnceLock::new();
@@ -75,7 +90,7 @@ pub fn migrate_config_root(config: &Path) -> Result<(), String> {
     let app = config.join(APP_DIRECTORY);
     directory(&app)?;
     merge(&config.join("peligames"), &app)?;
-    let mods = app.join("Mod");
+    let mods = layout::join(&app,"Mod");
     directory(&mods)?;
     let dlssnr = mods.join("DLSSNR");
     directory(&dlssnr)?;
@@ -93,7 +108,8 @@ pub fn migrate_config_root(config: &Path) -> Result<(), String> {
             } else {
                 &dlssnr
             };
-            merge(&entry.path(), &parent.join(&name))?;
+            let target=if parent==&app {layout::join(&app,&name)}else{parent.join(&name)};
+            merge(&entry.path(), &target)?;
         }
         if fs::read_dir(&old)
             .map_err(|e| e.to_string())?
@@ -150,7 +166,7 @@ fn migrate_scattered_data_at(root: &Path, local: Option<&Path>, cache: Option<&P
                             if let Err(error) = removed { errors.push(format!("{}: {error}", entry.path().display())); }
                             continue;
                         }
-                        "covers" | "nexus-browser" | "analyzer_cache.json" | "release_date_cache.json" => root.join(&name),
+                        "covers" | "nexus-browser" | "analyzer_cache.json" | "release_date_cache.json" => layout::join(root,&name),
                         // Webview storage: localStorage, cookies, IndexedDB and its HTTP cache.
                         _ => root.join("webview").join(&name),
                     };
@@ -177,15 +193,37 @@ pub fn legacy_covers() -> Option<PathBuf> {
     dirs::data_local_dir().map(|base| base.join(APP_IDENTIFIER).join("covers"))
 }
 
+/// Claim launcher ownership without migrating files or advancing reset recovery.
+pub fn launcher_root() -> Result<PathBuf, String> {
+    // Tests share the home folder (container): never touch the real profile.
+    #[cfg(test)]
+    let root = std::env::temp_dir().join(format!("peligames-test-profile-{}", std::process::id())).join(APP_DIRECTORY);
+    #[cfg(not(test))]
+    let root = dirs::config_dir()
+        .ok_or("Pasta de configuração indisponível.")?
+        .join(APP_DIRECTORY);
+    directory(&root)?;
+    Ok(root)
+}
 pub fn app_root() -> Result<PathBuf, String> {
     initialize()?;
-    Ok(dirs::config_dir()
-        .ok_or("Pasta de configuração indisponível.")?
-        .join(APP_DIRECTORY))
+    launcher_root()
 }
 
 pub fn mod_root() -> Result<PathBuf, String> {
-    Ok(app_root()?.join("Mod/DLSSNR"))
+    app_path("Mod/DLSSNR")
+}
+
+/// Points the symlink `link` at `target` atomically (a new link renamed over it),
+/// so readers never see it missing.
+pub fn replace_symlink(link: &Path, target: &Path) -> Result<(), String> {
+    let temporary = link.with_file_name(format!(".peligames-link-{}", std::process::id()));
+    let _ = fs::remove_file(&temporary);
+    std::os::unix::fs::symlink(target, &temporary).map_err(|e| e.to_string())?;
+    fs::rename(&temporary, link).map_err(|e| {
+        let _ = fs::remove_file(&temporary);
+        e.to_string()
+    })
 }
 
 // Installation manifests may still contain absolute paths to managed runners.
@@ -194,9 +232,13 @@ pub fn migrated_runner_path(value: &str) -> String {
     let Some(config) = dirs::config_dir() else {
         return value.into();
     };
+    if let Ok(relative) = Path::new(value).strip_prefix(config.join(APP_DIRECTORY)) {
+        let current = layout::join(&config.join(APP_DIRECTORY), relative);
+        if current.exists() { return current.to_string_lossy().into_owned(); }
+    }
     if let Ok(relative) = Path::new(value).strip_prefix(config.join("peligames")) {
         if relative.starts_with("runners") {
-            let current = config.join(APP_DIRECTORY).join(relative);
+            let current = layout::join(&config.join(APP_DIRECTORY), relative);
             if current.exists() {
                 return current.to_string_lossy().into_owned();
             }
@@ -226,8 +268,8 @@ mod tests {
         fs::create_dir_all(root.join("webview/localstorage")).unwrap();
         fs::write(root.join("webview/localstorage/file.sqlite"), b"new").unwrap();
         assert!(migrate_scattered_data_at(&root, Some(&local), Some(&cache)).is_empty());
-        assert_eq!(fs::read(root.join("covers/a.png")).unwrap(), b"cover");
-        assert!(root.join("nexus-browser").is_dir() && root.join("analyzer_cache.json").is_file() && root.join("webview/WebKitCache").is_dir());
+        assert_eq!(fs::read(layout::join(&root,"covers/a.png")).unwrap(), b"cover");
+        assert!(layout::join(&root,"nexus-browser").is_dir() && layout::join(&root,"analyzer_cache.json").is_file() && root.join("webview/WebKitCache").is_dir());
         assert_eq!(fs::read(root.join("webview/localstorage/file.sqlite")).unwrap(), b"new");
         assert!(!root.join("analysis_cache.json").exists() && !root.join("webview/runtime_api_observations_v1").exists());
         assert!(!cache.join("PeliGames").exists() && !cache.join(APP_IDENTIFIER).exists());

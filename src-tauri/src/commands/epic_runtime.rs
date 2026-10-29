@@ -154,7 +154,9 @@ fn install_runtime(directory: &Path, dispatch: &Path) -> Result<(), String> {
     } else {
         // A new official runtime/update gets its own original; never overwrite an older backup.
         let digest = hash(&bytes);
-        let backup = format!("proton.peligames-original-{}", &digest[..16]);
+        // Named by date; the manifest keeps its checksum. Older backups keep their names.
+        let backup = (1..=99).map(|n| if n == 1 { format!("proton.peligames-original-{}", crate::core::paths::names::stamp()) } else { format!("proton.peligames-original-{}-{n}", crate::core::paths::names::stamp()) })
+            .find(|name| fs::symlink_metadata(directory.join(name)).is_err()).ok_or("Não foi possível reservar o backup do Proton Epic.")?;
         let target = directory.join(&backup);
         if target.exists() {
             if target.is_symlink() || hash(&fs::read(&target).map_err(|e| e.to_string())?) != digest

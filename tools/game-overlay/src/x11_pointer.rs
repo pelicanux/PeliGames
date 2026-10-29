@@ -88,19 +88,44 @@ struct Color {
     flags: libc::c_char,
     pad: libc::c_char,
 }
-type BitmapFn = unsafe extern "C" fn(*mut c_void, c_ulong, *const libc::c_char, c_uint, c_uint) -> c_ulong;
-type PixmapCursorFn = unsafe extern "C" fn(*mut c_void, c_ulong, c_ulong, *mut Color, *mut Color, c_uint, c_uint) -> c_ulong;
+type BitmapFn =
+    unsafe extern "C" fn(*mut c_void, c_ulong, *const libc::c_char, c_uint, c_uint) -> c_ulong;
+type PixmapCursorFn = unsafe extern "C" fn(
+    *mut c_void,
+    c_ulong,
+    c_ulong,
+    *mut Color,
+    *mut Color,
+    c_uint,
+    c_uint,
+) -> c_ulong;
 type FreePixmapFn = unsafe extern "C" fn(*mut c_void, c_ulong) -> c_int;
 
 // A zero mask makes every pixel transparent. The cursor is scoped to the
 // existing pointer lease; no window cursor or desktop theme is changed.
-unsafe fn blank_cursor(display: usize, window: c_ulong, bitmap: BitmapFn, create: PixmapCursorFn, free: FreePixmapFn) -> c_ulong {
+unsafe fn blank_cursor(
+    display: usize,
+    window: c_ulong,
+    bitmap: BitmapFn,
+    create: PixmapCursorFn,
+    free: FreePixmapFn,
+) -> c_ulong {
     let data = [0 as libc::c_char];
     let mask = bitmap(display as _, window, data.as_ptr(), 1, 1);
-    if mask == 0 { return 0; }
+    if mask == 0 {
+        return 0;
+    }
     let mut foreground = Color::default();
     let mut background = Color::default();
-    let cursor = create(display as _, mask, mask, &mut foreground, &mut background, 0, 0);
+    let cursor = create(
+        display as _,
+        mask,
+        mask,
+        &mut foreground,
+        &mut background,
+        0,
+        0,
+    );
     free(display as _, mask);
     cursor
 }
@@ -179,7 +204,9 @@ impl Api for Native {
                 symbol::<PixmapCursorFn>(b"XCreatePixmapCursor\0"),
                 symbol::<FreePixmapFn>(b"XFreePixmap\0"),
             ) {
-                (Some(bitmap), Some(create), Some(free)) => blank_cursor(d, w, bitmap, create, free),
+                (Some(bitmap), Some(create), Some(free)) => {
+                    blank_cursor(d, w, bitmap, create, free)
+                }
                 _ => 0,
             }
         }
@@ -440,7 +467,9 @@ impl<A: Api> Pointer<A> {
         self.api.flush(s.display);
     }
     fn hidden_for(&self, window: c_ulong) -> bool {
-        self.lease.as_ref().is_some_and(|lease| lease.window == window)
+        self.lease
+            .as_ref()
+            .is_some_and(|lease| lease.window == window)
     }
     fn accepts(&self, display: usize, window: c_ulong) -> bool {
         self.lease
@@ -668,7 +697,9 @@ pub unsafe extern "C" fn XGrabPointer(
         cursor,
         time,
     };
-    if !crate::process_scope::enabled() { return Native.grab(request); }
+    if !crate::process_scope::enabled() {
+        return Native.grab(request);
+    }
     if let Ok(mut p) = pointer().lock() {
         p.game_grab(request)
     } else {
@@ -677,7 +708,9 @@ pub unsafe extern "C" fn XGrabPointer(
 }
 #[no_mangle]
 pub unsafe extern "C" fn XUngrabPointer(display: *mut c_void, time: c_ulong) -> c_int {
-    if !crate::process_scope::enabled() { return Native.ungrab(display as usize, time); }
+    if !crate::process_scope::enabled() {
+        return Native.ungrab(display as usize, time);
+    }
     if let Ok(mut p) = pointer().lock() {
         p.game_ungrab(display as usize, time)
     } else {
@@ -691,7 +724,9 @@ pub unsafe extern "C" fn XChangeActivePointerGrab(
     cursor: c_ulong,
     time: c_ulong,
 ) -> c_int {
-    if !crate::process_scope::enabled() { return Native.change(display as usize, mask, cursor, time); }
+    if !crate::process_scope::enabled() {
+        return Native.change(display as usize, mask, cursor, time);
+    }
     if let Ok(mut p) = pointer().lock() {
         p.game_change(display as usize, mask, cursor, time)
     } else {
@@ -937,7 +972,10 @@ mod tests {
         p.api.focus = 99;
         assert_eq!(p.refresh_focus(opened + Duration::from_millis(8)), None);
         assert!(p.lease.is_some());
-        assert_eq!(p.refresh_focus(opened + Duration::from_millis(16)), Some(99));
+        assert_eq!(
+            p.refresh_focus(opened + Duration::from_millis(16)),
+            Some(99)
+        );
         assert!(p.lease.is_none());
         assert_eq!(p.api.ungrabs, vec![7]);
         assert_eq!(p.api.grabs.len(), 2); // never re-grab the desktop for the game
@@ -951,7 +989,10 @@ mod tests {
         p.game_grab(request(7));
         p.open(7, 10, &[10, 20]).unwrap();
         let opened = p.lease.as_ref().unwrap().focus_checked_at;
-        assert_eq!(p.refresh_focus(opened + Duration::from_millis(16)), Some(20));
+        assert_eq!(
+            p.refresh_focus(opened + Duration::from_millis(16)),
+            Some(20)
+        );
         assert!(p.lease.is_some());
         assert!(p.api.ungrabs.is_empty());
         assert_eq!(p.refresh_focus(opened + Duration::from_millis(17)), None);
@@ -1003,94 +1044,186 @@ mod tests {
         static PIXMAP: AtomicU64 = AtomicU64::new(50);
         static CURSOR: AtomicU64 = AtomicU64::new(60);
         static FREED: AtomicU64 = AtomicU64::new(0);
-        unsafe extern "C" fn bitmap(display: *mut c_void, window: c_ulong, data: *const libc::c_char, width: c_uint, height: c_uint) -> c_ulong {
-            assert_eq!((display as usize, window, width, height), (7,10,1,1));
-            assert_eq!(*data,0);
+        unsafe extern "C" fn bitmap(
+            display: *mut c_void,
+            window: c_ulong,
+            data: *const libc::c_char,
+            width: c_uint,
+            height: c_uint,
+        ) -> c_ulong {
+            assert_eq!((display as usize, window, width, height), (7, 10, 1, 1));
+            assert_eq!(*data, 0);
             PIXMAP.load(Ordering::Relaxed)
         }
-        unsafe extern "C" fn create(display: *mut c_void, source: c_ulong, mask: c_ulong, foreground: *mut Color, background: *mut Color, x: c_uint, y: c_uint) -> c_ulong {
-            assert_eq!((display as usize,source,mask,x,y),(7,50,50,0,0));
-            assert_eq!(std::mem::size_of::<Color>(),16);
-            assert_eq!(((*foreground).pixel,(*background).pixel),(0,0));
+        unsafe extern "C" fn create(
+            display: *mut c_void,
+            source: c_ulong,
+            mask: c_ulong,
+            foreground: *mut Color,
+            background: *mut Color,
+            x: c_uint,
+            y: c_uint,
+        ) -> c_ulong {
+            assert_eq!((display as usize, source, mask, x, y), (7, 50, 50, 0, 0));
+            assert_eq!(std::mem::size_of::<Color>(), 16);
+            assert_eq!(((*foreground).pixel, (*background).pixel), (0, 0));
             CURSOR.load(Ordering::Relaxed)
         }
         unsafe extern "C" fn free(display: *mut c_void, pixmap: c_ulong) -> c_int {
-            assert_eq!((display as usize,pixmap),(7,50));
-            FREED.fetch_add(1,Ordering::Relaxed);
+            assert_eq!((display as usize, pixmap), (7, 50));
+            FREED.fetch_add(1, Ordering::Relaxed);
             1
         }
         unsafe {
-            assert_eq!(blank_cursor(7,10,bitmap,create,free),60);
-            assert_eq!(FREED.load(Ordering::Relaxed),1);
-            CURSOR.store(0,Ordering::Relaxed);
-            assert_eq!(blank_cursor(7,10,bitmap,create,free),0);
-            assert_eq!(FREED.load(Ordering::Relaxed),2); // failed cursor still frees its mask
-            PIXMAP.store(0,Ordering::Relaxed);
-            assert_eq!(blank_cursor(7,10,bitmap,create,free),0);
-            assert_eq!(FREED.load(Ordering::Relaxed),2); // no invalid resource was freed
+            assert_eq!(blank_cursor(7, 10, bitmap, create, free), 60);
+            assert_eq!(FREED.load(Ordering::Relaxed), 1);
+            CURSOR.store(0, Ordering::Relaxed);
+            assert_eq!(blank_cursor(7, 10, bitmap, create, free), 0);
+            assert_eq!(FREED.load(Ordering::Relaxed), 2); // failed cursor still frees its mask
+            PIXMAP.store(0, Ordering::Relaxed);
+            assert_eq!(blank_cursor(7, 10, bitmap, create, free), 0);
+            assert_eq!(FREED.load(Ordering::Relaxed), 2); // no invalid resource was freed
         }
     }
     #[test]
     #[ignore = "Requires isolated Xvfb and libXfixes; never uses the desktop display"]
     fn native_server_cursor_is_transparent_only_during_the_panel_grab() {
-        use std::{ffi::CString, io::{BufRead, BufReader}, process::{Child, Stdio}};
+        use std::{
+            ffi::CString,
+            io::{BufRead, BufReader},
+            process::{Child, Stdio},
+        };
         struct Server(Child);
-        impl Drop for Server { fn drop(&mut self) { let _ = self.0.kill(); let _ = self.0.wait(); } }
+        impl Drop for Server {
+            fn drop(&mut self) {
+                let _ = self.0.kill();
+                let _ = self.0.wait();
+            }
+        }
         struct Display(*mut c_void, unsafe extern "C" fn(*mut c_void) -> c_int);
-        impl Drop for Display { fn drop(&mut self) { unsafe { (self.1)(self.0); } } }
+        impl Drop for Display {
+            fn drop(&mut self) {
+                unsafe {
+                    (self.1)(self.0);
+                }
+            }
+        }
         #[repr(C)]
-        struct Image { x: i16, y: i16, width: u16, height: u16, xhot: u16, yhot: u16, serial: c_ulong, pixels: *const c_ulong }
+        struct Image {
+            x: i16,
+            y: i16,
+            width: u16,
+            height: u16,
+            xhot: u16,
+            yhot: u16,
+            serial: c_ulong,
+            pixels: *const c_ulong,
+        }
         unsafe fn function<T: Copy>(library: *mut c_void, name: &std::ffi::CStr) -> T {
-            let pointer = libc::dlsym(library,name.as_ptr());
-            assert!(!pointer.is_null(),"{}",name.to_string_lossy());
+            let pointer = libc::dlsym(library, name.as_ptr());
+            assert!(!pointer.is_null(), "{}", name.to_string_lossy());
             std::mem::transmute_copy(&pointer)
         }
-        let mut server = Server(std::process::Command::new("Xvfb")
-            .args(["-displayfd","1","-screen","0","128x128x24","-nolisten","tcp"])
-            .stdout(Stdio::piped()).stderr(Stdio::null()).spawn().unwrap());
+        let mut server = Server(
+            std::process::Command::new("Xvfb")
+                .args([
+                    "-displayfd",
+                    "1",
+                    "-screen",
+                    "0",
+                    "128x128x24",
+                    "-nolisten",
+                    "tcp",
+                ])
+                .stdout(Stdio::piped())
+                .stderr(Stdio::null())
+                .spawn()
+                .unwrap(),
+        );
         let mut number = String::new();
-        BufReader::new(server.0.stdout.take().unwrap()).read_line(&mut number).unwrap();
-        assert!(!number.trim().is_empty() && number.trim().bytes().all(|c|c.is_ascii_digit()));
-        let name = CString::new(format!(":{}",number.trim())).unwrap();
+        BufReader::new(server.0.stdout.take().unwrap())
+            .read_line(&mut number)
+            .unwrap();
+        assert!(!number.trim().is_empty() && number.trim().bytes().all(|c| c.is_ascii_digit()));
+        let name = CString::new(format!(":{}", number.trim())).unwrap();
         unsafe {
-            let x11 = libc::dlopen(c"libX11.so.6".as_ptr(),libc::RTLD_NOW|libc::RTLD_GLOBAL);
-            let fixes = libc::dlopen(c"libXfixes.so.3".as_ptr(),libc::RTLD_NOW|libc::RTLD_LOCAL);
+            let x11 = libc::dlopen(c"libX11.so.6".as_ptr(), libc::RTLD_NOW | libc::RTLD_GLOBAL);
+            let fixes = libc::dlopen(
+                c"libXfixes.so.3".as_ptr(),
+                libc::RTLD_NOW | libc::RTLD_LOCAL,
+            );
             assert!(!x11.is_null() && !fixes.is_null());
-            let open: unsafe extern "C" fn(*const libc::c_char)->*mut c_void = function(x11,c"XOpenDisplay");
-            let close = function(x11,c"XCloseDisplay");
-            let display = Display(open(name.as_ptr()),close); assert!(!display.0.is_null());
-            let root: unsafe extern "C" fn(*mut c_void)->c_ulong = function(x11,c"XDefaultRootWindow");
-            let create: unsafe extern "C" fn(*mut c_void,c_ulong,c_int,c_int,c_uint,c_uint,c_uint,c_ulong,c_ulong)->c_ulong = function(x11,c"XCreateSimpleWindow");
-            let map: unsafe extern "C" fn(*mut c_void,c_ulong)->c_int = function(x11,c"XMapWindow");
-            let font: unsafe extern "C" fn(*mut c_void,c_uint)->c_ulong = function(x11,c"XCreateFontCursor");
-            let define: unsafe extern "C" fn(*mut c_void,c_ulong,c_ulong)->c_int = function(x11,c"XDefineCursor");
-            let sync: unsafe extern "C" fn(*mut c_void,c_int)->c_int = function(x11,c"XSync");
-            let image: unsafe extern "C" fn(*mut c_void)->*mut Image = function(fixes,c"XFixesGetCursorImage");
-            let free: unsafe extern "C" fn(*mut c_void)->c_int = function(x11,c"XFree");
-            let grab: GrabFn = function(x11,c"XGrabPointer");
-            let ungrab: UngrabFn = function(x11,c"XUngrabPointer");
-            let warp: WarpFn = function(x11,c"XWarpPointer");
-            let free_cursor: FreeCursorFn = function(x11,c"XFreeCursor");
-            let window = create(display.0,root(display.0),0,0,128,128,0,0,0);
-            map(display.0,window);
-            let original = font(display.0,68); define(display.0,window,original);
-            warp(display.0,0,window,0,0,0,0,64,64); sync(display.0,0);
+            let open: unsafe extern "C" fn(*const libc::c_char) -> *mut c_void =
+                function(x11, c"XOpenDisplay");
+            let close = function(x11, c"XCloseDisplay");
+            let display = Display(open(name.as_ptr()), close);
+            assert!(!display.0.is_null());
+            let root: unsafe extern "C" fn(*mut c_void) -> c_ulong =
+                function(x11, c"XDefaultRootWindow");
+            let create: unsafe extern "C" fn(
+                *mut c_void,
+                c_ulong,
+                c_int,
+                c_int,
+                c_uint,
+                c_uint,
+                c_uint,
+                c_ulong,
+                c_ulong,
+            ) -> c_ulong = function(x11, c"XCreateSimpleWindow");
+            let map: unsafe extern "C" fn(*mut c_void, c_ulong) -> c_int =
+                function(x11, c"XMapWindow");
+            let font: unsafe extern "C" fn(*mut c_void, c_uint) -> c_ulong =
+                function(x11, c"XCreateFontCursor");
+            let define: unsafe extern "C" fn(*mut c_void, c_ulong, c_ulong) -> c_int =
+                function(x11, c"XDefineCursor");
+            let sync: unsafe extern "C" fn(*mut c_void, c_int) -> c_int = function(x11, c"XSync");
+            let image: unsafe extern "C" fn(*mut c_void) -> *mut Image =
+                function(fixes, c"XFixesGetCursorImage");
+            let free: unsafe extern "C" fn(*mut c_void) -> c_int = function(x11, c"XFree");
+            let grab: GrabFn = function(x11, c"XGrabPointer");
+            let ungrab: UngrabFn = function(x11, c"XUngrabPointer");
+            let warp: WarpFn = function(x11, c"XWarpPointer");
+            let free_cursor: FreeCursorFn = function(x11, c"XFreeCursor");
+            let window = create(display.0, root(display.0), 0, 0, 128, 128, 0, 0, 0);
+            map(display.0, window);
+            let original = font(display.0, 68);
+            define(display.0, window, original);
+            warp(display.0, 0, window, 0, 0, 0, 0, 64, 64);
+            sync(display.0, 0);
             let visible_pixels = || {
-                let image = image(display.0); assert!(!image.is_null());
+                let image = image(display.0);
+                assert!(!image.is_null());
                 let count = (*image).width as usize * (*image).height as usize;
                 assert!(count > 0 && count <= 4096);
-                let visible = std::slice::from_raw_parts((*image).pixels,count).iter().filter(|pixel| (**pixel >> 24) & 255 != 0).count();
-                free(image.cast()); visible
+                let visible = std::slice::from_raw_parts((*image).pixels, count)
+                    .iter()
+                    .filter(|pixel| (**pixel >> 24) & 255 != 0)
+                    .count();
+                free(image.cast());
+                visible
             };
-            assert!(visible_pixels() > 0,"fixture's original cursor must be visible");
-            let blank = Native.blank_cursor(display.0 as usize,window); assert_ne!(blank,0);
-            assert_eq!(grab(display.0,window,0,0,1,1,window,blank,0),0);
-            sync(display.0,0);
-            assert_eq!(visible_pixels(),0,"panel's server cursor must be fully transparent");
-            ungrab(display.0,0); free_cursor(display.0,blank); sync(display.0,0);
-            assert!(visible_pixels() > 0,"ungrab must restore the original cursor");
-            free_cursor(display.0,original);
+            assert!(
+                visible_pixels() > 0,
+                "fixture's original cursor must be visible"
+            );
+            let blank = Native.blank_cursor(display.0 as usize, window);
+            assert_ne!(blank, 0);
+            assert_eq!(grab(display.0, window, 0, 0, 1, 1, window, blank, 0), 0);
+            sync(display.0, 0);
+            assert_eq!(
+                visible_pixels(),
+                0,
+                "panel's server cursor must be fully transparent"
+            );
+            ungrab(display.0, 0);
+            free_cursor(display.0, blank);
+            sync(display.0, 0);
+            assert!(
+                visible_pixels() > 0,
+                "ungrab must restore the original cursor"
+            );
+            free_cursor(display.0, original);
         }
     }
-
 }

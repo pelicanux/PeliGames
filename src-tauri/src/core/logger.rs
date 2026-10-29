@@ -51,7 +51,7 @@ pub fn log_launcher(_app: &tauri::AppHandle, level: &str, message: &str) {
     event(level, message);
 }
 pub fn event(level: &str, message: &str) {
-    let Ok(config_dir) = super::paths::app_root() else {
+    let Ok(config_dir) = super::paths::app_path("logs") else {
         return;
     };
     let _ = append_log(&config_dir, level, message);
@@ -78,7 +78,7 @@ pub struct LauncherLog {
 pub fn read_launcher_log() -> Result<LauncherLog, String> {
     let root = super::paths::app_root()?;
     let _guard = LOG_LOCK.lock().unwrap_or_else(|error| error.into_inner());
-    let path = root.join("launcher.log");
+    let path = super::paths::layout::join(&root,"launcher.log");
     let content=super::bounded_logs::read(&path).map_err(|e|e.to_string())?;
     Ok(LauncherLog {
         path: path.to_string_lossy().into_owned(),

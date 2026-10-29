@@ -34,6 +34,7 @@ pub enum CopyKind {
 #[derive(Serialize)]
 pub struct CopyOptions {
     pub parent: String,
+    pub suggested_name: String,
     pub filesystem: String,
     pub reflink: bool,
     pub overlay: bool,
@@ -136,6 +137,46 @@ fn probe_reflink(parent: &Path) -> bool {
     let _ = fs::remove_dir_all(probe);
     result.unwrap_or(false)
 }
+// Only remove copy suffixes from managed copies; a real game title may end in a year.
+fn copy_name_base(name: &str, is_copy: bool) -> &str {
+    let mut base = name.trim();
+    if is_copy {
+        if let Some((title, suffix)) = base.rsplit_once(" (") {
+            if suffix.strip_suffix(')').and_then(|value| value.parse::<u32>().ok()).is_some_and(|n| n > 0) {
+                base = title.trim_end();
+            }
+        }
+        loop {
+            let previous = base;
+            for marker in [" - cópia", " - copy"] {
+                if let Some((title, suffix)) = base.rsplit_once(marker) {
+                    if suffix.is_empty() || suffix.strip_prefix(' ').and_then(|value| value.parse::<u32>().ok()).is_some_and(|n| n > 0) {
+                        base = title.trim_end();
+                    }
+                }
+            }
+            if base == previous || base.is_empty() {
+                break;
+            }
+        }
+    }
+    if base.is_empty() { name.trim() } else { base }
+}
+fn suggested_copy_name(name: &str, parent: &Path, is_copy: bool) -> Result<String, String> {
+    let base = copy_name_base(name, is_copy);
+    for number in 1..=u32::MAX {
+        let suffix = format!(" ({number})");
+        let title: String = base.chars().take(100 - suffix.len()).collect();
+        let candidate = format!("{}{suffix}", title.trim_end());
+        // Even a broken symlink occupies the destination name.
+        match fs::symlink_metadata(parent.join(&candidate)) {
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(candidate),
+            Err(error) => return Err(format!("Não foi possível verificar o nome da cópia: {error}")),
+            Ok(_) => {}
+        }
+    }
+    Err("Não há um nome numerado disponível para a cópia.".into())
+}
 pub fn options(path: &str, parent: Option<&str>) -> Result<CopyOptions, String> {
     let (entry, directory, prefix) = source(path)?;
     let parent = parent
@@ -154,7 +195,9 @@ pub fn options(path: &str, parent: Option<&str>) -> Result<CopyOptions, String> 
     let reflink = same_device(&prefix, &parent)
         && game_profiles::reflink_available(&prefix)
         && probe_reflink(&parent);
+    let suggested_name = suggested_copy_name(&entry.name, &parent, directory.join("copy.json").is_file())?;
     Ok(CopyOptions {
+        suggested_name,
         parent: parent.to_string_lossy().into_owned(),
         filesystem: filesystem(&parent),
         reflink,
@@ -501,6 +544,27 @@ mod tests {
         assert_eq!(fs::read(base.join("user.reg")).unwrap(),b"original registry");
         fs::remove_dir_all(&target).unwrap();
         assert_eq!(fs::read(&executable).unwrap(),b"MZgame");
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn copy_names_skip_occupied_destinations_and_continue_the_original_title() {
+        let root = std::env::temp_dir().join(format!("peligames-copy-names-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&root).unwrap();
+        assert_eq!(suggested_copy_name("Jogo X", &root, false).unwrap(), "Jogo X (1)");
+        fs::create_dir(root.join("Jogo X (1)")).unwrap();
+        fs::write(root.join("Jogo X (2)"), b"occupied").unwrap();
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(root.join("missing"), root.join("Jogo X (3)")).unwrap();
+        let expected = if cfg!(unix) { "Jogo X (4)" } else { "Jogo X (3)" };
+        for title in ["Jogo X", "Jogo X (1)", "Jogo X - cópia", "Jogo X - cópia 2", "Jogo X - cópia (1)"] {
+            assert_eq!(suggested_copy_name(title, &root, true).unwrap(), expected);
+        }
+        assert_eq!(suggested_copy_name("Jogo (2025)", &root, false).unwrap(), "Jogo (2025) (1)");
+        assert_eq!(suggested_copy_name("Jogo (2025) (1)", &root, true).unwrap(), "Jogo (2025) (1)");
+        assert_eq!(suggested_copy_name("Jogo (2025) - cópia", &root, true).unwrap(), "Jogo (2025) (1)");
+        let long = suggested_copy_name(&"á".repeat(100), &root, false).unwrap();
+        assert_eq!(long.chars().count(), 100);
+        assert!(valid_name(&long));
         fs::remove_dir_all(root).unwrap();
     }
     #[test]

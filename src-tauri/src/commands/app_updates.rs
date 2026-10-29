@@ -8,7 +8,7 @@ mod update_storage;
 
 fn update_cache_root() -> Result<PathBuf, String> {
     // Kept with the rest of the launcher data, so one folder holds everything.
-    crate::core::paths::app_root().map_err(|error| format!("download|{error}"))
+    crate::core::paths::app_path("cache").map_err(|error| format!("download|{error}"))
 }
 
 // The release list, not /releases/latest: that one skips experimental
@@ -53,7 +53,7 @@ fn newest(releases: Vec<Release>, experimental: bool) -> Option<Release> {
 /// `updates.json`: the update channel, apart from config.json (which the
 /// interface rewrites as a whole).
 fn channel_file() -> Result<PathBuf, String> {
-    Ok(crate::core::paths::app_root()?.join("updates.json"))
+    Ok(crate::core::paths::app_path("updates.json")?)
 }
 /// Whether test (pre-release) versions are offered; stable only by default.
 fn experimental_updates() -> bool {

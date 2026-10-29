@@ -196,9 +196,14 @@ pub(super) fn prepare(
     hash.update(&deps);
     let cache = super::nexus_profile::directory(game)?.join("archive-cache");
     fs::create_dir_all(&cache).map_err(|e| e.to_string())?;
-    let target = cache.join(format!("{}-{:x}.zip", item.id, hash.finalize()));
-    if !target.is_file() {
-        let temporary = cache.join(format!("{}.tmp", uuid::Uuid::new_v4()));
+    // Named after the stored package; the zip comment records what it was built from.
+    let source = format!("{:x}", hash.finalize());
+    let package = super::nexus_archive::stored_package(game, item)?;
+    let stem = package.file_stem().and_then(|s| s.to_str()).ok_or("Nome de pacote inválido.")?;
+    let target = cache.join(format!("{stem}-smapi.zip"));
+    let current = fs::File::open(&target).ok().and_then(|f| zip::ZipArchive::new(f).ok()).is_some_and(|zip| zip.comment() == source.as_bytes());
+    if !current {
+        let temporary = cache.join(format!(".{stem}-smapi-{}.tmp", uuid::Uuid::new_v4()));
         let result = (|| {
             let mut output =
                 zip::ZipWriter::new(fs::File::create(&temporary).map_err(|e| e.to_string())?);
@@ -225,6 +230,7 @@ pub(super) fn prepare(
                 )
                 .map_err(|e| e.to_string())?;
             output.write_all(&deps).map_err(|e| e.to_string())?;
+            output.set_comment(source.clone());
             output
                 .finish()
                 .map_err(|e| e.to_string())?

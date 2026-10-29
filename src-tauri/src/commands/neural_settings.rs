@@ -1,4 +1,5 @@
 use std::{fs, io::Read, path::{Path, PathBuf}};
+pub(super) static SETTINGS_WRITE: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 fn enabled_in_ini(text: &str) -> Option<bool> {
     bool_in_section(text, "DlssNr", "Enabled")
@@ -127,7 +128,7 @@ fn lumenite_in_ini(text: &str) -> bool {
 pub(super) fn lumenite_selected(game_dir: &Path) -> Result<bool, String> {
     Ok(lumenite_in_ini(&read_file(&game_dir.join("dlssnr-amd.ini"))?))
 }
-fn read_file(path: &Path) -> Result<String, String> {
+pub(super) fn read_file(path: &Path) -> Result<String, String> {
     match fs::File::open(path) {
         Ok(file) => {
             if file.metadata().map_err(|e| e.to_string())?.len() > 1024 * 1024 { return Err("Configuration file is too large".into()); }
@@ -140,7 +141,7 @@ fn read_file(path: &Path) -> Result<String, String> {
     }
 }
 
-fn write_settings(path: &Path, text: &str) -> Result<(), String> {
+pub(super) fn write_settings(path: &Path, text: &str) -> Result<(), String> {
     if fs::symlink_metadata(path).map(|meta| meta.file_type().is_symlink()).unwrap_or(false) { return Err("Redirected configuration files are not supported".into()); }
     let temporary = path.with_file_name(format!(".dlssnr-settings-{}.tmp", uuid::Uuid::new_v4()));
     let result = (|| {
@@ -158,9 +159,22 @@ pub struct NeuralSettings {
     pub renodx: bool,
 }
 
-fn get_settings(game_dir: &Path) -> Result<NeuralSettings, String> {
+pub(super) fn get_settings(game_dir: &Path) -> Result<NeuralSettings, String> {
     let root = super::installer::installed_mod_directory(game_dir).ok_or("Neural Rendering is not installed in this game")?;
     let backend_text = read_file(&root.join("dlssnr-amd.ini"))?;
+    if crate::core::neural_config::supported(&backend_text) {
+        let sections=crate::core::neural_config::sections(&backend_text);
+        let layers=crate::core::neural_config::layers(&sections);
+        if let Some(first)=layers.first() {
+            return Ok(NeuralSettings {
+                enabled: crate::core::neural_config::flag(crate::core::neural_config::get(&sections,"RenoDX","NeuralUplift"),true),
+                renodx: crate::core::neural_config::get(&sections,first,"Processing").is_none_or(|v|v.eq_ignore_ascii_case("renodx")),
+            });
+        }
+        let plugin=root.join("OptiScaler/plugins/dlssnr-amd.asi").is_file();
+        let renodx=crate::core::neural_config::flag(crate::core::neural_config::get(&sections,"RenoDX","Enabled"),plugin);
+        return Ok(NeuralSettings { enabled: !renodx || crate::core::neural_config::flag(crate::core::neural_config::get(&sections,"RenoDX","NeuralUplift"),true), renodx });
+    }
     let renodx = bool_in_section(&backend_text, "RenoDX", "Enabled").unwrap_or(false);
     let enabled = if renodx {
         bool_in_section(&backend_text, "RenoDX", "NeuralUplift").unwrap_or(true)
@@ -178,9 +192,15 @@ fn get_settings(game_dir: &Path) -> Result<NeuralSettings, String> {
 }
 
 fn set_options(game_dir: &Path, enabled: bool, renodx: Option<bool>) -> Result<(), String> {
-    let path = settings_path(game_dir)?;
+    let _write=SETTINGS_WRITE.lock().map_err(|e|e.to_string())?;
     let root = super::installer::installed_mod_directory(game_dir).ok_or("Neural Rendering is not installed in this game")?;
     let backend = root.join("dlssnr-amd.ini");
+    let backend_text = read_file(&backend)?;
+    if crate::core::neural_config::supported(&backend_text) {
+        let plugin=root.join("OptiScaler/plugins/dlssnr-amd.asi").is_file();
+        return write_settings(&backend,&crate::core::neural_config::startup(&backend_text,plugin,enabled,renodx));
+    }
+    let path = settings_path(game_dir)?;
     let canonical_root = root.canonicalize().map_err(|e| e.to_string())?;
     let canonical_parent = path.parent().ok_or("Invalid configuration path")?.canonicalize().map_err(|e| e.to_string())?;
     if !canonical_parent.starts_with(&canonical_root) { return Err("Redirected configuration directories are not supported".into()); }
@@ -333,6 +353,19 @@ mod saved_options_tests {
         assert!(techniques_in_preset(&preset).unwrap().split(',').any(is_feed));
         assert!(!get_settings(&f.0).unwrap().enabled);
         assert_eq!(bool_in_section(&read_file(&f.0.join("dlssnr-amd.ini")).unwrap(), "RenoDX", "NeuralUplift"), Some(false));
+    }
+    #[test]
+    fn plugin_startup_uses_the_nr_chain_without_rewriting_optiscaler() {
+        let f=Fixture::new(true);
+        let plugin=f.0.join("OptiScaler/plugins"); fs::create_dir_all(&plugin).unwrap(); fs::write(plugin.join("dlssnr-amd.asi"),b"MZ").unwrap();
+        let original=read_file(&f.0.join("OptiScaler.ini")).unwrap();
+        fs::write(f.0.join("dlssnr-amd.ini"),"[Network]\nModel=CC_SMALL_FP8_EXPERIMENTAL\n[Inspect]\nCompare=0\n[HudFix]\nMode=1\n[RenoDX]\nEnabled=1\nNRIntensity=0.7\n").unwrap();
+        set_options(&f.0,false,Some(false)).unwrap();
+        assert_eq!(get_settings(&f.0).unwrap(),NeuralSettings{enabled:false,renodx:false});
+        assert_eq!(read_file(&f.0.join("OptiScaler.ini")).unwrap(),original);
+        let text=read_file(&f.0.join("dlssnr-amd.ini")).unwrap();
+        assert!(text.contains("Model=CC_SMALL_FP8_EXPERIMENTAL"));
+        assert!(text.contains("nrintensity = 0.7"));
     }
     #[test]
     fn installer_startup_preserves_the_selected_mode() {

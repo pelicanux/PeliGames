@@ -22,7 +22,7 @@ fn default_directory() -> Result<PathBuf, String> {
         .join("PeliGames"))
 }
 fn config() -> Result<PathBuf, String> {
-    Ok(super::super::paths::app_root()?.join("capture-storage.json"))
+    Ok(super::super::paths::app_path("capture-storage.json")?)
 }
 fn read(config: &Path, default: &Path) -> Result<PathBuf, String> {
     match fs::read(config) {

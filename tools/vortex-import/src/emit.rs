@@ -85,6 +85,14 @@ fn is_re_engine(f: &GameFacts) -> bool {
     (family.contains("RE Engine") || family.contains("Fluffy")) && f.mod_types.iter().any(|m| m.id.ends_with("-reframework"))
 }
 
+/// Fluffy folder of the template (`FLUFFY_FOLDER`), when it is a plain folder name.
+fn re_engine_family(f: &GameFacts) -> Value {
+    match f.constants.get("FLUFFY_FOLDER").filter(|name| relative_file(name) && !name.contains('/')) {
+        Some(folder) => json!({ "kind": "re_engine", "fluffy": folder }),
+        None => json!({ "kind": "re_engine" }),
+    }
+}
+
 pub fn re_engine_module(f: &GameFacts, evidence: &str, nexus: Option<&NexusIndex>) -> Result<(Value, Value), String> {
     let (domain, name, steam, nexus_game_id) = identity_facts(f, nexus)?;
     // A constante EXEC é o jogo completo; o primeiro retorno pode ser a demo.
@@ -93,6 +101,8 @@ pub fn re_engine_module(f: &GameFacts, evidence: &str, nexus: Option<&NexusIndex
     if !relative_file(&exec) || !lower.ends_with(".exe") || lower == "gamelaunchhelper.exe" || lower.contains("trial") || lower.contains("demo") {
         return Err(format!("executável inválido: {exec}"));
     }
+    let family = re_engine_family(f);
+    let note = if family.get("fluffy").is_some() { "Módulo gerado do template RE Engine do Vortex: scripts, plugins e dados REFramework, carregador dinput8.dll, Fluffy Mod Manager (mods com modinfo.ini e presets .prt) e DLLs de upscaler na raiz. natives/ e pak_mods sem modinfo.ini são recusados. Estrutura verificada por testes sintéticos; não validado no jogo." } else { "Módulo gerado do template RE Engine do Vortex: scripts, plugins e dados REFramework e o carregador dinput8.dll. Pacotes natives/, pak_mods e mods Fluffy são recusados. Estrutura verificada por testes sintéticos; não validado no jogo." };
     let mut module = json!({
         "schema": 1,
         "version": "1.0.0",
@@ -100,7 +110,7 @@ pub fn re_engine_module(f: &GameFacts, evidence: &str, nexus: Option<&NexusIndex
         "name": name,
         "platform": "proton",
         "engine": "deployment",
-        "family": { "kind": "re_engine" },
+        "family": family,
         "executable": exec,
         "required": [exec],
         "header": [77, 90],
@@ -108,7 +118,7 @@ pub fn re_engine_module(f: &GameFacts, evidence: &str, nexus: Option<&NexusIndex
         "routes": [],
         "sources": [evidence],
         "credits": [CREDITS],
-        "notes": ["Módulo gerado do template RE Engine do Vortex: scripts, plugins e dados REFramework e o carregador dinput8.dll. Pacotes natives/, pak_mods e mods Fluffy são recusados. Estrutura verificada por testes sintéticos; não validado no jogo."],
+        "notes": [note],
     });
     if let Some(id) = &steam {
         module["steam_id"] = json!(id);
@@ -119,14 +129,25 @@ pub fn re_engine_module(f: &GameFacts, evidence: &str, nexus: Option<&NexusIndex
     } else if let Some((id, domain)) = nexus_page(f, "REF_PAGE_NO", "REF_DOMAIN") {
         module["downloads"] = json!([{ "name": "REFramework", "source": "nexus", "mod_id": id, "domain": domain, "prefix": "REFramework", "present": ["dinput8.dll"] }]);
     }
-    let cases = vec![
+    let mut cases = vec![
         json!({ "source": "dinput8.dll", "target": "dinput8.dll" }),
         json!({ "source": "Mod/reframework/autorun/example.lua", "target": "reframework/autorun/example.lua" }),
         json!({ "source": "reframework/plugins/example.dll", "target": "reframework/plugins/example.dll" }),
         json!({ "source": "Pack/reframework/data/example.json", "target": "reframework/data/example.json" }),
     ];
-    let audit = audit_entry(&domain, &name, evidence, cases,
-        "Identificação (executável, Steam ID) extraída da extensão; rotas REFramework do perfil RE Engine compartilhado. Mods Fluffy, natives e presets da extensão não são aplicados.",
+    let summary = if let Some(folder) = family.get("fluffy").and_then(Value::as_str) {
+        let games = format!("Games/{folder}");
+        cases.extend([
+            json!({ "source": "FluffyMod/modinfo.ini", "target": format!("{games}/Mods/FluffyMod/modinfo.ini") }),
+            json!({ "source": "FluffyMod/natives/STM/example.tex", "target": format!("{games}/Mods/FluffyMod/natives/STM/example.tex") }),
+            json!({ "source": "Example.prt", "target": format!("{games}/Presets/Example.prt") }),
+            json!({ "source": "nvngx_dlss.dll", "target": "nvngx_dlss.dll" }),
+        ]);
+        "Identificação (executável, Steam ID) e pasta do Fluffy extraídas da extensão; rotas REFramework, Fluffy (modinfo.ini, presets .prt) e DLLs da raiz do perfil RE Engine compartilhado. natives/ e pak_mods sem modinfo.ini não são aplicados."
+    } else {
+        "Identificação (executável, Steam ID) extraída da extensão; rotas REFramework do perfil RE Engine compartilhado. Mods Fluffy, natives e presets da extensão não são aplicados."
+    };
+    let audit = audit_entry(&domain, &name, evidence, cases, summary,
         nexus_game_id);
     Ok((module, audit))
 }
@@ -174,24 +195,15 @@ fn identity_facts(f: &GameFacts, nexus: Option<&NexusIndex>) -> Result<(String, 
     Ok((domain, name, steam, nexus_game_id))
 }
 
-fn audit_entry(domain: &str, name: &str, evidence: &str, cases: Vec<Value>, finding: &str, nexus_game_id: Option<u64>) -> Value {
+fn audit_entry(domain: &str, name: &str, evidence: &str, cases: Vec<Value>, _finding: &str, nexus_game_id: Option<u64>) -> Value {
     let mut audit = json!({
         "domain": domain,
         "name": name,
         "module_version": "1.0.0",
         "vortex_status": "confirmed",
         "vortex_evidence": [evidence],
-        "extension_code_compared": false,
-        "generated_by": "tools/vortex-import",
-        "framework_ids_checked": [],
         "route_sample_kind": "synthetic_family_layout",
         "route_cases": cases,
-        "findings": [finding],
-        "pending_checks": [
-            "Conferir domínio Nexus e executáveis em uma instalação real.",
-            "Amostragem de pacotes reais populares e recentes.",
-            "Execução no jogo real com versão do jogo, loader e Proton registradas."
-        ],
         "runtime_verified": false
     });
     if let Some(id) = nexus_game_id {
@@ -659,6 +671,12 @@ mod tests {
         let (module, _) = re_engine_module(&f, "u", None).unwrap();
         assert_eq!(module["required"], json!(["re7.exe"]));
         assert_eq!(module["family"], json!({ "kind": "re_engine" }));
+        f.constants.insert("FLUFFY_FOLDER".into(), "RE7".into());
+        let (module, audit) = re_engine_module(&f, "u", None).unwrap();
+        assert_eq!(module["family"], json!({ "kind": "re_engine", "fluffy": "RE7" }));
+        assert!(audit["route_cases"].as_array().unwrap().iter().any(|case| case["target"] == "Games/RE7/Mods/FluffyMod/modinfo.ini"));
+        f.constants.insert("FLUFFY_FOLDER".into(), "../RE7".into());
+        assert_eq!(re_engine_module(&f, "u", None).unwrap().0["family"], json!({ "kind": "re_engine" }));
         f.constants.remove("EXEC");
         assert!(re_engine_module(&f, "u", None).is_err(), "executável de demo recusado");
         f.mod_types.clear();

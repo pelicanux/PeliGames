@@ -76,7 +76,7 @@ export function NexusGameBackup({ gameId, disabled, onError, onSaved, onStatusTe
   useEffect(() => { onStatusTextChange?.(statusText); }, [statusText, onStatusTextChange]);
   return <div className="installation-field nexus-game-backup-control">
     <label><MenuIcon name="floppy" />{pt ? "Backup individual" : "Individual backup"}</label>
-    <div className={`neural-startup-switch nexus-game-backup-box${enabled ? " enabled" : ""}`}>
+    <div className="nexus-game-backup-actions">
       <HoverTooltip text={pt ? "Salva os pacotes e registros na pasta .peligames deste jogo. Esta escolha vale somente para este jogo." : "Saves packages and records in this game's .peligames folder. This choice applies only to this game."} anchorClassName="nexus-game-backup-tooltip">
         <ModOptionSwitch label={pt ? "Cópia de recuperação deste jogo" : "Recovery copy for this game"} enabled={enabled} disabled={locked} onToggle={() => void toggle(!enabled)} />
       </HoverTooltip>

@@ -402,7 +402,10 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
       </>}
 
       {step === 0 && <>
-        <h2>{mode === "repair" ? tr("Qual prefixo deseja usar para reparar?") : mode === "add" ? tr("Onde deseja criar o prefixo?") : tr("Onde deseja instalar?")}</h2>
+        <div className="pi-location-heading">
+          <h2>{mode === "repair" ? tr("Qual prefixo deseja usar para reparar?") : mode === "add" ? tr("Onde deseja criar o prefixo?") : tr("Onde deseja instalar?")}</h2>
+          {mode === "add" && <p className="pi-hint">{tr("Pasta com o ambiente Windows usado pelo jogo.")}</p>}
+        </div>
         {!validFile && <button type="button" className="pi-btn" onClick={() => void chooseFile()}><MenuIcon name="folderSearch" />{mode === "repair" ? tr("Selecionar instalador") : tr("Selecionar executável")}</button>}
         {mode !== "repair" && <div className="pi-cards">
           {card("default", icon("download", "var(--pi-accent-hi)", "var(--pi-accent-lo)"), tr("Pasta padrão"), tr("Pasta de jogos do PeliGames, definida nas Configurações."), () => void location.selectDefault().then(() => setPlaceKind("default")).catch(error => setError(String(error))), { pressed: placeKind === "default" })}

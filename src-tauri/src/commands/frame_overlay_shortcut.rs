@@ -19,7 +19,7 @@ pub struct Status {
     pub preferences: Preferences,
 }
 fn path() -> Result<std::path::PathBuf, String> {
-    Ok(crate::core::paths::app_root()?.join("frame-overlay.json"))
+    Ok(crate::core::paths::app_path("frame-overlay.json")?)
 }
 fn load() -> Preferences {
     path()

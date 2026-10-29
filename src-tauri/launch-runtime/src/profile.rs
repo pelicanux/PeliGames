@@ -37,10 +37,18 @@ pub fn app_id(value: &str) -> Result<u32, String> {
         .ok_or_else(|| "Steam AppID inválido.".into())
 }
 
+/// Ids made before readable names: `pg-` and 8 hex digits. They keep working
+/// through the profiles' `.aliases.json` after the rename.
+pub fn hashed_profile_id(value: &str) -> bool {
+    value.len() == 11 && value.starts_with("pg-") && value[3..].bytes().all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c))
+}
+/// A profile id is the game's name (`tomb-raider`, `tomb-raider-2`): lowercase
+/// letters and digits joined by single hyphens, so it is also a safe file name.
+/// At least one letter keeps it apart from the per-AppID profiles (`42.json`).
 pub fn profile_id(value: &str) -> Result<&str, String> {
-    if value.len() == 11 && value.starts_with("pg-") && value[3..].bytes().all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c)) {
-        Ok(value)
-    } else { Err("Identificador PeliRun inválido.".into()) }
+    let readable = value.len() <= 64 && value.bytes().any(|c| c.is_ascii_lowercase())
+        && value.split('-').all(|part| !part.is_empty() && part.bytes().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit()));
+    if readable || hashed_profile_id(value) { Ok(value) } else { Err("Identificador PeliRun inválido.".into()) }
 }
 
 impl Profile {

@@ -3,7 +3,6 @@ use super::{
     nexus_local::{LocalMod, NexusGame},
     nexus_profile::directory,
 };
-use sha2::{Digest, Sha256};
 use std::{
     ffi::{c_char, c_int, c_void, CStr, CString},
     fs,
@@ -228,6 +227,82 @@ pub(super) fn normalize(source: &Path, destination: &Path) -> Result<(), String>
         .sync_all()
         .map_err(|e| e.to_string())
 }
+/// Reserves `archives/<mod>-<version>.<ext>` (`-2`, `-3`… for repeats) by creating
+/// it empty, so concurrent imports never share a file. The mod id stays in the
+/// workspace entry, never in the name.
+pub(super) fn reserve_package(folder: &Path, name: &str, version: &str, extension: &str) -> Result<std::path::PathBuf, String> {
+    if extension.is_empty() || !extension.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_') {
+        return Err("Extensão de pacote inválida.".into());
+    }
+    let label = if version.trim().is_empty() { name.to_string() } else { format!("{name} {version}") };
+    let stem = crate::core::paths::names::slug(&label);
+    for number in 1..=16384 {
+        let path = folder.join(if number == 1 { format!("{stem}.{extension}") } else { format!("{stem}-{number}.{extension}") });
+        match fs::OpenOptions::new().write(true).create_new(true).open(&path) {
+            Ok(_) => return Ok(path),
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(error) => return Err(error.to_string()),
+        }
+    }
+    Err("Não foi possível reservar um nome para o pacote.".into())
+}
+/// The mod's stored package: the file recorded in `item.archive` inside the
+/// game's `archives`, or `<id>.<ext>` saved before readable names.
+pub(super) fn stored_package(game: &NexusGame, item: &LocalMod) -> Result<std::path::PathBuf, String> {
+    uuid::Uuid::parse_str(&item.id).map_err(|_| "Mod inválido.")?;
+    let folder = directory(game)?.join("archives");
+    let recorded = Path::new(&item.archive).file_name().and_then(|name| name.to_str())
+        .filter(|name| !name.starts_with('.') && super::nexus_modules::relative(name))
+        .map(|name| folder.join(name));
+    let extension = Path::new(&item.archive).extension().and_then(|ext| ext.to_str()).unwrap_or("").to_ascii_lowercase();
+    let legacy = folder.join(format!("{}.{extension}", item.id));
+    Ok(match recorded {
+        Some(path) if path.is_file() || !legacy.is_file() => path,
+        _ => legacy,
+    })
+}
+/// Converted copies of a package (`archive-cache/<package>.zip`, `<package>-smapi.zip`),
+/// including the `<id>-<hash>.zip` names used before readable names.
+pub(super) fn remove_cached(game: &NexusGame, item: &LocalMod) {
+    let Ok(cache) = directory(game).map(|d| d.join("archive-cache")) else { return };
+    if let Some(stem) = stored_package(game, item).ok().and_then(|p| p.file_stem().and_then(|s| s.to_str()).map(String::from)) {
+        for name in [format!("{stem}.zip"), format!("{stem}-smapi.zip")] { let _ = fs::remove_file(cache.join(name)); }
+    }
+    if let Ok(entries) = fs::read_dir(&cache) {
+        for entry in entries.flatten() {
+            if entry.file_name().to_str().is_some_and(|name| name.starts_with(&format!("{}-", item.id)) && name.ends_with(".zip")) { let _ = fs::remove_file(entry.path()); }
+        }
+    }
+}
+/// A cached conversion is current when written after its package (packages are
+/// never rewritten in place: a new import gets a new file).
+pub(super) fn cache_current(cache: &Path, package: &Path) -> bool {
+    let modified = |path: &Path| fs::metadata(path).and_then(|m| m.modified()).ok();
+    cache.is_file() && matches!((modified(cache), modified(package)), (Some(cache), Some(package)) if cache >= package)
+}
+/// Gives a package saved as `<id>.<ext>` its readable name and records it.
+pub(super) fn readable_package(game: &NexusGame, item: &mut LocalMod) -> Result<bool, String> {
+    let recorded = Path::new(&item.archive);
+    if recorded.file_stem().and_then(|s| s.to_str()) != Some(item.id.as_str()) && recorded.is_file() {
+        return Ok(false);
+    }
+    let current = stored_package(game, item)?;
+    if current.file_stem().and_then(|s| s.to_str()) != Some(item.id.as_str()) || !current.is_file() {
+        let recorded = current.to_string_lossy().into_owned();
+        let changed = current.is_file() && item.archive != recorded;
+        if changed { item.archive = recorded; }
+        return Ok(changed);
+    }
+    let extension = current.extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
+    let target = reserve_package(current.parent().ok_or("Pasta de pacotes inválida.")?, &item.name, &item.version, &extension)?;
+    if let Err(error) = fs::rename(&current, &target) {
+        let _ = fs::remove_file(&target);
+        return Err(error.to_string());
+    }
+    remove_cached(game, &LocalMod { archive: current.to_string_lossy().into_owned(), ..item.clone() });
+    item.archive = target.to_string_lossy().into_owned();
+    Ok(true)
+}
 pub(super) fn open(game: &NexusGame, item: &LocalMod) -> Result<zip::ZipArchive<fs::File>, String> {
     uuid::Uuid::parse_str(&item.id).map_err(|_| "Mod inválido.")?;
     let extension = Path::new(&item.archive)
@@ -248,30 +323,20 @@ pub(super) fn open(game: &NexusGame, item: &LocalMod) -> Result<zip::ZipArchive<
     if !archive && !supported_filename(&original) {
         return Err("Formato de arquivo não suportado.".into());
     }
-    let source = directory(game)?
-        .join("archives")
-        .join(format!("{}.{}", item.id, extension));
+    let source = stored_package(game, item)?;
     let path = if extension == "zip" {
         source
     } else {
         let cache = directory(game)?.join("archive-cache");
         fs::create_dir_all(&cache).map_err(|e| e.to_string())?;
-        let mut hash = Sha256::new();
-        if !archive {
-            hash.update(original.as_bytes());
-        }
-        let mut file = fs::File::open(&source).map_err(|e| e.to_string())?;
-        let mut buf = [0u8; 65536];
-        loop {
-            let size = file.read(&mut buf).map_err(|e| e.to_string())?;
-            if size == 0 {
-                break;
-            }
-            hash.update(&buf[..size]);
-        }
-        let target = cache.join(format!("{}-{:x}.zip", item.id, hash.finalize()));
-        if !target.is_file() {
-            let temporary = cache.join(format!("{}.tmp", uuid::Uuid::new_v4()));
+        let stem = source.file_stem().and_then(|s| s.to_str()).ok_or("Nome de pacote inválido.")?;
+        let target = cache.join(format!("{stem}.zip"));
+        // A loose file is stored under the mod's current name; a rename rebuilds it.
+        let current = cache_current(&target, &source) && (archive || fs::File::open(&target).ok()
+            .and_then(|f| zip::ZipArchive::new(f).ok())
+            .is_some_and(|mut zip| zip.len() == 1 && zip.by_index(0).is_ok_and(|entry| entry.name() == original)));
+        if !current {
+            let temporary = cache.join(format!(".{stem}-{}.tmp", uuid::Uuid::new_v4()));
             let result = if ["7z", "rar"].contains(&extension.as_str()) {
                 normalize(&source, &temporary)
             } else {

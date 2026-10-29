@@ -98,7 +98,7 @@ pub struct Workspace {
     pub(super) games: Vec<NexusGame>,
 }
 pub(super) fn root() -> Result<PathBuf, String> {
-    let path = paths::app_root()?.join("Mod/Nexus");
+    let path = paths::app_path("Mod/Nexus")?;
     fs::create_dir_all(&path).map_err(|e| e.to_string())?;
     Ok(path)
 }
@@ -133,6 +133,12 @@ pub(super) fn load() -> Result<Workspace, String> {
                 // One read of the running processes for every game.
                 let processes = super::nexus_deployment::ProcessSnapshot::take();
                 for game in &mut data.games {
+                    // Storage and packages saved with ids as names get readable names.
+                    // A failure leaves the old names working and is retried on the next load.
+                    match super::nexus_durable::readable_storage(game) {
+                        Ok(changed) => paths_changed |= changed,
+                        Err(error) => crate::core::logger::event("WARN", &format!("Nomes legíveis dos mods de {}: {error}", game.game["name"].as_str().unwrap_or("jogo"))),
+                    }
                     let storage = super::nexus_profile::directory(game)?;
                     let legacy = root()?.join("games").join(&game.id);
                     let named_legacy = super::nexus_storage::legacy_directory(game)?;
@@ -141,6 +147,13 @@ pub(super) fn load() -> Result<Workspace, String> {
                             let archive = storage.join(relative).to_string_lossy().to_string();
                             paths_changed |= item.archive != archive;
                             item.archive = archive;
+                        }
+                    }
+                    let owner = game.clone();
+                    for item in &mut game.mods {
+                        match super::nexus_archive::readable_package(&owner, item) {
+                            Ok(changed) => paths_changed |= changed,
+                            Err(error) => crate::core::logger::event("WARN", &format!("Nome legível do pacote {}: {error}", item.name)),
                         }
                     }
                     if let Some(source) = game.game["directory"].as_str() {
@@ -168,17 +181,39 @@ pub(super) fn load() -> Result<Workspace, String> {
                     game.running = super::nexus_profile::running_in(&processes, game);
                     paths_changed |= dependency_order(game);
                 }
-                if paths_changed { save(&data)?; }
-                super::nexus_durable::recover(&mut data)?;
+                recover_workspace(&mut data, paths_changed)?;
                 Ok(data)
             }),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             let mut data=Workspace::default();
-            super::nexus_durable::recover(&mut data)?;
+            recover_workspace(&mut data, false)?;
             Ok(data)
         },
         Err(e) => Err(e.to_string()),
     }
+}
+// A recovered workspace must also be readable by detached log windows and
+// other snapshot readers, without rescanning or recovering on each log poll.
+fn recover_workspace(data: &mut Workspace, changed: bool) -> Result<(), String> {
+    let previous_count = data.games.len();
+    super::nexus_durable::recover(data)?;
+    if data.games.len() != previous_count {
+        let processes = super::nexus_deployment::ProcessSnapshot::take();
+        for game in data.games.iter_mut().skip(previous_count) {
+            // adapter/running are intentionally not deserialized. Rebuild these
+            // capabilities before returning the recovered entries to the UI.
+            refresh_recovered_game(game, &processes);
+        }
+    }
+    if changed || data.games.len() != previous_count { save(data)?; }
+    Ok(())
+}
+fn refresh_recovered_game(game: &mut NexusGame, processes: &super::nexus_deployment::ProcessSnapshot) {
+    super::nexus_deployment::detect(game);
+    game.adapter = super::nexus_profile::adapter(game);
+    if !game.adapter.is_empty() { game.nexus_domain = game.adapter.clone(); }
+    game.running = super::nexus_profile::running_in(processes, game);
+    dependency_order(game);
 }
 pub(super) fn save(data: &Workspace) -> Result<(), String> {
     let mut ordered = data.clone();
@@ -223,7 +258,7 @@ pub async fn scan_nexus_library(app: tauri::AppHandle) -> Result<Workspace, Stri
         if let Some(url) = game["cover_url"].as_str().filter(|url| url.starts_with("file://")) {
             let source = reqwest::Url::parse(url).ok().and_then(|url| url.to_file_path().ok());
             game["cover_url"] = match source {
-                Some(source) => super::covers::cache_heroic_cover(source).await.ok()
+                Some(source) => super::covers::cache_heroic_cover(source,game["name"].as_str().unwrap_or("game").to_owned()).await.ok()
                     .and_then(|path| reqwest::Url::from_file_path(path).ok()).map(|url| serde_json::Value::String(url.to_string())).unwrap_or_default(),
                 None => serde_json::Value::Null,
             };
@@ -819,8 +854,14 @@ async fn import_archive_inner(
         uuid::Uuid::parse_str(&game.id).map_err(|_| "Identificador inválido.")?;
         let directory = super::nexus_profile::directory(game)?.join("archives");
         fs::create_dir_all(&directory).map_err(|e| e.to_string())?;
-        let destination = directory.join(format!("{id}.{extension}"));
         let package = package_identity(path);
+        let name = nexus_source.as_ref().filter(|s| !s.name.trim().is_empty()).map(|s| s.name.clone()).or_else(|| package.as_ref().map(|(name,_)|name.clone())).unwrap_or_else(|| path
+            .file_stem()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string());
+        let version = nexus_source.as_ref().map(|s| s.version.clone()).or_else(||package.as_ref().map(|(_,version)|version.clone())).unwrap_or_default();
+        let destination = super::nexus_archive::reserve_package(&directory, &name, &version, &extension)?;
         if let Err(error) = fs::copy(path, &destination) {
             let _ = fs::remove_file(&destination);
             return Err(error.to_string());
@@ -828,12 +869,8 @@ async fn import_archive_inner(
         game.mods.push(LocalMod {
             id,
             identification_note: None,
-            name: nexus_source.as_ref().filter(|s| !s.name.trim().is_empty()).map(|s| s.name.clone()).or_else(|| package.as_ref().map(|(name,_)|name.clone())).unwrap_or_else(|| path
-                .file_stem()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .to_string()),
-            version: nexus_source.as_ref().map(|s| s.version.clone()).or_else(||package.as_ref().map(|(_,version)|version.clone())).unwrap_or_default(),
+            name,
+            version,
             archive: destination.to_string_lossy().to_string(),
             size: metadata.len(),
             installed: false,
@@ -908,9 +945,10 @@ fn change_mod_inner(
     }
     let old_profile = game.profile.clone();
     let rebuild = game.mods[index].installed || !matches!(operation, "remove" | "move_up" | "move_down");
+    let mut removed = None;
     match operation {
         "remove" => {
-            game.mods.remove(index);
+            removed = Some(game.mods.remove(index));
         }
         "install" => {
             game.mods[index].installed = true;
@@ -969,13 +1007,10 @@ fn change_mod_inner(
             super::nexus_profile::discard(&updated_game, &revision);
         }
     }
-    if operation == "remove" {
-        let owned = super::nexus_profile::directory(&updated_game)?
-            .join("archives")
-            .join(format!("{mod_id}.{archive_extension}"));
-        let _ = fs::remove_file(owned);
-        if let Ok(entries) = fs::read_dir(super::nexus_profile::directory(&updated_game)?.join("archive-cache")) {
-            for entry in entries.flatten() { if entry.file_name().to_str().is_some_and(|name|name.starts_with(&format!("{mod_id}-")) && name.ends_with(".zip")) {let _ = fs::remove_file(entry.path());} }
+    if let Some(item) = removed {
+        super::nexus_archive::remove_cached(&updated_game, &item);
+        if let Ok(owned) = super::nexus_archive::stored_package(&updated_game, &item) {
+            let _ = fs::remove_file(owned);
         }
     }
     Ok(data)
@@ -1073,9 +1108,17 @@ pub async fn stop_nexus_game(game_id: String) -> Result<Workspace, String> {
 // committed snapshot without waiting for deployment or rescanning every game.
 pub(super) fn log_game(game_id: &str) -> Result<NexusGame, String> {
     uuid::Uuid::parse_str(game_id).map_err(|_| "Identificador de jogo inválido.")?;
-    let bytes = fs::read(root()?.join("library.json")).map_err(|e| e.to_string())?;
-    let mut game = serde_json::from_slice::<Workspace>(&bytes).map_err(|e| e.to_string())?
-        .games.into_iter().find(|game| game.id == game_id).ok_or("Jogo não encontrado.")?;
+    log_game_at(&root()?.join("library.json"), game_id)
+}
+fn log_game_at(index: &Path, game_id: &str) -> Result<NexusGame, String> {
+    let bytes = fs::read(index).map_err(|error| {
+        if error.kind() == std::io::ErrorKind::NotFound {
+            "A biblioteca de mods ainda não foi recuperada. Reabra a biblioteca e depois os logs deste jogo.".into()
+        } else { format!("Não foi possível ler a biblioteca de mods: {error}") }
+    })?;
+    let mut game = serde_json::from_slice::<Workspace>(&bytes).map_err(|e| format!("Biblioteca de mods inválida: {e}"))?
+        .games.into_iter().find(|game| game.id == game_id)
+        .ok_or("Este jogo não está na biblioteca de mods atual. Reabra os logs pela biblioteca.")?;
     game.adapter = game.nexus_domain.clone();
     Ok(game)
 }
@@ -1386,9 +1429,11 @@ mod prune_tests {
     }
     #[test]
     fn manual_removal_requires_no_installed_mods() {
-        let folder = std::env::temp_dir();
+        let folder = std::env::temp_dir().join(format!("peligames-manual-removal-{}", uuid::Uuid::new_v4()));
+        fs::create_dir(&folder).unwrap();
         assert!(removable(&game("Manual", &folder, false)).is_ok());
         assert!(removable(&game("Manual", &folder, true)).unwrap_err().contains("mods instalados"));
+        fs::remove_dir_all(folder).unwrap();
     }
 }
 
@@ -1452,4 +1497,65 @@ pub(super) fn clear_game_launch_options(game_id:&str)->Result<(),String>{
     let _lock=STORAGE.lock().map_err(|e|e.to_string())?;let mut data=load()?;
     let game=data.games.iter_mut().find(|g|g.id==game_id).ok_or("Jogo não encontrado.")?;
     super::nexus_profile::idle(game)?;game.launch_options=None;save(&data)
+}
+
+#[cfg(test)]
+mod log_snapshot_tests {
+    use super::*;
+    #[test]
+    fn recovered_valheim_gets_its_toggle_capability_from_game_files() {
+        let root = std::env::temp_dir().join(format!("peligames-recovered-valheim-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(root.join("valheim_Data")).unwrap();
+        fs::write(root.join("valheim.x86_64"), b"\x7fELFfixture").unwrap();
+        fs::write(root.join("valheim_Data/globalgamemanagers"), b"fixture").unwrap();
+        let mut game: NexusGame = serde_json::from_value(serde_json::json!({
+            "id":uuid::Uuid::new_v4().to_string(),"platform":"native","mods":[],
+            "game":{"directory":root,"name":"Valheim","native_linux":true},
+            "nexus_domain":"valheim","adapter":"valheim","running":true
+        })).unwrap();
+        assert!(game.adapter.is_empty(), "derived capabilities are not serialized");
+        refresh_recovered_game(&mut game, &super::super::nexus_deployment::ProcessSnapshot::take());
+        assert_eq!(game.adapter, "valheim");
+        assert_eq!(game.nexus_domain, "valheim");
+        assert!(!game.running);
+        // A saved catalog association alone never authorizes changes in an unidentified folder.
+        fs::remove_file(root.join("valheim.x86_64")).unwrap();
+        refresh_recovered_game(&mut game, &super::super::nexus_deployment::ProcessSnapshot::take());
+        assert!(game.adapter.is_empty());
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn missing_or_stale_log_snapshot_explains_how_to_reopen_it() {
+        let root = std::env::temp_dir().join(format!("peligames-log-snapshot-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&root).unwrap();
+        let index = root.join("library.json");
+        let id = uuid::Uuid::new_v4().to_string();
+        let error = log_game_at(&index, &id).err().unwrap();
+        assert!(error.contains("biblioteca de mods"));
+        assert!(!error.contains("os error 2"));
+        assert!(!index.exists(), "opening a monitor must not create a guessed library");
+        fs::write(&index, br#"{"games":[]}"#).unwrap();
+        assert!(log_game_at(&index, &id).err().unwrap().contains("Reabra os logs"));
+        fs::write(&index, b"invalid").unwrap();
+        assert!(log_game_at(&index, &id).err().unwrap().contains("inválida"));
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn detached_monitor_reads_the_persisted_game_without_scanning_or_writing() {
+        let root = std::env::temp_dir().join(format!("peligames-log-readonly-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&root).unwrap();
+        let id = uuid::Uuid::new_v4().to_string();
+        let index = root.join("library.json");
+        let bytes = serde_json::to_vec(&serde_json::json!({"games":[{
+            "id":id,"game":{"name":"Restored game","directory":"/offline/game"},
+            "platform":"proton","mods":[],"nexus_domain":"example"
+        }]})).unwrap();
+        fs::write(&index, &bytes).unwrap();
+        let game = log_game_at(&index, &id).unwrap();
+        assert_eq!(game.id, id);
+        assert_eq!(game.adapter, "example");
+        assert_eq!(fs::read(&index).unwrap(), bytes);
+        assert_eq!(fs::read_dir(&root).unwrap().count(), 1);
+        fs::remove_dir_all(root).unwrap();
+    }
 }

@@ -43,24 +43,16 @@ fn root() -> Option<PathBuf> {
     if let Some(root) = std::env::var_os("PELI_OVERLAY_CONFIG_ROOT") {
         return Some(root.into());
     }
-    Some(
-        PathBuf::from(std::env::var_os("MAKO_CONFIG")?)
-            .parent()?
-            .parent()?
-            .parent()?
-            .to_owned(),
-    )
+    crate::storage_layout::from_profile(&PathBuf::from(std::env::var_os("MAKO_CONFIG")?))
 }
 pub(crate) fn load_shortcuts()->crate::capture_shortcuts::Preferences {
-    let Some(path)=root().map(|r|r.join("capture-shortcuts.json")) else {return Default::default();};
+    let Some(path)=root().map(|r|crate::storage_layout::join(&r, "capture-shortcuts.json")) else {return Default::default();};
     let Ok(meta)=fs::symlink_metadata(&path) else{return Default::default();};
     if !meta.is_file()||meta.uid()!=unsafe{libc::geteuid()}||meta.mode()&0o077!=0||meta.len()>4096{return Default::default();}
     fs::read(path).ok().and_then(|b|serde_json::from_slice(&b).ok()).unwrap_or_default()
 }
 fn request(command: &str) -> Result<Reply, String> {
-    let descriptor = root()
-        .ok_or("Pasta do launcher indisponível.")?
-        .join("capture-overlay.json");
+    let descriptor = crate::storage_layout::join(&root().ok_or("Pasta do launcher indisponível.")?, "capture-overlay.json");
     let meta = fs::symlink_metadata(&descriptor)
         .map_err(|_| "Abra a aba Capturas do jogo e mantenha o PeliGames aberto.")?;
     if !meta.is_file()

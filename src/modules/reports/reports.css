@@ -1,0 +1,4 @@
+.feature-report-section{min-width:0}
+.feature-report-toolbar{display:flex;justify-content:flex-end;margin:0 0 12px;gap:8px}
+.feature-report-button{display:inline-flex;align-items:center;gap:7px}
+.feature-report-button svg{width:15px;height:15px}

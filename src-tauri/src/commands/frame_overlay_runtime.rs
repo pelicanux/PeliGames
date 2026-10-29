@@ -88,7 +88,7 @@ pub async fn frame_overlay_support(
             return Support { available: false, legacy_enabled: false, reason: "Abra a Steam Flatpak uma vez antes de ativar o overlay.".into() };
         }
         let legacy_enabled=advanced.as_ref().is_some_and(|settings| {
-            let Ok(root)=crate::core::paths::app_root().map(|p|p.join("FrameGeneration/profiles")) else{return false};
+            let Ok(root)=crate::core::paths::app_path("FrameGeneration/profiles") else{return false};
             settings.wrappers.iter().filter(|wrapper|wrapper.enabled).any(|wrapper|{
                 let path=Path::new(&wrapper.program);
                 if path.parent()!=Some(root.as_path()) || path.extension().is_none_or(|e|e!="sh"){return false;}
@@ -117,14 +117,8 @@ fn version() -> &'static str {
     })
 }
 pub(super) fn runner(config: &Path) -> PathBuf {
-    config
-        .parent()
-        .expect("profile parent")
-        .parent()
-        .expect("FrameGeneration")
-        .join("overlay")
-        .join(version())
-        .join(FILES[0].0)
+    let folder=config.parent().expect("profile parent").parent().expect("component root").join("overlay");
+    crate::core::paths::names::find(&folder,version()).unwrap_or_else(||folder.join("not-prepared")).join(FILES[0].0)
 }
 pub(crate) fn install(config: &Path) -> Result<(), String> {
     crate::core::release_features::require()?;
@@ -135,7 +129,8 @@ pub(crate) fn install(config: &Path) -> Result<(), String> {
         return Err("O overlay interno exige a edição Linux x86_64 do PeliGames.".into());
     }
     let _guard = INSTALL.lock().map_err(|e| e.to_string())?;
-    let directory = runner(config).parent().unwrap().to_owned();
+    let folder=config.parent().expect("profile parent").parent().expect("component root").join("overlay");
+    let directory=crate::core::paths::names::allocate(&folder,&format!("peligames-{}",env!("CARGO_PKG_VERSION")),version())?;
     if directory
         .to_string_lossy()
         .chars()
@@ -175,11 +170,12 @@ pub(crate) fn install(config: &Path) -> Result<(), String> {
 
 /// The general overlay has its own installation boundary, independent of MAKO.
 pub(crate) fn standalone_runner() -> Result<PathBuf,String> {
-    Ok(runner(&crate::core::paths::app_root()?.join("Overlay/profiles/standalone.toml")))
+    install_standalone()?;
+    Ok(runner(&crate::core::paths::app_path("Overlay/profiles/standalone.toml")?))
 }
 pub(crate) fn install_standalone() -> Result<(),String> {
     use std::os::unix::fs::{MetadataExt,PermissionsExt};
-    let root=crate::core::paths::app_root()?.join("Overlay");
+    let root=crate::core::paths::app_path("Overlay")?;
     match fs::create_dir(&root){Ok(())=>fs::set_permissions(&root,fs::Permissions::from_mode(0o700)).map_err(|e|e.to_string())?,Err(e) if e.kind()==std::io::ErrorKind::AlreadyExists=>{},Err(e)=>return Err(e.to_string())}
     let meta=fs::symlink_metadata(&root).map_err(|e|e.to_string())?;
     if !meta.is_dir()||meta.file_type().is_symlink()||meta.uid()!=unsafe{libc::geteuid()}||meta.mode()&0o077!=0{return Err("Pasta do overlay sem permissões privadas.".into());}
@@ -197,8 +193,8 @@ pub(crate) fn install_sandboxed(root: &Path) -> Result<PathBuf, String> {
 }
 /// Copies the shortcut preferences into a sandboxed overlay root.
 pub(crate) fn mirror_preferences(root: &Path) -> Result<(), String> {
-    let source = crate::core::paths::app_root()?.join("frame-overlay.json");
-    let target = root.join("frame-overlay.json");
+    let source = crate::core::paths::app_path("frame-overlay.json")?;
+    let target = crate::core::paths::layout::join(&root, "frame-overlay.json");
     match fs::read(&source) {
         Ok(bytes) if bytes.len() <= 65536 => super::frame_generation::write(&target, &bytes, 0o600),
         Ok(_) => Err("Preferências do overlay grandes demais.".into()),
@@ -263,7 +259,7 @@ fn session_roots() -> Vec<PathBuf> {
 /// The newest diagnosis whose command ran something inside `directory`.
 fn last_session_in(roots: &[PathBuf], directory: &Path) -> Option<Session> {
     let wanted: Vec<PathBuf> = [Some(directory.to_owned()), directory.canonicalize().ok()].into_iter().flatten().collect();
-    let mut files: Vec<PathBuf> = roots.iter().filter_map(|root| fs::read_dir(root.join("overlay-logs")).ok())
+    let mut files: Vec<PathBuf> = roots.iter().filter_map(|root| fs::read_dir(crate::core::paths::layout::join(&root, "overlay-logs")).ok())
         .flat_map(|entries| entries.flatten().map(|e| e.path()))
         .filter(|p| p.extension().is_some_and(|e| e == "log")).collect();
     files.sort_by_key(|p| std::cmp::Reverse(p.file_name().map(|n| n.to_owned())));
@@ -282,10 +278,13 @@ fn last_session_in(roots: &[PathBuf], directory: &Path) -> Option<Session> {
     }
     None
 }
+pub(super) fn report_session(directory: &Path) -> Option<Session> {
+    last_session_in(&session_roots(), directory)
+}
 /// The last overlay launch of the game in `directory`, for the Performance panel.
 #[tauri::command]
 pub async fn frame_overlay_last_session(directory: String) -> Result<Option<Session>, String> {
-    tauri::async_runtime::spawn_blocking(move || last_session_in(&session_roots(), Path::new(&directory)))
+    tauri::async_runtime::spawn_blocking(move || report_session(Path::new(&directory)))
         .await.map_err(|e| e.to_string())
 }
 
@@ -295,7 +294,7 @@ mod tests {
     #[test]
     fn sessions_explain_the_last_launch_of_each_game() {
         let root = std::env::temp_dir().join(format!("peli-overlay-sessions-{}", uuid::Uuid::new_v4()));
-        let logs = root.join("overlay-logs");
+        let logs = crate::core::paths::layout::join(&root, "overlay-logs");
         fs::create_dir_all(&logs).unwrap();
         fs::write(logs.join("000000000100-1.log"), "cmd\t/games/Hades/Hades.exe\nrunner\tRunner: camada Vulkan e entrada preparadas.\nHades.exe\tRenderer preparado; painel inicia oculto.\nHades.exe\tEntrada do jogo reconhecida; atalho do overlay disponível com o jogo em foco.\n").unwrap();
         fs::write(logs.join("000000000200-2.log"), "cmd\t/games/Hades2/Hades2.exe\nrunner\tRunner: overlay não carregado: Biblioteca sem propriedade/permissões seguras.\n").unwrap();

@@ -16,7 +16,7 @@ fn service(app: &tauri::AppHandle) -> Result<&'static Presence, String> {
                 endpoints.extend(discord_socket::candidates(&temporary));
             }
             Presence::new(
-                paths::app_root()?.join("discord-presence.json"),
+                paths::app_path("discord-presence.json")?,
                 endpoints,
                 Arc::new(move |status| {
                     let _ = app.emit("discord-presence-changed", status);

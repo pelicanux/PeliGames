@@ -17,6 +17,7 @@ const english: Record<string, string> = {
   "Registro na biblioteca": "Library entry",
   "Qual prefixo deseja usar para reparar?": "Which prefix should be repaired?",
   "Onde deseja criar o prefixo?": "Where should the prefix be created?",
+  "Pasta com o ambiente Windows usado pelo jogo.": "A folder with the Windows environment used by the game.",
   "Onde deseja instalar?": "Where should it be installed?",
   "Selecionar instalador": "Select installer",
   "Selecionar executável": "Select executable",
@@ -132,6 +133,12 @@ const english: Record<string, string> = {
   "Reparar com qual Proton?": "Repair with which Proton?",
   "Termine a instalação nas telas do próprio instalador. O Pelinstall fica aberto e registra o jogo quando ele fechar.": "Finish the installation in the installer’s own windows. Pelinstall stays open and registers the game when it closes.",
   "Todos": "All",
+  "Organização dos arquivos": "File organization",
+  "Os arquivos ainda não foram reorganizados": "Your files were not reorganized yet",
+  "Esta versão guarda as configurações em pastas novas. Nada foi apagado; a cópia dos arquivos de antes está em migration-backup/layout-v2.": "This version keeps its settings in new folders. Nothing was deleted; a copy of the previous files is in migration-backup/layout-v2.",
+  "Feche versões antigas do PeliGames e os jogos abertos por ele, depois tente de novo.": "Close older PeliGames versions and the games it opened, then try again.",
+  "Tentar de novo": "Try again",
+  "Aguarde…": "Please wait…",
 };
 
 export function useInstallerText() {

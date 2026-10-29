@@ -12,7 +12,7 @@ export function LibraryRecoveryDialog({onClose}:{onClose:()=>void}){
  const [roots,setRoots]=useState<string[]>([]),[result,setResult]=useState<Discovery>(),[selected,setSelected]=useState<string[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState("");
  const demo="__PELI_UI_PREVIEW__" in window;
  const search=async(next:string[])=>{setBusy(true);setError("");setResult(undefined);setSelected([]);try{
-  const found=demo?{token:"preview",warnings:[],candidates:[{directory:`${next[0]}/Real MU`,name:"Real MU",kind:"Instalação",games:1,registered:false,warnings:[],error:null},{directory:`${next[0]}/Real MU - cópia`,name:"Real MU - cópia",kind:"Overlay",games:1,registered:false,warnings:[],error:null}]}:await invoke<Discovery>("discover_peligames_library",{roots:next});
+  const found=demo?{token:"preview",warnings:[],candidates:[{directory:`${next[0]}/Real MU`,name:"Real MU",kind:"Instalação",games:1,registered:false,warnings:[],error:null},{directory:`${next[0]}/Real MU (1)`,name:"Real MU (1)",kind:"Overlay",games:1,registered:false,warnings:[],error:null}]}:await invoke<Discovery>("discover_peligames_library",{roots:next});
   setResult(found);setSelected(found.candidates.filter(c=>!c.error&&!c.registered).map(c=>c.directory));
  }catch(e){setError(String(e));}finally{setBusy(false);}};
  const add=async()=>{try{const path=await openDirectoryPicker("Localizar biblioteca PeliGames");if(path){const next=[...new Set([...roots,path])];setRoots(next);await search(next);}}catch(e){setError(String(e));}};

@@ -405,7 +405,7 @@ impl<'a> Extractor<'_, 'a> {
             "DATA_FOLDER_DEFAULT", "EXEC", "recommendedLoader", "loaderChoice", "isXna", "hasCustomLoader", "ARCH", "BEPINEX_BUILD",
             "BEP_VER", "BEP_BE_VER", "BEP_BE_COMMIT", "BEPINEX_PAGE_NO", "MELON_PAGE_NO", "allowBepinexNexus", "allowMelonNexus",
             // Requirements hosted on Nexus (UE4SS page, Sig Bypass, REFramework).
-            "GAME_ID", "UE4SS_PAGE_NO", "UE4SS_DOMAIN", "SIGBYPASS_REQUIRED", "SIGBYPASS_PAGE_NO", "SIGBYPASS_DOMAIN", "REF_PAGE_NO", "REF_DOMAIN", "useRefNightly", "autoDownloadUe4ss",
+            "GAME_ID", "UE4SS_PAGE_NO", "UE4SS_DOMAIN", "SIGBYPASS_REQUIRED", "SIGBYPASS_PAGE_NO", "SIGBYPASS_DOMAIN", "REF_PAGE_NO", "REF_DOMAIN", "useRefNightly", "autoDownloadUe4ss", "FLUFFY_FOLDER",
             // Template Basic.
             "MOD_PATH", "MOD_EXTS", "DATA_FOLDER", "needsModInstaller", "rootInstaller", "fallbackInstaller", "binariesInstaller",
         ] {

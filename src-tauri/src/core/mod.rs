@@ -4,6 +4,7 @@ pub mod audio_denoise;
 #[cfg(test)]
 pub(crate) mod test_support;
 pub mod script_runner;
+pub mod neural_config;
 #[path = "../../launch-runtime/src/release_features.rs"]
 pub mod release_features;
 #[cfg(target_os = "linux")]
@@ -13,6 +14,7 @@ pub mod file_manager;
 pub mod env_utils;
 pub mod config_manager;
 pub mod logger;
+pub mod report_privacy;
 
 pub mod game_info_cache;
 
@@ -71,6 +73,8 @@ pub mod openrgb;
 
 #[cfg(target_os = "linux")]
 pub mod webkit_graphics;
+#[cfg(target_os = "linux")]
+pub mod webkit_vblank;
 
 pub mod advanced_capabilities;
 

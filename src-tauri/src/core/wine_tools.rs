@@ -107,7 +107,7 @@ async fn catalog(
         }
     }
     if text.is_none() {
-        let cache = super::paths::app_root()?.join("tools/winetricks-catalog.txt");
+        let cache = super::paths::app_path("tools/winetricks-catalog.txt")?;
         text = fs::read_to_string(&cache).ok();
         if text.is_none() {
             progress("Consultando o catálogo oficial do Winetricks…".into());

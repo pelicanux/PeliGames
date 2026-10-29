@@ -239,3 +239,6 @@ pub(crate) fn nonce() -> String {
     }
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
+
+#[path = "../../storage_layout.rs"]
+mod storage_layout;

@@ -6,9 +6,9 @@ export function defaultShortcutForRoute(route?: string): string {
  * which carries the Vulkan layers of NR Control and int4 mixed. */
 export function launchOptionsFromInstallOutput(output: string): string | null {
   const lines = output.split("\n");
-  // 0.0.7 prints a second complete line to permit switching to int4 in game
+  // 0.0.7 and 0.0.8 ReShade print a complete line to permit switching to int4
   // even when the starting network is FP8/original. Keep that layer available.
-  const alternative = lines.findIndex(item => item.trim() === "To use CC_SILVER_AARDWOLD_INT4_MIXED in game, use this line instead (all three networks can be switched):");
+  const alternative = lines.findIndex(item => /^To use CC_SILVER_AARDWOLD_INT4_MIXED in game, use this line instead \((?:all three networks can be switched|every network can be switched to)\):$/.test(item.trim()));
   if (alternative >= 0) {
     const value = lines[alternative + 1]?.trim();
     if (value?.endsWith("%command%") && /(?:^|\s)VK_INSTANCE_LAYERS=/.test(value)

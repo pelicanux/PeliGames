@@ -63,7 +63,7 @@ fn adapter(base: &Path, proton: &Path, steam: &Path) -> Result<PathBuf, String> 
 pub(crate) fn runner(proton: &Path) -> Result<PathBuf, String> {
     let home = dirs::home_dir().ok_or("Pasta pessoal indisponível.")?;
     let steam = client_directory(&home)?;
-    #[cfg(unix)] { adapter(&super::paths::app_root()?.join("runners/steam-client-adapters"), proton, &steam) }
+    #[cfg(unix)] { adapter(&super::paths::app_path("runners/steam-client-adapters")?, proton, &steam) }
     #[cfg(not(unix))] { let _ = (proton, steam); Err("A integração Steam está disponível apenas no Linux.".into()) }
 }
 

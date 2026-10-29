@@ -228,8 +228,6 @@
 .maintenance-paths code { overflow-wrap: anywhere; }
 .maintenance-confirm { display: flex; align-items: flex-start; gap: 10px; font-size: .875rem; line-height: 1.5; }
 .maintenance-confirm input { flex-shrink: 0; margin-top: 4px; accent-color: var(--accent); }
-/* Reset cannot return to a session whose accounts have already been removed. */
-.maintenance-restart-required > .dialog-titlebar > .surface-close-button { display: none !important; }
 
 /* Keep large mod inventories inside the reset dialog instead of growing it. */
 .maintenance-popup .maintenance-game-list {

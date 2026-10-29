@@ -100,7 +100,7 @@ pub async fn import_model_bins(app: AppHandle, gpu_arch: String, bin_path: Strin
 }
 
 #[derive(serde::Serialize)]
-pub struct NeuralModelStatus { pub small: bool, pub original: bool, pub selectable: bool, pub unified_networks: bool, pub lumenite: bool, pub lumenite_selected: bool }
+pub struct NeuralModelStatus { pub small: bool, pub original: bool, pub selectable: bool, pub unified_networks: bool, pub lumenite: bool, pub lumenite_selected: bool, pub experimental: bool, pub nr_plugin: bool, pub selected_network: Option<String>, pub chain_installed: bool }
 
 #[tauri::command]
 pub fn get_neural_model_status(app: AppHandle, gpu_arch: String, bitness: String, bin_path: Option<String>, game_dir: Option<String>) -> Result<NeuralModelStatus, String> {
@@ -115,12 +115,18 @@ pub fn get_neural_model_status(app: AppHandle, gpu_arch: String, bitness: String
     let model_dir = if canonical.join("dlssnr.bin").is_file() { Some(canonical.as_path()) }
         else { selected.and_then(|p| p.parent()).filter(|p| *p != old_root.as_path()) };
     let has = |name| model_dir.map(|dir| dir.join(name).is_file()).unwrap_or(false);
+    let installed_text=game_dir.as_deref().and_then(|p|installed_mod_directory(std::path::Path::new(p)))
+        .map(|root|super::neural_settings::read_file(&root.join("dlssnr-amd.ini"))).transpose()?.unwrap_or_default();
     Ok(NeuralModelStatus {
         small: has("dlssnr-small.bin") && has("dlssnr.bin"), original: has("dlssnr.bin"),
         selectable: crate::core::script_runner::selectable_models(&script),
         unified_networks: crate::core::script_runner::unified_networks(&script),
+        experimental: crate::core::script_runner::experimental_network(&script) && resource.join("experimental/dlssnr-small-experimental.delta").is_file(),
+        nr_plugin: crate::core::script_runner::nr_plugin(&script),
         lumenite: crate::core::script_runner::supports_lumenite(&script),
-        lumenite_selected: match game_dir { Some(directory) => super::neural_settings::lumenite_selected(std::path::Path::new(&directory))?, None => false },
+        lumenite_selected: match game_dir.as_deref() { Some(directory) => super::neural_settings::lumenite_selected(std::path::Path::new(directory))?, None => false },
+        selected_network: crate::core::neural_config::get(&crate::core::neural_config::sections(&installed_text),"Network","Model").map(str::to_string),
+        chain_installed: crate::core::neural_config::supported(&installed_text),
     })
 }
 
@@ -143,7 +149,8 @@ pub struct GameInstallationDetails {
 fn details_in_directory(dir: &std::path::Path) -> GameInstallationDetails {
     let has = |names: &[&str]| names.iter().any(|name| dir.join(name).is_file());
     // Proxy DLL names alone are not evidence: games, DXVK and other tools ship them too.
-    let optiscaler = has(&["OptiScaler.dll", "OptiScaler.ini", "dlssnr_core.dll", "nvngx.dll_dlssnr.dll", "nvngx_dlssnr.dll"]);
+    let plugin = dir.join("OptiScaler/plugins/dlssnr-amd.asi").is_file();
+    let optiscaler = plugin || has(&["OptiScaler.dll", "OptiScaler.ini", "dlssnr_core.dll", "nvngx.dll_dlssnr.dll", "nvngx_dlssnr.dll"]);
     let addon = has(&["dlssnr_amd.addon64", "dlssnr_amd.addon32"]);
     let manifest = dir.join("dlssnr-amd-install.txt").is_file()
         && dir.join("dlssnr-amd/dlssnr.bin").is_file();
@@ -167,7 +174,7 @@ fn details_in_directory(dir: &std::path::Path) -> GameInstallationDetails {
         "ReShade"
     };
     let installed_dll = if status == "Não Instalado" { None } else { proxy.map(|name| (*name).to_string()) };
-    let dlssnr_installed = proxy.is_some() && (addon || manifest
+    let dlssnr_installed = proxy.is_some() && (plugin || addon || manifest
         || has(&["dlssnr_core.dll", "nvngx.dll_dlssnr.dll", "nvngx_dlssnr.dll"]));
     GameInstallationDetails { status: status.to_string(), installed_dll, dlssnr_installed }
 }

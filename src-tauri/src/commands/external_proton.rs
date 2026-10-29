@@ -21,11 +21,12 @@ pub(super) fn save(path: &Path, before: &str, after: &str) -> Result<(), String>
         use std::os::unix::fs::PermissionsExt;
         fs::set_permissions(&backups, fs::Permissions::from_mode(0o700)).map_err(|e|e.to_string())?;
     }
-    let backup = backups.join(format!("{}-{}.bak",path.file_name().unwrap().to_string_lossy(),uuid::Uuid::new_v4()));
+    // `config-vdf-<date>.bak`, reserved empty by the allocator.
+    let backup = crate::core::paths::names::dated(&backups, &path.file_name().unwrap().to_string_lossy(), Some("bak"))?;
     let temporary = parent.join(format!(".peligames-{}.part",uuid::Uuid::new_v4()));
     let result = (|| {
-        use std::io::Write;
-        let mut backup_file = fs::OpenOptions::new().write(true).create_new(true).open(&backup).map_err(|e|e.to_string())?;
+        use std::{io::Write, os::unix::fs::OpenOptionsExt};
+        let mut backup_file = fs::OpenOptions::new().write(true).truncate(true).custom_flags(libc::O_NOFOLLOW).open(&backup).map_err(|e|e.to_string())?;
         #[cfg(unix)] { use std::os::unix::fs::PermissionsExt; backup_file.set_permissions(fs::Permissions::from_mode(0o600)).map_err(|e|e.to_string())?; }
         backup_file.write_all(before.as_bytes()).map_err(|e|e.to_string())?;
         backup_file.sync_all().map_err(|e|e.to_string())?;
@@ -139,13 +140,37 @@ fn steam(home:&Path,game:&ExternalGame,proton:&Path)->Result<(),String> {
     save(&path,&before,&vdf_dump(&data)?)
 }
 
+const MARKER: &str = ".peligames-proton-path";
+/// Adapters named before readable names: `peligames-` and 16 hex digits of a hash.
+fn hashed(name: &str) -> bool {
+    name.strip_prefix("peligames-").is_some_and(|rest| rest.len() == 16 && rest.bytes().all(|b| b.is_ascii_hexdigit()))
+}
+fn adapters(directory: &Path) -> Vec<(String, std::path::PathBuf)> {
+    fs::read_dir(directory).into_iter().flatten().flatten().filter_map(|entry| {
+        let name = entry.file_name().to_str()?.to_owned();
+        if !name.starts_with("peligames-") || !entry.file_type().is_ok_and(|t| t.is_dir()) { return None; }
+        let proton = fs::read_to_string(entry.path().join(MARKER)).ok()?;
+        Some((name, std::path::PathBuf::from(proton)))
+    }).collect()
+}
+/// `peligames-<runner folder>` (`-2`… when another runner has that folder name);
+/// the runner path lives in the adapter's marker file.
+fn adapter_name(directory: &Path, proton: &Path) -> String {
+    let existing = adapters(directory);
+    if let Some((name, _)) = existing.iter().find(|(name, path)| path == proton && !hashed(name)) { return name.clone(); }
+    let base = format!("peligames-{}", crate::core::paths::names::slug(&proton.file_name().unwrap_or_default().to_string_lossy()));
+    (1..).map(|n| if n == 1 { base.clone() } else { format!("{base}-{n}") })
+        .find(|name| !hashed(name) && fs::symlink_metadata(directory.join(name)).is_err()).unwrap()
+}
 fn register_steam_tool(directory:&Path,proton:&Path)->Result<String,String> {
-    use sha2::{Digest,Sha256};
-    // Give the adapter a unique identity, including Valve Proton installations
-    // which have no custom compatibilitytool.vdf. Never edit the original runner.
-    let digest=format!("{:x}",Sha256::digest(proton.to_string_lossy().as_bytes()));
-    let name=format!("peligames-{}",&digest[..16]);
-    let target=directory.join(&name);let marker=target.join(".peligames-proton-path");
+    let name = adapter_name(directory, proton);
+    populate_tool(directory, &name, proton)?;
+    Ok(name)
+}
+// Give the adapter a unique identity, including Valve Proton installations
+// which have no custom compatibilitytool.vdf. Never edit the original runner.
+fn populate_tool(directory:&Path,name:&str,proton:&Path)->Result<(),String> {
+    let target=directory.join(name);let marker=target.join(MARKER);
     if fs::symlink_metadata(&target).is_ok() {
         if target.is_symlink() || fs::read_to_string(&marker).ok().as_deref()!=proton.to_str() {return Err("Diretório de integração Steam ocupado por outra ferramenta.".into());}
     } else {
@@ -154,7 +179,7 @@ fn register_steam_tool(directory:&Path,proton:&Path)->Result<String,String> {
     }
     for entry in fs::read_dir(proton).map_err(|e|e.to_string())? {
         let entry=entry.map_err(|e|e.to_string())?;let leaf=entry.file_name();
-        if leaf=="compatibilitytool.vdf" || leaf==".peligames-proton-path" {continue;}
+        if leaf=="compatibilitytool.vdf" || leaf==MARKER {continue;}
         let link=target.join(leaf);
         if fs::symlink_metadata(&link).is_ok() {
             if fs::read_link(&link).ok().as_deref()!=Some(entry.path().as_path()) {return Err("Arquivo conflitante na integração Steam.".into());}
@@ -163,11 +188,62 @@ fn register_steam_tool(directory:&Path,proton:&Path)->Result<String,String> {
         }
     }
     let display=format!("{} (PeliGames)",proton.file_name().unwrap().to_string_lossy());
-    let manifest=json!({"compatibilitytools":{"compat_tools":{name.clone():{"install_path":".","display_name":display,"from_oslist":"windows","to_oslist":"linux"}}}});
+    let manifest=json!({"compatibilitytools":{"compat_tools":{name:{"install_path":".","display_name":display,"from_oslist":"windows","to_oslist":"linux"}}}});
     let file=target.join("compatibilitytool.vdf");
     if file.is_symlink() {return Err("Manifesto da integração Steam não pode ser um link.".into());}
-    fs::write(file,vdf_dump(&manifest)?).map_err(|e|e.to_string())?;
-    Ok(name)
+    fs::write(file,vdf_dump(&manifest)?).map_err(|e|e.to_string())
+}
+/// Keeps the Steam adapters working after PeliGames reorganizes its runners and
+/// gives hash-named adapters readable names. Links follow a moved runner at any
+/// time; a rename also edits Steam's game mappings, so it waits for Steam to close.
+pub(crate) fn organize_steam_tools() -> Vec<String> {
+    let Some(home) = dirs::home_dir() else { return Vec::new() };
+    let mut errors = Vec::new();
+    for flatpak in [false, true] {
+        for root in super::super::steam_installation::roots(&home, flatpak) {
+            if let Err(error) = organize_steam_root(&root, &|| !super::super::steam_installation::running(flatpak), &|path| std::path::PathBuf::from(crate::core::paths::migrated_runner_path(&path.to_string_lossy()))) {
+                errors.push(format!("{}: {error}", root.display()));
+            }
+        }
+    }
+    errors
+}
+fn organize_steam_root(root: &Path, steam_closed: &dyn Fn() -> bool, relocate: &dyn Fn(&Path) -> std::path::PathBuf) -> Result<(), String> {
+    let directory = root.join("compatibilitytools.d");
+    if !fs::symlink_metadata(&directory).is_ok_and(|m| m.is_dir() && !m.file_type().is_symlink()) { return Ok(()); }
+    for (name, recorded) in adapters(&directory) {
+        let target = directory.join(&name);
+        let proton = relocate(&recorded);
+        if !proton.join("proton").is_file() { continue; }
+        if proton != recorded {
+            // Repoint the links into the moved runner, then the marker.
+            for entry in fs::read_dir(&target).map_err(|e| e.to_string())?.flatten() {
+                let Ok(link) = fs::read_link(entry.path()) else { continue };
+                let Ok(rest) = link.strip_prefix(&recorded) else { continue };
+                crate::core::paths::replace_symlink(&entry.path(), &proton.join(rest))?;
+            }
+            fs::write(target.join(MARKER), proton.to_string_lossy().as_bytes()).map_err(|e| e.to_string())?;
+        }
+        if !hashed(&name) || !steam_closed() { continue; }
+        // New adapter first, then the mappings, then the old adapter: each step can be repeated.
+        let readable = adapter_name(&directory, &proton);
+        populate_tool(&directory, &readable, &proton)?;
+        let path = root.join("config/config.vdf");
+        if path.is_file() {
+            let before = read(&path)?;
+            let mut data = vdf(&before)?;
+            let mapping = section(&mut data, &["InstallConfigStore","Software","Valve","Steam","CompatToolMapping"])?;
+            let mut changed = false;
+            if let Some(games) = mapping.as_object_mut() {
+                for game in games.values_mut() {
+                    if game.get("name").and_then(Value::as_str) == Some(name.as_str()) { game["name"] = Value::String(readable.clone()); changed = true; }
+                }
+            }
+            if changed { save(&path, &before, &vdf_dump(&data)?)?; }
+        }
+        fs::remove_dir_all(&target).map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }
 
 pub(super) fn apply(game:&ExternalGame,proton:&Path)->Result<(),String> {
@@ -265,6 +341,40 @@ mod tests {
         assert_eq!(fs::read_link(root.join("compatibilitytools.d").join(tool).join("proton")).unwrap(),runner.join("proton"));
         assert_eq!(read(&runner.join("proton")).unwrap(),"original script");assert!(!runner.join("compatibilitytool.vdf").exists());
         assert_eq!(fs::read_dir(root.join("config/.peligames-backups")).unwrap().count(),1);
+        fs::remove_dir_all(home).unwrap();
+    }
+    #[test]
+    fn hashed_steam_adapters_follow_moved_runners_and_get_readable_names() {
+        let home=std::env::temp_dir().join(format!("peligames-steam-adapters-{}",uuid::Uuid::new_v4()));
+        let root=home.join(".local/share/Steam");fs::create_dir_all(root.join("config")).unwrap();
+        let old_runner=home.join("runners/proton/GE-Proton10-1");
+        let runner=home.join("components/runners/proton/GE-Proton10-1");
+        fs::create_dir_all(&runner).unwrap();fs::write(runner.join("proton"),"script").unwrap();fs::create_dir(runner.join("files")).unwrap();
+        // An adapter made before the move and before readable names.
+        let tools=root.join("compatibilitytools.d");let hashed_dir=tools.join("peligames-0123456789abcdef");
+        fs::create_dir_all(&hashed_dir).unwrap();fs::write(hashed_dir.join(MARKER),old_runner.to_string_lossy().as_bytes()).unwrap();
+        for leaf in ["proton","files"] { std::os::unix::fs::symlink(old_runner.join(leaf),hashed_dir.join(leaf)).unwrap(); }
+        fs::write(root.join("config/config.vdf"),"\"InstallConfigStore\" {\"Software\" {\"Valve\" {\"Steam\" {\"CompatToolMapping\" {\"22380\" {\"name\" \"peligames-0123456789abcdef\"} \"42\" {\"name\" \"other\"}}}}}}").unwrap();
+        let relocate=|path:&Path| if path==old_runner {runner.clone()} else {path.to_path_buf()};
+        // Steam open: links and marker follow the runner, the name and mappings wait.
+        organize_steam_root(&root,&||false,&relocate).unwrap();
+        assert_eq!(fs::read_link(hashed_dir.join("proton")).unwrap(),runner.join("proton"));
+        assert_eq!(fs::read_to_string(hashed_dir.join(MARKER)).unwrap(),runner.to_string_lossy());
+        assert!(read(&root.join("config/config.vdf")).unwrap().contains("peligames-0123456789abcdef"));
+        // Steam closed: readable adapter, mappings updated, old adapter removed.
+        organize_steam_root(&root,&||true,&relocate).unwrap();
+        let readable=tools.join("peligames-ge-proton10-1");
+        assert!(!hashed_dir.exists());
+        assert_eq!(fs::read_link(readable.join("proton")).unwrap(),runner.join("proton"));
+        let mut config=vdf(&read(&root.join("config/config.vdf")).unwrap()).unwrap();
+        let mapping=section(&mut config,&["InstallConfigStore","Software","Valve","Steam","CompatToolMapping"]).unwrap();
+        assert_eq!(mapping["22380"]["name"],"peligames-ge-proton10-1");assert_eq!(mapping["42"]["name"],"other");
+        assert!(read(&readable.join("compatibilitytool.vdf")).unwrap().contains("\"peligames-ge-proton10-1\""));
+        let backups:Vec<_>=fs::read_dir(root.join("config/.peligames-backups")).unwrap().flatten().map(|e|e.file_name().to_string_lossy().into_owned()).collect();
+        assert!(backups.len()==1 && backups[0].starts_with("config-vdf-") && backups[0].ends_with(".bak"));
+        // New registrations reuse the readable adapter.
+        assert_eq!(register_steam_tool(&tools,&runner).unwrap(),"peligames-ge-proton10-1");
+        organize_steam_root(&root,&||true,&relocate).unwrap();
         fs::remove_dir_all(home).unwrap();
     }
     #[test]

@@ -20,7 +20,7 @@ pub struct Record {
 static WRITE: Mutex<()> = Mutex::new(());
 
 fn file() -> Result<PathBuf, String> {
-    Ok(super::paths::app_root()?.join("playtime.json"))
+    Ok(super::paths::app_path("playtime.json")?)
 }
 
 fn read_at(path: &Path) -> BTreeMap<String, Record> {

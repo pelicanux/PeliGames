@@ -1,0 +1,1640 @@
+[
+  {
+    "id": "RenoDX",
+    "label": [
+      "Ativação do NR",
+      "NR activation"
+    ],
+    "fields": [
+      {
+        "key": "NeuralUplift",
+        "label": [
+          "NR ligado (todas as camadas)",
+          "NR enabled (all layers)"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "id": "Network",
+    "label": [
+      "Rede e memória",
+      "Network and memory"
+    ],
+    "fields": [
+      {
+        "key": "Residency",
+        "label": [
+          "Memória das redes",
+          "Network residency"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "auto",
+            "Automático",
+            "Auto"
+          ],
+          [
+            "resident",
+            "Manter na VRAM",
+            "Keep in VRAM"
+          ],
+          [
+            "offload",
+            "Descarregar na RAM",
+            "Offload to RAM"
+          ],
+          [
+            "minimal",
+            "Mínimo",
+            "Minimal"
+          ]
+        ],
+        "default": "auto"
+      },
+      {
+        "key": "OSD",
+        "label": [
+          "Indicador na tela",
+          "On-screen display"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "off",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "switch",
+            "Ao trocar a rede",
+            "On network switch"
+          ],
+          [
+            "always",
+            "Sempre",
+            "Always"
+          ],
+          [
+            "cost",
+            "Custo por camada",
+            "Cost per layer"
+          ]
+        ],
+        "default": "switch"
+      }
+    ]
+  },
+  {
+    "id": "HudFix",
+    "label": [
+      "Proteção do HUD",
+      "HUD protection"
+    ],
+    "fields": [
+      {
+        "key": "Mode",
+        "label": [
+          "Fonte do HUD",
+          "HUD source"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "off",
+            "Desligada",
+            "Off"
+          ],
+          [
+            "auto",
+            "Automática",
+            "Auto"
+          ],
+          [
+            "game",
+            "Geração de quadros",
+            "Frame generation"
+          ],
+          [
+            "captured",
+            "Imagem capturada sem HUD",
+            "Captured HUD-less frame"
+          ],
+          [
+            "estimated",
+            "Estimativa",
+            "Estimated"
+          ]
+        ],
+        "default": "auto"
+      },
+      {
+        "key": "ShowMask",
+        "label": [
+          "Mostrar máscara do HUD",
+          "Show HUD mask"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "id": "Inspect",
+    "label": [
+      "Comparação e diagnóstico visual",
+      "Comparison and visual diagnostics"
+    ],
+    "fields": [
+      {
+        "key": "Compare",
+        "label": [
+          "Comparar NR",
+          "Compare NR"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Lado a lado",
+            "Side by side"
+          ],
+          [
+            "2",
+            "Linha divisória",
+            "Split line"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "Split",
+        "label": [
+          "Posição da divisão",
+          "Split position"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 1,
+        "default": "0.5",
+        "step": 0.01
+      },
+      {
+        "key": "Zoom",
+        "label": [
+          "Ampliação",
+          "Zoom"
+        ],
+        "kind": "number",
+        "min": 1,
+        "max": 2,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "Swap",
+        "label": [
+          "NR ligado à esquerda",
+          "NR on the left"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "Tags",
+        "label": [
+          "Identificar os lados",
+          "Label each side"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "TagScale",
+        "label": [
+          "Tamanho dos rótulos",
+          "Label size"
+        ],
+        "kind": "number",
+        "min": 0.5,
+        "max": 4,
+        "default": "1.5",
+        "step": 0.1
+      },
+      {
+        "key": "Layer",
+        "label": [
+          "Camada (0 = imagem final)",
+          "Layer (0 = final picture)"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 9999,
+        "default": "0",
+        "step": 1
+      },
+      {
+        "key": "DebugView",
+        "label": [
+          "Visualização da rede",
+          "Network debug view"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Normal",
+            "Normal"
+          ],
+          [
+            "1",
+            "Entrada",
+            "Input"
+          ],
+          [
+            "2",
+            "Saída",
+            "Output"
+          ],
+          [
+            "3",
+            "Diferença ×20",
+            "Difference ×20"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "ApplyModel",
+        "label": [
+          "Aplicar resultado da rede",
+          "Apply network result"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "1"
+      },
+      {
+        "key": "HoldFrame",
+        "label": [
+          "Congelar entrada da camada",
+          "Hold layer input"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "SkinMask",
+        "label": [
+          "Mostrar máscara de pele",
+          "Show skin mask"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "SpatialOutlines",
+        "label": [
+          "Mostrar compressão periférica",
+          "Show peripheral compression"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "id": "Preprocess",
+    "label": [
+      "Pré-processamento",
+      "Preprocessing"
+    ],
+    "fields": [
+      {
+        "key": "Enabled",
+        "label": [
+          "Pré-processamento",
+          "Preprocessing"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "Exposure",
+        "label": [
+          "Exposição",
+          "Exposure"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "off",
+            "Sem alteração",
+            "Unchanged"
+          ],
+          [
+            "auto",
+            "Automática",
+            "Auto"
+          ],
+          [
+            "fixed",
+            "Fixa",
+            "Fixed"
+          ]
+        ],
+        "default": "auto"
+      },
+      {
+        "key": "ExposureBias",
+        "label": [
+          "Compensação da exposição (EV)",
+          "Exposure bias (EV)"
+        ],
+        "kind": "number",
+        "min": -8,
+        "max": 8,
+        "step": 0.1,
+        "default": "0"
+      },
+      {
+        "key": "Curve",
+        "label": [
+          "Curva da imagem",
+          "Image curve"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "none",
+            "Nenhuma",
+            "None"
+          ],
+          [
+            "neutral",
+            "neutral",
+            "neutral"
+          ],
+          [
+            "reinhard",
+            "reinhard",
+            "reinhard"
+          ],
+          [
+            "filmic",
+            "filmic",
+            "filmic"
+          ],
+          [
+            "gt",
+            "gt",
+            "gt"
+          ],
+          [
+            "aces",
+            "aces",
+            "aces"
+          ],
+          [
+            "agx",
+            "agx",
+            "agx"
+          ]
+        ],
+        "default": "none"
+      },
+      {
+        "key": "Contrast",
+        "label": [
+          "Contraste",
+          "Contrast"
+        ],
+        "kind": "number",
+        "min": 0.5,
+        "max": 2,
+        "step": 0.1,
+        "default": "1"
+      },
+      {
+        "key": "Saturation",
+        "label": [
+          "Saturação",
+          "Saturation"
+        ],
+        "kind": "number",
+        "min": 0.05,
+        "max": 2,
+        "step": 0.05,
+        "default": "1"
+      },
+      {
+        "key": "Inverse",
+        "label": [
+          "Aplicar transformação inversa",
+          "Apply inverse transformation"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "id": "Log",
+    "label": [
+      "Logs",
+      "Logs"
+    ],
+    "fields": [
+      {
+        "key": "Enabled",
+        "label": [
+          "Gravar log",
+          "Write log"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "1"
+      },
+      {
+        "key": "ClearOnStart",
+        "label": [
+          "Limpar log ao iniciar",
+          "Clear log on start"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "1"
+      }
+    ]
+  },
+  {
+    "id": "renodx",
+    "label": [
+      "Imagem RenoDX",
+      "RenoDX image"
+    ],
+    "fields": [
+      {
+        "key": "NRStyle",
+        "label": [
+          "Estilo",
+          "Style"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Standard",
+            "Standard"
+          ],
+          [
+            "1",
+            "Natural",
+            "Natural"
+          ],
+          [
+            "2",
+            "Cinematic",
+            "Cinematic"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "NRIntensity",
+        "label": [
+          "Intensidade",
+          "Intensity"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 2,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "NRLocalStructure",
+        "label": [
+          "Estrutura local",
+          "Local structure"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 2,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "NRLocalTone",
+        "label": [
+          "Tonalidade local",
+          "Local tone"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 2,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "NRSkinStructure",
+        "label": [
+          "Estrutura da pele",
+          "Skin structure"
+        ],
+        "kind": "number",
+        "min": -1,
+        "max": 1,
+        "default": "-1",
+        "step": 0.1
+      },
+      {
+        "key": "NRAutoMask",
+        "label": [
+          "Máscara automática de pele",
+          "Automatic skin mask"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "1"
+      },
+      {
+        "key": "NRResolutionScale",
+        "label": [
+          "Resolução relativa do modelo",
+          "Relative model resolution"
+        ],
+        "kind": "number",
+        "min": 0.33,
+        "max": 1,
+        "default": "1",
+        "step": 0.01
+      },
+      {
+        "key": "NRDetailStability",
+        "label": [
+          "Estabilidade de detalhes",
+          "Detail stability"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Automática",
+            "Auto"
+          ],
+          [
+            "1",
+            "Desligada",
+            "Off"
+          ],
+          [
+            "2",
+            "Ligada",
+            "On"
+          ]
+        ],
+        "default": "1"
+      },
+      {
+        "key": "NRPasses",
+        "label": [
+          "Passes tradicionais",
+          "Legacy passes"
+        ],
+        "kind": "number",
+        "min": 1,
+        "max": 30,
+        "default": "1",
+        "step": 1
+      },
+      {
+        "key": "NRUnlockPasses",
+        "label": [
+          "Liberar mais de 4 passes",
+          "Unlock more than 4 passes"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "NRPassesMode",
+        "label": [
+          "Modo de passes",
+          "Pass mode"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "legacy",
+            "Tradicional",
+            "Legacy"
+          ],
+          [
+            "fast",
+            "Rápido",
+            "Fast"
+          ]
+        ],
+        "default": "legacy"
+      },
+      {
+        "key": "NRFastMethod",
+        "label": [
+          "Método rápido",
+          "Fast method"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Extrapolation",
+            "Extrapolation"
+          ],
+          [
+            "1",
+            "Feedback",
+            "Feedback"
+          ],
+          [
+            "2",
+            "Hybrid",
+            "Hybrid"
+          ],
+          [
+            "3",
+            "Edit strength",
+            "Edit strength"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "NRFastExtrapolationPasses",
+        "label": [
+          "Extrapolation · força",
+          "Extrapolation · strength"
+        ],
+        "kind": "number",
+        "min": 1,
+        "max": 8,
+        "default": "3",
+        "step": 0.1
+      },
+      {
+        "key": "NRFastExtrapolationHaloLimit",
+        "label": [
+          "Extrapolation · limitar halos",
+          "Extrapolation · halo limit"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "NRFastExtrapolationFine",
+        "label": [
+          "Extrapolation · detalhes",
+          "Extrapolation · fine detail"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 2,
+        "default": "0",
+        "step": 0.1
+      },
+      {
+        "key": "NRFastFeedbackPasses",
+        "label": [
+          "Feedback · força",
+          "Feedback · strength"
+        ],
+        "kind": "number",
+        "min": 1,
+        "max": 8,
+        "default": "3",
+        "step": 0.1
+      },
+      {
+        "key": "NRFastFeedbackHaloLimit",
+        "label": [
+          "Feedback · limitar halos",
+          "Feedback · halo limit"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "NRFastFeedbackFine",
+        "label": [
+          "Feedback · detalhes",
+          "Feedback · fine detail"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 2,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "NRFastHybridPasses",
+        "label": [
+          "Hybrid · força",
+          "Hybrid · strength"
+        ],
+        "kind": "number",
+        "min": 1,
+        "max": 8,
+        "default": "3",
+        "step": 0.1
+      },
+      {
+        "key": "NRFastHybridHaloLimit",
+        "label": [
+          "Hybrid · limitar halos",
+          "Hybrid · halo limit"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "NRFastHybridFine",
+        "label": [
+          "Hybrid · detalhes",
+          "Hybrid · fine detail"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 2,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "NRFastEditStrength",
+        "label": [
+          "Edit strength · força",
+          "Edit strength · strength"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 4,
+        "default": "2",
+        "step": 0.1
+      }
+    ]
+  },
+  {
+    "id": "wilsjo2",
+    "label": [
+      "Imagem wilsjo2",
+      "wilsjo2 image"
+    ],
+    "fields": [
+      {
+        "key": "Style",
+        "label": [
+          "Estilo",
+          "Style"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Standard",
+            "Standard"
+          ],
+          [
+            "1",
+            "Natural",
+            "Natural"
+          ],
+          [
+            "2",
+            "Cinematic",
+            "Cinematic"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "Intensity",
+        "label": [
+          "Intensidade",
+          "Intensity"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 2,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "LocalStructure",
+        "label": [
+          "Estrutura local",
+          "Local structure"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 2,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "LocalTone",
+        "label": [
+          "Tonalidade local",
+          "Local tone"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 2,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "SkinStructure",
+        "label": [
+          "Estrutura da pele",
+          "Skin structure"
+        ],
+        "kind": "number",
+        "min": -1,
+        "max": 2,
+        "default": "-1",
+        "step": 0.1
+      },
+      {
+        "key": "AutoMask",
+        "label": [
+          "Máscara automática de pele",
+          "Automatic skin mask"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "1"
+      },
+      {
+        "key": "WorkingScale",
+        "label": [
+          "Resolução relativa (2 = 200%)",
+          "Relative resolution (2 = 200%)"
+        ],
+        "kind": "number",
+        "min": 0.25,
+        "max": 2,
+        "default": "1",
+        "step": 0.01
+      },
+      {
+        "key": "ScalingDownscaler",
+        "label": [
+          "Filtro de supersampling",
+          "Supersampling filter"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "FSR 1",
+            "FSR 1"
+          ],
+          [
+            "1",
+            "Bicubic",
+            "Bicubic"
+          ],
+          [
+            "2",
+            "Catmull-Rom",
+            "Catmull-Rom"
+          ],
+          [
+            "3",
+            "Lanczos 2",
+            "Lanczos 2"
+          ],
+          [
+            "4",
+            "Lanczos 3",
+            "Lanczos 3"
+          ],
+          [
+            "5",
+            "Kaiser 2",
+            "Kaiser 2"
+          ],
+          [
+            "6",
+            "Kaiser 3",
+            "Kaiser 3"
+          ],
+          [
+            "7",
+            "MAGIC",
+            "MAGIC"
+          ]
+        ],
+        "default": "4"
+      },
+      {
+        "key": "ReversibleMode",
+        "label": [
+          "Curva HDR",
+          "HDR curve"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Soft knee",
+            "Soft knee"
+          ],
+          [
+            "1",
+            "Neutwo",
+            "Neutwo"
+          ],
+          [
+            "2",
+            "Neutwo replace",
+            "Neutwo replace"
+          ],
+          [
+            "3",
+            "Hybrid",
+            "Hybrid"
+          ],
+          [
+            "4",
+            "Hybrid replace",
+            "Hybrid replace"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "TransferStrength",
+        "label": [
+          "Força dos detalhes",
+          "Detail strength"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 2,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "ColourStrength",
+        "label": [
+          "Força das cores",
+          "Colour strength"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 2,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "SkinProtection",
+        "label": [
+          "Proteger tons de pele",
+          "Protect skin tones"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "SkinDetail",
+        "label": [
+          "Detalhes na pele",
+          "Skin detail"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 1,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "SkinColour",
+        "label": [
+          "Cores na pele",
+          "Skin colour"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 1,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "EnvironmentDetail",
+        "label": [
+          "Detalhes no ambiente",
+          "Environment detail"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 1,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "EnvironmentColour",
+        "label": [
+          "Cores no ambiente",
+          "Environment colour"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 1,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "SpatialCompression",
+        "label": [
+          "Compressão periférica",
+          "Peripheral compression"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "SpatialCenterX",
+        "label": [
+          "Centro · largura (%)",
+          "Centre X (%)"
+        ],
+        "kind": "number",
+        "min": 1,
+        "max": 99,
+        "default": "80",
+        "step": 1
+      },
+      {
+        "key": "SpatialWorkX",
+        "label": [
+          "Resolução de trabalho X (%)",
+          "Working resolution X (%)"
+        ],
+        "kind": "number",
+        "min": 25,
+        "max": 100,
+        "default": "90",
+        "step": 1
+      },
+      {
+        "key": "SpatialCenterY",
+        "label": [
+          "Centro · altura (%)",
+          "Centre Y (%)"
+        ],
+        "kind": "number",
+        "min": 1,
+        "max": 99,
+        "default": "80",
+        "step": 1
+      },
+      {
+        "key": "SpatialWorkY",
+        "label": [
+          "Resolução de trabalho Y (%)",
+          "Working resolution Y (%)"
+        ],
+        "kind": "number",
+        "min": 25,
+        "max": 100,
+        "default": "90",
+        "step": 1
+      },
+      {
+        "key": "WhitePointSource",
+        "label": [
+          "Fonte da exposição",
+          "Exposure source"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Manual",
+            "Manual"
+          ],
+          [
+            "1",
+            "Jogo",
+            "Game"
+          ],
+          [
+            "3",
+            "Automática",
+            "Auto"
+          ]
+        ],
+        "default": "1"
+      },
+      {
+        "key": "WhitePointScale",
+        "label": [
+          "Ponto de branco",
+          "White point"
+        ],
+        "kind": "number",
+        "min": 0.01,
+        "max": 16,
+        "default": "1",
+        "step": 0.01
+      },
+      {
+        "key": "AutoExposureTrim",
+        "label": [
+          "Exposição automática · fator",
+          "Automatic exposure · factor"
+        ],
+        "kind": "number",
+        "min": 0.001,
+        "max": 16,
+        "default": "5",
+        "step": 0.001
+      },
+      {
+        "key": "Passes",
+        "label": [
+          "Passes tradicionais",
+          "Legacy passes"
+        ],
+        "kind": "number",
+        "min": 1,
+        "max": 30,
+        "default": "1",
+        "step": 1
+      },
+      {
+        "key": "UnlockPasses",
+        "label": [
+          "Liberar mais de 3 passes",
+          "Unlock more than 3 passes"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "PassesMode",
+        "label": [
+          "Modo de passes",
+          "Pass mode"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "legacy",
+            "Tradicional",
+            "Legacy"
+          ],
+          [
+            "fast",
+            "Rápido",
+            "Fast"
+          ]
+        ],
+        "default": "legacy"
+      },
+      {
+        "key": "FastMethod",
+        "label": [
+          "Método rápido",
+          "Fast method"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Extrapolation",
+            "Extrapolation"
+          ],
+          [
+            "1",
+            "Feedback",
+            "Feedback"
+          ],
+          [
+            "2",
+            "Hybrid",
+            "Hybrid"
+          ],
+          [
+            "3",
+            "Edit strength",
+            "Edit strength"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "FastExtrapolationPasses",
+        "label": [
+          "Extrapolation · força",
+          "Extrapolation · strength"
+        ],
+        "kind": "number",
+        "min": 1,
+        "max": 8,
+        "default": "3",
+        "step": 0.1
+      },
+      {
+        "key": "FastExtrapolationHaloLimit",
+        "label": [
+          "Extrapolation · limitar halos",
+          "Extrapolation · halo limit"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "FastExtrapolationFine",
+        "label": [
+          "Extrapolation · detalhes",
+          "Extrapolation · fine detail"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 2,
+        "default": "0",
+        "step": 0.1
+      },
+      {
+        "key": "FastFeedbackPasses",
+        "label": [
+          "Feedback · força",
+          "Feedback · strength"
+        ],
+        "kind": "number",
+        "min": 1,
+        "max": 8,
+        "default": "3",
+        "step": 0.1
+      },
+      {
+        "key": "FastFeedbackHaloLimit",
+        "label": [
+          "Feedback · limitar halos",
+          "Feedback · halo limit"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "FastFeedbackFine",
+        "label": [
+          "Feedback · detalhes",
+          "Feedback · fine detail"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 2,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "FastHybridPasses",
+        "label": [
+          "Hybrid · força",
+          "Hybrid · strength"
+        ],
+        "kind": "number",
+        "min": 1,
+        "max": 8,
+        "default": "3",
+        "step": 0.1
+      },
+      {
+        "key": "FastHybridHaloLimit",
+        "label": [
+          "Hybrid · limitar halos",
+          "Hybrid · halo limit"
+        ],
+        "kind": "select",
+        "options": [
+          [
+            "0",
+            "Desligado",
+            "Off"
+          ],
+          [
+            "1",
+            "Ligado",
+            "On"
+          ]
+        ],
+        "default": "0"
+      },
+      {
+        "key": "FastHybridFine",
+        "label": [
+          "Hybrid · detalhes",
+          "Hybrid · fine detail"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 2,
+        "default": "1",
+        "step": 0.1
+      },
+      {
+        "key": "FastEditStrength",
+        "label": [
+          "Edit strength · força",
+          "Edit strength · strength"
+        ],
+        "kind": "number",
+        "min": 0,
+        "max": 4,
+        "default": "2",
+        "step": 0.1
+      }
+    ]
+  }
+]

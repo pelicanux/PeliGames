@@ -33,6 +33,8 @@ pub mod pelinstall;
 mod nexus_dependency_order;
 pub mod nexus_local;
 pub mod nexus_reports;
+pub mod feature_reports;
+pub mod report_delivery;
 
 mod nexus_profile;
 pub mod nexus_launch_options;

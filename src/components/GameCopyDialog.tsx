@@ -8,18 +8,19 @@ import type {GameInfo} from "./GameGrid";
 import {notifyInfo} from "../services/notifications";
 import "./GameCopyDialog.css";
 type Kind="full"|"reflink"|"overlay";
-interface Options{parent:string;filesystem:string;reflink:boolean;overlay:boolean;shared_game_directory?:string|null}
+interface Options{parent:string;suggested_name:string;filesystem:string;reflink:boolean;overlay:boolean;shared_game_directory?:string|null}
 export function GameCopyDialog({game,onClose,onBusy}:{game:GameInfo;onClose:()=>void;onBusy:(busy:boolean)=>void}){
- const [name,setName]=useState(`${game.name} - cópia`),[parent,setParent]=useState(""),[options,setOptions]=useState<Options|null>(null),[kind,setKind]=useState<Kind>("full");
+ const [name,setName]=useState(`${game.name} (1)`),[parent,setParent]=useState(""),[options,setOptions]=useState<Options|null>(null),[kind,setKind]=useState<Kind>("full");
  const [busy,setBusy]=useState(false),[error,setError]=useState(""),[message,setMessage]=useState(""),[cancelling,setCancelling]=useState(false);
  const [acknowledged,setAcknowledged]=useState(false);
+ const nameEdited=useRef(false);
  const request=useRef<string|null>(null),checking=useRef(0),mounted=useRef(true);
  const demo="__PELI_UI_PREVIEW__" in window;
  const load=async(folder?:string)=>{const revision=++checking.current;setOptions(null);setError("");try{
-  const next:Options=demo?{parent:folder||"/preview/Games/PeliGames",filesystem:"ext4 (demonstração)",reflink:false,overlay:true}:await invoke("game_copy_options",{path:game.path,parent:folder||null});
-  if(mounted.current&&checking.current===revision){setParent(next.parent);setOptions(next);if(kind!=="full")setKind(next.reflink?"reflink":next.overlay?"overlay":"full");}
+  const next:Options=demo?{parent:folder||"/preview/Games/PeliGames",suggested_name:`${game.name} (1)`,filesystem:"ext4 (demonstração)",reflink:false,overlay:true}:await invoke("game_copy_options",{path:game.path,parent:folder||null});
+  if(mounted.current&&checking.current===revision){setParent(next.parent);setOptions(next);if(!nameEdited.current)setName(next.suggested_name);if(kind!=="full")setKind(next.reflink?"reflink":next.overlay?"overlay":"full");}
  }catch(e){if(mounted.current&&checking.current===revision)setError(String(e));}};
- useEffect(()=>{mounted.current=true;void load();return()=>{mounted.current=false;};},[game.path]);
+ useEffect(()=>{mounted.current=true;nameEdited.current=false;setName(`${game.name} (1)`);void load();return()=>{mounted.current=false;};},[game.path]);
  const choose=async()=>{try{const folder=await open({directory:true,multiple:false,title:"Pasta para a cópia",defaultPath:parent||undefined});if(typeof folder==="string")await load(folder);}catch(e){setError(String(e));}};
  const start=async()=>{
   if(busy||!options||!name.trim()||!acknowledged)return;
@@ -40,7 +41,7 @@ export function GameCopyDialog({game,onClose,onBusy}:{game:GameInfo;onClose:()=>
   <button type="button" className="btn btn-primary" disabled={busy||!options||!name.trim()||!acknowledged} onClick={()=>void start()}><MenuIcon name="copy"/>{busy?"Copiando…":"Criar cópia"}</button>
  </>}>
   <div className="game-copy-form">
-   <label>Nome da cópia<input value={name} maxLength={100} disabled={busy} onChange={e=>setName(e.target.value)}/></label>
+   <label>Nome da cópia<input value={name} maxLength={100} disabled={busy} onChange={e=>{nameEdited.current=true;setName(e.target.value);}}/></label>
    <div className="game-copy-destination"><span>Salvar em<code>{parent?`${parent}/${name.trim()}`:"Verificando destino…"}</code></span><button type="button" className="modern-mini-btn" disabled={busy||!options} onClick={()=>{setAcknowledged(false);void choose();}}><MenuIcon name="folder"/>Alterar pasta</button></div>
    {external&&<div className="game-copy-explanation"><strong>Copiar apenas o prefixo</strong><p>O jogo está em outra pasta. Cada cópia terá seu próprio ambiente Windows e usará o mesmo executável. Os arquivos da pasta do jogo, inclusive configurações e logs salvos nela, serão compartilhados.</p><code>{options?.shared_game_directory}</code></div>}
    {options&&<><div role="radiogroup" aria-label="Tipo de cópia" className="game-copy-methods">

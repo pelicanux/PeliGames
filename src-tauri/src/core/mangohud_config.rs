@@ -103,7 +103,7 @@ pub fn validate(settings: &Settings) -> Result<(), String> {
     Ok(())
 }
 pub fn directory() -> Result<PathBuf, String> {
-    let dir = super::paths::app_root()?.join("MangoHUD");
+    let dir = super::paths::app_path("MangoHUD")?;
     match fs::symlink_metadata(&dir) {
         Ok(m) if !m.is_dir() || m.file_type().is_symlink() => {
             return Err("Pasta MangoHUD inválida.".into())
@@ -318,7 +318,7 @@ pub fn apply_with_preset(command: &mut Command, enabled: bool, limit: Option<u32
             let fingerprint = format!("{:x}", Sha256::digest(text.as_bytes()));
             let folder = directory()?.join("game-presets");
             safe_directory(&folder)?;
-            let path = folder.join(format!("{}-{}.conf", game_folder(&preset.name), &fingerprint[..16]));
+            let path=super::paths::names::allocate(&folder,&preset.name,&fingerprint)?.with_extension("conf");
             atomic_write(&path, text.as_bytes())?;
             path
         } else {

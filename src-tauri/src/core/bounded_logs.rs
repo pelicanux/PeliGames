@@ -300,13 +300,13 @@ pub fn startup_cleanup() {
         return;
     };
     for name in ["launcher.log", "launcher.previous.log"] {
-        let path = root.join(name);
+        let path = super::paths::layout::join(&root,name);
         if path.exists() {
             let _ = compact(&path);
         }
     }
     for directory in ["game-logs", "Logs", "MangoHUD"] {
-        sweep(&root.join(directory));
+        sweep(&super::paths::layout::join(&root,directory));
     }
     if let Ok(entries) = super::installed_library::list(false) {
         for entry in entries {

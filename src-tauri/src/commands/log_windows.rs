@@ -122,7 +122,7 @@ pub async fn open_log_folder(kind: String, target: Option<String>) -> Result<(),
                 let game = super::nexus_local::log_game(target.as_deref().ok_or("Jogo não informado.")?)?;
                 super::nexus_profile::directory(&game)?.join("logs")
             }
-            "launcher" => crate::core::paths::app_root()?,
+            "launcher" => crate::core::paths::app_path("logs")?,
             _ => return Err("Destino de logs inválido.".into()),
         };
         if !folder.is_dir() { return Err("Ainda não há pasta de logs para esta execução.".into()); }

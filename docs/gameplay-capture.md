@@ -21,13 +21,13 @@ Trocar de subaba não interrompe uma captura. Os ajustes de vídeo e áudio fica
 
 ### Presets de qualidade
 
-| Preset | Limite de resolução | FPS | Bitrate de vídeo |
+| Preset | Limite de resolução | FPS | Qualidade constante (QP) |
 | --- | --- | --- | --- |
-| Baixa qualidade | 480p | 30 | 2 Mb/s |
-| Padrão | 720p | 60 | 5 Mb/s |
-| Alta qualidade | 1080p | 60 | 8 Mb/s |
+| Baixa qualidade | 480p | 30 | Média |
+| Padrão | 720p | 60 | Alta |
+| Alta qualidade | 1080p | 60 | Muito alta |
 
-Os presets usam CBR e codec automático conforme o suporte da GPU. Preservam o contêiner, a fonte e o áudio escolhidos. **Personalizado** permite ajustar os controles sem aplicar outro preset; editar os valores de qualidade também seleciona esse modo. Preferências existentes não são substituídas ao abrir o painel.
+Os presets usam qualidade constante (QP) e codec automático conforme o suporte da GPU, sem exigir CBR nem fixar um codec por fabricante. O bitrate e o tamanho dos arquivos variam conforme o conteúdo; não há uma estimativa fixa de espaço por minuto. Preservam o contêiner, a fonte e o áudio escolhidos. **Personalizado** permite ajustar os controles sem aplicar outro preset; editar os valores de qualidade também seleciona esse modo. Preferências existentes não são substituídas ao abrir o painel.
 
 ## Escolher a fonte
 
@@ -38,13 +38,13 @@ A autorização depende da instalação do GPU Screen Recorder e das políticas 
 
 ## Gravação e replay
 
-O padrão inicial é **720p, 60 FPS, MKV e CBR a 5 Mb/s**, com áudio automático do jogo e microfone desligado. O codec automático prioriza AV1, depois HEVC e H.264, conforme o suporte confirmado da GPU. Os ajustes, incluindo a duração do replay, são salvos por jogo e restaurados ao reabrir o launcher. Preferências já salvas são preservadas.
+O padrão inicial é **720p, 60 FPS, MKV e qualidade constante (QP) alta**, com áudio automático do jogo e microfone desligado. O codec automático prioriza AV1, depois HEVC e H.264, conforme o suporte confirmado da GPU. Os ajustes, incluindo a duração do replay, são salvos por jogo e restaurados ao reabrir o launcher. Preferências já salvas são preservadas.
 
 **Gravar sessão** inicia um vídeo SDR com FPS selecionável entre 24 e 240. A resolução pode acompanhar a fonte ou ser limitada a 480p, 720p, 1080p, 1440p ou 4K, preservando a proporção da imagem. Escolha o contêiner **MP4**, **MKV** ou **WebM** e, separadamente, o codec **H.264**, **HEVC (H.265)**, **AV1** ou **VP9**. Os codecs disponíveis são confirmados pelo comando `--info` do gravador, usando o driver da GPU de captura. Opções sem suporte ficam desabilitadas, e o backend verifica novamente antes de iniciar. WebM aceita AV1 ou VP9; H.264 e HEVC exigem MP4 ou MKV. A integração não troca silenciosamente para codificação por CPU. O formato escolhido também vale para replays. **Parar e salvar gravação** finaliza o arquivo.
 
 **Replay instantâneo** mantém em memória os últimos segundos configurados, com opções de 1, 3 e 5 minutos ou duração personalizada de até 15 minutos. **Salvar replay** grava esse trecho em disco. Com replay ativo, também é possível iniciar e parar uma gravação de sessão, compartilhando o mesmo codificador.
 
-O controle de qualidade oferece bitrate constante (CBR), qualidade constante (QP) e bitrate variável (VBR). Em CBR, escolha de 1 a 200 Mb/s; o padrão é 5 Mb/s, equivalente a aproximadamente 37,5 MB por minuto, além do áudio. Em QP e VBR, escolha qualidade média, alta, muito alta ou ultra; o tamanho depende do conteúdo. FPS e qualidade maiores podem aumentar a carga da GPU. O buffer só fica ativo após uma ação explícita; não inicia automaticamente com o launcher ou o jogo.
+O controle de qualidade oferece bitrate constante (CBR), qualidade constante (QP) e bitrate variável (VBR). Em CBR, escolha de 1 a 200 Mb/s; por exemplo, 5 Mb/s equivalem a aproximadamente 37,5 MB por minuto, além do áudio. CBR e VBR continuam disponíveis nos ajustes manuais, conforme o suporte do codificador e driver. Em QP e VBR, escolha qualidade média, alta, muito alta ou ultra; o tamanho depende do conteúdo. FPS e qualidade maiores podem aumentar a carga da GPU. O buffer só fica ativo após uma ação explícita; não inicia automaticamente com o launcher ou o jogo.
 
 Em **Fonte de áudio**, escolha a saída padrão, um dispositivo específico ou um aplicativo. A captura de uma saída inclui os aplicativos e chamadas enviados a ela. Aplicativos só aparecem enquanto reproduzem som: abra o seletor depois que o jogo começar a tocar. A lista é atualizada automaticamente ao abrir o seletor de áudio ou microfone. O microfone tem um seletor de entrada próprio e começa desligado. Quando ambas as fontes estão ligadas, são misturadas na mesma faixa.
 

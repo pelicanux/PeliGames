@@ -33,7 +33,7 @@ impl Bindings {
                 }
             }
         }
-        let folder = self.root.join("CaptureSettings");
+        let folder = crate::core::paths::layout::join(&self.root, "CaptureSettings");
         let mut selected = None;
         let entries = match fs::read_dir(&folder) {
             Ok(entries) => entries,

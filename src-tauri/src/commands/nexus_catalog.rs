@@ -574,7 +574,7 @@ mod requirements_tests {
         let (domains, ids) = vortex_support_snapshot();
         assert!(!domains.iter().any(|domain| domain == "masseffectlegendaryedition"));
         assert!(!ids.contains(&3712));
-        let audit: serde_json::Value = serde_json::from_slice(include_bytes!("../../resources/nexus-games/support-audit.json")).unwrap();
+        let audit: serde_json::Value = serde_json::from_slice(include_bytes!("../../resources/nexus-games/support-route-cases.json")).unwrap();
         for module in audit["modules"].as_array().unwrap().iter().filter(|m| m["vortex_status"] == "confirmed") {
             let domain = module["domain"].as_str().unwrap();
             assert!(domains.iter().any(|d| d == domain) || ids.contains(&module["nexus_game_id"].as_u64().unwrap()), "{domain}");

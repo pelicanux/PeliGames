@@ -63,17 +63,17 @@ export function ResetStartupGate({ children }: { children: (health: ReactNode) =
     finally { setBusy(false); }
   };
   if (!status) return <BootSplash />;
-  if (status.state === "recovery") return <><BootSplash /><SplashDone /><div className="modal-overlay">
+  if (status.state === "recovery") return <div className="reset-recovery-screen"><BootSplash /><SplashDone /><div className="modal-overlay">
     <ModalSurface className="modal-content dialog-glass steam-manual-popup maintenance-popup reset-recovery" hideClose role="dialog" aria-modal="true" aria-labelledby="reset-recovery-title"
       header={<h2 id="reset-recovery-title">{pt ? "Recuperar redefinição" : "Recover reset"}</h2>}
       footer={<div className="nexus-popup-footer">
         <button className="btn btn-secondary" disabled={busy} onClick={() => void recover(false)}>{pt ? "Tentar configuração nova" : "Try new configuration"}</button>
         <button className="btn btn-primary" disabled={busy} onClick={() => void recover(true)}>{busy ? (pt ? "Aguarde…" : "Please wait…") : (pt ? "Restaurar e reiniciar" : "Restore and restart")}</button>
       </div>}>
-      <p>{pt ? "A redefinição anterior não teve a inicialização validada. As cópias antigas foram preservadas. Você pode tentar novamente ou restaurar os arquivos anteriores." : "The previous reset did not pass startup validation. Old copies were preserved. You can retry or restore the previous files."}</p>
+      <p>{pt ? "Uma manutenção anterior foi interrompida. Os arquivos anteriores foram preservados. Você pode tentar novamente ou restaurar os arquivos anteriores." : "A previous maintenance operation was interrupted. Previous files were preserved. You can retry or restore the previous files."}</p>
       <p>{pt ? "A restauração reinicia o programa e preserva a configuração nova até validar a recuperação. Contas desconectadas precisam ser vinculadas novamente." : "Restoring restarts the app and preserves the new configuration until recovery is validated. Disconnected accounts must be linked again."}</p>
       {(failure || status.error) && <p role="alert">{failure || status.error}</p>}
       {status.backups.length > 0 && <ul className="maintenance-paths">{status.backups.map(path => <li key={path}><code>{path}</code></li>)}</ul>}
-    </ModalSurface></div></>;
+    </ModalSurface></div></div>;
   return children(status.state !== "none" ? <ResetHealth onSuccess={callbacks.success} onFailure={healthFailure} /> : null);
 }

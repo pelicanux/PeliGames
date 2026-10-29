@@ -1,5 +1,5 @@
 # Revisões fixadas das extensões Vortex lidas pelo extrator (repositório commit).
-# Mantidas iguais às de src-tauri/resources/nexus-games/support-audit.json.
+# Mantidas iguais às de src-tauri/resources/nexus-games/support-route-cases.json.
 Nexus-Mods/Vortex e7698e5a038b74642544916c2bfafe6d64dc19bd
 ChemGuy1611/ChemBoy1-Vortex-Games 9951b6a04c6bc498be39c160b58df90927152b72
 Nexus-Mods/game-palworld 16850505152c67b0a4322a4c1ae4cdb5fd69d9e5

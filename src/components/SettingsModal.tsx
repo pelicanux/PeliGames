@@ -138,6 +138,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
     { id: "experimental-updates", page: "tools", title: text.experimentalUpdates, keywords: `${text.launcherUpdates} ${text.experimentalUpdatesHint} beta update atualização` },
     { id: "monitoring-panel", page: "monitoring", title: text.monitoring, keywords: `${text.monitoringHint} FPS GPU CPU MangoHUD` },
     { id: "launcher-logs", page: "tools", title: text.launcherLogs, keywords: `${text.openLogs} ${text.logsHint}` },
+    { id: "developer-mode", page: "tools", title: text.developerMode, keywords: `${text.frameRateMeter} ${text.frameRateMeterHint} fps desenvolvedor developer` },
     { id: "backup-create", page: "mods", title: text.backupCreate, keywords: "Nexus ZIP" },
     { id: "backup-restore", page: "mods", title: text.backupRestore, keywords: text.backupSearch },
     { id: "backup-discover", page: "mods", title: text.backupDiscover, keywords: text.backupSearch },

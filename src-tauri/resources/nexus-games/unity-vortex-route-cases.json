@@ -1,8 +1,8 @@
 {
   "schema": 1,
+  "description": "Synthetic package-routing fixtures and source provenance; not a runtime compatibility certification.",
   "generated_by": "tools/vortex-import --emit",
   "family": "unity",
-  "scope": "Módulos gerados por análise estática das extensões Vortex. Rotas verificadas por casos sintéticos; nenhum jogo foi executado.",
   "sources": {
     "chemboy1": "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72",
     "vortex": "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games"
@@ -12,13 +12,11 @@
       "domain": "aska",
       "name": "ASKA",
       "module_version": "1.0.0",
+      "nexus_game_id": 7531,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-aska/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -38,28 +36,17 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 7531
+      "runtime_verified": false
     },
     {
       "domain": "ballxpit",
       "name": "BALL x PIT",
       "module_version": "1.0.0",
+      "nexus_game_id": 8305,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-ballxpit/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -95,28 +82,17 @@
           "target": "UserLibs/Shared.dll"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8305
+      "runtime_verified": false
     },
     {
       "domain": "blueprince",
       "name": "Blue Prince",
       "module_version": "1.0.0",
+      "nexus_game_id": 7562,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-blueprince/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -152,28 +128,17 @@
           "target": "UserLibs/Shared.dll"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 7562
+      "runtime_verified": false
     },
     {
       "domain": "burglingnomes",
       "name": "Burglin' Gnomes",
       "module_version": "1.0.0",
+      "nexus_game_id": 8756,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-burglingnomes/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -193,28 +158,17 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8756
+      "runtime_verified": false
     },
     {
       "domain": "cairn",
       "name": "Cairn",
       "module_version": "1.0.0",
+      "nexus_game_id": 8515,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-cairn/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -250,28 +204,17 @@
           "target": "UserLibs/Shared.dll"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8515
+      "runtime_verified": false
     },
     {
       "domain": "cloverpit",
       "name": "CloverPit",
       "module_version": "1.0.0",
+      "nexus_game_id": 8219,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-cloverpit/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -307,28 +250,17 @@
           "target": "UserLibs/Shared.dll"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8219
+      "runtime_verified": false
     },
     {
       "domain": "dimraeth",
       "name": "Dimraeth",
       "module_version": "1.0.0",
+      "nexus_game_id": 10236,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dimraeth/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -348,28 +280,17 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 10236
+      "runtime_verified": false
     },
     {
       "domain": "diplomacyisnotanoption",
       "name": "Diplomacy is Not an Option",
       "module_version": "1.0.0",
+      "nexus_game_id": 6883,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-diplomacyisnotanoption/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -389,28 +310,17 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 6883
+      "runtime_verified": false
     },
     {
       "domain": "discoelysium",
       "name": "Disco Elysium",
       "module_version": "1.0.0",
+      "nexus_game_id": 3027,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-discoelysium/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -430,28 +340,17 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 3027
+      "runtime_verified": false
     },
     {
       "domain": "dressmaker",
       "name": "Dressmaker",
       "module_version": "1.0.0",
+      "nexus_game_id": 10325,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dressmaker/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -471,28 +370,17 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 10325
+      "runtime_verified": false
     },
     {
       "domain": "escapefromduckov",
       "name": "Escape from Duckov",
       "module_version": "1.0.0",
+      "nexus_game_id": 8316,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-escapefromduckov/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -528,28 +416,17 @@
           "target": "UserLibs/Shared.dll"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8316
+      "runtime_verified": false
     },
     {
       "domain": "footballmanager26",
       "name": "Football Manager 26",
       "module_version": "1.0.0",
+      "nexus_game_id": 8374,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-footballmanager26/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -585,28 +462,17 @@
           "target": "UserLibs/Shared.dll"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8374
+      "runtime_verified": false
     },
     {
       "domain": "grimshire",
       "name": "Grimshire",
       "module_version": "1.0.0",
+      "nexus_game_id": 8643,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-grimshire/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -626,28 +492,17 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8643
+      "runtime_verified": false
     },
     {
       "domain": "hollowknight",
       "name": "Hollow Knight",
       "module_version": "1.0.0",
+      "nexus_game_id": 2698,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-hollowknight/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -667,28 +522,17 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 2698
+      "runtime_verified": false
     },
     {
       "domain": "hollowknightsilksong",
       "name": "Hollow Knight: Silksong",
       "module_version": "1.0.0",
+      "nexus_game_id": 8136,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-hollowknightsilksong/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -708,28 +552,17 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8136
+      "runtime_verified": false
     },
     {
       "domain": "howtofish",
       "name": "How to Fish",
       "module_version": "1.0.0",
+      "nexus_game_id": 9944,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-howtofish/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -765,28 +598,17 @@
           "target": "UserLibs/Shared.dll"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 9944
+      "runtime_verified": false
     },
     {
       "domain": "megabonk",
       "name": "Megabonk",
       "module_version": "1.0.0",
+      "nexus_game_id": 7674,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-megabonk/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -822,28 +644,17 @@
           "target": "UserLibs/Shared.dll"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 7674
+      "runtime_verified": false
     },
     {
       "domain": "mirthwood",
       "name": "Mirthwood",
       "module_version": "1.0.0",
+      "nexus_game_id": 7554,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-mirthwood/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -863,28 +674,17 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 7554
+      "runtime_verified": false
     },
     {
       "domain": "mousepiforhire",
       "name": "MOUSE: P.I. For Hire",
       "module_version": "1.0.0",
+      "nexus_game_id": 9108,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-mousepiforhire/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -904,28 +704,17 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 9108
+      "runtime_verified": false
     },
     {
       "domain": "pcbuildingsimulator",
       "name": "PC Building Simulator",
       "module_version": "1.0.0",
+      "nexus_game_id": 2397,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-pcbuildingsimulator/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -945,28 +734,17 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 2397
+      "runtime_verified": false
     },
     {
       "domain": "pcbuildingsimulator2",
       "name": "PC Building Simulator 2",
       "module_version": "1.0.0",
+      "nexus_game_id": 4558,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-pcbuildingsimulator2/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -986,28 +764,17 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 4558
+      "runtime_verified": false
     },
     {
       "domain": "peak",
       "name": "PEAK",
       "module_version": "1.0.0",
+      "nexus_game_id": 7867,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-peak/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1027,28 +794,17 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 7867
+      "runtime_verified": false
     },
     {
       "domain": "prodeus",
       "name": "Prodeus",
       "module_version": "1.0.0",
+      "nexus_game_id": 5379,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-prodeus/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1068,28 +824,17 @@
           "target": "UserLibs/Shared.dll"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 5379
+      "runtime_verified": false
     },
     {
       "domain": "starsandisland",
       "name": "Starsand Island",
       "module_version": "1.0.0",
+      "nexus_game_id": 8808,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-starsandisland/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1109,28 +854,17 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8808
+      "runtime_verified": false
     },
     {
       "domain": "storyofseasonsgrandbazaar",
       "name": "STORY OF SEASONS: Grand Bazaar",
       "module_version": "1.0.0",
+      "nexus_game_id": 8123,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-storyofseasonsgrandbazaar/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1150,26 +884,7 @@
           "target": "BepInEx/config/example.cfg"
         }
       ],
-      "findings": [
-        "Identificação (executável, pasta de dados, Steam ID, carregadores) extraída da extensão; rotas do perfil Unity compartilhado. DLLs soltas são classificadas pelo carregador referenciado; mods para o carregador errado, pacotes mistos e substituições de dados do jogo são recusados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8123
-    }
-  ],
-  "skipped": [
-    {
-      "domain": "animeshopsimulator",
-      "reason": "sem extensão Vortex publicada no manifesto público"
-    },
-    {
-      "domain": "romestead",
-      "reason": "jogo XNA: sem pasta de dados Unity"
+      "runtime_verified": false
     }
   ]
 }

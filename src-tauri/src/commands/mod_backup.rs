@@ -74,7 +74,7 @@ fn any_enabled(settings: &BackupSettings) -> bool {
     settings.per_game || settings.game_overrides.values().any(|enabled| *enabled)
 }
 fn settings_path() -> Result<PathBuf, String> {
-    Ok(crate::core::paths::app_root()?.join("mod-backup.json"))
+    Ok(crate::core::paths::app_path("mod-backup.json")?)
 }
 fn settings() -> Result<BackupSettings, String> {
     match fs::read(settings_path()?) {
@@ -926,7 +926,7 @@ pub async fn delete_nexus_game_backup(game_id: String) -> Result<BackupSettings,
 }
 
 fn preserved_recoveries() -> Result<PathBuf,String> {
-    Ok(crate::core::paths::app_root()?.join("mod-recovery-preserved"))
+    Ok(crate::core::paths::app_path("mod-recovery-preserved")?)
 }
 pub(super) fn preserve_recovery(game:&NexusGame)->Result<(),String>{
     let Some(root)=game.game["directory"].as_str() else{return Ok(());};
@@ -943,7 +943,8 @@ fn preserve_recovery_at(source:&Path,parent:&Path)->Result<PathBuf,String>{
     copy_tree(&source.join("data"),&stage.0.join("data"),false,None)?;
     json(&stage.0.join("snapshot.json"),&snapshot)?;
     read_snapshot(&stage.0)?;
-    let target=parent.join(format!("{}-{}",snapshot.game.id,uuid::Uuid::new_v4()));
+    // A readable dated name; rename(2) atomically replaces the empty placeholder.
+    let target=crate::core::paths::names::dated(parent,snapshot.game.game["name"].as_str().unwrap_or("jogo"),None)?;
     fs::rename(&stage.0,&target).map_err(error)?;
     Ok(target)
 }
@@ -1056,7 +1057,7 @@ pub async fn create_mod_backup(destination: String) -> Result<Report, String> {
         let eligible: Vec<_> = data.games.iter().filter(|g| has_installed_mods(g)).collect();
         if eligible.is_empty() { return Err("Nenhum jogo com mods Nexus instalados para fazer backup.".into()); }
         let parent = fs::canonicalize(&destination).map_err(error)?;
-        let mods = crate::core::paths::app_root()?.join("Mod");
+        let mods = crate::core::paths::app_path("Mod")?;
         if parent.starts_with(&mods) { return Err("Salve o backup fora do armazenamento de mods.".into()); }
         let stage = staging(&parent)?;
         directory(&stage.0.join("Nexus"))?;
@@ -1068,7 +1069,9 @@ pub async fn create_mod_backup(destination: String) -> Result<Report, String> {
             games.push(folder);
         }
         json(&stage.0.join("backup.json"), &Backup { format: 2, games })?;
-        let target = parent.join(format!("PeliGames-Nexus-{}.zip", uuid::Uuid::new_v4()));
+        // `peligames-mods-<date>.zip`: the name is reserved, then written with create_new.
+        let target = crate::core::paths::names::dated(&parent, "PeliGames mods", Some("zip"))?;
+        fs::remove_file(&target).map_err(error)?;
         compress_backup(&stage.0, &target)?;
         Ok(Report { path: target.to_string_lossy().into_owned(), ..Default::default() })
     }).await.map_err(error)?
@@ -1082,7 +1085,9 @@ pub async fn restore_mod_backup(source: String) -> Result<Report, String> {
         // Preserve compatibility with previously exported directory backups.
         let stage;
         let root = if source.is_dir() { source } else {
-            stage = staging(&crate::core::paths::app_root()?)?;
+            let cache=crate::core::paths::app_path("cache/imports")?;
+            fs::create_dir_all(&cache).map_err(error)?;
+            stage = staging(&cache)?;
             extract_backup(&source, &stage.0)?;
             stage.0.clone()
         };

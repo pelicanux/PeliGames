@@ -797,13 +797,14 @@
   },
   {
     "schema": 1,
-    "version": "1.1.1",
+    "version": "1.2.0",
     "domain": "monsterhunterrise",
     "name": "Monster Hunter Rise",
     "platform": "proton",
     "engine": "deployment",
     "family": {
-      "kind": "re_engine"
+      "kind": "re_engine",
+      "fluffy": "MHRISE"
     },
     "executable": "MonsterHunterRise.exe",
     "required": [
@@ -824,7 +825,7 @@
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
     ],
     "notes": [
-      "Família RE Engine: scripts Lua (reframework/autorun), plugins e dados REFramework e o carregador dinput8.dll, com override dinput8=n,b no Proton. Pacotes natives/, pak_mods e mods Fluffy exigem processamento especializado e são recusados."
+      "Família RE Engine: scripts Lua (reframework/autorun), plugins e dados REFramework e o carregador dinput8.dll, com override dinput8=n,b no Proton. Mods Fluffy (pastas com modinfo.ini) vão para a pasta Mods do Fluffy Mod Manager, que os aplica; presets .prt para Presets; DLLs de upscaler/DirectStorage para a raiz. Pacotes natives/ e pak_mods sem modinfo.ini (que o Vortex recompacta para o Fluffy) e executáveis .exe soltos na raiz não são aplicados."
     ],
     "destinations": [],
     "routes": [],
@@ -842,13 +843,14 @@
   },
   {
     "schema": 1,
-    "version": "1.1.1",
+    "version": "1.2.0",
     "domain": "monsterhunterwilds",
     "name": "Monster Hunter Wilds",
     "platform": "proton",
     "engine": "deployment",
     "family": {
-      "kind": "re_engine"
+      "kind": "re_engine",
+      "fluffy": "MonsterHunterWilds"
     },
     "executable": "MonsterHunterWilds.exe",
     "required": [
@@ -869,7 +871,7 @@
       "Regras factuais adaptadas de definições públicas; implementação independente PeliGames."
     ],
     "notes": [
-      "Família RE Engine: scripts Lua (reframework/autorun), plugins e dados REFramework e o carregador dinput8.dll, com override dinput8=n,b no Proton. Pacotes natives/, pak_mods e mods Fluffy exigem processamento especializado e são recusados."
+      "Família RE Engine: scripts Lua (reframework/autorun), plugins e dados REFramework e o carregador dinput8.dll, com override dinput8=n,b no Proton. Mods Fluffy (pastas com modinfo.ini) vão para a pasta Mods do Fluffy Mod Manager, que os aplica; presets .prt para Presets; DLLs de upscaler/DirectStorage para a raiz. Pacotes natives/ e pak_mods sem modinfo.ini (que o Vortex recompacta para o Fluffy) e executáveis .exe soltos na raiz não são aplicados."
     ],
     "destinations": [],
     "routes": [],
@@ -1946,7 +1948,7 @@
   },
   {
     "schema": 1,
-    "version": "1.0.1",
+    "version": "1.1.0",
     "domain": "monsterhunterworld",
     "name": "Monster Hunter: World",
     "platform": "proton",
@@ -2001,6 +2003,11 @@
         "kind": "file",
         "source": "dinput8.dll",
         "target": "dinput8.dll"
+      },
+      {
+        "kind": "extension",
+        "extension": ".ini",
+        "target": ""
       }
     ],
     "sources": [
@@ -2012,7 +2019,9 @@
     ],
     "notes": [
       "Mods nativePC e Stracker Loader; arquivos de dados originais do jogo permanecem protegidos.",
-      "Stracker's Loader atual traz dinput8.dll ao lado de loader.dll; como no tipo mhwstrackermodloader do Vortex, vai para a raiz."
+      "Stracker's Loader atual traz dinput8.dll ao lado de loader.dll; como no tipo mhwstrackermodloader do Vortex, vai para a raiz.",
+      "Presets ReShade (.ini fora de nativePC) vão para a raiz do jogo, sem pastas, como no tipo mhwreshade do Vortex; graphics_option.ini do jogo fica protegido. O aviso do Vortex quando falta reshade-shaders não é exibido.",
+      "HunterPie, SmartHunter e MHW Transmog, ferramentas do Vortex, não são cadastradas: ficam fora da pasta do jogo, e o PeliGames só abre ferramentas que estão dentro dela."
     ],
     "rejected_prefixes": [],
     "frameworks": [
@@ -2043,6 +2052,12 @@
     ],
     "config_files": [
       "loader-config.json"
+    ],
+    "root_extensions": [
+      ".ini"
+    ],
+    "protected_files": [
+      "graphics_option.ini"
     ]
   },
   {

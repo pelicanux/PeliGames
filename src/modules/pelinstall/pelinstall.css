@@ -81,6 +81,8 @@ html.pelinstall-mode, html.pelinstall-mode body { background: transparent !impor
 .pi-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 18px 20px 20px; scrollbar-width: thin; }
 .pi-body h2 { margin: 0; font-size: 1.1875rem; letter-spacing: -.02em; color: var(--pi-text); }
 .pi-hint { margin: -4px 0 0; color: var(--pi-muted); font-size: 0.84375rem; line-height: 1.45; overflow-wrap: anywhere; }
+.pi-location-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+.pi-location-heading .pi-hint { flex: 1 1 150px; margin: 0; font-size: 0.75rem; }
 .pi-label { margin-bottom: -6px; font-size: 0.75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--pi-faint); }
 /* File being installed. */
 .pi-file, .pi-game { display: flex; align-items: center; gap: 14px; min-width: 0; padding: 12px 14px; border-radius: 16px; background: var(--pi-card); border: 1px solid var(--pi-line); }

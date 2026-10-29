@@ -9,7 +9,7 @@ struct Pending {
     after: SavedExternalSettings,
 }
 fn file() -> Result<PathBuf, String> {
-    Ok(crate::core::paths::app_root()?.join("steam-pending-settings.json"))
+    Ok(crate::core::paths::app_path("steam-pending-settings.json")?)
 }
 fn read() -> Result<BTreeMap<String, Pending>, String> {
     match fs::read(file()?) {
@@ -189,7 +189,7 @@ fn update(
 }
 fn universal_line_matches(game: &ExternalGame, actual: &str) -> Result<bool, String> {
     Ok(super::super::launch_profiles::prefix(Path::new(&game.path))?
-        .is_some_and(|prefix| same_manual_line(actual, &format!("{prefix}%command%"))))
+        .is_some_and(|prefix| same_manual_line(&super::super::launch_profiles::current_line(actual), &format!("{prefix}%command%"))))
 }
 fn quote(value: &str) -> String {
     format!("'{}'", value.replace('\'', "'\"'\"'"))
@@ -287,7 +287,7 @@ fn apply(game: &ExternalGame) -> Result<(), String> {
     let mut changes = Vec::new();
     for path in configs {
         let before = fs::read_to_string(&path).map_err(|e| e.to_string())?;
-        let current = super::super::steam_launch_options::read_launch_options(&before, app)?;
+        let current = super::super::launch_profiles::current_line(&super::super::steam_launch_options::read_launch_options(&before, app)?);
         let mut current = current.replacen(&old_prefix, "", 1);
         if let Some(prefix) = super::super::launch_profiles::prefix(Path::new(&game.path))? {
             if same_manual_line(&current, &format!("{prefix}%command%")) {
@@ -356,16 +356,17 @@ fn migrate_expanded_line(
     let root = crate::core::paths::app_root()?;
     let words = crate::core::advanced_settings::wrapper_args(current)?;
     let existing_wrapper = words.iter().any(|word| {
-        Path::new(word).starts_with(root.join("FrameGeneration/profiles"))
+        let managed=crate::core::paths::migrated_runner_path(word);
+        Path::new(&managed).starts_with(crate::core::paths::layout::join(&root, "FrameGeneration/profiles"))
             || word
                 .strip_prefix("MANGOHUD_CONFIGFILE=")
-                .is_some_and(|path| Path::new(path).starts_with(root.join("MangoHUD")))
+                .is_some_and(|path| Path::new(&crate::core::paths::migrated_runner_path(path)).starts_with(crate::core::paths::layout::join(&root, "MangoHUD")))
             || before.is_some_and(|before| {
                 before
                     .advanced
                     .wrappers
                     .iter()
-                    .any(|wrapper| wrapper.enabled && wrapper.program == *word)
+                    .any(|wrapper| wrapper.enabled && wrapper.program == managed)
             })
     });
     if existing_wrapper {

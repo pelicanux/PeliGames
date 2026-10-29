@@ -10,10 +10,10 @@ use tauri::Manager;
 pub mod reset;
 mod pelirun;
 static BUSY: AtomicBool = AtomicBool::new(false);
-static RESET_READY: std::sync::Mutex<Option<(Vec<String>, bool, bool)>> = std::sync::Mutex::new(None);
 #[derive(Serialize)]
 pub struct Plan {
     action: String,
+    cleanup_data: bool,
     paths: Vec<String>,
     mod_games: Vec<super::nexus_durable::Review>,
     mod_revision: Option<String>,
@@ -183,15 +183,23 @@ fn strings(paths: Vec<PathBuf>) -> Vec<String> {
         .map(|p| p.to_string_lossy().into_owned())
         .collect()
 }
+fn operation_paths(action: &str, cleanup_data: bool) -> Result<Vec<PathBuf>, String> {
+    let mut paths = targets(action)?;
+    if action == "uninstall" && cleanup_data { paths.extend(targets("reset")?); }
+    paths.sort(); paths.dedup();
+    Ok(paths)
+}
 #[tauri::command]
-pub fn launcher_maintenance_plan(action: String) -> Result<Plan, String> {
+pub fn launcher_maintenance_plan(action: String, cleanup_data: Option<bool>) -> Result<Plan, String> {
+    let cleaning = action == "reset" || cleanup_data.unwrap_or(false);
     Ok(Plan {
-        paths: strings(targets(&action)?),
-        mod_games: if action == "reset" {super::nexus_durable::review()?} else {vec![]},
-        mod_revision: if action == "reset" {Some(super::nexus_durable::reset_revision()?)}else{None},
-        installed_games: if action == "reset" { crate::core::installed_library::reset_inventory(&[])? } else {vec![]},
-        pelirun: if action == "reset" { strings(pelirun::folders()?) } else { vec![] },
+        paths: strings(operation_paths(&action, cleaning)?),
+        mod_games: if cleaning {super::nexus_durable::review()?} else {vec![]},
+        mod_revision: if cleaning {Some(super::nexus_durable::reset_revision()?)}else{None},
+        installed_games: if cleaning { crate::core::installed_library::reset_inventory(&[])? } else {vec![]},
+        pelirun: if cleaning { strings(pelirun::folders()?) } else { vec![] },
         action,
+        cleanup_data: cleaning,
     })
 }
 
@@ -213,7 +221,7 @@ done
 # Report incomplete uninstall rather than treating a leftover as success.
 for target do
   if [ -e "$target" ] || [ -L "$target" ]; then
-    printf 'Limpeza incompleta; reinício cancelado: %s\n' "$target" >&2
+    printf 'Remoção incompleta: %s\n' "$target" >&2
     exit 1
   fi
 done
@@ -262,9 +270,11 @@ pub async fn launcher_maintenance_apply(
     app: tauri::AppHandle,
     action: String,
     confirmed_paths: Vec<String>,
+    cleanup_data: Option<bool>,
     remove_mods: Option<bool>,
     preserve_accounts: Option<bool>,
     preserve_games: Option<bool>,
+    preserve_mangohud: Option<bool>,
     confirmed_mod_revision: Option<String>,
     remove_pelirun: Option<bool>,
 ) -> Result<(), String> {
@@ -279,14 +289,15 @@ pub async fn launcher_maintenance_apply(
     }
     let _guard = Guard;
     idle(&app)?;
-    let paths = strings(targets(&action)?);
+    let cleaning = action == "reset" || cleanup_data.unwrap_or(false);
+    let paths = strings(operation_paths(&action, cleaning)?);
     if paths != confirmed_paths {
         return Err(
             "Os caminhos mudaram. Abra a confirmação novamente para revisar a lista atualizada."
                 .into(),
         );
     }
-    if action == "reset" {
+    if cleaning {
         if reset::launcher_reset_status()?.state != "none" {
             return Err("Conclua a redefinição anterior antes de iniciar outra.".into());
         }
@@ -324,25 +335,13 @@ pub async fn launcher_maintenance_apply(
         }
     }
     idle(&app)?;
-    if action == "reset" {
+    if cleaning {
         tauri::async_runtime::spawn_blocking(move || super::nexus_durable::prepare_reset(remove_mods.unwrap_or(false))).await.map_err(|e|e.to_string())??;
-        *RESET_READY.lock().map_err(|e| e.to_string())? = Some((paths, preserve_accounts.unwrap_or(false), preserve_games.unwrap_or(false)));
-        return Ok(());
+        let reset_paths = strings(targets("reset")?);
+        let uninstall_paths = if action == "uninstall" { strings(targets("uninstall")?) } else { vec![] };
+        return reset::close(&app, &reset_paths, preserve_accounts.unwrap_or(false), preserve_games.unwrap_or(false), preserve_mangohud.unwrap_or(false), &uninstall_paths);
     }
     launch_cleanup(&app, &paths)
-}
-#[tauri::command]
-pub fn launcher_maintenance_restart(app: tauri::AppHandle) -> Result<(), String> {
-    let ready = RESET_READY.lock().map_err(|e| e.to_string())?;
-    let (paths, preserve_accounts, preserve_games) = ready
-        .as_ref()
-        .ok_or("Nenhuma redefinição aguardando reinício.")?;
-    idle(&app)?;
-    for path in paths {
-        validate_ancestors(Path::new(path))?;
-    }
-    if *preserve_games { crate::core::installed_library::reset_inventory(paths)?; }
-    reset::restart(&app, paths, *preserve_accounts, *preserve_games)
 }
 fn launch_cleanup(app: &tauri::AppHandle, paths: &[String]) -> Result<(), String> {
     let mut helper = Command::new("/bin/sh");

@@ -19,7 +19,9 @@ interface Props {
   onStartup: () => void;
   renodx: boolean;
   onRenodx: () => void;
-  model: "small" | "original";
+  model: "small" | "experimental" | "original";
+  experimentalAvailable?: boolean;
+  nrPlugin?: boolean;
   modelAvailable: boolean;
   unifiedNetworks: boolean;
   lumeniteAvailable: boolean;
@@ -27,7 +29,7 @@ interface Props {
   onLumenite: (enabled: boolean) => void;
   installed?: boolean;
   modelStatus: "checking" | "error" | "backend" | "missing" | "ready";
-  onModel: (model: "small" | "original") => void;
+  onModel: (model: "small" | "experimental" | "original") => void;
   int4: boolean;
   onInt4: () => void;
   actions: ReactNode;
@@ -42,6 +44,7 @@ export function ModernDlssPanel(props: Props) {
     : props.modelStatus === "error" ? (pt ? "Não foi possível verificar os modelos. Reabra os detalhes para tentar novamente." : "Could not check models. Reopen the details to retry.")
     : props.modelStatus === "backend" ? (pt ? "Atualize o backend para habilitar a seleção do modelo novo." : "Update the backend to enable the new model selection.")
     : props.modelStatus === "missing" ? (pt ? "Backend atualizado. Extraia a DLL 310.9.16 para adicionar o modelo novo." : "Backend ready. Extract DLL 310.9.16 to add the new model.")
+    : props.model === "experimental" ? (pt ? "Derivado da 310.9.16 · mais rápido, pode alterar a imagem." : "Derived from 310.9.16 · faster, may change the image.")
     : props.model === "original" ? "310.8.0 · " + (pt ? "modelo antigo" : "old model")
     : (pt ? "310.9.16 · modelo novo disponível" : "310.9.16 · new model available");
   const option = (label: string, hint: string, enabled: boolean, onToggle: () => void, disabled = props.busy, description = hint) =>
@@ -54,7 +57,7 @@ export function ModernDlssPanel(props: Props) {
       <p className="modern-dlss-description">{props.recommendation || (pt ? "Escolha o modo e a arquitetura para instalar ou reparar o mod neste jogo." : "Choose the mode and architecture to install or repair the mod in this game.")}</p>
       <div className="modern-dlss-setting"><span>{pt ? "Modo" : "Mode"}</span>
         <div className="modern-dlss-choice"><div className="modern-dlss-segments" role="group" aria-label={pt ? "Modo de instalação" : "Installation mode"}>
-          {(["optiscaler", "reshade", "vulkan", "dx9"] as const).map(value => <HoverTooltip key={value} text={t("routeSelector", `${value}Desc`)} tooltipClassName="modern-dlss-tooltip"><button type="button"
+          {(["optiscaler", "reshade", "vulkan", "dx9"] as const).map(value => <HoverTooltip key={value} text={value === "optiscaler" && props.nrPlugin ? (pt ? "OptiScaler original com plugin NR · DX11, DX12 e Vulkan · 64 bits. Requer DLSS, FSR ou XeSS no jogo." : "Original OptiScaler with NR plugin · DX11, DX12 and Vulkan · 64-bit. Requires DLSS, FSR or XeSS in game.") : t("routeSelector", `${value}Desc`)} tooltipClassName="modern-dlss-tooltip"><button type="button"
             aria-pressed={props.route === value} disabled={props.busy || (value === "optiscaler" && props.bitness === "32")}
             onClick={() => props.onRoute(value)}>
             {value === "optiscaler" ? "OptiScaler" : value === "reshade" ? "ReShade" : value === "vulkan" ? "Vulkan" : "DX9"}
@@ -72,20 +75,21 @@ export function ModernDlssPanel(props: Props) {
         {props.installed && <small>{props.unifiedNetworks ? (pt ? "No jogo: menu NR ou Ctrl+F11." : "In game: NR menu or Ctrl+F11.") : (pt ? "Após trocar, repare o mod." : "Repair the mod after switching.")}</small>}
       </div>
         <div className="modern-dlss-choice"><div className="modern-dlss-segments" role="group" aria-label={pt ? "Modelo neural" : "Neural model"}>
-          {(props.unifiedNetworks ? ["small", "original", "int4"] as const : ["small", "original"] as const).map(value => <HoverTooltip key={value}
-            text={value === "small" ? "CC_SMALL_FP8 · 310.9.16" : value === "original" ? "CC_SILVER_AARDWOLD · 310.8.0" : "CC_SILVER_AARDWOLD_INT4_MIXED · 310.8.0"} tooltipClassName="modern-dlss-tooltip">
+          {(props.unifiedNetworks ? ["small", ...(props.experimentalAvailable ? ["experimental" as const] : []), "original", "int4"] as const : ["small", "original"] as const).map(value => <HoverTooltip key={value}
+            text={value === "experimental" ? "CC_SMALL_FP8_EXPERIMENTAL · 310.9.16" : value === "small" ? "CC_SMALL_FP8 · 310.9.16" : value === "original" ? "CC_SILVER_AARDWOLD · 310.8.0" : "CC_SILVER_AARDWOLD_INT4_MIXED · 310.8.0"} tooltipClassName="modern-dlss-tooltip">
             <button type="button" aria-pressed={value === "int4" ? props.int4 : props.model === value && (!props.unifiedNetworks || !props.int4)}
-              disabled={props.busy || (value === "small" && !props.modelAvailable)} onClick={() => {
+              disabled={props.busy || ((value === "small" || value === "experimental") && !props.modelAvailable)} onClick={() => {
                 if (value === "int4") { props.onModel("original"); if (!props.int4) props.onInt4(); }
                 else { props.onModel(value); if (value === "original" && props.int4 && props.unifiedNetworks) props.onInt4(); }
               }}>
-              {value === "small" ? (pt ? "Novo" : "New") : value === "original" ? (pt ? "Antigo" : "Old") : "int4"}
+              {value === "small" ? (pt ? "Novo" : "New") : value === "experimental" ? "Experimental" : value === "original" ? (pt ? "Antigo" : "Old") : "int4"}
             </button>
           </HoverTooltip>)}
         </div><small className="modern-dlss-recommendation">{props.unifiedNetworks && props.int4 ? (pt ? "310.8.0 · int4 misto" : "310.8.0 · mixed int4") : modelHint}</small></div>
       </div>}
       {props.modelStatus === "error" && <p className="modern-dlss-key-hint">{modelHint}</p>}
       <div className="modern-dlss-actions">{props.actions}</div>
+      {props.nrPlugin && <p className="modern-dlss-key-hint">{pt ? "Instalar / reparar substitui os ajustes NR no jogo pelos padrões do backend e pelas escolhas acima." : "Install / repair replaces the game’s NR settings with backend defaults and the choices above."}</p>}
     </section>
     <section className="modern-dlss-card" aria-label={pt ? "Opções do DLSSNR-AMD" : "DLSSNR-AMD options"}>
       <h3>{pt ? "Opções" : "Options"}</h3>
@@ -104,7 +108,8 @@ export function ModernDlssPanel(props: Props) {
       {option(t("routeSelector", "renodx"), t("routeSelector", "renodxHint"), props.renodx, props.onRenodx, props.busy || props.startupDisabled, pt ? "Estilo de imagem do add-on DLSS 5." : "Image style from the DLSS 5 add-on.")}
       {!props.unifiedNetworks && option(t("routeSelector", "int4"), t("routeSelector", "int4Hint"), props.int4, props.onInt4, props.busy || props.model === "small", pt ? "Disponível apenas com o modelo antigo (310.8.0)." : "Available only with the old model (310.8.0).")}
       {props.shortcut && <div className="modern-dlss-shortcut"><span>{props.route === "optiscaler" ? (pt ? "Menu do OptiScaler" : "OptiScaler menu") : (pt ? "Menu do ReShade" : "ReShade menu")}</span>{props.shortcut}</div>}
-      {props.route === "optiscaler" && <p className="modern-dlss-key-hint">{pt ? "End abre o NR Control. Com RenoDX ativado, os ajustes de NR ficam nesse painel; o menu do OptiScaler continua para upscaling e geração de quadros." : "End opens NR Control. With RenoDX enabled, NR settings move to that panel; OptiScaler keeps its upscaling and frame generation menu."}</p>}
+      {props.route === "optiscaler" && <p className="modern-dlss-key-hint">{props.nrPlugin ? (pt ? "No jogo, pressione End para ajustar o NR no NR Control." : "In game, press End to adjust NR in NR Control.") : (pt ? "End abre o NR Control. Com RenoDX ativado, os ajustes de NR ficam nesse painel; o menu do OptiScaler continua para upscaling e geração de quadros." : "End opens NR Control. With RenoDX enabled, NR settings move to that panel; OptiScaler keeps its upscaling and frame generation menu.")}</p>}
+      {props.route !== "optiscaler" && props.route !== "remove" && <p className="modern-dlss-key-hint">{pt ? "No jogo, ajuste o NR na aba Add-ons do menu do ReShade." : "In game, adjust NR in the ReShade menu’s Add-ons tab."}</p>}
       {props.feedback}
     </section>
   </div>;

@@ -12,6 +12,8 @@ use std::{
 static SETTINGS_LOCK: Mutex<()> = Mutex::new(());
 #[path = "external_proton.rs"]
 mod external_proton;
+/// Steam adapters follow reorganized runners and get readable names (see `external_proton`).
+pub(crate) fn organize_steam_tools() -> Vec<String> { external_proton::organize_steam_tools() }
 #[path = "epic_runtime.rs"]
 mod epic_runtime;
 #[path = "steam_settings.rs"]
@@ -56,7 +58,7 @@ struct SavedExternalSettings {
     directory: Option<String>,
 }
 fn settings_file() -> Result<PathBuf, String> {
-    Ok(crate::core::paths::app_root()?.join("external-game-settings.json"))
+    Ok(crate::core::paths::app_path("external-game-settings.json")?)
 }
 fn read_settings() -> Result<BTreeMap<String, SavedExternalSettings>, String> {
     let path = settings_file()?;
@@ -225,7 +227,7 @@ pub async fn scan_external_library() -> Result<Vec<ExternalGame>, String> {
                 .ok()
                 .and_then(|u| u.to_file_path().ok())
             {
-                Some(path) => super::covers::cache_heroic_cover(path)
+                Some(path) => super::covers::cache_heroic_cover(path,game.name.clone())
                     .await
                     .ok()
                     .and_then(|p| reqwest::Url::from_file_path(p).ok())

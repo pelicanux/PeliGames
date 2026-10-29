@@ -50,7 +50,67 @@ fn find(directory: &Path, installation: &str) -> Result<Option<Profile>, String>
 
 fn quote(value: &str) -> String { format!("'{}'", value.replace('\'', "'\"'\"'")) }
 
-fn save_at(root: &Path, installation: &str, mut profile: Profile) -> Result<Export, String> {
+/// The game's name as id (`tomb-raider`, then `tomb-raider-2`…). Never reuses an
+/// id held by another installation or by a former id in `.aliases.json`.
+fn readable_id(directory: &Path, profile: &Profile, installation: &str) -> Result<String, String> {
+    let name = profile.source.get("name").and_then(|v| v.as_str()).filter(|v| !v.trim().is_empty()).map(String::from)
+        .or_else(|| Path::new(installation).file_name().map(|v| v.to_string_lossy().into_owned())).unwrap_or_else(|| "jogo".into());
+    let base = crate::core::paths::names::slug(&name);
+    let base = if base.bytes().any(|c| c.is_ascii_lowercase()) { base } else { format!("jogo-{base}") };
+    let aliases = profile_io::aliases(directory)?;
+    for number in 1..=16384 {
+        let id = if number == 1 { base.clone() } else { format!("{base}-{number}") };
+        if steam_runtime::contract::hashed_profile_id(&id) || aliases.contains_key(&id) { continue; }
+        match fs::symlink_metadata(directory.join(format!("{id}.json"))) {
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(id),
+            Err(e) => return Err(e.to_string()),
+            Ok(_) => {},
+        }
+    }
+    Err("Não foi possível reservar um nome para o perfil PeliRun.".into())
+}
+
+/// Renames `pg-xxxxxxxx` profiles after their game. The former id goes to
+/// `.aliases.json` first-to-last (new file, alias, old file removed), so any
+/// launch option still holding it keeps working and a crash can be resumed.
+fn rename_hashed(directory: &Path) -> Result<(), String> {
+    for entry in fs::read_dir(directory).map_err(|e| e.to_string())?.flatten() {
+        let path = entry.path();
+        let Some(old) = path.file_stem().and_then(|v| v.to_str()).filter(|v| path.extension().is_some_and(|e| e == "json") && steam_runtime::contract::hashed_profile_id(v)).map(String::from) else { continue };
+        let Some(mut profile) = profile_io::universal(directory, &old)? else { continue };
+        let installation = profile.installation.clone().ok_or("Perfil sem instalação.")?;
+        // A readable copy left by an interrupted rename is reused.
+        let id = match find_readable(directory, &installation)? { Some(id) => id, None => readable_id(directory, &profile, &installation)? };
+        profile.id = Some(id.clone());
+        profile.validate_id(&id)?;
+        let bytes = serde_json::to_vec_pretty(&profile).map_err(|e| e.to_string())?;
+        steam_runtime::atomic_write(&directory.join(format!("{id}.json")), &bytes, 0o600)?;
+        let mut aliases = profile_io::aliases(directory)?;
+        for target in aliases.values_mut() { if *target == old { *target = id.clone(); } }
+        aliases.insert(old.clone(), id);
+        steam_runtime::atomic_write(&directory.join(profile_io::ALIASES), &serde_json::to_vec_pretty(&aliases).map_err(|e| e.to_string())?, 0o600)?;
+        fs::remove_file(&path).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+fn find_readable(directory: &Path, installation: &str) -> Result<Option<String>, String> {
+    for entry in fs::read_dir(directory).map_err(|e| e.to_string())?.flatten() {
+        let path = entry.path();
+        let Some(id) = path.file_stem().and_then(|v| v.to_str()).filter(|v| path.extension().is_some_and(|e| e == "json") && !steam_runtime::contract::hashed_profile_id(v) && steam_runtime::contract::profile_id(v).is_ok()) else { continue };
+        if profile_io::universal(directory, id)?.and_then(|p| p.installation).as_deref() == Some(installation) { return Ok(Some(id.into())); }
+    }
+    Ok(None)
+}
+
+/// Launch options written with a renamed profile's former id read as current.
+pub(super) fn current_line(text: &str) -> String {
+    let Ok(directory) = profiles_directory() else { return text.into() };
+    let Ok(aliases) = profile_io::aliases(&directory) else { return text.into() };
+    aliases.iter().fold(text.to_string(), |line, (old, new)| line.replace(&format!("--profile {old} --"), &format!("--profile {new} --")))
+}
+
+/// Cross-process lock of the profiles (other PeliGames processes and helpers).
+fn lock(root: &Path) -> Result<fs::File, String> {
     steam_runtime::private_directory(root)?;
     let lock = fs::OpenOptions::new().read(true).write(true).create(true).truncate(false)
         .mode(0o600).custom_flags(libc::O_NOFOLLOW).open(root.join(".lock")).map_err(|e| e.to_string())?;
@@ -59,19 +119,16 @@ fn save_at(root: &Path, installation: &str, mut profile: Profile) -> Result<Expo
         return Err("Bloqueio do perfil PeliRun inválido.".into());
     }
     if unsafe { libc::flock(lock.as_raw_fd(), libc::LOCK_EX) } != 0 { return Err(std::io::Error::last_os_error().to_string()); }
+    Ok(lock)
+}
+
+fn save_at(root: &Path, installation: &str, mut profile: Profile) -> Result<Export, String> {
+    let _lock = lock(root)?;
     let directory = root.join("profiles");
     steam_runtime::private_directory(&directory)?;
     let id = match find(&directory, installation)? {
         Some(previous) => previous.id.ok_or("Perfil sem identificador.")?,
-        None => loop {
-            let id = format!("pg-{}", &uuid::Uuid::new_v4().simple().to_string()[..8]);
-            // Never reuse a short ID which already belongs to another installation.
-            match fs::symlink_metadata(directory.join(format!("{id}.json"))) {
-                Err(e) if e.kind() == std::io::ErrorKind::NotFound => break id,
-                Err(e) => return Err(e.to_string()),
-                Ok(_) => {},
-            }
-        },
+        None => readable_id(&directory, &profile, installation)?,
     };
     profile.version = UNIVERSAL_VERSION;
     profile.app_id = 0;
@@ -120,10 +177,14 @@ pub(super) fn refresh_all() -> Result<(), String> {
     let root = root()?;
     let directory = root.join("profiles");
     if !directory.is_dir() { return Ok(()); }
+    {
+        let _lock = lock(&root)?;
+        rename_hashed(&directory)?;
+    }
     for entry in fs::read_dir(&directory).map_err(|e| e.to_string())? {
         let path = entry.map_err(|e| e.to_string())?.path();
         if path.extension().and_then(|s| s.to_str()) != Some("json") { continue; }
-        let Some(id) = path.file_stem().and_then(|s| s.to_str()) else { continue };
+        let Some(id) = path.file_stem().and_then(|s| s.to_str()).filter(|id| steam_runtime::contract::profile_id(id).is_ok()) else { continue };
         let Some(previous) = profile_io::universal(&directory, id)? else { continue };
         save_at(&root, previous.installation.as_deref().ok_or("Perfil sem instalação.")?, steam_runtime::rebuild(&previous)?)?;
     }
@@ -152,11 +213,13 @@ mod tests {
     fn short_ids_reuse_one_installation_but_never_merge_equal_titles() {
         let root = std::env::temp_dir().join(format!("pelirun-registry-{}", uuid::Uuid::new_v4()));
         let first = save_at(&root, "/games/one", profile("Tomb Raider")).unwrap();
-        assert_eq!(first.id.len(), 11);
+        assert_eq!(first.id, "tomb-raider");
         let again = save_at(&root, "/games/one", profile("Renamed game")).unwrap();
         assert_eq!(first.id, again.id);
         let other = save_at(&root, "/other-disk/one", profile("Tomb Raider")).unwrap();
-        assert_ne!(first.id, other.id);
+        assert_eq!(other.id, "tomb-raider-2");
+        assert_eq!(save_at(&root, "/games/1942", profile("1942")).unwrap().id, "jogo-1942");
+        assert!(steam_runtime::contract::profile_id("42").is_err() && steam_runtime::contract::profile_id("../x").is_err());
         let loaded = profile_io::universal(&root.join("profiles"), &first.id).unwrap().unwrap();
         assert_eq!(loaded.source["name"], "Renamed game");
         assert_eq!(loaded.app_id, 0);
@@ -178,6 +241,38 @@ mod tests {
         let directory = root.join("profiles");
         assert_eq!(fs::read_dir(&directory).unwrap().count(), 1);
         profile_io::universal(&directory, &first.id).unwrap().unwrap();
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn hashed_ids_are_renamed_after_the_game_and_keep_answering() {
+        let root = std::env::temp_dir().join(format!("pelirun-readable-{}", uuid::Uuid::new_v4()));
+        let directory = root.join("profiles");
+        steam_runtime::private_directory(&root).unwrap();
+        steam_runtime::private_directory(&directory).unwrap();
+        // A profile saved by an older version.
+        let mut old = profile("Tomb Raider");
+        old.version = UNIVERSAL_VERSION; old.app_id = 0; old.id = Some("pg-6cbaeb11".into()); old.installation = Some("/games/tomb".into());
+        steam_runtime::atomic_write(&directory.join("pg-6cbaeb11.json"), &serde_json::to_vec(&old).unwrap(), 0o600).unwrap();
+        rename_hashed(&directory).unwrap();
+        assert!(!directory.join("pg-6cbaeb11.json").exists());
+        let current = profile_io::universal(&directory, "tomb-raider").unwrap().unwrap();
+        assert_eq!(current.installation.as_deref(), Some("/games/tomb"));
+        // Launch options holding the former id still reach the same profile.
+        assert_eq!(profile_io::universal(&directory, "pg-6cbaeb11").unwrap().unwrap().id.as_deref(), Some("tomb-raider"));
+        assert_eq!(find(&directory, "/games/tomb").unwrap().unwrap().id.as_deref(), Some("tomb-raider"));
+        // The alias name is never handed to another game, and the rename is repeatable.
+        assert_eq!(save_at(&root, "/games/other", profile("pg 6cbaeb11")).unwrap().id, "pg-6cbaeb11-2");
+        rename_hashed(&directory).unwrap();
+        // An interrupted rename (readable copy already written) reuses that copy.
+        let mut second = profile("Hades");
+        second.version = UNIVERSAL_VERSION; second.app_id = 0; second.id = Some("pg-0000aaaa".into()); second.installation = Some("/games/hades".into());
+        steam_runtime::atomic_write(&directory.join("pg-0000aaaa.json"), &serde_json::to_vec(&second).unwrap(), 0o600).unwrap();
+        second.id = Some("hades".into());
+        steam_runtime::atomic_write(&directory.join("hades.json"), &serde_json::to_vec(&second).unwrap(), 0o600).unwrap();
+        rename_hashed(&directory).unwrap();
+        assert!(!directory.join("hades-2.json").exists() && !directory.join("pg-0000aaaa.json").exists());
+        assert_eq!(profile_io::aliases(&directory).unwrap().get("pg-0000aaaa").map(String::as_str), Some("hades"));
         fs::remove_dir_all(root).unwrap();
     }
 }

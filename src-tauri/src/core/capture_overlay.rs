@@ -33,7 +33,9 @@ impl Bridge {
         if !metadata.is_dir() || metadata.uid()!=unsafe{libc::geteuid()} || metadata.mode()&0o022!=0 {
             return Err("Pasta da ponte de captura sem propriedade ou permissões seguras.".into());
         }
-        let directory = root.join(format!("cap-{}", &uuid::Uuid::new_v4().simple().to_string()[..12]));
+        let runtime=root.join("runtime");
+        fs::DirBuilder::new().recursive(true).mode(0o700).create(&runtime).map_err(|e|e.to_string())?;
+        let directory=(1..=1024).map(|n|runtime.join(format!("capture-{}-{n}",std::process::id()))).find(|p|p.symlink_metadata().is_err()).ok_or("Não foi possível reservar a ponte de captura.")?;
         fs::DirBuilder::new()
             .mode(0o700)
             .create(&directory)
@@ -41,7 +43,7 @@ impl Bridge {
         let result = (|| {
             let socket = directory.join("control");
             let listener = UnixListener::bind(&socket).map_err(|e| e.to_string())?;
-            let descriptor = root.join("capture-overlay.json");
+            let descriptor = crate::core::paths::layout::join(&root, "capture-overlay.json");
             let temporary = root.join(format!(".capture-overlay-{}", uuid::Uuid::new_v4()));
             let bytes = serde_json::to_vec(&json!({"socket":socket})).map_err(|e| e.to_string())?;
             let mut file = fs::OpenOptions::new()
@@ -182,15 +184,15 @@ mod tests {
         fs::create_dir(&root).unwrap();
         let bridge = Bridge::start(&root, Arc::new(|command, peer| json!({"received":command,"peer":peer}))).unwrap();
         let descriptor: Value =
-            serde_json::from_slice(&fs::read(root.join("capture-overlay.json")).unwrap()).unwrap();
+            serde_json::from_slice(&fs::read(crate::core::paths::layout::join(&root, "capture-overlay.json")).unwrap()).unwrap();
         let socket = descriptor["socket"].as_str().unwrap();
-        assert_eq!(Path::new(socket).parent().unwrap().parent(),Some(root.as_path()));
+        assert_eq!(Path::new(socket).parent().unwrap().parent(),Some(root.join("runtime").as_path()));
         assert_eq!(
             fs::metadata(&bridge.directory).unwrap().mode() & 0o777,
             0o700
         );
         assert_eq!(
-            fs::metadata(root.join("capture-overlay.json"))
+            fs::metadata(crate::core::paths::layout::join(&root, "capture-overlay.json"))
                 .unwrap()
                 .mode()
                 & 0o777,
@@ -218,7 +220,7 @@ mod tests {
         }
         bridge.shutdown();
         assert!(!Path::new(socket).exists());
-        assert!(!root.join("capture-overlay.json").exists());
-        fs::remove_dir(root).unwrap();
+        assert!(!crate::core::paths::layout::join(&root, "capture-overlay.json").exists());
+        fs::remove_dir_all(root).unwrap();
     }
 }

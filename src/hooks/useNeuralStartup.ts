@@ -19,7 +19,8 @@ function migratePreferences(): Promise<void> {
   return migration;
 }
 export function useNeuralStartup(path: string | undefined, installed: boolean) {
-  const identity = JSON.stringify([path, installed]);
+  const [revision,setRevision]=useState(0);
+  const identity = JSON.stringify([path, installed, revision]);
   const initial = path ? readPreferences()[path] ?? true : true;
   const drafts = useRef(new Map<string, Settings>());
   const intended = useRef<Settings>({ enabled: initial, renodx: false });
@@ -62,7 +63,7 @@ export function useNeuralStartup(path: string | undefined, installed: boolean) {
       }
     }).catch(error => { if (active) setState({ identity, enabled: initial, renodx: false, busy: false, initializing: false, error: String(error), feedback: "" as Feedback }); });
     return () => { active = false; writer.dispose(); if (queue.current === writer) queue.current = null; };
-  }, [path, installed]);
+  }, [path, installed, revision]);
   useEffect(() => {
     if (!state.feedback || state.identity !== identity) return;
     const timer = window.setTimeout(() => {
@@ -81,5 +82,5 @@ export function useNeuralStartup(path: string | undefined, installed: boolean) {
     setState({ identity, ...value, busy: true, initializing: false, error: "", feedback: "" as Feedback });
     queue.current.enqueue(value);
   };
-  return { enabled, renodx: state.identity === identity ? state.renodx : false, busy, initializing, feedback: state.identity === identity ? state.feedback : "", error: state.identity === identity ? state.error : "", change: (enabled: boolean) => update({ enabled }), changeRenodx: (renodx: boolean) => update({ renodx }) };
+  return { refresh:()=>setRevision(value=>value+1), enabled, renodx: state.identity === identity ? state.renodx : false, busy, initializing, feedback: state.identity === identity ? state.feedback : "", error: state.identity === identity ? state.error : "", change: (enabled: boolean) => update({ enabled }), changeRenodx: (renodx: boolean) => update({ renodx }) };
 }

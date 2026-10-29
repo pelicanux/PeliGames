@@ -44,13 +44,14 @@
   },
   {
     "schema": 1,
-    "version": "1.0.0",
+    "version": "1.1.0",
     "domain": "monsterhunterstories3twistedreflection",
     "name": "Monster Hunter Stories 3: Twisted Reflection",
     "platform": "proton",
     "engine": "deployment",
     "family": {
-      "kind": "re_engine"
+      "kind": "re_engine",
+      "fluffy": "Monster Hunter Stories 3"
     },
     "executable": "MONSTER_HUNTER_STORIES_3_TWISTED_REFLECTION.exe",
     "required": [
@@ -69,7 +70,7 @@
       "Fatos extraídos por análise estática da extensão Vortex (GPL-3.0) com tools/vortex-import; implementação independente PeliGames."
     ],
     "notes": [
-      "Módulo gerado do template RE Engine do Vortex: scripts, plugins e dados REFramework e o carregador dinput8.dll. Pacotes natives/, pak_mods e mods Fluffy são recusados. Estrutura verificada por testes sintéticos; não validado no jogo."
+      "Módulo gerado do template RE Engine do Vortex: scripts, plugins e dados REFramework, carregador dinput8.dll, Fluffy Mod Manager (mods com modinfo.ini e presets .prt) e DLLs de upscaler na raiz. natives/ e pak_mods sem modinfo.ini são recusados. Estrutura verificada por testes sintéticos; não validado no jogo."
     ],
     "steam_id": "2852190",
     "downloads": [

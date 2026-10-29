@@ -89,6 +89,8 @@ import { TitleBar } from "./components/TitleBar";
 import { SetupWizard, AppConfig } from "./components/SetupWizard";
 import { SettingsModal, type SettingsPage } from "./components/SettingsModal";
 import { useFavorites, toggleFavorite } from "./services/favorites";
+import { FeatureReportSection } from "./modules/reports/FeatureReportSection";
+import { featureReportContext, type ReportCategory } from "./modules/reports/reportContext";
 import { NexusReportModal } from "./modules/nexus/NexusReportModal";
 import { NexusLogsModal } from "./modules/nexus/NexusLogsModal";
 import { NexusPopup } from "./modules/nexus/NexusPopup";
@@ -174,9 +176,10 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   const [gameDir, setGameDir] = useState("");
   const [route, setRoute] = useState<InstallRoute>("optiscaler");
   // Optional parts of the next install or repair, on every route.
-  const [neuralModel, setNeuralModel] = useState<"small" | "original">("small");
+  const [neuralModel, setNeuralModel] = useState<"small" | "experimental" | "original">("small");
+  const neuralNetworkIdentity=useRef("");
   const [neuralModelsError, setNeuralModelsError] = useState(false);
-  const [neuralModels, setNeuralModels] = useState<{small:boolean; original:boolean; selectable:boolean; unified_networks:boolean; lumenite:boolean; lumenite_selected:boolean} | null>(null);
+  const [neuralModels, setNeuralModels] = useState<{small:boolean; original:boolean; selectable:boolean; unified_networks:boolean; lumenite:boolean; lumenite_selected:boolean; experimental:boolean; nr_plugin:boolean; selected_network:string|null; chain_installed:boolean} | null>(null);
   const [lumeniteChoices, setLumeniteChoices] = useState<Record<string, boolean>>({});
   const [int4Mixed, setInt4Mixed] = useState(false);
   const [bitness, setBitness] = useState<"32" | "64">("64");
@@ -394,14 +397,20 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       const layersNote = launchOptions.includes("VK_INSTANCE_LAYERS") ? `\n\n${t("routeSelector", "layersNote")}` : "";
       // The options the mod needs go into the game's own launch options by themselves.
       const target = selectedGame && (selectedGameDirectory === gameDir || selectedGame.path === gameDir) ? selectedGame : null;
-      const synced = await syncModLaunchOptions(target, gameDir, launchOptions).catch(error => { notifyError(selectedGame?.name || "DLSS 5 NR", error); return undefined; });
+      const synced = await syncModLaunchOptions(target, gameDir, launchOptions).catch(error => {
+        setLogs(previous => `${previous}\n\n${t("app", "launchOptionsError")}\n${String(error)}`);
+        notifyError(selectedGame?.name || "DLSS 5 NR", error);
+        return undefined;
+      });
       if (synced) setSelectedGame(previous => previous && previous.path === synced.path ? synced : previous);
-      const intro = isRepair ? t("app", "repairSuccessMsg") : t("app", "installSuccessMsg").split("\n\n")[0];
-      const appliedKey = synced?.steamModOptions === "written" ? "launchOptionsSteam" : synced?.steamModOptions === "waiting" ? "launchOptionsSteamWaiting" : "launchOptionsApplied";
-      // With Steam open, pasting into its launch options applies at once: the line goes to the clipboard.
-      setModalMessage(synced ? `${intro}\n\n${t("app", appliedKey).replace("{launchOptions}", launchOptions)}`
-        : synced === undefined ? `${intro}\n\n${t("app", "launchOptionsError").replace("{launchOptions}", launchOptions)}`
-        : isRepair ? t("app", "repairSuccessMsg") + (printed ? `\n\n${launchOptions}${layersNote}` : "") : t("app", "installSuccessMsg").replace("{launchOptions}", launchOptions) + layersNote);
+      // Preserve the exact command and layer requirements in View log, including fallback commands.
+      setLogs(previous => `${previous}${printed ? "" : `\n\n${t("app", "launchOptionsLogTitle")}\n${launchOptions}`}${layersNote}`);
+      const intro = isRepair ? t("app", "repairSuccessMsg") : t("app", "installSuccessMsg");
+      const appliedKey = synced?.steamModOptions === "written" ? "launchOptionsSteam"
+        : synced?.steamModOptions === "waiting" ? "launchOptionsSteamWaiting"
+        : synced ? "launchOptionsApplied"
+        : synced === undefined ? "launchOptionsError" : "launchOptionsManual";
+      setModalMessage(`${intro}\n\n${t("app", appliedKey)}`);
       if (synced?.external_id && synced.launcher !== "Steam") {
         setModalLaunchGame(synced);
         setModalMessage(intro);
@@ -429,6 +438,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       // The DLSS view checks the executable's folder, which can differ from the game's path.
       if (selectedGame && (selectedGameDirectory === gameDir || selectedGame.path === gameDir)) {
         await refreshInstallationDetails(gameDir);
+        neuralStartup.refresh();
         setGameInfoRevision(value => value + 1);
       }
       setLoading(false);
@@ -519,12 +529,18 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       const current = ++revision;
       setNeuralModelsError(false);
       try {
-        const status = await invoke<{small:boolean; original:boolean; selectable:boolean; unified_networks:boolean; lumenite:boolean; lumenite_selected:boolean}>("get_neural_model_status", {
+        const status = await invoke<{small:boolean; original:boolean; selectable:boolean; unified_networks:boolean; lumenite:boolean; lumenite_selected:boolean; experimental:boolean; nr_plugin:boolean; selected_network:string|null; chain_installed:boolean}>("get_neural_model_status", {
           gpuArch, bitness, gameDir, binPath: appConfig.dll_version.endsWith(".bin") ? appConfig.dll_version : null,
         });
         if (!active || revision !== current) return;
         setNeuralModels(status);
-        if (!status.small || !status.selectable) setNeuralModel("original");
+        if(neuralNetworkIdentity.current!==gameDir){
+          neuralNetworkIdentity.current=gameDir;
+          const small=status.small && status.selectable;
+          setNeuralModel(status.selected_network==="CC_SMALL_FP8_EXPERIMENTAL" && status.experimental && small ? "experimental"
+            : status.selected_network?.startsWith("CC_SILVER_AARDWOLD") || !small ? "original" : "small");
+          setInt4Mixed(status.selected_network==="CC_SILVER_AARDWOLD_INT4_MIXED");
+        }else setNeuralModel(previous => !status.small || !status.selectable ? "original" : previous === "experimental" && !status.experimental ? "small" : previous);
       } catch {
         if (!active || revision !== current) return;
         setNeuralModels(null); setNeuralModelsError(true);
@@ -1306,7 +1322,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     recommendation={recommendOptiscaler ? (language === "pt" ? "Recomendado para este jogo: OptiScaler, pelos upscalers detectados." : "Recommended for this game: OptiScaler, based on the detected upscalers.") : undefined}
     startup={neuralStartup.enabled} startupDisabled={loading || neuralStartup.initializing || installStatus === "Verificando..."}
     onStartup={() => neuralStartup.change(!neuralStartup.enabled)} renodx={neuralStartup.renodx} onRenodx={() => neuralStartup.changeRenodx(!neuralStartup.renodx)}
-    unifiedNetworks={Boolean(neuralModels?.unified_networks)}
+    unifiedNetworks={Boolean(neuralModels?.unified_networks)} experimentalAvailable={Boolean(neuralModels?.experimental)} nrPlugin={Boolean(neuralModels?.nr_plugin)}
     lumeniteAvailable={Boolean(neuralModels?.lumenite)} lumenite={lumeniteChoices[gameDir] ?? neuralModels?.lumenite_selected ?? false}
     onLumenite={value => setLumeniteChoices(previous => ({...previous, [gameDir]: value}))}
     model={neuralModel} installed={isInstalledMod(installStatus)} modelAvailable={Boolean(neuralModels?.small && neuralModels.original && neuralModels.selectable)}
@@ -1317,7 +1333,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
           ? "Modelo selecionado. Clique em Reparar / reinstalar para aplicar a troca ao jogo."
           : "Model selected. Click Repair / reinstall to apply the change to the game.");
       }
-      setNeuralModel(value); if (value === "small") setInt4Mixed(false);
+      setNeuralModel(value); if (value === "small" || value === "experimental") setInt4Mixed(false);
     }}
     int4={int4Mixed} onInt4={() => setInt4Mixed(value => !value)}
     actions={<>
@@ -1345,17 +1361,21 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   const supportsExecutionSettings = selectedGame?.launcher === "PeliGames" || Boolean(selectedGame?.external_id);
   const executionPanel = (section: "performance" | "options" | "advanced") => supportsExecutionSettings ? installedPanel(section) : nexusGame ? section === "performance" ? <GamePerformancePanel game={{path:String(nexusGame.game.path||""),executable:String(nexusGame.game.executable||""),flatpak:Boolean(nexusGame.game.flatpak)}} value={nexusGame.advanced} disabled={nexus.busy || nexus.settingsBusy || Boolean(nexusGame.running)} onChange={value=>nexus.configureAdvanced(nexusGame.id,value)}/> : cloneElement(nexusPanels,{section}) : <div className="modern-tile"><h3>{t("modern", section === "advanced" ? "options" : section)}</h3><p>{language === "pt" ? "As opções de execução deste jogo são gerenciadas pelo launcher de origem." : "This game's launch options are managed by its original launcher."}</p></div>;
   const dlssGamePanel = selectedGame?.native_linux ? <div className="modern-tile"><h3>DLSSNR-AMD</h3><p>{language === "pt" ? "Esta instalação é nativa do Linux. O instalador de DLLs do DLSSNR-AMD é destinado a jogos Windows executados com Proton." : "This is a native Linux installation. The DLSSNR-AMD DLL installer targets Windows games running through Proton."}</p></div> : !hasDlssnrConfiguration(appConfig) ? <div className="modern-tile"><h3>DLSSNR-AMD</h3><p>{language === "pt" ? "Configure o backend e o modelo antes de instalar o DLSSNR-AMD neste jogo." : "Configure the backend and model before installing DLSSNR-AMD in this game."}</p><button className="modern-mini-btn" onClick={()=>setShowSetupWizard(true)}>{language === "pt" ? "Configuração inicial" : "Initial setup"}</button></div> : modPathsError ? <div className="modern-tile" role="alert">{modPathsError}</div> : modPaths?.key !== modPathKey ? <p role="status">{language === "pt" ? "Localizando o executável e o destino do DLSSNR-AMD…" : "Locating the executable and DLSSNR-AMD destination…"}</p> : !modPaths.dlss_destination ? <div className="modern-tile"><p>{language === "pt" ? "Não foi possível localizar o executável desta instalação. Escolha a pasta do executável para configurar o DLSSNR-AMD." : "Could not locate this installation’s executable. Choose its folder to configure DLSSNR-AMD."}</p><button className="modern-mini-btn" disabled={directoryPickerBusy} onClick={()=>void handleChooseCustomPath()}>{language === "pt" ? "Escolher destino" : "Choose destination"}</button></div> : <><div className="modern-overview-paths">{pathTile(language === "pt" ? "Destino do DLSSNR-AMD · pasta do executável" : "DLSSNR-AMD destination · executable folder",modPaths.dlss_destination,<button className="modern-mini-btn" disabled={directoryPickerBusy || loading} onClick={()=>void handleChooseCustomPath()}>{language === "pt" ? "Alterar destino" : "Change destination"}</button>)}</div>{dlssInstallPanel}</>;
+  const reportGame = selectedGame ? {...selectedGame, nexus_id: nexusGame?.id ?? selectedGame.nexus_id,
+    advanced: !supportsExecutionSettings && nexusGame ? nexusGame.advanced : selectedGame.advanced, proton: selectedProton || selectedGame.proton} : null;
+  const withFeatureReport = (category: ReportCategory, label: string, content: ReactNode) => reportGame
+    ? <FeatureReportSection key={detailsResetKey + ":" + category} context={featureReportContext(reportGame, category, selectedGameRoot || reportGame.directory || reportGame.path, modPaths?.key === modPathKey ? modPaths.dlss_destination || "" : "")} label={label}>{content}</FeatureReportSection> : content;
   const modernTabs: ModernTab[] = gamePanelMode === "install" || gamePanelMode === "add"
     ? [{ id: "installation", label: t("modern", "installation"), content: <div className="modern-install-panels">{installationPanels}</div> }]
     : [
       { id: "overview", label: t("modern", "overview"), content: overviewTiles },
-      { id: "nexus", label: t("modern", "mods"), count:installedModCount, content: selectedGame && <GameModsTabs activeTab={gameModsTab} onTabChange={setGameModsTab} nexus={<NexusGameTab key={detailsResetKey} game={selectedGame} workspace={nexus}>{cloneElement(nexusPanels,{section:"mods"})}</NexusGameTab>} dlss={dlssGamePanel} /> },
+      { id: "nexus", label: t("modern", "mods"), count:installedModCount, content: selectedGame && <GameModsTabs activeTab={gameModsTab} onTabChange={setGameModsTab} nexus={<NexusGameTab key={detailsResetKey} game={selectedGame} workspace={nexus}>{cloneElement(nexusPanels,{section:"mods"})}</NexusGameTab>} dlss={withFeatureReport("dlssnr", "DLSSNR-AMD", dlssGamePanel)} /> },
       ...(nexusToolState.available ? [{ id:"tools",label:language === "pt" ? "Ferramentas" : "Tools",content:cloneElement(nexusPanels,{section:"tools"}) }] : []),
-      { id: "frame-generation", disabled: !experimentalFrameGeneration, disabledHint: language === "pt" ? "Em desenvolvimento. Indisponível nesta versão." : "Under development. Unavailable in this release.", label: language === "pt" ? "Geração de quadros" : "Frame generation", content:experimentalFrameGeneration && selectedGame && <FrameGeneratorTabs key={detailsResetKey} game={!supportsExecutionSettings && nexusGame ? {...selectedGame,advanced:nexusGame.advanced} : selectedGame} onPersist={!supportsExecutionSettings && nexusGame ? async settings=>{if(!await nexus.configureAdvanced(nexusGame.id,settings))throw new Error("Não foi possível salvar o perfil de execução.");} : undefined} running={gameExecution.active || Boolean(nexusGame?.running)} disabled={Boolean(gameExecution.pendingPath) || Boolean(nexus.launching) || nexus.busy || nexus.settingsBusy} onSaved={game=>{setSelectedGame(game);if(supportsExecutionSettings && nexusGame)void nexus.configureAdvanced(nexusGame.id,game.advanced!);}} /> },
-      { id: "performance", label: t("modern", "performance"), content: executionPanel("performance") },
-      {id:"captures",label:language === "pt"?"Capturas":"Captures",content:selectedGame&&<CapturePanel key={detailsResetKey} gameKey={selectedGame.external_id||selectedGame.path} gameName={selectedGame.name} gameDirectory={selectedGameRoot} gameExecutable={selectedGame.executable||""} steamAppId={selectedGame.launcher==="Steam"?selectedGame.app_id||"":""}/>},
-      { id: "options", label: t("modern", "options"), content: <>{executionPanel("options")}{selectedGame && <PeliRunProfile key={detailsResetKey} game={!supportsExecutionSettings && nexusGame ? {...selectedGame,advanced:nexusGame.advanced} : selectedGame} disabled={loading || gameInstaller.busy || libraryMutationBusy || nexus.busy || nexus.settingsBusy} />}</> },
-      { id: "advanced", label: language === "pt" ? "Avançado" : "Advanced", content: executionPanel("advanced") },
+      { id: "frame-generation", disabled: !experimentalFrameGeneration, disabledHint: language === "pt" ? "Em desenvolvimento. Indisponível nesta versão." : "Under development. Unavailable in this release.", label: language === "pt" ? "Geração de quadros" : "Frame generation", content: withFeatureReport("frame-generation", language === "pt" ? "Geração de quadros" : "Frame generation", experimentalFrameGeneration && selectedGame && <FrameGeneratorTabs key={detailsResetKey} game={!supportsExecutionSettings && nexusGame ? {...selectedGame,advanced:nexusGame.advanced} : selectedGame} onPersist={!supportsExecutionSettings && nexusGame ? async settings=>{if(!await nexus.configureAdvanced(nexusGame.id,settings))throw new Error("Não foi possível salvar o perfil de execução.");} : undefined} running={gameExecution.active || Boolean(nexusGame?.running)} disabled={Boolean(gameExecution.pendingPath) || Boolean(nexus.launching) || nexus.busy || nexus.settingsBusy} onSaved={game=>{setSelectedGame(game);if(supportsExecutionSettings && nexusGame)void nexus.configureAdvanced(nexusGame.id,game.advanced!);}} />) },
+      { id: "performance", label: t("modern", "performance"), content: withFeatureReport("performance", language === "pt" ? "Desempenho e overlay" : "Performance and overlay", executionPanel("performance")) },
+      {id:"captures",label:language === "pt"?"Capturas":"Captures",content: withFeatureReport("captures", language === "pt" ? "Capturas" : "Captures", selectedGame&&<CapturePanel key={detailsResetKey} gameKey={selectedGame.external_id||selectedGame.path} gameName={selectedGame.name} gameDirectory={selectedGameRoot} gameExecutable={selectedGame.executable||""} steamAppId={selectedGame.launcher==="Steam"?selectedGame.app_id||"":""}/>)},
+      { id: "options", label: t("modern", "options"), content: withFeatureReport("options", language === "pt" ? "Opções de execução" : "Launch options", <>{executionPanel("options")}{selectedGame && <PeliRunProfile key={detailsResetKey} game={!supportsExecutionSettings && nexusGame ? {...selectedGame,advanced:nexusGame.advanced} : selectedGame} disabled={loading || gameInstaller.busy || libraryMutationBusy || nexus.busy || nexus.settingsBusy} />}</>) },
+      { id: "advanced", label: language === "pt" ? "Avançado" : "Advanced", content: withFeatureReport("advanced", language === "pt" ? "Avançado" : "Advanced", executionPanel("advanced")) },
       { id: "reset", label: language === "pt" ? "Redefinir" : "Reset", content: selectedGame&&<GameResetPanel key={detailsResetKey} game={selectedGame} nexusId={nexusGame?.id} gpuArch={gpuArch} bitness={bitness} disabled={loading||gameInstaller.busy||libraryMutationBusy||gameExecution.active||Boolean(gameExecution.pendingPath)||Boolean(nexusGame?.running)||Boolean(nexus.launching)||nexus.busy||nexus.settingsBusy||reservedBase} onBusy={busy=>{setLibraryMutationBusy(busy);if(!busy){nexus.refresh();setHomeRevision(value=>value+1);setGameInfoRevision(value=>value+1);}}} onSaved={game=>{setSelectedGame(previous=>previous?.path===game.path?game:previous);}}/> },
     ];
   if(reservedBase){for(const tab of modernTabs){if(tab.id!=="overview"){tab.disabled=true;tab.disabledHint="Base reservada para cópias overlay. Use as configurações de uma cópia.";tab.content=<p>Base reservada. Configure uma das cópias overlay.</p>;}}}

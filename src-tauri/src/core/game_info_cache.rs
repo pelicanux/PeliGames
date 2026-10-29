@@ -11,7 +11,7 @@ pub fn clear_files(cache_dir: &std::path::Path) -> Result<(), String> {
     let mut generation = lock_generation();
     *generation = generation.wrapping_add(1);
     for name in ["analyzer_cache.json", "release_date_cache.json"] {
-        match std::fs::remove_file(cache_dir.join(name)) {
+        match std::fs::remove_file(super::paths::layout::join(cache_dir, name)) {
             Ok(()) => {},
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {},
             Err(error) => return Err(format!("{}: {}", name, error)),

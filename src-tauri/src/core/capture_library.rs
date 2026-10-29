@@ -28,9 +28,24 @@ fn digest(value: &str) -> String {
     format!("{:x}", Sha256::digest(value.as_bytes()))
 }
 fn cache() -> Result<PathBuf, String> {
-    let root = super::super::paths::app_root()?.join("CaptureLibrary");
+    let root = super::super::paths::app_path("CaptureLibrary")?;
     fs::create_dir_all(&root).map_err(|e| e.to_string())?;
     Ok(root)
+}
+fn cache_base(root:&Path,file:&Path,identity:&str)->Result<PathBuf,String>{
+    let game=file.parent().and_then(|p|p.file_name()).unwrap_or_default().to_string_lossy();
+    let game=game.rsplit_once('-').filter(|(_,suffix)|suffix.len()==12&&suffix.bytes().all(|b|b.is_ascii_hexdigit())).map(|(name,_)|name).unwrap_or(&game);
+    let base=super::super::paths::names::allocate(root,&format!("{game}-{}",title(file)),&identity)?;
+    let legacy=root.join(format!("{identity}.json"));
+    if !base.with_extension("json").exists()&&legacy.is_file(){
+        let bytes=fs::read(&legacy).map_err(|e|e.to_string())?;
+        if let Ok(mut details)=serde_json::from_slice::<Details>(&bytes){
+            let old=root.join(format!("{identity}.jpg"));let image=base.with_extension("jpg");
+            if old.is_file()&&!image.exists(){fs::rename(old,&image).map_err(|e|e.to_string())?;details.thumbnail=Some(image.to_string_lossy().into_owned());}
+            write_json(&base.with_extension("json"),&details)?;fs::remove_file(legacy).map_err(|e|e.to_string())?;
+        }
+    }
+    Ok(base)
 }
 pub fn validate_file(folder: &Path, path: &Path) -> Result<PathBuf, String> {
     let folder = folder.canonicalize().map_err(|e| e.to_string())?;
@@ -151,10 +166,12 @@ pub fn rename(folder: &Path, path: &Path, title: &str) -> Result<Renamed, String
         (old_key, fingerprint(Path::new(&renamed.path)), cache())
     {
         if old_key != new_key {
-            if let Ok(bytes) = fs::read(root.join(format!("{old_key}.json"))) {
+            if let Some(old_base) = super::super::paths::names::find(&root,&old_key) {
+            if let Ok(bytes) = fs::read(old_base.with_extension("json")) {
                 if let Ok(details) = serde_json::from_slice::<Details>(&bytes) {
-                    let _ = write_json(&root.join(format!("{new_key}.json")), &details);
+                    if let Ok(new_base)=cache_base(&root,Path::new(&renamed.path),&new_key){let _=write_json(&new_base.with_extension("json"),&details);}
                 }
+            }
             }
         }
     }
@@ -238,10 +255,14 @@ fn parse_probe(bytes: &[u8]) -> Result<Details, String> {
     })
 }
 pub fn details(folder: &Path, path: &Path, generate: bool) -> Result<Details, String> {
-    let file = validate_file(folder, path)?;
-    let root = cache()?;
-    let key = fingerprint(&file)?;
-    let json = root.join(format!("{key}.json"));
+    details_at(&cache()?,folder,path,generate)
+}
+fn details_at(root:&Path,folder:&Path,path:&Path,generate:bool)->Result<Details,String>{
+    let file=validate_file(folder,path)?;
+    let identity=fingerprint(&file)?;
+    let base=cache_base(root,&file,&identity)?;
+    let key=base.file_name().unwrap().to_string_lossy();
+    let json=base.with_extension("json");
     if let Ok(bytes) = fs::read(&json) {
         if let Ok(value) = serde_json::from_slice::<Details>(&bytes) {
             if value
@@ -338,7 +359,7 @@ pub fn details(folder: &Path, path: &Path, generate: bool) -> Result<Details, St
     }
     let _ = fs::remove_file(temporary);
     // A recording still being written must not get cached as a completed clip.
-    if fingerprint(&file)? == key {
+    if fingerprint(&file)? == identity {
         write_json(&json, &metadata)?;
     }
     Ok(metadata)
@@ -405,4 +426,27 @@ mod tests {
         assert_eq!(fs::read(&outside).unwrap(), b"other");
         fs::remove_dir_all(root).unwrap();
     }
+    #[test]
+    fn thumbnail_cache_uses_the_clip_title_and_reuses_legacy_metadata() {
+        let root=std::env::temp_dir().join(format!("peli-clip-cache-{}",uuid::Uuid::new_v4()));
+        let game=root.join("Tomb_Raider-abcdef123456");let cache=root.join("cache");fs::create_dir_all(&game).unwrap();fs::create_dir(&cache).unwrap();
+        let video=game.join("Replay-final.mkv");fs::write(&video,b"video").unwrap();let identity=fingerprint(&video).unwrap();
+        let image=cache.join(format!("{identity}.jpg"));fs::write(&image,b"thumbnail").unwrap();
+        let saved=Details{thumbnail:Some(image.to_string_lossy().into_owned()),width:Some(1920),height:Some(1080),..Default::default()};
+        write_json(&cache.join(format!("{identity}.json")),&saved).unwrap();let base=cache_base(&cache,&video,&identity).unwrap();
+        assert_eq!(base.file_name().unwrap(),"tomb-raider-replay-final");assert_eq!(cache_base(&cache,&video,&identity).unwrap(),base);
+        let value:Details=serde_json::from_slice(&fs::read(base.with_extension("json")).unwrap()).unwrap();
+        assert_eq!((value.width,value.height),(Some(1920),Some(1080)));assert_eq!(fs::read(value.thumbnail.unwrap()).unwrap(),b"thumbnail");assert!(!cache.join(format!("{identity}.json")).exists());fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    #[ignore = "requires FFmpeg and ffprobe"]
+    fn generated_readable_cache_persists_and_is_reused_without_regeneration(){
+        let root=std::env::temp_dir().join(format!("peli-video-generation-{}",uuid::Uuid::new_v4()));let game=root.join("Game");let cache=root.join("cache");fs::create_dir_all(&game).unwrap();fs::create_dir(&cache).unwrap();
+        let video=game.join("sample.mp4");
+        let status=Command::new("ffmpeg").args(["-nostdin","-v","error","-f","lavfi","-i","color=size=32x32:rate=2","-frames:v","4","-c:v","mpeg4"]).arg(&video).status().unwrap();assert!(status.success());
+        let details=details_at(&cache,&game,&video,true).unwrap();assert_eq!((details.width,details.height),(Some(32),Some(32)));assert!(details.thumbnail.as_ref().is_some_and(|p|Path::new(p).is_file()),"{:?}",details.warning);assert!(cache.join("game-sample.json").is_file());
+        let reused=details_at(&cache,&game,&video,false).unwrap();assert_eq!(details.thumbnail,reused.thumbnail);assert!(!reused.pending);assert_eq!(reused.width,Some(32));fs::remove_dir_all(root).unwrap();
+    }
+
 }

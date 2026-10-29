@@ -28,6 +28,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "../i18n/I18nContext";
 import { AnimatePresence } from "framer-motion";
 import { useVisibleCoverLayers } from "../hooks/useVisibleCoverLayers";
+import { useMissingGameCovers } from "../hooks/useMissingGameCovers";
 import { usePerformanceMode } from "./EffectsContext";
 import { applyCustomCovers, readGameLibrary, saveGameLibrary } from "../services/gameLibraryCache";
 import { warmAmbientCover } from "../services/ambientCoverCache";
@@ -206,6 +207,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   }, []);
 
   const [fallbackAttempted, setFallbackAttempted] = useState<Set<string>>(new Set());
+  useMissingGameCovers(games, !managed, libraryScope);
 
   const fetchGames = async (folders: string[] = customFolders, background = false, scope = libraryScope) => {
     if (managedLibrary) { managedLibrary.onRefresh(); return; }

@@ -564,12 +564,14 @@
 .modern-ui .nexus-mod-batch-bar .menu-icon { width: 16px; height: 16px; }
 .modern-ui .nexus-mod-selecting .nexus-mod-summary { margin-left: 24px; width: calc(100% - 24px); }
 .modern-ui .nexus-mod-selecting > .nexus-mod-select { left: 12px; right: auto; top: 22px; }
+.modern-ui .nexus-modern-workspace > .nexus-modern-empty-mods { grid-column:1; grid-row:1 / span 3; }
 @container game-spotlight (max-width: 850px) {
   .modern-ui .nexus-panel-modern .nexus-modern-workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, auto) auto; }
   .modern-ui .nexus-modern-workspace > .nexus-panel-heading { grid-column: 1; grid-row: 1; max-height: none; }
   .modern-ui .nexus-modern-workspace > .nexus-mod-search-field { grid-row: 2; }
   .modern-ui .nexus-modern-workspace > .nexus-mod-list { grid-row: 3; }
   .modern-ui .nexus-modern-workspace > .nexus-mod-batch-bar { grid-row: 4; }
+  .modern-ui .nexus-modern-workspace > .nexus-modern-empty-mods { grid-row:2; }
 }
 
 .modern-ui .modern-play-time { font-size: 0.8125rem; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0; }

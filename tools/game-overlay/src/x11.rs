@@ -135,7 +135,9 @@ fn windows() -> &'static Mutex<HashMap<u64, Window>> {
     WINDOWS.get_or_init(Default::default)
 }
 fn wine() -> bool {
-    if !crate::process_scope::enabled() { return false; }
+    if !crate::process_scope::enabled() {
+        return false;
+    }
     static WINE: OnceLock<bool> = OnceLock::new();
     *WINE.get_or_init(|| {
         let mut maps = String::new();
@@ -179,14 +181,60 @@ pub fn focused(window: u64) -> bool {
                 .is_some_and(|target| target.ancestors.contains(&focused))
         })
 }
+/// Recover an initial focus snapshot taken before the WM focused the game.
+/// Run only on Wine's existing event connection, never on the Vulkan thread.
+/// Poll missing focus at most 10 times/s; a key event gets an immediate check so
+/// the first shortcut press does not have to wait for a FocusIn or Alt+Tab.
+unsafe fn refresh_missing_focus(display: *mut c_void, force: bool) {
+    use std::time::{Duration, Instant};
+    let Some((window, target)) = current() else {
+        return;
+    };
+    if target.display != display as usize || focused(window) {
+        return;
+    }
+    static LAST: OnceLock<Mutex<Option<(usize, u64, Instant)>>> = OnceLock::new();
+    let now = Instant::now();
+    {
+        let Ok(mut last) = LAST.get_or_init(Default::default).lock() else {
+            return;
+        };
+        if !force
+            && last.as_ref().is_some_and(|(d, w, t)| {
+                *d == target.display
+                    && *w == window
+                    && now.duration_since(*t) < Duration::from_millis(100)
+            })
+        {
+            return;
+        }
+        *last = Some((target.display, window, now));
+    }
+    type GetFocus = unsafe extern "C" fn(*mut c_void, *mut c_ulong, *mut c_int) -> c_int;
+    if let Some(get) = symbol::<GetFocus>(b"XGetInputFocus\0") {
+        let (mut actual, mut revert) = (0, 0);
+        if get(display, &mut actual, &mut revert) != 0 {
+            focus(actual);
+        }
+    }
+}
 fn focus(window: u64) {
     FOCUS.store(window, Ordering::Release);
     if let Target::Xlib(active) = crate::target() {
         let focused = focused(active);
+        let mut changed = false;
         if let Ok(mut s) = state().lock() {
+            changed = s.focused != focused;
             s.focus(focused);
         }
         crate::tools::focus(focused);
+        if changed {
+            crate::report(if focused {
+                "Foco X11 reconhecido na janela do jogo ou em sua janela pai."
+            } else {
+                "Foco X11 fora da janela do jogo; captura suspensa."
+            });
+        }
     }
 }
 pub unsafe fn register(display: *mut c_void, window: u64) -> bool {
@@ -496,6 +544,9 @@ unsafe fn core(event: &Event, display: *mut c_void) -> Route {
             Route::Game
         }
         2 | 3 => {
+            if any.kind == 2 {
+                refresh_missing_focus(display, true);
+            }
             let e = event.key;
             key(e.detail, any.kind == 2, e.time)
         }
@@ -544,6 +595,7 @@ pub unsafe extern "C" fn XCheckIfEvent(
         return real(display, event, predicate, argument);
     }
     CHECK_SEEN.store(true, Ordering::Release);
+    refresh_missing_focus(display, false);
     pointer::reconcile(display);
     // Call the application's predicate unchanged, outside all overlay locks.
     // Draining captured events is valid for this NONBLOCKING API. Do not apply
@@ -573,6 +625,9 @@ unsafe fn xi(cookie: &Cookie) -> Route {
     let h = &*cookie.data.cast::<XiHeader>();
     if h.extension != cookie.extension || h.event_type != cookie.event_type {
         return Route::Game;
+    }
+    if matches!(cookie.event_type, 2 | 3 | 13 | 14) {
+        refresh_missing_focus(cookie.display, true);
     }
     match cookie.event_type {
         2..=6 => {
@@ -684,6 +739,128 @@ pub unsafe extern "C" fn XQueryKeymap(display: *mut c_void, keys: *mut c_char) -
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn first_shortcut_recovers_focus_without_focusin_and_other_windows_remain_unfiltered() {
+        // Isolate the process-global input/symbol registries from other tests.
+        const CHILD: &str = "PELI_X11_INITIAL_FOCUS_TEST";
+        if std::env::var_os(CHILD).is_none() {
+            let output = std::process::Command::new(std::env::current_exe().unwrap())
+                .args(["--exact", "x11::tests::first_shortcut_recovers_focus_without_focusin_and_other_windows_remain_unfiltered", "--nocapture"])
+                .env(CHILD,"1").env_remove("LD_PRELOAD").env_remove("LD_AUDIT")
+                .env_remove("PELI_OVERLAY_BACKGROUND_FPS").env_remove("PELI_OVERLAY_LOG")
+                .output().unwrap();
+            assert!(
+                output.status.success(),
+                "{}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            return;
+        }
+        static ACTUAL: AtomicU64 = AtomicU64::new(80);
+        static QUERIES: AtomicU64 = AtomicU64::new(0);
+        unsafe extern "C" fn get_focus(
+            display: *mut c_void,
+            window: *mut c_ulong,
+            revert: *mut c_int,
+        ) -> c_int {
+            assert_eq!(display as usize, 10);
+            QUERIES.fetch_add(1, Ordering::Relaxed);
+            *window = ACTUAL.load(Ordering::Relaxed);
+            *revert = 0;
+            1
+        }
+        let slot = crate::symbols::abi::SYMBOLS
+            .iter()
+            .position(|(name, _, _)| *name == b"XGetInputFocus")
+            .unwrap();
+        crate::symbols::peli_overlay_originals[slot]
+            .store(get_focus as *const () as usize, Ordering::Release);
+        windows().lock().unwrap().insert(
+            81,
+            Window {
+                display: 10,
+                ancestors: Arc::from([81, 80]),
+                xi_opcode: 7,
+                references: 1,
+            },
+        );
+        crate::set_target(Target::Xlib(81));
+        let reset = || {
+            focus(0);
+            let mut input = state().lock().unwrap();
+            *input = Default::default();
+            input.ready = true;
+            input.shortcut("F8").unwrap();
+        };
+        let mut event = Event {
+            key: Key {
+                any: Any {
+                    kind: 2,
+                    serial: 0,
+                    send_event: 0,
+                    display: 10 as _,
+                    window: 81,
+                },
+                root: 1,
+                child: 0,
+                time: 1,
+                x: 0,
+                y: 0,
+                root_x: 0,
+                root_y: 0,
+                modifiers: 0,
+                detail: 74,
+                same_screen: 1,
+            },
+        };
+        reset();
+        unsafe {
+            refresh_missing_focus(10 as _, false);
+        }
+        assert!(
+            state().lock().unwrap().focused,
+            "event pump recovers a late initial focus without keyboard input"
+        );
+        reset();
+        unsafe {
+            assert!(core(&event, 10 as _) == Route::Overlay);
+        }
+        assert!(
+            state().lock().unwrap().capturing(),
+            "first F8 works without an intervening FocusIn"
+        );
+        reset();
+        event.key.time = 2;
+        ACTUAL.store(99, Ordering::Relaxed);
+        unsafe {
+            assert!(core(&event, 10 as _) == Route::Game);
+        }
+        assert!(
+            !state().lock().unwrap().capturing(),
+            "an unrelated foreground window cannot enable capture"
+        );
+        let count = QUERIES.load(Ordering::Relaxed);
+        unsafe {
+            refresh_missing_focus(11 as _, true);
+            refresh_missing_focus(10 as _, false);
+        }
+        assert_eq!(
+            QUERIES.load(Ordering::Relaxed),
+            count,
+            "other connections and rapid event pumps must not query"
+        );
+        ACTUAL.store(80, Ordering::Relaxed);
+        event.key.time = 3;
+        reset();
+        unsafe {
+            assert!(core(&event, 10 as _) == Route::Overlay);
+        }
+        assert!(
+            state().lock().unwrap().capturing(),
+            "a key press bypasses the rate limit after focus returns"
+        );
+    }
     #[test]
     fn xlib_and_xinput_are_not_xcb_wire_structures() {
         assert_eq!(std::mem::size_of::<Event>(), 192);

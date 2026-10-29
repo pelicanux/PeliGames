@@ -1,12 +1,18 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "../../i18n/I18nContext";
 import { MenuIcon } from "../MenuIcon";
 import { NexusPopup } from "../../modules/nexus/NexusPopup";
 import { notifyError } from "../../services/notifications";
+import "./MaintenancePreferences.css";
 
 type ModGame = { id: string; name: string; directory: string; device: string; available: boolean; portable: boolean; mods: number };
-type Plan = { action: "reset" | "uninstall"; paths: string[]; mod_games?: ModGame[]; installed_games?: {name: string; directory: string; available: boolean}[]; mod_revision?: string; pelirun?: string[] };
+type Plan = { action: "reset" | "uninstall"; cleanup_data: boolean; paths: string[]; mod_games?: ModGame[]; installed_games?: { name: string; directory: string; available: boolean }[]; mod_revision?: string; pelirun?: string[] };
+
+function KeepOption({ title, description, checked, disabled, onChange }: { title: string; description: string; checked: boolean; disabled: boolean; onChange: (checked: boolean) => void }) {
+  return <label className="maintenance-keep-option"><span><strong>{title}</strong><small>{description}</small></span><input type="checkbox" checked={checked} disabled={disabled} onChange={event => onChange(event.target.checked)} /></label>;
+}
+
 export function MaintenancePreferences({ uninstall = false }: { uninstall?: boolean }) {
   const pt = useI18n().language === "pt";
   const [plan, setPlan] = useState<Plan | null>(null);
@@ -15,100 +21,65 @@ export function MaintenancePreferences({ uninstall = false }: { uninstall?: bool
   const [removeMods, setRemoveMods] = useState(false);
   const [preserveAccounts, setPreserveAccounts] = useState(false);
   const [preserveGames, setPreserveGames] = useState(false);
+  const [preserveMangohud, setPreserveMangohud] = useState(false);
   const [removePelirun, setRemovePelirun] = useState(false);
-  const [restartRequired, setRestartRequired] = useState(false);
+  const [previewCompleted, setPreviewCompleted] = useState(false);
   const lock = useRef(false);
-  useLayoutEffect(() => {
-    if (!restartRequired) return;
-    const blockOutside = (event: Event) => {
-      if (event.target instanceof Element && event.target.closest(".maintenance-restart-required")) return;
-      event.preventDefault(); event.stopImmediatePropagation();
-    };
-    // Notifications normally remain usable above dialogs. A reset is different:
-    // navigation must not unmount the mandatory restart screen.
-    window.addEventListener("pointerdown", blockOutside, true);
-    window.addEventListener("click", blockOutside, true);
-    return () => { window.removeEventListener("pointerdown", blockOutside, true); window.removeEventListener("click", blockOutside, true); };
-  }, [restartRequired]);
   const title = uninstall ? (pt ? "Desinstalar AppImage" : "Uninstall AppImage") : (pt ? "Redefinir PeliGames" : "Reset PeliGames");
   const description = uninstall
-    ? (pt ? "Remove esta instalação AppImage e seus atalhos. Os dados e conexões são preservados; use Redefinir PeliGames para apagá-los." : "Removes this AppImage installation and its shortcuts. Data and connections are preserved; use Reset PeliGames to erase them.")
-    : (pt ? "Remove preferências, histórico, capas, caches, prefixos guardados nas pastas do PeliGames. Permite preservar as contas conectadas e os registros dos jogos do Pelinstall. Preserva os jogos externos e o gerenciamento dos mods Nexus junto de cada jogo, salvo se você escolher removê-los." : "Removes preferences, history, covers, caches, prefixes stored in PeliGames folders. Lets you preserve connected accounts and Pelinstall game registrations. Keeps external games and Nexus mod management beside each game unless you choose to remove the mods.");
-  const review = async () => {
+    ? (pt ? "Remova o aplicativo e escolha se também deseja limpar seus dados." : "Remove the application and choose whether to clear its data too.")
+    : (pt ? "Restaure as configurações do launcher e escolha o que deseja manter." : "Reset launcher settings and choose what you want to keep.");
+  const cleaning = !uninstall || Boolean(plan?.cleanup_data);
+  const actionLabel = uninstall ? (pt ? "Desinstalar e fechar" : "Uninstall and close") : (pt ? "Redefinir e fechar" : "Reset and close");
+  const blockedGame = cleaning ? plan?.mod_games?.find(game => !game.available && (removeMods || !game.portable)) : undefined;
+  const review = async (cleanupData = false) => {
     if (lock.current) return;
     lock.current = true; setBusy(true);
-    try { setPlan(await invoke<Plan>("launcher_maintenance_plan", { action: uninstall ? "uninstall" : "reset" })); setAccepted(false); setRemoveMods(false); setPreserveAccounts(false); setPreserveGames(false); setRemovePelirun(false); }
-    catch (error) { notifyError(title, String(error)); }
+    try {
+      setPlan(await invoke<Plan>("launcher_maintenance_plan", { action: uninstall ? "uninstall" : "reset", cleanupData }));
+      setAccepted(false); setRemoveMods(false); setPreserveAccounts(false); setPreserveGames(false); setPreserveMangohud(false); setRemovePelirun(false);
+    } catch (error) { notifyError(title, String(error)); }
     finally { lock.current = false; setBusy(false); }
   };
   const apply = async () => {
-    if (!plan || !accepted || lock.current) return;
+    if (!plan || !accepted || blockedGame || lock.current) return;
     lock.current = true; setBusy(true);
     try {
-      // The visual preview must never remove real files or credentials.
       if ("__PELI_UI_PREVIEW__" in window) {
-        if (plan.action === "reset") setRestartRequired(true);
-        else throw new Error(pt ? "Demonstração: nenhuma conta ou arquivo foi removido." : "Preview: no accounts or files were removed.");
+        setPreviewCompleted(true);
       } else {
-        await invoke("launcher_maintenance_apply", { action: plan.action, confirmedPaths: plan.paths, removeMods, preserveAccounts, preserveGames, confirmedModRevision: plan.mod_revision, removePelirun });
-        if (plan.action === "reset") setRestartRequired(true);
+        await invoke("launcher_maintenance_apply", { action: plan.action, cleanupData: plan.cleanup_data, confirmedPaths: plan.paths, removeMods, preserveAccounts, preserveGames, preserveMangohud, confirmedModRevision: plan.mod_revision, removePelirun });
       }
     } catch (error) { notifyError(title, String(error)); }
     finally { lock.current = false; setBusy(false); }
   };
-  const restart = async () => {
-    if (lock.current) return;
-    lock.current = true; setBusy(true);
-    try {
-      if ("__PELI_UI_PREVIEW__" in window) throw new Error(pt ? "Prévia: nenhum arquivo será apagado e nenhum programa será reiniciado." : "Preview: no files will be deleted and no program will restart.");
-      await invoke("launcher_maintenance_restart");
-    } catch (error) { notifyError(title, String(error)); }
-    finally { lock.current = false; setBusy(false); }
-  };
-  if (restartRequired) return <NexusPopup className="steam-manual-popup maintenance-popup maintenance-restart-required" title={pt ? "Reinício necessário" : "Restart required"} titleIcon={<MenuIcon name="repair"/>} onClose={() => {}} footer={
-    <button autoFocus type="button" className="btn btn-primary" disabled={busy} aria-busy={busy} onClick={() => void restart()}><MenuIcon name="repair"/>{busy ? (pt ? "Reiniciando…" : "Restarting…") : (pt ? "Reiniciar PeliGames" : "Restart PeliGames")}</button>
-  }><p>{pt ? "A redefinição está pronta. Ao reiniciar, as pastas antigas serão renomeadas e preservadas até validar a nova configuração. Só então a cópia será apagada. O programa ficará bloqueado até o reinício." : "The reset is ready. Restarting renames and preserves old folders until the new configuration is validated. Only then is the copy deleted. The program stays locked until it restarts."}</p></NexusPopup>;
+  if (previewCompleted) return <NexusPopup className="steam-manual-popup maintenance-popup" title={pt ? "Demonstração concluída" : "Preview complete"} titleIcon={<MenuIcon name="check" />} onClose={() => { setPreviewCompleted(false); setPlan(null); }} footer={<button type="button" className="btn btn-secondary" onClick={() => { setPreviewCompleted(false); setPlan(null); }}>{pt ? "Voltar" : "Back"}</button>}>
+    <div className="maintenance-completion-copy"><MenuIcon name="check" /><h3>{pt ? "O PeliGames fecharia agora" : "PeliGames would close now"}</h3><p>{pt ? "Na versão instalada, a operação é concluída após fechar o launcher, sem abri-lo novamente." : "In the installed version, the operation completes after closing the launcher, without reopening it."}</p><small>{pt ? "Esta prévia não remove arquivos, não encerra programas e não altera suas contas." : "This preview does not remove files, close programs or change your accounts."}</small></div>
+  </NexusPopup>;
   return <section className="preference-section" data-preference-id={uninstall ? "appimage-uninstall" : "launcher-reset"}>
     <h3>{title}</h3><p>{description}</p>
-    <button type="button" className="preference-outline danger" disabled={busy} onClick={() => void review()}><MenuIcon name={uninstall ? "trash" : "repair"}/>{title}</button>
-    {plan && <NexusPopup className="steam-manual-popup maintenance-popup" title={title} titleIcon={<MenuIcon name="repair"/>} onClose={() => { if (!busy) setPlan(null); }} footer={<>
-      <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => setPlan(null)}>{pt ? "Cancelar" : "Cancel"}</button>
-      <button type="button" className="btn btn-danger" disabled={busy || !accepted || Boolean(plan.mod_games?.some(game => !game.available && (removeMods || !game.portable)))} aria-busy={busy} onClick={() => void apply()}>{busy ? (pt ? "Aguarde…" : "Please wait…") : title}</button>
+    <button type="button" className="preference-outline danger" disabled={busy} onClick={() => void review()}><MenuIcon name={uninstall ? "trash" : "repair"} />{title}</button>
+    {plan && <NexusPopup className="steam-manual-popup maintenance-popup" title={title} titleIcon={<MenuIcon name={uninstall ? "trash" : "repair"} />} onClose={() => { if (!busy) setPlan(null); }} footer={<>
+      <label className="maintenance-confirm maintenance-final-confirm"><input type="checkbox" checked={accepted} disabled={busy} onChange={event => setAccepted(event.target.checked)} /><span>{cleaning ? (pt ? "Entendo que os dados não preservados serão apagados." : "I understand that data I do not keep will be deleted.") : (pt ? "Entendo que o aplicativo e os atalhos serão removidos." : "I understand the application and shortcuts will be removed.")}</span></label>
+      <div className="maintenance-actions"><button type="button" className="btn btn-secondary" disabled={busy} onClick={() => setPlan(null)}>{pt ? "Cancelar" : "Cancel"}</button><button type="button" className="btn btn-danger" disabled={busy || !accepted || Boolean(blockedGame)} aria-busy={busy} onClick={() => void apply()}>{busy ? (pt ? "Aguarde…" : "Please wait…") : actionLabel}</button></div>
     </>}>
-      <p>{description}</p>
-      <p>{pt ? "O programa será fechado para concluir a operação. Feche outras instâncias, jogos, instalações e downloads antes de continuar." : "The program will close to complete the operation. Close other instances, games, installations and downloads first."}</p>
-      <strong>{pt ? "Caminhos da operação:" : "Operation paths:"}</strong>
-      <ul className="maintenance-paths">{plan.paths.map(path => <li key={path}><code>{path}</code></li>)}</ul>
-      {!uninstall && <p>{pt ? "As pastas serão renomeadas no reinício. Após validar a nova inicialização, a cópia será apagada, inclusive arquivos adicionados manualmente. Se houver interrupção, será oferecida a recuperação. As contas nos serviços não são excluídas. Se você não escolher preservá-las, será necessário conectá-las novamente." : "Folders are renamed on restart. Once the new startup is validated, the copy is deleted, including manually added files. Recovery is offered after an interruption. Service accounts are not deleted. Unless you choose to preserve connections, you will need to sign in again."}</p>}
-      {!uninstall && <section className="maintenance-games-review">
-        <label className="maintenance-confirm"><input type="checkbox" checked={preserveGames} disabled={busy} onChange={event => { setPreserveGames(event.target.checked); setAccepted(false); }}/><span>{pt ? "Preservar jogos instalados ou adicionados pelo Pelinstall" : "Preserve games installed or added through Pelinstall"}</span></label>
-        <p>{pt ? "Mantém os registros para recuperar os jogos no mesmo caminho após redefinir. Jogos em discos desconectados continuam registrados e reaparecem quando o disco estiver montado e os arquivos estiverem disponíveis. Runners armazenados nas pastas de redefinição precisarão ser instalados novamente." : "Keeps registrations to recover games at the same paths after resetting. Games on disconnected disks stay registered and return when mounted and their files are available. Runners stored in reset folders will need reinstalling."}</p>
-        {preserveGames && Boolean(plan.installed_games?.length) && <ul className="maintenance-paths maintenance-game-list" tabIndex={0} aria-label={pt ? "Jogos do Pelinstall" : "Pelinstall games"}>{plan.installed_games!.map(game => <li key={game.directory}><strong>{game.name}</strong><br/><code>{game.directory}</code>{!game.available && <p>{pt ? "Instalação indisponível. Verifique o disco, a montagem e os arquivos. O registro será preservado." : "Installation unavailable. Check the disk, mount and files. Its registration will be preserved."}</p>}</li>)}</ul>}
+      <div className="maintenance-intro"><MenuIcon name="info" /><p>{uninstall && !cleaning ? (pt ? "O PeliGames será fechado para remover esta instalação. Seus jogos, contas e configurações permanecem." : "PeliGames will close to remove this installation. Your games, accounts and settings remain.") : (pt ? "Preferências, histórico, capas e cache serão apagados, exceto o que você escolher manter. Feche jogos, instalações e downloads. O PeliGames fechará ao confirmar." : "Preferences, history, covers and cache will be cleared, except what you choose to keep. Close games, installations and downloads. PeliGames will close when you confirm.")}</p></div>
+      {uninstall && <section className="maintenance-uninstall-choice"><KeepOption title={pt ? "Limpar também os dados do PeliGames" : "Also clear PeliGames data"} description={pt ? "Inclui configurações, contas, histórico, capas e cache. Escolha abaixo o que deseja preservar." : "Includes settings, accounts, history, covers and cache. Choose below what you want to keep."} checked={Boolean(plan.cleanup_data)} disabled={busy} onChange={value => { setAccepted(false); void review(value); }} /></section>}
+      {cleaning && <section className="maintenance-preservation"><h3>{pt ? "O que manter" : "What to keep"}</h3><p className="maintenance-section-note">{pt ? "Marque os dados que deseja manter no computador." : "Select the data you want to keep on this computer."}</p>
+        <KeepOption title={pt ? "Jogos do Pelinstall" : "Pelinstall games"} description={pt ? "Mantém os registros dos jogos, inclusive em discos desconectados. Runners precisarão ser reinstalados." : "Keeps game registrations, including disconnected disks. Runners will need reinstalling."} checked={preserveGames} disabled={busy} onChange={value => { setPreserveGames(value); setAccepted(false); }} />
+        {preserveGames && Boolean(plan.installed_games?.length) && <details className="maintenance-details maintenance-row-details"><summary>{pt ? `Ver jogos registrados (${plan.installed_games!.length})` : `View registered games (${plan.installed_games!.length})`}</summary><ul className="maintenance-paths maintenance-game-list" tabIndex={0}>{plan.installed_games!.map(game => <li key={game.directory}><strong>{game.name}</strong><code>{game.directory}</code>{!game.available && <small>{pt ? "Indisponível neste momento. O registro será preservado." : "Currently unavailable. Its registration will be kept."}</small>}</li>)}</ul></details>}
+        <KeepOption title={pt ? "Contas conectadas" : "Connected accounts"} description={pt ? "Mantém as sessões e credenciais do Matrix, Discord e Nexus Mods." : "Keeps Matrix, Discord and Nexus Mods sessions and credentials."} checked={preserveAccounts} disabled={busy} onChange={value => { setPreserveAccounts(value); setAccepted(false); }} />
+        <KeepOption title={pt ? "Perfis do MangoHUD" : "MangoHUD profiles"} description={pt ? "Mantém o perfil atual e os presets personalizados. Os arquivos do componente não são preservados." : "Keeps your current profile and custom presets. Component files are not kept."} checked={preserveMangohud} disabled={busy} onChange={value => { setPreserveMangohud(value); setAccepted(false); }} />
+        <KeepOption title={pt ? "Mods do Nexus" : "Nexus mods"} description={removeMods ? (pt ? "Os mods gerenciados serão removidos e os arquivos originais restaurados. Jogos e saves permanecem." : "Managed mods will be removed and original files restored. Games and saves remain.") : (pt ? "Mantém os mods, pacotes e registros junto de cada jogo para recuperar o gerenciamento." : "Keeps mods, packages and records beside each game to recover mod management.")} checked={!removeMods} disabled={busy} onChange={value => { setRemoveMods(!value); setAccepted(false); }} />
+        {Boolean(plan.mod_games?.length) && <details className="maintenance-details maintenance-row-details"><summary>{pt ? `Ver jogos com mods (${plan.mod_games!.length})` : `View games with mods (${plan.mod_games!.length})`}</summary><ul className="maintenance-paths maintenance-game-list" tabIndex={0}>{plan.mod_games!.map(game => <li key={game.id}><strong>{game.name} · {game.mods} mods</strong><code>{game.directory}</code>{!game.available && <small>{pt ? `Indisponível. Dispositivo: ${game.device}.` : `Unavailable. Device: ${game.device}.`}</small>}</li>)}</ul></details>}
       </section>}
-      {!uninstall && <section className="maintenance-accounts-review">
-        <label className="maintenance-confirm"><input type="checkbox" checked={preserveAccounts} disabled={busy} onChange={event => { setPreserveAccounts(event.target.checked); setAccepted(false); }}/><span>{pt ? "Preservar contas conectadas" : "Preserve connected accounts"}</span></label>
-        <p>{preserveAccounts
-          ? (pt ? "Mantém as conexões do Matrix, Discord e Nexus Mods, as credenciais no chaveiro e os dados de sessão necessários após o reinício. As demais preferências serão redefinidas." : "Keeps Matrix, Discord and Nexus Mods connections, keyring credentials and session data needed after restarting. Other preferences will be reset.")
-          : (pt ? "Desconecta Matrix, Discord e Nexus Mods e remove suas credenciais locais. Será necessário entrar novamente." : "Disconnects Matrix, Discord and Nexus Mods and removes their local credentials. You will need to sign in again.")}</p>
-      </section>}
-      {!uninstall && <section className="maintenance-mods-review">
-        <label className="maintenance-confirm"><input type="checkbox" checked={removeMods} disabled={busy} onChange={event => { setRemoveMods(event.target.checked); setAccepted(false); }}/><span>{pt ? "Remover também todos os mods gerenciados pelo Nexus" : "Also remove all Nexus-managed mods"}</span></label>
-        <p>{removeMods
-          ? (pt ? "Remove os mods de todos os jogos listados e restaura os originais preservados. Os jogos e saves permanecem. Arquivos antigos sem registro não são apagados automaticamente." : "Removes mods from every listed game and restores preserved originals. Games and saves remain. Untracked older files are not deleted automatically.")
-          : (pt ? "Os registros, pacotes e originais preservados serão mantidos na pasta de cada jogo. Após redefinir, o PeliGames recupera o gerenciamento automaticamente. O índice de localização dos mods é preservado." : "Records, packages and preserved originals stay beside each game. After resetting, PeliGames automatically recovers mod management. The mod location index is preserved.")}</p>
-        {Boolean(plan.mod_games?.length) && <ul className="maintenance-paths maintenance-game-list" tabIndex={0} aria-label={pt ? "Jogos com mods gerenciados" : "Games with managed mods"}>{plan.mod_games!.map(game => <li key={game.id}><strong>{game.name}</strong> · {game.mods} mods<br/><code>{game.directory}</code>{!game.available && <p role="alert">{pt ? `Não foi possível acessar este jogo. Dispositivo registrado: ${game.device}. Verifique se o dispositivo está conectado e montado no caminho original antes de remover os mods ou migrar seus registros.` : `This game cannot be accessed. Recorded device: ${game.device}. Check that it is connected and mounted at the original path before removing mods or migrating records.`}</p>}</li>)}</ul>}
-      </section>}
-      {!uninstall && <section className="maintenance-pelirun-review">
-        <label className="maintenance-confirm"><input type="checkbox" checked={removePelirun} disabled={busy || !plan.pelirun?.length} onChange={event => { setRemovePelirun(event.target.checked); setAccepted(false); }}/><span>{pt ? "Remover também o PeliRun" : "Also remove PeliRun"}</span></label>
-        <p>{pt ? "O PeliRun é o pequeno programa do PeliGames que aplica as configurações de cada jogo (MangoHUD, Proton, opções de inicialização, mods) quando o jogo é aberto pela Steam ou por outro launcher. Ele fica fora das pastas do PeliGames para que esses jogos continuem abrindo mesmo depois de redefinir." : "PeliRun is PeliGames' small program that applies each game's settings (MangoHUD, Proton, launch options, mods) when the game is opened from Steam or another launcher. It lives outside PeliGames' folders so those games keep opening after a reset."}</p>
-        <p>{!plan.pelirun?.length
-          ? (pt ? "O PeliRun não está instalado neste computador." : "PeliRun is not installed on this computer.")
-          : removePelirun
-            ? (pt ? "Feche a Steam antes de continuar. O PeliGames tira a chamada do PeliRun das opções de inicialização dos jogos na Steam, mantendo o restante da linha, e apaga as pastas abaixo. Linhas copiadas à mão para outros launchers (Heroic, Lutris) precisam ser apagadas por você." : "Close Steam before continuing. PeliGames removes the PeliRun call from the games' Steam launch options, keeping the rest of the line, and deletes the folders below. Lines you copied by hand into other launchers (Heroic, Lutris) must be removed by you.")
-            : (pt ? "Sem esta opção, só os perfis de configuração do PeliRun são apagados; o programa continua, e os jogos da Steam abrem sem os ajustes do PeliGames." : "Without this option, only PeliRun's settings profiles are deleted; the program stays, and Steam games open without PeliGames' adjustments.")}</p>
-        {removePelirun && Boolean(plan.pelirun?.length) && <ul className="maintenance-paths" aria-label={pt ? "Pastas do PeliRun" : "PeliRun folders"}>{plan.pelirun!.map(path => <li key={path}><code>{path}</code></li>)}</ul>}
-      </section>}
-      <label className="maintenance-confirm"><input type="checkbox" checked={accepted} disabled={busy} onChange={event => setAccepted(event.target.checked)}/><span>{pt ? "Conferi os caminhos e entendo que esta remoção é permanente." : "I reviewed the paths and understand this removal is permanent."}</span></label>
+      {blockedGame && <p className="maintenance-blocked" role="alert">{pt ? `Conecte e monte o dispositivo de “${blockedGame.name}” no caminho original antes de continuar. Os arquivos e registros precisam estar acessíveis para esta operação.` : `Connect and mount the device for “${blockedGame.name}” at its original path before continuing. Its files and records must be accessible for this operation.`}</p>}
+      {cleaning && <details className="maintenance-details maintenance-advanced"><summary>{pt ? "Opções avançadas" : "Advanced options"}</summary><KeepOption title={pt ? "Remover também o PeliRun" : "Also remove PeliRun"} description={!plan.pelirun?.length ? (pt ? "O auxiliar não está instalado neste computador." : "The helper is not installed on this computer.") : (pt ? "Remove o auxiliar que aplica ajustes ao iniciar jogos por outros launchers. Feche a Steam antes de remover." : "Removes the helper that applies settings when launching games through other launchers. Close Steam before removing it.")} checked={removePelirun} disabled={busy || !plan.pelirun?.length} onChange={value => { setRemovePelirun(value); setAccepted(false); }} />
+        <p className="maintenance-section-note">{pt ? "Se mantido, o PeliRun continua permitindo abrir os jogos, mas seus perfis de configuração serão redefinidos. Se removido, chamadas copiadas manualmente para outros launchers também precisam ser retiradas." : "If kept, PeliRun still lets games launch, but its configuration profiles are reset. If removed, calls manually copied to other launchers also need removing."}</p>
+        {removePelirun && Boolean(plan.pelirun?.length) && <ul className="maintenance-paths">{plan.pelirun!.map(path => <li key={path}><code>{path}</code></li>)}</ul>}
+      </details>}
+      <details className="maintenance-details maintenance-operation-paths"><summary>{pt ? `Pastas ${uninstall ? "da desinstalação" : "da redefinição"} (${plan.paths.length})` : `Folders affected (${plan.paths.length})`}</summary><ul className="maintenance-paths">{plan.paths.map(path => <li key={path}><code>{path}</code></li>)}</ul></details>
+      <p className="maintenance-recovery-note">{pt ? "A operação termina com o PeliGames fechado. Ele só abre novamente se você iniciar manualmente. Jogos externos e saves não são apagados." : "The operation finishes with PeliGames closed. It only opens again if you start it manually. External games and saves are not deleted."}</p>
     </NexusPopup>}
   </section>;
 }

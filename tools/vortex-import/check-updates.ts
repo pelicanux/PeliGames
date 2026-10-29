@@ -207,7 +207,7 @@ async function main() {
   }
   report.push("---", `Mudanças de regra em módulos existentes: ${pending}.`,
     "Módulos das famílias geradas (`*-vortex.json`): regenere com `tools/vortex-import/run.sh --emit` na revisão nova e compare.",
-    "Módulos feitos à mão: revise o diff da extensão, ajuste o módulo, suba a versão e atualize `support-audit.json` e `sources.txt`.");
+    "Módulos feitos à mão: revise o diff da extensão, ajuste o módulo, suba a versão e atualize `support-route-cases.json` e `sources.txt`.");
   const text = report.join("\n") + "\n";
   if (output) writeFileSync(output, text);
   process.stdout.write(text);

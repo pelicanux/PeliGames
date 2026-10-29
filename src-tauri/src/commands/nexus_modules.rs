@@ -231,7 +231,7 @@ pub(super) struct Redirection {
     /// Archive list used when the INI has none.
     pub defaults: Vec<String>,
 }
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct RootPackage {
     pub marker: String,
@@ -362,8 +362,13 @@ pub(super) enum Family {
         d3d9_loader: bool,
     },
     /// RE Engine with REFramework (scripts, plugins, data and its dinput8 loader).
-    /// `natives/` and Fluffy packages need specialized processing and are refused.
-    ReEngine {},
+    /// With `fluffy` (the game folder of Fluffy Mod Manager), packages with a
+    /// `modinfo.ini` go to `Games/<fluffy>/Mods` for Fluffy to apply; without it,
+    /// `natives/` and `pak_mods/` packages are refused.
+    ReEngine {
+        #[serde(default)]
+        fluffy: Option<String>,
+    },
     Unity {
         /// `<Game>_Data`; replacing game data is refused, as in the existing modules.
         data: String,
@@ -482,6 +487,21 @@ fn re_loose_lua(source: &str, entries: &[String]) -> Option<Option<String>> {
     let root = if shared.is_empty() { String::new() } else { format!("{}/", shared.join("/")) };
     Some(source.strip_prefix(&root).filter(|rest| !rest.is_empty()).map(|rest| format!("reframework/autorun/{rest}")))
 }
+/// Fluffy Mod Manager, installed at the game root by the Vortex RE Engine template.
+const FLUFFY_EXECUTABLE: &str = "Modmanager.exe";
+/// Upscaler and DirectStorage DLLs the Vortex template installs at the game root.
+const RE_ROOT_FILES: &[&str] = &["nvngx_dlss.dll", "dstoragecore.dll", "dstorage.dll", "amd_fidelityfx_dx12.dll", "amd_ags_x64.dll", "libxess.dll"];
+/// Fluffy mod: the shallowest folder holding a `modinfo.ini` goes whole, option
+/// subfolders included, to `Games/<fluffy>/Mods/<folder>/`, where Fluffy reads
+/// extracted mods as the archives Vortex places there. `None` for a file outside
+/// every such folder.
+fn re_fluffy(fluffy: &str, source: &str, mod_id: &str, entries: &[String]) -> Option<String> {
+    let root = entries.iter().filter(|entry| entry.rsplit('/').next().is_some_and(|name| name.eq_ignore_ascii_case("modinfo.ini")))
+        .map(|entry| entry.rsplit_once('/').map(|(parent, _)| format!("{parent}/")).unwrap_or_default())
+        .filter(|root| source.starts_with(root.as_str())).min_by_key(String::len)?;
+    let folder = root.trim_end_matches('/').rsplit('/').next().filter(|name| !name.is_empty()).unwrap_or(mod_id);
+    Some(format!("Games/{fluffy}/Mods/{folder}/{}", &source[root.len()..]))
+}
 fn push_new<T: PartialEq>(items: &mut Vec<T>, item: T) {
     if !items.contains(&item) { items.push(item); }
 }
@@ -557,9 +577,8 @@ impl Definition {
         if let Some(Family::Unity { data, loaders }) = self.family.clone() {
             return self.apply_unity(&data, &loaders);
         }
-        if let Some(Family::ReEngine {}) = self.family {
-            self.apply_re_engine();
-            return Ok(());
+        if let Some(Family::ReEngine { fluffy }) = self.family.clone() {
+            return self.apply_re_engine(fluffy.as_deref());
         }
         let Some(Family::Unreal { project, binaries, ue4ss, sig_bypass, plugin_mods, d3d9_loader }) = self.family.clone() else { return Ok(()); };
         if plugin_mods.as_ref().is_some_and(|folder| !relative(folder) || folder.contains('/')) { return Err("Família Unreal com pasta de plugins inválida.".into()); }
@@ -663,15 +682,39 @@ impl Definition {
     }
 
     /// REFramework layout shared by the RE Engine games (Vortex "Fluffy +
-    /// REFramework" template, REFramework part only).
-    fn apply_re_engine(&mut self) {
+    /// REFramework" template). With Fluffy, its manager, mod folder, presets and
+    /// the upscaler/DirectStorage DLLs the template puts at the game root.
+    fn apply_re_engine(&mut self, fluffy: Option<&str>) -> Result<(), String> {
         let prefix = |folder: &str| Route::Prefix { source: format!("reframework/{folder}/"), target: format!("reframework/{folder}/"), search: true };
-        let explicit = [prefix("autorun"), prefix("plugins"), prefix("data"), Route::File { source: "dinput8.dll".into(), target: "dinput8.dll".into(), search: false }];
-        let generic = [Route::Extension { extension: ".lua".into(), target: "reframework/autorun/".into(), root_only: true, keep_path: false }];
+        let mut explicit = vec![prefix("autorun"), prefix("plugins"), prefix("data"), Route::File { source: "dinput8.dll".into(), target: "dinput8.dll".into(), search: false }];
+        let mut generic = vec![Route::Extension { extension: ".lua".into(), target: "reframework/autorun/".into(), root_only: true, keep_path: false }];
+        if let Some(folder) = fluffy {
+            if !relative(folder) || folder.contains('/') { return Err("Família RE Engine com pasta do Fluffy inválida.".into()); }
+            let games = format!("Games/{folder}");
+            for file in RE_ROOT_FILES {
+                explicit.push(Route::File { source: (*file).into(), target: (*file).into(), search: true });
+                push_new(&mut self.allowed_files, (*file).into());
+            }
+            generic.push(Route::Extension { extension: ".prt".into(), target: format!("{games}/Presets/"), root_only: false, keep_path: false });
+            for sub in ["Mods", "Presets"] { push_new(&mut self.destinations, format!("{games}/{sub}")); }
+            push_new(&mut self.allowed_files, FLUFFY_EXECUTABLE.into());
+            push_new(&mut self.root_packages, RootPackage { marker: FLUFFY_EXECUTABLE.into(), extensions: Vec::new(), folders: Vec::new(), target: String::new() });
+            if !self.tools.iter().any(|tool| tool.executable.eq_ignore_ascii_case(FLUFFY_EXECUTABLE)) {
+                self.tools.push(GameTool { name: "Fluffy Mod Manager".into(), executable: FLUFFY_EXECUTABLE.into(), arguments: Vec::new() });
+            }
+            if !self.downloads.iter().any(|download| download.name == "Fluffy Mod Manager") {
+                self.downloads.push(GithubDownload {
+                    name: "Fluffy Mod Manager".into(), source: DownloadSource::Nexus, repository: String::new(), root: None,
+                    mod_id: Some(818), domain: Some("site".into()), fallback: None, present: vec![FLUFFY_EXECUTABLE.into()],
+                    group: None, recommended: true, tag: None, prefix: "Fluffy".into(), exclude: Vec::new(), automatic: false,
+                });
+            }
+        }
         let own = std::mem::take(&mut self.routes);
         for route in explicit.into_iter().chain(own).chain(generic) { push_new(&mut self.routes, route); }
         for folder in ["autorun", "plugins", "data"] { push_new(&mut self.destinations, format!("reframework/{folder}")); }
         push_new(&mut self.allowed_files, "dinput8.dll".into());
+        // Without a `modinfo.ini` these still have no route (see `re_fluffy`).
         for rejected in ["natives/", "pak_mods/"] { push_new(&mut self.rejected_prefixes, rejected.into()); }
         push_new(&mut self.dll_overrides, DllOverride { name: "dinput8".into(), file: "dinput8.dll".into() });
         if !self.frameworks.iter().any(|f| f.name.starts_with("REFramework")) {
@@ -680,6 +723,7 @@ impl Definition {
                 required_files: vec!["dinput8.dll".into()], any_files: Vec::new(), for_paths: vec!["reframework/".into()], for_extensions: Vec::new(),
             });
         }
+        Ok(())
     }
 
     /// Routes of the Vortex Unity template (BepInEx/MelonLoader hybrid). Loose
@@ -915,7 +959,7 @@ impl Definition {
         if self.script_extender.as_ref().is_some_and(|extender| extender.folder == parent && extender.owns(file)) && relative(path) {
             return true;
         }
-        relative(path) && !self.protected_files.iter().any(|file|file.eq_ignore_ascii_case(path)) && (self.allowed_files.iter().any(|file| file == path)
+        relative(path) && !self.protected_files.iter().any(|file|file.eq_ignore_ascii_case(path)) && (self.allowed_files.iter().any(|file| file == path || self.platform == "proton" && file.eq_ignore_ascii_case(path))
             || !path.contains('/') && self.root_extensions.iter().any(|ext| path.to_ascii_lowercase().ends_with(ext))
             || self.root_packages.iter().any(|rule| !path.contains('/') && rule.extensions.iter().any(|ext| path.to_ascii_lowercase().ends_with(&ext.to_ascii_lowercase()))
                 || rule.folders.iter().any(|folder| path.split('/').next().is_some_and(|first| first.eq_ignore_ascii_case(folder)) && path.contains('/')))
@@ -1048,7 +1092,11 @@ impl Definition {
             let Route::Manifest { marker, target, first: true } = rule else { continue; };
             if let Some(target) = self.manifest_target(marker, target, source, mod_id, entries)? { return Ok(Some(target)); }
         }
-        if matches!(self.family, Some(Family::ReEngine {})) {
+        if let Some(Family::ReEngine { fluffy }) = &self.family {
+            if let Some(target) = fluffy.as_deref().and_then(|fluffy| re_fluffy(fluffy, source, mod_id, entries)) {
+                if !self.allowed(&target) { return Err(format!("Destino fora das regras do módulo: {target}")); }
+                return Ok(Some(target));
+            }
             if let Some(target) = re_loose_lua(source, entries) {
                 if let Some(target) = &target { if !self.allowed(target) { return Err(format!("Destino fora das regras do módulo: {target}")); } }
                 return Ok(target);
@@ -1208,8 +1256,8 @@ pub(super) fn verify_framework_identity(domain: &str, mod_id: u64, actual: &str)
     Ok(())
 }
 pub(super) fn registry() -> ModuleRegistry {
-    match crate::core::paths::app_root() {
-        Ok(root) => external(&root.join("Mod/Nexus/modules"), builtins()),
+    match crate::core::paths::app_path("Mod/Nexus/modules") {
+        Ok(root) => external(&root, builtins()),
         Err(error) => ModuleRegistry { definitions: builtins(), errors: vec![error.to_string()] },
     }
 }
@@ -1247,8 +1295,8 @@ mod tests {
     const ID: &str = "00000000-0000-4000-8000-000000000001";
     #[test]
     fn documented_package_matrix_covers_every_bundled_game_without_losing_companions() {
-        let audit: serde_json::Value = serde_json::from_slice(include_bytes!("../../resources/nexus-games/support-audit.json")).unwrap();
-        let generated: Vec<serde_json::Value> = [include_bytes!("../../resources/nexus-games/unreal-vortex-audit.json").as_slice(), include_bytes!("../../resources/nexus-games/unity-vortex-audit.json").as_slice(), include_bytes!("../../resources/nexus-games/re_engine-vortex-audit.json").as_slice()]
+        let audit: serde_json::Value = serde_json::from_slice(include_bytes!("../../resources/nexus-games/support-route-cases.json")).unwrap();
+        let generated: Vec<serde_json::Value> = [include_bytes!("../../resources/nexus-games/unreal-vortex-route-cases.json").as_slice(), include_bytes!("../../resources/nexus-games/unity-vortex-route-cases.json").as_slice(), include_bytes!("../../resources/nexus-games/re_engine-vortex-route-cases.json").as_slice()]
             .iter().map(|bytes| serde_json::from_slice(bytes).unwrap()).collect();
         let definitions = builtins();
         let cases: Vec<_> = audit["modules"].as_array().unwrap().iter().chain(generated.iter().flat_map(|g| g["modules"].as_array().unwrap())).collect();
@@ -1841,7 +1889,7 @@ mod tests {
     }
     #[test]
     fn re_engine_family_routes_reframework_and_refuses_unprocessed_data() {
-        let modules: Vec<_> = builtins().into_iter().filter(|m| matches!(m.family, Some(Family::ReEngine {}))).collect();
+        let modules: Vec<_> = builtins().into_iter().filter(|m| matches!(m.family, Some(Family::ReEngine { .. }))).collect();
         assert!(modules.len() >= 10);
         for game in modules {
             let d = &game.domain;
@@ -1863,8 +1911,49 @@ mod tests {
         }
     }
     #[test]
+    fn re_engine_fluffy_receives_modinfo_folders_presets_and_its_manager() {
+        let game = builtins().into_iter().find(|m| m.domain == "monsterhunterwilds").unwrap();
+        let mods = "Games/MonsterHunterWilds/Mods";
+        let route = |source: &str, entries: &[&str]| game.route_package(source, ID, &entries.iter().map(|e| e.to_string()).collect::<Vec<_>>());
+        // modinfo.ini at the root: the mod id names the folder; option subfolders stay inside.
+        let flat = ["modinfo.ini", "natives/STM/x.tex", "Option A/modinfo.ini", "Option A/natives/STM/y.tex"];
+        assert_eq!(route("natives/STM/x.tex", &flat).unwrap(), Some(format!("{mods}/{ID}/natives/STM/x.tex")));
+        assert_eq!(route("Option A/natives/STM/y.tex", &flat).unwrap(), Some(format!("{mods}/{ID}/Option A/natives/STM/y.tex")));
+        // Sibling variants become separate Fluffy mods; files outside them keep the normal rules.
+        let variants = ["Pack/Red/modinfo.ini", "Pack/Red/pak_mods/red.pak", "Pack/Blue/modinfo.ini", "Pack/Blue/natives/x.tex", "Pack/readme.txt"];
+        assert_eq!(route("Pack/Red/pak_mods/red.pak", &variants).unwrap(), Some(format!("{mods}/Red/pak_mods/red.pak")));
+        assert_eq!(route("Pack/Blue/natives/x.tex", &variants).unwrap(), Some(format!("{mods}/Blue/natives/x.tex")));
+        assert_eq!(route("Pack/readme.txt", &variants).unwrap(), None);
+        // Without modinfo.ini natives/ and pak_mods/ are still refused.
+        assert!(route("Mod/natives/STM/x.tex", &["Mod/natives/STM/x.tex"]).is_err());
+        assert_eq!(route("Look/Hunter.prt", &["Look/Hunter.prt"]).unwrap().as_deref(), Some("Games/MonsterHunterWilds/Presets/Hunter.prt"));
+        assert_eq!(route("DLSS/nvngx_dlss.dll", &["DLSS/nvngx_dlss.dll"]).unwrap().as_deref(), Some("nvngx_dlss.dll"));
+        // The manager goes to the game root, whatever the case of its name.
+        assert_eq!(route("Fluffy/modmanager.exe", &["Fluffy/modmanager.exe"]).unwrap().as_deref(), Some("modmanager.exe"));
+        assert!(game.tools.iter().any(|tool| tool.executable == "Modmanager.exe"));
+        assert!(game.downloads.iter().any(|d| d.name == "Fluffy Mod Manager" && d.mod_id == Some(818) && d.domain.as_deref() == Some("site")));
+        // RE Engine games without a Fluffy folder keep refusing Fluffy content.
+        let other = builtins().into_iter().find(|m| matches!(&m.family, Some(Family::ReEngine { fluffy: None }))).unwrap();
+        assert!(other.route_package("Mod/natives/x.tex", ID, &["Mod/modinfo.ini".into(), "Mod/natives/x.tex".into()]).is_err());
+        assert!(!other.allowed("Modmanager.exe") && !other.allowed("nvngx_dlss.dll"));
+        let mut invalid: serde_json::Value = serde_json::from_slice(include_bytes!("../../resources/nexus-games/re_engine-vortex.json")).unwrap();
+        let invalid = invalid.as_array_mut().unwrap().iter_mut().find(|m| m["family"]["fluffy"].is_string()).unwrap();
+        invalid["family"]["fluffy"] = "../Mods".into();
+        assert!(parse(&serde_json::to_vec(invalid).unwrap()).is_err());
+    }
+    #[test]
+    fn monster_hunter_world_puts_reshade_presets_at_the_root() {
+        let game = builtins().into_iter().find(|m| m.domain == "monsterhunterworld").unwrap();
+        let entries: Vec<String> = ["Preset/Look.ini", "Preset/nativePC/x.tex", "nativePC/plugins/p.ini"].map(String::from).to_vec();
+        let route = |source: &str| game.route_package(source, ID, &entries).unwrap();
+        assert_eq!(route("Preset/Look.ini").as_deref(), Some("Look.ini"));
+        assert_eq!(route("Preset/nativePC/x.tex").as_deref(), Some("nativePC/x.tex"));
+        assert_eq!(route("nativePC/plugins/p.ini").as_deref(), Some("nativePC/plugins/p.ini"));
+        assert!(game.route_package("graphics_option.ini", ID, &["graphics_option.ini".into()]).is_err());
+    }
+    #[test]
     fn re_engine_loose_lua_roots_at_the_folder_shared_by_every_script() {
-        let game = builtins().into_iter().find(|m| matches!(m.family, Some(Family::ReEngine {}))).unwrap();
+        let game = builtins().into_iter().find(|m| matches!(m.family, Some(Family::ReEngine { .. }))).unwrap();
         let entries: Vec<String> = ["Pack/", "Pack/Mod/", "Pack/Mod/main.lua", "Pack/Mod/lib/util.lua", "Pack/Mod/lib/data.json", "Pack/readme.txt"].map(String::from).to_vec();
         let route = |source: &str| game.route_package(source, ID, &entries).unwrap();
         assert_eq!(route("Pack/Mod/main.lua").as_deref(), Some("reframework/autorun/main.lua"));

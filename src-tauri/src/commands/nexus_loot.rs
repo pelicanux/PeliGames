@@ -31,7 +31,7 @@ pub(super) fn kind(module: &Definition) -> Option<(GameType, &'static str)> {
 }
 
 pub(super) fn folder(repository: &str) -> Result<PathBuf, String> {
-    Ok(crate::core::paths::app_root().map_err(|e| e.to_string())?.join("Mod/Nexus/loot").join(repository))
+    Ok(crate::core::paths::app_path("Mod/Nexus/loot")?.join(repository))
 }
 
 #[derive(Serialize)]

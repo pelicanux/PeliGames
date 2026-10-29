@@ -104,9 +104,144 @@ fn root(game: &NexusGame) -> Result<PathBuf, String> {
     real(&path)?;
     Ok(path)
 }
-pub(super) fn portable(game: &NexusGame) -> Result<PathBuf, String> {
+fn mods_folder(game: &NexusGame) -> Result<PathBuf, String> {
     uuid::Uuid::parse_str(&game.id).map_err(|_| "Identificador de mods inválido.")?;
-    Ok(root(game)?.join(".peligames/mods").join(&game.id))
+    Ok(root(game)?.join(".peligames/mods"))
+}
+/// `.peligames/mods/<game>` beside the game, named after it; the game id lives
+/// in `<game>.identity`. Storage created before readable names keeps `<id>`
+/// until `readable_storage` renames it.
+pub(super) fn portable(game: &NexusGame) -> Result<PathBuf, String> {
+    let folder = mods_folder(game)?;
+    let legacy = folder.join(&game.id);
+    Ok(match crate::core::paths::names::find(&folder, &game.id) {
+        Some(path) if path.exists() || !legacy.exists() => path,
+        _ => legacy,
+    })
+}
+/// The readable folder for a game that has no storage yet.
+pub(super) fn reserve(game: &NexusGame) -> Result<PathBuf, String> {
+    let current = portable(game)?;
+    if current.exists() || current.file_name().is_some_and(|name| name != game.id.as_str()) {
+        return Ok(current);
+    }
+    let folder = mods_folder(game)?;
+    real(&folder)?;
+    crate::core::paths::names::allocate(&folder, game.game["name"].as_str().unwrap_or("jogo"), &game.id)
+}
+/// Marker carried inside a renamed storage until every reference follows it.
+const RENAME_MARKER: &str = "storage-rename.json";
+fn regular_folder(path: &Path) -> bool {
+    fs::symlink_metadata(path).is_ok_and(|m| m.is_dir() && !m.file_type().is_symlink())
+}
+/// Gives id-named mod storage its readable name: `.peligames/mods/<id>` beside
+/// the game and the older `games/<name>--<id>` (plus its `games/<id>` link) in
+/// the launcher folder. Paths recorded inside it, the game's symlinks into it
+/// and the workspace entry follow. A marker travels with the folder, so an
+/// interrupted rename resumes on the next load; a running game keeps its folder.
+pub(super) fn readable_storage(game: &mut NexusGame) -> Result<bool, String> {
+    let mut changed = false;
+    if let Ok(parent) = super::nexus_local::root().map(|root| root.join("games")) {
+        if regular_folder(&parent) {
+            let suffix = format!("--{}", game.id);
+            let named: Vec<PathBuf> = fs::read_dir(&parent).map_err(|e| e.to_string())?.flatten().map(|e| e.path())
+                .filter(|p| p.file_name().and_then(|n| n.to_str()).is_some_and(|n| n.ends_with(&suffix)) && regular_folder(p)).collect();
+            if let [old] = named.as_slice() {
+                let link = parent.join(&game.id);
+                let linked = fs::read_link(&link).ok().is_some_and(|target| Some(target.as_os_str()) == old.file_name());
+                let from = if linked { vec![old.clone(), link.clone()] } else { vec![old.clone()] };
+                if begin_rename(game, &parent, old, &from)? && linked {
+                    fs::remove_file(&link).map_err(|e| e.to_string())?;
+                }
+            }
+            changed |= finish_rename(game, &parent)?;
+            // The old `games/<id>` link, left behind by an interrupted rename.
+            let link = parent.join(&game.id);
+            if fs::read_link(&link).is_ok_and(|target| target.to_string_lossy().ends_with(&suffix)) && !link.exists() {
+                fs::remove_file(&link).map_err(|e| e.to_string())?;
+            }
+        }
+    }
+    if let Ok(folder) = mods_folder(game) {
+        if regular_folder(&folder) {
+            let old = folder.join(&game.id);
+            if regular_folder(&old) {
+                begin_rename(game, &folder, &old, &[old.clone()])?;
+            }
+            changed |= finish_rename(game, &folder)?;
+        }
+    }
+    Ok(changed)
+}
+/// Renames `old` to the readable name reserved for the game in `parent`, leaving
+/// the marker inside. `false` while the game (or its virtual file system) uses it.
+fn begin_rename(game: &NexusGame, parent: &Path, old: &Path, from: &[PathBuf]) -> Result<bool, String> {
+    real(old)?;
+    if super::nexus_storage::in_use(old) {
+        return Ok(false);
+    }
+    let target = crate::core::paths::names::allocate(parent, game.game["name"].as_str().unwrap_or("jogo"), &game.id)?;
+    if fs::symlink_metadata(&target).is_ok() {
+        return Err(format!("Pastas antiga e nova de mods coexistem em {}; nenhuma foi alterada.", parent.display()));
+    }
+    json(&old.join(RENAME_MARKER), &serde_json::json!({"from": from}))?;
+    if let Err(error) = fs::rename(old, &target) {
+        let _ = fs::remove_file(old.join(RENAME_MARKER));
+        let _ = fs::remove_file(target.with_extension("identity"));
+        return Err(error.to_string());
+    }
+    Ok(true)
+}
+fn finish_rename(game: &mut NexusGame, parent: &Path) -> Result<bool, String> {
+    let Some(target) = crate::core::paths::names::find(parent, &game.id).filter(|t| regular_folder(t)) else { return Ok(false) };
+    let marker = target.join(RENAME_MARKER);
+    if !marker.is_file() {
+        return Ok(false);
+    }
+    let record: serde_json::Value = read(&marker)?;
+    let from: Vec<PathBuf> = serde_json::from_value(record["from"].clone()).map_err(|_| "Registro de renomeação inválido.")?;
+    if from.is_empty() || from.iter().any(|path| path.parent() != Some(parent)) {
+        return Err("Registro de renomeação fora da pasta de mods.".into());
+    }
+    let repoint = |link: &Path| -> Option<PathBuf> {
+        from.iter().find_map(|old| link.strip_prefix(old).ok().map(|rest| target.join(rest)))
+    };
+    let relink = |path: &Path, next: PathBuf| crate::core::paths::replace_symlink(path, &next);
+    // The game's symlinks into the folder, found through the deployment record.
+    let manifest = target.join("deployment.json");
+    if manifest.is_file() {
+        let value: serde_json::Value = read(&manifest)?;
+        let destination = super::nexus_deployment::destinations(game).ok();
+        let mut deployed: Vec<PathBuf> = value["targets"].as_object().into_iter().flatten().filter_map(|(_, v)| v.as_str().map(PathBuf::from)).collect();
+        if let Some(destination) = &destination {
+            deployed.extend(value["files"].as_object().into_iter().flatten().filter_map(|(key, _)| destination(key).ok()));
+        }
+        for path in deployed.iter().filter(|p| p.is_absolute()) {
+            let Ok(link) = fs::read_link(path) else { continue };
+            if let Some(next) = repoint(&link) { relink(path, next)?; }
+        }
+    }
+    // Absolute paths recorded inside the folder: manifests and internal links.
+    for entry in fs::read_dir(&target).map_err(|e| e.to_string())?.flatten() {
+        let path = entry.path();
+        if entry.file_name() == RENAME_MARKER || path.extension().is_none_or(|e| e != "json")
+            || !entry.file_type().is_ok_and(|t| t.is_file()) || entry.metadata().map_or(true, |m| m.len() > 32 * 1024 * 1024) {
+            continue;
+        }
+        let mut value: serde_json::Value = read(&path)?;
+        let before = value.clone();
+        for old in &from { rebase(&mut value, old, &target); }
+        if value != before { json(&path, &value)?; }
+    }
+    for entry in walkdir::WalkDir::new(&target).follow_links(false).min_depth(1) {
+        let entry = entry.map_err(|e| e.to_string())?;
+        if !entry.file_type().is_symlink() { continue; }
+        let link = fs::read_link(entry.path()).map_err(|e| e.to_string())?;
+        if let Some(next) = repoint(&link) { relink(entry.path(), next)?; }
+    }
+    for old in &from { *game = rebased(game, old, &target)?; }
+    fs::remove_file(&marker).map_err(|e| e.to_string())?;
+    Ok(true)
 }
 fn device(path: &Path) -> String {
     // Only on save/review, never a recursive scan of disks or games.
@@ -254,12 +389,18 @@ pub(super) fn recover_game(directory: &Path, data: &mut Workspace) -> Result<boo
         if !entry.file_type().map_err(|e| e.to_string())?.is_dir() {
             continue;
         }
-        let id = entry.file_name().to_string_lossy().into_owned();
-        if uuid::Uuid::parse_str(&id).is_err() || !entry.path().join("game.json").is_file() {
+        if !entry.path().join("game.json").is_file() {
             continue;
         }
         let saved: Record = read(&entry.path().join("game.json"))?;
-        if saved.format != 1 || saved.game.id != id || saved.storage != portable(&saved.game)? {
+        let id = saved.game.id.clone();
+        // The folder is the game id (older layout) or a readable name whose
+        // `.identity` holds it; the record was saved for this same folder name.
+        let owned = entry.file_name() == id.as_str()
+            || crate::core::paths::names::find(&markers, &id).is_some_and(|path| path == entry.path());
+        if saved.format != 1 || uuid::Uuid::parse_str(&id).is_err() || !owned
+            || saved.storage.file_name() != Some(entry.file_name().as_os_str())
+            || saved.storage.parent() != Some(root(&saved.game)?.join(".peligames/mods").as_path()) {
             return Err("Registro de mods inválido junto ao jogo; arquivos preservados.".into());
         }
         if saved.game.mods.is_empty() {
@@ -440,7 +581,7 @@ fn copy_tree(
 }
 fn migrate(game: &mut NexusGame) -> Result<(), String> {
     let old = super::nexus_storage::legacy_directory(game)?;
-    let target = portable(game)?;
+    let target = reserve(game)?;
     if !old.exists() && target.join("game.json").is_file() {
         return Ok(());
     }
@@ -676,6 +817,13 @@ mod tests {
         fs::remove_dir_all(&old_config).unwrap();
         let recovered = super::super::nexus_local::load().unwrap();
         assert_eq!(recovered.games.len(), 2);
+        // Detached monitors read the central snapshot, not the recovery catalog.
+        for game in &recovered.games {
+            assert_eq!(super::super::nexus_local::log_game(&game.id).unwrap().id, game.id);
+        }
+        let persisted = fs::read(old_config.join("library.json")).unwrap();
+        super::super::nexus_local::load().unwrap();
+        assert_eq!(fs::read(old_config.join("library.json")).unwrap(), persisted);
         let before = fs::read(catalog().unwrap()).unwrap();
         {
             let mut draft = recovered.clone();
@@ -763,5 +911,105 @@ mod tests {
             serde_json::json!(["/new/file", "/old/mod-extra/file"])
         );
         fs::remove_dir_all(base).unwrap();
+    }
+    /// A symlink-deployed game whose storage and package still use ids as names.
+    fn id_named_fixture(base: &Path) -> (NexusGame, PathBuf, PathBuf) {
+        let root = base.join("Baldurs Gate 3");
+        fs::create_dir_all(root.join("bin")).unwrap();
+        fs::write(root.join("bin/bg3_dx11.exe"), b"MZ fixture").unwrap();
+        let id = uuid::Uuid::new_v4().to_string();
+        let mut game: NexusGame = serde_json::from_value(serde_json::json!({"id":uuid::Uuid::new_v4().to_string(),"game":{"directory":root,"name":"Baldur's Gate 3","path":root.join("bin/bg3_dx11.exe")},"platform":"proton","deploy_method":"symlink","mods":[{"id":id,"name":"Native Fix","version":"1.2","archive":"placeholder.zip","size":1,"installed":true,"enabled":true,"installed_files":[["bin/NativeMods/Fix.dll","bin/NativeMods/Fix.dll"]]}]})).unwrap();
+        let readable = super::super::nexus_storage::directory(&game).unwrap();
+        fs::create_dir_all(readable.join("archives")).unwrap();
+        let archive = readable.join("archives").join(format!("{id}.zip"));
+        let mut zip = zip::ZipWriter::new(fs::File::create(&archive).unwrap());
+        zip.start_file("bin/NativeMods/Fix.dll", zip::write::FileOptions::default()).unwrap();
+        zip.write_all(b"fix").unwrap();
+        zip.finish().unwrap();
+        game.mods[0].archive = archive.to_string_lossy().into_owned();
+        game.profile = Some(super::super::nexus_deployment::build(&game).unwrap());
+        super::super::nexus_deployment::apply(&game).unwrap().commit();
+        // Put the storage back under the game id, as older versions saved it.
+        let old = readable.with_file_name(&game.id);
+        fs::rename(&readable, &old).unwrap();
+        fs::remove_file(readable.with_extension("identity")).unwrap();
+        let mut manifest: serde_json::Value = read(&old.join("deployment.json")).unwrap();
+        rebase(&mut manifest, &readable, &old);
+        json(&old.join("deployment.json"), &manifest).unwrap();
+        let link = root.join("bin/NativeMods/Fix.dll");
+        let target = fs::read_link(&link).unwrap();
+        fs::remove_file(&link).unwrap();
+        std::os::unix::fs::symlink(old.join(target.strip_prefix(&readable).unwrap()), &link).unwrap();
+        (rebased(&game, &readable, &old).unwrap(), readable, old)
+    }
+    #[test]
+    fn id_named_storage_and_packages_get_readable_names_and_links_follow() {
+        let base = std::env::temp_dir().join(format!("peligames-readable-storage-{}", uuid::Uuid::new_v4()));
+        let (mut game, readable, old) = id_named_fixture(&base);
+        assert_eq!(portable(&game).unwrap(), old, "the old folder stays in use until renamed");
+        assert!(readable_storage(&mut game).unwrap());
+        assert_eq!(readable.file_name().unwrap(), "baldur-s-gate-3");
+        assert!(readable.is_dir() && !old.exists());
+        assert_eq!(portable(&game).unwrap(), readable);
+        let link = PathBuf::from(game.game["directory"].as_str().unwrap()).join("bin/NativeMods/Fix.dll");
+        assert!(fs::read_link(&link).unwrap().starts_with(&readable));
+        assert_eq!(fs::read(&link).unwrap(), b"fix");
+        let manifest = fs::read_to_string(readable.join("deployment.json")).unwrap();
+        assert!(!manifest.contains(&game.id) && !readable.join(RENAME_MARKER).exists() && !readable.join("recovery-deployment.json").exists());
+        assert!(Path::new(&game.mods[0].archive).starts_with(&readable));
+        // The package itself is renamed after the mod and still opens.
+        let mut item = game.mods[0].clone();
+        assert!(super::super::nexus_archive::readable_package(&game, &mut item).unwrap());
+        assert_eq!(Path::new(&item.archive).file_name().unwrap(), "native-fix-1-2.zip");
+        assert!(super::super::nexus_archive::open(&game, &item).is_ok());
+        assert!(!super::super::nexus_archive::readable_package(&game, &mut item).unwrap(), "nothing left to rename");
+        assert!(!readable_storage(&mut game).unwrap(), "repeatable");
+        fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
+    fn interrupted_rename_resumes_and_a_running_game_keeps_its_folder() {
+        let base = std::env::temp_dir().join(format!("peligames-readable-resume-{}", uuid::Uuid::new_v4()));
+        let (mut game, readable, old) = id_named_fixture(&base);
+        fs::write(old.join("session.pid"), std::process::id().to_string()).unwrap();
+        assert!(!readable_storage(&mut game).unwrap());
+        assert!(old.is_dir());
+        fs::remove_file(old.join("session.pid")).unwrap();
+        // Crash right after the rename: only the marker knows the old name.
+        json(&old.join(RENAME_MARKER), &serde_json::json!({"from": [old]})).unwrap();
+        crate::core::paths::names::allocate(old.parent().unwrap(), "Baldur's Gate 3", &game.id).unwrap();
+        fs::rename(&old, &readable).unwrap();
+        assert_eq!(portable(&game).unwrap(), readable);
+        assert!(readable_storage(&mut game).unwrap());
+        let link = PathBuf::from(game.game["directory"].as_str().unwrap()).join("bin/NativeMods/Fix.dll");
+        assert_eq!(fs::read(&link).unwrap(), b"fix");
+        assert!(!readable.join(RENAME_MARKER).exists());
+        // A readable folder found beside the game is recovered as its own.
+        json(&readable.join("game.json"), &Record { format: 1, game: game.clone(), storage: readable.clone(), device: String::new() }).unwrap();
+        let mut workspace = Workspace::default();
+        assert!(recover_game(Path::new(game.game["directory"].as_str().unwrap()), &mut workspace).unwrap());
+        assert_eq!(workspace.games[0].id, game.id);
+        fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
+    fn launcher_folder_storage_named_with_the_id_gets_the_game_name() {
+        let base = std::env::temp_dir().join(format!("peligames-readable-legacy-{}", uuid::Uuid::new_v4()));
+        let mut game = fixture(&base, "symlink");
+        let old = super::super::nexus_storage::legacy_directory(&game).unwrap();
+        assert!(old.file_name().unwrap().to_string_lossy().ends_with(&format!("--{}", game.id)));
+        // The link older versions kept for paths saved as `games/<id>`.
+        let link = old.with_file_name(&game.id);
+        std::os::unix::fs::symlink(old.file_name().unwrap(), &link).unwrap();
+        assert!(readable_storage(&mut game).unwrap());
+        let readable = super::super::nexus_storage::legacy_directory(&game).unwrap();
+        assert_eq!(readable.file_name().unwrap(), "baldur-s-gate-3");
+        assert!(!old.exists() && fs::symlink_metadata(&link).is_err());
+        let fix = PathBuf::from(game.game["directory"].as_str().unwrap()).join("bin/NativeMods/Fix.dll");
+        assert!(fs::read_link(&fix).unwrap().starts_with(&readable));
+        assert_eq!(fs::read(&fix).unwrap(), b"fix");
+        assert!(Path::new(&game.mods[0].archive).starts_with(&readable));
+        assert!(super::super::nexus_archive::open(&game, &game.mods[0]).is_ok());
+        assert!(!readable_storage(&mut game).unwrap());
+        fs::remove_dir_all(base).unwrap();
+        fs::remove_dir_all(readable).unwrap();
     }
 }

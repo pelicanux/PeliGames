@@ -35,12 +35,14 @@ pub struct InstallExtras {
 }
 #[derive(Clone, Copy, Debug, PartialEq, serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum NeuralModel { Auto, Small, Original }
+pub enum NeuralModel { Auto, Small, Experimental, Original }
 
 /// Capability detection keeps RDNA3 and older packages on their original CLI.
 pub fn unified_networks(script: &str) -> bool {
     script.contains("--model)") && script.contains("CC_SILVER_AARDWOLD_INT4_MIXED")
 }
+pub fn experimental_network(script: &str) -> bool { script.contains("CC_SMALL_FP8_EXPERIMENTAL") }
+pub fn nr_plugin(script: &str) -> bool { script.contains("plugins/dlssnr-amd.asi") }
 pub fn selectable_models(script: &str) -> bool {
     unified_networks(script) || (script.contains("--new-model)") && script.contains("--old-model)"))
 }
@@ -49,11 +51,14 @@ pub fn supports_lumenite(script: &str) -> bool {
 }
 
 fn model_arguments(script: &str, extras: InstallExtras, has_small: bool, has_original: bool) -> Result<Vec<&'static str>, String> {
-    if extras.model == Some(NeuralModel::Small) && extras.int4 == Some(true) {
+    if matches!(extras.model, Some(NeuralModel::Small | NeuralModel::Experimental)) && extras.int4 == Some(true) {
         return Err("int4 misto só funciona com o modelo original (310.8.0).".into());
     }
     let selectable = selectable_models(script);
-    if extras.model == Some(NeuralModel::Small) && (!selectable || !has_small) {
+    if extras.model == Some(NeuralModel::Experimental) && !experimental_network(script) {
+        return Err("A rede experimental exige o backend Mochizuki 0.0.8 ou mais recente.".into());
+    }
+    if matches!(extras.model, Some(NeuralModel::Small | NeuralModel::Experimental)) && (!selectable || !has_small) {
         return Err("Modelo novo indisponível. Atualize o backend e extraia a DLL 310.9.16 no assistente.".into());
     }
     if (extras.model == Some(NeuralModel::Original) || extras.int4 == Some(true)) && !has_original {
@@ -64,7 +69,7 @@ fn model_arguments(script: &str, extras: InstallExtras, has_small: bool, has_ori
     if unified_networks(script) {
         return Ok(vec!["--model", if extras.int4 == Some(true) {
             "CC_SILVER_AARDWOLD_INT4_MIXED"
-        } else if old { "CC_SILVER_AARDWOLD" } else { "CC_SMALL_FP8" }]);
+        } else if old { "CC_SILVER_AARDWOLD" } else if extras.model == Some(NeuralModel::Experimental) { "CC_SMALL_FP8_EXPERIMENTAL" } else { "CC_SMALL_FP8" }]);
     }
     Ok(vec![if old { "--old-model" } else { "--new-model" }])
 }
@@ -418,6 +423,20 @@ mod tests {
         assert!(model_arguments(script, InstallExtras {model:Some(NeuralModel::Small), ..Default::default()}, false, true).is_err());
     }
 
+}
+
+#[cfg(test)]
+mod v008_tests {
+    use super::*;
+    const SCRIPT: &str="--model) CC_SMALL_FP8_EXPERIMENTAL CC_SILVER_AARDWOLD_INT4_MIXED plugins/dlssnr-amd.asi";
+    #[test] fn experimental_model_requires_its_backend_weights_and_cannot_be_int4() {
+        let extras=InstallExtras {model:Some(NeuralModel::Experimental),..Default::default()};
+        assert_eq!(model_arguments(SCRIPT,extras,true,true).unwrap(),vec!["--model","CC_SMALL_FP8_EXPERIMENTAL"]);
+        assert!(model_arguments(SCRIPT,extras,false,true).is_err());
+        assert!(model_arguments("--model) CC_SILVER_AARDWOLD_INT4_MIXED",extras,true,true).is_err());
+        assert!(model_arguments(SCRIPT,InstallExtras{int4:Some(true),..extras},true,true).is_err());
+        assert!(nr_plugin(SCRIPT)); assert!(!nr_plugin("0.0.7 --model)"));
+    }
 }
 
 #[cfg(test)]

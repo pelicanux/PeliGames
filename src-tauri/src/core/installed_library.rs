@@ -107,7 +107,7 @@ pub struct InstallationRecord {
     pub profile_kind: super::game_profiles::ProfileKind,
 }
 fn library_file() -> Result<PathBuf, String> {
-    Ok(super::paths::app_root()?.join("installed-destinations.json"))
+    Ok(super::paths::app_path("installed-destinations.json")?)
 }
 fn write_json(path: &Path, value: &impl Serialize) -> Result<(), String> {
     fs::create_dir_all(path.parent().ok_or("Destino inválido.")?).map_err(|e| e.to_string())?;
@@ -372,7 +372,7 @@ pub fn set_profile_kind(path: &str, kind: super::game_profiles::ProfileKind) -> 
     profile_options(path)
 }
 fn add_shortcut_to_library_at(index: &Path, path: &str, id: &str,
-    create: impl FnOnce(&Path, &Path, super::game_profiles::ProfileKind) -> Result<super::game_profiles::GameProfile, String>) -> Result<InstalledEntry, String> {
+    create: impl FnOnce(&Path, &Path, super::game_profiles::ProfileKind, &str) -> Result<super::game_profiles::GameProfile, String>) -> Result<InstalledEntry, String> {
     let _guard = LIBRARY_LOCK.lock().map_err(|e| e.to_string())?;
     let _process_guard = process_lock(index)?;
     let (manifest, mut record) = record_of(index, path)?.ok_or("Entrada não registrada na biblioteca PeliGames.")?;
@@ -384,7 +384,7 @@ fn add_shortcut_to_library_at(index: &Path, path: &str, id: &str,
     let (executable, arguments) = shortcut_program(&record, item)?;
     // Every game gets its own prefix, mirrored from the launcher's.
     let profiles = super::installation_layout::profiles_dir(Path::new(&record.directory), Path::new(&record.prefix))?;
-    let profile = create(Path::new(&record.prefix), &profiles, record.profile_kind)?;
+    let profile = create(Path::new(&record.prefix), &profiles, record.profile_kind, &name)?;
     let directory = folder.or_else(|| Path::new(&executable).parent().map(Path::to_path_buf)).unwrap_or_default().to_string_lossy().into_owned();
     let entry = InstalledEntry {
         discovery_source: Some("Atalho do launcher".into()), recommended: false, shortcut: Some(id.to_string()),
@@ -896,12 +896,7 @@ fn update_at(index: &Path, settings: EntrySettings) -> Result<InstalledEntry, St
             .find(|entry| entry.path == settings.path)
         {
             ensure_no_copy_dependents(&destinations(index)?,Path::new(&entry.prefix))?;
-            if Path::new(&directory).join("copy.json").is_file() {
-                let prefix=Path::new(&entry.prefix).canonicalize().map_err(|e|e.to_string())?;
-                if !executable.starts_with(&prefix) || settings.prefix.as_ref().is_some_and(|value|!same_location(Path::new(value),&prefix)) {
-                    return Err("Uma cópia deve manter seu próprio prefixo e um executável dentro dele. Use a instalação original para configurar outra origem.".into());
-                }
-            }
+            validate_copy_paths(Path::new(&directory), Path::new(&entry.prefix), settings.prefix.as_deref(), &executable)?;
 
             if let Some(prefix) = settings.prefix.as_deref() {
                 if prefix != entry.prefix {
@@ -1156,12 +1151,7 @@ fn register_copy_at(index:&Path,entry:InstalledEntry,directory:&Path)->Result<In
     let directory=directory.canonicalize().map_err(|e|e.to_string())?;
     let prefix=Path::new(&entry.prefix).canonicalize().map_err(|e|e.to_string())?;
     let executable=Path::new(&entry.executable).canonicalize().map_err(|e|e.to_string())?;
-    let shared_external = fs::read(directory.join("copy.json")).ok()
-        .and_then(|bytes|serde_json::from_slice::<serde_json::Value>(&bytes).ok())
-        .and_then(|value|value["shared_game_directory"].as_str().map(PathBuf::from))
-        .and_then(|path|path.canonicalize().ok())
-        .is_some_and(|root|executable.starts_with(root));
-    if !prefix.starts_with(&directory)||(!executable.starts_with(&prefix)&&!shared_external)||!executable.is_file()||directory.join("installation.json").exists(){return Err("Destino da cópia inválido ou já registrado.".into());}
+    if !prefix.starts_with(&directory)||!copy_allows_executable(&directory,&prefix,&executable)||!executable.is_file()||directory.join("installation.json").exists(){return Err("Destino da cópia inválido ou já registrado.".into());}
     let mut record=InstallationRecord {
         name:entry.name.clone(),directory:directory.to_string_lossy().into_owned(),prefix:entry.prefix.clone(),proton:entry.proton.clone(),installer:String::new(),cover_url:entry.cover_url.clone(),
         entries:vec![entry.clone()],selected_executable:Some(entry.executable.clone()),
@@ -1179,6 +1169,26 @@ pub struct CopyReference {
     pub base: Option<String>,
     pub reserved: bool,
     pub dependents: Vec<String>,
+}
+// Registration and later settings edits must accept the same copied layout.
+// Callers resolve executable/prefix paths first, so symlinks cannot escape these roots.
+fn copy_allows_executable(directory: &Path, prefix: &Path, executable: &Path) -> bool {
+    executable.starts_with(prefix) || fs::read(directory.join("copy.json")).ok()
+        .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
+        .and_then(|value| value["shared_game_directory"].as_str().map(PathBuf::from))
+        .and_then(|path| path.canonicalize().ok())
+        .is_some_and(|root| executable.starts_with(root))
+}
+fn validate_copy_paths(directory: &Path, current_prefix: &Path, requested_prefix: Option<&str>, executable: &Path) -> Result<(), String> {
+    if !directory.join("copy.json").is_file() { return Ok(()); }
+    let prefix = current_prefix.canonicalize().map_err(|e| e.to_string())?;
+    if requested_prefix.is_some_and(|value| !same_location(Path::new(value), &prefix)) {
+        return Err("Esta cópia deve manter seu próprio prefixo. A versão do Proton pode ser alterada sem trocar essa pasta.".into());
+    }
+    if !copy_allows_executable(directory, &prefix, executable) {
+        return Err("Selecione um executável dentro do prefixo da cópia ou da pasta compartilhada registrada para este jogo.".into());
+    }
+    Ok(())
 }
 fn same_location(a: &Path, b: &Path) -> bool {
     a == b || a.canonicalize().ok().zip(b.canonicalize().ok()).is_some_and(|(a,b)|a==b)
@@ -1787,18 +1797,60 @@ mod tests {
         bytes
     }
     #[test]
+    fn copied_settings_accept_shared_games_but_keep_the_prefix_and_path_boundary() {
+        let root = std::env::temp_dir().join(format!("peligames-copy-settings-{}", uuid::Uuid::new_v4()));
+        let directory = root.join("Copy");
+        let prefix = directory.join("prefix");
+        let shared = root.join("Game");
+        let outside = root.join("Game-other");
+        for path in [&prefix, &shared, &outside] { fs::create_dir_all(path).unwrap(); }
+        let inside = prefix.join("game.exe");
+        let external = shared.join("game.exe");
+        let unrelated = outside.join("game.exe");
+        for path in [&inside, &external, &unrelated] { fs::write(path, b"MZ").unwrap(); }
+        for kind in ["reflink", "overlay", "full"] {
+            write_json(&directory.join("copy.json"), &serde_json::json!({"version":2,"kind":kind,"shared_game_directory":shared})).unwrap();
+            assert!(validate_copy_paths(&directory, &prefix, Some(prefix.to_str().unwrap()), &external.canonicalize().unwrap()).is_ok());
+            assert!(validate_copy_paths(&directory, &prefix, None, &inside.canonicalize().unwrap()).is_ok());
+            assert!(validate_copy_paths(&directory, &prefix, Some(outside.to_str().unwrap()), &external.canonicalize().unwrap()).is_err());
+            assert!(validate_copy_paths(&directory, &prefix, None, &unrelated.canonicalize().unwrap()).is_err());
+            let link = shared.join("escape.exe");
+            std::os::unix::fs::symlink(&unrelated, &link).unwrap();
+            assert!(validate_copy_paths(&directory, &prefix, None, &link.canonicalize().unwrap()).is_err());
+            fs::remove_file(link).unwrap();
+        }
+        write_json(&directory.join("copy.json"), &serde_json::json!({"version":1,"kind":"reflink"})).unwrap();
+        assert!(validate_copy_paths(&directory, &prefix, None, &external.canonicalize().unwrap()).is_err());
+        assert!(validate_copy_paths(&directory, &prefix, None, &inside.canonicalize().unwrap()).is_ok());
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
     fn external_executable_copy_registration_and_removal_preserve_game_files() {
         let root=std::env::temp_dir().join(format!("peligames-external-registration-{}",uuid::Uuid::new_v4()));
         let folder=root.join("Copy");let prefix=folder.clone();let game=root.join("ExternalGame");
         fs::create_dir_all(prefix.join("drive_c")).unwrap();fs::create_dir_all(&game).unwrap();
         fs::write(folder.join(super::super::installation_layout::OWNED_MARKER), b"PeliGames\n").unwrap();
         let executable=game.join("Game.exe");fs::write(&executable,b"MZ").unwrap();
-        let mut copied=entry(&executable,None);copied.path=format!("peligames:{}",uuid::Uuid::new_v4());
+        let mut copied=entry(&executable,None);copied.name="External Game".into();copied.path=format!("peligames:{}",uuid::Uuid::new_v4());
         copied.prefix=prefix.to_string_lossy().into_owned();copied.directory=game.to_string_lossy().into_owned();
         let index=root.join("destinations.json");
         assert!(register_copy_at(&index,copied.clone(),&folder).is_err(),"external files require an explicit shared reference");
         write_json(&folder.join("copy.json"),&serde_json::json!({"version":2,"kind":"reflink","source":root.join("Original"),"shared_game_directory":game})).unwrap();
         register_copy_at(&index,copied.clone(),&folder).unwrap();
+        let runner = root.join("Other Proton");
+        fs::create_dir(&runner).unwrap();
+        fs::write(runner.join("proton"), b"#!/bin/sh\nexit 0\n").unwrap();
+        { use std::os::unix::fs::PermissionsExt; fs::set_permissions(runner.join("proton"), fs::Permissions::from_mode(0o700)).unwrap(); }
+        let updated = update_at(&index, EntrySettings {
+            path: copied.path.clone(), name: copied.name.clone(), executable: copied.executable.clone(),
+            prefix: Some(copied.prefix.clone()), proton: runner.to_string_lossy().into_owned(), advanced: None,
+        }).unwrap();
+        assert_eq!(Path::new(&updated.proton), runner.canonicalize().unwrap());
+        assert_eq!(updated.prefix, copied.prefix);
+        assert_eq!(updated.executable, copied.executable);
+        let saved: InstallationRecord = serde_json::from_slice(&fs::read(folder.join("installation.json")).unwrap()).unwrap();
+        assert_eq!(saved.entries[0].proton, updated.proton);
+        assert_eq!(saved.overrides[0].proton, updated.proton);
         uninstall_with_shortcuts_at(&index,&copied.path,&[],UninstallOptions {remove_prefix:true,remove_settings:true}).unwrap();
         assert!(executable.is_file(),"removing the copied prefix must never delete the external game");
         assert!(!prefix.exists());
@@ -1933,15 +1985,15 @@ mod tests {
         // Right click → add to the library: an entry of its own that survives rescans.
         let overwatch = list[1].id.clone();
         // Each game gets its own profile prefix (a stand-in here: FUSE is not available in tests).
-        let fake = |base: &Path, profiles: &Path, _kind| {
-            let root = profiles.join(uuid::Uuid::new_v4().to_string());
+        let fake = |base: &Path, profiles: &Path, _kind, name: &str| {
+            let root = super::super::paths::names::unique_directory(profiles, name).unwrap();
             fs::create_dir_all(root.join("prefix")).unwrap();
             Ok(super::super::game_profiles::GameProfile { kind: super::super::game_profiles::ProfileKind::Reflink, base: base.to_string_lossy().into_owned(), root: root.to_string_lossy().into_owned(), flat_copy: false })
         };
         let added = add_shortcut_to_library_at(&index, &path, &overwatch, fake).unwrap();
         assert_eq!((added.name.as_str(), added.launch_arguments.clone()), ("Overwatch", vec!["--exec=launch Pro".to_string()]));
         let profile = added.profile.clone().unwrap();
-        assert!(added.prefix.ends_with("/prefix") && added.prefix.contains("/profiles/"));
+        assert!(added.prefix.ends_with("/profiles/overwatch/prefix"), "readable profile folder: {}", added.prefix);
         assert!(added.executable.starts_with(&added.prefix) && added.executable.ends_with("Battle.net Launcher.exe"));
         assert!(launcher_shortcuts_at(&index, &path).unwrap().iter().any(|item| item.id == overwatch && item.in_library));
         let mut saved: InstallationRecord = serde_json::from_slice(&fs::read(base.join("installation.json")).unwrap()).unwrap();

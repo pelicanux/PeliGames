@@ -322,7 +322,7 @@ pub async fn scan_installed_games(app: AppHandle, api_key: String, custom_folder
         if let Some(url) = game.cover_url.as_ref().filter(|url| url.starts_with("file://")) {
             let source = reqwest::Url::parse(url).ok().and_then(|url| url.to_file_path().ok());
             game.cover_url = match source {
-                Some(source) => super::covers::cache_heroic_cover(source).await.ok()
+                Some(source) => super::covers::cache_heroic_cover(source,game.name.clone()).await.ok()
                     .and_then(|path| reqwest::Url::from_file_path(path).ok()).map(|url| url.to_string()),
                 None => None,
             };
@@ -377,7 +377,7 @@ struct ReleaseDateCache {
 
 fn load_date_cache() -> ReleaseDateCache {
     let cache_dir = crate::core::paths::app_root().unwrap_or_else(|_| std::path::PathBuf::from("."));
-    let cache_file = cache_dir.join("release_date_cache.json");
+    let cache_file = crate::core::paths::layout::join(&cache_dir, "release_date_cache.json");
     if let Ok(data) = std::fs::read_to_string(cache_file) {
         if let Ok(cache) = serde_json::from_str(&data) {
             return cache;
@@ -389,8 +389,9 @@ fn load_date_cache() -> ReleaseDateCache {
 fn save_date_cache(cache: &ReleaseDateCache) {
     let cache_dir = crate::core::paths::app_root().unwrap_or_else(|_| std::path::PathBuf::from("."));
     std::fs::create_dir_all(&cache_dir).ok();
-    let cache_file = cache_dir.join("release_date_cache.json");
+    let cache_file = crate::core::paths::layout::join(&cache_dir, "release_date_cache.json");
     if let Ok(data) = serde_json::to_string(cache) {
+        std::fs::create_dir_all(cache_file.parent().unwrap()).ok();
         std::fs::write(cache_file, data).ok();
     }
 }

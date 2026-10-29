@@ -1,8 +1,8 @@
 {
   "schema": 1,
+  "description": "Synthetic package-routing fixtures and source provenance; not a runtime compatibility certification.",
   "generated_by": "tools/vortex-import --emit",
   "family": "unreal",
-  "scope": "Módulos gerados por análise estática das extensões Vortex. Rotas verificadas por casos sintéticos; nenhum jogo foi executado.",
   "sources": {
     "chemboy1": "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72",
     "vortex": "https://github.com/Nexus-Mods/Vortex/blob/e7698e5a038b74642544916c2bfafe6d64dc19bd/extensions/games"
@@ -12,13 +12,11 @@
       "domain": "abioticfactor",
       "name": "Abiotic Factor",
       "module_version": "1.0.0",
+      "nexus_game_id": 6412,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-abioticfactor/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -54,28 +52,17 @@
           "target": "AbioticFactor/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 6412
+      "runtime_verified": false
     },
     {
       "domain": "atomicheart",
       "name": "Atomic Heart",
       "module_version": "1.0.0",
+      "nexus_game_id": 5158,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-atomicheart/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -111,28 +98,17 @@
           "target": "AtomicHeart/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 5158
+      "runtime_verified": false
     },
     {
       "domain": "avowed",
       "name": "Avowed",
       "module_version": "1.0.0",
+      "nexus_game_id": 7325,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-avowed/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -168,28 +144,17 @@
           "target": "Alabama/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 7325
+      "runtime_verified": false
     },
     {
       "domain": "beastofreincarnation",
       "name": "Beast of Reincarnation",
       "module_version": "1.0.0",
+      "nexus_game_id": 9755,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-beastofreincarnation/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -225,28 +190,17 @@
           "target": "BeastOfReincarnation/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 9755
+      "runtime_verified": false
     },
     {
       "domain": "bellwright",
       "name": "Bellwright",
       "module_version": "1.0.0",
+      "nexus_game_id": 6381,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-bellwright/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -282,28 +236,17 @@
           "target": "Bellwright/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 6381
+      "runtime_verified": false
     },
     {
       "domain": "blackmythwukong",
       "name": "Black Myth: Wukong",
       "module_version": "1.0.0",
+      "nexus_game_id": 6713,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-blackmythwukong/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -339,28 +282,17 @@
           "target": "b1/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 6713
+      "runtime_verified": false
     },
     {
       "domain": "borderlands4",
       "name": "Borderlands 4",
       "module_version": "1.0.0",
+      "nexus_game_id": 8148,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-borderlands4/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -396,28 +328,17 @@
           "target": "OakGame/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8148
+      "runtime_verified": false
     },
     {
       "domain": "clivebarkershellraiserrevival",
       "name": "Clive Barker's Hellraiser: Revival",
       "module_version": "1.0.0",
+      "nexus_game_id": 10245,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-clivebarkershellraiserrevival/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -453,28 +374,17 @@
           "target": "Hellraiser/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 10245
+      "runtime_verified": false
     },
     {
       "domain": "codevein2",
       "name": "CODE VEIN II",
       "module_version": "1.0.0",
+      "nexus_game_id": 8699,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-codevein2/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -510,28 +420,17 @@
           "target": "CodeVein2/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8699
+      "runtime_verified": false
     },
     {
       "domain": "crisoltheaterofidols",
       "name": "Crisol: Theater of Idols",
       "module_version": "1.0.0",
+      "nexus_game_id": 8790,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-crisoltheaterofidols/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -567,28 +466,17 @@
           "target": "CRToiPrototype/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8790
+      "runtime_verified": false
     },
     {
       "domain": "cronosthenewdawn",
       "name": "Cronos: The New Dawn",
       "module_version": "1.0.0",
+      "nexus_game_id": 8133,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-cronosthenewdawn/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -624,28 +512,17 @@
           "target": "Cronos/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8133
+      "runtime_verified": false
     },
     {
       "domain": "deadasdisco",
       "name": "Dead As Disco",
       "module_version": "1.0.0",
+      "nexus_game_id": 7897,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-deadasdisco/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -681,28 +558,17 @@
           "target": "Pagoda/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 7897
+      "runtime_verified": false
     },
     {
       "domain": "dispatch",
       "name": "Dispatch",
       "module_version": "1.0.0",
+      "nexus_game_id": 8325,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dispatch/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -738,28 +604,17 @@
           "target": "Dispatch/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8325
+      "runtime_verified": false
     },
     {
       "domain": "dragonballsparkingzero",
       "name": "Dragon Ball: Sparking! Zero",
       "module_version": "1.1.0",
+      "nexus_game_id": 6892,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dragonballsparkingzero/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -795,28 +650,17 @@
           "target": "SparkingZERO/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 6892
+      "runtime_verified": false
     },
     {
       "domain": "dragonquest1and2hd2dremake",
       "name": "DRAGON QUEST I & II HD-2D Remake",
       "module_version": "1.0.0",
+      "nexus_game_id": 8349,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dragonquest1and2hd2dremake/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -852,28 +696,17 @@
           "target": "Game/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8349
+      "runtime_verified": false
     },
     {
       "domain": "dragonquest7reimagined",
       "name": "DRAGON QUEST VII Reimagined",
       "module_version": "1.0.0",
+      "nexus_game_id": 8698,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-dragonquest7reimagined/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -909,28 +742,17 @@
           "target": "DQ7R/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8698
+      "runtime_verified": false
     },
     {
       "domain": "fantasylifeithegirlwhostealstime",
       "name": "FANTASY LIFE i: The Girl Who Steals Time",
       "module_version": "1.0.0",
+      "nexus_game_id": 7755,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-fantasylifeithegirlwhostealstime/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -966,28 +788,17 @@
           "target": "Game/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 7755
+      "runtime_verified": false
     },
     {
       "domain": "farfarwest",
       "name": "Far Far West",
       "module_version": "1.0.0",
+      "nexus_game_id": 8879,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-farfarwest/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1023,28 +834,17 @@
           "target": "FarFarWest/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8879
+      "runtime_verified": false
     },
     {
       "domain": "fatekeeper",
       "name": "Fatekeeper",
       "module_version": "1.0.0",
+      "nexus_game_id": 9337,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-fatekeeper/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1080,28 +880,17 @@
           "target": "SLASHER/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 9337
+      "runtime_verified": false
     },
     {
       "domain": "frostpunk2",
       "name": "Frostpunk 2",
       "module_version": "1.0.0",
+      "nexus_game_id": 6349,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-frostpunk2/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1137,28 +926,17 @@
           "target": "Frostpunk2/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 6349
+      "runtime_verified": false
     },
     {
       "domain": "gearsofwareday",
       "name": "Gears of War: E-Day",
       "module_version": "1.0.1",
+      "nexus_game_id": 9851,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-gearsofwareday/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1194,28 +972,17 @@
           "target": "FairlightConcept/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 9851
+      "runtime_verified": false
     },
     {
       "domain": "halloweenthegame",
       "name": "Halloween: The Game",
       "module_version": "1.0.0",
+      "nexus_game_id": 10111,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-halloweenthegame/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1251,28 +1018,17 @@
           "target": "Ravage/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 10111
+      "runtime_verified": false
     },
     {
       "domain": "hellisus",
       "name": "Hell is Us",
       "module_version": "1.0.0",
+      "nexus_game_id": 7813,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-hellisus/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1308,28 +1064,17 @@
           "target": "HellIsUs/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 7813
+      "runtime_verified": false
     },
     {
       "domain": "highonlife",
       "name": "High On Life",
       "module_version": "1.0.0",
+      "nexus_game_id": 5005,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-highonlife/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1365,28 +1110,17 @@
           "target": "Oregon/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 5005
+      "runtime_verified": false
     },
     {
       "domain": "highonlife2",
       "name": "High On Life 2",
       "module_version": "1.0.0",
+      "nexus_game_id": 8807,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-highonlife2/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1422,28 +1156,17 @@
           "target": "HighOnLife2/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8807
+      "runtime_verified": false
     },
     {
       "domain": "humanitz",
       "name": "HumanitZ",
       "module_version": "1.0.0",
+      "nexus_game_id": 5743,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-humanitz/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1479,28 +1202,17 @@
           "target": "Humanitz/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 5743
+      "runtime_verified": false
     },
     {
       "domain": "inzoi",
       "name": "inZOI",
       "module_version": "1.0.0",
+      "nexus_game_id": 7480,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-inzoi/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1536,28 +1248,17 @@
           "target": "BlueClient/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 7480
+      "runtime_verified": false
     },
     {
       "domain": "keeper",
       "name": "Keeper",
       "module_version": "1.0.0",
+      "nexus_game_id": 8303,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-keeper/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1593,28 +1294,17 @@
           "target": "Keeper/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8303
+      "runtime_verified": false
     },
     {
       "domain": "legobatmanlegacyofthedarkknight",
       "name": "LEGO Batman: Legacy of the Dark Knight",
       "module_version": "1.0.0",
+      "nexus_game_id": 9287,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-legobatmanlegacyofthedarkknight/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1650,28 +1340,17 @@
           "target": "LEGOBatmanLotDK/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 9287
+      "runtime_verified": false
     },
     {
       "domain": "liesofp",
       "name": "Lies of P",
       "module_version": "1.0.0",
+      "nexus_game_id": 5441,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-liesofp/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1707,28 +1386,17 @@
           "target": "LiesofP/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 5441
+      "runtime_verified": false
     },
     {
       "domain": "lordsofthefallen2023",
       "name": "Lords of the Fallen (2023)",
       "module_version": "1.0.0",
+      "nexus_game_id": 5803,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-lordsofthefallen2023/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1764,28 +1432,17 @@
           "target": "LOTF2/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 5803
+      "runtime_verified": false
     },
     {
       "domain": "lostsoulaside",
       "name": "Lost Soul Aside",
       "module_version": "1.0.0",
+      "nexus_game_id": 8108,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-lostsoulaside/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1821,28 +1478,17 @@
           "target": "Projectlsa/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8108
+      "runtime_verified": false
     },
     {
       "domain": "mandragorawhispersofthewitchtree",
       "name": "Mandragora: Whispers of the Witch Tree",
       "module_version": "1.0.0",
+      "nexus_game_id": 7623,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-mandragorawhispersofthewitchtree/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1878,28 +1524,17 @@
           "target": "man/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 7623
+      "runtime_verified": false
     },
     {
       "domain": "manorlords",
       "name": "Manor Lords",
       "module_version": "1.0.0",
+      "nexus_game_id": 6352,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-manorlords/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1935,28 +1570,17 @@
           "target": "ManorLords/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 6352
+      "runtime_verified": false
     },
     {
       "domain": "mechwarrior5clans",
       "name": "MechWarrior 5: Clans",
       "module_version": "1.0.0",
+      "nexus_game_id": 6935,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-mechwarrior5clans/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -1992,28 +1616,17 @@
           "target": "MW5Clans/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 6935
+      "runtime_verified": false
     },
     {
       "domain": "metaleden",
       "name": "METAL EDEN",
       "module_version": "1.0.1",
+      "nexus_game_id": 8131,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-metaleden/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2049,28 +1662,17 @@
           "target": "MetalEden/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8131
+      "runtime_verified": false
     },
     {
       "domain": "metalgearsoliddeltasnakeeater",
       "name": "Metal Gear Solid Delta: Snake Eater",
       "module_version": "1.0.0",
+      "nexus_game_id": 8091,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-metalgearsoliddeltasnakeeater/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2106,28 +1708,17 @@
           "target": "MGSDelta/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8091
+      "runtime_verified": false
     },
     {
       "domain": "misery",
       "name": "MISERY",
       "module_version": "1.0.0",
+      "nexus_game_id": 8383,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-misery/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2163,28 +1754,17 @@
           "target": "MISERY/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8383
+      "runtime_verified": false
     },
     {
       "domain": "mortalkombat",
       "name": "Mortal Kombat 1",
       "module_version": "1.0.0",
+      "nexus_game_id": 5735,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-mortalkombat/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2220,28 +1800,17 @@
           "target": "MK12/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 5735
+      "runtime_verified": false
     },
     {
       "domain": "myheroacademiaallsjustice",
       "name": "MY HERO ACADEMIA: All's Justice",
       "module_version": "1.0.0",
+      "nexus_game_id": 8767,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-myheroacademiaallsjustice/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2277,28 +1846,17 @@
           "target": "HeroGame/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8767
+      "runtime_verified": false
     },
     {
       "domain": "ninjagaiden2black",
       "name": "NINJA GAIDEN 2 Black",
       "module_version": "1.1.0",
+      "nexus_game_id": 7247,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-ninjagaiden2black/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2334,28 +1892,17 @@
           "target": "NINJAGAIDEN2BLACK/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 7247
+      "runtime_verified": false
     },
     {
       "domain": "nobodywantstodie",
       "name": "Nobody Wants to Die",
       "module_version": "1.0.0",
+      "nexus_game_id": 6617,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-nobodywantstodie/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2391,28 +1938,17 @@
           "target": "detnoir/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 6617
+      "runtime_verified": false
     },
     {
       "domain": "norse",
       "name": "NORSE: Oath of Blood",
       "module_version": "1.0.0",
+      "nexus_game_id": 8832,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-norse/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2448,28 +1984,17 @@
           "target": "Norse/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8832
+      "runtime_verified": false
     },
     {
       "domain": "octopathtraveler0",
       "name": "OCTOPATH TRAVELER 0",
       "module_version": "1.0.0",
+      "nexus_game_id": 8425,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-octopathtraveler0/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2505,28 +2030,17 @@
           "target": "Octopath_Traveler0/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8425
+      "runtime_verified": false
     },
     {
       "domain": "ofashandsteel",
       "name": "Of Ash and Steel",
       "module_version": "1.0.0",
+      "nexus_game_id": 8358,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-ofashandsteel/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2562,28 +2076,17 @@
           "target": "ofAshAndSteelGame/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8358
+      "runtime_verified": false
     },
     {
       "domain": "painkiller",
       "name": "Painkiller",
       "module_version": "1.0.1",
+      "nexus_game_id": 8288,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-painkiller/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2619,28 +2122,17 @@
           "target": "Painkiller/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8288
+      "runtime_verified": false
     },
     {
       "domain": "quarantinezonethelastcheck",
       "name": "Quarantine Zone: The Last Check",
       "module_version": "1.0.0",
+      "nexus_game_id": 8662,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-quarantinezonethelastcheck/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2676,28 +2168,17 @@
           "target": "QZSim/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8662
+      "runtime_verified": false
     },
     {
       "domain": "reanimal",
       "name": "REANIMAL",
       "module_version": "1.0.0",
+      "nexus_game_id": 8281,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-reanimal/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2733,28 +2214,17 @@
           "target": "Everholm/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8281
+      "runtime_verified": false
     },
     {
       "domain": "robocoproguecity",
       "name": "RoboCop: Rogue City",
       "module_version": "1.0.0",
+      "nexus_game_id": 5797,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-robocoproguecity/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2790,28 +2260,17 @@
           "target": "Game/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 5797
+      "runtime_verified": false
     },
     {
       "domain": "romeoisadeadman",
       "name": "ROMEO IS A DEAD MAN",
       "module_version": "1.0.0",
+      "nexus_game_id": 8792,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-romeoisadeadman/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2847,28 +2306,17 @@
           "target": "SevGame/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8792
+      "runtime_verified": false
     },
     {
       "domain": "routine",
       "name": "ROUTINE",
       "module_version": "1.0.0",
+      "nexus_game_id": 8499,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-routine/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2904,28 +2352,17 @@
           "target": "Routine/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8499
+      "runtime_verified": false
     },
     {
       "domain": "runescapedragonwilds",
       "name": "RuneScape: Dragonwilds",
       "module_version": "1.0.0",
+      "nexus_game_id": 7597,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-runescapedragonwilds/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -2961,28 +2398,17 @@
           "target": "RSDragonwilds/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 7597
+      "runtime_verified": false
     },
     {
       "domain": "rvthereyet",
       "name": "RV There Yet?",
       "module_version": "1.0.0",
+      "nexus_game_id": 8319,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-rvthereyet/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3018,28 +2444,17 @@
           "target": "Ride/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8319
+      "runtime_verified": false
     },
     {
       "domain": "senuassagahellblade2",
       "name": "Senua's Saga: Hellblade 2",
       "module_version": "1.0.0",
+      "nexus_game_id": 6438,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-senuassagahellblade2/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3075,28 +2490,17 @@
           "target": "Hellblade2/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 6438
+      "runtime_verified": false
     },
     {
       "domain": "sifu",
       "name": "Sifu",
       "module_version": "1.0.0",
+      "nexus_game_id": 4309,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-sifu/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3132,28 +2536,17 @@
           "target": "Sifu/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 4309
+      "runtime_verified": false
     },
     {
       "domain": "silenthill2",
       "name": "Silent Hill 2 (2024)",
       "module_version": "1.0.0",
+      "nexus_game_id": 6880,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-silenthill2/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3189,28 +2582,17 @@
           "target": "SHProto/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 6880
+      "runtime_verified": false
     },
     {
       "domain": "silenthillf",
       "name": "Silent Hill f",
       "module_version": "1.0.0",
+      "nexus_game_id": 8203,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-silenthillf/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3246,28 +2628,17 @@
           "target": "SHf/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8203
+      "runtime_verified": false
     },
     {
       "domain": "silenthilltownfall",
       "name": "SILENT HILL: Townfall",
       "module_version": "1.0.0",
+      "nexus_game_id": 10286,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-silenthilltownfall/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3303,28 +2674,17 @@
           "target": "Townfall/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 10286
+      "runtime_verified": false
     },
     {
       "domain": "starrupture",
       "name": "StarRupture",
       "module_version": "1.0.0",
+      "nexus_game_id": 8632,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-starrupture/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3360,28 +2720,17 @@
           "target": "StarRupture/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8632
+      "runtime_verified": false
     },
     {
       "domain": "starwarsgalacticracer",
       "name": "STAR WARS: Galactic Racer",
       "module_version": "1.0.0",
+      "nexus_game_id": 10217,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-starwarsgalacticracer/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3417,28 +2766,17 @@
           "target": "Griffin/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 10217
+      "runtime_verified": false
     },
     {
       "domain": "starwarszerocompany",
       "name": "STAR WARS Zero Company",
       "module_version": "1.0.0",
+      "nexus_game_id": 9987,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-starwarszerocompany/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3474,28 +2812,17 @@
           "target": "SWZeroCompany/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 9987
+      "runtime_verified": false
     },
     {
       "domain": "styxbladesofgreed",
       "name": "Styx: Blades of Greed",
       "module_version": "1.0.0",
+      "nexus_game_id": 8659,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-styxbladesofgreed/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3531,28 +2858,17 @@
           "target": "Styx3/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8659
+      "runtime_verified": false
     },
     {
       "domain": "subnautica2",
       "name": "Subnautica 2",
       "module_version": "1.0.0",
+      "nexus_game_id": 9198,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-subnautica2/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3588,28 +2904,17 @@
           "target": "Subnautica2/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 9198
+      "runtime_verified": false
     },
     {
       "domain": "surroundead",
       "name": "SurrounDead",
       "module_version": "1.0.0",
+      "nexus_game_id": 7020,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-surroundead/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3645,28 +2950,17 @@
           "target": "SurrounDead/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 7020
+      "runtime_verified": false
     },
     {
       "domain": "systemshock2023",
       "name": "System Shock (2023)",
       "module_version": "1.0.0",
+      "nexus_game_id": 5415,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-systemshock2023/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3702,28 +2996,17 @@
           "target": "SystemShock/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 5415
+      "runtime_verified": false
     },
     {
       "domain": "tekken8",
       "name": "TEKKEN 8",
       "module_version": "1.0.0",
+      "nexus_game_id": 5622,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-tekken8/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3759,28 +3042,17 @@
           "target": "Polaris/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 5622
+      "runtime_verified": false
     },
     {
       "domain": "thebloodofdawnwalker",
       "name": "The Blood of Dawnwalker",
       "module_version": "1.0.0",
+      "nexus_game_id": 9719,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-thebloodofdawnwalker/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3816,28 +3088,17 @@
           "target": "Dawnwalker/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 9719
+      "runtime_verified": false
     },
     {
       "domain": "thelastcaretaker",
       "name": "The Last Caretaker",
       "module_version": "1.0.0",
+      "nexus_game_id": 8289,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-thelastcaretaker/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3873,28 +3134,17 @@
           "target": "Voyage/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8289
+      "runtime_verified": false
     },
     {
       "domain": "thelordoftheringsreturntomoria",
       "name": "The Lord of the Rings: Return to Moria",
       "module_version": "1.0.0",
+      "nexus_game_id": 5829,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-thelordoftheringsreturntomoria/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3930,28 +3180,17 @@
           "target": "Moria/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 5829
+      "runtime_verified": false
     },
     {
       "domain": "theouterworlds",
       "name": "The Outer Worlds",
       "module_version": "1.0.0",
+      "nexus_game_id": 3037,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-theouterworlds/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -3987,28 +3226,17 @@
           "target": "Indiana/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 3037
+      "runtime_verified": false
     },
     {
       "domain": "theouterworlds2",
       "name": "The Outer Worlds 2",
       "module_version": "1.0.0",
+      "nexus_game_id": 8322,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-theouterworlds2/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -4044,28 +3272,17 @@
           "target": "Arkansas/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8322
+      "runtime_verified": false
     },
     {
       "domain": "thesinkingcity2",
       "name": "The Sinking City 2",
       "module_version": "1.0.0",
+      "nexus_game_id": 9377,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-thesinkingcity2/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -4101,28 +3318,17 @@
           "target": "PlayGround/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 9377
+      "runtime_verified": false
     },
     {
       "domain": "titanquest2",
       "name": "Titan Quest 2",
       "module_version": "1.0.0",
+      "nexus_game_id": 8008,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-titanquest2/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -4158,28 +3364,17 @@
           "target": "TQ2/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8008
+      "runtime_verified": false
     },
     {
       "domain": "trepang2",
       "name": "Trepang2",
       "module_version": "1.0.0",
+      "nexus_game_id": 4589,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-trepang2/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -4215,28 +3410,17 @@
           "target": "CPPFPS/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 4589
+      "runtime_verified": false
     },
     {
       "domain": "valormortis",
       "name": "Valor Mortis",
       "module_version": "1.0.0",
+      "nexus_game_id": 8249,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-valormortis/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -4272,28 +3456,17 @@
           "target": "ValorMortis/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8249
+      "runtime_verified": false
     },
     {
       "domain": "vein",
       "name": "VEIN",
       "module_version": "1.0.0",
+      "nexus_game_id": 8175,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-vein/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -4329,28 +3502,17 @@
           "target": "Vein/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8175
+      "runtime_verified": false
     },
     {
       "domain": "voidtrain",
       "name": "Voidtrain",
       "module_version": "1.0.0",
+      "nexus_game_id": 4073,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-voidtrain/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -4386,28 +3548,17 @@
           "target": "VoidTrain/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 4073
+      "runtime_verified": false
     },
     {
       "domain": "vtmbloodlines2",
       "name": "Vampire: The Masquerade - Bloodlines 2",
       "module_version": "1.0.0",
+      "nexus_game_id": 8298,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-vtmbloodlines2/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -4443,28 +3594,17 @@
           "target": "Bloodlines2/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8298
+      "runtime_verified": false
     },
     {
       "domain": "warhammer40000boltgun",
       "name": "Warhammer 40,000: Boltgun",
       "module_version": "1.0.0",
+      "nexus_game_id": 5392,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-warhammer40000boltgun/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -4500,28 +3640,17 @@
           "target": "Boltgun/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 5392
+      "runtime_verified": false
     },
     {
       "domain": "warhammer40000boltgun2",
       "name": "Warhammer 40,000: Boltgun 2",
       "module_version": "1.0.0",
+      "nexus_game_id": 9447,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-warhammer40000boltgun2/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -4557,28 +3686,17 @@
           "target": "Boltgun2/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 9447
+      "runtime_verified": false
     },
     {
       "domain": "whiskerwood",
       "name": "Whiskerwood",
       "module_version": "1.0.0",
+      "nexus_game_id": 8402,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-whiskerwood/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -4614,28 +3732,17 @@
           "target": "Whiskerwood/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 8402
+      "runtime_verified": false
     },
     {
       "domain": "witchfire",
       "name": "Witchfire",
       "module_version": "1.0.0",
+      "nexus_game_id": 5754,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-witchfire/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -4671,28 +3778,17 @@
           "target": "Witchfire/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 5754
+      "runtime_verified": false
     },
     {
       "domain": "wuchangfallenfeathers",
       "name": "WUCHANG: Fallen Feathers",
       "module_version": "1.0.0",
+      "nexus_game_id": 7976,
       "vortex_status": "confirmed",
       "vortex_evidence": [
         "https://github.com/ChemGuy1611/ChemBoy1-Vortex-Games/blob/9951b6a04c6bc498be39c160b58df90927152b72/game-wuchangfallenfeathers/index.js"
       ],
-      "extension_code_compared": false,
-      "generated_by": "tools/vortex-import",
-      "framework_ids_checked": [],
       "route_sample_kind": "synthetic_family_layout",
       "route_cases": [
         {
@@ -4728,46 +3824,7 @@
           "target": "Project_Plague/Binaries/Win64/dwmapi.dll"
         }
       ],
-      "findings": [
-        "Identificação (executáveis, Steam ID, pasta do projeto) extraída da extensão; rotas do perfil Unreal compartilhado. Configurações em AppData, saves, filmes e substituição de paks originais da extensão não são aplicados."
-      ],
-      "pending_checks": [
-        "Conferir domínio Nexus e executáveis em uma instalação real.",
-        "Amostragem de pacotes reais populares e recentes.",
-        "Execução no jogo real com versão do jogo, loader e Proton registradas."
-      ],
-      "runtime_verified": false,
-      "nexus_game_id": 7976
-    }
-  ],
-  "skipped": [
-    {
-      "domain": "borderlands3",
-      "reason": "pasta ~mods do projeto não resolvida"
-    },
-    {
-      "domain": "dynastywarriors3completeeditionremastered",
-      "reason": "pasta ~mods do projeto não resolvida"
-    },
-    {
-      "domain": "stateofdecay2",
-      "reason": "pasta ~mods do projeto não resolvida"
-    },
-    {
-      "domain": "untildawn",
-      "reason": "projeto divergente: Bates / Windows/Bates"
-    },
-    {
-      "domain": "windrose-server",
-      "reason": "domínio fora do padrão: windrose-server"
-    },
-    {
-      "domain": "daemonxmachinatitanicscion",
-      "reason": "identidade ambígua com runefactoryguardiansofazuma: mesmos executáveis exigidos"
-    },
-    {
-      "domain": "runefactoryguardiansofazuma",
-      "reason": "identidade ambígua com daemonxmachinatitanicscion: mesmos executáveis exigidos"
+      "runtime_verified": false
     }
   ]
 }

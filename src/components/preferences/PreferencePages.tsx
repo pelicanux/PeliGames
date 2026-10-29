@@ -18,6 +18,7 @@ import { notifyError } from "../../services/notifications";
 import { ConfirmModal } from "../ConfirmModal";
 import { BackendUpdaterModal } from "../BackendUpdaterModal";
 import { MaintenancePreferences } from "./MaintenancePreferences";
+import { frameRateMeterShown, setFrameRateMeter } from "../../services/frameRateMeter";
 
 type ConfigProps = { config: AppConfig; disabled: boolean; save: (patch: Partial<AppConfig>) => void };
 type InterfaceTab="themes"|"appearance"|"effects";
@@ -196,6 +197,14 @@ function AppImageInstallPreferences({ onError }: { onError: (error: string) => v
   return <section data-preference-id="appimage-install" className="preference-section"><h3>{t("welcome", "installTitle")}</h3><p>{t("welcome", "installHint")}</p><p><code>{target}</code></p>
     <button type="button" className="preference-outline" disabled={installing} onClick={() => void install()}><MenuIcon name="download"/>{installing ? t("welcome", "installing") : t("welcome", "installButton")}</button><MaintenancePreferences uninstall/></section>;
 }
+function DeveloperPreferences() {
+  const text = usePreferencesText();
+  const [meter, setMeter] = useState(frameRateMeterShown);
+  const change = (shown: boolean) => { setFrameRateMeter(shown); setMeter(shown); };
+  return <section data-preference-id="developer-mode" className="preference-section"><details className="maintenance-details"><summary>{text.developerMode}</summary><p>{text.developerModeHint}</p>
+    <label className="preference-switch"><input type="checkbox" checked={meter} onChange={event => change(event.target.checked)}/><span className="preference-switch-track"/><span>{text.frameRateMeter}<small>{text.frameRateMeterHint}</small></span></label>
+  </details></section>;
+}
 export function ToolsPreferences({ onError, onLogs, onWelcome }: { onWelcome: () => void; onError: (error: string) => void; onLogs: () => void }) {
   const text = usePreferencesText(), { t, language } = useI18n();
   const [folders, setFolders] = useState<string[]>(() => { try { const value = JSON.parse(localStorage.getItem("custom_folders") ?? "[]"); return Array.isArray(value) ? value.filter(item => typeof item === "string") : []; } catch { return []; } });
@@ -203,6 +212,7 @@ export function ToolsPreferences({ onError, onLogs, onWelcome }: { onWelcome: ()
   return <><h2>{text.tools}</h2>
     <section data-preference-id="welcome-tour" className="preference-section first"><h3>{language === "pt" ? "Boas-vindas ao PeliGames" : "Welcome to PeliGames"}</h3><p>{language === "pt" ? "Reveja a apresentação dos recursos do launcher e seus atalhos, quando quiser." : "Revisit the launcher's features and shortcuts whenever you like."}</p><button type="button" className="preference-outline" onClick={onWelcome}><MenuIcon name="info"/>{language === "pt" ? "Rever apresentação" : "View the tour"}</button></section>
     <section data-preference-id="launcher-logs" className="preference-section"><h3>{text.openLogs}</h3><p>{text.logsHint}</p><button type="button" className="preference-outline" onClick={onLogs}><MenuIcon name="logs"/>{text.openLogs}</button></section>
+    <DeveloperPreferences/>
     <UpdateChannelPreferences onError={onError}/>
     <MaintenancePreferences/>
     <AppImageInstallPreferences onError={onError}/>

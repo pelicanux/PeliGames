@@ -97,8 +97,6 @@ export function NexusPanels({ section, toolState, tab, onTabChange, highlightedM
   },[advanced,section,game?.id,game?.launch_options,game?.advanced?.dll_overrides,dllRevision,dllRefresh]);
   useEffect(() => { setAdvanced(section === "performance"); }, [game?.id, section]);
   const [moduleDetailsGame, setModuleDetailsGame] = useState<string | null>(null);
-  const [backupStatusText, setBackupStatusText] = useState("");
-  useEffect(() => { setBackupStatusText(""); }, [game?.id]);
   useEffect(() => { setModuleDetailsGame(null); }, [game?.id]);
   // Each mounted panel owns its ref: closing the overlay must not clear the compact list's ref.
   const modList = useRef<HTMLDivElement>(null);
@@ -309,8 +307,20 @@ export function NexusPanels({ section, toolState, tab, onTabChange, highlightedM
         {null}{large && loadOrderKind === "baldurs_gate3" && <button type="button" className="btn btn-secondary" disabled={!game} onClick={() => setLoadOrderOpen(true)}><MenuIcon name="arrowUpDown" />{text.loadOrder}</button>}{large && loadOrderKind === "bethesda" && <button type="button" className="btn btn-secondary" disabled={!game} onClick={() => setPluginsOpen(true)}><MenuIcon name="puzzle" />{text.plugins}</button>}{large && loadOrderKind === "archive_list" && <button type="button" className="btn btn-secondary" disabled={!game} onClick={() => setArchivesOpen(true)}><MenuIcon name="arrowUpDown" />{text.archiveOrder}</button>}{large && savesSupported && <button type="button" className="btn btn-secondary" disabled={!game} onClick={() => setSavesOpen(true)}><MenuIcon name="floppy" />{text.saves}</button>}{section === "tools" && game && <NexusLootControl gameId={game.id} disabled={settingsLocked} onError={onError} onSaved={showSaved} />}</div>
         {large && tools.length > 0 && <section className="nexus-game-tools" aria-label={text.gameTools}><h4>{text.gameTools}</h4><div className="nexus-tabs">{tools.map(tool => <button type="button" className="btn btn-secondary" key={tool.name} disabled={!game || locked} onClick={() => { if (game) void invoke("open_nexus_game_tool", {gameId:game.id,name:tool.name}).catch(error => onError(String(error))); }}><MenuIcon name="settings" />{text.openManager}: {tool.name}</button>)}</div></section>}
   </>;
+  const modManagement = <div className="nexus-panel-heading nexus-modern-manager-heading">
+          <h3>{text.manageMods}{!installReview && !togglingMod && <NexusDeployCounter progress={progress} />}</h3>
+          {Boolean(game?.mods.length) && <div className="nexus-manager-shortcuts">
+            <button type="button" className="nexus-empty-square nexus-manager-square" disabled={locked} onClick={() => setTab("catalog")}><span>{text.onlineCatalog}</span><span className="nexus-empty-puzzle-art" aria-hidden="true"><span className="nexus-install-piece"><MenuIcon name="puzzle" /></span></span></button>
+            <button type="button" className="nexus-empty-square nexus-manager-square" disabled={locked || choosing} onClick={() => void importArchive()}><span>{choosing ? text.loading : text.localMod}</span><MenuIcon name="plusCircle" /></button>
+            <button type="button" className="nexus-empty-square nexus-manager-square" disabled={locked || settingsBusy} onClick={() => setProfilesOpen(true)}><span>{text.profile}</span><MenuIcon name="sliders" /></button>
+            <button type="button" className="nexus-empty-square nexus-manager-square" disabled={busy || !game?.mods.length} onClick={() => { if (game?.mods[0]) void invoke("open_folder", {path: game.mods[0].archive.replace(/\/[^/]+$/, "")}).catch(e => onError(String(e))); }}><span>{text.modFolder}</span><MenuIcon name="folder" /></button>
+            <button type="button" className="nexus-empty-square nexus-manager-square" disabled={!game} onClick={() => { if (game) onLogs(game.id); }}><span>{text.logs}</span><MenuIcon name="logs" /></button>
+            <button type="button" className="nexus-empty-square nexus-manager-square" disabled={locked} onClick={() => { void requireNexusAccount(language).then(connected => { if (connected) setCollectionReference(""); }); }}><span>{text.collection}</span><MenuIcon name="puzzle" /></button>
+          </div>}
+          {game && <div className="nexus-mod-backup-row"><NexusGameBackup key={game.id} gameId={game.id} disabled={settingsLocked} onError={onError} onSaved={showSaved} /></div>}
+        </div>;
   const renderMods = (active: boolean, large: boolean) => game && !game.mods.length ? (
-    <div className="nexus-modern-empty-mods">
+    <>{modManagement}<div className="nexus-modern-empty-mods">
       <h3>{text.noInstalledMods}</h3>
       <p>{text.emptyModsHint}</p>
       <div className="nexus-empty-choices">
@@ -325,20 +335,9 @@ export function NexusPanels({ section, toolState, tab, onTabChange, highlightedM
           </button>
         </div>
       </div>
-    </div>
+    </div></>
   ) : (
-      <><div className="nexus-panel-heading nexus-modern-manager-heading">
-          <h3>{text.manageMods}{!installReview && !togglingMod && <NexusDeployCounter progress={progress} />}</h3>
-          <div className="nexus-manager-shortcuts">
-            <button type="button" className="nexus-empty-square nexus-manager-square" disabled={locked} onClick={() => setTab("catalog")}><span>{text.onlineCatalog}</span><span className="nexus-empty-puzzle-art" aria-hidden="true"><span className="nexus-install-piece"><MenuIcon name="puzzle" /></span></span></button>
-            <button type="button" className="nexus-empty-square nexus-manager-square" disabled={locked || choosing} onClick={() => void importArchive()}><span>{choosing ? text.loading : text.localMod}</span><MenuIcon name="plusCircle" /></button>
-            <button type="button" className="nexus-empty-square nexus-manager-square" disabled={locked || settingsBusy} onClick={() => setProfilesOpen(true)}><span>{text.profile}</span><MenuIcon name="sliders" /></button>
-            <button type="button" className="nexus-empty-square nexus-manager-square" disabled={busy || !game?.mods.length} onClick={() => { if (game?.mods[0]) void invoke("open_folder", {path: game.mods[0].archive.replace(/\/[^/]+$/, "")}).catch(e => onError(String(e))); }}><span>{text.modFolder}</span><MenuIcon name="folder" /></button>
-            <button type="button" className="nexus-empty-square nexus-manager-square" disabled={!game} onClick={() => { if (game) onLogs(game.id); }}><span>{text.logs}</span><MenuIcon name="logs" /></button>
-            <button type="button" className="nexus-empty-square nexus-manager-square" disabled={locked} onClick={() => { void requireNexusAccount(language).then(connected => { if (connected) setCollectionReference(""); }); }}><span>{text.collection}</span><MenuIcon name="puzzle" /></button>
-          </div>
-
-        </div>
+      <>{modManagement}
 
         {["dragonageinquisition", "starwarsbattlefront22017"].includes(game?.adapter || "") && <p className="nexus-hint">{text.managerRequired}</p>}
         {(searchOpen || (large)) && <label className="nexus-mod-search-field"><MenuIcon name="search" /><input ref={active ? searchInput : undefined} id={`${searchId}-${large ? "large" : "small"}`} type="search" aria-label={text.searchInstalledMods} placeholder={text.searchInstalledMods} value={modQuery} onChange={event => setModQuery(event.target.value)} onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); setModQuery(""); setSearchOpen(false); } }} /></label>}
@@ -468,7 +467,8 @@ export function NexusPanels({ section, toolState, tab, onTabChange, highlightedM
       <button type="button" className="btn btn-primary" disabled={locked || settingsBusy || removing} onClick={() => void confirmRemoval()}><MenuIcon name="trash" />{removing ? text.loading : text.remove}</button>
     </>}><strong className="nexus-remove-name">{display(modToRemove).name}</strong><p className="nexus-hint">{text.removePrompt}</p>{error && <p role="alert" className="nexus-error">{error}</p>}</NexusPopup>}
     <div className={"nexus-mod-panels"}>
-      {(!section || section === "mods") && (<div ref={modsPanel} role="region" aria-label={text.mods} className="nexus-tab-content nexus-mods-content nexus-modern-mods-layout nexus-modern-workspace">{renderMods(true, true)}</div>)}
+      {(!section || section === "mods") && (<div ref={modsPanel} role="region" aria-label={text.mods} className="nexus-tab-content nexus-mods-content nexus-modern-mods-layout nexus-modern-workspace">{renderMods(true, true)}
+      </div>)}
       {section === "tools" && <div className="nexus-modern-game-tools">{renderManagement(true)}{error && <p role="alert" className="nexus-error">{error}</p>}</div>}
       {section !== "mods" && section !== "tools" && <section className="nexus-settings-panel menu-glass-panel" aria-label={text.settings}>
         <AnimatePresence mode="wait" initial={false}><motion.div key={advanced ? "advanced" : "standard"} className="nexus-settings-content" data-scrollbar-outside="true" tabIndex={0}
@@ -479,7 +479,6 @@ export function NexusPanels({ section, toolState, tab, onTabChange, highlightedM
           {standardSettings}
         </>}
         <div className="nexus-settings-info-links">
-          {game && <HoverTooltip text={backupStatusText} tooltipClassName="nexus-backup-status-tooltip"><button type="button" className="nexus-module-link nexus-backup-info-link"><span>{text.backupLatest}</span></button></HoverTooltip>}
           <button type="button" className="nexus-module-link" aria-haspopup="dialog" disabled={!game} onClick={() => setModuleDetailsGame(game?.id || null)}><span>{text.moduleLabel}</span></button>
         </div>
         </>}

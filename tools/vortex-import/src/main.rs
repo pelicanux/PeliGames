@@ -25,7 +25,7 @@ const USAGE: &str = "Uso:
       [--overrides tools/vortex-import/overrides.json]
 
 --emit grava, por família (unreal, unity), DIR/<família>-vortex.json (módulos) e
-DIR/<família>-vortex-audit.json para os jogos sem módulo próprio. --evidence informa a URL fixada de cada fonte.
+DIR/<família>-vortex-route-cases.json para os jogos sem módulo próprio. --evidence informa a URL fixada de cada fonte.
 --nexus-index valida cada domínio na lista pública de jogos do Nexus e exige uma
 extensão Vortex publicada no manifesto público (api.nexusmods.com/v3/vortex/extensions).
 --overrides aplica ajustes manuais por domínio (o que a análise estática não deduz);
@@ -170,14 +170,13 @@ fn run() -> Result<(), String> {
                 }
             }
             write(&format!("{family}-vortex.json"), &serde_json::Value::Array(modules))?;
-            write(&format!("{family}-vortex-audit.json"), &serde_json::json!({
+            write(&format!("{family}-vortex-route-cases.json"), &serde_json::json!({
                 "schema": 1,
                 "generated_by": "tools/vortex-import --emit",
                 "family": family,
-                "scope": "Módulos gerados por análise estática das extensões Vortex. Rotas verificadas por casos sintéticos; nenhum jogo foi executado.",
+                "description": "Synthetic package-routing fixtures and source provenance; not a runtime compatibility certification.",
                 "sources": args.evidence,
                 "modules": audits,
-                "skipped": generated.skipped.iter().map(|s| serde_json::json!({ "domain": s.game, "reason": s.reason })).collect::<Vec<_>>(),
             }))?;
             eprintln!("{family}: {} módulo(s) gerado(s), {} recusado(s)", generated.modules.len(), generated.skipped.len());
         }

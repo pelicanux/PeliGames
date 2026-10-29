@@ -57,7 +57,7 @@ fn send_at(socket: &Path, entry: Option<&str>) -> Result<bool, String> {
 }
 
 pub fn focus_running(entry: Option<&str>) -> Result<bool, String> {
-    send_at(&super::paths::app_root()?.join("launcher.sock"), entry)
+    send_at(&super::paths::app_path("launcher.sock")?, entry)
 }
 
 impl LauncherInstance {

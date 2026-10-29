@@ -273,9 +273,10 @@ pub fn extract_png(executable: &Path) -> io::Result<Vec<u8>> {
     }
     Err(invalid())
 }
-fn cache_icon(directory: &Path, bytes: &[u8], extension: &str) -> io::Result<PathBuf> {
+fn cache_icon(directory: &Path, bytes: &[u8], extension: &str, label: &str) -> io::Result<PathBuf> {
     fs::create_dir_all(directory)?;
-    let target = directory.join(format!("{:x}.{extension}", Sha256::digest(bytes)));
+    let identity=format!("{:x}",Sha256::digest(bytes));
+    let target=super::paths::names::allocate(directory,label,&identity).map_err(io::Error::other)?.with_extension(extension);
     let temp = directory.join(format!("{}.tmp", uuid::Uuid::new_v4()));
     let result = (|| {
         let mut file = fs::OpenOptions::new()
@@ -293,11 +294,11 @@ fn cache_icon(directory: &Path, bytes: &[u8], extension: &str) -> io::Result<Pat
 }
 pub fn shortcut_icon_at(executable: &Path, directory: &Path) -> io::Result<PathBuf> {
     match extract_png(executable) {
-        Ok(png) => cache_icon(directory, &png, "png"),
-        Err(_) => cache_icon(directory, include_bytes!("../../../public/peligames.svg"), "svg"),
+        Ok(png) => cache_icon(directory, &png, "png",executable.file_stem().and_then(|v|v.to_str()).unwrap_or("executable-icon")),
+        Err(_) => cache_icon(directory, include_bytes!("../../../public/peligames.svg"), "svg","peligames-icon"),
     }
 }
 pub fn shortcut_icon(executable: &Path) -> Option<PathBuf> {
-    let directory = super::paths::app_root().ok()?.join("icons/executables");
+    let directory = super::paths::app_path("icons/executables").ok()?;
     shortcut_icon_at(executable, &directory).ok()
 }

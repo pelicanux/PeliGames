@@ -12,7 +12,7 @@ Uso: bash compilar.sh [--bin | --all] [--jobs N] [--container NOME]
 Sem opções: compila PeliGames, PeliInstall e AppImage.
   --bin        Compila apenas os dois executáveis.
   --all        Compila também DEB e RPM, com hashes de publicação.
-  --jobs N     Limita as tarefas de compilação (padrão: 6).
+  --jobs N     Limita as tarefas de compilação (padrão: 12).
   --container  Usa outro container já preparado (padrão: ubuntu-24-dev).
   --help       Mostra esta ajuda, sem compilar.
 

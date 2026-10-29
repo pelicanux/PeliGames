@@ -47,12 +47,14 @@ pub struct CaptureOptions {
     pub selection: selection::Selection,
 }
 fn settings_path(root: &Path, key: &str) -> PathBuf {
-    root.join("CaptureSettings").join(format!("{:x}.json", Sha256::digest(key.as_bytes())))
+    let folder=super::paths::layout::join(root,"CaptureSettings");
+    super::paths::names::find(&folder,key).map(|base|base.with_extension("json")).unwrap_or_else(||folder.join(format!("{:x}.json",Sha256::digest(key.as_bytes()))))
 }
 fn write_settings(root: &Path, options: &CaptureOptions) -> Result<(), String> {
     use std::os::unix::fs::OpenOptionsExt;
     validate(options)?;
-    let path = settings_path(root, &options.game_key);
+    let folder=super::paths::layout::join(root,"CaptureSettings");
+    let path=super::paths::names::allocate(&folder,&options.game_name,&options.game_key)?.with_extension("json");
     fs::create_dir_all(path.parent().unwrap()).map_err(|e| e.to_string())?;
     let temporary = path.with_extension(format!("{}.tmp", uuid::Uuid::new_v4()));
     let result = (|| {
@@ -1000,6 +1002,12 @@ mod tests {
         assert_eq!(legacy.selection.fps, 30);
         assert_eq!(legacy.selection.resolution, "1280x720");
         assert_eq!(legacy.selection.bitrate_kbps, 5000);
+        assert_eq!(legacy.selection.rate_control, "qp");
+        assert_eq!(legacy.selection.quality_preset, "high");
+        let defaults = args(&settings, false, Path::new("/clips"), Path::new("/ipc"), "test");
+        assert!(defaults.windows(2).any(|v| v == ["-bm", "qp"]));
+        assert!(defaults.windows(2).any(|v| v == ["-q", "high"]));
+        settings.selection.rate_control = "cbr".into();
         settings.selection.resolution = "1920x1080".into();
         settings.selection.fps = 144;
         settings.selection.bitrate_kbps = 45000;
@@ -1450,7 +1458,7 @@ mod tests {
 
 /// Global bindings are read on game startup, like the overlay's own shortcut.
 pub fn shortcut_preferences() -> Result<shortcuts::Preferences,String> {
-    let path=super::paths::app_root()?.join("capture-shortcuts.json");
+    let path=super::paths::app_path("capture-shortcuts.json")?;
     let bytes=match fs::read(path) {Ok(bytes) if bytes.len()<=4096=>bytes,Err(e) if e.kind()==std::io::ErrorKind::NotFound=>return Ok(Default::default()),_=>return Err("Não foi possível ler os atalhos de captura.".into())};
     let value:shortcuts::Preferences=serde_json::from_slice(&bytes).map_err(|_|"Atalhos de captura inválidos.")?;value.validate()?;Ok(value)
 }

@@ -85,8 +85,8 @@ fn prepare_root_at(base: &Path, path: &str, name: &str, executable: &Path, prefi
     let previous = existing_at(base,path)?;
     let identity = Identity {name:name.into(),path:path.into(),identity:id.clone(),executable:executable.to_string_lossy().into_owned(),prefix:prefix.to_string_lossy().into_owned()};
     let name = slug(name);
-    for length in (8..=64).step_by(4) {
-        let root = base.join(format!("{name}-{}",&id[..length]));
+    for number in 1..=16384 {
+        let root=base.join(if number==1{name.clone()}else{format!("{name}-{number}")});
         if previous.as_ref() == Some(&root) || belongs(&root,path,&id) {
             save_identity(&root,&identity)?;return Ok(root);
         }
@@ -120,7 +120,7 @@ fn rotate_at(root: &Path) -> Result<PathBuf, String> {
     Ok(current)
 }
 pub(crate) fn prepare(path: &str, run: &mut super::game_installation::PreparedRun) -> Result<(), String> {
-    let base = super::paths::app_root()?.join("game-logs");
+    let base = super::paths::app_path("game-logs")?;
     let root = prepare_root_at(&base,path,&run.name,&run.executable,&run.prefix)?;
     let directory = rotate_at(&root)?;
     let file = fs::File::create(directory.join("execution.log")).map_err(|e|e.to_string())?;
@@ -159,12 +159,12 @@ pub fn folder(path: &str) -> Result<PathBuf, String> {
     if !super::installed_library::list(false)?.iter().any(|entry| entry.path == path) {
         return Err("Jogo não registrado no PeliGames.".into());
     }
-    existing_at(&super::paths::app_root()?.join("game-logs"), path)?
+    existing_at(&super::paths::app_path("game-logs")?, path)?
         .ok_or_else(|| "Ainda não há pasta de logs para este jogo. Execute-o primeiro.".into())
 }
 pub fn read(path: &str) -> Result<GameLogs, String> {
     if !super::installed_library::list(false)?.iter().any(|entry| entry.path==path) { return Err("Jogo não registrado no PeliGames.".into()); }
-    let base = super::paths::app_root()?.join("game-logs");
+    let base = super::paths::app_path("game-logs")?;
     let Some(directory) = existing_at(&base,path)? else {return Ok(GameLogs {current:String::new(),previous:String::new()});};
     Ok(GameLogs { current: read_at(&directory.join("current"))?, previous: read_at(&directory.join("previous"))? })
 }
@@ -181,8 +181,8 @@ mod tests {
         let dir=Temp::new();
         let first=prepare(&dir.0,"installation-one","Real MU");
         let second=prepare(&dir.0,"installation-two","Real MU");
-        assert!(first.file_name().unwrap().to_string_lossy().starts_with("real-mu-"));
-        assert_eq!(first.file_name().unwrap().len(),"real-mu-".len()+8);
+        assert_eq!(first.file_name().unwrap(),"real-mu");
+        assert_eq!(second.file_name().unwrap(),"real-mu-2");
         assert_ne!(first,second);
         assert_eq!(identity_at(&first).unwrap().path,"installation-one");
         assert_eq!(prepare(&dir.0,"installation-one","Real MU"),first);
@@ -212,10 +212,10 @@ mod tests {
     }
     #[test]
     fn occupied_short_names_are_preserved_and_the_identifier_extends() {
-        let dir=Temp::new();let id=digest("new-game");let occupied=dir.0.join(format!("real-mu-{}",&id[..8]));
+        let dir=Temp::new();let occupied=dir.0.join("real-mu");
         fs::create_dir(&occupied).unwrap();fs::write(occupied.join("do-not-touch"),"old data").unwrap();
         let allocated=prepare(&dir.0,"new-game","Real MU");
-        assert_eq!(allocated.file_name().unwrap().to_string_lossy(),format!("real-mu-{}",&id[..12]));
+        assert_eq!(allocated.file_name().unwrap(),"real-mu-2");
         assert_eq!(fs::read_to_string(occupied.join("do-not-touch")).unwrap(),"old data");
     }
     #[test]
@@ -232,7 +232,7 @@ mod tests {
 /// Remove all retained sessions for one identity, including its identity folder.
 /// Callers performing uninstall may already have removed the library entry.
 pub(crate) fn remove(path: &str) -> Result<(), String> {
-    remove_at(&super::paths::app_root()?.join("game-logs"),path)
+    remove_at(&super::paths::app_path("game-logs")?,path)
 }
 fn remove_at(base: &Path,path: &str) -> Result<(),String> {
     let id=digest(path);

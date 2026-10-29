@@ -3,6 +3,14 @@ use crate::core::pelinstall::StartupInfo;
 pub fn get_startup_context(info: tauri::State<'_, StartupInfo>) -> StartupInfo {
     info.inner().clone()
 }
+/// Retries the file organization that kept the launcher from opening and
+/// restarts it once the files are organized.
+#[tauri::command]
+pub async fn retry_storage_organization(app: tauri::AppHandle, info: tauri::State<'_, StartupInfo>) -> Result<(), String> {
+    if info.module != "storage-blocked" { return Err("A organização dos arquivos já foi concluída.".into()); }
+    tauri::async_runtime::spawn_blocking(|| crate::core::paths::organize(true)).await.map_err(|e| e.to_string())??;
+    app.restart()
+}
 #[tauri::command]
 pub fn validate_pelinstall_file(path: String) -> Result<String, String> {
     let absolute = if std::path::Path::new(&path).is_absolute() {

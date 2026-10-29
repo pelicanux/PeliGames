@@ -16,6 +16,7 @@ import { I18nProvider } from "./i18n/I18nContext";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { FloatingScrollbars } from "./components/FloatingScrollbars";
 import { migrateCoverPaths } from "./services/customCovers";
+import { installFrameRateMeter } from "./services/frameRateMeter";
 
 if (["game", "nexus"].includes(new URLSearchParams(window.location.search).get("logWindow") || "")) {
   document.documentElement.classList.add("log-monitor-window");
@@ -27,6 +28,8 @@ void import("@tauri-apps/api/core").then(({ invoke }) => invoke<boolean>("window
   .then(opaque => { if (opaque) document.documentElement.dataset.opaqueWindow = "1"; })
   .catch(() => {});
 
+// Restores the interface frame meter (Settings → Logs and more → Developer mode).
+installFrameRateMeter();
 
 // The window's outer boxes never scroll; WebKitGTK may still scroll them (a focus,
 // an overflowing transform), which slides the title bar out of view. Put them back.
