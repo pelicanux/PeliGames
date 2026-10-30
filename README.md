@@ -73,117 +73,108 @@ Use um único gerador de quadros. Desative o FG interno do jogo e do OptiScaler;
 
 A primeira ativação mostra a linha necessária nas opções de inicialização da Steam. É possível colar e verificar com a Steam aberta, ou pedir aplicação automática com reinício da Steam; ajustes do perfil não repetem essa etapa. Flatpak exige extensão e acesso aos perfis/DLL: use **Preparar / verificar Flatpak**, que mostra a ABI e os comandos específicos antes de liberar a ativação. O multiplicador vai de **2× a 5×** e o FPS alvo adaptativo de **10 a 1000**. Veja o [guia de uso e compatibilidade](docs/overlay.md) para requisitos e limites de cada launcher.
 
-O auxiliar Rust **PeliRun** exporta perfis com identificadores curtos (`pg-xxxxxxxx`) para Steam, Heroic, Lutris e outros launchers com suporte a wrapper/prefixo de comando. A interface fornece o executável e os argumentos adequados a cada formato; um perfil identifica a instalação, sem depender apenas do AppID da Steam.
+O auxiliar Rust **PeliRun** exporta perfis com identificadores legíveis, como `tomb-raider`, para Steam, Heroic, Lutris e outros launchers com suporte a wrapper/prefixo de comando. A interface fornece o executável e os argumentos adequados a cada formato; um perfil identifica a instalação, sem depender apenas do AppID da Steam.
 
 Na Steam, uma linha fixa chama o auxiliar Rust `pelirun`, que lê o perfil atualizado do jogo. Depois de vincular essa linha uma vez, mudar MangoHUD, geração de quadros, variáveis ou argumentos não exige reiniciar a Steam: as opções de inicialização valem ao reabrir o jogo. Ajustes com recarga durante a partida dependem de cada ferramenta. A escolha do Proton continua em **Compatibilidade**, na Steam. Veja [o funcionamento e os limites do auxiliar](docs/steam-launch-runtime.md).
 
 Referências: [MAKO Renderer](https://github.com/eugeniosegala/MAKO/blob/main/engine/README.md), [compatibilidade do MAKO](https://github.com/eugeniosegala/MAKO/blob/main/engine/docs/LAYER-CHAINING.md).
 
-Nas rotas ReShade, Vulkan e DX9, o backend compatível também oferece **Vetores de movimento: VORT / LumeniteFX**. VORT já acompanha o backend. Selecionar LumeniteFX e clicar em Instalar/Reparar baixa os arquivos do projeto oficial; a escolha pode ser alternada em ReShade → Add-ons após a instalação.
-
 ## DLSS 5 Neural Rendering em placas AMD (DLSSNR)
 
-A aba **DLSSNR-AMD** roda o modelo de Neural Rendering (NR) do DLSS 5 da NVIDIA em placas AMD Radeon. Quem faz esse trabalho são dois projetos independentes, que reimplementam a rede em shaders Vulkan, executados no próprio dispositivo Vulkan do jogo (DXVK / vkd3d-proton sob o Proton). O PeliGames baixa o backend certo para a sua placa, executa o instalador dele com as opções escolhidas na interface e guarda o modelo para as próximas instalações. As informações abaixo resumem a documentação desses projetos e explicam como o PeliGames os usa.
+Nos detalhes do jogo, abra **Mods → DLSSNR-AMD** para instalar e configurar o Neural Rendering. O PeliGames gerencia o backend, os modelos e as opções de inicialização de cada instalação.
 
 > Projetos experimentais (versões 0.0.x), sem afiliação com a NVIDIA nem com a AMD. **Não use em jogos online com anti-cheat**: DLLs injetadas podem levar ao banimento da conta. O instalador coloca arquivos na pasta do jogo; **Remover** apaga só o que ele instalou.
 
 ### Placas e backends
 
-| Placa | Backend | Testado pelos autores |
+| Placa | Backend | Referência dos autores |
 |---|---|---|
-| RX 9000 (RDNA 4) | [DLSSNR-AMD, de mochizuki0323](https://github.com/mochizuki0323/DLSSNR-AMD) | RX 9070 XT, Mesa 26.2, GE-Proton |
-| RX 7000 (RDNA 3) | [DLSSNR-RDNA3, de mauri870](https://github.com/mauri870/DLSSNR-RDNA3) (fork do anterior) | RX 7900 XTX, Mesa 26.2.3, GE-Proton 11-7 |
+| RX 9000 (RDNA 4) | [DLSSNR-AMD, de mochizuki0323](https://github.com/mochizuki0323/DLSSNR-AMD) | Mesa 26.2 ou superior e Proton recente; o 0.0.8 foi testado com GE-Proton 11-11 e Mesa 26.2.5 |
+| RX 7000 (RDNA 3) | [DLSSNR-RDNA3, de mauri870](https://github.com/mauri870/DLSSNR-RDNA3/blob/rdna3/README-RDNA3.md) | Fork próprio para RX 7000; testado pelo autor na RX 7900 XTX com Mesa 26.2.3 |
 
-- O PeliGames identifica a série da placa e oferece o backend correspondente em **Configurações → Mods → DLSSNR-AMD**. O download vem das releases do GitHub de cada projeto e fica em `~/.config/PeliGames/components/Mods/DLSSNR/backend-files/<rdna3|rdna4>/<32|64>`.
-- A RX 7000 não tem as instruções de matriz FP8 da RDNA 4. O fork reproduz a mesma rede com FP16 e chega à mesma fidelidade, mas custa cerca de 2,6 vezes mais por quadro.
-- Requisitos: Mesa 26.2 ou mais novo (driver RADV) e um Proton recente. O instalador do backend usa `bash` e `python3`.
+O backend RDNA 4 usa instruções FP8; o fork RDNA 3 adapta o processamento para FP16. As opções mostradas pelo PeliGames dependem das capacidades do pacote instalado. Não se presume que os dois projetos tenham os mesmos recursos.
 
-### O modelo
+### Preparar o modelo e instalar no jogo
 
-A `nvngx_dlssnr.dll` e os pesos pertencem à NVIDIA e **não acompanham o PeliGames nem o download do backend**. Esse download fornece o instalador, as ferramentas de extração e os componentes do mod. Obtenha uma DLL compatível por fora do launcher, a partir de um jogo que a forneça.
+1. Abra **Configurações → Complementos → DLSSNR-AMD** e baixe o backend da sua GPU. **Importar backend local** aceita uma pasta com os pacotes Linux do projeto ou as subpastas de arquitetura já extraídas.
+2. No assistente de configuração, use **Extrair de uma DLL** com sua `nvngx_dlssnr.dll`, ou **Usar arquivo existente** com modelos `.bin` válidos. Essas opções ficam disponíveis depois da preparação do backend. Os modelos são conferidos por SHA-256.
+3. Na biblioteca, abra os detalhes do jogo e **Mods → DLSSNR-AMD**. Confira o destino do mod, selecione o modo, a arquitetura e a rede inicial e clique em **Instalar** ou **Reparar**.
+4. Conclua **Configurar na Steam**, quando solicitado, ou use o perfil PeliRun no outro launcher. Depois, abra o jogo.
 
-1. Na **Configuração inicial**, escolha RDNA 4 / RX 9000 ou RDNA 3 / RX 7000 e baixe o backend. Em **Arquivos locais**, selecione a pasta com os pacotes do backend baixados manualmente das releases dos mantenedores. Essa opção importa o backend, não substitui a seleção do modelo de IA.
-2. Espere o download e a verificação terminarem. **Extrair de uma DLL** e **Usar arquivo existente** só ficam disponíveis com o backend pronto; arquivos em cache podem ser reutilizados. O caminho sublinhado abaixo do download abre a pasta onde ele foi salvo.
-3. Escolha **Extrair de uma DLL** e indique a sua `nvngx_dlssnr.dll` compatível, ou use **Usar arquivo existente** para importar um modelo `.bin` válido. Os modelos são conferidos por SHA-256.
+A DLL e os pesos da NVIDIA **não acompanham o PeliGames nem o download do backend**. Obtenha uma DLL compatível a partir de um jogo que a forneça. O instalador do backend utiliza `bash` e `python3`.
 
-| DLL usada na extração | Arquivos gerados pelo backend compatível |
+| DLL usada na extração | Modelos importados pelo launcher |
 |---|---|
 | **310.8.0** | `dlssnr.bin` — modelo antigo |
-| **310.9.16** | `dlssnr.bin` e `dlssnr-small.bin` — modelos antigo e novo, em arquivos separados |
+| **310.9.16** | `dlssnr.bin` e `dlssnr-small.bin` — modelos antigo e novo |
 
-Os arquivos permanecem no diretório padrão do backend: `~/.config/PeliGames/components/Mods/DLSSNR/backend-files/<rdna3|rdna4>/<32|64>/dlssnr-amd/`, conforme as arquiteturas disponíveis. Não é necessário mover o `.bin` para a raiz `components/Mods/DLSSNR`. Ao importar o modelo novo já extraído, mantenha `dlssnr-small.bin` ao lado de `dlssnr.bin`; o launcher importa os dois.
+Os arquivos ficam em `~/.config/PeliGames/components/Mods/DLSSNR/backend-files/<rdna3|rdna4>/<32|64>/dlssnr-amd/`. Ao importar os modelos da 310.9.16, mantenha os dois `.bin` juntos. Modelos válidos em cache podem ser reutilizados nas próximas instalações.
 
-Nos detalhes do jogo, o backend **0.0.7 da RX 9000** usa **Rede inicial → Novo / Antigo / int4**. As escolhas correspondem a `CC_SMALL_FP8` (310.9.16), `CC_SILVER_AARDWOLD` (310.8.0) e `CC_SILVER_AARDWOLD_INT4_MIXED` (derivado do antigo). O instalador prepara as redes disponíveis juntas; a escolha no launcher define qual inicia após instalar ou reparar. No jogo, alterne no **NR Control (End)**, em **ReShade → Add-ons**, ou com **Ctrl+F11**, sem reinstalar a cada troca. Redes sem pesos ou sem suporte ficam indisponíveis no menu do backend. O launcher utiliza a linha completa impressa pelo instalador com a camada int4 quando ela está disponível, mesmo se a rede inicial for outra.
+### Rede inicial e opções do launcher
 
-Backends anteriores e o fork RDNA3 mantêm o fluxo que seus scripts suportam: **Modelo NR → Novo / Antigo**, quando disponível, e a opção separada de int4. Nesses backends, após mudar as opções do launcher, use **Reparar**. Não se presume que o fork RDNA3 tenha recebido as mudanças do 0.0.7.
+No backend Mochizuki 0.0.8, **Rede inicial** oferece:
 
-Quem atualiza o PeliGames não precisa apagar o backend anterior. Para habilitar o modelo novo, atualize também o backend em **Configurações → Mods → DLSSNR-AMD** e extraia a DLL **310.9.16** na configuração inicial. Atualizar somente o launcher não fornece a DLL nem gera os modelos novos.
+| Opção | Rede | Modelo necessário |
+|---|---|---|
+| **Novo** | `CC_SMALL_FP8` | 310.9.16 |
+| **Experimental** | `CC_SMALL_FP8_EXPERIMENTAL` | 310.9.16; pesos derivados durante a instalação |
+| **Antigo** | `CC_SILVER_AARDWOLD` | 310.8.0 ou 310.9.16 |
+| **int4** | `CC_SILVER_AARDWOLD_INT4_MIXED` | Modelo antigo; pesos derivados durante a instalação |
 
-### Backend Mochizuki 0.0.8 (Linux preview)
+A rede **Experimental** pode alterar a imagem. Ela só aparece com backend compatível. Backends anteriores e RDNA 3 conservam os seletores e opções que seus scripts suportam; int4 não se combina com o modelo novo.
 
-A rota **OptiScaler** utiliza o OptiScaler original para upscaling e geração de quadros, com o NR como plugin separado. Suporta jogos DirectX 11, DirectX 12 e Vulkan de 64 bits com DLSS, FSR ou XeSS. **End** abre o NR Control; o atalho configurado em **Menu do OptiScaler** abre somente os controles de upscaling e geração de quadros. As opções de inicialização impressas pelo instalador são sincronizadas com o perfil do jogo, substituindo as opções de NR registradas anteriormente. Nessa rota, o NR não exige camadas Vulkan adicionais; rotas ReShade podem continuar exigindo a camada int4.
+| Ajuste no PeliGames | Quando é aplicado |
+|---|---|
+| **Começar ligado** e **RenoDX** | Em um mod já instalado, são salvos automaticamente para a próxima abertura do jogo |
+| Modo, arquitetura, rede inicial e atalho do menu | Ao instalar ou reparar |
+| **VORT / LumeniteFX**, nas rotas ReShade compatíveis | Ao instalar ou reparar; VORT acompanha o backend, enquanto LumeniteFX exige download adicional do projeto oficial |
 
-**Rede inicial → Experimental** escolhe `CC_SMALL_FP8_EXPERIMENTAL`, derivada do modelo da DLL 310.9.16 durante a instalação. A rede reduz o custo de processamento, mas pode alterar a imagem. A opção aparece somente quando o backend fornece a implementação e exige os mesmos modelos validados da 310.9.16.
+**Instalar ou reparar substitui o `dlssnr-amd.ini` pelos padrões do backend e pelas escolhas de instalação.** Guarde uma cópia dos ajustes personalizados antes dessa operação. Atualizar o backend no launcher não atualiza automaticamente os arquivos instalados nos jogos: repare cada jogo que deve receber a atualização.
 
-O launcher mantém as opções de inicialização: rede, ativação do NR, estilo RenoDX e atalho do menu do OptiScaler. Camadas, passes, imagem e diagnósticos são ajustados dentro do jogo no **NR Control (End)** ou em **ReShade → Add-ons**. **Copy a report**, no menu do backend, gera o relatório usado pelo suporte.
+### Escolher o modo
 
-**Instalar / reparar substitui os ajustes NR pelos padrões do backend e pelas escolhas de instalação.** Atualizar o backend no launcher não atualiza sozinho os jogos. Backends anteriores e RDNA3 conservam seus controles compatíveis.
+A tabela descreve as rotas do Mochizuki 0.0.8 para RX 9000. Com RDNA 3 ou pacotes anteriores, siga as rotas e os controles disponíveis no backend instalado.
 
-### Backend Mochizuki 0.0.7 (19/10/2026)
+| Jogo | Modo no launcher | Menu durante a partida |
+|---|---|---|
+| DirectX 11/12 ou Vulkan, 64 bits, com DLSS, FSR ou XeSS disponível | **OptiScaler** | **Insert**, por padrão, abre OptiScaler; **End** abre NR Control |
+| DirectX 10/11/12 sem upscaler compatível | **ReShade** | **Home → Add-ons**, por padrão |
+| Vulkan sem upscaler compatível | **Vulkan** | **Home → Add-ons**, por padrão |
+| DirectX 9 | **DX9** | **Home → Add-ons**, por padrão |
 
-A versão Linux estável 0.0.7 foi publicada para x86_64 e i686 junto de um pacote Windows experimental. O atualizador seleciona somente os assets Linux da arquitetura correspondente. O arquivo interno `backend-files/rdna4/version.txt` continua registrando a tag do pacote com o sufixo `-rdna4`; os nomes das redes não substituem essa versão. Os hashes dos modelos 310.8.0/310.9.16 não mudaram: modelos válidos em cache podem ser reutilizados.
+No Mochizuki 0.0.8, a rota OptiScaler utiliza o OptiScaler original com o plugin `dlssnr-amd.asi`. Backends antigos podem usar o fork OptiScaler-NR. Ative um upscaler compatível nas configurações do jogo ao usar essa rota. Jogos 32 bits não usam OptiScaler; no RDNA 3, o PeliGames oferece somente 64 bits. OpenGL não é suportado.
 
-O backend acrescentou troca de redes durante o jogo, política de memória **Residency**, indicador de rede **OSD**, diagnóstico **Engine data** e opções de rede/log no menu do próprio mod. Também corrigiu crescimento de VRAM em mudanças de resolução, leitura de texturas e diferenças no processamento Natural/Cinematic. Esses recursos vêm do backend atualizado; não exigem que o launcher reproduza seus controles nem permanecem disponíveis em uma instalação antiga do mod. Atualize o backend e use **Reparar / reinstalar** em cada jogo que deve recebê-los. O PeliRun reaproveita a linha fixa já vinculada; a alteração do perfil não exige reiniciar a Steam.
+### Ajustes no jogo com Mochizuki 0.0.8
 
-**LumeniteFX** é uma alternativa opcional de vetores de movimento para as rotas ReShade, oferecida pelo script oficial com `--lumenite`; não se aplica ao OptiScaler. É um projeto separado e exige um download adicional do autor. O PeliGames mantém VORT como padrão e não ativa nem baixa LumeniteFX automaticamente nesta integração. [Notas oficiais do release](https://github.com/mochizuki0323/DLSSNR-AMD/releases/tag/v0.0.7).
+O launcher mantém os controles de preparação e inicialização. **Camadas, processamento RenoDX/wilsjo2, passes rápidos ou tradicionais, proteção do HUD, comparação visual e diagnósticos de custo/VRAM** ficam no **NR Control**, na rota OptiScaler, ou em **ReShade → Add-ons**, nas demais rotas do backend 0.0.8. Os detalhes e limitações estão nas [notas oficiais do 0.0.8](https://github.com/mochizuki0323/DLSSNR-AMD/releases/tag/v0.0.8-linux-preview).
 
-### Rotas
+No OptiScaler, o menu de **Insert** cuida de upscaling e geração de quadros; o **End** abre os ajustes NR. Use o menu NR para alternar redes durante a partida; **Ctrl+F11** é o atalho padrão de troca nos backends compatíveis. Os ajustes ficam no `dlssnr-amd.ini` da pasta onde o mod foi instalado.
 
-Escolha a rota pela API do jogo. O PeliGames converte o nome para o que o backend instalado entende: as versões novas chamam as rotas do ReShade de `reshade-feeder`, `reshade-feeder-vulkan` e `reshade-feeder-dx9`, enquanto o fork da RX 7000 ainda usa `reshade`, `vulkan` e `dx9`.
+### Inicialização pela Steam e outros launchers
 
-| O jogo usa | Rota | Como funciona | Onde ajustar no jogo |
+O PeliGames salva as opções impressas pelo instalador no perfil do jogo, substituindo as opções NR anteriores. Use **Configurar na Steam** ou a linha fornecida pelo **PeliRun** uma vez. Com o perfil vinculado, as próximas alterações valem ao reabrir o jogo, sem repetir a vinculação nem reiniciar a Steam. A seleção do Proton continua na Steam ou no launcher correspondente. Veja o [guia do PeliRun](docs/steam-launch-runtime.md).
+
+Não acrescente camadas Vulkan de NR por conta própria à rota OptiScaler do 0.0.8. Rotas ReShade e backends anteriores podem precisar delas; siga o perfil gerado pelo instalador. Se a sincronização falhar, **Visualizar log** mostra as opções necessárias para configuração manual.
+
+### Custo de processamento
+
+Tempos publicados pelos autores, em milissegundos por quadro, somente da rede:
+
+| GPU e rede | 1080p | 1440p | 4K |
 |---|---|---|---|
-| DirectX 11/12 ou Vulkan (Mochizuki 0.0.8), com DLSS, FSR ou XeSS | **OptiScaler** (só 64 bits) | No Mochizuki 0.0.8, OptiScaler original + plugin NR (também em Vulkan); nos backends anteriores, [OptiScaler-NR](https://github.com/wilsjo2/OptiScaler-DLSSNR-PreSR-Multipass). Usa os vetores de movimento do jogo. Ative DLSS, FSR ou XeSS no jogo. | **Insert**: menu do OptiScaler. **End**: NR Control (só RX 9000) |
-| DirectX 10/11/12 sem upscaler | **ReShade** | ReShade com vetores de movimento estimados pela imagem (VORT) | **Home** → aba **Add-ons** |
-| Vulkan | **Vulkan** | ReShade carregado como camada Vulkan | **Home** → aba **Add-ons** |
-| DirectX 9 | **DX9** | O DXVK converte o D3D9 em Vulkan; a rota ajusta a direção da profundidade dos jogos antigos | **Home** → aba **Add-ons** |
-| OpenGL | não suportado | | |
+| RX 9070 XT — Novo | 3,27 ms | 5,53 ms | 12,67 ms |
+| RX 9070 XT — Experimental | 2,90 ms | 4,84 ms | 11,09 ms |
+| RX 7900 XTX — Antigo | 15 ms | 26 ms | 56 ms |
+| RX 7900 XTX — int4 do antigo | 13,3 ms | 22,8 ms | 50,8 ms |
 
-- Jogos de 32 bits usam o pacote de 32 bits, sem a rota OptiScaler. Na RX 7000, o pacote de 32 bits ainda não foi testado pelo autor, então o PeliGames só oferece 64 bits.
-- A tecla de menu escolhida no PeliGames é gravada no `ReShade.ini` ou no `OptiScaler.ini` do jogo.
-- As configurações ficam no `dlssnr-amd.ini`, na pasta do jogo, e as mudanças valem na hora. **Reparar** reinstala do zero: o backend desinstala pelo registro `dlssnr-amd-install.txt` e o `dlssnr-amd.ini` volta ao padrão. Guarde uma cópia se tiver ajustes.
-- Rodar o modelo abaixo da resolução de saída é o que mais pesa no desempenho. Nas rotas do ReShade, use **Model resolution**: 50% praticamente dobra o FPS. Na rota OptiScaler, use **Generate model before upscaler**.
-
-### Opções
-
-| Opção | RX 9000 | RX 7000 | O que faz |
-|---|---|---|---|
-| **RenoDX** | todas as rotas | não disponível | Processa a imagem antes e depois do NR como o [add-on DLSS5 do RenoDX](https://github.com/PEQHUB/RenoDX-DLSS5-Generic). A rede é a mesma. Todos os ajustes do NR passam para a seção `[RenoDX]`: no NR Control (End) na rota OptiScaler, ou em Home → Add-ons nas rotas do ReShade. Vale depois de reiniciar o jogo. |
-| **int4 misto** | todas as rotas | todas as rotas | Disponível com o modelo antigo (310.8.0). Segunda rede, de 7% a 11% mais rápida, com parte das contas em int4; a imagem muda um pouco. **Nas rotas ReShade e nos backends antigos, precisa das variáveis `VK_ADD_LAYER_PATH` e `VK_INSTANCE_LAYERS` nas opções de inicialização** (veja abaixo). **Ctrl+F11** alterna entre o int4 e a rede padrão. Com ele, o NR demora mais para entrar quando o jogo abre. |
-| **NR Control** | rota OptiScaler | não disponível | Menu próprio do NR na tecla **End**: mostra o custo do NR e liga o int4 e o Preprocess. No Mochizuki 0.0.8, não exige camada Vulkan; nos backends anteriores, preserve as variáveis indicadas pelo instalador. |
-| **Preprocess** | todas as rotas | todas as rotas | Seção `[Preprocess]` do `dlssnr-amd.ini`, desligada por padrão. Ajusta exposição, curva, contraste e saturação da imagem que a rede recebe e corrige jogos que escurecem ou ficam granulados com o NR (como 007 First Light). **Ctrl+F10** compara com e sem. |
-
-**Opções de inicialização automáticas.** O backend informa no fim da instalação as variáveis que o jogo precisa, por exemplo `WINEDLLOVERRIDES="dxgi=n,b"` e, quando a rota/backend exige camada de NR, também `VK_ADD_LAYER_PATH` e `VK_INSTANCE_LAYERS`. O PeliGames grava essas variáveis sozinho nas opções de inicialização do jogo, a cada instalação ou reparo. Ao desligar o int4 e reparar, ou ao remover o mod, ele tira só o que o mod tinha adicionado; o resto do que você escreveu continua igual. Essas opções valem quando o jogo é iniciado pelo PeliGames. Em jogos da Steam, feche a Steam antes, para que ela receba as opções; se preferir abrir pela Steam, copie a linha mostrada no fim da instalação para **Propriedades → Opções de inicialização**. Sem essas variáveis, o jogo usa a rede padrão, e o Ctrl+F11 e a tecla End não fazem nada (o `dlssnr-amd.log` avisa).
-
-### Desempenho medido pelos autores
-
-Tempo da rede por quadro, sem contar o resto do jogo:
-
-| Placa | 1080p | 1440p | 4K |
-|---|---|---|---|
-| RX 9070 XT | 5,6 ms | 9,7 ms | 21,9 ms |
-| RX 9070 XT, int4 misto | 5,0 ms | 8,7 ms | 19,6 ms |
-| RX 7900 XTX | 15 ms | 26 ms | 56 ms |
-| RX 7900 XTX, int4 misto | 13,3 ms | 22,8 ms | 50,8 ms |
-
-Na RX 7000, o 4K nativo não chega a um FPS jogável: use Model resolution de 50% ou menos (cerca de 16 ms em 4K).
+São referências de versões e métodos de medição diferentes, sem incluir o restante do jogo nem todo o processamento do mod. Não representam o FPS final nem garantem o mesmo resultado em outra máquina. Confira as condições nas referências de [RDNA 4](https://github.com/mochizuki0323/DLSSNR-AMD#performance) e [RDNA 3](https://github.com/mauri870/DLSSNR-RDNA3/blob/rdna3/README-RDNA3.md#what-it-costs). Reduzir a resolução de processamento da rede pode diminuir o custo, com impacto na imagem.
 
 ### Quando algo não funciona
 
-- Na primeira execução em cada jogo, a rede leva de 10 a 20 segundos para compilar (com o int4, mais). Até lá a imagem aparece sem NR, o que não significa falha.
-- Os logs ficam na pasta do jogo: `dlssnr-amd.log`, mais o `ReShade.log` ou o `OptiScaler.log`, conforme a rota. O `dlssnr-amd.log` diz se o RenoDX, o int4 e o NR estão ativos e o que falta.
-- A tecla End só existe na rota OptiScaler. Nas rotas do ReShade, tudo fica em Home → Add-ons.
-- A **F6** liga e desliga o NR com o RenoDX ativo, para comparar a imagem.
+- Na primeira execução, aguarde a compilação da rede; o tempo depende do backend e da máquina.
+- Confira `dlssnr-amd.log` e `OptiScaler.log` ou `ReShade.log` na pasta do mod. Instalar os arquivos não comprova que o NR está processando a imagem.
+- Se uma opção não aparecer, confira a GPU selecionada, o backend instalado e os modelos disponíveis no assistente.
+- Use **Reportar erro** na área DLSSNR-AMD do jogo. O relatório reúne configurações e logs; revise os dados filtrados antes de confirmar o envio ao suporte no Discord. **Copy a report**, nos diagnósticos do backend 0.0.8, também gera um relatório local.
 
 ## Jogos suportados
 
