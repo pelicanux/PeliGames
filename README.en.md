@@ -12,6 +12,34 @@ Windows game launcher for Linux with Proton, a game library, Pelinstall, Wine to
   <img src="public/images/interface-preview.webp" alt="PeliGames interface with the game library grouped by source" width="1200" />
 </p>
 
+<!-- section-links -->
+<details>
+<summary><strong>Contents — direct section links</strong></summary>
+
+To share a topic, follow its link and copy the page address, or right-click and choose “Copy link address”.
+
+- [How it works](#how-it-works)
+- [Installation](#installation)
+  - [Installing the AppImage](#installing-the-appimage)
+- [Nexus Mods](#nexus-mods)
+- [MAKO frame generation and PeliGames overlay](#mako-frame-generation-and-peligames-overlay)
+- [DLSS 5 Neural Rendering on AMD cards (DLSSNR)](#dlss-5-neural-rendering-on-amd-cards-dlssnr)
+  - [Cards and backends](#cards-and-backends)
+  - [Prepare the model and install in a game](#prepare-the-model-and-install-in-a-game)
+  - [Starting network and launcher options](#starting-network-and-launcher-options)
+  - [Choose the mode](#choose-the-mode)
+  - [In-game adjustments with Mochizuki 0.0.8](#in-game-adjustments-with-mochizuki-008)
+  - [Launching through Steam and other launchers](#launching-through-steam-and-other-launchers)
+  - [Processing cost](#processing-cost)
+  - [When something does not work](#when-something-does-not-work)
+- [Supported games](#supported-games)
+- [Building from source](#building-from-source)
+- [Credits and license](#credits-and-license)
+- [Special thanks](#special-thanks)
+
+</details>
+<!-- /section-links -->
+
 ## How it works
 
 1. **Library:** PeliGames brings together games from Steam, the native Epic Games Launcher for Linux, Heroic, Lutris, Bottles and Faugus, plus the ones you install with it.

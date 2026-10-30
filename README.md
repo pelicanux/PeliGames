@@ -13,6 +13,34 @@ Launcher de jogos Windows para Linux com Proton, biblioteca de jogos, Pelinstall
   <img src="public/images/interface-preview.webp" alt="Interface do PeliGames com biblioteca de jogos organizada por origem" width="1200" />
 </p>
 
+<!-- section-links -->
+<details>
+<summary><strong>Índice — links diretos das seções</strong></summary>
+
+Para compartilhar um tópico, clique no link e copie o endereço da página, ou use “Copiar endereço do link” com o botão direito.
+
+- [Como funciona](#como-funciona)
+- [Instalação](#instala%C3%A7%C3%A3o)
+  - [Instalar o AppImage](#instalar-o-appimage)
+- [Mods locais do Nexus](#mods-locais-do-nexus)
+- [Biblioteca unificada e geração de quadros](#biblioteca-unificada-e-gera%C3%A7%C3%A3o-de-quadros)
+- [DLSS 5 Neural Rendering em placas AMD (DLSSNR)](#dlss-5-neural-rendering-em-placas-amd-dlssnr)
+  - [Placas e backends](#placas-e-backends)
+  - [Preparar o modelo e instalar no jogo](#preparar-o-modelo-e-instalar-no-jogo)
+  - [Rede inicial e opções do launcher](#rede-inicial-e-op%C3%A7%C3%B5es-do-launcher)
+  - [Escolher o modo](#escolher-o-modo)
+  - [Ajustes no jogo com Mochizuki 0.0.8](#ajustes-no-jogo-com-mochizuki-008)
+  - [Inicialização pela Steam e outros launchers](#inicializa%C3%A7%C3%A3o-pela-steam-e-outros-launchers)
+  - [Custo de processamento](#custo-de-processamento)
+  - [Quando algo não funciona](#quando-algo-n%C3%A3o-funciona)
+- [Jogos suportados](#jogos-suportados)
+- [Compilar a partir do código](#compilar-a-partir-do-c%C3%B3digo)
+- [Créditos e licença](#cr%C3%A9ditos-e-licen%C3%A7a)
+- [Agradecimentos especiais](#agradecimentos-especiais)
+
+</details>
+<!-- /section-links -->
+
 ## Como funciona
 
 1. **Biblioteca:** o PeliGames reúne num só lugar os jogos da Steam, da Epic Games nativa para Linux, do Heroic, do Lutris, do Bottles e do Faugus, além dos que você instala por ele.
