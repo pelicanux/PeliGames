@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { listen } from "@tauri-apps/api/event";
+import { openBrowserUrl } from "../services/browser";
 import { ModalSurface } from "./ModalSurface";
 import { MenuIcon } from "./MenuIcon";
 import { useI18n } from "../i18n/I18nContext";
@@ -9,6 +10,12 @@ export function DiscordPanel({ onClose }: { onClose: () => void }) {
   const { language } = useI18n();
   const pt = language === "pt";
   const frame = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let active = true;
+    const subscription = listen<string>("discord-invite-error", event => { if (active) setError(event.payload); }).catch(() => undefined);
+    return () => { active = false; void subscription.then(unlisten => unlisten?.()); };
+  }, []);
   useEffect(() => {
     const previous = document.activeElement;
     frame.current?.querySelector<HTMLButtonElement>("button")?.focus();
@@ -27,13 +34,15 @@ export function DiscordPanel({ onClose }: { onClose: () => void }) {
   }, [onClose]);
   const join = async () => {
     const url = "https://discord.gg/78XSB9bHst";
-    try { await openUrl(url); } catch { window.open(url, "_blank", "noopener,noreferrer"); }
+    setError("");
+    try { await openBrowserUrl(url); } catch (error) { setError(String(error)); }
   };
   return createPortal(<div className="modal-overlay discord-panel-overlay" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <ModalSurface ref={frame} className="modal-content dialog-glass discord-panel" role="dialog" aria-modal="true" aria-labelledby="discord-panel-heading" onDismiss={onClose}
       header={<h2 id="discord-panel-heading"><MenuIcon name="discord" />{pt ? "Comunidade PeliGames" : "PeliGames community"}</h2>}
       footer={<div className="discord-panel-footer"><button type="button" className="btn btn-primary" onClick={() => void join()}><MenuIcon name="discord" />{pt ? "Entrar no servidor" : "Join server"}</button></div>}>
       <iframe title={pt ? "Servidor Discord do PeliGames" : "PeliGames Discord server"} src="https://discord.com/widget?id=1088170837921779812&theme=dark" width="350" height="500" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts" />
+      {error && <p className="nexus-error" role="alert">{error}</p>}
     </ModalSurface>
   </div>, document.body);
 }

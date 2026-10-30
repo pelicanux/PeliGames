@@ -167,9 +167,11 @@ fn run_mode(installer: bool) {
             {
                 use tauri::Manager;
                 if let Some(window) = app.get_webview_window("main") {
-                    if let Err(error) = window.with_webview(|native| {
+                    let browser_app = app.handle().clone();
+                    if let Err(error) = window.with_webview(move |native| {
                         use webkit2gtk::WebViewExt;
                         let view = native.inner();
+                        commands::browser::configure_discord_widget(&browser_app, &view);
                         if let Err(error) = core::webkit_graphics::configure_webview(&view) {
                             core::logger::event("ERROR", &error);
                         }
