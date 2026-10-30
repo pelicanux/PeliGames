@@ -29,6 +29,7 @@ To share a topic, follow its link and copy the page address, or right-click and 
   - [Starting network and launcher options](#starting-network-and-launcher-options)
   - [Choose the mode](#choose-the-mode)
   - [In-game adjustments with Mochizuki 0.0.8](#in-game-adjustments-with-mochizuki-008)
+  - [DLSSNR shortcuts](#dlssnr-shortcuts)
   - [Launching through Steam and other launchers](#launching-through-steam-and-other-launchers)
   - [Processing cost](#processing-cost)
   - [When something does not work](#when-something-does-not-work)
@@ -163,7 +164,25 @@ Mochizuki 0.0.8 uses original OptiScaler with the `dlssnr-amd.asi` plugin on the
 
 The launcher keeps preparation and startup controls. **Layers, RenoDX/wilsjo2 processing, fast or legacy passes, HUD protection, visual comparison and cost/VRAM diagnostics** are adjusted in **NR Control** on the OptiScaler route, or **ReShade → Add-ons** on the other 0.0.8 routes. See the [official 0.0.8 release notes](https://github.com/mochizuki0323/DLSSNR-AMD/releases/tag/v0.0.8-linux-preview) for details and limitations.
 
-On the OptiScaler route, **Insert** controls upscaling and frame generation; **End** opens NR settings. Use the NR menu to switch networks during play; **Ctrl+F11** is the default switching shortcut in supporting backends. Settings are stored in `dlssnr-amd.ini` in the mod's installation folder.
+Settings are stored in `dlssnr-amd.ini` in the mod's installation folder. See [DLSSNR shortcuts](#dlssnr-shortcuts) to open the menus and compare the image.
+
+### DLSSNR shortcuts
+
+With the game focused, these are the default shortcuts for Mochizuki 0.0.8 on RX 9000. Custom bindings and older/RDNA 3 backends may differ.
+
+| Key | Where | Action |
+|---|---|---|
+| **End** | OptiScaler | Opens/closes **NR Control**: network, layers, processing, HUD FIX and diagnostics. |
+| **Insert** | OptiScaler | Opens/closes the **upscaling and frame generation** menu. |
+| **Home** | ReShade, Vulkan and DX9 | Opens/closes ReShade; NR settings are under **Add-ons**. |
+| **F6** | NR | Toggles Neural Rendering to compare the image during the current run. |
+| **Ctrl+F11** | NR | Cycles available networks, skipping those without support or required weights. |
+| **Ctrl+F10** | NR | Toggles preprocessing during the current run. |
+| **F5** | NR comparison capture | Saves the same frame without/with NR in **NR Screenshots** in the game folder. |
+
+**F6 does not disable upscaling or frame generation.** Network changes are saved for the next launch; **F6** and **Ctrl+F10** toggles last only for the current run. To choose the startup state, use **Start enabled** in PeliGames or save activation in the NR menu.
+
+PeliGames capture shortcuts are configured separately in **Captures**. Reference: [NR Control and backend options](https://github.com/mochizuki0323/DLSSNR-AMD#nr-control-optiscaler-route).
 
 ### Launching through Steam and other launchers
 

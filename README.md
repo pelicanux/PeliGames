@@ -30,6 +30,7 @@ Para compartilhar um tópico, clique no link e copie o endereço da página, ou 
   - [Rede inicial e opções do launcher](#rede-inicial-e-op%C3%A7%C3%B5es-do-launcher)
   - [Escolher o modo](#escolher-o-modo)
   - [Ajustes no jogo com Mochizuki 0.0.8](#ajustes-no-jogo-com-mochizuki-008)
+  - [Atalhos do DLSSNR](#atalhos-do-dlssnr)
   - [Inicialização pela Steam e outros launchers](#inicializa%C3%A7%C3%A3o-pela-steam-e-outros-launchers)
   - [Custo de processamento](#custo-de-processamento)
   - [Quando algo não funciona](#quando-algo-n%C3%A3o-funciona)
@@ -176,7 +177,25 @@ No Mochizuki 0.0.8, a rota OptiScaler utiliza o OptiScaler original com o plugin
 
 O launcher mantém os controles de preparação e inicialização. **Camadas, processamento RenoDX/wilsjo2, passes rápidos ou tradicionais, proteção do HUD, comparação visual e diagnósticos de custo/VRAM** ficam no **NR Control**, na rota OptiScaler, ou em **ReShade → Add-ons**, nas demais rotas do backend 0.0.8. Os detalhes e limitações estão nas [notas oficiais do 0.0.8](https://github.com/mochizuki0323/DLSSNR-AMD/releases/tag/v0.0.8-linux-preview).
 
-No OptiScaler, o menu de **Insert** cuida de upscaling e geração de quadros; o **End** abre os ajustes NR. Use o menu NR para alternar redes durante a partida; **Ctrl+F11** é o atalho padrão de troca nos backends compatíveis. Os ajustes ficam no `dlssnr-amd.ini` da pasta onde o mod foi instalado.
+Os ajustes ficam no `dlssnr-amd.ini` da pasta onde o mod foi instalado. Consulte os [atalhos do DLSSNR](#atalhos-do-dlssnr) para abrir os menus e comparar a imagem.
+
+### Atalhos do DLSSNR
+
+Com o jogo em foco, estes são os atalhos padrão do Mochizuki 0.0.8 para RX 9000. Teclas personalizadas e backends anteriores/RDNA 3 podem ser diferentes.
+
+| Tecla | Onde usar | Função |
+|---|---|---|
+| **End** | OptiScaler | Abre/fecha o **NR Control**: rede, camadas, processamento, HUD FIX e diagnósticos. |
+| **Insert** | OptiScaler | Abre/fecha o menu de **upscaling e geração de quadros**. |
+| **Home** | ReShade, Vulkan e DX9 | Abre/fecha o ReShade; os ajustes NR ficam em **Add-ons**. |
+| **F6** | NR | Liga/desliga o Neural Rendering para comparar a imagem durante a execução atual. |
+| **Ctrl+F11** | NR | Alterna entre as redes disponíveis; redes sem suporte ou pesos necessários são puladas. |
+| **Ctrl+F10** | NR | Liga/desliga o pré-processamento durante a execução atual. |
+| **F5** | Captura comparativa NR | Salva o mesmo quadro sem/com NR em **NR Screenshots**, na pasta do jogo. |
+
+**F6 não desliga o upscaler nem a geração de quadros.** A troca de rede é salva para a próxima abertura; os estados alternados por **F6** e **Ctrl+F10** valem somente naquela execução. Para começar sempre ligado/desligado, use **Começar ligado** no PeliGames ou salve a ativação no menu NR.
+
+Os atalhos de captura do PeliGames são configurados separadamente na aba **Capturas**. Referência: [NR Control e opções do backend](https://github.com/mochizuki0323/DLSSNR-AMD#nr-control-optiscaler-route).
 
 ### Inicialização pela Steam e outros launchers
 
