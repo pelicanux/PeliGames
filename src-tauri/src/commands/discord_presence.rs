@@ -15,13 +15,15 @@ fn service(app: &tauri::AppHandle) -> Result<&'static Presence, String> {
             if temporary != runtime {
                 endpoints.extend(discord_socket::candidates(&temporary));
             }
-            Presence::new(
+            let presence = Presence::new(
                 paths::app_path("discord-presence.json")?,
                 endpoints,
                 Arc::new(move |status| {
                     let _ = app.emit("discord-presence-changed", status);
                 }),
-            )
+            )?;
+            presence.capture(capture_activity(&super::capture::capture_status()));
+            Ok(presence)
         })
         .as_ref()
         .map_err(Clone::clone)
@@ -39,19 +41,18 @@ pub fn discord_presence_preferences(
     let _ = app.emit("discord-presence-changed", &status);
     Ok(status)
 }
-#[tauri::command]
-pub fn discord_presence_game(app: tauri::AppHandle, name: Option<String>) -> Result<(), String> {
-    service(&app)?.game(name);
-    Ok(())
+fn capture_activity(
+    status: &crate::core::capture::CaptureStatus,
+) -> crate::core::discord_presence::CaptureActivity {
+    crate::core::discord_presence::CaptureActivity {
+        active: status.phase == "active",
+        recording: status.recording,
+        replay: status.replay,
+    }
 }
 pub fn capture(status: &crate::core::capture::CaptureStatus) {
     if let Some(Ok(service)) = SERVICE.get() {
-        service.capture(crate::core::discord_presence::CaptureActivity {
-            active: status.phase == "active",
-            recording: status.recording,
-            replay: status.replay,
-            game_name: status.game_name.clone(),
-        });
+        service.capture(capture_activity(status));
     }
 }
 pub fn shutdown() {

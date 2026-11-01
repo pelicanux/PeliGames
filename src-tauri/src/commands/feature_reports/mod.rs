@@ -13,6 +13,7 @@ use std::{fs, io::Write, path::Path};
 #[serde(rename_all = "kebab-case")]
 pub enum Category {
     Dlssnr,
+    DanielNr,
     FrameGeneration,
     Performance,
     Captures,
@@ -23,6 +24,7 @@ impl Category {
     fn label(self) -> &'static str {
         match self {
             Self::Dlssnr => "DLSSNR-AMD",
+            Self::DanielNr => "Daniel NR experimental",
             Self::FrameGeneration => "Geração de quadros",
             Self::Performance => "Desempenho e overlay",
             Self::Captures => "Capturas",
@@ -33,6 +35,7 @@ impl Category {
     fn slug(self) -> &'static str {
         match self {
             Self::Dlssnr => "dlssnr",
+            Self::DanielNr => "daniel-nr",
             Self::FrameGeneration => "geracao-de-quadros",
             Self::Performance => "desempenho",
             Self::Captures => "capturas",
@@ -93,6 +96,37 @@ fn build(context: &Context, label: &str) -> String {
                 &context.mod_directory
             }),
         ),
+        Category::DanielNr => {
+            let base = Path::new(if context.mod_directory.is_empty() {
+                &context.directory
+            } else {
+                &context.mod_directory
+            });
+            for name in [
+                "amdnr-linux/components.json",
+                "amdnr-linux/launch.log",
+                "amd_bridge.log",
+                "amd_presr.log",
+                "dlssnr_on_amd.log",
+                "OptiScaler.log",
+            ] {
+                if let Some(log) = read_at(base, name) {
+                    section(&mut out, name, &log);
+                }
+            }
+            if let Ok(root) = paths::app_path("Mod/DanielNR") {
+                if let Some(log) = read_at(&root, "prepare.log") {
+                    section(&mut out, "PREPARO DANIEL NR", &log);
+                }
+                if let Some(path) = crate::core::daniel_nr::operation_log(&root, base) {
+                    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                        if let Some(log) = read_at(&root.join("logs"), name) {
+                            section(&mut out, "INSTALAÇÃO DESTE JOGO", &log);
+                        }
+                    }
+                }
+            }
+        }
         Category::Captures => captures(&mut out, &context.capture_key),
         Category::FrameGeneration => {
             frame_profiles(&mut out, &context.advanced);
@@ -169,6 +203,9 @@ fn build(context: &Context, label: &str) -> String {
     sanitize(&out)
 }
 fn save(context: &Context, label: &str) -> Result<super::nexus_reports::Report, String> {
+    if matches!(context.category, Category::DanielNr) {
+        crate::core::release_features::require_daniel()?;
+    }
     let mut content = build(context, label);
     let truncated = content.len() > REPORT_LIMIT;
     if truncated {

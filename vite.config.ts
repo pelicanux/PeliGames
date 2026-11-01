@@ -1,10 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { previewCovers } from "./scripts/preview-covers";
 // @ts-expect-error type error without @types/node package
 import process from "node:process";
 // @ts-expect-error type error without @types/node package
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 const host = process.env.TAURI_DEV_HOST;
 // Tauri is the authoritative version, including when Bun builds in a container.
 const appVersion = JSON.parse(readFileSync(new URL("./src-tauri/tauri.conf.json", import.meta.url), "utf8")).version;
@@ -17,8 +16,13 @@ const buildTime = new Intl.DateTimeFormat('en-GB', {
 const timePart = (type: string) => buildTime.find(part => part.type === type)!.value;
 const buildSuffix = `${timePart('day')}${timePart('hour')}${timePart('minute')}`;
 
-export default defineConfig(() => ({
-  plugins: [react(), previewCovers()],
+export default defineConfig(async ({ command }) => {
+  // Optional local preview tooling is not needed to build or run the published app.
+  const previewModule = new URL("./scripts/preview-covers.ts", import.meta.url);
+  const previewPlugins = command === "serve" && existsSync(previewModule)
+    ? [(await import(/* @vite-ignore */ previewModule.href)).previewCovers()] : [];
+  return {
+  plugins: [react(), ...previewPlugins],
   build: { outDir: process.env.PELIGAMES_FRONTEND_DIST || "dist", emptyOutDir: true, rollupOptions: { input: { main: "index.html", logs: "logs.html" } } },
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
@@ -46,4 +50,5 @@ export default defineConfig(() => ({
       ignored: ["**/src-tauri/**"],
     },
   },
-}));
+};
+});

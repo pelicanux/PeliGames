@@ -47,6 +47,16 @@ O Proton antigo pode precisar ser instalado ou substituído nos detalhes do jogo
 **Esses registros não são um backup dos jogos ou dos saves.** Formatar um disco sem preservar os arquivos elimina também as instalações e as alterações dos perfis. Para transportar reflinks mantendo a economia de espaço, o método de backup também precisa preservar o compartilhamento de blocos; uma cópia convencional pode ocupar o tamanho completo.
 
 
+## Cadastro e troca de prefixo
+
+O PeliGames mantém um cadastro independente em `~/.config/PeliGames/library/installations/`, com nomes legíveis por instalação. Os registros existentes são incorporados automaticamente ao carregar a biblioteca. O cadastro principal fica na configuração do launcher; `installation.json`, na pasta da instalação junto ao prefixo, mantém uma cópia atualizada das opções, do executável e do Proton.
+
+Se um desses arquivos for apagado, o outro permite recuperar o cadastro: ao carregar a biblioteca, uma cópia portátil ausente é recriada se a pasta ainda existir, e um cadastro central ausente é recuperado da cópia portátil. Uma pasta apagada ou um disco desconectado não são recriados durante a consulta. Se toda a configuração do launcher tiver sido apagada, use **Localizar biblioteca** para importar os registros portáteis restantes.
+
+Se o jogo estiver fora do prefixo e a pasta do Wine for apagada, o cadastro e as opções salvas continuam disponíveis. Em **Opções → Diretório do prefixo**, informe uma pasta nova ou vazia e confirme. Ao clicar em **Jogar**, o Wine/Proton selecionado cria o novo ambiente e abre o mesmo executável externo. Dependências, configurações e saves apagados com o prefixo precisam ser reinstalados ou restaurados.
+
+Ao redefinir o launcher com **Preservar jogos**, o índice e esses cadastros independentes são mantidos. Inclua a configuração do PeliGames nos seus backups para preservar o cadastro mesmo quando a cópia portátil já não existir.
+
 ## Executável fora do prefixo
 
 Se o executável estiver em outra pasta ou disco, a operação copia somente o prefixo Wine. A nova entrada usa o mesmo executável externo. Reflink é verificado entre o disco do prefixo original e o destino; a partição do executável não precisa oferecer reflink.

@@ -240,6 +240,13 @@ pub(crate) fn prepare_launch_program(
         .into_iter()
         .find(|entry| entry.path == path)
         .ok_or("Executável não registrado na biblioteca PeliGames.")?;
+    prepare_registered_entry(entry, executable, extra_arguments)
+}
+pub(crate) fn prepare_registered_entry(
+    entry: super::installed_library::InstalledEntry,
+    executable: Option<String>,
+    extra_arguments: Vec<String>,
+) -> Result<PreparedRun, String> {
     super::installed_library::ensure_prefix_writable(Path::new(&entry.prefix))?;
     // A game's profile prefix (overlay) is mounted before anything runs in it.
     if let Some(profile) = &entry.profile { super::game_profiles::ensure_ready(profile)?; }

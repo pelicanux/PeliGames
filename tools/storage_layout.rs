@@ -14,6 +14,7 @@ pub const MOVES: &[(&str, &str)] = &[
     ("discord-presence.json", "settings/discord-presence.json"),
     ("updates.json", "settings/updates.json"),
     ("playtime.json", "library/playtime.json"),
+    ("installation-records", "library/installations"),
     (
         "installed-destinations.json",
         "library/installed-destinations.json",
@@ -110,4 +111,9 @@ pub fn from_profile(profile: &Path) -> Option<PathBuf> {
         }
         .to_owned(),
     )
+}
+
+/// Independent installation records live beside the library index, outside Wine prefixes.
+pub fn installation_records(index: &Path) -> Option<PathBuf> {
+    Some(index.parent()?.join("installations"))
 }

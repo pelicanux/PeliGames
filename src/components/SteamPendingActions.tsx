@@ -42,16 +42,16 @@ export function SteamPendingActions({game, disabled, onSaved, children}: {
       if (!live || inFlight || latest.current.busy || document.visibilityState === "hidden" || Date.now() - checkedAt < 750) return;
       inFlight = true; checkedAt = Date.now();
       const entry = latest.current.game;
-      void invoke<Pick<GameInfo, "proton" | "steam_proton_name" | "steam_pending">>("steam_game_proton_status", {externalId: entry.external_id, prefix: entry.prefix || null}).then(next => {
+      void invoke<Pick<GameInfo, "proton" | "steam_proton_name" | "steam_pending" | "steam_profile_proton">>("steam_game_proton_status", {externalId: entry.external_id, prefix: entry.prefix || null}).then(next => {
         if (!live || latest.current.game.external_id !== entry.external_id) return;
         const current = latest.current.game;
         // A late focus response must not replace a choice just saved locally.
-        if (current.proton !== entry.proton || current.advanced !== entry.advanced || Boolean(current.steam_pending) !== Boolean(entry.steam_pending)) return;
+        if (current.proton !== entry.proton || current.steam_profile_proton !== entry.steam_profile_proton || current.advanced !== entry.advanced || Boolean(current.steam_pending) !== Boolean(entry.steam_pending)) return;
         setPending(Boolean(next.steam_pending));
         const proton = current.native_linux ? undefined : next.proton || undefined;
         const label = current.native_linux ? undefined : next.steam_proton_name || undefined;
-        if ((current.proton || undefined) !== proton || (current.steam_proton_name || undefined) !== label || Boolean(current.steam_pending) !== Boolean(next.steam_pending)) {
-          latest.current.onSaved({...current, proton, steam_proton_name: label, steam_pending: next.steam_pending});
+        if ((current.steam_profile_proton || undefined) !== (next.steam_profile_proton || undefined) || (current.proton || undefined) !== proton || (current.steam_proton_name || undefined) !== label || Boolean(current.steam_pending) !== Boolean(next.steam_pending)) {
+          latest.current.onSaved({...current, proton, steam_profile_proton: next.steam_profile_proton, steam_proton_name: label, steam_pending: next.steam_pending});
         }
       }).catch(() => {}).finally(() => { inFlight = false; });
     };
@@ -122,7 +122,7 @@ export function SteamPendingActions({game, disabled, onSaved, children}: {
   return <>
     <div className="steam-action-slot">
       {pending ? <div className="steam-pending-actions">
-        <p className="steam-pending-label" role="status"><strong>{pt ? "Conclua a configuração na Steam" : "Complete Steam setup"}</strong>{pt ? "Confira a linha fixa e o Proton nas propriedades do jogo." : "Check the fixed command and Proton in game properties."}</p>
+        <p className="steam-pending-label" role="status"><strong>{pt ? "Conclua a configuração na Steam" : "Complete Steam setup"}</strong>{pt ? "Vincule o perfil às opções de inicialização do jogo." : "Link the profile in the game’s launch options."}</p>
         <div className="steam-pending-primary">
           <button type="button" className="btn btn-play modern-play" disabled={blocked} aria-busy={exporting} onClick={() => void showManual()}><MenuIcon name="settings" />{exporting ? (pt ? "Aguarde…" : "Please wait…") : (pt ? "Configurar na Steam" : "Configure in Steam")}</button>
           <button type="button" className="modern-mini-btn" disabled={blocked} onClick={() => void act("revert")}>{pt ? "Reverter alterações" : "Revert changes"}</button>
@@ -137,7 +137,7 @@ export function SteamPendingActions({game, disabled, onSaved, children}: {
       <p className="steam-manual-intro">{pt ? "Na Steam, abra Propriedades do jogo → Geral → Opções de inicialização e substitua a linha pelas opções abaixo. Acrescente seus argumentos adicionais, se houver." : "In Steam, open game Properties → General → Launch Options and replace the line with the options below. Append any additional game arguments you use."}</p>
       <label className="steam-manual-field"><span>{pt ? "Opções de inicialização geradas" : "Generated launch options"}</span><textarea readOnly spellCheck={false} rows={4} value={manual.line} onFocus={event => event.currentTarget.select()} /></label>
       {protonName && <div className="steam-manual-proton"><MenuIcon name="info" /><p>{pt ? <>Para usar <strong>{protonName}</strong>, abra Propriedades → Compatibilidade na Steam e selecione essa versão do Proton. Ela precisa estar disponível na sua instalação da Steam.</> : <>To use <strong>{protonName}</strong>, open Properties → Compatibility in Steam and select that Proton version. It must be available in your Steam installation.</>}</p></div>}
-      <p className="steam-manual-help">{pt ? "Adicione esta linha uma vez e use “Já adicionei · verificar”. Depois, MangoHUD, geração de quadros e variáveis usarão o perfil atualizado na próxima abertura do jogo, sem reiniciar a Steam. A escolha do Proton continua em Compatibilidade." : "Add this command once and use “I added it · verify”. MangoHUD, frame generation and variables will then read the updated profile on the next game launch, without restarting Steam. Proton selection remains under Compatibility."}</p>
+      <p className="steam-manual-help">{pt ? "Adicione esta linha uma vez e use “Já adicionei · verificar”. Depois, MangoHUD, geração de quadros e variáveis usarão o perfil atualizado na próxima abertura do jogo, sem reiniciar a Steam. Na Steam nativa, o Proton também pode ser escolhido no PeliGames; no Flatpak, continua em Compatibilidade." : "Add this command once and use “I added it · verify”. MangoHUD, frame generation and variables will then read the updated profile on the next game launch, without restarting Steam. With native Steam, Proton can also be selected in PeliGames; Flatpak keeps the Compatibility selection."}</p>
     </NexusPopup>}
   </>;
 }

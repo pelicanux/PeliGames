@@ -4,6 +4,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::ffi::OsString;
 
+#[path = "steam_proton.rs"]
+pub mod steam_proton;
+
 pub const VERSION: u32 = 1;
 pub const UNIVERSAL_VERSION: u32 = 2;
 pub const MARKER: &str = "__PELIGAMES_COMMAND__";
@@ -27,6 +30,8 @@ pub struct Profile {
     /// GUI-only information for rebuilding a profile after a global HUD edit.
     #[serde(default)]
     pub source: serde_json::Value,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub steam_proton: Option<steam_proton::SteamProton>,
 }
 
 pub fn app_id(value: &str) -> Result<u32, String> {
@@ -40,22 +45,41 @@ pub fn app_id(value: &str) -> Result<u32, String> {
 /// Ids made before readable names: `pg-` and 8 hex digits. They keep working
 /// through the profiles' `.aliases.json` after the rename.
 pub fn hashed_profile_id(value: &str) -> bool {
-    value.len() == 11 && value.starts_with("pg-") && value[3..].bytes().all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c))
+    value.len() == 11
+        && value.starts_with("pg-")
+        && value[3..]
+            .bytes()
+            .all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c))
 }
 /// A profile id is the game's name (`tomb-raider`, `tomb-raider-2`): lowercase
 /// letters and digits joined by single hyphens, so it is also a safe file name.
 /// At least one letter keeps it apart from the per-AppID profiles (`42.json`).
 pub fn profile_id(value: &str) -> Result<&str, String> {
-    let readable = value.len() <= 64 && value.bytes().any(|c| c.is_ascii_lowercase())
-        && value.split('-').all(|part| !part.is_empty() && part.bytes().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit()));
-    if readable || hashed_profile_id(value) { Ok(value) } else { Err("Identificador PeliRun inválido.".into()) }
+    let readable = value.len() <= 64
+        && value.bytes().any(|c| c.is_ascii_lowercase())
+        && value.split('-').all(|part| {
+            !part.is_empty()
+                && part
+                    .bytes()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+        });
+    if readable || hashed_profile_id(value) {
+        Ok(value)
+    } else {
+        Err("Identificador PeliRun inválido.".into())
+    }
 }
 
 impl Profile {
     pub fn validate_id(&self, expected: &str) -> Result<(), String> {
         profile_id(expected)?;
-        if self.version != UNIVERSAL_VERSION || self.id.as_deref() != Some(expected)
-            || self.installation.as_ref().is_none_or(|p| !std::path::Path::new(p).is_absolute()) {
+        if self.version != UNIVERSAL_VERSION
+            || self.id.as_deref() != Some(expected)
+            || self
+                .installation
+                .as_ref()
+                .is_none_or(|p| !std::path::Path::new(p).is_absolute())
+        {
             return Err("Perfil PeliRun incompatível ou de outra instalação.".into());
         }
         self.validate_command()
@@ -68,6 +92,12 @@ impl Profile {
     }
 
     fn validate_command(&self) -> Result<(), String> {
+        if let Some(proton) = &self.steam_proton {
+            proton.validate()?;
+            if self.version == VERSION && self.app_id != proton.app_id {
+                return Err("Proton de outro jogo Steam.".into());
+            }
+        }
         if self.command.is_empty()
             || self.command[0].is_empty()
             || self.command.len() + self.extra_args.len() > 4096
@@ -100,7 +130,9 @@ impl Profile {
     pub fn expand(&self, original: &[OsString]) -> Result<Vec<OsString>, String> {
         if self.version == UNIVERSAL_VERSION {
             self.validate_id(self.id.as_deref().ok_or("Perfil sem identificador.")?)?;
-        } else { self.validate(self.app_id)?; }
+        } else {
+            self.validate(self.app_id)?;
+        }
         if original.is_empty() || original[0].is_empty() {
             return Err("O launcher não forneceu o comando do jogo.".into());
         }
@@ -129,11 +161,13 @@ mod tests {
         Profile {
             version: VERSION,
             app_id: 42,
-            id: None, installation: None,
+            id: None,
+            installation: None,
             command: vec!["/path with spaces/wrapper".into(), MARKER.into()],
             environment: BTreeMap::from([("MANGOHUD".into(), None)]),
             extra_args: vec!["$(touch /never-executed)".into(), "two words".into()],
             source: serde_json::Value::Null,
+            steam_proton: None,
         }
     }
 

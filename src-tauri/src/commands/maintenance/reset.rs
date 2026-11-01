@@ -242,6 +242,9 @@ fn preserve_sessions(journal: &Journal) -> Result<(), String> {
             {
                 preserved.push(relative.into());
             }
+            if exists(&entry.backup.join("library/installations")) {
+                preserved.push("library/installations".into());
+            }
         }
         if journal.preserve_mangohud && entry.original.file_name().is_some_and(|name| name == "PeliGames" || name == "peligames") {
             // Keep only user profiles, never downloaded libraries or generated per-game configs.
@@ -836,7 +839,7 @@ mod tests {
         assert!(modern.join("custom-presets.json").is_file());
     }
     #[test]
-    fn game_preservation_is_independent_of_accounts_and_keeps_only_the_index() {
+    fn game_preservation_keeps_the_index_and_independent_installation_records() {
         let mut f = Fixture::new();
         let entry = &mut f.journal.entries[0];
         let target = entry.original.with_file_name("PeliGames");
@@ -851,6 +854,10 @@ mod tests {
         .unwrap();
         fs::create_dir(entry.original.join("nexus-browser")).unwrap();
         fs::write(entry.original.join("nexus-browser/cookie"), b"fake").unwrap();
+        let records = entry.original.join("library/installations");
+        fs::create_dir_all(&records).unwrap();
+        fs::write(records.join("game.json"), b"independent registration").unwrap();
+        fs::write(records.join("game.identity"), b"/offline/Game").unwrap();
         f.journal.preserve_games = true;
         stage(&f.root, &mut f.journal).unwrap();
         let entry = &f.journal.entries[0];
@@ -858,6 +865,8 @@ mod tests {
             fs::read(entry.original.join("library/installed-destinations.json")).unwrap(),
             b"[\"/offline/Game\"]"
         );
+        assert_eq!(fs::read(entry.original.join("library/installations/game.json")).unwrap(), b"independent registration");
+        assert!(entry.original.join("library/installations/game.identity").is_file());
         assert!(!entry.original.join("nexus-browser").exists());
         assert!(entry.backup.join("nexus-browser/cookie").is_file());
         f.journal.phase = Phase::Committed;

@@ -1,5 +1,5 @@
 import type { GameInfo } from "../../components/GameGrid";
-export type ReportCategory = "dlssnr" | "frame-generation" | "performance" | "captures" | "options" | "advanced";
+export type ReportCategory = "dlssnr" | "daniel-nr" | "frame-generation" | "performance" | "captures" | "options" | "advanced";
 export interface FeatureReportContext {
   category: ReportCategory; name: string; path: string; directory: string; mod_directory: string;
   capture_key: string; launcher: string; proton: string; nexus_id?: string;

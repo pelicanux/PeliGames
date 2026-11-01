@@ -16,7 +16,9 @@ Use os caminhos e argumentos apresentados na interface: eles dependem do local d
 
 ## Quando as alterações entram em vigor
 
-Variáveis, argumentos, camadas e bibliotecas de inicialização são lidos ao reabrir o jogo. Isso não significa que toda opção possa mudar durante uma partida: recarga ao vivo depende de cada ferramenta. O Proton usado pela Steam continua sendo escolhido em **Propriedades → Compatibilidade** na própria Steam.
+Variáveis, argumentos, camadas e bibliotecas de inicialização são lidos ao reabrir o jogo. Isso não significa que toda opção possa mudar durante uma partida: recarga ao vivo depende de cada ferramenta. Na Steam nativa, escolha o Proton em **Opções → Versão do Proton** no PeliGames. A escolha fica no perfil e vale ao reabrir o jogo, inclusive iniciando pela Steam e com o PeliGames fechado. O PeliRun usa o Steam Linux Runtime exigido pela versão escolhida; ele precisa estar instalado. Para voltar à seleção original, clique em **Usar Proton da Steam**.
+
+O jogo precisa continuar configurado para usar Proton na Steam. Essa opção mantém o prefixo existente; não cria uma cópia dos saves. Na Steam Flatpak, a escolha de compatibilidade continua sendo aplicada pelas opções da própria Steam.
 
 O executável do PeliRun é compartilhado; cada instalação tem seu próprio perfil JSON. Renomear um jogo não exige um novo identificador. Identificadores antigos no formato `pg-xxxxxxxx` continuam funcionando por meio dos aliases do perfil. Apagar ou corromper um perfil não apaga os perfis dos demais jogos.
 

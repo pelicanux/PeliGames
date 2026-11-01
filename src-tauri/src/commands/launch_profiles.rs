@@ -167,7 +167,7 @@ pub(super) fn refresh(path: &Path, name: &str, advanced: &AdvancedSettings) -> R
     let key = key.to_str().ok_or("Instalação não usa UTF-8.")?;
     if let Some(previous) = find(&root.join("profiles"), key)? {
         let mods = previous.source.get("mod_options").and_then(|v| v.as_str()).map(str::to_string);
-        save_at(&root, key, steam_runtime::build_for(name, advanced, mods)?)?;
+        save_at(&root, key, steam_runtime::inherit_proton(steam_runtime::build_for(name, advanced, mods)?, Some(&previous)))?;
     }
     Ok(())
 }
@@ -204,7 +204,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     fn profile(name: &str) -> Profile {
-        Profile { version: 1, app_id: 42, id: None, installation: None,
+        Profile { steam_proton: None, version: 1, app_id: 42, id: None, installation: None,
             command: vec![steam_runtime::contract::MARKER.into()], environment: BTreeMap::new(), extra_args: vec![],
             source: serde_json::json!({"name":name}) }
     }
@@ -295,7 +295,7 @@ pub async fn export_launch_profile(name: String, path: String, advanced: Advance
         let root = root()?;
         let previous = find(&root.join("profiles"), key.to_str().ok_or("Instalação não usa UTF-8.")?)?;
         let mods = steam_mods.or_else(|| previous.as_ref().and_then(|p| p.source.get("mod_options")).and_then(|v| v.as_str()).map(str::to_string));
-        save_at(&root, key.to_str().ok_or("Instalação não usa UTF-8.")?, steam_runtime::build_for(&name, &advanced, mods)?)
+        save_at(&root, key.to_str().ok_or("Instalação não usa UTF-8.")?, steam_runtime::inherit_proton(steam_runtime::build_for(&name, &advanced, mods)?, previous.as_ref()))
     }).await.map_err(|e| e.to_string())?
 }
 

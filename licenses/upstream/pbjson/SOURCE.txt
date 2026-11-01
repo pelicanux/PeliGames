@@ -1,1 +1,0 @@
-https://github.com/influxdata/pbjson/blob/main/LICENSE

@@ -927,9 +927,25 @@
 @media (max-width: 900px) { .modern-lib-filter-strip { flex: 1 1 100%; order: 3; } }
 
 
-.modern-ui .modern-lib-toolbar { --library-control-glass: rgba(20, 21, 32, .58); }
+.modern-ui .modern-lib-toolbar { --library-control-glass: rgba(20, 21, 32, .58); --library-control-backdrop: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.25); }
 :root[data-appearance="light"] .modern-ui .modern-lib-toolbar { --library-control-glass: rgba(246, 247, 252, .72); }
-.modern-ui .modern-lib-toolbar :is(.modern-lib-search, .modern-lib-chips button, .modern-lib-filter-arrow, .modern-lib-icon, .modern-lib-view, .modern-lib-button) { backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.25); -webkit-backdrop-filter: blur(calc(20px * var(--window-blur-factor, 1))) saturate(1.25); }
+/* Keep the moving backdrop separate from text and icons in sticky controls. */
+.modern-ui .modern-lib-toolbar :is(.modern-lib-search, .modern-lib-chips button, .modern-lib-filter-arrow, .modern-lib-icon, .modern-lib-view, .modern-lib-button) {
+  position: relative;
+  isolation: isolate;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.modern-ui .modern-lib-toolbar :is(.modern-lib-search, .modern-lib-chips button, .modern-lib-filter-arrow, .modern-lib-icon, .modern-lib-view, .modern-lib-button)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  backdrop-filter: var(--library-control-backdrop);
+  -webkit-backdrop-filter: var(--library-control-backdrop);
+}
 .modern-ui .modern-lib-toolbar :is(.modern-lib-search, .modern-lib-chips button, .modern-lib-filter-arrow, .modern-lib-icon, .modern-lib-view) { background: var(--library-control-glass); }
 .modern-ui .modern-lib-toolbar .modern-lib-chips button[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 22%, var(--library-control-glass)); }
 .modern-ui .modern-lib-toolbar :is(.modern-lib-chips button, .modern-lib-filter-arrow, .modern-lib-icon):hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 14%, var(--library-control-glass)); }
@@ -1279,6 +1295,7 @@ html, body, #root { overflow: clip !important; }
 /* Performance mode keeps library controls solid even without compositing blur. */
 :root .performance-mode .modern-ui .modern-lib-toolbar {
   --library-control-glass: rgb(var(--glass-base-end, 18, 20, 30));
+  --library-control-backdrop: none;
 }
 :root .performance-mode .modern-lib-toolbar :is(.modern-lib-search, .modern-lib-view, button),
 :root .performance-mode .app-titlebar,

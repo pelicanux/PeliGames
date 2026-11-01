@@ -67,7 +67,7 @@ fn run_mode(installer: bool) {
             && assets.iter().any(|name| name.ends_with(".js"))
             && assets.iter().any(|name| name.ends_with(".css"))
             && assets.iter().any(|name| name.ends_with(".wasm"));
-        println!("{}", serde_json::json!({"production": !tauri::is_dev(), "embedded_ui": embedded, "asset_count": assets.len(), "experimental_frame_generation": core::release_features::enabled(), "overlay_payloads_available": commands::frame_overlay_runtime::bundled()}));
+        println!("{}", serde_json::json!({"production": !tauri::is_dev(), "embedded_ui": embedded, "asset_count": assets.len(), "experimental_frame_generation": core::release_features::enabled(), "experimental_daniel_nr": core::release_features::daniel_enabled(), "overlay_payloads_available": commands::frame_overlay_runtime::bundled()}));
         if !embedded { std::process::exit(1); }
         return;
     }
@@ -225,7 +225,6 @@ fn run_mode(installer: bool) {
             let handler: Box<dyn Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync> = Box::new(tauri::generate_handler![
             commands::discord_presence::discord_presence_status,
             commands::discord_presence::discord_presence_preferences,
-            commands::discord_presence::discord_presence_game,
             commands::capture::capture_prepare_overlay,
             commands::capture::capture_runtime_status,
             commands::capture::capture_runtime_install,
@@ -485,6 +484,10 @@ fn run_mode(installer: bool) {
             commands::app_updates::set_launcher_experimental_updates,
             commands::app_updates::download_launcher_update,
             commands::app_updates::restart_launcher_update,
+            commands::daniel_nr::daniel_nr_state,
+            commands::daniel_nr::daniel_nr_component_state,
+            commands::daniel_nr::daniel_nr_operate,
+            commands::daniel_nr::daniel_nr_diagnostics,
             commands::installer::install_mod,
             commands::installer::extract_dll,
             commands::installer::extract_dll_wizard,

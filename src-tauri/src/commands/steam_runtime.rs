@@ -26,6 +26,8 @@ static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 #[derive(Clone, Serialize, Deserialize)]
 struct Source {
+    #[serde(default)]
+    steam_proton: Option<contract::steam_proton::SteamProton>,
     kind: String,
     name: String,
     flatpak: bool,
@@ -170,6 +172,7 @@ fn build(app: u32, source: &Source) -> Result<Profile, String> {
             .map(|word| word.to_string_lossy().into_owned())
             .collect(),
         source: serde_json::to_value(source).map_err(|error| error.to_string())?,
+        steam_proton: source.steam_proton.clone(),
     };
     if source.flatpak { sandboxed_overlay(&mut profile)?; }
     crate::core::release_features::restrict(&mut profile.command, &mut profile.environment, crate::core::release_features::enabled());
@@ -200,14 +203,23 @@ pub(super) fn flatpak_directory() -> Option<PathBuf> {
 
 /// Rebuild from the complete saved source, including Steam Flatpak routing.
 pub(super) fn rebuild(previous: &Profile) -> Result<Profile, String> {
-    let mut next = build(previous.app_id.max(1), &source(previous)?)?;
+    let source = source(previous)?;
+    let app = source.steam_proton.as_ref().map(|p|p.app_id).unwrap_or(previous.app_id.max(1));
+    let mut next = build(app, &source)?;
     next.installation = previous.installation.clone();
     Ok(next)
 }
 
 pub(super) fn build_for(name: &str, advanced: &AdvancedSettings, mods: Option<String>) -> Result<Profile, String> {
-    build(1, &Source { kind: KIND.into(), name: name.into(), flatpak: false, advanced: advanced.clone(), mod_options: mods })
+    build(1, &Source { steam_proton: None, kind: KIND.into(), name: name.into(), flatpak: false, advanced: advanced.clone(), mod_options: mods })
 }
+/// Preserve the Steam runner when another editor rebuilds the same universal profile.
+pub(super) fn inherit_proton(mut next: Profile, previous: Option<&Profile>) -> Profile {
+    next.steam_proton = previous.and_then(|p|p.steam_proton.clone());
+    next.source["steam_proton"] = serde_json::to_value(&next.steam_proton).expect("serializable Proton selection");
+    next
+}
+
 
 fn publish_at(directory: &Path, profile: &Profile) -> Result<(), String> {
     if let Some(installation) = &profile.installation {
@@ -279,7 +291,12 @@ pub(super) fn prepare(
         return Err("O auxiliar Steam não está disponível neste pacote.".into());
     }
     let app = contract::app_id(game.app_id.as_deref().ok_or("Steam AppID ausente.")?)?;
+    let steam_proton = game.steam_profile_proton.as_deref().map(|selected| {
+        let home = dirs::home_dir().ok_or("Pasta pessoal indisponível.")?;
+        super::external_library::steam_proton_profile::resolve(&home, app, selected)
+    }).transpose()?;
     let source = Source {
+        steam_proton,
         kind: KIND.into(),
         name: game.name.clone(),
         flatpak: game.flatpak,
@@ -427,6 +444,19 @@ mod tests {
     use super::*;
 
     #[test]
+    fn steam_proton_survives_rebuilding_and_exporting_a_universal_profile() {
+        let target = contract::steam_proton::SteamProton { app_id: 42, directory: "/runner/Proton".into(), runtime: Some("/runtime/SteamLinuxRuntime".into()) };
+        let source = Source { kind: KIND.into(), name: "Game".into(), flatpak: false, advanced: AdvancedSettings::default(), mod_options: None, steam_proton: Some(target.clone()) };
+        let mut previous = build(42, &source).unwrap();
+        previous.version = contract::UNIVERSAL_VERSION; previous.app_id = 0; previous.id = Some("game".into()); previous.installation = Some("/game".into());
+        let rebuilt = rebuild(&previous).unwrap();
+        assert_eq!(rebuilt.steam_proton, Some(target.clone()));
+        let next = inherit_proton(build_for("Game", &AdvancedSettings::default(), None).unwrap(), Some(&previous));
+        assert_eq!(next.steam_proton, Some(target));
+        assert_eq!(next.source["steam_proton"], previous.source["steam_proton"]);
+    }
+
+    #[test]
     fn profile_update_is_atomic_private_and_keeps_steam_line_stable() {
         let root = std::env::temp_dir().join(format!("peligames-runtime-{}", uuid::Uuid::new_v4()));
         let original = Profile {
@@ -437,6 +467,7 @@ mod tests {
             environment: BTreeMap::new(),
             extra_args: vec!["-before".into()],
             source: serde_json::Value::Null,
+            steam_proton: None,
         };
         publish_at(&root, &original).unwrap();
         let path = root.join("profiles/42.json");

@@ -79,6 +79,7 @@ mod nexus_download_watch;
 pub mod nexus_downloads;
 
 mod nexus_prefix;
+mod nexus_registered_launch;
 
 pub mod nexus_modules;
 
@@ -144,3 +145,5 @@ pub mod matrix_shortcuts;
 pub mod neon_wave;
 
 pub mod openrgb;
+
+pub mod daniel_nr;

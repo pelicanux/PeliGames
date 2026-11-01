@@ -4,7 +4,7 @@
    Do not transform scrolling panels or travelling/animated surfaces: those
    own their positioning, portal stacking and cover-flight transformations. */
 :root :is(
-  .app-titlebar, .game-action-stack, .library-toolbar,
+  .app-titlebar, .game-action-stack, .library-toolbar, .modern-lib-toolbar,
   .nexus-panel-heading-actions, .nexus-installed-mod-actions,
   .nexus-browser-controls, .matrix-rooms-heading,
   .modal-actions, .nexus-popup-footer, .preferences-breadcrumb,

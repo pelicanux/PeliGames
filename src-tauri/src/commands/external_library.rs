@@ -1,5 +1,5 @@
-//! Read-only discovery and launcher-owned execution. A user-selected Proton is
-//! applied to the source launcher's per-game runner configuration before launch.
+//! External library discovery and execution. Native Steam uses a per-game
+//! Proton in PeliRun; other launchers retain their own runner configuration.
 use super::launcher_library::{self, LauncherGame};
 use crate::core::advanced_settings::{launch_command, AdvancedSettings};
 use serde::{Deserialize, Serialize};
@@ -12,6 +12,8 @@ use std::{
 static SETTINGS_LOCK: Mutex<()> = Mutex::new(());
 #[path = "external_proton.rs"]
 mod external_proton;
+#[path = "faugus_launch.rs"]
+mod faugus_launch;
 /// Steam adapters follow reorganized runners and get readable names (see `external_proton`).
 pub(crate) fn organize_steam_tools() -> Vec<String> { external_proton::organize_steam_tools() }
 #[path = "epic_runtime.rs"]
@@ -20,12 +22,15 @@ mod epic_runtime;
 mod steam_settings;
 #[path = "steam_proton_state.rs"]
 mod steam_proton_state;
+#[path = "steam_proton_profile.rs"]
+pub(super) mod steam_proton_profile;
 #[derive(Clone, Serialize)]
 pub struct ExternalGame {
     pub name: String,
     pub native_linux: bool,
     pub steam_pending: bool,
     pub steam_proton_name: Option<String>,
+    pub steam_profile_proton: Option<String>,
     pub path: String,
     pub directory: String,
     pub launcher: String,
@@ -50,6 +55,8 @@ pub struct ExternalSettings {
 }
 #[derive(Clone, Serialize, Deserialize)]
 struct SavedExternalSettings {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    steam_profile_proton: Option<String>,
     #[serde(flatten)]
     advanced: AdvancedSettings,
     #[serde(default)]
@@ -118,7 +125,7 @@ fn discover(home: &Path) -> Vec<ExternalGame> {
             continue;
         }
         result.push(ExternalGame {
-            steam_pending: false, steam_proton_name: None,
+            steam_pending: false, steam_proton_name: None, steam_profile_proton: None,
             native_linux: super::native_games::steam_native(Path::new(&steam.path), &id), name: steam.name,
             directory: steam.path.clone(),
             path: steam.path,
@@ -173,7 +180,7 @@ fn discover(home: &Path) -> Vec<ExternalGame> {
 }
 fn from_launcher(game: LauncherGame, key: String, id: String, name: String) -> ExternalGame {
     ExternalGame {
-        steam_pending: false, steam_proton_name: None,
+        steam_pending: false, steam_proton_name: None, steam_profile_proton: None,
         native_linux: game.native_linux || (game.prefix.is_none() && game.proton.is_none() && game.executable.as_deref().map(|exe| super::native_games::executable_is_native(Path::new(exe))).unwrap_or_else(|| super::native_games::installed_native(Path::new(&game.path)))),
         name,
         path: game.path.clone(),
@@ -207,6 +214,10 @@ pub(super) fn all() -> Result<Vec<ExternalGame>, String> {
                 game.proton = selection.proton;
                 game.steam_proton_name = Some(selection.name);
             }
+        }
+        if game.launcher == "Steam" && !game.flatpak && !game.native_linux {
+            game.steam_profile_proton = preferences.get(&game.external_id).and_then(|s|s.steam_profile_proton.clone());
+            if let Some(proton) = &game.steam_profile_proton { game.proton = Some(proton.clone()); game.steam_proton_name = None; }
         }
         // Without a choice here, show the Proton the launcher last ran the prefix with.
         if game.native_linux { game.proton = None; }
@@ -253,7 +264,10 @@ pub async fn configure_external_game(settings: ExternalSettings) -> Result<Exter
         let mut saved = read_settings()?;
         if game.native_linux && settings.proton.is_some() { return Err("Este jogo usa a versão nativa de Linux. A troca de Proton está desabilitada.".into()); }
         let previous_proton = if game.launcher == "Steam" { game.proton.clone() } else { saved.get(&settings.external_id).filter(|_| !game.native_linux).and_then(|saved| saved.proton.clone()) };
+        let native_steam = game.launcher == "Steam" && !game.flatpak;
+        let follows_steam = native_steam && settings.proton.as_deref() == Some("");
         let proton = match settings.proton.as_deref() {
+            Some("") if follows_steam => dirs::home_dir().and_then(|home|game.app_id.as_deref().and_then(|app|steam_proton_state::selected(&home,false,app))).and_then(|s|s.proton),
             Some(value) => {
                 if game.launcher == "Bottles" {return Err("O Bottles compartilha a versão entre os programas da mesma bottle. Altere o runner no Bottles.".into());}
                 let runner = crate::core::game_installation::validate_proton(value)?;
@@ -272,7 +286,16 @@ pub async fn configure_external_game(settings: ExternalSettings) -> Result<Exter
             },
             None => saved.get(&settings.external_id).and_then(|saved| saved.directory.clone()),
         };
-        let next = SavedExternalSettings {advanced: settings.advanced.clone(), proton: proton.clone(), directory: directory.clone()};
+        let previous_profile_proton = game.steam_profile_proton.clone();
+        if native_steam {
+            game.steam_profile_proton = if follows_steam { None } else if settings.proton.is_some() { proton.clone() } else { previous_profile_proton.clone() };
+            if let Some(selected) = &game.steam_profile_proton {
+                let home = dirs::home_dir().ok_or("Pasta pessoal indisponível.")?;
+                let app = super::steam_runtime::contract::app_id(game.app_id.as_deref().ok_or("Steam AppID ausente.")?)?;
+                steam_proton_profile::resolve(&home, app, selected)?;
+            }
+        }
+        let next = SavedExternalSettings { steam_profile_proton: game.steam_profile_proton.clone(), advanced: settings.advanced.clone(), proton: proton.clone(), directory: directory.clone()};
         let previous = saved.get(&game.external_id).cloned();
         let before = saved.clone();
         saved.insert(settings.external_id, next.clone());
@@ -294,7 +317,7 @@ pub async fn configure_external_game(settings: ExternalSettings) -> Result<Exter
             }
         }
         if game.launcher == "Steam" {
-            let baseline = Some(SavedExternalSettings { advanced: previous.as_ref().map(|s| s.advanced.clone()).unwrap_or_default(), proton: game.proton.clone(), directory: previous.and_then(|s| s.directory) });
+            let baseline = Some(SavedExternalSettings { steam_profile_proton: previous_profile_proton, advanced: previous.as_ref().map(|s| s.advanced.clone()).unwrap_or_default(), proton: game.proton.clone(), directory: previous.and_then(|s| s.directory) });
             if let Err(error) = steam_settings::stage(&game, baseline, next) {
                 std::fs::write(settings_file()?, serde_json::to_vec_pretty(&before).map_err(|e|e.to_string())?).map_err(|e| format!("{error}; falha ao restaurar configurações: {e}"))?;
                 return Err(error);
@@ -306,7 +329,8 @@ pub async fn configure_external_game(settings: ExternalSettings) -> Result<Exter
         game.steam_pending = game.launcher == "Steam" && steam_settings::pending(&game.external_id)?;
         game.advanced = settings.advanced;
         if let Some(directory) = directory { game.directory = directory; }
-        if let Some(proton) = proton { game.proton = Some(proton); game.steam_proton_name = None; }
+        if follows_steam { game.proton = proton; game.steam_proton_name = None; }
+        else if let Some(proton) = proton { game.proton = Some(proton); game.steam_proton_name = None; }
         Ok(game)
     })
     .await
@@ -327,7 +351,7 @@ pub(super) fn save_steam_mod_runtime(external_id: &str, app_id: &str, launch_opt
     let game = all()?.into_iter().find(|game| game.external_id == external_id && game.launcher == "Steam" && game.app_id.as_deref() == Some(app_id)).ok_or("Jogo Steam não encontrado. Atualize a biblioteca.")?;
     let mut saved = read_settings()?;
     let snapshot = saved.clone();
-    let before = saved.get(external_id).cloned().unwrap_or_else(|| SavedExternalSettings { advanced: game.advanced.clone(), proton: game.proton.clone(), directory: None });
+    let before = saved.get(external_id).cloned().unwrap_or_else(|| SavedExternalSettings { steam_profile_proton: None, advanced: game.advanced.clone(), proton: game.proton.clone(), directory: None });
     let mut after = before.clone();
     let previous_mods = super::steam_runtime::mod_options(&game)?;
     let launch_options = super::mod_launch_options::merge(launch_options.as_deref(), previous_mods.as_deref(), None)?;
@@ -645,7 +669,7 @@ fn steam_mod_options(game: &mut ExternalGame) -> Result<(), String> {
             std::fs::rename(temporary, file).map_err(|_| "Não foi possível salvar configurações.")?;
         }
         game.advanced.launch_options = cleaned;
-        let previous = saved.get(&game.external_id).cloned().unwrap_or_else(|| SavedExternalSettings { advanced: game.advanced.clone(), proton: game.proton.clone(), directory: None });
+        let previous = saved.get(&game.external_id).cloned().unwrap_or_else(|| SavedExternalSettings { steam_profile_proton: None, advanced: game.advanced.clone(), proton: game.proton.clone(), directory: None });
         steam_settings::stage_with_mods(game, Some(previous.clone()), previous, Some(line.clone()))?;
     } else {
         // A converted game no longer needs a VDF write when its mod changes.
@@ -686,6 +710,7 @@ pub async fn launch_external_game(external_id: String) -> Result<(), String> {
         if !matches!(game.launcher.as_str(), "Steam" | "Epic Games") {
         for (key,value) in custom_options(&game.advanced)?.get_envs() {if let Some(value)=value {command.env(key,value);} }
         crate::core::mangohud_config::apply_with_preset(&mut command, game.advanced.options.get("mangohud") == Some(&true) || game.advanced.options.get("mangohud_env") == Some(&true), game.advanced.mangohud_fps_limit, game.advanced.mangohud_enabled, game.advanced.mangohud_preset.as_ref())?;
+        faugus_launch::apply(&game, &mut command)?;
         }
         #[cfg(target_os = "linux")]
         if game.launcher == "Steam" {
@@ -764,7 +789,7 @@ mod tests {
     }
     pub(super) fn game(launcher: &str, id: &str) -> ExternalGame {
         ExternalGame {
-            steam_pending: false, steam_proton_name: None,
+            steam_pending: false, steam_proton_name: None, steam_profile_proton: None,
             native_linux: false, name: "Game with spaces".into(),
             path: "/games/test".into(),
             directory: "/games/test".into(),
@@ -779,6 +804,13 @@ mod tests {
             flatpak: false,
             advanced: AdvancedSettings::default(),
         }
+    }
+    #[test]
+    fn steam_profile_selection_does_not_reinterpret_a_legacy_cached_proton() {
+        let cached: SavedExternalSettings = serde_json::from_value(serde_json::json!({"proton":"/old/cache"})).unwrap();
+        assert!(cached.steam_profile_proton.is_none());
+        let selected: SavedExternalSettings = serde_json::from_value(serde_json::json!({"proton":"/new/Proton", "steam_profile_proton":"/new/Proton"})).unwrap();
+        assert_eq!(selected.steam_profile_proton.as_deref(),Some("/new/Proton"));
     }
     #[test]
     fn local_proton_overrides_preserve_legacy_advanced_settings() {
@@ -984,7 +1016,7 @@ pub async fn steam_game_launch_preview(external_id: String) -> Result<serde_json
 }
 
 #[derive(Serialize)]
-pub struct SteamProtonStatus { proton: Option<String>, steam_proton_name: Option<String>, steam_pending: bool }
+pub struct SteamProtonStatus { proton: Option<String>, steam_proton_name: Option<String>, steam_pending: bool, steam_profile_proton: Option<String> }
 /// Targeted refresh for the open game. Never scans the installed game library.
 #[tauri::command]
 pub async fn steam_game_proton_status(external_id: String, prefix: Option<String>) -> Result<SteamProtonStatus, String> {
@@ -993,9 +1025,13 @@ pub async fn steam_game_proton_status(external_id: String, prefix: Option<String
         let parts: Vec<_> = external_id.split(':').collect();
         if parts.len() != 3 || parts[0] != "Steam" || !["native", "flatpak"].contains(&parts[1]) || parts[2].is_empty() || !parts[2].bytes().all(|b| b.is_ascii_digit()) { return Err("Identificação Steam inválida.".into()); }
         let pending = steam_settings::pending(&external_id)?;
+        let profile_proton = if parts[1] == "native" { read_settings()?.get(&external_id).and_then(|s|s.steam_profile_proton.clone()) } else { None };
+        if let Some(proton) = &profile_proton {
+            return Ok(SteamProtonStatus { proton: Some(proton.clone()), steam_proton_name: None, steam_pending: pending, steam_profile_proton: profile_proton });
+        }
         if pending {
             let proton = read_settings()?.get(&external_id).and_then(|s|s.proton.clone());
-            return Ok(SteamProtonStatus { proton, steam_proton_name: None, steam_pending: true });
+            return Ok(SteamProtonStatus { proton, steam_proton_name: None, steam_pending: true, steam_profile_proton: None });
         }
         let home = dirs::home_dir().ok_or("Pasta pessoal indisponível.")?;
         let selection = steam_proton_state::selected(&home, parts[1] == "flatpak", parts[2]);
@@ -1003,6 +1039,6 @@ pub async fn steam_game_proton_status(external_id: String, prefix: Option<String
             Some(value) => (value.proton, Some(value.name)),
             None => (prefix.as_deref().filter(|p| Path::new(p).is_absolute()).and_then(|p|crate::core::game_installation::proton_from_prefix(Path::new(p))), None),
         };
-        Ok(SteamProtonStatus { proton, steam_proton_name: name, steam_pending: false })
+        Ok(SteamProtonStatus { proton, steam_proton_name: name, steam_pending: false, steam_profile_proton: None })
     }).await.map_err(|_| "Não foi possível atualizar o Proton da Steam.")?
 }

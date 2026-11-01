@@ -21,7 +21,7 @@ import { MatrixGameActivities } from "./MatrixGameActivity";
 import { MenuIcon } from "./MenuIcon";
 import { useI18n } from "../i18n/I18nContext";
 import { MATRIX_COMMUNITY_ID, MATRIX_PREMIUM_ROOM_ID } from "../services/matrixCommunity";
-import { displayName, loadOlderMessages, mentionsMe, moderation, powerOf, refreshMatrixRoomMembers, refreshMatrixRooms, disconnectMatrixChat, refreshMatrixStatus, reloadMatrixRooms, setMatrixUserBlocked, useMatrixChat, type ChatMessage } from "../services/matrixChat";
+import { displayName, loadOlderMessages, markMatrixRoomRead, mentionsMe, moderation, powerOf, refreshMatrixRoomMembers, refreshMatrixRooms, disconnectMatrixChat, refreshMatrixStatus, reloadMatrixRooms, setMatrixUserBlocked, useMatrixChat, type ChatMessage } from "../services/matrixChat";
 import { notifyError } from "../services/notifications";
 import { GIF_LINK, matrixAnimatedImage, matrixAvatar, matrixGifMedia, matrixImage, matrixVideo, type GifMedia } from "../services/matrixMedia";
 import { useDiscordBenefits } from "../theme/useDiscordBenefits";
@@ -153,7 +153,6 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
   const settingsShown = useRef(false); settingsShown.current = settingsOpen;
   const editingShown = useRef(false); editingShown.current = Boolean(editing);
   const typingSent = useRef<{ room: string; at: number } | null>(null);
-  const lastRead = useRef<Record<string, string>>({});
   // An action on one message that asks for a reason and confirmation first.
   type Pending = { id: string; kind: "report" | "redact" | "kick" | "ban" };
   const [pending, setPending] = useState<Pending | null>(null), [reason, setReason] = useState("");
@@ -209,14 +208,21 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
       void matrixAvatar(sender).then(avatar=>{if (frame.current?.isConnected) setAvatars(previous=>({...previous,[sender]:avatar}));}).catch(()=>{});
     }
   }, [messages]);
-  // Reading the open room clears its unread count, on every device (private receipt).
-  const lastMessage = messages.length ? messages[messages.length - 1].id : null;
+  // Persist every displayed tail; unread counts can arrive after the message.
+  const lastMessage = current?.messages[current.messages.length - 1]?.id ?? null;
   useEffect(() => {
-    if (preview || !lastMessage || !current?.joined || (premiumSelected && !premiumReady) || lastRead.current[room] === lastMessage) return;
-    if (!current.unread && lastRead.current[room] !== undefined) { lastRead.current[room] = lastMessage; return; }
-    lastRead.current[room] = lastMessage;
-    void invoke("matrix_chat_read", { room, event: lastMessage }).catch(() => { delete lastRead.current[room]; });
-  }, [room, lastMessage, current?.joined, current?.unread, premiumReady]);
+    if (!lastMessage || !current?.joined || (premiumSelected && !premiumReady) || (inCall && !callChat)) return;
+    const read = () => {
+      if (document.visibilityState === "hidden" || !document.hasFocus()) return;
+      void markMatrixRoomRead(room, lastMessage).catch(() => {
+        // A failed receipt stays retryable when the room is reopened or updated.
+      });
+    };
+    read();
+    window.addEventListener("focus", read);
+    document.addEventListener("visibilitychange", read);
+    return () => { window.removeEventListener("focus", read); document.removeEventListener("visibilitychange", read); };
+  }, [room, lastMessage, current?.joined, current?.unread, premiumReady, premiumSelected, inCall, callChat]);
   // New messages follow the end only while the reader is already there; older
   // history keeps the message in view where it was.
   useLayoutEffect(() => {

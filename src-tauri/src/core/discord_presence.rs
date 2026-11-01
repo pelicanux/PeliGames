@@ -18,19 +18,31 @@ pub const APPLICATION_ID: &str = match option_env!("PELIGAMES_DISCORD_APPLICATIO
     None => "1559353844239175802",
 };
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(default)]
+#[serde(from = "SavedPreferences")]
 pub struct Preferences {
     pub enabled: bool,
-    pub share_game: bool,
-    pub share_capture: bool,
+}
+/// Honor the old capture opt-out without retaining game sharing in the new format.
+#[derive(Deserialize)]
+struct SavedPreferences {
+    #[serde(default)]
+    enabled: bool,
+    #[serde(default = "previous_capture_default")]
+    share_capture: bool,
+}
+fn previous_capture_default() -> bool {
+    true
+}
+impl From<SavedPreferences> for Preferences {
+    fn from(saved: SavedPreferences) -> Self {
+        Self {
+            enabled: saved.enabled && saved.share_capture,
+        }
+    }
 }
 impl Default for Preferences {
     fn default() -> Self {
-        Self {
-            enabled: false,
-            share_game: true,
-            share_capture: true,
-        }
+        Self { enabled: false }
     }
 }
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -38,19 +50,18 @@ pub struct CaptureActivity {
     pub active: bool,
     pub recording: bool,
     pub replay: bool,
-    pub game_name: Option<String>,
 }
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct Status {
     pub preferences: Preferences,
     pub connected: bool,
+    pub active: bool,
     pub error: Option<String>,
     pub application_id: String,
 }
 #[derive(Default)]
 struct Inner {
     preferences: Preferences,
-    game: Option<String>,
     capture: CaptureActivity,
     revision: u64,
     connected: bool,
@@ -63,53 +74,22 @@ pub struct Presence {
     state: Shared,
     path: PathBuf,
 }
-fn clean(value: &str) -> String {
-    let mut out = String::new();
-    for c in value.chars().filter(|c| !c.is_control()) {
-        if out.len() + c.len_utf8() > 110 {
-            break;
-        }
-        out.push(c);
+fn selection(preferences: &Preferences, capture: &CaptureActivity) -> Option<&'static str> {
+    if !preferences.enabled || !capture.active {
+        return None;
     }
-    out.trim().to_string()
-}
-fn selection(
-    preferences: &Preferences,
-    game: &Option<String>,
-    capture: &CaptureActivity,
-) -> (String, String) {
-    let capturing = preferences.share_capture && capture.active;
-    let name = if preferences.share_game {
-        game.as_deref().filter(|s| !s.is_empty())
-    } else {
-        None
-    };
-    let details = if let Some(name) = name {
-        format!("Jogando {}", clean(name))
-    } else if capturing && preferences.share_game {
-        capture
-            .game_name
-            .as_deref()
-            .map(|name| format!("Captura · {}", clean(name)))
-            .unwrap_or_else(|| "PeliGames".into())
-    } else {
-        "Na biblioteca".into()
-    };
-    let state = if capturing && capture.recording && capture.replay {
-        "Gravando · replay ativo"
-    } else if capturing && capture.recording {
-        "Gravando gameplay"
-    } else if capturing && capture.replay {
-        "Replay instantâneo ativo"
-    } else {
-        "Jogos no Linux"
-    };
-    (details, state.into())
+    match (capture.recording, capture.replay) {
+        (true, true) => Some("Gravando tela · replay ativo"),
+        (true, false) => Some("Gravando tela"),
+        (false, true) => Some("Replay instantâneo ativo"),
+        (false, false) => None,
+    }
 }
 fn snapshot(inner: &Inner) -> Status {
     Status {
         preferences: inner.preferences.clone(),
         connected: inner.connected,
+        active: selection(&inner.preferences, &inner.capture).is_some(),
         error: inner.error.clone(),
         application_id: APPLICATION_ID.into(),
     }
@@ -284,15 +264,6 @@ impl Presence {
         self.state.1.notify_one();
         Ok(status)
     }
-    pub fn game(&self, name: Option<String>) {
-        let name = name.map(|n| clean(&n)).filter(|n| !n.is_empty());
-        let mut inner = self.state.0.lock().unwrap();
-        if inner.game != name {
-            inner.game = name;
-            inner.revision += 1;
-            self.state.1.notify_one();
-        }
-    }
     pub fn capture(&self, activity: CaptureActivity) {
         let mut inner = self.state.0.lock().unwrap();
         if inner.capture != activity {
@@ -322,8 +293,8 @@ fn run(shared: Shared, paths: Vec<PathBuf>, notify: Notify) {
         let inner = shared.0.lock().unwrap();
         let revision = inner.revision;
         let stop = inner.stop;
-        let enabled = inner.preferences.enabled && !stop;
-        let selected = selection(&inner.preferences, &inner.game, &inner.capture);
+        let selected = selection(&inner.preferences, &inner.capture);
+        let enabled = selected.is_some() && !stop;
         drop(inner);
         let outcome = if !enabled {
             if let Some(mut rpc) = connection.take() {
@@ -333,8 +304,8 @@ fn run(shared: Shared, paths: Vec<PathBuf>, notify: Notify) {
             identity = None;
             Ok(false)
         } else {
-            if identity.as_ref() != Some(&selected) {
-                identity = Some(selected.clone());
+            if identity != selected {
+                identity = selected;
                 since = SystemTime::now()
                     .duration_since(UNIX_EPOCH)
                     .unwrap_or_default()
@@ -358,7 +329,7 @@ fn run(shared: Shared, paths: Vec<PathBuf>, notify: Notify) {
                     }
                 }
             }
-            let activity = json!({"type":0,"details":selected.0,"state":selected.1,"timestamps":{"start":since}});
+            let activity = json!({"type":0,"details":"Gravação e replay","state":selected.unwrap(),"timestamps":{"start":since}});
             let rpc = connection.as_mut().unwrap();
             let result = if sent.as_ref() == Some(&activity) {
                 rpc.ping()
@@ -418,32 +389,70 @@ fn publish(shared: &Shared, connected: bool, error: Option<String>, notify: &Not
 mod tests {
     use super::*;
     #[test]
-    fn privacy_and_capture_summary() {
-        let off = Preferences::default();
-        assert!(!off.enabled);
+    fn only_active_recording_or_replay_is_published() {
+        let enabled = Preferences { enabled: true };
         let capture = CaptureActivity {
             active: true,
             recording: true,
-            replay: true,
-            game_name: Some("Outro jogo".into()),
+            replay: false,
         };
+        assert_eq!(selection(&Preferences::default(), &capture), None);
+        assert_eq!(selection(&enabled, &CaptureActivity::default()), None);
         assert_eq!(
             selection(
-                &Preferences {
-                    enabled: true,
-                    share_game: false,
-                    share_capture: false
-                },
-                &Some("Jogo privado".into()),
-                &capture
+                &enabled,
+                &CaptureActivity {
+                    active: false,
+                    ..capture.clone()
+                }
             ),
-            ("Na biblioteca".into(), "Jogos no Linux".into())
+            None
         );
         assert_eq!(
-            selection(&off, &Some("Cyberpunk".into()), &capture),
-            ("Jogando Cyberpunk".into(), "Gravando · replay ativo".into())
+            selection(
+                &enabled,
+                &CaptureActivity {
+                    active: true,
+                    ..Default::default()
+                }
+            ),
+            None
         );
-        assert!(clean(&"á".repeat(100)).len() <= 110);
+        assert_eq!(selection(&enabled, &capture), Some("Gravando tela"));
+        assert_eq!(
+            selection(
+                &enabled,
+                &CaptureActivity {
+                    replay: true,
+                    ..capture
+                }
+            ),
+            Some("Gravando tela · replay ativo")
+        );
+        assert_eq!(
+            selection(
+                &enabled,
+                &CaptureActivity {
+                    active: true,
+                    recording: false,
+                    replay: true
+                }
+            ),
+            Some("Replay instantâneo ativo")
+        );
+    }
+    #[test]
+    fn old_capture_opt_out_is_preserved_and_game_sharing_is_removed() {
+        let old = |text: &str| serde_json::from_str::<Preferences>(text).unwrap();
+        assert!(!old(r#"{"enabled":true,"share_capture":false,"share_game":true}"#).enabled);
+        assert!(old(r#"{"enabled":true,"share_capture":true,"share_game":false}"#).enabled);
+        assert!(!old(r#"{"enabled":false,"share_capture":true}"#).enabled);
+        assert!(old(r#"{"enabled":true}"#).enabled);
+        assert!(!old("{}").enabled);
+        assert_eq!(
+            serde_json::to_value(old(r#"{"enabled":true,"share_game":true}"#)).unwrap(),
+            json!({"enabled":true})
+        );
     }
     #[test]
     fn rpc_handshake_ping_activity_and_clear() {
@@ -476,7 +485,8 @@ mod tests {
             }
         });
         let mut rpc = Rpc::from_stream(client, "123").unwrap();
-        rpc.activity(json!({"details":"Jogando"})).unwrap();
+        rpc.activity(json!({"details":"Gravação e replay"}))
+            .unwrap();
         rpc.activity(Value::Null).unwrap();
         worker.join().unwrap();
     }
@@ -499,7 +509,11 @@ mod tests {
         use std::sync::mpsc;
         let root = std::env::temp_dir().join(format!("peli-presence-{}", uuid::Uuid::new_v4()));
         fs::create_dir(&root).unwrap();
-        let socket_folder=if flatpak {root.join("app/com.discordapp.Discord")} else {root.clone()};
+        let socket_folder = if flatpak {
+            root.join("app/com.discordapp.Discord")
+        } else {
+            root.clone()
+        };
         fs::create_dir_all(&socket_folder).unwrap();
         let socket = socket_folder.join("discord-ipc-0");
         let listener = UnixListener::bind(&socket).unwrap();
@@ -522,7 +536,18 @@ mod tests {
             let (op, _) = receive(&mut stream).unwrap();
             assert_eq!(op, 0);
             frame(&mut stream, 1, b"{\"evt\":\"READY\"}").unwrap();
-            for _ in 0..7 {
+            for index in 0..8 {
+                // Stopping capture and disabling sharing close only our session.
+                if index == 4 || index == 6 {
+                    let (next, _) = listener.accept().unwrap();
+                    stream = next;
+                    stream
+                        .set_read_timeout(Some(Duration::from_secs(3)))
+                        .unwrap();
+                    let (op, _) = receive(&mut stream).unwrap();
+                    assert_eq!(op, 0);
+                    frame(&mut stream, 1, b"{\"evt\":\"READY\"}").unwrap();
+                }
                 let (op, payload) = receive(&mut stream).unwrap();
                 assert_eq!(op, 1);
                 let request: Value = serde_json::from_slice(&payload).unwrap();
@@ -538,44 +563,52 @@ mod tests {
                 tx.send(request["args"]["activity"].clone()).unwrap();
             }
         });
-        let enabled = Preferences {
-            enabled: true,
-            ..Default::default()
-        };
-        service.preferences(enabled).unwrap();
-        let next = || rx.recv_timeout(Duration::from_secs(3)).unwrap();
-        assert_eq!(next()["details"], "Na biblioteca");
-        service.game(Some("Jogo de teste".into()));
-        assert_eq!(next()["details"], "Jogando Jogo de teste");
+        let enabled = Preferences { enabled: true };
+        service.preferences(enabled.clone()).unwrap();
+        // Enabling sharing while idle must not even open the Discord socket.
+        assert!(rx.recv_timeout(Duration::from_millis(80)).is_err());
         service.capture(CaptureActivity {
             active: true,
             recording: true,
             replay: false,
-            game_name: Some("Jogo de teste".into()),
         });
-        assert_eq!(next()["state"], "Gravando gameplay");
-        service.capture(CaptureActivity{active:true,recording:false,replay:true,game_name:Some("Jogo de teste".into())});
-        assert_eq!(next()["state"],"Replay instantâneo ativo");
-        service.capture(CaptureActivity{active:true,recording:true,replay:true,game_name:Some("Jogo de teste".into())});
-        assert_eq!(next()["state"],"Gravando · replay ativo");
-        service
-            .preferences(Preferences {
-                enabled: true,
-                share_game: false,
-                share_capture: false,
-            })
-            .unwrap();
-        let hidden = next();
-        assert_eq!(hidden["details"], "Na biblioteca");
-        assert_eq!(hidden["state"], "Jogos no Linux");
-        assert!(!hidden.to_string().contains("Jogo de teste"));
+        let next = || rx.recv_timeout(Duration::from_secs(3)).unwrap();
+        let recording = next();
+        assert_eq!(recording["state"], "Gravando tela");
+        assert_eq!(recording["details"], "Gravação e replay");
+        assert_eq!(recording["timestamps"]["start"].as_u64().is_some(), true);
+        service.capture(CaptureActivity {
+            active: true,
+            recording: false,
+            replay: true,
+        });
+        assert_eq!(next()["state"], "Replay instantâneo ativo");
+        service.capture(CaptureActivity {
+            active: true,
+            recording: true,
+            replay: true,
+        });
+        assert_eq!(next()["state"], "Gravando tela · replay ativo");
+        // Removing PeliGames' own activity leaves other applications untouched.
+        service.capture(CaptureActivity::default());
+        assert!(next().is_null());
+        service.capture(CaptureActivity {
+            active: true,
+            recording: true,
+            replay: false,
+        });
+        assert_eq!(next()["state"], "Gravando tela");
         service.preferences(Preferences::default()).unwrap();
+        assert!(next().is_null());
+        service.preferences(enabled).unwrap();
+        assert_eq!(next()["state"], "Gravando tela");
+        service.shutdown();
         assert!(next().is_null());
         server.join().unwrap();
         service.shutdown();
         let stored: Preferences =
             serde_json::from_slice(&fs::read(root.join("preferences.json")).unwrap()).unwrap();
-        assert!(!stored.enabled);
+        assert!(stored.enabled);
         fs::remove_dir_all(root).unwrap();
     }
 }

@@ -18,7 +18,7 @@ export const GameCoverMenu = forwardRef<HTMLDivElement, { game: GameInfo; x: num
     <button onClick={() => { onClose(); void changeLocalCover(game).catch(reportCoverError); }}><MenuIcon name="edit" />{t("gameGrid", "changeCover")}</button>
     <button onClick={() => { onClose(); void resetGameCover(game).catch(reportCoverError); }}><MenuIcon name="repair" />{t("gameGrid", "resetCover")}</button>
     <button disabled={blocked} onClick={() => action("scan")}><MenuIcon name="search" />{t("gameGrid", "rescan")}</button>
-    {canRemoveFromLibrary(game) && game.launcher !== "PeliGames" && <button className="cover-action-danger" disabled={blocked} onClick={() => action("remove")}><MenuIcon name="trash" />{language === "pt" ? "Remover da biblioteca" : "Remove from library"}</button>}
+    {canRemoveFromLibrary(game) && <button className="cover-action-danger" disabled={blocked} onClick={() => action("remove")}><MenuIcon name="trash" />{language === "pt" ? "Remover da biblioteca" : "Remove from library"}</button>}
     {(game.library_view ?? (own ? "own" : "all")) === "own" && !external && <button className="cover-action-danger" disabled={blocked || (!own && !steam)} title={!own && !steam ? "Desinstale pelo launcher de origem." : undefined} onClick={() => action("uninstall")}><MenuIcon name="trash" />Desinstalar</button>}
   </CoverContextMenuPanel>;
 });

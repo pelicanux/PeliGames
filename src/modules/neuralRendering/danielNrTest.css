@@ -1,0 +1,50 @@
+.daniel-nr-test-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.daniel-nr-test-heading h3 { margin: 0; }
+.daniel-nr-test .modern-dlss-setting > span:last-child { min-width: 0; overflow-wrap: anywhere; text-align: end; }
+.daniel-nr-test-status { margin: 16px 0 0; }
+.daniel-nr-test-error { margin: 12px 0 0; color: var(--danger, #ff8a8a); font-size: .8125rem; }
+@container game-spotlight (max-width: 480px) {
+  .daniel-nr-test .modern-dlss-setting > span:last-child { text-align: start; }
+}
+
+.daniel-nr-path { overflow-wrap: anywhere; color: var(--modern-muted); font-size: .8125rem; }
+.daniel-nr-confirm { display: flex; gap: 8px; align-items: center; margin-top: 16px; font-size: .8125rem; }
+.daniel-nr-confirm input { accent-color: var(--accent); }
+.daniel-nr-diagnostics { max-height: 360px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--modern-muted); font-size: .75rem; line-height: 1.5; }
+
+.daniel-loading-dll-row { flex-wrap: wrap; }
+.daniel-loading-dll-row > div:first-child { flex: 1 1 200px; }
+.daniel-loading-dll-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.daniel-loading-dll-controls .selection-menu { min-width: 156px; }
+
+.daniel-nr-step { padding: 18px 0; border-top: 1px solid var(--modern-line); }
+.daniel-nr-step:last-of-type { padding-bottom: 0; }
+.daniel-nr-step > header { display: flex; align-items: center; gap: 10px; }
+.daniel-nr-step h4 { margin: 0; font-size: .875rem; font-weight: 600; color: var(--modern-text); }
+.daniel-nr-step-content { min-width: 0; }
+.daniel-nr-step-content > p, .daniel-nr-step-content details > p { color: var(--modern-muted); font-size: .75rem; line-height: 1.5; margin: 8px 0 12px; }
+.daniel-nr-environment-link { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin: 0 0 16px; font-size: .75rem; color: var(--modern-muted); }
+.daniel-nr-note { margin: 10px 0; font-size: .75rem; }
+.daniel-nr-destination { margin-top: 12px; font-size: .75rem; }
+.daniel-nr-test summary { cursor: pointer; color: var(--modern-text); font-size: .8125rem; }
+.daniel-nr-test summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+.daniel-nr-shortcuts { margin: 12px 0; }
+.daniel-nr-shortcuts > div { display: grid; grid-template-columns: minmax(90px, auto) 1fr; gap: 10px; align-items: baseline; padding: 6px 0; }
+.daniel-nr-shortcuts dd { margin: 0; font-size: .75rem; line-height: 1.4; color: var(--modern-muted); }
+.daniel-nr-shortcuts kbd { font: inherit; font-size: .6875rem; border: 1px solid var(--modern-line); border-radius: 5px; padding: 3px 5px; background: var(--modern-card-2); color: var(--modern-text); white-space: nowrap; }
+.daniel-nr-uninstall { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 18px 0; font-size: .8125rem; }
+.daniel-nr-uninstall > div { flex: 1 1 170px; }
+.daniel-nr-uninstall p { margin: 4px 0 0; color: var(--modern-muted); font-size: .75rem; line-height: 1.5; }
+.daniel-nr-uninstall > button { color: var(--danger, #ff8a8a); }
+.daniel-nr-support { margin-top: 18px; border-top: 1px solid var(--modern-line); padding-top: 16px; }
+.daniel-nr-support[open] > summary { margin-bottom: 12px; }
+@container game-spotlight (max-width: 480px) {
+  .daniel-loading-dll-controls, .daniel-loading-dll-controls .selection-menu { width: 100%; }
+}

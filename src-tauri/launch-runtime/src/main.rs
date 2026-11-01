@@ -1,8 +1,9 @@
+mod discord_socket;
 mod epic;
 mod epic_contract;
 mod profile;
+mod steam_proton_dispatch;
 mod release_features;
-mod discord_socket;
 
 mod profile_io;
 use profile::app_id;
@@ -12,12 +13,24 @@ use std::process::Command;
 
 fn run() -> Result<(), String> {
     let mut args = std::env::args_os().skip(1);
-    let mode = args.next().and_then(|v| v.into_string().ok()).ok_or("Use pelirun --profile ID -- comando [argumentos].")?;
-    if mode == "--epic-runtime" { return epic::run(args); }
-    let identity = args.next().and_then(|v| v.into_string().ok()).ok_or("Identificador do perfil ausente.")?;
+    let mode = args
+        .next()
+        .and_then(|v| v.into_string().ok())
+        .ok_or("Use pelirun --profile ID -- comando [argumentos].")?;
+    if mode == "--epic-runtime" {
+        return epic::run(args);
+    }
+    let identity = args
+        .next()
+        .and_then(|v| v.into_string().ok())
+        .ok_or("Identificador do perfil ausente.")?;
     match mode.as_str() {
-        "--profile" => { profile::profile_id(&identity)?; }
-        "--app" => { app_id(&identity)?; }
+        "--profile" => {
+            profile::profile_id(&identity)?;
+        }
+        "--app" => {
+            app_id(&identity)?;
+        }
         _ => return Err("Use pelirun --profile ID -- comando [argumentos].".into()),
     }
     if args.next().as_deref() != Some(std::ffi::OsStr::new("--")) {
@@ -36,21 +49,60 @@ fn run() -> Result<(), String> {
     let mut profile = if mode == "--profile" {
         profile_io::universal(&directory.join("profiles"), &identity)?
     } else {
-        profile_io::legacy(&directory.join("profiles").join(format!("{identity}.json")), app_id(&identity)?)?
+        profile_io::legacy(
+            &directory.join("profiles").join(format!("{identity}.json")),
+            app_id(&identity)?,
+        )?
     };
     if let Some(value) = profile.as_mut() {
-        release_features::restrict(&mut value.command, &mut value.environment, release_features::enabled());
+        release_features::restrict(
+            &mut value.command,
+            &mut value.environment,
+            release_features::enabled(),
+        );
     }
+    let selected = profile
+        .as_ref()
+        .and_then(|p| p.steam_proton.as_ref())
+        .filter(|_| {
+            mode == "--app"
+                || original.iter().any(|word| word == "SteamLaunch")
+                || std::env::var_os("SteamAppId").is_some_and(|id| id != "0")
+        })
+        .map(|p| {
+            let inherited = [
+                "SteamAppId",
+                "SteamGameId",
+                "STEAM_COMPAT_TOOL_PATHS",
+                "STEAM_COMPAT_MOUNTS",
+            ]
+            .into_iter()
+            .filter_map(|key| std::env::var_os(key).map(|value| (key.to_string(), value)))
+            .collect();
+            p.launch(&original, &inherited)
+        })
+        .transpose()?;
     let words = match &profile {
-        Some(value) => value.expand(&original)?,
+        Some(value) => value.expand(
+            selected
+                .as_ref()
+                .map(|s| s.command.as_slice())
+                .unwrap_or(&original),
+        )?,
         None => original,
     };
     let mut command = Command::new(&words[0]);
     command.args(&words[1..]);
     if let Some(profile) = profile {
         // Proton's Discord bridge reaches a Flatpak/Snap client only through a top-level socket.
-        if profile.environment.get("PROTON_DISCORD_BRIDGE").is_some_and(|value| value.as_deref() == Some("1")) {
-            if let Err(error) = discord_socket::link_sandboxed(&discord_socket::runtime_dir()) { eprintln!("PeliGames: {error}"); }
+        if profile
+            .environment
+            .get("PROTON_DISCORD_BRIDGE")
+            .is_some_and(|value| value.as_deref() == Some("1"))
+        {
+            if let Err(error) = discord_socket::link_sandboxed(&discord_socket::runtime_dir()) {
+                eprintln!("PeliGames: {error}");
+            }
         }
         for (key, value) in profile.environment {
             match value {
@@ -62,6 +114,9 @@ fn run() -> Result<(), String> {
                 }
             }
         }
+    }
+    if let Some(selected) = selected {
+        command.envs(selected.environment);
     }
     // Keep the PID, signals, inherited Steam environment and exit status. No
     // shell, background daemon, GUI process, or game-file replacement is used.

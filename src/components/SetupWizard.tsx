@@ -289,8 +289,8 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
         <fieldset disabled={!gpuCompatible} style={{ border: 0, margin: 0, padding: 0, minWidth: 0, opacity: gpuCompatible ? 1 : 0.45 }}>
         <div className="backend-options wizard-backend-options">
           {([
-            {arch:"rdna4", name:"DLSSNR-AMD", hardware:"RDNA 4 / RX 9000", author:"mochizuki0323", repo:"DLSSNR-AMD", description:"rdna4Desc"},
-            {arch:"rdna3", name:"DLSSNR-RDNA3", hardware:"RDNA 3 / RX 7000", author:"mauri870", repo:"DLSSNR-RDNA3", description:"rdna3Desc"},
+            {arch:"rdna4", name:"DLSSNR-AMD", hardware:"RDNA 4 / RX 9000", author:"mochizuki0323", url:"https://gitlab.com/mochizuki0323/DLSSNR-AMD", description:"rdna4Desc"},
+            {arch:"rdna3", name:"DLSSNR-RDNA3", hardware:"RDNA 3 / RX 7000", author:"mauri870", url:"https://github.com/mauri870/DLSSNR-RDNA3", description:"rdna3Desc"},
           ] as const).map(backend => <div key={backend.arch} className={`backend-option wizard-backend-card${gpuArch === backend.arch ? " active" : ""}`}>
             <button type="button" className="wizard-backend-select" aria-pressed={gpuArch === backend.arch}
               disabled={!gpuCompatible || isDownloading || loading} onClick={() => setGpuArch(backend.arch)}>
@@ -301,8 +301,8 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
               </div>
               <p>{t("setupWizard", backend.description)}</p>
             </button>
-            <button type="button" className="wizard-maintainer-link" title={t("setupWizard", "viewOnGithub")}
-              onClick={() => { void openUrl(`https://github.com/${backend.author}/${backend.repo}`); }}>
+            <button type="button" className="wizard-maintainer-link" title={t("setupWizard", "viewProject")}
+              onClick={() => { void openUrl(backend.url); }}>
               {backend.author}<MenuIcon name="externalLink" />
             </button>
           </div>)}

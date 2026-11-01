@@ -1,0 +1,12 @@
+.daniel-component-workspace { max-width: 920px; }
+.daniel-component-workspace .mod-setting-row > .selection-menu { flex: 0 0 160px; width: 160px; max-width: 100%; }
+.daniel-compiler-row { flex-wrap: wrap; }
+.daniel-compiler-row > .mod-row-copy { flex-basis: 220px; }
+.daniel-compiler-controls { display: flex; align-items: center; flex: 1 1 300px; min-width: 0; gap: 8px; }
+.daniel-compiler-controls input { flex: 1; min-width: 0; width: 100%; padding: 7px 10px; border: 1px solid var(--mod-line); font: inherit; font-size: .8125rem; }
+.daniel-compiler-controls > button { flex-shrink: 0; }
+@container settings-page (max-width: 540px) {
+  .daniel-component-workspace .mod-setting-row { flex-wrap: wrap; }
+  .daniel-component-workspace .mod-setting-row > .selection-menu { flex-basis: 100%; }
+  .daniel-compiler-controls { flex-basis: 100%; }
+}

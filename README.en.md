@@ -2,7 +2,7 @@
   <img src="public/images/readme-header.svg" alt="PeliGames" width="900" />
 </p>
 
-> **0.5.2 experimental:** constant-quality capture presets with automatic codec selection, AppImage/Wayland animation fixes, artwork recovery, and improvements to data organization and reset. See the [0.5.2 release notes (Portuguese)](docs/releases/0.5.2.md). Capture, frame generation and the overlay are experimental; compatibility depends on the game, GPU, Proton and desktop environment. See the [usage and limitations guide](docs/overlay.md).
+> **0.5.3 experimental:** Mochizuki backend updates through GitLab, prefix and installation-record recovery, and improvements to Matrix, Discord and add-on navigation. See the [0.5.3 release notes (Portuguese)](docs/releases/0.5.3.md). Capture, frame generation and the overlay are experimental; compatibility depends on the game, GPU, Proton and desktop environment. See the [usage and limitations guide](docs/overlay.md).
 
 <p align="center"><a href="README.md">Português</a> · <strong>English</strong></p>
 
@@ -105,7 +105,7 @@ Open **Mods → DLSSNR-AMD** in a game's details to install and configure Neural
 
 | Card | Backend | Authors' reference |
 |---|---|---|
-| RX 9000 (RDNA 4) | [DLSSNR-AMD by mochizuki0323](https://github.com/mochizuki0323/DLSSNR-AMD) | Mesa 26.2 or newer and recent Proton; 0.0.8 tested with GE-Proton 11-11 and Mesa 26.2.5 |
+| RX 9000 (RDNA 4) | [DLSSNR-AMD by mochizuki0323](https://gitlab.com/mochizuki0323/DLSSNR-AMD) | Mesa 26.2 or newer and recent Proton; 0.0.8 tested with GE-Proton 11-11 and Mesa 26.2.5 |
 | RX 7000 (RDNA 3) | [DLSSNR-RDNA3 by mauri870](https://github.com/mauri870/DLSSNR-RDNA3/blob/rdna3/README-RDNA3.md) | Separate RX 7000 fork; tested by its author on RX 7900 XTX with Mesa 26.2.3 |
 
 The RDNA 4 backend uses FP8 instructions; the RDNA 3 fork adapts processing to FP16. PeliGames shows options according to the installed package's capabilities. The projects do not necessarily provide the same features.
@@ -162,7 +162,7 @@ Mochizuki 0.0.8 uses original OptiScaler with the `dlssnr-amd.asi` plugin on the
 
 ### In-game adjustments with Mochizuki 0.0.8
 
-The launcher keeps preparation and startup controls. **Layers, RenoDX/wilsjo2 processing, fast or legacy passes, HUD protection, visual comparison and cost/VRAM diagnostics** are adjusted in **NR Control** on the OptiScaler route, or **ReShade → Add-ons** on the other 0.0.8 routes. See the [official 0.0.8 release notes](https://github.com/mochizuki0323/DLSSNR-AMD/releases/tag/v0.0.8-linux-preview) for details and limitations.
+The launcher keeps preparation and startup controls. **Layers, RenoDX/wilsjo2 processing, fast or legacy passes, HUD protection, visual comparison and cost/VRAM diagnostics** are adjusted in **NR Control** on the OptiScaler route, or **ReShade → Add-ons** on the other 0.0.8 routes. See the [official backend release notes](https://gitlab.com/mochizuki0323/DLSSNR-AMD/-/releases/v0.0.8.1) for details and limitations.
 
 Settings are stored in `dlssnr-amd.ini` in the mod's installation folder. See [DLSSNR shortcuts](#dlssnr-shortcuts) to open the menus and compare the image.
 
@@ -182,7 +182,7 @@ With the game focused, these are the default shortcuts for Mochizuki 0.0.8 on RX
 
 **F6 does not disable upscaling or frame generation.** Network changes are saved for the next launch; **F6** and **Ctrl+F10** toggles last only for the current run. To choose the startup state, use **Start enabled** in PeliGames or save activation in the NR menu.
 
-PeliGames capture shortcuts are configured separately in **Captures**. Reference: [NR Control and backend options](https://github.com/mochizuki0323/DLSSNR-AMD#nr-control-optiscaler-route).
+PeliGames capture shortcuts are configured separately in **Captures**. Reference: [NR Control and backend options](https://gitlab.com/mochizuki0323/DLSSNR-AMD#nr-control-optiscaler-route).
 
 ### Launching through Steam and other launchers
 
@@ -201,7 +201,7 @@ Authors' published network-only times, in milliseconds per frame:
 | RX 7900 XTX — Old | 15 ms | 26 ms | 56 ms |
 | RX 7900 XTX — Old model's int4 | 13.3 ms | 22.8 ms | 50.8 ms |
 
-These references use different versions and measurement methods, excluding the rest of the game and the mod's full processing cost. They do not represent final FPS or guarantee the same result on another machine. Check the conditions in the [RDNA 4](https://github.com/mochizuki0323/DLSSNR-AMD#performance) and [RDNA 3](https://github.com/mauri870/DLSSNR-RDNA3/blob/rdna3/README-RDNA3.md#what-it-costs) references. Reducing the network's processing resolution can lower its cost while affecting the image.
+These references use different versions and measurement methods, excluding the rest of the game and the mod's full processing cost. They do not represent final FPS or guarantee the same result on another machine. Check the conditions in the [RDNA 4](https://gitlab.com/mochizuki0323/DLSSNR-AMD#performance) and [RDNA 3](https://github.com/mauri870/DLSSNR-RDNA3/blob/rdna3/README-RDNA3.md#what-it-costs) references. Reducing the network's processing resolution can lower its cost while affecting the image.
 
 ### When something does not work
 
@@ -238,6 +238,7 @@ PeliGames installs Nexus Mods mods in **215 games**, with modules based on the V
    ```
 4. Build the interface (it also generates the icons):
    ```
+   bash scripts/license-notices.sh
    bun run build
    ```
 5. Build both executables, with the interface embedded:
@@ -252,7 +253,7 @@ To build packages (AppImage, DEB and RPM) in `src-tauri/target/release/bundle/`,
 
 PeliGames is developed by Pelicano and distributed under the [GNU GPL 3.0](LICENSE). Distributed derivative versions must provide the corresponding source code under the same license.
 
-It includes [DLSSNR-AMD by mochizuki0323](https://github.com/mochizuki0323/DLSSNR-AMD) and [DLSSNR-RDNA3 by mauri870](https://github.com/mauri870/DLSSNR-RDNA3).
+It includes [DLSSNR-AMD by mochizuki0323](https://gitlab.com/mochizuki0323/DLSSNR-AMD) and [DLSSNR-RDNA3 by mauri870](https://github.com/mauri870/DLSSNR-RDNA3).
 
 Third-party components keep their own licenses. The [full credits and notices](licenses/README.md) ship with the program and can be read in the **About** window.
 

@@ -3,64 +3,18 @@ pub(super) mod backend_folder;
 #[path = "backend_release.rs"]
 mod backend_release;
 use tauri::AppHandle;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use reqwest::Client;
 use std::fs;
 use std::path::PathBuf;
-use std::io::Cursor;
 use flate2::read::GzDecoder;
 use tar::Archive;
 
-#[derive(Serialize, Deserialize, Debug)]
-struct GitHubAsset {
-    name: String,
-    browser_download_url: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct GitHubRelease {
-    tag_name: String,
-    #[serde(default)]
-    name: Option<String>,
-    #[serde(default)]
-    body: Option<String>,
-    #[serde(default)]
-    draft: bool,
-    #[serde(default)]
-    prerelease: bool,
-    assets: Vec<GitHubAsset>,
-}
-
-impl GitHubRelease {
-    fn linux_assets(&self) -> Vec<(&GitHubAsset, &'static str)> {
-        let windows = backend_release::windows_release(&self.tag_name, self.name.as_deref().unwrap_or(""), self.body.as_deref().unwrap_or(""));
-        self.assets.iter().filter_map(|asset| backend_release::linux_bitness(&asset.name, windows).map(|bits| (asset, bits))).collect()
-    }
-    fn compatible(&self) -> bool {
-        !self.draft && !self.linux_assets().is_empty()
-    }
-}
-
-/// Both version checks and downloads must resolve the same Linux release.
-async fn linux_release(client: &Client, gpu_arch: &str) -> Result<GitHubRelease, String> {
-    let repo = match gpu_arch {
-        "rdna3" => "mauri870/DLSSNR-RDNA3",
-        "rdna4" => "mochizuki0323/DLSSNR-AMD",
-        _ => return Err("Arquitetura de backend inválida.".into()),
-    };
-    let base = format!("https://api.github.com/repos/{repo}/releases");
-    // Linux updates currently ship as previews. Read newest releases first;
-    // /latest excludes previews and can leave the launcher on an older backend.
-    for page in 1..=5 {
-        let releases: Vec<GitHubRelease> = client.get(format!("{base}?per_page=30&page={page}")).send().await
-            .map_err(|e| e.to_string())?.error_for_status().map_err(|e| e.to_string())?
-            .json().await.map_err(|e| e.to_string())?;
-        let count = releases.len();
-        if let Some(release) = releases.into_iter().find(GitHubRelease::compatible) { return Ok(release); }
-        if count < 30 { break; }
-    }
-    Err("Nenhuma release com pacotes Linux compatíveis foi encontrada. O backend instalado foi preservado.".into())
-}
+#[path = "backend_source.rs"]
+mod backend_source;
+#[path = "backend_package.rs"]
+mod backend_package;
+use backend_source::linux_release;
 
 #[tauri::command]
 pub async fn get_backend_path(app: tauri::AppHandle, gpu_arch: String) -> Result<String, String> {
@@ -91,6 +45,18 @@ use std::time::Instant;
 use tauri::Emitter;
 
 static CANCEL_DOWNLOAD: AtomicBool = AtomicBool::new(false);
+static BACKEND_OPERATION: AtomicBool = AtomicBool::new(false);
+
+struct BackendOperation;
+impl BackendOperation {
+    fn start() -> Result<Self, String> {
+        BACKEND_OPERATION.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .map(|_| Self).map_err(|_| "Já há uma operação de backend em andamento.".into())
+    }
+}
+impl Drop for BackendOperation {
+    fn drop(&mut self) { BACKEND_OPERATION.store(false, Ordering::SeqCst); }
+}
 
 #[derive(Clone, Serialize)]
 pub struct ProgressPayload {
@@ -159,6 +125,7 @@ pub async fn update_backend(app: AppHandle, gpu_arch: String) -> Result<String, 
     result
 }
 async fn update_backend_inner(app: AppHandle, gpu_arch: String) -> Result<String, String> {
+    let _operation = BackendOperation::start()?;
     CANCEL_DOWNLOAD.store(false, Ordering::SeqCst);
 
     let client = Client::builder()
@@ -177,9 +144,8 @@ async fn update_backend_inner(app: AppHandle, gpu_arch: String) -> Result<String
     // Sum total sizes to give overall progress
     let mut overall_total: u64 = 0;
     for (asset, _) in &linux_assets {
-        let resp = client.head(&asset.browser_download_url).send().await.map_err(|e| e.to_string())?;
-        if let Some(len) = resp.content_length() {
-            overall_total += len;
+        if let Ok(resp) = client.head(&asset.url).send().await {
+            if resp.status().is_success() { overall_total += resp.content_length().unwrap_or(0); }
         }
     }
 
@@ -187,15 +153,18 @@ async fn update_backend_inner(app: AppHandle, gpu_arch: String) -> Result<String
     let overall_start = Instant::now();
     let mut last_emit = Instant::now();
 
+    let stage = backend_package::UpdateStage::new(backend_dir.parent().ok_or("Pasta de backend inválida.")?, &gpu_arch)?;
     for (asset, bitness) in linux_assets {
 
-        let mut download_resp = client.get(&asset.browser_download_url).send().await.map_err(|e| format!("Error downloading {}: {}", asset.name, e))?.error_for_status().map_err(|e| e.to_string())?;
+        let mut download_resp = client.get(&asset.url).send().await.map_err(|e| format!("Error downloading {}: {}", asset.name, e))?.error_for_status().map_err(|e| e.to_string())?;
         
+        let checksum = asset.sha256.clone().or_else(|| download_resp.headers().get("x-checksum-sha256")
+            .and_then(|value| value.to_str().ok()).map(str::to_owned));
         // Use the actual size if we couldn't get it via HEAD
         let file_total = download_resp.content_length().unwrap_or(0);
         if overall_total == 0 { overall_total = file_total * 2; } // rough fallback
 
-        let mut bytes_vec = Vec::with_capacity(file_total as usize);
+        let mut bytes_vec = Vec::with_capacity(file_total.min(32 * 1024 * 1024) as usize);
 
         while let Some(chunk) = download_resp.chunk().await.map_err(|e| e.to_string())? {
             if CANCEL_DOWNLOAD.load(Ordering::SeqCst) {
@@ -223,20 +192,16 @@ async fn update_backend_inner(app: AppHandle, gpu_arch: String) -> Result<String
             return Err("Download cancelado pelo usuário.".into());
         }
 
-        let target_dir = backend_dir.join(bitness);
-        fs::create_dir_all(&target_dir).map_err(|e| e.to_string())?;
-
-        let cursor = Cursor::new(bytes_vec);
-        if asset.name.to_ascii_lowercase().ends_with(".zip") {
-            let mut archive = zip::ZipArchive::new(cursor).map_err(|e| format!("Failed reading Linux ZIP: {e}"))?;
-            archive.extract(&target_dir).map_err(|e| format!("Failed unpacking Linux ZIP: {e}"))?;
-        } else {
-            let tar = GzDecoder::new(cursor);
-            let mut archive = Archive::new(tar);
-            archive.unpack(&target_dir).map_err(|e| format!("Failed unpacking tar: {}", e))?;
-        }
+        backend_package::verify_download(&bytes_vec, checksum.as_deref())?;
+        stage.unpack(&asset.name, bitness, &bytes_vec)?;
     }
-    
+    if CANCEL_DOWNLOAD.load(Ordering::SeqCst) {
+        return Err("Download cancelado pelo usuário.".into());
+    }
+    let destination = backend_dir.clone();
+    tauri::async_runtime::spawn_blocking(move || stage.publish(&destination, &tag_with_arch, || CANCEL_DOWNLOAD.load(Ordering::SeqCst)))
+        .await.map_err(|e| e.to_string())??;
+
     // final emit
     let elapsed = overall_start.elapsed().as_secs_f64();
     let speed = if elapsed > 0.0 { overall_downloaded as f64 / elapsed } else { 0.0 };
@@ -245,8 +210,6 @@ async fn update_backend_inner(app: AppHandle, gpu_arch: String) -> Result<String
         total: overall_total,
         speed_bytes_per_sec: speed,
     });
-
-    fs::write(backend_dir.join("version.txt"), tag_with_arch).map_err(|e| e.to_string())?;
 
     Ok(format!("Arquivos atualizados com sucesso na pasta:\n{:?}", backend_dir))
 }
@@ -260,6 +223,8 @@ pub async fn delete_backend(app: AppHandle, gpu_arch: String) -> Result<String, 
     result
 }
 async fn delete_backend_inner(app: AppHandle, gpu_arch: String) -> Result<String, String> {
+    if !matches!(gpu_arch.as_str(), "rdna3" | "rdna4") { return Err("Arquitetura de backend inválida.".into()); }
+    let _operation = BackendOperation::start()?;
     let backend_dir = get_backend_dir(&app)?.join(&gpu_arch);
     if backend_dir.exists() {
         fs::remove_dir_all(&backend_dir).map_err(|e| format!("Falha ao apagar pasta: {}", e))?;
@@ -272,6 +237,7 @@ async fn delete_backend_inner(app: AppHandle, gpu_arch: String) -> Result<String
 #[tauri::command]
 pub async fn copy_local_backend(app: AppHandle, gpu_arch: String, source_path: String) -> Result<String, String> {
     if !matches!(gpu_arch.as_str(), "rdna3" | "rdna4") { return Err("Arquitetura de backend inválida.".into()); }
+    let _operation = BackendOperation::start()?;
     let backend_dir = get_backend_dir(&app)?.join(&gpu_arch);
     
     // Copy source_path to backend_dir
@@ -378,20 +344,4 @@ fn copy_dir_all(src: impl AsRef<std::path::Path>, dst: impl AsRef<std::path::Pat
         }
     }
     Ok(())
-}
-
-#[cfg(test)]
-mod linux_release_tests {
-    use super::*;
-    fn release(name: &str, prerelease: bool, draft: bool) -> GitHubRelease {
-        GitHubRelease { tag_name:"v0.0.6-linux-preview".into(), name:None, body:None, prerelease, draft,
-            assets:vec![GitHubAsset {name:name.into(), browser_download_url:String::new()}] }
-    }
-    #[test]
-    fn linux_previews_are_updates_but_windows_and_drafts_are_not() {
-        assert!(release("DLSSNR-AMD-Vulkan-Linux-0.0.6-x86_64.tar.gz", true, false).compatible());
-        assert!(release("DLSSNR-AMD-Vulkan-Linux-0.0.6-x86_64-rdna3.tar.gz", true, false).compatible());
-        assert!(!release("DLSSNR-AMD-Vulkan-Windows-0.0.6-x86_64.zip", true, false).compatible());
-        assert!(!release("DLSSNR-AMD-Vulkan-Linux-0.0.6-x86_64.tar.gz", true, true).compatible());
-    }
 }

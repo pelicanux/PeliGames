@@ -1,2 +1,5 @@
 # Generated: the logo and font embedded in base64 for the sign-in return page.
 src-tauri/src/commands/connection-brand-markup.html linguist-generated=true
+
+# Adapted third-party AMDNR Linux bridge, retained with its original license.
+tools/daniel-bridge/** linguist-vendored=true

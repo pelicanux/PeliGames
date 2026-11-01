@@ -179,12 +179,12 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
           <div className="credits-mod-grid">
           <div className="credits-neon-card"
             style={{ display: "flex", alignItems: "center", gap: "1rem", background: "rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)", borderRadius: "8px", padding: "0.6rem 0.8rem", cursor: "pointer", transition: "all 0.2s" }}
-            onClick={() => handleLink("https://github.com/mochizuki0323/DLSSNR-AMD")}
+            onClick={() => handleLink("https://gitlab.com/mochizuki0323/DLSSNR-AMD")}
             onMouseOver={(e) => e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)"}
             onMouseOut={(e) => e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)"}
           >
             <div style={{ width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--tone-e2e8f0, #e2e8f0)" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="8 5 2 12 8 19"/><polyline points="16 5 22 12 16 19"/></svg>
             </div>
             <div style={{ flex: 1, overflow: "hidden" }}>
               <div className="credits-card-title" style={{ color: "var(--tone-ffffff, #fff)", fontWeight: "bold", fontSize: "0.9rem" }}>Backend</div>

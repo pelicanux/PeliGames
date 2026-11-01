@@ -1,4 +1,6 @@
 //! Persistent library of destinations installed through PeliGames.
+#[path = "installation_registry.rs"]
+mod registry;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -71,7 +73,7 @@ pub struct EntrySettings {
     pub proton: String,
     pub executable: String,
 }
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct InstallationRecord {
     pub name: String,
     pub directory: String,
@@ -123,6 +125,13 @@ fn write_json(path: &Path, value: &impl Serialize) -> Result<(), String> {
     }
     Ok(())
 }
+fn read_record(index: &Path, directory: &Path) -> Result<Option<InstallationRecord>, String> {
+    registry::read(index, directory)
+}
+fn write_record(index: &Path, record: &InstallationRecord) -> Result<(), String> {
+    registry::store(index, record)
+}
+
 fn destinations(index: &Path) -> Result<BTreeSet<String>, String> {
     match fs::read(index) {
         Ok(data) => serde_json::from_slice(&data)
@@ -149,13 +158,7 @@ fn reset_inventory_at(index: &Path, targets: &[String]) -> Result<Vec<ResetGame>
         if targets.iter().any(|target| root.starts_with(target)) {
             return Err(format!("A instalação {directory} está dentro das pastas de redefinição. Mova-a para uma pasta externa antes de preservar os jogos."));
         }
-        let manifest = Path::new(&directory).join("installation.json");
-        let record = match fs::read(&manifest) {
-            Ok(bytes) => Some(serde_json::from_slice::<InstallationRecord>(&bytes)
-                .map_err(|_|format!("Registro de instalação inválido em {directory}."))?),
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
-            Err(e) => return Err(format!("Não foi possível verificar {directory}: {e}")),
-        };
+        let record = registry::peek(index, Path::new(&directory))?;
         if let Some(record) = &record {
             for path in std::iter::once(directory.as_str()).chain(std::iter::once(record.prefix.as_str()))
                 .chain(record.entries.iter().flat_map(|e| [e.executable.as_str(), e.prefix.as_str()])) {
@@ -365,9 +368,9 @@ pub fn set_profile_kind(path: &str, kind: super::game_profiles::ProfileKind) -> 
         let index = library_file()?;
         let _guard = LIBRARY_LOCK.lock().map_err(|e| e.to_string())?;
         let _process_guard = process_lock(&index)?;
-        let (manifest, mut record) = record_of(&index, path)?.ok_or("Entrada não registrada na biblioteca PeliGames.")?;
+        let (_, mut record) = record_of(&index, path)?.ok_or("Entrada não registrada na biblioteca PeliGames.")?;
         record.profile_kind = kind;
-        write_json(&manifest, &record)?;
+        write_record(&index, &record)?;
     }
     profile_options(path)
 }
@@ -375,7 +378,7 @@ fn add_shortcut_to_library_at(index: &Path, path: &str, id: &str,
     create: impl FnOnce(&Path, &Path, super::game_profiles::ProfileKind, &str) -> Result<super::game_profiles::GameProfile, String>) -> Result<InstalledEntry, String> {
     let _guard = LIBRARY_LOCK.lock().map_err(|e| e.to_string())?;
     let _process_guard = process_lock(index)?;
-    let (manifest, mut record) = record_of(index, path)?.ok_or("Entrada não registrada na biblioteca PeliGames.")?;
+    let (_, mut record) = record_of(index, path)?.ok_or("Entrada não registrada na biblioteca PeliGames.")?;
     if let Some(existing) = record.entries.iter().find(|entry| entry.shortcut.as_deref() == Some(id)) { return Ok(existing.clone()); }
     let launcher = record.entries.iter().find(|entry| entry.path == path).cloned().ok_or("Entrada não registrada na biblioteca PeliGames.")?;
     let item = record_shortcuts(&record).into_iter().find(|item| item.file.to_string_lossy() == id).ok_or("Atalho não encontrado no prefixo.")?;
@@ -395,7 +398,7 @@ fn add_shortcut_to_library_at(index: &Path, path: &str, id: &str,
         profile: Some(profile),
     };
     record.entries.push(entry.clone());
-    write_json(&manifest, &record)?;
+    write_record(&index, &record)?;
     Ok(entry)
 }
 /// Takes a launcher's game out of the library again (the game stays installed).
@@ -405,7 +408,7 @@ pub fn remove_shortcut_from_library(path: &str, id: &str) -> Result<(), String> 
 fn remove_shortcut_from_library_at(index: &Path, path: &str, id: &str) -> Result<(), String> {
     let _guard = LIBRARY_LOCK.lock().map_err(|e| e.to_string())?;
     let _process_guard = process_lock(index)?;
-    let (manifest, mut record) = record_of(index, path)?.ok_or("Entrada não registrada na biblioteca PeliGames.")?;
+    let (_, mut record) = record_of(index, path)?.ok_or("Entrada não registrada na biblioteca PeliGames.")?;
     let removed: Vec<String> = record.entries.iter().filter(|entry| entry.shortcut.as_deref() == Some(id)).map(|entry| entry.path.clone()).collect();
     // The game's profile goes with it (its changes, mods and saves); the launcher's prefix stays.
     for profile in record.entries.iter().filter(|entry| entry.shortcut.as_deref() == Some(id)).filter_map(|entry| entry.profile.as_ref()) {
@@ -413,7 +416,7 @@ fn remove_shortcut_from_library_at(index: &Path, path: &str, id: &str) -> Result
     }
     record.entries.retain(|entry| entry.shortcut.as_deref() != Some(id));
     record.overrides.retain(|item| !removed.contains(&item.source));
-    write_json(&manifest, &record)?;
+    write_record(&index, &record)?;
     Ok(())
 }
 /// A game a launcher installed in the prefix, found by its new shortcut.
@@ -426,10 +429,8 @@ fn record_owner(index: &Path, path: &str) -> Option<String> {
 }
 fn record_of(index: &Path, path: &str) -> Result<Option<(PathBuf, InstallationRecord)>, String> {
     for directory in destinations(index)? {
-        let manifest = Path::new(&directory).join("installation.json");
-        if !manifest.is_file() { continue; }
-        let record: InstallationRecord = serde_json::from_slice(&fs::read(&manifest).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
-        if record.entries.iter().any(|entry| entry.path == path) { return Ok(Some((manifest, record))); }
+        let record = match read_record(&index, Path::new(&directory))? { Some(record) => record, None => continue };
+        if record.entries.iter().any(|entry| entry.path == path) { return Ok(Some((Path::new(&directory).join("installation.json"), record))); }
     }
     Ok(None)
 }
@@ -452,13 +453,13 @@ fn new_launcher_games_at(index: &Path, path: &str) -> Result<Vec<LauncherGame>, 
         && manifest.parent().is_some_and(|root| root.join("copy.json").is_file())
     {
         initialize_copy_shortcuts(&mut record);
-        write_json(&manifest, &record)?;
+        write_record(&index, &record)?;
         return Ok(vec![]);
     }
     let current = shortcut_targets(Path::new(&record.prefix));
     let Some(known) = record.known_shortcuts.clone() else {
         record.known_shortcuts = Some(current.into_keys().collect());
-        write_json(&manifest, &record)?;
+        write_record(&index, &record)?;
         return Ok(vec![]);
     };
     // Executables the player already named, chose or hid; one only found by a
@@ -469,7 +470,7 @@ fn new_launcher_games_at(index: &Path, path: &str) -> Result<Vec<LauncherGame>, 
         .map(|(executable, name)| LauncherGame { name: name.clone(), executable: executable.clone() }).collect();
     if current.keys().any(|executable| !known.contains(executable)) {
         record.known_shortcuts = Some(known.into_iter().chain(current.into_keys()).collect::<BTreeSet<_>>().into_iter().collect());
-        write_json(&manifest, &record)?;
+        write_record(&index, &record)?;
     }
     Ok(found)
 }
@@ -481,7 +482,7 @@ pub fn add_launcher_games(path: &str, added: Vec<LauncherGame>, declined: Vec<St
 fn add_launcher_games_at(index: &Path, path: &str, added: Vec<LauncherGame>, declined: Vec<String>) -> Result<Vec<InstalledEntry>, String> {
     let _guard = LIBRARY_LOCK.lock().map_err(|e| e.to_string())?;
     let _process_guard = process_lock(index)?;
-    let Some((manifest, mut record)) = record_of(index, path)? else { return Err("Entrada não registrada na biblioteca PeliGames.".into()); };
+    let Some((_, mut record)) = record_of(index, path)? else { return Err("Entrada não registrada na biblioteca PeliGames.".into()); };
     let launcher = record.entries.iter().find(|entry| entry.path == path).cloned().ok_or("Entrada não registrada na biblioteca PeliGames.")?;
     let drive = Path::new(&record.prefix).join("drive_c").canonicalize().map_err(|e| e.to_string())?;
     let inside = |executable: &str| Path::new(executable).canonicalize().is_ok_and(|real| real.starts_with(&drive) && real.is_file());
@@ -514,7 +515,7 @@ fn add_launcher_games_at(index: &Path, path: &str, added: Vec<LauncherGame>, dec
             proton: String::new(), executable: String::new(), prefix: Some(launcher.prefix.clone()),
         });
     }
-    write_json(&manifest, &record)?;
+    write_record(&index, &record)?;
     Ok(entries)
 }
 /// Lower-case letters and digits only.
@@ -597,7 +598,8 @@ fn scan(record: &mut InstallationRecord) -> Result<(), String> {
     // Explicit registrations have independent identities, even when they share
     // an executable and prefix. Only discovered executables are deduplicated.
     let added: Vec<_> = record.entries.iter()
-        .filter(|entry| entry.path.starts_with("peligames:") && (entry.profile.is_some() || Path::new(&entry.executable).is_file()))
+        .filter(|entry| (entry.path.starts_with("peligames:") || !Path::new(&entry.executable).starts_with(&record.prefix))
+            && (entry.profile.is_some() || Path::new(&entry.executable).is_file()))
         .cloned().collect();
     let mut files = BTreeSet::new();
     let mut visited = 0;
@@ -633,7 +635,7 @@ fn scan(record: &mut InstallationRecord) -> Result<(), String> {
     files.retain(|file| {
         // An explicitly added card already represents this executable. Do not
         // manufacture a discovered copy when rescanning its installation.
-        if added.iter().any(|entry| entry.shortcut.is_none() && entry.prefix == record.prefix && Path::new(&entry.executable) == file) {
+        if added.iter().any(|entry| entry.shortcut.is_none() && (Path::new(&entry.path) == file || entry.prefix == record.prefix && Path::new(&entry.executable) == file)) {
             return false;
         }
         if record
@@ -724,10 +726,7 @@ pub fn register(mut record: InstallationRecord) -> Result<usize, String> {
     let _guard = LIBRARY_LOCK.lock().map_err(|e| e.to_string())?;
     let index = library_file()?;
     let _process_guard = process_lock(&index)?;
-    let manifest = Path::new(&record.directory).join("installation.json");
-    if manifest.is_file() {
-        let previous: InstallationRecord = serde_json::from_slice(&fs::read(&manifest).map_err(|e| e.to_string())?)
-            .map_err(|e| e.to_string())?;
+    if let Some(previous) = read_record(&index, Path::new(&record.directory))? {
         if previous.entries.is_empty() {
             // A new installation explicitly reusing a removed prefix must not inherit hidden old cards.
             record.entries.clear();record.overrides.clear();record.selected_executable=None;
@@ -741,10 +740,7 @@ pub fn register(mut record: InstallationRecord) -> Result<usize, String> {
     record.known_shortcuts = Some(shortcut_targets(Path::new(&record.prefix)).into_keys().collect());
     record.install_shortcuts = Some(super::installation_targets::shortcut_files(Path::new(&record.prefix)).into_iter().map(|item| item.file.to_string_lossy().into_owned()).collect());
     let count = record.entries.len();
-    write_json(
-        &Path::new(&record.directory).join("installation.json"),
-        &record,
-    )?;
+    write_record(&index, &record)?;
     let mut roots = destinations(&index)?;
     roots.insert(record.directory.clone());
     write_json(&index, &roots)?;
@@ -760,13 +756,7 @@ fn list_at(index: &Path, rescan: bool) -> Result<Vec<InstalledEntry>, String> {
     let mut seen = BTreeSet::new();
     for directory in destinations(index)? {
         super::installation_layout::migrate(Path::new(&directory))?;
-        let manifest = Path::new(&directory).join("installation.json");
-        if !manifest.exists() {
-            continue;
-        }
-        let mut record: InstallationRecord =
-            serde_json::from_slice(&fs::read(&manifest).map_err(|e| e.to_string())?)
-                .map_err(|e| format!("Registro inválido em {directory}: {e}"))?;
+        let mut record = match read_record(&index, Path::new(&directory))? { Some(record) => record, None => continue };
         let old_prefix = Path::new(&directory).join(".peligames/prefix");
         let moved = Path::new(&record.prefix) == old_prefix;
         if moved {
@@ -779,7 +769,7 @@ fn list_at(index: &Path, rescan: bool) -> Result<Vec<InstalledEntry>, String> {
         let restored_selection = restore_executable_selection(&mut record);
         if rescan || moved || restored_selection {
             scan(&mut record)?;
-            write_json(&manifest, &record)?;
+            write_record(&index, &record)?;
         }
         // A profile's prefix is mounted again when needed (after a reboot).
         for profile in record.entries.iter().filter_map(|entry| entry.profile.as_ref()) {
@@ -809,9 +799,7 @@ fn find_executable_at(index: &Path, executable: &str) -> Result<Vec<ExecutableMa
     let _process_guard = process_lock(index)?;
     let mut matches = vec![];
     for directory in destinations(index)? {
-        let manifest = Path::new(&directory).join("installation.json");
-        if !manifest.is_file() { continue; }
-        let record: InstallationRecord = serde_json::from_slice(&fs::read(manifest).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+        let record = match read_record(&index, Path::new(&directory))? { Some(record) => record, None => continue };
         let installer = Path::new(&record.installer).canonicalize().ok().filter(|path| path.is_file());
         for entry in record.entries {
             if !Path::new(&entry.executable).is_file() { continue; }
@@ -826,32 +814,16 @@ fn find_executable_at(index: &Path, executable: &str) -> Result<Vec<ExecutableMa
 pub(crate) fn validate_selected_prefix(path: &str) -> Result<PathBuf, String> {
     validate_prefix_selection(path, false)
 }
-/// A replacement can also be an empty folder: Wine/Proton initializes it when launched.
-fn validate_replacement_prefix(path: &str) -> Result<PathBuf, String> {
+/// A replacement may be new: the selected runner initializes it only on launch.
+pub(crate) fn validate_replacement_prefix(path: &str) -> Result<PathBuf, String> {
     validate_prefix_selection(path, true)
 }
-fn validate_prefix_selection(path: &str, allow_empty: bool) -> Result<PathBuf, String> {
-    let path = super::game_installation::absolute(path)?;
-    let metadata = fs::symlink_metadata(&path).map_err(|e| format!("Prefixo indisponível: {e}"))?;
-    if metadata.file_type().is_symlink() || !metadata.is_dir() {
-        return Err("Escolha uma pasta real de prefixo Wine/Proton.".into());
-    }
-    let canonical = path.canonicalize().map_err(|e| e.to_string())?;
-    if canonical.parent().is_none() {return Err("Não use a raiz do sistema como prefixo.".into());}
-    let initialized=fs::symlink_metadata(canonical.join("drive_c"))
-        .is_ok_and(|m| m.is_dir() && !m.file_type().is_symlink())
-        && fs::symlink_metadata(canonical.join("system.reg"))
-            .is_ok_and(|m| m.is_file() && !m.file_type().is_symlink());
-    let empty=allow_empty && fs::read_dir(&canonical).map_err(|e|e.to_string())?.next().transpose().map_err(|e|e.to_string())?.is_none();
-    if !initialized && !empty {
-        return Err(if allow_empty {
-            "Selecione um prefixo com drive_c e system.reg ou uma pasta vazia para criar um novo ao jogar. A pasta escolhida contém outros arquivos.".into()
-        } else {"Selecione o prefixo Wine/Proton que contém drive_c e system.reg.".into()});
-    }
-    if super::game_execution::prefix_in_use(&canonical) {
+fn validate_prefix_selection(path: &str, allow_new: bool) -> Result<PathBuf, String> {
+    let path = super::prefix_selection::resolve(path, allow_new)?;
+    if super::game_execution::prefix_in_use(&path) {
         return Err("Encerre os programas deste prefixo antes de alterá-lo.".into());
     }
-    Ok(canonical)
+    Ok(path)
 }
 
 pub fn set_cover(path: &str, cover: &str) -> Result<(), String> { set_cover_at(&library_file()?,path,cover) }
@@ -859,13 +831,12 @@ fn set_cover_at(index: &Path, path: &str, cover: &str) -> Result<(), String> {
     if !cover.starts_with("https://") || cover.len() > 8192 || cover.contains(['\n','\r','\0']) { return Err("Capa inválida.".into()); }
     let _guard = LIBRARY_LOCK.lock().map_err(|e| e.to_string())?; let _process_guard = process_lock(index)?;
     for directory in destinations(index)? {
-        let manifest = Path::new(&directory).join("installation.json"); if !manifest.is_file() { continue; }
-        let mut record: InstallationRecord = serde_json::from_slice(&fs::read(&manifest).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+        let mut record = match read_record(&index, Path::new(&directory))? { Some(record) => record, None => continue };
         if let Some(entry) = record.entries.iter_mut().find(|entry| entry.path == path) {
             entry.cover_url = Some(cover.into());
             if let Some(custom) = record.overrides.iter_mut().find(|item| item.source == path) { custom.cover_url = Some(cover.into()); }
             else { record.overrides.push(EntryOverride { source: entry.path.clone(), name: entry.name.clone(), proton: entry.proton.clone(), executable: entry.executable.clone(), prefix: Some(entry.prefix.clone()), advanced: Some(entry.advanced.clone()), cover_url: Some(cover.into()) }); }
-            return write_json(&manifest,&record);
+            return write_record(&index, &record);
         }
     }
     Err("Entrada não registrada na biblioteca PeliGames.".into())
@@ -880,22 +851,19 @@ fn update_at(index: &Path, settings: EntrySettings) -> Result<InstalledEntry, St
     if name.is_empty() {
         return Err("Informe o nome do jogo ou programa.".into());
     }
-    let executable = super::game_installation::validate_executable(&settings.executable)?;
-    let proton = super::game_installation::validate_proton(&settings.proton)?;
     for directory in destinations(index)? {
-        let manifest = Path::new(&directory).join("installation.json");
-        if !manifest.is_file() {
-            continue;
-        }
-        let mut record: InstallationRecord =
-            serde_json::from_slice(&fs::read(&manifest).map_err(|e| e.to_string())?)
-                .map_err(|e| e.to_string())?;
+        let mut record = match read_record(&index, Path::new(&directory))? { Some(record) => record, None => continue };
         if let Some(entry) = record
             .entries
             .iter_mut()
             .find(|entry| entry.path == settings.path)
         {
-            ensure_no_copy_dependents(&destinations(index)?,Path::new(&entry.prefix))?;
+            let executable = super::game_installation::validate_executable(&settings.executable)?;
+            // A stale mod-manager snapshot may omit the runner; it must not erase the saved choice.
+            let requested_proton = if settings.proton.trim().is_empty() { &entry.proton } else { &settings.proton };
+            if requested_proton.trim().is_empty() { return Err("Selecione uma versão do Proton antes de iniciar este jogo.".into()); }
+            let proton = super::game_installation::validate_proton(requested_proton)?;
+            ensure_no_copy_dependents(&index,&destinations(index)?,Path::new(&entry.prefix))?;
             validate_copy_paths(Path::new(&directory), Path::new(&entry.prefix), settings.prefix.as_deref(), &executable)?;
 
             if let Some(prefix) = settings.prefix.as_deref() {
@@ -932,11 +900,11 @@ fn update_at(index: &Path, settings: EntrySettings) -> Result<InstalledEntry, St
                 proton: updated.proton.clone(),
                 executable: updated.executable.clone(),
             });
-            write_json(&manifest, &record)?;
+            write_record(&index, &record)?;
             return Ok(updated);
         }
     }
-    Err("Entrada não registrada na biblioteca PeliGames.".into())
+    Err("O registro desta instalação (installation.json) não foi encontrado. Remova a entrada da biblioteca e adicione o executável novamente para recriar o cadastro.".into())
 }
 
 /// Keeps `path` as the installation's executable: the other discovered ones are
@@ -974,9 +942,7 @@ fn executable_choices_at(index: &Path, path: &str) -> Result<Vec<InstalledEntry>
     let _guard = LIBRARY_LOCK.lock().map_err(|e| e.to_string())?;
     let _process_guard = process_lock(index)?;
     for directory in destinations(index)? {
-        let manifest = Path::new(&directory).join("installation.json");
-        if !manifest.is_file() { continue; }
-        let record: InstallationRecord = serde_json::from_slice(&fs::read(manifest).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+        let record = match read_record(&index, Path::new(&directory))? { Some(record) => record, None => continue };
         if record.entries.iter().any(|entry| entry.path == path) { return Ok(record_executable_choices(&record, path)); }
     }
     Ok(vec![])
@@ -989,12 +955,7 @@ fn choose_at(index: &Path, path: &str) -> Result<InstalledEntry, String> {
     let _guard = LIBRARY_LOCK.lock().map_err(|e| e.to_string())?;
     let _process_guard = process_lock(index)?;
     for directory in destinations(index)? {
-        let manifest = Path::new(&directory).join("installation.json");
-        if !manifest.is_file() {
-            continue;
-        }
-        let mut record: InstallationRecord = serde_json::from_slice(&fs::read(&manifest).map_err(|e| e.to_string())?)
-            .map_err(|e| e.to_string())?;
+        let mut record = match read_record(&index, Path::new(&directory))? { Some(record) => record, None => continue };
         if !record.entries.iter().any(|entry| entry.path == path) {
             if let Some(restored) = record_executable_choices(&record, path).into_iter().find(|entry| entry.path == path) {
                 record.entries.push(restored);
@@ -1024,7 +985,7 @@ fn choose_at(index: &Path, path: &str) -> Result<InstalledEntry, String> {
             source: chosen.path.clone(), name: chosen.name.clone(), proton: chosen.proton.clone(), executable: chosen.executable.clone(),
         });
         if let Some(entry) = record.entries.iter_mut().find(|entry| entry.path == path) { *entry = chosen.clone(); }
-        write_json(&manifest, &record)?;
+        write_record(&index, &record)?;
         return Ok(chosen);
     }
     Err("Entrada não registrada na biblioteca PeliGames.".into())
@@ -1054,10 +1015,7 @@ fn add_at(
     if directory.is_dir() && !directory.join("installation.json").exists() {
         let selected = directory.canonicalize().map_err(|e|e.to_string())?;
         if let Some(parent) = selected.parent() {
-            let manifest = parent.join("installation.json");
-            if manifest.is_file() {
-                let record: InstallationRecord = serde_json::from_slice(&fs::read(&manifest).map_err(|e|e.to_string())?)
-                    .map_err(|e|format!("Registro de instalação inválido: {e}"))?;
+            if let Some(record) = read_record(index, parent)? {
                 if Path::new(&record.directory).canonicalize().ok().as_deref() == Some(parent)
                     && Path::new(&record.prefix).canonicalize().ok().as_ref() == Some(&selected)
                     && super::installation_layout::prefix_for(parent).canonicalize().ok().as_ref() == Some(&selected) {
@@ -1096,10 +1054,7 @@ fn add_at(
         cover_url: request.cover_url,
         launcher: "PeliGames".into(),
     };
-    let manifest = directory.join("installation.json");
-    let mut record = if manifest.is_file() {
-        let existing: InstallationRecord = serde_json::from_slice(&fs::read(&manifest).map_err(|e| e.to_string())?)
-            .map_err(|e| format!("Registro de instalação inválido: {e}"))?;
+    let mut record = if let Some(existing) = read_record(index, &directory)? {
         if Path::new(&existing.directory) != directory {
             return Err("O destino registrado foi redirecionado.".into());
         }
@@ -1127,7 +1082,7 @@ fn add_at(
         advanced: None, prefix: None, source: entry.path.clone(), name: entry.name.clone(),
         proton: entry.proton.clone(), executable: entry.executable.clone(),
     });
-    write_json(&directory.join("installation.json"), &record)?;
+    write_record(&index, &record)?;
     let mut roots = destinations(index)?;
     roots.insert(record.directory);
     write_json(index, &roots)?;
@@ -1159,7 +1114,7 @@ fn register_copy_at(index:&Path,entry:InstalledEntry,directory:&Path)->Result<In
         baseline:vec![],known_shortcuts:Some(vec![]),launcher_games:vec![],install_shortcuts:Some(vec![]),profile_kind:Default::default(),
     };
     initialize_copy_shortcuts(&mut record);
-    write_json(&directory.join("installation.json"),&record)?;
+    write_record(&index, &record)?;
     let mut roots=destinations(&index)?;roots.insert(record.directory.clone());write_json(&index,&roots)?;
     Ok(entry)
 }
@@ -1193,7 +1148,7 @@ fn validate_copy_paths(directory: &Path, current_prefix: &Path, requested_prefix
 fn same_location(a: &Path, b: &Path) -> bool {
     a == b || a.canonicalize().ok().zip(b.canonicalize().ok()).is_some_and(|(a,b)|a==b)
 }
-fn copy_dependents(roots: &BTreeSet<String>, prefix: &Path) -> Result<Vec<String>,String> {
+fn copy_dependents(index: &Path, roots: &BTreeSet<String>, prefix: &Path) -> Result<Vec<String>,String> {
     let mut result=Vec::new();
     for directory in roots {
         let root=Path::new(directory);
@@ -1204,21 +1159,21 @@ fn copy_dependents(roots: &BTreeSet<String>, prefix: &Path) -> Result<Vec<String
         let source=copy["source"].as_str().ok_or("Referência de cópia inválida.")?;
         // Keep tracking an overlay even if its library entry was removed: its files still depend on the base.
         if same_location(Path::new(source),prefix) {
-            let record:InstallationRecord=serde_json::from_slice(&fs::read(root.join("installation.json")).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;
+            let Some(record) = read_record(index, root)? else { continue; };
             result.push(record.name);
         }
     }
     Ok(result)
 }
-fn ensure_no_copy_dependents(roots:&BTreeSet<String>,prefix:&Path)->Result<(),String>{
-    let copies=copy_dependents(roots,prefix)?;
+fn ensure_no_copy_dependents(index: &Path, roots:&BTreeSet<String>,prefix:&Path)->Result<(),String>{
+    let copies=copy_dependents(index,roots,prefix)?;
     if copies.is_empty(){Ok(())}else{Err(format!("Prefixo reservado como base de {} cópia(s) overlay: {}. Use as cópias; remova seus arquivos para liberar a base.",copies.len(),copies.join(", ")))}
 }
 /// Reject launcher writes to a base while any managed overlay still references it.
 pub fn ensure_prefix_writable(prefix:&Path)->Result<(),String>{
     let _guard=LIBRARY_LOCK.lock().map_err(|e|e.to_string())?;
     let index=library_file()?;let _process=process_lock(&index)?;
-    ensure_no_copy_dependents(&destinations(&index)?,prefix)
+    ensure_no_copy_dependents(&index,&destinations(&index)?,prefix)
 }
 pub fn ensure_path_writable(path:&Path)->Result<(),String>{
     let path=path.canonicalize().map_err(|e|e.to_string())?;
@@ -1240,7 +1195,7 @@ pub fn copy_reference(path:&str)->Result<CopyReference,String>{
     let index=library_file()?;let _process=process_lock(&index)?;
     let (_,record)=record_of(&index,path)?.ok_or("Jogo não registrado.")?;
     let entry=record.entries.iter().find(|entry|entry.path==path).ok_or("Jogo não encontrado.")?;
-    let dependents=copy_dependents(&destinations(&index)?,Path::new(&entry.prefix))?;
+    let dependents=copy_dependents(&index,&destinations(&index)?,Path::new(&entry.prefix))?;
     let metadata=Path::new(&record.directory).join("copy.json");
     let copy:serde_json::Value=if metadata.exists(){serde_json::from_slice(&fs::read(metadata).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?}else{serde_json::Value::Null};
     let kind=copy["kind"].as_str().map(str::to_owned);
@@ -1265,10 +1220,9 @@ fn removed_destination_at(index:&Path,directory:&Path)->Result<Option<RemovedDes
     if !prefix.starts_with(&directory)||!prefix.is_dir(){return Ok(None);}
     let roots=destinations(index)?;
     let mut reset_reason=if !roots.contains(directory.to_str().ok_or("Destino inválido.")?){Some("Esta pasta não está no registro de instalações gerenciadas. Reaproveite-a ou remova os arquivos manualmente após conferir seu conteúdo.".into())}else{None};
-    if let Err(error)=ensure_no_copy_dependents(&roots,prefix){reset_reason=Some(error);}
+    if let Err(error)=ensure_no_copy_dependents(&index,&roots,prefix){reset_reason=Some(error);}
     for root in roots.iter().filter(|root|Path::new(root.as_str())!=directory){
-        let manifest=Path::new(root).join("installation.json");if !manifest.is_file(){continue;}
-        let other:InstallationRecord=serde_json::from_slice(&fs::read(manifest).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;
+        let Some(other) = read_record(index, Path::new(root))? else { continue; };
         if other.entries.iter().any(|entry|same_location(Path::new(&entry.prefix),prefix)||entry.profile.as_ref().is_some_and(|profile|same_location(Path::new(&profile.base),prefix))){
             reset_reason=Some("Outro jogo registrado utiliza este prefixo. Remova essas entradas antes de recriá-lo.".into());
         }
@@ -1317,12 +1271,20 @@ pub fn remove_entry(path: &str) -> Result<(), String> { remove_entry_at(&library
 fn remove_entry_at(index: &Path, path: &str) -> Result<(), String> {
     let _guard = LIBRARY_LOCK.lock().map_err(|e| e.to_string())?;
     let _process_guard = process_lock(index)?;
-    for directory in destinations(index)? {
-        let manifest = Path::new(&directory).join("installation.json");
-        if !manifest.is_file() { continue; }
-        let mut record: InstallationRecord = serde_json::from_slice(&fs::read(&manifest).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+    let mut roots = destinations(index)?;
+    let previous_roots = roots.clone();
+    let executable = Path::new(path).canonicalize().ok().filter(|path| path.is_file());
+    for directory in previous_roots.iter() {
+        let mut record = match read_record(index, Path::new(directory))? {
+            Some(record) => record,
+            None => {
+                // Forget only the missing registration that contains this executable.
+                if executable.as_ref().is_some_and(|exe| Path::new(directory).canonicalize().is_ok_and(|root| exe.starts_with(root))) { roots.remove(directory); }
+                continue;
+            }
+        };
         if !record.entries.iter().any(|entry| entry.path == path) { continue; }
-        if let Some(entry)=record.entries.iter().find(|entry|entry.path==path){ensure_no_copy_dependents(&destinations(index)?,Path::new(&entry.prefix))?;}
+        if let Some(entry)=record.entries.iter().find(|entry|entry.path==path){ensure_no_copy_dependents(&index,&destinations(index)?,Path::new(&entry.prefix))?;}
         if Path::new(&directory).join("copy.json").is_file() && record.entries.iter().any(|entry|entry.path==path && entry.profile.as_ref().is_some_and(|p|p.kind==super::game_profiles::ProfileKind::Overlay)) {
             return Err("Use Desinstalar para remover esta cópia overlay e liberar sua referência com segurança.".into());
         }
@@ -1331,8 +1293,9 @@ fn remove_entry_at(index: &Path, path: &str) -> Result<(), String> {
         if !path.starts_with("peligames:") {
             record.overrides.push(EntryOverride { source: path.into(), name: String::new(), proton: record.proton.clone(), executable: String::new(), prefix: None, advanced: None, cover_url: None });
         }
-        write_json(&manifest, &record)?;
+        write_record(&index, &record)?;
     }
+    if roots != previous_roots { write_json(index, &roots)?; }
     Ok(())
 }
 /// The UI supplies only a registered entry identity, never a directory to erase.
@@ -1355,9 +1318,7 @@ pub fn uninstall(path: String, options: UninstallOptions) -> Result<(), String> 
     // and saved profiles still belong to the prefix being uninstalled.
     let mut entries=Vec::new();
     for directory in destinations(&index)? {
-        let manifest=Path::new(&directory).join("installation.json");
-        if !manifest.is_file(){continue;}
-        let record:InstallationRecord=serde_json::from_slice(&fs::read(&manifest).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;
+        let Some(record) = read_record(&index, Path::new(&directory))? else { continue; };
         entries.extend(record.entries);
     }
     let selected=entries.iter().find(|entry|entry.path==path).ok_or("Jogo não registrado.")?;
@@ -1380,17 +1341,15 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
     let mut roots = destinations(index)?;
     for directory in roots.clone() {
         let root = Path::new(&directory);
-        let manifest = root.join("installation.json");
-        if !manifest.exists() {
-            continue;
-        }
-        let record: InstallationRecord =
-            serde_json::from_slice(&fs::read(&manifest).map_err(|e| e.to_string())?)
-                .map_err(|e| e.to_string())?;
+        let Some(record) = read_record(index, root)? else { continue; };
         if directory != path && !record.entries.iter().any(|entry| entry.path == path) {
             continue;
         }
-        let canonical = root.canonicalize().map_err(|e| e.to_string())?;
+        let canonical = match root.canonicalize() {
+            Ok(path) => path,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => root.to_path_buf(),
+            Err(error) => return Err(error.to_string()),
+        };
         if Path::new(&record.directory) != canonical {
             return Err("O destino registrado foi redirecionado.".into());
         }
@@ -1402,7 +1361,7 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
                 .map(|entry| entry.prefix.as_str())
                 .unwrap_or(&record.prefix),
         );
-        ensure_no_copy_dependents(&roots,&prefix)?;
+        ensure_no_copy_dependents(&index,&roots,&prefix)?;
         if !options.remove_prefix && root.join("copy.json").is_file() && record.entries.iter().any(|entry|entry.path==path && entry.profile.as_ref().is_some_and(|p|p.kind==super::game_profiles::ProfileKind::Overlay)) {
             return Err("Para desinstalar um overlay, mantenha marcada a remoção do prefixo. A base e as outras cópias serão preservadas.".into());
         }
@@ -1416,17 +1375,16 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
         for destination in &roots {
             let other_root = Path::new(destination);
             let other_manifest = other_root.join("installation.json");
-            if !other_manifest.is_file() {
-                continue;
-            }
-            let mut other: InstallationRecord =
-                serde_json::from_slice(&fs::read(&other_manifest).map_err(|e| e.to_string())?)
-                    .map_err(|e| e.to_string())?;
+            let Some(mut other) = read_record(index, other_root)? else { continue; };
             let same_prefix = |entry: &InstalledEntry| Path::new(&entry.prefix) == prefix
                 || entry.profile.as_ref().is_some_and(|profile| Path::new(&profile.base) == prefix);
             let any = other.entries.iter().any(same_prefix);
             if any || (destination == &directory && other.entries.is_empty()) {
-                let other_canonical = other_root.canonicalize().map_err(|e| e.to_string())?;
+                let other_canonical = match other_root.canonicalize() {
+                    Ok(path) => path,
+                    Err(error) if error.kind() == std::io::ErrorKind::NotFound => other_root.to_path_buf(),
+                    Err(error) => return Err(error.to_string()),
+                };
                 if Path::new(&other.directory) != other_canonical {
                     return Err("Destino registrado inválido.".into());
                 }
@@ -1515,10 +1473,11 @@ fn uninstall_with_shortcuts_at(index: &Path, path: &str, shortcut_directories: &
                         _ => {}
                     }
                     super::installation_layout::remove_leftovers(Path::new(&destination), &prefix);
-                }
+                    registry::forget(index, Path::new(&destination))?;
+                } else { write_record(index, &remaining)?; }
                 roots.remove(&destination);
             } else {
-                write_json(&manifest, &remaining)?;
+                write_record(index, &remaining)?;
             }
         }
         write_json(index, &roots)?;
@@ -1561,6 +1520,7 @@ mod tests {
     fn overlay_reservation_releases_only_after_last_copy_and_never_for_reflinks() {
         let root=std::env::temp_dir().join(format!("peligames-base-reservation-{}",uuid::Uuid::new_v4()));
         let base=root.join("Original");fs::create_dir_all(&base).unwrap();
+        let index=root.join("library.json");
         let mut roots=BTreeSet::new();
         for number in 1..=3 {
             let copy=root.join(format!("Copy {number}"));fs::create_dir_all(copy.join("prefix/drive_c")).unwrap();
@@ -1571,12 +1531,12 @@ mod tests {
             write_json(&copy.join("copy.json"),&serde_json::json!({"version":1,"kind":"overlay","source":base})).unwrap();
             roots.insert(copy.to_string_lossy().into_owned());
         }
-        assert_eq!(copy_dependents(&roots,&base).unwrap().len(),3);
-        assert!(ensure_no_copy_dependents(&roots,&base).is_err());
-        roots.remove(root.join("Copy 1").to_str().unwrap());assert_eq!(copy_dependents(&roots,&base).unwrap().len(),2);
-        roots.remove(root.join("Copy 2").to_str().unwrap());assert!(ensure_no_copy_dependents(&roots,&base).is_err());
+        assert_eq!(copy_dependents(&index,&roots,&base).unwrap().len(),3);
+        assert!(ensure_no_copy_dependents(&index,&roots,&base).is_err());
+        roots.remove(root.join("Copy 1").to_str().unwrap());assert_eq!(copy_dependents(&index,&roots,&base).unwrap().len(),2);
+        roots.remove(root.join("Copy 2").to_str().unwrap());assert!(ensure_no_copy_dependents(&index,&roots,&base).is_err());
         write_json(&root.join("Copy 3/copy.json"),&serde_json::json!({"kind":"reflink","source":base})).unwrap();
-        assert!(ensure_no_copy_dependents(&roots,&base).is_ok());
+        assert!(ensure_no_copy_dependents(&index,&roots,&base).is_ok());
         fs::remove_dir_all(root).unwrap();
     }
     #[test]
@@ -1659,6 +1619,28 @@ mod tests {
         fs::remove_dir_all(base).unwrap();
     }
     #[test]
+    fn missing_installation_record_can_be_forgotten_without_removing_the_prefix() {
+        let base = std::env::temp_dir().join(format!("peligames-missing-registration-{}", uuid::Uuid::new_v4()));
+        let root = base.join("Game");
+        let exe = root.join("prefix/drive_c/Game.exe");
+        fs::create_dir_all(exe.parent().unwrap()).unwrap();
+        fs::write(&exe, b"MZfixture").unwrap();
+        fs::write(root.join("prefix/system.reg"), b"keep registry").unwrap();
+        let offline = base.join("offline");
+        let index = base.join("library.json");
+        write_json(&index, &BTreeSet::from([root.to_string_lossy().into_owned(), offline.to_string_lossy().into_owned()])).unwrap();
+        let error = update_at(&index, EntrySettings {path:exe.to_string_lossy().into_owned(), name:"Game".into(),
+            executable:exe.to_string_lossy().into_owned(), prefix:Some(base.join("new").to_string_lossy().into_owned()),
+            proton:String::new(), advanced:None}).err().unwrap();
+        assert!(error.contains("installation.json"), "missing registration must precede empty runner validation: {error}");
+        remove_entry_at(&index, &exe.to_string_lossy()).unwrap();
+        assert_eq!(destinations(&index).unwrap(), BTreeSet::from([offline.to_string_lossy().into_owned()]));
+        assert_eq!(fs::read(&exe).unwrap(), b"MZfixture");
+        assert_eq!(fs::read(root.join("prefix/system.reg")).unwrap(), b"keep registry");
+        assert!(!base.join("new").exists());
+        fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
     fn replacement_prefix_accepts_empty_or_initialized_without_touching_files() {
         let base=std::env::temp_dir().join(format!("peligames-prefix-selection-{}",uuid::Uuid::new_v4()));
         fs::create_dir_all(&base).unwrap();let empty=base.join("fresh");fs::create_dir(&empty).unwrap();
@@ -1692,6 +1674,15 @@ mod tests {
         assert_eq!(fs::read(old.join("system.reg")).unwrap(),b"old registry");
         assert_eq!(fs::read(&exe).unwrap(),b"MZfixture");
         assert_eq!(update_at(&index,request(&old)).unwrap().prefix,old.to_string_lossy());
+        let mut stale = request(&old);
+        stale.proton.clear();
+        assert_eq!(update_at(&index, stale).unwrap().proton, entry.proton, "a stale Nexus snapshot keeps the registered runner");
+        let missing = base.join("not-created/selected-prefix");
+        let updated = update_at(&index, request(&missing)).unwrap();
+        assert_eq!(Path::new(&updated.prefix), missing);
+        assert!(!base.join("not-created").exists(), "saving a new path does not create or initialize it");
+        assert_eq!(list_at(&index, true).unwrap()[0].prefix, updated.prefix);
+        assert_eq!(fs::read(old.join("system.reg")).unwrap(), b"old registry");
         update_at(&index,request(&fresh)).unwrap();
         uninstall_with_shortcuts_at(&index,&entry.path,&[],UninstallOptions::default()).unwrap();
         assert!(!fresh.exists());assert!(old.join("system.reg").is_file());assert!(exe.is_file());
@@ -2178,3 +2169,7 @@ mod readd_prefix_tests {
         fs::remove_dir_all(root).unwrap();
     }
 }
+
+#[cfg(test)]
+#[path = "installed_registry_tests.rs"]
+mod registry_tests;

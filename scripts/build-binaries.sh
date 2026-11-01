@@ -18,6 +18,7 @@ export CARGO_INCREMENTAL=0
 export PATH="${BUN_INSTALL:-$HOME/.bun}/bin:${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 findmnt -no TARGET,FSTYPE -T "$build_target"
 source scripts/native-voice-toolchain.sh
+bash scripts/license-notices.sh
 bun run build
 cargo build --manifest-path src-tauri/Cargo.toml --release --bins --features custom-protocol --offline -j "$CARGO_BUILD_JOBS"
 "$build_target/release/peligames" --verify-ui

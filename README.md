@@ -3,7 +3,7 @@
   <img src="public/images/readme-header.svg" alt="PeliGames" width="900" />
 </p>
 
-> **0.5.2 experimental:** presets de captura com qualidade constante e codec automático, correções de fluidez no AppImage/Wayland, recuperação de capas e melhorias na organização e redefinição dos dados. Veja as [notas da 0.5.2](docs/releases/0.5.2.md). Captura, geração de quadros e overlay são experimentais e dependem do jogo, GPU, Proton e ambiente gráfico. Consulte o [guia de uso e limitações](docs/overlay.md).
+> **0.5.3 experimental:** atualização do backend Mochizuki pelo GitLab, recuperação de prefixos e registros de instalação, melhorias no Matrix, Discord e navegação dos complementos. Veja as [notas da 0.5.3](docs/releases/0.5.3.md). Captura, geração de quadros e overlay são experimentais e dependem do jogo, GPU, Proton e ambiente gráfico. Consulte o [guia de uso e limitações](docs/overlay.md).
 
 <p align="center"><strong>Português</strong> · <a href="README.en.md">English</a></p>
 
@@ -110,6 +110,7 @@ Referências: [MAKO Renderer](https://github.com/eugeniosegala/MAKO/blob/main/en
 
 ## DLSS 5 Neural Rendering em placas AMD (DLSSNR)
 
+
 Nos detalhes do jogo, abra **Mods → DLSSNR-AMD** para instalar e configurar o Neural Rendering. O PeliGames gerencia o backend, os modelos e as opções de inicialização de cada instalação.
 
 > Projetos experimentais (versões 0.0.x), sem afiliação com a NVIDIA nem com a AMD. **Não use em jogos online com anti-cheat**: DLLs injetadas podem levar ao banimento da conta. O instalador coloca arquivos na pasta do jogo; **Remover** apaga só o que ele instalou.
@@ -118,7 +119,7 @@ Nos detalhes do jogo, abra **Mods → DLSSNR-AMD** para instalar e configurar o 
 
 | Placa | Backend | Referência dos autores |
 |---|---|---|
-| RX 9000 (RDNA 4) | [DLSSNR-AMD, de mochizuki0323](https://github.com/mochizuki0323/DLSSNR-AMD) | Mesa 26.2 ou superior e Proton recente; o 0.0.8 foi testado com GE-Proton 11-11 e Mesa 26.2.5 |
+| RX 9000 (RDNA 4) | [DLSSNR-AMD, de mochizuki0323](https://gitlab.com/mochizuki0323/DLSSNR-AMD) | Mesa 26.2 ou superior e Proton recente; o 0.0.8 foi testado com GE-Proton 11-11 e Mesa 26.2.5 |
 | RX 7000 (RDNA 3) | [DLSSNR-RDNA3, de mauri870](https://github.com/mauri870/DLSSNR-RDNA3/blob/rdna3/README-RDNA3.md) | Fork próprio para RX 7000; testado pelo autor na RX 7900 XTX com Mesa 26.2.3 |
 
 O backend RDNA 4 usa instruções FP8; o fork RDNA 3 adapta o processamento para FP16. As opções mostradas pelo PeliGames dependem das capacidades do pacote instalado. Não se presume que os dois projetos tenham os mesmos recursos.
@@ -175,7 +176,7 @@ No Mochizuki 0.0.8, a rota OptiScaler utiliza o OptiScaler original com o plugin
 
 ### Ajustes no jogo com Mochizuki 0.0.8
 
-O launcher mantém os controles de preparação e inicialização. **Camadas, processamento RenoDX/wilsjo2, passes rápidos ou tradicionais, proteção do HUD, comparação visual e diagnósticos de custo/VRAM** ficam no **NR Control**, na rota OptiScaler, ou em **ReShade → Add-ons**, nas demais rotas do backend 0.0.8. Os detalhes e limitações estão nas [notas oficiais do 0.0.8](https://github.com/mochizuki0323/DLSSNR-AMD/releases/tag/v0.0.8-linux-preview).
+O launcher mantém os controles de preparação e inicialização. **Camadas, processamento RenoDX/wilsjo2, passes rápidos ou tradicionais, proteção do HUD, comparação visual e diagnósticos de custo/VRAM** ficam no **NR Control**, na rota OptiScaler, ou em **ReShade → Add-ons**, nas demais rotas do backend 0.0.8. Os detalhes e limitações estão nas [notas oficiais do backend](https://gitlab.com/mochizuki0323/DLSSNR-AMD/-/releases/v0.0.8.1).
 
 Os ajustes ficam no `dlssnr-amd.ini` da pasta onde o mod foi instalado. Consulte os [atalhos do DLSSNR](#atalhos-do-dlssnr) para abrir os menus e comparar a imagem.
 
@@ -195,7 +196,7 @@ Com o jogo em foco, estes são os atalhos padrão do Mochizuki 0.0.8 para RX 900
 
 **F6 não desliga o upscaler nem a geração de quadros.** A troca de rede é salva para a próxima abertura; os estados alternados por **F6** e **Ctrl+F10** valem somente naquela execução. Para começar sempre ligado/desligado, use **Começar ligado** no PeliGames ou salve a ativação no menu NR.
 
-Os atalhos de captura do PeliGames são configurados separadamente na aba **Capturas**. Referência: [NR Control e opções do backend](https://github.com/mochizuki0323/DLSSNR-AMD#nr-control-optiscaler-route).
+Os atalhos de captura do PeliGames são configurados separadamente na aba **Capturas**. Referência: [NR Control e opções do backend](https://gitlab.com/mochizuki0323/DLSSNR-AMD#nr-control-optiscaler-route).
 
 ### Inicialização pela Steam e outros launchers
 
@@ -214,7 +215,7 @@ Tempos publicados pelos autores, em milissegundos por quadro, somente da rede:
 | RX 7900 XTX — Antigo | 15 ms | 26 ms | 56 ms |
 | RX 7900 XTX — int4 do antigo | 13,3 ms | 22,8 ms | 50,8 ms |
 
-São referências de versões e métodos de medição diferentes, sem incluir o restante do jogo nem todo o processamento do mod. Não representam o FPS final nem garantem o mesmo resultado em outra máquina. Confira as condições nas referências de [RDNA 4](https://github.com/mochizuki0323/DLSSNR-AMD#performance) e [RDNA 3](https://github.com/mauri870/DLSSNR-RDNA3/blob/rdna3/README-RDNA3.md#what-it-costs). Reduzir a resolução de processamento da rede pode diminuir o custo, com impacto na imagem.
+São referências de versões e métodos de medição diferentes, sem incluir o restante do jogo nem todo o processamento do mod. Não representam o FPS final nem garantem o mesmo resultado em outra máquina. Confira as condições nas referências de [RDNA 4](https://gitlab.com/mochizuki0323/DLSSNR-AMD#performance) e [RDNA 3](https://github.com/mauri870/DLSSNR-RDNA3/blob/rdna3/README-RDNA3.md#what-it-costs). Reduzir a resolução de processamento da rede pode diminuir o custo, com impacto na imagem.
 
 ### Quando algo não funciona
 
@@ -253,6 +254,7 @@ O PeliGames instala mods do Nexus Mods em **215 jogos**, com módulos baseados n
    ```
 4. Compile a interface (gera também os ícones):
    ```
+   bash scripts/license-notices.sh
    bun run build
    ```
 5. Compile os dois executáveis, com a interface embutida:
@@ -267,9 +269,9 @@ Para gerar pacotes (AppImage, DEB e RPM) em `src-tauri/target/release/bundle/`, 
 
 PeliGames é desenvolvido por Pelicano e distribuído sob [GNU GPL 3.0](LICENSE). Versões derivadas distribuídas devem disponibilizar o código-fonte correspondente sob a mesma licença.
 
-Integra [DLSSNR-AMD, de mochizuki0323](https://github.com/mochizuki0323/DLSSNR-AMD), e [DLSSNR-RDNA3, de mauri870](https://github.com/mauri870/DLSSNR-RDNA3).
+Integra [DLSSNR-AMD, de mochizuki0323](https://gitlab.com/mochizuki0323/DLSSNR-AMD), e [DLSSNR-RDNA3, de mauri870](https://github.com/mauri870/DLSSNR-RDNA3).
 
-A tradução opcional das descrições de mods utiliza a API online [MyMemory, da Translated S.r.l.](https://mymemory.translated.net/). O texto é enviado ao serviço somente ao solicitar a tradução. Consulte os [avisos de uso, privacidade e cotas](licenses/MyMemory-Service.md).
+A tradução opcional das descrições de mods utiliza a API online [MyMemory, da Translated S.r.l.](https://mymemory.translated.net/). O texto é enviado ao serviço somente ao solicitar a tradução. Consulte os [termos e a privacidade do serviço](https://mymemory.translated.net/terms-and-conditions).
 
 Os componentes de terceiros mantêm suas próprias licenças. Os [créditos e avisos completos](licenses/README.md) acompanham o programa e podem ser consultados na janela **Sobre**.
 

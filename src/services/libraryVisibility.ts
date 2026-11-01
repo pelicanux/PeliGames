@@ -19,7 +19,7 @@ export function useRemovedLibraryGames() {
 }
 export function canRemoveFromLibrary(game: GameInfo) {
   if (game.launcher === "Steam") return false;
-  if (game.launcher === "PeliGames") return (game.library_view ?? "own") === "own";
+  if (game.launcher === "PeliGames") return (game.library_view ?? "own") === "own" || (game.library_view === "nexus" && Boolean(game.nexus_id));
   return ["Manual", "Custom"].includes(game.launcher);
 }
 export function setLibraryGameRemoved(game: GameInfo, removed: boolean) {

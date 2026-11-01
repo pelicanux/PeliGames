@@ -1074,12 +1074,11 @@ pub async fn launch_nexus_game(game_id: String) -> Result<Workspace, String> {
 }
 fn launch_game_blocking(game_id: String) -> Result<Workspace, String> {
     let _lock = STORAGE.lock().map_err(|e| e.to_string())?;
-    let data = load()?;
-    let game = data
-        .games
-        .iter()
-        .find(|g| g.id == game_id)
+    let mut data = load()?;
+    let index = data.games.iter().position(|game| game.id == game_id)
         .ok_or("Jogo não encontrado.")?;
+    if super::nexus_registered_launch::refresh(&mut data.games[index])? { save(&data)?; }
+    let game = &data.games[index];
     let result = super::nexus_profile::launch(game);
     super::nexus_reports::outcome(game,"iniciar jogo",&result);
     result?;

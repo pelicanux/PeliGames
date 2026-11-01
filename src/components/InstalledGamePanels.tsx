@@ -81,7 +81,7 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
       ? await invoke<GameInfo>("configure_external_game", {settings: {external_id: entry.external_id, advanced: patch.advanced ?? entry.advanced, ...(patch.proton !== undefined ? {proton: patch.proton} : {}), ...(patch.directory !== undefined ? {directory:patch.directory} : {})}})
       : await updatePeliGamesSettings({
       path: entry.path, name: entry.name, proton: entry.proton || "",
-      executable: entry.executable || entry.path, prefix: entry.prefix, advanced: entry.advanced, ...patch,
+      executable: entry.executable || entry.path, prefix: entry.prefix || undefined, advanced: entry.advanced, ...patch,
     });
     const scoped = {...updated, library_view: entry.library_view, ...(entry.external_id ? {cover_url: entry.cover_url, automatic_cover_url: entry.automatic_cover_url} : {})};
     currentGame.current = scoped;
@@ -163,7 +163,7 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
                   </div>
                 </HoverTooltip>
                 {prefixChanged && Boolean(prefix.trim()) && <button type="submit" className="installation-name-confirm" disabled={blocked}><MenuIcon name="check" />{t("gameModes", "confirmName")}</button>}
-                <small className="installed-prefix-hint">{pt ? "Selecione um prefixo existente ou uma pasta vazia. Uma pasta vazia será inicializada com o Wine/Proton selecionado ao clicar em Jogar. O prefixo anterior é preservado." : "Select an existing prefix or an empty folder. An empty folder is initialized with the selected Wine/Proton when you click Play. The previous prefix is preserved."}</small>
+                <small className="installed-prefix-hint">{pt ? "Selecione um prefixo existente ou informe uma pasta nova ou vazia. O prefixo será criado com o Wine/Proton selecionado ao clicar em Jogar. O prefixo anterior é preservado." : "Select an existing prefix or enter a new or empty folder. The prefix is created with the selected Wine/Proton when you click Play. The previous prefix is preserved."}</small>
               </form>
           <form className="installation-field" onSubmit={event => { event.preventDefault(); if (executableChanged && executable.trim()) void save({ executable: executable.trim() }); }}>
             <label htmlFor={`${id}-exe`}>{t("gameModes", "executable")}</label>
@@ -189,7 +189,7 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
     ? (pt ? "Gerenciado no Bottles" : "Managed in Bottles")
     : undefined;
 
-  if (section === "options") return game ? <><ModernGameOptions name={game.name} protonLabel={game.steam_proton_name || undefined} protonDisabled={protonDisabled} protonDisabledHint={protonDisabledHint} protonDisabledLabel={protonDisabledLabel} value={game.advanced} proton={proton} onProton={value=>save({proton:value})} onAdvanced={value=>save({advanced:value})} disabled={blocked} toolsDisabled={Boolean(programsDisabled || busy || !game)} native={game.native_linux || game.nexus_platform === "native"} maintenancePath={game.external_id ? `external:${game.external_id}` : game.path} onUninstall={onUninstall} onChangeExecutable={onChangeExecutable}
+  if (section === "options") return game ? <><ModernGameOptions name={game.name} steamProtonMode={game.launcher === "Steam" && !game.flatpak ? game.steam_profile_proton ? "profile" : "steam" : undefined} protonLabel={game.steam_proton_name || undefined} protonDisabled={protonDisabled} protonDisabledHint={protonDisabledHint} protonDisabledLabel={protonDisabledLabel} value={game.advanced} proton={proton} onProton={value=>save({proton:value})} onAdvanced={value=>save({advanced:value})} disabled={blocked} toolsDisabled={Boolean(programsDisabled || busy || !game)} native={game.native_linux || game.nexus_platform === "native"} maintenancePath={game.external_id ? `external:${game.external_id}` : game.path} onUninstall={onUninstall} onChangeExecutable={onChangeExecutable}
     launchOptions={<InstalledLaunchOptions inline game={game} disabled={blocked} errorMessage={error} onSave={options=>save({advanced:{...normalizeAdvanced(currentGame.current?.advanced),launch_options:options}})}/>} configuration={
       <section className="modern-game-fields modern-options-section"><h4>{t("installedSettings", "title")}</h4>{game.launcher === "Epic Games" && !game.native_linux && <p className="modern-performance-hint">{pt ? "Integração experimental: alterações valem na próxima execução do jogo, mesmo com a Epic aberta." : "Experimental integration: changes apply on the next game launch, even while Epic is open."}</p>}<fieldset className="installation-fields" disabled={blocked}>{nameField}</fieldset>{gameDirectoryField}{directoryFields}
         {error && <TimedFeedback>{error}</TimedFeedback>}{!headerStatus && saved === "settings" && <TimedFeedback>{t("installedSettings", "saved")}</TimedFeedback>}

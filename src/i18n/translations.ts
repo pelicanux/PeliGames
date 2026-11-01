@@ -425,7 +425,7 @@ export const translations = {
       saveError: "Erro ao salvar configurações!",
       selectLocalFolderTitle: "Selecionar pasta local do backend",
       selectLocalFolderPrompt: "Selecione a pasta do backend (ex: release/dlssnr-amd)",
-      viewOnGithub: "Ver no GitHub"
+      viewProject: "Ver projeto"
     }
   },
   en: {
@@ -852,7 +852,7 @@ export const translations = {
       saveError: "Error saving configuration!",
       selectLocalFolderTitle: "Select local backend folder",
       selectLocalFolderPrompt: "Select the backend folder (e.g., release/dlssnr-amd)",
-      viewOnGithub: "View on GitHub"
+      viewProject: "View project"
     }
   }
 };

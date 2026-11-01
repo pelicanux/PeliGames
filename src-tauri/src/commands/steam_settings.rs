@@ -1,5 +1,5 @@
 //! A one-time fixed Steam command reads mutable profiles. Only initial linkage
-//! and changes to Steam-selected Proton need confirmation or a closed client.
+//! and Flatpak changes to Steam-selected Proton need confirmation or a closed client.
 use super::*;
 use std::fs;
 
@@ -58,7 +58,7 @@ fn effective(value: Option<&SavedExternalSettings>) -> serde_json::Value {
             .map(|p| p.to_string_lossy().into_owned())
             .unwrap_or_else(|_| path.clone())
     });
-    serde_json::json!({"advanced": advanced, "proton": proton})
+    serde_json::json!({"advanced": advanced, "proton": proton, "steam_profile_proton": value.and_then(|v|v.steam_profile_proton.as_ref())})
 }
 pub(super) fn pending_ids() -> Result<Vec<String>, String> {
     Ok(read()?.into_keys().collect())
@@ -134,7 +134,7 @@ fn update_linked(
     next: &SavedExternalSettings,
     selected: Option<String>,
 ) {
-    if same_proton(selected.as_ref(), next.proton.as_ref()) {
+    if (id.starts_with("Steam:native:") && next.steam_profile_proton.is_some()) || same_proton(selected.as_ref(), next.proton.as_ref()) {
         records.remove(id);
     } else {
         let mut before = next.clone();
@@ -238,7 +238,7 @@ pub(super) fn manual(game: &ExternalGame) -> Result<ManualOptions, String> {
     )?;
     Ok(ManualOptions {
         line: format!("{}%command%", super::super::steam_runtime::prefix(game)?),
-        proton: game.proton.clone(),
+        proton: if game.flatpak { game.proton.clone() } else { None },
     })
 }
 fn wrap(current: &str, prefix: &str) -> String {
@@ -312,7 +312,7 @@ fn apply(game: &ExternalGame) -> Result<(), String> {
             .after
             .proton
             .as_ref()
-            .filter(|next| edit.before.as_ref().and_then(|s| s.proton.as_ref()) != Some(*next))
+            .filter(|next| edit.after.steam_profile_proton.is_none() && edit.before.as_ref().and_then(|s| s.proton.as_ref()) != Some(*next))
         {
             if !game.native_linux {
                 external_proton::apply(
@@ -524,7 +524,7 @@ pub(super) fn confirm_manual(game: &ExternalGame) -> Result<(), String> {
         return Err("A Steam ainda não gravou a linha esperada. Cole as opções em Propriedades → Geral → Opções de inicialização, feche essa tela e tente verificar novamente.".into());
     }
     if let Some(proton) = &edit.after.proton {
-        if !same_proton(selected_proton(game).as_ref(), Some(proton)) {
+        if edit.after.steam_profile_proton.is_none() && !same_proton(selected_proton(game).as_ref(), Some(proton)) {
             return Err("O Proton selecionado ainda difere na Steam. Selecione-o em Compatibilidade ou use a aplicação automática.".into());
         }
     }
@@ -551,7 +551,7 @@ pub(super) fn revert(game: &ExternalGame) -> Result<(), String> {
     } else {
         saved.insert(
             game.external_id.clone(),
-            SavedExternalSettings {
+            SavedExternalSettings { steam_profile_proton: None,
                 advanced: AdvancedSettings::default(),
                 proton: None,
                 directory,
@@ -561,8 +561,10 @@ pub(super) fn revert(game: &ExternalGame) -> Result<(), String> {
     let restored = saved
         .get(&game.external_id)
         .ok_or("Perfil anterior indisponível.")?;
+    let mut restored_game = game.clone();
+    restored_game.steam_profile_proton = restored.steam_profile_proton.clone();
     super::super::steam_runtime::prepare(
-        game,
+        &restored_game,
         &restored.advanced,
         super::super::steam_runtime::mod_options(game)?,
     )?;
@@ -772,7 +774,7 @@ mod tests {
     #[test]
     fn restoring_proton_clears_only_its_change_in_both_steam_installations() {
         for id in ["Steam:native:42", "Steam:flatpak:42"] {
-            let baseline = SavedExternalSettings {
+            let baseline = SavedExternalSettings { steam_profile_proton: None,
                 advanced: AdvancedSettings::default(),
                 proton: Some("/proton/Experimental".into()),
                 directory: None,
@@ -810,7 +812,7 @@ mod tests {
             std::env::temp_dir().join(format!("peligames-proton-alias-{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(root.join("Experimental")).unwrap();
         std::os::unix::fs::symlink(root.join("Experimental"), root.join("Current")).unwrap();
-        let baseline = SavedExternalSettings {
+        let baseline = SavedExternalSettings { steam_profile_proton: None,
             advanced: AdvancedSettings::default(),
             proton: Some(root.join("Current").to_string_lossy().into_owned()),
             directory: None,
@@ -854,7 +856,7 @@ mod tests {
         let mut settings = AdvancedSettings::default();
         settings.schema_version = 2;
         settings.options.insert("fsr4".into(), false);
-        let saved = SavedExternalSettings {
+        let saved = SavedExternalSettings { steam_profile_proton: None,
             advanced: settings,
             proton: None,
             directory: None,
@@ -866,7 +868,7 @@ mod tests {
     }
     #[test]
     fn multiple_edits_keep_baseline_and_returning_to_it_clears_pending() {
-        let baseline = SavedExternalSettings {
+        let baseline = SavedExternalSettings { steam_profile_proton: None,
             advanced: AdvancedSettings::default(),
             proton: Some("/proton/old".into()),
             directory: None,
@@ -893,41 +895,19 @@ mod tests {
         assert!(records.is_empty());
     }
     #[test]
-    fn linked_profiles_apply_advanced_edits_without_a_steam_restart() {
-        let mut next = SavedExternalSettings {
-            advanced: AdvancedSettings::default(),
-            proton: Some("/proton/current".into()),
-            directory: None,
-        };
+    fn linked_profiles_apply_advanced_and_native_proton_edits_without_a_steam_restart() {
+        let mut next = SavedExternalSettings { steam_profile_proton: Some("/proton/new".into()),
+            advanced: AdvancedSettings::default(), proton: Some("/proton/new".into()), directory: None };
         next.advanced.mangohud_enabled = Some(true);
-        next.advanced.mangohud_fps_limit = Some(60);
         let mut records = BTreeMap::new();
-        update_linked(&mut records, "Steam:native:42", &next, next.proton.clone());
+        update_linked(&mut records, "Steam:native:42", &next, Some("/proton/current".into()));
         assert!(records.is_empty());
-        next.proton = Some("/proton/new".into());
-        update_linked(
-            &mut records,
-            "Steam:native:42",
-            &next,
-            Some("/proton/current".into()),
-        );
-        let pending = &records["Steam:native:42"];
-        assert_eq!(
-            pending.before.as_ref().unwrap().advanced.mangohud_enabled,
-            Some(true)
-        );
-        assert_eq!(
-            pending.before.as_ref().unwrap().advanced.mangohud_fps_limit,
-            Some(60)
-        );
-        assert_eq!(
-            pending.before.as_ref().unwrap().proton.as_deref(),
-            Some("/proton/current")
-        );
-        next.advanced.mangohud_enabled = Some(false);
+        update_linked(&mut records, "Steam:flatpak:42", &next, Some("/proton/current".into()));
+        assert!(records.contains_key("Steam:flatpak:42"));
+        next.steam_profile_proton = None;
         next.proton = Some("/proton/current".into());
         update_linked(&mut records, "Steam:native:42", &next, next.proton.clone());
-        assert!(records.is_empty());
+        assert!(!records.contains_key("Steam:native:42"));
     }
     #[test]
     fn wrapper_preserves_steam_arguments_and_does_not_duplicate() {

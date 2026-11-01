@@ -1,29 +1,22 @@
 # Licenças e avisos de terceiros
 
-O código próprio do PeliGames usa [GNU GPL 3.0](../LICENSE) (`GPL-3.0-only`). Dependências, fontes, imagens e ferramentas externas não são relicenciadas automaticamente pelo launcher. Créditos resumidos não substituem os textos e copyrights exigidos por cada licença.
+O código do PeliGames usa a [GNU GPL 3.0](../LICENSE) (`GPL-3.0-only`). Os componentes de terceiros distribuídos com o launcher mantêm as próprias licenças, e seus avisos originais acompanham os pacotes. No programa, eles ficam em **Sobre → Licenças**.
 
-| Componente | Avisos preservados |
+| Componente | Aviso |
 | --- | --- |
-| PeliGames — Pelicano | [GPL 3.0 integral](../LICENSE) e [aviso de autoria e distribuição](PeliGames-Notice.txt) |
-| DLSSNR-AMD — mochizuki0323 | [MIT original](DLSSNR-AMD-LICENSE.txt) e [componentes do backend](DLSSNR-AMD-THIRD-PARTY.md) |
-| DLSSNR-RDNA3 — mauri870, a partir de mochizuki0323 | [MIT original do fork](DLSSNR-RDNA3-LICENSE.txt); o copyright original de mochizuki0323 foi mantido |
-| React, React DOM, Scheduler, Motion e APIs Tauri | [Avisos das dependências da interface](Frontend-Dependencies.txt) |
-| Bibliotecas Rust, inclusive dependências transitivas e de compilação | [Avisos completos](Rust-Dependencies.txt) e [inventário por versão](dependency-inventory.json) |
-| musl libc — auxiliar estático de inicialização Steam | [Copyright e licença originais](Musl-COPYRIGHT.txt) |
-| Jersey 10 — The Soft Type Project Authors | [SIL OFL 1.1 original](../public/fonts/jersey-10/OFL.txt) |
-| SVG Linux / Tux — Simple Icons contributors | [CC0-1.0 original](upstream/Simple-Icons/LICENSE.md); [SVG e origem](../public/icons/linux.svg) |
-| SVG Nexus Mods copiado do Vortex | [GPL-3.0 do repositório de origem](upstream/Vortex-Nexus-Icon/LICENSE.md); [arquivo-fonte e origem](../public/nexus-mods.svg) |
-| MyMemory — Translated S.r.l. | [Serviço externo: atribuição, dados enviados, termos e cotas](MyMemory-Service.md); o motor não é redistribuído |
-| Bibliotecas nativas presentes no AppImage 0.3.0 | [Copyrights e avisos originais dos pacotes](AppImage-Native-Notices.txt) |
-| GDK modificada do AppImage | [Origem, reconstrução e distribuição da fonte correspondente](../scripts/gtk3-wayland/README.md); `COPYING` e `copyright` originais em `usr/share/doc/peligames-gtk3/` no pacote |
-| Extração de ícones de executáveis — ico e png | [Avisos preservados](Executable-Icon-LICENSES.txt) |
+| Bibliotecas Rust do launcher, PeliRun e overlay | `generated/Rust-Dependencies.txt`, gerado ao empacotar |
+| React, Motion e APIs Tauri | `generated/Frontend-Dependencies.txt`, gerado ao empacotar |
+| Código adaptado no overlay (vkBasalt/vkDaedalus, MangoHUD, Khronos) | [Atribuições](PeliGames-Overlay-NOTICES.md) |
+| WebRTC e LiveKit, usados na transmissão de tela | [Avisos](LiveKit-WebRTC-Third-Party.md) |
+| musl libc, no auxiliar estático do PeliRun | [Copyright](Musl-COPYRIGHT.txt) |
+| Bibliotecas nativas do AppImage | [Avisos dos pacotes](AppImage-Native-Notices.txt) |
+| GDK modificada do AppImage | [Origem e fonte correspondente](../scripts/gtk3-wayland/README.md) |
+| Fonte Jersey 10 | [SIL OFL 1.1](../public/fonts/jersey-10/OFL.txt) |
+| Ícone do Nexus Mods, do Vortex | [GPL-3.0](upstream/Vortex-Nexus-Icon/LICENSE.md) |
+| Ícones do Lutris e do Faugus Launcher | [Lutris](upstream/Lutris/LICENSE) e [Faugus](upstream/Faugus-Assets/LICENSE) |
 
-O inventário Rust é conservador: inclui dependências de compilação e não afirma que todos os pacotes são redistribuídos no executável. Os documentos idênticos são deduplicados pelo hash SHA-256; cada componente aponta para os textos originais correspondentes. As expressões `OR` representam alternativas de licença, e `AND` exige a combinação indicada; preservamos os documentos disponibilizados pelo pacote, sem transformar essas expressões em uma licença única.
+`scripts/license-notices.sh` gera os avisos das dependências a partir das versões fixadas nos `Cargo.lock` e no `package.json`. Quando um pacote não traz o texto da licença, o gerador usa o texto original guardado em `upstream/<pacote>/`; se faltar algum, a compilação para.
 
-As fontes originais das dependências MPL-2.0 estão em [sources/](sources/README.md). Os textos adicionais obtidos dos repositórios oficiais têm suas URLs e referências registradas em [upstream/sources.json](upstream/sources.json).
+O código-fonte das dependências MPL-2.0 está disponível, sem modificações, no endereço do crates.io indicado para cada versão nos avisos Rust.
 
-**Limites da verificação:** A presença destes avisos, por si só, não certifica o cumprimento de todas as obrigações de distribuição GPL/LGPL do AppImage.
-
-Proton, UMU, Winetricks e os backends são baixados separadamente. Seus pacotes e componentes internos mantêm as próprias licenças. Os avisos do backend não demonstram que esses componentes estão dentro do binário PeliGames. A DLL e os pesos de modelos da NVIDIA não são incluídos nem cobertos pela GPL do launcher.
-
-A camada interna opcional mantém suas [referências e atribuições](PeliGames-Overlay-NOTICES.md). O inventário inclui os grafos isolados do overlay e do PeliRun, os textos das fontes padrão do egui e os [commits e hashes dos avisos adicionais](Overlay-Dependency-Sources.json).
+Proton, UMU, Winetricks e os backends DLSSNR são baixados à parte e mantêm as próprias licenças; não fazem parte do pacote do PeliGames.

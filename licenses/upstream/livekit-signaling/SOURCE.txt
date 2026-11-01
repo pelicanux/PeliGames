@@ -1,1 +1,0 @@
-https://github.com/livekit/rust-sdks/blob/main/LICENSE

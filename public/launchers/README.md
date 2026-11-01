@@ -7,7 +7,7 @@ Files: ubisoft, ea, battledotnet, fetched 2026-10-13.
 Brand names and trademarks belong to their respective owners. These buttons identify installers; PeliGames is independent of these companies.
 See https://github.com/simple-icons/simple-icons/blob/develop/DISCLAIMER.md.
 
-The project already ships the upstream license in `licenses/upstream/Simple-Icons/LICENSE.md`.
+Simple Icons is released under CC0-1.0, which requires no notice.
 
 `*-cover.svg` are original PeliGames portrait layouts using these brand paths, for offline/missing-cover fallback.
 

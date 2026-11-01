@@ -827,7 +827,7 @@ fn launch_with(game: &NexusGame, tool: Option<&super::nexus_modules::GameTool>) 
     let mut cmd = if game.platform == "native" {
         Command::new(dir.join(launcher))
     } else {
-    let (prefix, proton) = validate_runner(&game.compat_data, &game.proton)?;
+    let (prefix, proton) = super::nexus_registered_launch::runner(game)?;
     let home = dirs::home_dir().ok_or("Pasta pessoal indisponível.")?;
     let steam = [".local/share/Steam", ".steam/steam", ".var/app/com.valvesoftware.Steam/.local/share/Steam", ".var/app/com.valvesoftware.Steam/data/Steam"]
         .iter().map(|relative| home.join(relative)).find(|path| path.is_dir());

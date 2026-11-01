@@ -1,5 +1,8 @@
+import {experimentalDanielNr} from "../services/releaseFeatures";
+import {AddonCatalog} from "./preferences/AddonCatalog";
+import {addonAvailable, addonLabel, type AddonId} from "./preferences/addonCatalogData";
+import {DanielEnvironmentPreferences} from "../modules/neuralRendering/DanielEnvironmentPreferences";
 import {CaptureRuntimePreferences} from "./preferences/CaptureRuntimePreferences";
-import {experimentalFrameGeneration} from "../services/releaseFeatures";
 import {FrameRuntimePreferences} from "./preferences/FrameRuntimePreferences";
 import {PreferenceSearchScope} from "./preferences/PreferenceSearchScope";
 import {ModernMangoHudEditor} from "./preferences/ModernMangoHudEditor";
@@ -27,13 +30,11 @@ import "./preferences/connections.css";
 import "./preferences/protonPreferences.css";
 import "./preferences/interfacePreferences.css";
 
-const MOD_PREFERENCE_TABS=[{id:"dlss",label:"DLSSNR-AMD"},{id:"nexus",label:"Nexus Mods"},{id:"mako",label:"MAKO"},{id:"afmf",label:"AFMF"},{id:"capture",label:"GPU Screen Recorder"}] as const;
-type ModPreferenceTab=typeof MOD_PREFERENCE_TABS[number]["id"];
-const modPreferenceTabFor=(id:string):ModPreferenceTab=>id==="runtime-capture"?"capture":id==="runtime-mako"?"mako":id.startsWith("backup-")?"nexus":"dlss";
+const modPreferenceTabFor=(id:string):AddonId=>id==="runtime-daniel"?"daniel":id==="runtime-capture"?"capture":id==="runtime-mako"?"mako":id.startsWith("backup-")?"nexus":"dlss";
 interface Props {
   onClose: () => void;
   onBusyChange?: (busy: boolean) => void;
-  initialSection?: "general" | "covers" | "protons" | "backendUpdate" | "diskAutomount" | "monitoring" | "interface" | "connections" | "nexusAccount" | "appimageInstall" | "mako" | "afmf" | "capture" | "mods";
+  initialSection?: "general" | "covers" | "protons" | "backendUpdate" | "diskAutomount" | "monitoring" | "interface" | "connections" | "nexusAccount" | "appimageInstall" | "mako" | "afmf" | "capture" | "mods" | "daniel";
   initialBackendArch?: "rdna3" | "rdna4";
   onConfigUpdated: (config: AppConfig | null) => void;
   onOpenWizard: () => void;
@@ -44,15 +45,16 @@ interface Props {
 }
 export type SettingsPage = Page;
 type Page = "home" | "interface" | "mods" | "protons" | "covers" | "tools" | "connections" | "backendUpdate" | "diskAutomount" | "monitoring";
-export function SettingsModal({ onClose, initialSection = "general", initialBackendArch, onBusyChange, onConfigUpdated, onOpenWizard, onOpenWelcome, page: controlledPage, onPageChange }: Props) {
+export function SettingsModal({ onClose, initialSection: requestedSection = "general", initialBackendArch, onBusyChange, onConfigUpdated, onOpenWizard, onOpenWelcome, page: controlledPage, onPageChange }: Props) {
+  const initialSection = requestedSection === "daniel" && !experimentalDanielNr ? "mods" : requestedSection;
   const text = usePreferencesText(), { t, language } = useI18n();
   const preferences = usePreferencesConfig(onConfigUpdated);
-  const initialPage: Page = initialSection === "mako" || initialSection === "afmf" || initialSection === "capture" ? "mods" : initialSection === "general" ? "home" : initialSection === "appimageInstall" ? "tools" : initialSection === "nexusAccount" ? "connections" : initialSection;
+  const initialPage: Page = initialSection === "mako" || initialSection === "afmf" || initialSection === "capture" || initialSection === "daniel" ? "mods" : initialSection === "general" ? "home" : initialSection === "appimageInstall" ? "tools" : initialSection === "nexusAccount" ? "connections" : initialSection;
   const [ownPage, setOwnPage] = useState<Page>(initialPage);
   const page = controlledPage ?? ownPage;
   const setPage = (next: Page) => { if (onPageChange) onPageChange(next); else setOwnPage(next); };
   const displayedPage = page === "home" ? "interface" : page;
-  const [modsTab, setModsTab] = useState<ModPreferenceTab>(initialSection === "mako" || initialSection === "afmf" || initialSection === "capture" ? initialSection : "dlss");
+  const [modsTab, setModsTab] = useState<AddonId | null>(initialSection === "mako" || initialSection === "afmf" || initialSection === "capture" || initialSection === "daniel" ? initialSection : null);
   const [searchBusy,setSearchBusy]=useState<Record<string,boolean>>({});
   const searchBusyHandlers=useMemo(()=>Object.fromEntries(["mango","protons","mods","diskAutomount"].map(id=>[id,(value:boolean)=>setSearchBusy(old=>old[id]===value?old:{...old,[id]:value})])) as Record<string,(value:boolean)=>void>,[]);
   const [backendArch, setBackendArch] = useState(initialBackendArch);
@@ -70,9 +72,21 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
   const [clearingCache, setClearingCache] = useState(false), [cacheError, setCacheError] = useState("");
   const steamRef = useRef<HTMLInputElement>(null), coverRef = useRef<HTMLInputElement>(null), wasSaving = useRef(false);
   const busy = preferences.saving || downloadBusy || clearingCache || Object.values(searchBusy).some(Boolean);
-  useEffect(() => { if(initialSection === "mako" || initialSection === "afmf" || initialSection === "capture") setModsTab(initialSection); setBackendArch(initialBackendArch); setPage(initialPage); setSearchTarget(initialSection === "appimageInstall" ? "appimage-install" : initialSection === "nexusAccount" ? "connection-nexus" : null); }, [initialPage, initialSection, initialBackendArch]);
+  useEffect(() => { if(initialSection === "mako" || initialSection === "afmf" || initialSection === "capture" || initialSection === "daniel") setModsTab(initialSection); setBackendArch(initialBackendArch); setPage(initialPage); setSearchTarget(initialSection === "appimageInstall" ? "appimage-install" : initialSection === "nexusAccount" ? "connection-nexus" : null); }, [initialPage, initialSection, initialBackendArch]);
   useEffect(() => { onBusyChange?.(busy); return () => onBusyChange?.(false); }, [busy, onBusyChange]);
+  useEffect(() => { if (page !== "mods" && page !== "backendUpdate") setModsTab(null); }, [page]);
   const parent: Page = page === "backendUpdate" ? "mods" : "home";
+  const openAddon = (next: AddonId) => {
+    if (busy || preferences.isPending() || !addonAvailable(next)) return;
+    setModsTab(next); setActionError("");
+    requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(".addon-menu-toolbar button")?.focus());
+  };
+  const closeAddon = () => {
+    if (busy || preferences.isPending()) return;
+    const previous = modsTab;
+    setModsTab(null); setActionError(""); setSearchTarget(null);
+    requestAnimationFrame(() => document.getElementById(`addon-button-${previous}`)?.focus());
+  };
   const back = () => { if (!busy && !preferences.isPending()) { setPage(parent); setActionError(""); } };
   useEffect(() => {
     if (wasSaving.current && !preferences.saving && !preferences.error) setNotice(text.saved);
@@ -91,10 +105,10 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
       if (document.querySelector(".modern-drawer-open, .maintenance-popup")) return;
       // A portaled choice menu consumes Escape before navigating out of preferences.
       if (event.target instanceof Element && (event.target.closest('.custom-select-menu[role="listbox"]') || (event.target.getAttribute("aria-haspopup") === "listbox" && event.target.getAttribute("aria-expanded") === "true"))) return;
-      if (event.key === "Escape" && !storageDialogOpen && !cacheDialog && !showLauncherLogs && !protonConfirmationOpen) { event.stopImmediatePropagation(); if (search) { setSearch(""); return; } if (!busy && !preferences.isPending()) { if (parent === "home") onClose(); else setPage(parent); } }
+      if (event.key === "Escape" && !storageDialogOpen && !cacheDialog && !showLauncherLogs && !protonConfirmationOpen) { event.stopImmediatePropagation(); if (search) { setSearch(""); return; } if (!busy && !preferences.isPending()) { if (displayedPage === "mods" && modsTab) closeAddon(); else if (parent === "home") onClose(); else setPage(parent); } }
     };
     window.addEventListener("keydown", escape, true); return () => window.removeEventListener("keydown", escape, true);
-  }, [busy, storageDialogOpen, cacheDialog, showLauncherLogs, protonConfirmationOpen, page, parent, onClose, search]);
+  }, [busy, storageDialogOpen, cacheDialog, showLauncherLogs, protonConfirmationOpen, page, parent, onClose, search, modsTab]);
   const clearCache = async () => {
     if (clearingCache) return;
     setClearingCache(true);
@@ -124,6 +138,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
     { id: "blur-windows", page: "interface", title: text.windowsEffect, keywords: text.blurSearch },
     { id: "launch-effect", page: "interface", title: text.launchEffect, keywords: `${text.freezeEffect} ${text.freezeHint} ${text.shatterEffect} ${text.smoothEffect} ${text.aquariumEffect} ${text.aquariumHint} ${text.particlesEffect} ${text.particlesHint} ${text.penguinEffect} ${text.penguinHint} ${text.shrinkEffect} ${text.shrinkHint} ${text.noLaunchEffect} ${text.launchEffectHint}` },
     { id: "backup-delete-all", page: "mods", title: "Apagar todos os backups de mods", keywords: "backup recuperação excluir remover apagar cópias Nexus" },
+    { id: "runtime-daniel", page: "mods", title: "Daniel NR", keywords: "DLSS neural 0.6 0.8 ambiente preparo experimental HIP AMDNR" },
     { id: "runtime-capture", page: "mods", title: "GPU Screen Recorder", keywords: "captura gravador gravação tela gameplay replay instalar reparar componente vídeo" },
     { id: "runtime-mako", page: "mods", title: "MAKO", keywords: "frame generation geração quadros Lossless Scaling download instalação atualização versões backups" },
     { id: "backend-project", page: "mods", title: text.project, keywords: `${text.rdna4} ${text.rdna3} DLSSNR AMD OptiScaler` },
@@ -149,7 +164,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
     { id: "manual-folders", page: "tools", title: t("settings", "manualDirs"), keywords: text.directorySearch },
   ] as const;
   const mangoMatches=query?mangoSearchOptions(query):[];
-  const searchResults = options.filter(option => matchesPreferenceSearch(query,categoryNames[option.page],option.title,option.keywords)).filter(option=>option.page!=="monitoring"||mangoMatches.length===0);
+  const searchResults = options.filter(option => option.id !== "runtime-daniel" || experimentalDanielNr).filter(option => matchesPreferenceSearch(query,categoryNames[option.page],option.title,option.keywords)).filter(option=>option.page!=="monitoring"||mangoMatches.length===0);
   const searchPages=[...new Set(searchResults.map(option=>option.page))];
   useEffect(() => {
     if (!searchTarget || query || !preferences.ready) return;
@@ -167,7 +182,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
   const renderSearchControls=(target:Page,ids:string[])=>{
     if(target==="interface")return <ThemePreferences searchMode onApplied={()=>setNotice(text.applied)} onOpenConnections={()=>{setSearch("");setPage("connections");setSearchTarget(null)}}/>;
     if(target==="connections")return <ConnectionsPreferences searchMode/>;
-    if(target==="mods")return <>{ids.includes("runtime-capture")&&<CaptureRuntimePreferences disabled={busy} onBusy={searchBusyHandlers.mods}/>}{ids.some(id=>["backend-project","backend-update","setup","clear-cache"].includes(id))&&<ModPreferences {...configProps} onBusy={searchBusyHandlers.mods} onWizard={()=>{if(!preferences.isPending()){onOpenWizard();onClose()}}} onClear={()=>setCacheDialog("confirm")}/>} {ids.some(id=>id.startsWith("backup-"))&&<ModBackupPreferences onError={setActionError} onBusy={searchBusyHandlers.mods} onRestored={async()=>onConfigUpdated(await invoke<AppConfig|null>("load_app_config"))}/>} {(["mako"] as const).filter(backend=>ids.includes(`runtime-${backend}`)).map(backend=><div data-preference-id={`runtime-${backend}`} key={backend}><h3>{"MAKO"}</h3><FrameRuntimePreferences backend={backend} disabled={busy} onBusy={searchBusyHandlers.mods}/></div>)}</>;
+    if(target==="mods")return <>{experimentalDanielNr&&ids.includes("runtime-daniel")&&<DanielEnvironmentPreferences disabled={busy} onBusy={searchBusyHandlers.mods}/>}{ids.includes("runtime-capture")&&<CaptureRuntimePreferences disabled={busy} onBusy={searchBusyHandlers.mods}/>}{ids.some(id=>["backend-project","backend-update","setup","clear-cache"].includes(id))&&<ModPreferences {...configProps} onBusy={searchBusyHandlers.mods} onWizard={()=>{if(!preferences.isPending()){onOpenWizard();onClose()}}} onClear={()=>setCacheDialog("confirm")}/>} {ids.some(id=>id.startsWith("backup-"))&&<ModBackupPreferences onError={setActionError} onBusy={searchBusyHandlers.mods} onRestored={async()=>onConfigUpdated(await invoke<AppConfig|null>("load_app_config"))}/>} {(["mako"] as const).filter(backend=>ids.includes(`runtime-${backend}`)).map(backend=><div data-preference-id={`runtime-${backend}`} key={backend}><h3>{"MAKO"}</h3><FrameRuntimePreferences backend={backend} disabled={busy} onBusy={searchBusyHandlers.mods}/></div>)}</>;
     if(target==="protons")return <ProtonPreferences {...configProps} onBusy={searchBusyHandlers.protons} focusRef={steamRef} onConfirmationChange={setProtonConfirmationOpen}/>;
     if(target==="covers")return <CoverPreferences {...configProps} focusRef={coverRef} onError={setActionError}/>;
     if(target==="tools")return <ToolsPreferences onWelcome={()=>{if(!busy&&!preferences.isPending()){onClose();onOpenWelcome()}}} onError={setActionError} onLogs={()=>setShowLauncherLogs(true)}/>;
@@ -190,7 +205,10 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
         </> : <>
         {displayedPage === "interface" && <ThemePreferences focusTarget={searchTarget} searchControl={searchControl} onApplied={() => setNotice(text.applied)} onOpenConnections={() => { if (!busy && !preferences.isPending()) { setPage("connections"); setSearch(""); setSearchTarget(null); setActionError(""); } }}/>}
         {displayedPage === "connections" && <ConnectionsPreferences focusTarget={searchTarget} searchControl={searchControl}/>}
-        {displayedPage === "mods" && <><h2>{text.mods}</h2><div className="settings-tab-toolbar"><div className="preference-mod-tabs mods-tabs" data-active={modsTab} role="tablist" aria-label={text.mods} onKeyDown={event => { if (busy || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const index=MOD_PREFERENCE_TABS.findIndex(tab=>tab.id===modsTab);const next=MOD_PREFERENCE_TABS[event.key==="Home"?0:event.key==="End"?MOD_PREFERENCE_TABS.length-1:(index+(event.key==="ArrowLeft"?-1:1)+MOD_PREFERENCE_TABS.length)%MOD_PREFERENCE_TABS.length].id; setModsTab(next); requestAnimationFrame(() => document.getElementById(`mod-preferences-tab-${next}`)?.focus()); }}>{MOD_PREFERENCE_TABS.map(tab => <button type="button" key={tab.id} role="tab" id={`mod-preferences-tab-${tab.id}`} aria-controls={`mod-preferences-panel-${tab.id}`} aria-selected={modsTab === tab.id} tabIndex={modsTab === tab.id ? 0 : -1} disabled={busy || (tab.id === "mako" && !experimentalFrameGeneration)} title={tab.id === "mako" && !experimentalFrameGeneration ? "Em desenvolvimento" : undefined} onClick={() => { if (!preferences.isPending()) { setModsTab(tab.id); setActionError(""); } }}>{tab.label}</button>)}</div>{searchControl}</div><div className="mod-preferences-content" role="tabpanel" id={`mod-preferences-panel-${modsTab}`} aria-labelledby={`mod-preferences-tab-${modsTab}`}>{modsTab === "dlss" ? <ModPreferences {...configProps} onBusy={setDownloadBusy} onWizard={() => { if (!preferences.isPending()) { onOpenWizard(); onClose(); } }} onClear={() => setCacheDialog("confirm")}/> : modsTab==="nexus" ? <ModBackupPreferences onError={setActionError} onBusy={setDownloadBusy} onRestored={async () => onConfigUpdated(await invoke<AppConfig | null>("load_app_config"))}/> : modsTab==="capture" ? <CaptureRuntimePreferences disabled={busy} onBusy={setDownloadBusy}/> : <FrameRuntimePreferences backend={modsTab} disabled={busy} onBusy={setDownloadBusy}/>}</div></>}
+        {displayedPage === "mods" && (modsTab ? <>
+          <div className="addon-menu-toolbar mod-workspace"><button type="button" className="mod-action-secondary" disabled={busy} onClick={closeAddon}><MenuIcon name="back"/>{language === "pt" ? "Todos os complementos" : "All add-ons"}</button></div>
+          <section className="mod-preferences-content addon-menu-content" id={`mod-preferences-panel-${modsTab}`} aria-label={addonLabel(modsTab, language === "pt")}>{modsTab === "dlss" ? <ModPreferences {...configProps} onBusy={setDownloadBusy} onWizard={() => { if (!preferences.isPending()) { onOpenWizard(); onClose(); } }} onClear={() => setCacheDialog("confirm")}/> : modsTab==="daniel" ? experimentalDanielNr && <DanielEnvironmentPreferences disabled={busy} onBusy={setDownloadBusy}/> : modsTab==="nexus" ? <ModBackupPreferences onError={setActionError} onBusy={setDownloadBusy} onRestored={async () => onConfigUpdated(await invoke<AppConfig | null>("load_app_config"))}/> : modsTab==="capture" ? <CaptureRuntimePreferences disabled={busy} onBusy={setDownloadBusy}/> : <FrameRuntimePreferences backend={modsTab} disabled={busy} onBusy={setDownloadBusy}/>}</section>
+        </> : <AddonCatalog disabled={busy} onOpen={openAddon}/>)}
         {displayedPage === "protons" && <ProtonPreferences {...configProps} onBusy={setDownloadBusy} focusRef={steamRef} onConfirmationChange={setProtonConfirmationOpen}/>}
         {displayedPage === "covers" && preferences.ready && <CoverPreferences {...configProps} disabled={!preferences.ready} focusRef={coverRef} onError={setActionError}/>}
         {displayedPage === "tools" && <ToolsPreferences onWelcome={() => { if (!busy && !preferences.isPending()) { onClose(); onOpenWelcome(); } }} onError={setActionError} onLogs={() => setShowLauncherLogs(true)}/>}
@@ -211,7 +229,7 @@ export function SettingsModal({ onClose, initialSection = "general", initialBack
       {parent !== "home" && <button type="button" className="settings-page-back" onClick={back} disabled={busy} aria-label={text.back}><MenuIcon name="back"/></button>}
       <div><h1>{query ? text.searchResults : categoryNames[displayedPage]}</h1>{!query && hints[displayedPage] && <p>{hints[displayedPage]}</p>}</div>
       <span className="settings-page-spacer" />
-      {(!tabbedSearch || Boolean(query)) && searchControl}
+      {(!tabbedSearch || displayedPage === "mods" || Boolean(query)) && searchControl}
     </header>}
     {displayedPage === "monitoring" && <MonitoringPreferences searchQuery={query} searchControl={query?undefined:searchControl} onDirtyChange={setDownloadBusy}/>}
     <div ref={pageRef} className="preferences-page settings-page-body" key={displayedPage}>{pageBody}</div>

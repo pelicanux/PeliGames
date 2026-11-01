@@ -163,3 +163,12 @@ __pycache__/
 
 # Internal research snapshots stay local; public route fixtures are separate.
 /src-tauri/resources/nexus-games/*-audit.json
+
+# Dependency notices generated while packaging (scripts/license-notices.sh)
+/licenses/generated/
+
+# Experimental HIP bridge sources; generated binaries remain local.
+!/tools/daniel-bridge/
+/tools/daniel-bridge/build/
+
+!/docs/releases/0.5.3.md

@@ -22,7 +22,9 @@ interface SyncRoom { creators?: string[] | null; members?: Record<string, boolea
 interface SyncResult { next_batch: string; user_id: string; join: Record<string, SyncRoom>; leave: string[]; ignored: string[] | null; presence?: Record<string, string>; member_presence?: Record<string, MatrixMemberPresence> }
 
 /** A message that mentions the signed-in user (bell): opens the chat on click. */
-export interface MatrixMentionDetail { sender: string; room: string; message: string; silent?: boolean }
+export interface MatrixMentionDetail { sender: string; room: string; roomId: string; eventId: string; message: string; silent?: boolean }
+export const MATRIX_READ_EVENT = "peligamesMatrixRead";
+export interface MatrixReadDetail { roomId: string; eventIds: string[]; fullyRead: boolean }
 export const MATRIX_MENTION_EVENT = "peligamesMatrixMention";
 export const OPEN_MATRIX_CHAT_EVENT = "peligamesOpenMatrixChat";
 const MAX_MESSAGES = 300;
@@ -38,6 +40,37 @@ let statusRequest = 0;
 let disconnectRequest: Promise<boolean> | null = null;
 let profileRun = -1;
 const profileAttempts = new Map<string, number>();
+const confirmedReads = new Map<string, string>();
+const readRequests = new Map<string, { event: string; promise: Promise<void> }>();
+const notifiedMessages = new Set<string>();
+/** Confirm the latest displayed message even when the server's unread count is
+ * still zero. Keep acknowledgements across panel/room switches, never accounts. */
+export function markMatrixRoomRead(roomId: string, event: string): Promise<void> {
+  const room = state.rooms[roomId];
+  if (!state.userId || !room?.joined || room.messages[room.messages.length - 1]?.id !== event) return Promise.resolve();
+  if (confirmedReads.get(roomId) === event) return Promise.resolve();
+  const previous = readRequests.get(roomId);
+  if (previous?.event === event) return previous.promise;
+  const run = generation;
+  const request = { event, promise: Promise.resolve() };
+  request.promise = (previous?.promise.catch(() => {}) ?? Promise.resolve()).then(async () => {
+    if (run !== generation || !state.rooms[roomId]?.joined) return;
+    await invoke("matrix_chat_read", { room: roomId, event });
+    if (run !== generation) return;
+    confirmedReads.set(roomId, event);
+    const current = state.rooms[roomId];
+    if (!current) return;
+    const index = current.messages.findIndex(message => message.id === event);
+    const fullyRead = current.messages[current.messages.length - 1]?.id === event;
+    if (fullyRead && current.unread) set({ rooms: { ...state.rooms, [roomId]: { ...current, unread: 0 } } });
+    window.dispatchEvent(new CustomEvent<MatrixReadDetail>(MATRIX_READ_EVENT, { detail: {
+      roomId, fullyRead, eventIds: index < 0 ? [] : current.messages.slice(0, index + 1).map(message => message.id),
+    } }));
+  }).finally(() => { if (readRequests.get(roomId) === request) readRequests.delete(roomId); });
+  readRequests.set(roomId, request);
+  return request.promise;
+}
+
 function resolveMissingNames() {
   if ("__PELI_UI_PREVIEW__" in window || !state.userId || profileRun === generation) return;
   const run = generation;
@@ -159,7 +192,7 @@ export function refreshMatrixRoomMembers(roomId: string): Promise<void> {
 }
 function apply(data: SyncResult, initial: boolean) {
   const rooms = { ...state.rooms }, names = { ...state.names };
-  for (const id of data.leave) rooms[id] = { ...(rooms[id] ?? emptyRoom()), joined: false, members: [], typing: [], unread: 0 };
+  for (const id of data.leave) { confirmedReads.delete(id); rooms[id] = { ...(rooms[id] ?? emptyRoom()), joined: false, members: [], typing: [], unread: 0 }; }
   for (const [id, update] of Object.entries(data.join)) {
     const pending = memberRequests.get(id);
     if (pending?.run === generation) Object.assign(pending.changes, update.members);
@@ -168,13 +201,21 @@ function apply(data: SyncResult, initial: boolean) {
     // A gap (limited timeline) restarts the room from this batch.
     const base = update.limited && !initial ? [] : room.messages;
     const creators = update.creators ?? room.creators;
-    rooms[id] = { ...room, creators, members: updateRoomMembers(room.members, update.members, initial || !room.joined), joined: true, encrypted: update.encrypted ?? room.encrypted, power: withCreators(update.power ?? room.power, creators), messages: mergeEvents(base, update.events),
-      unread: update.unread ?? room.unread, typing: update.typing ?? room.typing, reactions: mergeReactions(room.reactions, update.events),
+    const messages = mergeEvents(base, update.events);
+    const read = confirmedReads.get(id);
+    // A sync already in flight can still contain the old notification count.
+    const readThroughLatest = Boolean(read && messages[messages.length - 1]?.id === read);
+    rooms[id] = { ...room, creators, members: updateRoomMembers(room.members, update.members, initial || !room.joined), joined: true, encrypted: update.encrypted ?? room.encrypted, power: withCreators(update.power ?? room.power, creators), messages,
+      unread: readThroughLatest ? 0 : update.unread ?? room.unread, typing: update.typing ?? room.typing, reactions: mergeReactions(room.reactions, update.events),
       prevBatch: initial || update.limited || !room.prevBatch ? update.prev_batch : room.prevBatch };
     if (!initial && data.user_id) for (const event of update.events) {
       if (event.kind !== "message" || !mentionsMe(event, data.user_id, names) || state.ignored.includes(event.sender)) continue;
-      const room = state.roomList.find(item => item.room_id === id)?.name || "PeliGames";
-      window.dispatchEvent(new CustomEvent<MatrixMentionDetail>(MATRIX_MENTION_EVENT, { detail: { sender: displayName(event.sender, names), room, message: event.body.slice(0, 160), silent: matrixPresenceChoice(data.user_id) === "dnd" } }));
+      const key = `${id}:${event.id}`;
+      if (room.messages.some(message => message.id === event.id) || notifiedMessages.has(key)) continue;
+      notifiedMessages.add(key);
+      if (notifiedMessages.size > 3000) notifiedMessages.delete(notifiedMessages.values().next().value!);
+      const roomName = state.roomList.find(item => item.room_id === id)?.name || "PeliGames";
+      window.dispatchEvent(new CustomEvent<MatrixMentionDetail>(MATRIX_MENTION_EVENT, { detail: { sender: displayName(event.sender, names), room: roomName, roomId: id, eventId: event.id, message: event.body.slice(0, 160), silent: matrixPresenceChoice(data.user_id) === "dnd" } }));
     }
   }
   set({ rooms, names, ignored: data.ignored ?? state.ignored, ready: true, error: "", presence: { ...state.presence, ...data.presence }, memberPresence: { ...state.memberPresence, ...data.member_presence } });
@@ -207,9 +248,10 @@ function syncLoop(run: number) {
     if (/expirada|expirou|encerrada|Entre com Matrix|M_UNKNOWN_TOKEN/.test(error)) void refreshMatrixStatus();
   });
 }
-function stop() { generation++; memberRequests.clear(); profileAttempts.clear(); stopMatrixSdk(); window.dispatchEvent(new Event("peligamesMatrixSignedOut")); set({ rooms: {}, names: {}, ignored: [], roomList: [], ready: false, presence: {}, memberPresence: {} }); }
+function stop() { generation++; confirmedReads.clear(); readRequests.clear(); notifiedMessages.clear(); memberRequests.clear(); profileAttempts.clear(); stopMatrixSdk(); window.dispatchEvent(new Event("peligamesMatrixSignedOut")); set({ rooms: {}, names: {}, ignored: [], roomList: [], ready: false, presence: {}, memberPresence: {} }); }
 async function begin() {
   const run = ++generation;
+  confirmedReads.clear(); readRequests.clear(); notifiedMessages.clear();
   profileAttempts.clear();
   await loadRooms();
   if (run === generation) void syncLoop(run);

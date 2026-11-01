@@ -1,10 +1,8 @@
 #!/usr/bin/env bun
-// Preserve original dependency notices. Supply cargo metadata from the locked Linux build:
-//   cargo metadata --format-version 1 --locked --offline --filter-platform x86_64-unknown-linux-gnu \
-//     --manifest-path src-tauri/Cargo.toml > /tmp/metadata.json
-//   bun scripts/generate-license-notices.ts /tmp/metadata.json
+// Preserve original dependency notices in licenses/generated/ (packaged, not versioned).
+// Run by scripts/license-notices.sh with cargo metadata from each locked Linux graph.
 import { createHash } from "node:crypto";
-import { existsSync, lstatSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 
 const ROOT = join(import.meta.dir, "..");
@@ -44,7 +42,7 @@ function generate(label: string, packages: [Package, [string, string][]][], dest
   const sections = [`${label} — original third-party notices\n`,
     "Generated from installed, locked dependency versions. Includes transitive and build-time dependencies; this is not a claim that every listed package is shipped in the executable.\n"];
   if (label === "Rust dependencies")
-    sections.push("Unmodified source archives for the MPL-2.0 crates are provided under that license in the bundled licenses/sources/ directory and at https://github.com/pelicanux/PeliGames/tree/main/licenses/sources . See manifest.json for versions and Cargo.lock-matching checksums. These archives do not cover the native libraries in the AppImage.\n");
+    sections.push("The Source Code Form of each MPL-2.0 crate is available, unmodified, at the crates.io address listed with its version below.\n");
   const ordered = [...packages].sort(([a], [b]) => a.name !== b.name ? (a.name < b.name ? -1 : 1) : a.version < b.version ? -1 : a.version > b.version ? 1 : 0);
   for (const [pkg, files] of ordered) {
     const row: Row = { ...pkg, notices: [] };
@@ -67,8 +65,6 @@ function generate(label: string, packages: [Package, [string, string][]][], dest
   writeFileSync(destination, sections.join(""));
   return [rows, missing] as const;
 }
-/** JSON with non-ASCII characters escaped, as the inventory always used. */
-const asciiJson = (value: unknown) => JSON.stringify(value, null, 2).replace(/[^\x00-\x7f]/g, char => "\\u" + char.charCodeAt(0).toString(16).padStart(4, "0"));
 
 const metadataPaths = process.argv.slice(2);
 if (!metadataPaths.length) { console.error("Usage: bun scripts/generate-license-notices.ts <cargo-metadata.json> [additional-metadata.json ...]"); process.exit(2); }
@@ -114,8 +110,13 @@ while (pending.length) {
   }
   frontend.push([{ name: pkg.name, version: pkg.version, license: pkg.license ?? "UNKNOWN", source: `https://www.npmjs.com/package/${pkg.name}/v/${pkg.version}` }, files]);
 }
-const output = join(ROOT, "licenses");
+const output = join(ROOT, "licenses/generated");
+mkdirSync(output, { recursive: true });
 const [r, rm] = generate("Rust dependencies", rust, join(output, "Rust-Dependencies.txt"));
 const [f, fm] = generate("Frontend production dependencies", frontend, join(output, "Frontend-Dependencies.txt"));
-writeFileSync(join(output, "dependency-inventory.json"), asciiJson({ rust: r, frontend: f, missing_notice_texts: [...rm, ...fm] }) + "\n");
-console.log(`Rust: ${r.length}; frontend: ${f.length}; missing notice texts: ${JSON.stringify([...rm, ...fm])}`);
+console.log(`Avisos de licença: ${r.length} pacotes Rust, ${f.length} da interface.`);
+// A package without its license text cannot ship: add the upstream text to licenses/upstream/<name>/.
+if (rm.length || fm.length) {
+  console.error(`Pacotes sem texto de licença: ${[...rm, ...fm].join(", ")}`);
+  process.exit(1);
+}

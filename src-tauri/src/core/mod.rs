@@ -83,3 +83,7 @@ pub mod capture_overlay;
 pub mod capture_runtime;
 
 pub mod component_uninstall;
+
+pub mod daniel_nr;
+
+pub(crate) mod prefix_selection;

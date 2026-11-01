@@ -38,7 +38,9 @@ pub fn runtime_dir() -> PathBuf {
 pub fn candidates(runtime: &Path) -> Vec<PathBuf> {
     let mut paths = Vec::new();
     for folder in std::iter::once("").chain(SANDBOXED) {
-        for slot in 0..SLOTS { paths.push(runtime.join(folder).join(format!("discord-ipc-{slot}"))); }
+        for slot in 0..SLOTS {
+            paths.push(runtime.join(folder).join(format!("discord-ipc-{slot}")));
+        }
     }
     paths
 }
@@ -47,7 +49,11 @@ pub fn candidates(runtime: &Path) -> Vec<PathBuf> {
 /// top-level socket answers. Returns the link created, if any. Never replaces a
 /// real socket or a link it did not make (one pointing outside `SANDBOXED`).
 pub fn link_sandboxed(runtime: &Path) -> Result<Option<PathBuf>, String> {
-    let ours = |target: &Path| SANDBOXED.iter().any(|folder| target.starts_with(runtime.join(folder)));
+    let ours = |target: &Path| {
+        SANDBOXED
+            .iter()
+            .any(|folder| target.starts_with(runtime.join(folder)))
+    };
     let mut free = None;
     for slot in 0..SLOTS {
         let top = runtime.join(format!("discord-ipc-{slot}"));
@@ -57,7 +63,8 @@ pub fn link_sandboxed(runtime: &Path) -> Result<Option<PathBuf>, String> {
             Ok(meta) if meta.file_type().is_symlink() => {
                 // A link left by a previous session of a closed client.
                 if fs::read_link(&top).is_ok_and(|target| ours(&target)) {
-                    fs::remove_file(&top).map_err(|e| format!("Não foi possível renovar {}: {e}", top.display()))?;
+                    fs::remove_file(&top)
+                        .map_err(|e| format!("Não foi possível renovar {}: {e}", top.display()))?;
                     free = free.or(Some(top));
                 }
             }
@@ -67,10 +74,19 @@ pub fn link_sandboxed(runtime: &Path) -> Result<Option<PathBuf>, String> {
         }
     }
     let Some(link) = free else { return Ok(None) };
-    let found = SANDBOXED.iter().flat_map(|folder| (0..SLOTS).map(move |slot| runtime.join(folder).join(format!("discord-ipc-{slot}"))))
+    let found = SANDBOXED
+        .iter()
+        .flat_map(|folder| {
+            (0..SLOTS).map(move |slot| runtime.join(folder).join(format!("discord-ipc-{slot}")))
+        })
         .find(|candidate| socket(candidate));
     let Some(target) = found else { return Ok(None) };
-    symlink(&target, &link).map_err(|e| format!("Não foi possível ligar o Discord em {}: {e}", link.display()))?;
+    symlink(&target, &link).map_err(|e| {
+        format!(
+            "Não foi possível ligar o Discord em {}: {e}",
+            link.display()
+        )
+    })?;
     Ok(Some(link))
 }
 
@@ -80,7 +96,14 @@ mod tests {
     use std::os::unix::net::UnixListener;
 
     fn runtime() -> PathBuf {
-        let path = std::env::temp_dir().join(format!("peli-discord-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        let path = std::env::temp_dir().join(format!(
+            "peli-discord-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
         fs::create_dir_all(&path).unwrap();
         path
     }
@@ -103,7 +126,8 @@ mod tests {
     fn native_clients_and_foreign_links_are_left_alone() {
         let root = runtime();
         fs::create_dir_all(root.join("app/com.discordapp.Discord")).unwrap();
-        let _flatpak = UnixListener::bind(root.join("app/com.discordapp.Discord/discord-ipc-0")).unwrap();
+        let _flatpak =
+            UnixListener::bind(root.join("app/com.discordapp.Discord/discord-ipc-0")).unwrap();
         // A native client already answers: nothing to do.
         let native = UnixListener::bind(root.join("discord-ipc-0")).unwrap();
         assert_eq!(link_sandboxed(&root).unwrap(), None);
@@ -111,8 +135,14 @@ mod tests {
         fs::remove_file(root.join("discord-ipc-0")).unwrap();
         // A link made by someone else stays, even if broken; the next free slot is used.
         symlink("/elsewhere/socket", root.join("discord-ipc-0")).unwrap();
-        assert_eq!(link_sandboxed(&root).unwrap(), Some(root.join("discord-ipc-1")));
-        assert_eq!(fs::read_link(root.join("discord-ipc-0")).unwrap(), PathBuf::from("/elsewhere/socket"));
+        assert_eq!(
+            link_sandboxed(&root).unwrap(),
+            Some(root.join("discord-ipc-1"))
+        );
+        assert_eq!(
+            fs::read_link(root.join("discord-ipc-0")).unwrap(),
+            PathBuf::from("/elsewhere/socket")
+        );
         fs::remove_dir_all(root).unwrap();
     }
 
@@ -124,9 +154,15 @@ mod tests {
         // Left by a previous session: the client was closed and its socket removed.
         symlink(flatpak.join("discord-ipc-3"), root.join("discord-ipc-0")).unwrap();
         assert_eq!(link_sandboxed(&root).unwrap(), None);
-        assert!(fs::symlink_metadata(root.join("discord-ipc-0")).is_err(), "stale link removed");
+        assert!(
+            fs::symlink_metadata(root.join("discord-ipc-0")).is_err(),
+            "stale link removed"
+        );
         let _client = UnixListener::bind(flatpak.join("discord-ipc-0")).unwrap();
-        assert_eq!(link_sandboxed(&root).unwrap(), Some(root.join("discord-ipc-0")));
+        assert_eq!(
+            link_sandboxed(&root).unwrap(),
+            Some(root.join("discord-ipc-0"))
+        );
         assert!(socket(&root.join("discord-ipc-0")));
         fs::remove_dir_all(root).unwrap();
     }

@@ -12,8 +12,8 @@ import { MenuIcon } from "../MenuIcon";
 import { notifyError, notifyInfo } from "../../services/notifications";
 import { WinetricksModal } from "../WinetricksModal";
 
-export function ModernGameOptions({name="",value, proton, protonLabel, onProton, onAdvanced, launchOptions, disabled, toolsDisabled = disabled, native, maintenancePath, onUninstall, onChangeExecutable, automaticDlls, dllError, onResetDlls, children, protonDisabled, protonDisabledHint, protonDisabledLabel, configuration, prefixPrograms}: {
-  name?: string; protonLabel?: string; configuration?: ReactNode; prefixPrograms?: ReactNode; protonDisabled?: boolean; protonDisabledHint?: string; protonDisabledLabel?: string; value?: AdvancedSettings; proton: string; onProton: (path: string)=>Promise<boolean>; onAdvanced: (settings:AdvancedSettings)=>Promise<boolean>;
+export function ModernGameOptions({name="",value, proton, protonLabel, steamProtonMode, onProton, onAdvanced, launchOptions, disabled, toolsDisabled = disabled, native, maintenancePath, onUninstall, onChangeExecutable, automaticDlls, dllError, onResetDlls, children, protonDisabled, protonDisabledHint, protonDisabledLabel, configuration, prefixPrograms}: {
+  name?: string; steamProtonMode?: "profile" | "steam"; protonLabel?: string; configuration?: ReactNode; prefixPrograms?: ReactNode; protonDisabled?: boolean; protonDisabledHint?: string; protonDisabledLabel?: string; value?: AdvancedSettings; proton: string; onProton: (path: string)=>Promise<boolean>; onAdvanced: (settings:AdvancedSettings)=>Promise<boolean>;
   launchOptions: ReactNode; disabled?: boolean; toolsDisabled?: boolean; native?: boolean; maintenancePath: string; onUninstall?: ()=>void; onChangeExecutable?: ()=>void;
   automaticDlls?: string; dllError?: string; onResetDlls?: ()=>void; children?: ReactNode;
 }) {
@@ -64,6 +64,8 @@ export function ModernGameOptions({name="",value, proton, protonLabel, onProton,
         </div>
         <button type="button" className="modern-proton-manage" onClick={()=>{closeRunners();window.dispatchEvent(new Event("openProtonPreferences"));}}>{pt?"Gerenciar versões":"Manage versions"}</button>
       </div>,document.body)}</>}
+
+      {!native&&steamProtonMode&&<div className="modern-option-row"><span>{pt?"Escolha do Proton":"Proton selection"}<small className="modern-performance-hint">{steamProtonMode==="profile"?(pt?"Salvo no perfil PeliGames. Será usado na próxima abertura do jogo, sem reiniciar a Steam.":"Saved in the PeliGames profile. Used on the next game launch without restarting Steam."):(pt?"Seguindo a versão escolhida na Steam. Selecione uma versão acima para fixá-la neste perfil.":"Following Steam’s selection. Choose a version above to pin it to this profile.")}</small></span>{steamProtonMode==="profile"&&<button type="button" className="modern-mini-btn" disabled={blocked} onClick={()=>choose("")}>{pt?"Usar Proton da Steam":"Use Steam’s Proton"}</button>}</div>}
 
       {!native&&!maintenancePath.startsWith("external:")&&<div className="modern-option-row"><span>{pt?"Comunicação com a Steam":"Steam client communication"}<small className="modern-performance-hint">{pt?"Requer a Steam aberta e um Proton compatível. Não adiciona o jogo à Steam.":"Requires Steam to be running and a compatible Proton. Does not add the game to Steam."}</small></span><button type="button" role="switch" aria-label={pt?"Comunicação com a Steam":"Steam client communication"} aria-checked={Boolean(value?.options.steam_client)} className={`advanced-toggle ${value?.options.steam_client?"enabled":""}`} disabled={blocked} onClick={()=>void run(async()=>{const current=normalizeAdvanced(value);if(!await onAdvanced({...current,options:{...current.options,steam_client:!current.options.steam_client}}))throw new Error(pt?"Não foi possível salvar a comunicação com a Steam.":"Could not save Steam client communication.");})}><span/></button></div>}
       {launchOptions}

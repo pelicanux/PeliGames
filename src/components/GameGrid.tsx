@@ -46,6 +46,7 @@ const libraryNameOrder = new Intl.Collator("pt-BR", { sensitivity: "base", numer
 export interface GameInfo {
   steam_pending?: boolean;
   steam_proton_name?: string | null;
+  steam_profile_proton?: string | null;
   native_linux?: boolean;
   nexus_platform?: "native" | "proton";
   nexus_running?: boolean;
@@ -235,7 +236,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
         const settings = external.find(entry => entry.launcher === game.launcher && (entry.path === game.path || (game.launcher === "Steam" && Boolean(game.app_id) && entry.app_id === game.app_id) || (game.launcher !== "Steam" && inside(entry.path))));
         // Never the launcher's folder: the DLSS library finds the game folder its own
         // way (the executable that loads the graphics API) and keeps manual choices.
-        return settings ? {...game, external_id: settings.external_id, native_linux: settings.native_linux, advanced: settings.advanced, proton: settings.proton, prefix: settings.prefix} : game;
+        return settings ? {...game, external_id: settings.external_id, steam_profile_proton: settings.steam_profile_proton, steam_proton_name: settings.steam_proton_name, steam_pending: settings.steam_pending, native_linux: settings.native_linux, advanced: settings.advanced, proton: settings.proton, prefix: settings.prefix} : game;
       });
       if (scope !== activeScope.current) return;
       setGames(applyCustomCovers([...result.filter(game => game.launcher !== "PeliGames" && (game.launcher !== "Custom" || !ownEntries.current.some(entry=>sameGameInstallation(entry,game)))), ...ownEntries.current]));

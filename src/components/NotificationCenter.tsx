@@ -9,12 +9,12 @@ import type { LauncherUpdateInfo } from "../services/launcherUpdates";
 import type { ProtonFamily } from "../services/protonService";
 import "./notifications.css";
 import { LAUNCHER_ERROR_EVENT, LAUNCHER_NOTICE_EVENT, repeatNotification, type LauncherErrorDetail } from "../services/notifications";
-import { MATRIX_MENTION_EVENT, OPEN_MATRIX_CHAT_EVENT, type MatrixMentionDetail } from "../services/matrixChat";
+import { MATRIX_MENTION_EVENT, MATRIX_READ_EVENT, OPEN_MATRIX_CHAT_EVENT, type MatrixMentionDetail, type MatrixReadDetail } from "../services/matrixChat";
 import { playNotificationSound, unlockNotificationSound } from "../services/notificationSound";
 import { useNativeVideoOverlay } from "../services/matrixScreenView";
 
 export type UpdateTarget = "launcher" | "rdna4" | "rdna3" | ProtonFamily;
-type Notice = { id: string; target: UpdateTarget | "nexus" | "error" | "info" | "matrix"; version: string; message?: string; source?: string; action?: LauncherErrorDetail["action"]; unread: boolean };
+type Notice = { id: string; target: UpdateTarget | "nexus" | "error" | "info" | "matrix"; version: string; message?: string; source?: string; roomId?: string; eventId?: string; action?: LauncherErrorDetail["action"]; unread: boolean };
 type Store = { items: Notice[]; seen: string[] };
 type BackendStatus = { latest: string; current: string | null; needs_update: boolean };
 const storageKey = "peligames_update_notifications_v1";
@@ -102,16 +102,27 @@ export function NotificationCenter({ launcherUpdate, onNavigate, onNexusAccount,
     document.addEventListener("pointerdown", unlockNotificationSound);
     document.addEventListener("keydown", unlockNotificationSound);
     const received = (event: Event) => {
-      const { sender, room, message, silent } = (event as CustomEvent<MatrixMentionDetail>).detail;
+      const { sender, room, roomId, eventId, message, silent } = (event as CustomEvent<MatrixMentionDetail>).detail;
+      const id = `matrix:${roomId}:${eventId}`;
+      if (storeRef.current.seen.includes(id)) return;
       if (!silent) void playNotificationSound();
       const previous = storeRef.current;
-      const notice: Notice = { id: `matrix:${crypto.randomUUID()}`, target: "matrix", version: "", message: `${sender}: ${message}`, source: room, unread: !openRef.current };
-      commit({ ...previous, items: [notice, ...previous.items].slice(0, 20) });
+      const notice: Notice = { id, target: "matrix", version: "", message: `${sender}: ${message}`, source: room, roomId, eventId, unread: !openRef.current };
+      commit({ ...previous, items: [notice, ...previous.items].slice(0, 20), seen: [...previous.seen, id].slice(-100) });
       if (!openRef.current && !silent) setToasts(queue => [...queue, notice]);
     };
+    const read = (event: Event) => {
+      const { roomId, eventIds, fullyRead } = (event as CustomEvent<MatrixReadDetail>).detail;
+      const covered = (notice: Notice) => notice.target === "matrix" && notice.roomId === roomId && (fullyRead || Boolean(notice.eventId && eventIds.includes(notice.eventId)));
+      const previous = storeRef.current;
+      if (previous.items.some(notice => covered(notice) && notice.unread)) commit({ ...previous, items: previous.items.map(notice => covered(notice) ? { ...notice, unread: false } : notice) });
+      setToasts(queue => queue.filter(notice => !covered(notice)));
+    };
     window.addEventListener(MATRIX_MENTION_EVENT, received);
+    window.addEventListener(MATRIX_READ_EVENT, read);
     return () => {
       window.removeEventListener(MATRIX_MENTION_EVENT, received);
+      window.removeEventListener(MATRIX_READ_EVENT, read);
       document.removeEventListener("pointerdown", unlockNotificationSound);
       document.removeEventListener("keydown", unlockNotificationSound);
     };
