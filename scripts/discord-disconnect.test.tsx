@@ -15,6 +15,7 @@ mock.module("@tauri-apps/api/core",()=>({invoke:(command:string)=>new Promise((r
 mock.module("../src/i18n/I18nContext",()=>({useI18n:()=>({language:"pt"})}));
 mock.module("../src/components/MenuIcon",()=>({MenuIcon:()=>null}));
 mock.module("../src/services/notifications",()=>({notifyError:()=>{}}));
+mock.module("../src/components/preferences/DiscordPresencePreferences",()=>({DiscordPresencePreferences:()=>null}));
 const {DiscordConnection}=await import("../src/components/preferences/DiscordConnection");
 function render(){cursor=0; const tree=DiscordConnection(); if(!mounted){mounted=true;effects.forEach(effect=>effect());}return tree;}
 function buttons(node:any):any[]{if(!node||typeof node!=="object")return [];return [...(node.type==="button"?[node]:[]),...[node.props?.children].flat(Infinity).flatMap(buttons)];}
