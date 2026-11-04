@@ -172,3 +172,4 @@ __pycache__/
 /tools/daniel-bridge/build/
 
 !/docs/releases/0.5.3.md
+!/docs/releases/0.5.4.md

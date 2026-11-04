@@ -990,18 +990,23 @@ img[src="/peligames.svg"] { filter: hue-rotate(var(--brand-hue, 0deg)); }
 .credits-licenses h4 { display: flex; align-items: center; gap: .5rem; margin: 0 0 .7rem; font-size: 1rem; color: var(--tone-f2f3fb, #f2f3fb); }
 .credits-licenses h4 svg { color: var(--accent-soft); }
 .credits-license-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
-.credits-license-grid button, .credits-license-actions button, .credits-license-back {
+.credits-license-grid button, .credits-license-actions button, .credits-license-pagination button, .credits-license-back {
   background: rgba(153,163,198,.07); border: 1px solid rgba(153,163,198,.2); border-radius: 8px; color: var(--tone-e2e8f0, #e2e8f0); padding: .65rem .75rem; cursor: pointer; font: inherit;
 }
 .credits-license-grid button { display: flex; flex-direction: column; gap: .3rem; text-align: left; min-width: 0; font-size: .8rem; }
 .credits-license-grid small { color: var(--tone-94a3b8, #94a3b8); font-size: .7rem; overflow-wrap: anywhere; }
 .credits-license-read { color: var(--tone-f59aa9, #f59aa9); font-size: .7rem; }
-.credits-license-grid button:hover, .credits-license-actions button:hover, .credits-license-back:hover { background: rgba(var(--accent-rgb), .12); border-color: rgba(var(--accent-rgb), .5); }
-.credits-license-grid button:focus-visible, .credits-license-actions button:focus-visible, .credits-license-back:focus-visible, .credits-license-text:focus-visible { outline: 2px solid var(--tone-f59aa9, #f59aa9); outline-offset: 2px; }
+.credits-license-grid button:hover, .credits-license-actions button:hover, .credits-license-pagination button:hover:not(:disabled), .credits-license-back:hover { background: rgba(var(--accent-rgb), .12); border-color: rgba(var(--accent-rgb), .5); }
+.credits-license-grid button:focus-visible, .credits-license-actions button:focus-visible, .credits-license-pagination button:focus-visible, .credits-license-back:focus-visible, .credits-license-text:focus-visible { outline: 2px solid var(--tone-f59aa9, #f59aa9); outline-offset: 2px; }
 .credits-dialog.license-dialog { max-width: 620px !important; display: flex; flex-direction: column; overflow: hidden; }
 .credits-license-back { align-self: flex-start; flex-shrink: 0; font-size: .8rem; margin-bottom: 1rem; }
 .credits-license-note { font-size: .75rem; line-height: 1.5; color: var(--tone-94a3b8, #94a3b8); flex-shrink: 0; }
-.credits-license-text { min-height: 0; overflow: auto; overscroll-behavior: contain; margin: 0; padding: 1rem; border: 1px solid rgba(153,163,198,.15); border-radius: 9px; background: rgba(var(--surface-7-10-20, 7, 10, 20), .4); color: var(--tone-cbd5e1, #cbd5e1); font: .78rem/1.65 monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.credits-license-text { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; margin: 0; padding: 1rem; border: 1px solid rgba(153,163,198,.15); border-radius: 9px; background: rgba(var(--surface-7-10-20, 7, 10, 20), .4); color: var(--tone-cbd5e1, #cbd5e1); font: .78rem/1.65 monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.credits-license-pagination { display: flex; align-items: center; gap: .4rem; flex-shrink: 0; margin-bottom: .65rem; font-size: .8rem; }
+.credits-license-pagination span { flex: 1; text-align: center; }
+.credits-license-pagination button { min-width: 36px; padding: .35rem .5rem; }
+.credits-license-pagination button:disabled { opacity: .4; cursor: default; }
+.credits-license-status { min-height: 6rem; font-size: .8rem; color: var(--tone-94a3b8, #94a3b8); }
 .credits-license-actions { display: flex; justify-content: flex-end; gap: .5rem; flex-wrap: wrap; padding-top: 1rem; flex-shrink: 0; font-size: .8rem; }
 @media (max-width: 480px) { .credits-license-grid { grid-template-columns: 1fr; } }
 

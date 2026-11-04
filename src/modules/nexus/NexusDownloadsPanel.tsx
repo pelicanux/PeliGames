@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { nexusDownloadFeedback, type DownloadFeedback } from "./downloadFeedback";
+import { nexusDownloadFeedback, notifyNexusDownloadError, type DownloadFeedback } from "./downloadFeedback";
 import { invoke } from "@tauri-apps/api/core";
 import { openBrowserUrl as openUrl, openNexusBrowser } from "../../services/browser";
 import { NexusPopup } from "./NexusPopup";
@@ -9,13 +9,16 @@ import { MenuIcon } from "../../components/MenuIcon";
 import { NexusIcon } from "../../components/NexusIcon";
 import "./NexusDownloadsPanel.css";
 import { useNexusText } from "./text";
+import { useI18n } from "../../i18n/I18nContext";
 import type { NexusGame } from "./useNexusWorkspace";
 export interface NexusDownload { id: string; domain: string; mod_id: number; file_id: number; game_id?: string; name: string; status: "preparing" | "queued" | "authorizing" | "waiting" | "downloading" | "importing" | "installing" | "installed" | "imported" | "cancelled" | "error"; received: number; total?: number; error?: string; auto_install?: boolean; mod_entry_id?: string; requirements?: Requirements; collection?: string }
 /** openRequest/hideButton/onActiveCount: the new interface opens the queue from its side menu. */
-export function NexusDownloadsPanel({ games, onViewMod, buttonClassName = "btn btn-secondary", openRequest = 0, hideButton = false, onActiveCount }: { buttonClassName?: string; games: NexusGame[]; onViewMod: (gameId: string, modId: string) => void; openRequest?: number; hideButton?: boolean; onActiveCount?: (count: number) => void }) {
+export function NexusDownloadsPanel({ games, onViewMod, buttonClassName = "btn btn-secondary", openRequest = 0, hideButton = false, accountSettingsOpen = false, onActiveCount }: { buttonClassName?: string; games: NexusGame[]; onViewMod: (gameId: string, modId: string) => void; openRequest?: number; hideButton?: boolean; accountSettingsOpen?: boolean; onActiveCount?: (count: number) => void }) {
   const text = useNexusText();
+  const { language } = useI18n();
   const [opened, setOpened] = useState(false);
   useEffect(() => { if (openRequest) setOpened(true); }, [openRequest]);
+  useEffect(() => { if (accountSettingsOpen && opened) { setOpened(false); setSelectedJob(null); } }, [accountSettingsOpen, opened]);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [jobs, setJobs] = useState<NexusDownload[]>([]);
   const [error, setError] = useState("");
@@ -25,14 +28,20 @@ export function NexusDownloadsPanel({ games, onViewMod, buttonClassName = "btn b
   useEffect(() => { if (!("__PELI_UI_PREVIEW__" in window)) void invoke<{ appimage: boolean }>("appimage_install_status").then(status => setNeedsInstall(status.appimage)).catch(() => {}); }, []);
   const [busy, setBusy] = useState(false);
   const [preparing, setPreparing] = useState(false);
-  const seen = useRef(new Map<string, NexusDownload["status"]>());
+  const seen = useRef(new Map<string, Pick<NexusDownload, "status" | "error">>());
   useEffect(() => {
     let active = true, querying = false;
     const refresh = async () => {
       if (querying) return; querying = true;
       try { const rows = await invoke<NexusDownload[]>("list_nexus_downloads"); if (active) {
-        if (rows.some(job => (["authorizing", "waiting", "downloading", "error"] as string[]).includes(job.status) && seen.current.get(job.id) !== job.status && (job.status !== "error" || seen.current.has(job.id)))) setOpened(true);
-        seen.current = new Map(rows.map(job => [job.id, job.status]));
+        if (rows.some(job => (["authorizing", "waiting", "downloading", "error"] as string[]).includes(job.status) && seen.current.get(job.id)?.status !== job.status && (job.status !== "error" || seen.current.has(job.id)))) setOpened(true);
+        for (const job of rows) {
+          const previous = seen.current.get(job.id);
+          if (job.status === "error" && job.error && (previous?.status !== "error" || previous.error !== job.error)) {
+            notifyNexusDownloadError(job.error, language);
+          }
+        }
+        seen.current = new Map(rows.map(job => [job.id, { status: job.status, error: job.error }]));
         setJobs(rows);
       } }
       catch (e) { if (active) setError(String(e)); } finally { querying = false; }
@@ -40,16 +49,17 @@ export function NexusDownloadsPanel({ games, onViewMod, buttonClassName = "btn b
     const feedback = (event: Event) => {
       const detail = (event as CustomEvent<DownloadFeedback>).detail;
       setOpened(true); setSelectedJob(null); setPreparing(detail.phase === "preparing"); setError(detail.error || "");
+      if (detail.phase === "error") notifyNexusDownloadError(detail.error, language);
       void refresh();
     };
     window.addEventListener(nexusDownloadFeedback, feedback);
     void refresh(); const timer = window.setInterval(() => void refresh(), 1000);
     return () => { active = false; window.clearInterval(timer); window.removeEventListener(nexusDownloadFeedback, feedback); };
-  }, []);
+  }, [language]);
   const run = async (command: string, args?: Record<string, unknown>) => {
     if (busy) return; setBusy(true); setError("");
     try { await invoke(command, args); if (command === "register_nexus_handler") setRegistered(true); }
-    catch (e) { setError(String(e)); } finally { setBusy(false); }
+    catch (e) { setError(String(e)); notifyNexusDownloadError(e, language); } finally { setBusy(false); }
   };
   const activeJobs = jobs.filter(job => ["preparing", "queued", "authorizing", "waiting", "downloading", "importing", "installing"].includes(job.status));
   const requirementJob = jobs.find(job => job.id === selectedJob);

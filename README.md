@@ -3,7 +3,7 @@
   <img src="public/images/readme-header.svg" alt="PeliGames" width="900" />
 </p>
 
-> **0.5.3 experimental:** atualização do backend Mochizuki pelo GitLab, recuperação de prefixos e registros de instalação, melhorias no Matrix, Discord e navegação dos complementos. Veja as [notas da 0.5.3](docs/releases/0.5.3.md). Captura, geração de quadros e overlay são experimentais e dependem do jogo, GPU, Proton e ambiente gráfico. Consulte o [guia de uso e limitações](docs/overlay.md).
+> **0.5.4 experimental:** troca automática entre MAKO e AFMF, avisos de falha nos downloads do Nexus Mods, barra da biblioteca fixa durante a rolagem e ajuda do DLSSNR-AMD atualizada. Veja as [notas da 0.5.4](docs/releases/0.5.4.md). Captura, geração de quadros e overlay são experimentais e dependem do jogo, GPU, Proton e ambiente gráfico. Consulte o [guia de uso e limitações](docs/overlay.md).
 
 <p align="center"><strong>Português</strong> · <a href="README.en.md">English</a></p>
 

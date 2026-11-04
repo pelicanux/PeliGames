@@ -6,6 +6,7 @@ import {openFrameGenerationPreferences} from "../../services/frameGenerationNavi
 import {ModOptionSwitch} from "../../components/ModOptionRow";
 import type {GameInfo} from "../../components/GameGrid";
 import {defaultAfmf,isFrameGenerationWrapper,normalizeAdvanced,type AdvancedSettings,type AfmfSettings} from "../../services/advancedSettings";
+import {selectFrameGenerator} from "../../services/frameGenerationSelection";
 import {updatePeliGamesSettings} from "../../services/installedLibrary";
 import {useI18n} from "../../i18n/I18nContext";
 import "./frameGeneration.css";
@@ -30,7 +31,7 @@ export function AfmfPanel({game,disabled,running=false,onSaved,onPersist}:{game:
  const autosave=useRef(new DebouncedSave());const lock=useRef(false);
  useEffect(()=>()=>{void autosave.current.flush();},[]);
  const key=game.external_id||game.path;
- useEffect(()=>{setSettings(normalizeAdvanced(game.advanced).afmf??defaultAfmf)},[key]);
+ useEffect(()=>{setSettings(normalizeAdvanced(game.advanced).afmf??defaultAfmf)},[key,game.advanced?.afmf]);
  const loadRuntime=()=>invoke<Runtime>("frame_generation_state",{gameKey:"runtime-preferences:afmf",backend:"afmf",activeProfile:null}).then(setRuntime).catch(e=>setError(String(e)));
  useEffect(()=>{void loadRuntime();const reload=()=>void loadRuntime();window.addEventListener("frameGenerationRuntimeChanged",reload);return()=>window.removeEventListener("frameGenerationRuntimeChanged",reload)},[]);
  useEffect(()=>{let live=true;setSupport(undefined);void invoke<Support>("afmf_support",{directory:game.directory||game.path,executable:game.executable||null,flatpak:Boolean(game.flatpak)}).then(s=>{if(live)setSupport(s)}).catch(e=>{if(live)setSupport({available:false,reason:String(e)})});return()=>{live=false}},[key,game.directory,game.executable,game.flatpak]);
@@ -38,11 +39,11 @@ export function AfmfPanel({game,disabled,running=false,onSaved,onPersist}:{game:
  const installed=Boolean(runtime?.installed_versions.some(r=>r.current));
  const supported=Boolean(onPersist)||game.launcher==="PeliGames"||Boolean(game.external_id);
  const makoOn=(advanced.wrappers??[]).some(w=>isFrameGenerationWrapper(w)&&w.enabled);
- const conflict=makoOn?(pt?"O MAKO está ativado neste jogo. Desative-o na aba MAKO antes de ativar o AFMF: os dois geradores não funcionam juntos.":"MAKO is enabled for this game. Disable it in the MAKO tab first: the two generators cannot run together."):(advanced.options.mlfg||advanced.options.optiscaler)?(pt?"Desative a geração de quadros por ML e o OptiScaler na aba Avançado antes de ativar o AFMF.":"Disable ML frame generation and OptiScaler in the Advanced tab before enabling AFMF."):"";
+ const conflict=(advanced.options.mlfg||advanced.options.optiscaler)?(pt?"Desative a geração de quadros por ML e o OptiScaler na aba Avançado antes de ativar o AFMF.":"Disable ML frame generation and OptiScaler in the Advanced tab before enabling AFMF."):"";
  const blocked=busy||disabled||running;
 
  const persist=async(next:AfmfSettings)=>{if(lock.current)return;lock.current=true;setBusy(true);setSaveStatus("saving");try{
-  const nextAdvanced={...advanced,afmf:next};
+  const nextAdvanced=next.enabled?selectFrameGenerator({...advanced,afmf:next},"afmf"):{...advanced,afmf:next};
   const updated=onPersist?await onPersist(nextAdvanced).then(()=>({...game,advanced:nextAdvanced})):game.external_id?await invoke<GameInfo>("configure_external_game",{settings:{external_id:game.external_id,advanced:nextAdvanced}}):await updatePeliGamesSettings({path:game.path,name:game.name,executable:game.executable||game.path,proton:game.proton||"",prefix:game.prefix,advanced:nextAdvanced});
   onSaved({...game,...updated,library_view:game.library_view});window.dispatchEvent(new Event("peligamesLibraryChanged"));setSaveStatus("saved");setError("");
  }catch(e){setSaveStatus("error");setError(String(e))}finally{lock.current=false;setBusy(false)}};
@@ -67,6 +68,7 @@ export function AfmfPanel({game,disabled,running=false,onSaved,onPersist}:{game:
       <div className="mod-step-heading"><div><h4>{pt?"Ative neste jogo":"Enable for this game"}</h4><p>{support?.reason??(pt?"Verificando a compatibilidade do jogo…":"Checking the game's compatibility…")}</p></div></div>
       <div className="fg-toolbar"><div className="fg-master-toggle"><span>{pt?"Ativar AFMF":"Enable AFMF"}</span><ModOptionSwitch label={pt?"Ativar AFMF neste jogo":"Enable AFMF for this game"} enabled={settings.enabled} disabled={blocked||(!settings.enabled&&!canEnable)} onToggle={()=>patch({enabled:!settings.enabled},"afmf-prepare")}/></div><span className="fg-generator-name">AFMF · 2×</span></div>
       {!installed&&runtime&&<p className="mod-step-note">{pt?"Instale o AFMF em Configurações → Complementos para liberar a ativação.":"Install AFMF in Settings → Add-ons to unlock activation."}</p>}
+      {makoOn&&<p className="mod-step-note">{pt?"Ativar o AFMF desativa o MAKO automaticamente neste jogo.":"Enabling AFMF automatically disables MAKO for this game."}</p>}
       {conflict&&<p className="fg-partition-note" role="alert">{conflict}</p>}
       {!supported&&<p className="mod-step-note">{pt?"Registre esta instalação na biblioteca principal para configurar sua execução.":"Register this installation in the main library to configure its launch."}</p>}
      </div>

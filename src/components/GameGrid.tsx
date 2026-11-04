@@ -763,7 +763,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const showEmptyOwnLibrary = !scanning && ownLoaded && (libraryScope === "own" || mode === "mods") && !searchQuery && filteredGames.length === 0;
 
   return (
-    <div ref={gridRoot} style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <div ref={gridRoot} className="modern-library-viewport">
       {recoverLibrary&&<LibraryRecoveryDialog onClose={()=>setRecoverLibrary(false)}/>}
       <AnimatePresence>{teleport && <CoverLaunchTeleport value={teleport} reducedMotion={performanceMode} cancellingDisabled={launchCommitted} onCancel={() => cancelPendingLaunch.current?.()} />}</AnimatePresence>
       <div className="modern-lib-toolbar">
@@ -792,7 +792,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
       </div>
       {(libraryError || managedLibrary?.error) && <TimedFeedback>{libraryError || managedLibrary?.error}</TimedFeedback>}
 
-      <div className={`game-grid-container game-library--${viewMode} modern-grid-container`} style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+      <div className={`game-grid-container game-library--${viewMode} modern-grid-container`}>
         {showScanScreen ? <div className="empty-library-state"><NexusLibraryLoading reducedMotion={performanceMode} /></div> : <>
         {filteredGames.length === 0 && !scanSpinning && (managedLibrary ? <div className="empty-library-state">
           {searchQuery ? <p role="status">{t("gameGrid", "noSearchResults")}</p>

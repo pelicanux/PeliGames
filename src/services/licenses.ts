@@ -1,3 +1,5 @@
+import { paginateLicenseNotices } from './licensePages';
+
 import launcherLicense from '../../LICENSE?raw';
 import fontLicense from '../../public/fonts/jersey-10/OFL.txt?raw';
 import nexusIconLicense from '../../licenses/upstream/Vortex-Nexus-Icon/LICENSE.md?raw';
@@ -25,6 +27,8 @@ const notices = [
 ];
 
 // One document keeps the notices accessible without listing technical components in About.
-export const bundledLicenseNotices = notices
+const bundledLicenseNotices = notices
   .map(item => `${item.name}\n${item.label}\n\n${item.text}`)
   .join("\n\n────────────────────────────────────────\n\n");
+
+export const licensePages = paginateLicenseNotices(bundledLicenseNotices);

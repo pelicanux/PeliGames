@@ -17,8 +17,11 @@ export function gamescopeEnabled(g: GamescopeSettings): boolean {
   return g.enable_upscaling || g.enable_limiter || g.force_grab_cursor || Boolean(g.hdr) || Boolean(g.adaptive_sync) || Boolean(g.additional_options.trim());
 }
 export interface LaunchWrapper { program: string; arguments: string; enabled: boolean; }
-/** Recognize both existing SHA-256 paths and readable per-game profile names. */
-export const isFrameGenerationWrapper = (w: LaunchWrapper): boolean => /\/FrameGeneration\/profiles\/(?:[a-f0-9]{64}|[a-z0-9]+(?:-[a-z0-9]+)*-[a-f0-9]{8,64})\.sh$/.test(w.program);
+/** Match storage_names::valid: current readable names, numeric suffixes and legacy hashes. */
+export const isFrameGenerationWrapper = (w: LaunchWrapper): boolean => {
+  const name = /\/FrameGeneration\/profiles\/([a-z0-9]+(?:-[a-z0-9]+)*)\.sh$/.exec(w.program)?.[1];
+  return Boolean(name && name.length <= 128);
+};
 export interface AdvancedSettings {
   mangohud_preset?: import("./mangohud").MangoHudPreset | null;
   overlay_enabled?: boolean | null; background_fps?: number | null; mangohud_enabled?: boolean | null; mangohud_fps_limit?: number | null; schema_version?: number; launch_options?: string | null; options: Record<string, boolean>; option_values?: Record<string,string>; dll_overrides: string;

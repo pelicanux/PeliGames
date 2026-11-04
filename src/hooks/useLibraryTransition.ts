@@ -18,7 +18,7 @@ export function useLibraryTransition(root: RefObject<HTMLElement | null>, disabl
     }
     // Commit before animating so there is no outgoing fade or delayed navigation.
     flushSync(change);
-    const content = root.current?.querySelector<HTMLElement>(".modern-library");
+    const content = root.current?.querySelector<HTMLElement>(".modern-grid-container");
     if (!content?.animate) return;
     const incoming = content.animate(
       [{ transform: "translateY(6px)" }, { transform: "translateY(0)" }],

@@ -3,7 +3,7 @@ import { ModalSurface } from "./ModalSurface";
 import { useI18n } from "../i18n/I18nContext";
 import { BrandName } from "./BrandName";
 import React, { useEffect, useRef, useState } from 'react';
-import { bundledLicenseNotices } from '../services/licenses';
+import { LicenseNoticesReader } from './LicenseNoticesReader';
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { APP_BUILD_LABEL } from "../services/buildInfo";
 
@@ -16,7 +16,6 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
   const [licenseId, setLicenseId] = useState<string | null>(null);
   const selectedLicense = licenseId ? {
     name: t("credits", "licenses"),
-    text: bundledLicenseNotices,
     url: "https://github.com/pelicanux/PeliGames/tree/main/licenses",
   } : null;
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -24,7 +23,7 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
-    dialog.scrollTop = 0;
+    dialog.querySelector('.modal-scroll-body')?.scrollTo(0, 0);
     if (licenseId) dialog.querySelector<HTMLButtonElement>('button')?.focus();
     else (returnButtonRef.current ?? dialog.querySelector<HTMLButtonElement>('button'))?.focus();
   }, [licenseId]);
@@ -35,7 +34,7 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
       else onClose();
     }
     if (event.key === 'Tab') {
-      const buttons = dialogRef.current?.querySelectorAll<HTMLElement>('button, [tabindex="0"]');
+      const buttons = dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), [tabindex="0"]');
       if (!buttons?.length) return;
       const first = buttons[0], last = buttons[buttons.length - 1];
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
@@ -69,7 +68,7 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
           <button className="credits-license-back" onClick={() => setLicenseId(null)}>← {t("credits", "backToCredits")}</button>
 
           <p className="credits-license-note">{t("credits", "originalNotice")}</p>
-          <pre className="credits-license-text" tabIndex={0}>{selectedLicense.text}</pre>
+          <LicenseNoticesReader />
           <div className="credits-license-actions">
             <button onClick={() => handleLink(selectedLicense.url)}>{t("credits", "viewSource")} ↗</button>
             <button onClick={() => setLicenseId(null)}>{t("credits", "backToCredits")}</button>
@@ -218,10 +217,7 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
           </h4>
           <p className="credits-license-note">{t("credits", "launcherLicenseNotice")}</p>
           <div className="credits-license-grid">
-            <button onClick={event => {
-              returnButtonRef.current = event.currentTarget;
-              setLicenseId("notices");
-            }}>
+            <button ref={returnButtonRef} onClick={() => setLicenseId("notices")}>
               <span>{t("credits", "licenses")}</span>
               <span className="credits-license-read">{t("credits", "readLicense")} →</span>
             </button>

@@ -14,6 +14,7 @@ import {useEffect,useId,useRef,useState} from "react";
 import {Channel,invoke} from "@tauri-apps/api/core";
 import type {GameInfo} from "../../components/GameGrid";
 import {isFrameGenerationWrapper,normalizeAdvanced,type LaunchWrapper,type AdvancedSettings} from "../../services/advancedSettings";
+import {selectFrameGenerator} from "../../services/frameGenerationSelection";
 import {updatePeliGamesSettings} from "../../services/installedLibrary";
 import {openFilePicker} from "../../services/tauriService";
 import {notifyError,notifyInfo} from "../../services/notifications";
@@ -71,9 +72,10 @@ export function FrameGenerationPanel({game,disabled,running=false,onSaved,onPers
  setError("");setSaveStatus("saved");
  }catch(e){setSaveStatus("error");setError(String(e))}finally{lock.current=false;setBusy(false)}};
  const save=async(settings:FrameSettings)=>{if(managementBackend||lock.current)return;lock.current=true;setBusy(true);setSaveStatus("saving");try{
-  const wrapper=await invoke<LaunchWrapper>("prepare_frame_generation",{gameKey:key,gameName:game.name,directory:game.directory||game.path,settings,advanced,flatpak:Boolean(game.flatpak),executable:game.executable||null});
-  const launchChanged=(settings.enabled?!(advanced.wrappers??[]).some(w=>isFrameWrapper(w)&&w.enabled&&w.program===wrapper.program):enabled)||(advanced.overlay_enabled==null&&settings.overlay_enabled);
-  const next={...advanced,overlay_enabled:advanced.overlay_enabled??(settings.overlay_enabled?true:null),wrappers:[...(advanced.wrappers ?? []).filter(w=>!isFrameWrapper(w)),...(settings.enabled?[wrapper]:[])]};
+  const selectedAdvanced=settings.enabled?selectFrameGenerator(advanced,"mako"):advanced;
+  const wrapper=await invoke<LaunchWrapper>("prepare_frame_generation",{gameKey:key,gameName:game.name,directory:game.directory||game.path,settings,advanced:selectedAdvanced,flatpak:Boolean(game.flatpak),executable:game.executable||null});
+  const launchChanged=selectedAdvanced!==advanced||(settings.enabled?!(advanced.wrappers??[]).some(w=>isFrameWrapper(w)&&w.enabled&&w.program===wrapper.program):enabled)||(advanced.overlay_enabled==null&&settings.overlay_enabled);
+  const next={...selectedAdvanced,overlay_enabled:advanced.overlay_enabled??(settings.overlay_enabled?true:null),wrappers:[...(advanced.wrappers ?? []).filter(w=>!isFrameWrapper(w)),...(settings.enabled?[wrapper]:[])]};
   const updated=!launchChanged?game:onPersist?await onPersist(next).then(()=>({...game,advanced:next})):game.external_id?await invoke<GameInfo>("configure_external_game",{settings:{external_id:game.external_id,advanced:next}}):await updatePeliGamesSettings({path:game.path,name:game.name,executable:game.executable||game.path,proton:game.proton||"",prefix:game.prefix,advanced:next});
   const saved={...game,...updated,library_view:game.library_view};onSaved(saved);if(launchChanged&&(saved.launcher==="Steam"?saved.steam_pending:settings.enabled&&saved.launcher!=="PeliGames"))setLaunchSetup({game:saved,enabled:settings.enabled});window.dispatchEvent(new Event("peligamesLibraryChanged"));setSaveStatus("saved");setError("");
  }catch(e){setSaveStatus("error");setError(String(e))}finally{lock.current=false;setBusy(false)}};
@@ -124,6 +126,7 @@ export function FrameGenerationPanel({game,disabled,running=false,onSaved,onPers
    {state&&settings&&<div className="fg-master-toggle"><span>{pt?"Ativar neste jogo":"Enable for this game"}</span><ModOptionSwitch label={pt?"Ativar neste jogo":"Enable for this game"} enabled={settings.enabled} disabled={startupBlocked||!componentInstalled||!supported} onToggle={()=>patch({enabled:!settings.enabled})}/></div>}
    <span className="fg-generator-name">MAKO</span>
   </div>
+  {advanced.afmf?.enabled&&<p className="mod-step-note">{pt?"Ativar o MAKO desativa o AFMF automaticamente neste jogo.":"Enabling MAKO automatically disables AFMF for this game."}</p>}
 
     {!game.flatpak&&state&&!componentInstalled&&<div className="fg-component-row"><button type="button" className="modern-mini-btn" disabled={blocked} onClick={()=>{if(backend==="saved")return;notifyInfo("Frame Generation",pt?`${"MAKO"} não está instalado. Instale o componente em Configurações → Complementos.`:`${"MAKO"} is not installed. Install it in Settings → Add-ons.`,"frame-mako");openFrameGenerationPreferences(backend);}}>{pt?"Instalar":"Install"}</button></div>}
     {state&&state.installed_versions.length>0&&<section className="fg-game-version-history" aria-labelledby={versionsTitleId}><h4 id={versionsTitleId}>{pt?"Versões e backups":"Versions and backups"} <small>({state.installed_versions.length})</small></h4><p>{pt?"Escolha a versão para este jogo. Atualizações preservam as anteriores.":"Choose the version for this game. Updates preserve older versions."}</p><SelectionMenu label={pt?"Versão do MAKO neste jogo":"MAKO version for this game"} value={selectedVersion||""} disabled={startupBlocked||!settings} onChange={version=>{if(version!==selectedVersion)patch({runtime_version:version});}} options={state.installed_versions.map(r=>({value:r.version,label:`${r.version} · ${r.current?(pt?"Atual":"Current"):(pt?"Backup":"Backup")}`}))}/></section>}
