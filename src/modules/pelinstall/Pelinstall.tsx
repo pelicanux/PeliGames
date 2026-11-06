@@ -333,15 +333,15 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
   const backToStart = () => { if (embedded) { requestClose(); return; } setMode(null); setName(""); setProton(""); location.reset(); setRepairPrefix(""); setFile(startup.executable || ""); setError(""); setStep(-1); };
   const back = () => { setError(""); if (step === -2 || (mode === "repair" && step === 1)) backToStart(); else setStep(step === 0 ? -2 : step - 1); };
   const fileName = file.split(/[\\/]/).pop() || "";
-  const shownName = name.trim() || (step === -1 && target ? target.entry.name : fileName) || tr("Nenhum executável selecionado");
+  const shownName = name.trim() || (step === -1 && target ? target.entry.name : fileName) || tr("no_executable_selected");
   const shownPath = step === -1 && target ? target.entry.executable || startup.executable || "" : file;
-  const chip = step === 3 ? [tr("Em andamento"), ""] : step === 4 && !error ? [mode === "repair" ? tr("Reparado") : tr("Na biblioteca"), "ok"] : step === -1 && target ? [tr("Na biblioteca"), "ok"] : step === 5 ? [tr("Removido"), ""] : [mode === "add" ? tr("Programa Windows") : "Windows · .exe", ""];
+  const chip = step === 3 ? [tr("in_progress"), ""] : step === 4 && !error ? [mode === "repair" ? tr("repaired") : tr("in_the_library"), "ok"] : step === -1 && target ? [tr("in_the_library"), "ok"] : step === 5 ? [tr("removed"), ""] : [mode === "add" ? tr("windows_program") : "Windows · .exe", ""];
   const fileCard = <div className="pi-file">
-    <div className="pi-file-icon">{executableIcon ? <img src={executableIcon} alt={tr("Ícone do executável")} /> : <MenuIcon name="document" />}</div>
+    <div className="pi-file-icon">{executableIcon ? <img src={executableIcon} alt={tr("executable_icon")} /> : <MenuIcon name="document" />}</div>
     <div className="pi-file-text"><strong title={shownName}>{shownName}</strong>{shownPath && <small title={shownPath}>{shownPath}</small>}</div>
     <span className={`pi-chip ${chip[1]}`}>{chip[0]}</span>
   </div>;
-  const stepLabels = [tr("Nome"), tr("Local"), "Proton", tr("Revisão"), mode === "add" ? tr("Adicionar") : mode === "repair" ? tr("Reparar") : tr("Instalar")];
+  const stepLabels = [tr("name"), tr("location"), "Proton", tr("review"), mode === "add" ? tr("add") : mode === "repair" ? tr("repair") : tr("install")];
   const progressStep = step === -2 ? 0 : step + 1;
   const progress = (step === -2 || step >= 0) && step <= 3 && <div className="pi-steps-wrap" aria-hidden="true">
     <div className="pi-steps">{stepLabels.map((label, index) => <i key={label} className={index < progressStep ? "done" : index === progressStep ? "now" : ""} />)}</div>
@@ -361,9 +361,9 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
       <h1 className="pi-brand"><img src="/peligames.svg" alt="" /><span className="pelinstall-brand">Pel<span className="titlebar-games">install</span></span></h1>
       <span className="pi-spacer" />
       {!embedded && <InstallerSettingsMenu />}
-      {!embedded && <button type="button" className="titlebar-title pelinstall-launcher-button" aria-label={tr("Abrir PeliGames")} title={tr("Abrir PeliGames")} disabled={launcherOpening} onClick={() => void openLauncherFromTitle()}><BrandName /></button>}
+      {!embedded && <button type="button" className="titlebar-title pelinstall-launcher-button" aria-label={tr("open_peligames")} title={tr("open_peligames")} disabled={launcherOpening} onClick={() => void openLauncherFromTitle()}><BrandName /></button>}
       {!embedded && <PelinstallMinimizeButton onError={setError} />}
-      <button type="button" className="btn-titlebar window-control pi-close" aria-label={tr("Fechar")} title={tr("Fechar")} disabled={(busy && step !== 3) || cancelPending} onClick={requestClose}>
+      <button type="button" className="btn-titlebar window-control pi-close" aria-label={tr("close")} title={tr("close")} disabled={(busy && step !== 3) || cancelPending} onClick={requestClose}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
       </button>
     </header>
@@ -371,12 +371,12 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
       {fileCard}
       {progress}
 
-      {step === -1 && checking && <p className="pi-hint" role="status">{tr("Consultando a biblioteca…")}</p>}
+      {step === -1 && checking && <p className="pi-hint" role="status">{tr("checking_the_library")}</p>}
       {step === -1 && !checking && !matches.length && <>
-        <h2>{tr("O que deseja fazer?")}</h2>
+        <h2>{tr("what_do_you_want_to_do")}</h2>
         <div className="pi-cards">
-          {card("install", icon("download", "#5aa9ff", "#2058d8"), tr("Instalar"), tr("Abre o instalador com o Proton e registra o jogo na biblioteca."), () => { setMode("install"); setError(""); setStep(-2); })}
-          {card("add", icon("plusCircle", "#3ee0a6", "#06946a"), tr("Adicionar"), tr("O jogo já está instalado. Só cria o registro e o prefixo."), () => { setMode("add"); setError(""); setStep(-2); })}
+          {card("install", icon("download", "#5aa9ff", "#2058d8"), tr("install"), tr("runs_the_installer_with_proton_and_adds_the_game"), () => { setMode("install"); setError(""); setStep(-2); })}
+          {card("add", icon("plusCircle", "#3ee0a6", "#06946a"), tr("add"), tr("the_game_is_already_installed_only_creates_the_entry"), () => { setMode("add"); setError(""); setStep(-2); })}
         </div>
       </>}
       {step === -1 && !checking && target && <>
@@ -384,72 +384,72 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
           {target.entry.cover_url ? <div className="pi-game-cover" style={{ backgroundImage: `url("${target.entry.cover_url.replace(/"/g, "%22")}")` }} /> : <div className="pi-game-cover empty"><MenuIcon name="gamepad" /></div>}
           <div className="pi-file-text"><strong>{target.entry.name}</strong><small title={target.entry.prefix}>{target.entry.prefix}{target.entry.proton ? ` · ${target.entry.proton.split(/[\\/]/).pop()}` : ""}</small></div>
         </div>
-        {matches.length > 1 && <EntrySelector label={tr("Registro na biblioteca")} value={target.entry.path} onChange={setTargetPath} options={matches.map((match, index) => ({ value: match.entry.path, label: `${index + 1}. ${match.entry.name}` }))} />}
-        <h2>{tr("Já está na biblioteca")}</h2>
+        {matches.length > 1 && <EntrySelector label={tr("library_entry")} value={target.entry.path} onChange={setTargetPath} options={matches.map((match, index) => ({ value: match.entry.path, label: `${index + 1}. ${match.entry.name}` }))} />}
+        <h2>{tr("already_in_the_library")}</h2>
         <div className="pi-cards">
-          {card("repair", icon("repair", "#ffb54d", "#ef6a17"), tr("Reparar"), tr("Atualiza o prefixo, o Proton e os atalhos."), () => beginExisting(true), { disabled: busy })}
-          {card("duplicate", icon("copy", "#c28dff", "#7432e8"), tr("Duplicar"), tr("Instala de novo em outro prefixo."), () => beginExisting(false), { disabled: busy })}
-          {card("settings", icon("settings", "#a3abbd", "#555e73"), tr("Configurações"), tr("Abre o jogo no PeliGames."), () => void openSettings(), { disabled: busy })}
-          {card("uninstall", icon("trash", "#ff7f8e", "#d1293f"), tr("Desinstalar"), tr("Escolha o que apagar: prefixo, atalhos, saves."), () => setUninstallConfirmation(true), { danger: true, disabled: busy })}
+          {card("repair", icon("repair", "#ffb54d", "#ef6a17"), tr("repair"), tr("updates_the_prefix_proton_and_shortcuts"), () => beginExisting(true), { disabled: busy })}
+          {card("duplicate", icon("copy", "#c28dff", "#7432e8"), tr("duplicate"), tr("installs_again_in_another_prefix"), () => beginExisting(false), { disabled: busy })}
+          {card("settings", icon("settings", "#a3abbd", "#555e73"), tr("settings"), tr("opens_the_game_in_peligames"), () => void openSettings(), { disabled: busy })}
+          {card("uninstall", icon("trash", "#ff7f8e", "#d1293f"), tr("uninstall"), tr("choose_what_to_delete_prefix_shortcuts_saves"), () => setUninstallConfirmation(true), { danger: true, disabled: busy })}
         </div>
       </>}
 
       {step === -2 && <>
-        <h2>{tr("Qual é o nome do jogo ou programa?")}</h2>
-        <div className="pi-field"><input aria-label={tr("Nome")} placeholder={tr("Digite o nome")} value={name} onChange={event => setName(event.target.value)} disabled={busy} /></div>
-        <p className="pi-hint">{tr("A pasta padrão do prefixo usará este nome. Na próxima etapa, escolha onde ela será criada.")}</p>
-        {!validFile && <button type="button" className="pi-btn" onClick={() => void chooseFile()}><MenuIcon name="folderSearch" />{tr(mode === "install" ? "Selecionar instalador" : "Selecionar executável")}</button>}
+        <h2>{tr("what_is_the_name_of_the_game_or_program")}</h2>
+        <div className="pi-field"><input aria-label={tr("name")} placeholder={tr("enter_a_name")} value={name} onChange={event => setName(event.target.value)} disabled={busy} /></div>
+        <p className="pi-hint">{tr("the_default_prefix_folder_will_use_this_name_choose")}</p>
+        {!validFile && <button type="button" className="pi-btn" onClick={() => void chooseFile()}><MenuIcon name="folderSearch" />{tr(mode === "install" ? "select_installer" : "select_executable")}</button>}
       </>}
 
       {step === 0 && <>
         <div className="pi-location-heading">
-          <h2>{mode === "repair" ? tr("Qual prefixo deseja usar para reparar?") : mode === "add" ? tr("Onde deseja criar o prefixo?") : tr("Onde deseja instalar?")}</h2>
-          {mode === "add" && <p className="pi-hint">{tr("Pasta com o ambiente Windows usado pelo jogo.")}</p>}
+          <h2>{mode === "repair" ? tr("which_prefix_should_be_repaired") : mode === "add" ? tr("where_should_the_prefix_be_created") : tr("where_should_it_be_installed")}</h2>
+          {mode === "add" && <p className="pi-hint">{tr("a_folder_with_the_windows_environment_used_by_the")}</p>}
         </div>
-        {!validFile && <button type="button" className="pi-btn" onClick={() => void chooseFile()}><MenuIcon name="folderSearch" />{mode === "repair" ? tr("Selecionar instalador") : tr("Selecionar executável")}</button>}
+        {!validFile && <button type="button" className="pi-btn" onClick={() => void chooseFile()}><MenuIcon name="folderSearch" />{mode === "repair" ? tr("select_installer") : tr("select_executable")}</button>}
         {mode !== "repair" && <div className="pi-cards">
-          {card("default", icon("download", "var(--pi-accent-hi)", "var(--pi-accent-lo)"), tr("Pasta padrão"), tr("Pasta de jogos do PeliGames, definida nas Configurações."), () => void location.selectDefault().then(() => setPlaceKind("default")).catch(error => setError(String(error))), { pressed: placeKind === "default" })}
-          {card("custom", icon("folder", "#ffb54d", "#ef6a17"), tr("Escolher outra"), tr("Abre o seletor de pastas do sistema, começando em /mnt."), () => void chooseDirectory().then(() => { if (location.selected) setPlaceKind("custom"); }), { pressed: placeKind === "custom" })}
+          {card("default", icon("download", "var(--pi-accent-hi)", "var(--pi-accent-lo)"), tr("default_folder"), tr("peligames_games_folder_set_in_settings"), () => void location.selectDefault().then(() => setPlaceKind("default")).catch(error => setError(String(error))), { pressed: placeKind === "default" })}
+          {card("custom", icon("folder", "#ffb54d", "#ef6a17"), tr("choose_another"), tr("opens_the_system_folder_picker_starting_in_mnt"), () => void chooseDirectory().then(() => { if (location.selected) setPlaceKind("custom"); }), { pressed: placeKind === "custom" })}
         </div>}
         {directorySelected ? <>
-          <div className="pi-label">{mode === "repair" ? tr("Prefixo") : tr("Local escolhido")}</div>
+          <div className="pi-label">{mode === "repair" ? tr("prefix") : tr("chosen_location")}</div>
           <HoverTooltip text={directory} anchorClassName="installation-path-tooltip-anchor" tooltipClassName="installation-path-tooltip">
-            <div className="pi-field"><input aria-label={tr("Local de instalação")} value={directory} onChange={event => { if (mode === "repair") setRepairPrefix(event.target.value); else location.setDirectory(event.target.value); }} />
-              <button type="button" className="pi-mini" aria-label={tr("Alterar local de instalação")} title={tr("Alterar local de instalação")} onClick={() => void chooseDirectory().then(() => { if (mode !== "repair") setPlaceKind("custom"); })}><MenuIcon name="folderSearch" /></button></div>
+            <div className="pi-field"><input aria-label={tr("installation_location")} value={directory} onChange={event => { if (mode === "repair") setRepairPrefix(event.target.value); else location.setDirectory(event.target.value); }} />
+              <button type="button" className="pi-mini" aria-label={tr("change_installation_location")} title={tr("change_installation_location")} onClick={() => void chooseDirectory().then(() => { if (mode !== "repair") setPlaceKind("custom"); })}><MenuIcon name="folderSearch" /></button></div>
           </HoverTooltip>
-        </> : mode === "repair" ? <button type="button" className="pi-btn" onClick={() => void chooseDirectory()}><MenuIcon name="folderSearch" />{tr("Escolher prefixo")}</button>
-          : <p className="pi-hint">{tr("Escolha uma das opções para continuar.")}</p>}
+        </> : mode === "repair" ? <button type="button" className="pi-btn" onClick={() => void chooseDirectory()}><MenuIcon name="folderSearch" />{tr("choose_prefix")}</button>
+          : <p className="pi-hint">{tr("choose_one_of_the_options_to_continue")}</p>}
       </>}
 
       {step === 1 && <>
-        <h2>{mode === "add" ? tr("Executar com qual Proton?") : mode === "repair" ? tr("Reparar com qual Proton?") : tr("Instalar com qual Proton?")}</h2>
+        <h2>{mode === "add" ? tr("run_with_which_proton") : mode === "repair" ? tr("repair_with_which_proton") : tr("install_with_which_proton")}</h2>
         <PelinstallProtonPicker value={proton} onChange={setProton} disabled={busy} onManage={() => setProtonPreferencesOpen(true)} />
       </>}
 
       {step === 2 && <>
-        <h2>{tr("Confira antes de continuar")}</h2>
-        {mode === "repair" && <div className="pi-field"><input aria-label={tr("Nome")} placeholder={tr("Digite o nome")} value={name} onChange={event => setName(event.target.value)} disabled={busy} /></div>}
-        {mode === "repair" && <><div className="pi-label">{tr("Executável")}</div><EntrySelector label={tr("Executável para reparar")} value={file} onChange={setFile} disabled={busy} options={Array.from(new Map([...(target ? [target.entry] : []), ...repairExecutables].map(entry => [entry.executable || "", { value: entry.executable || "", label: entry.executable?.split(/[\\/]/).pop() || entry.name }])).values()).filter(option => option.value)} /></>}
+        <h2>{tr("review_before_continuing")}</h2>
+        {mode === "repair" && <div className="pi-field"><input aria-label={tr("name")} placeholder={tr("enter_a_name")} value={name} onChange={event => setName(event.target.value)} disabled={busy} /></div>}
+        {mode === "repair" && <><div className="pi-label">{tr("executable")}</div><EntrySelector label={tr("executable_to_repair")} value={file} onChange={setFile} disabled={busy} options={Array.from(new Map([...(target ? [target.entry] : []), ...repairExecutables].map(entry => [entry.executable || "", { value: entry.executable || "", label: entry.executable?.split(/[\\/]/).pop() || entry.name }])).values()).filter(option => option.value)} /></>}
         <div className="pi-toggle">
-          <span>{mode === "repair" && shortcutChecking ? tr("Verificando atalhos…") : mode === "repair" && shortcutCheckFailed ? tr("Não foi possível verificar os atalhos") : repairShortcuts ? tr("Remover atalho da área de trabalho") : tr("Criar atalho na área de trabalho")}
-            <small>{repairShortcuts ? tr("Este jogo já tem atalho na área de trabalho.") : tr("Abre o jogo direto, sem abrir o PeliGames.")}</small></span>
-          <button type="button" className="pi-switch" role="switch" aria-label={repairShortcuts ? tr("Remover atalho da área de trabalho") : tr("Criar atalho na área de trabalho")} aria-checked={repairShortcuts ? removeExistingShortcuts : desktop}
+          <span>{mode === "repair" && shortcutChecking ? tr("checking_shortcuts") : mode === "repair" && shortcutCheckFailed ? tr("could_not_check_shortcuts") : repairShortcuts ? tr("remove_desktop_shortcut") : tr("create_desktop_shortcut")}
+            <small>{repairShortcuts ? tr("this_game_already_has_a_desktop_shortcut") : tr("starts_the_game_directly_without_opening_peligames")}</small></span>
+          <button type="button" className="pi-switch" role="switch" aria-label={repairShortcuts ? tr("remove_desktop_shortcut") : tr("create_desktop_shortcut")} aria-checked={repairShortcuts ? removeExistingShortcuts : desktop}
             disabled={busy || (mode === "repair" && (shortcutChecking || shortcutCheckFailed))}
             onClick={() => { if (repairShortcuts) { const next = !removeExistingShortcuts; setRemoveExistingShortcuts(next); if (next) setUpdateExistingShortcuts(false); } else setDesktop(!desktop); }} />
         </div>
         {repairShortcuts && <div className="pi-toggle">
-          <span>{tr("Atualizar atalho ao reparar")}<small>{tr("Aponta o atalho para o executável e o Proton escolhidos.")}</small></span>
-          <button type="button" className="pi-switch" role="switch" aria-label={tr("Atualizar atalho ao reparar")} aria-checked={updateExistingShortcuts} disabled={busy || shortcutChecking || shortcutCheckFailed}
+          <span>{tr("update_shortcut_when_repairing_2")}<small>{tr("points_the_shortcut_to_the_chosen_executable_and_proton")}</small></span>
+          <button type="button" className="pi-switch" role="switch" aria-label={tr("update_shortcut_when_repairing_2")} aria-checked={updateExistingShortcuts} disabled={busy || shortcutChecking || shortcutCheckFailed}
             onClick={() => { setUpdateExistingShortcuts(!updateExistingShortcuts); setRemoveExistingShortcuts(false); }} />
         </div>}
-        <dl className="pi-summary"><dt>{tr("Destino")}</dt><dd title={directory}>{directory}</dd><dt>Proton</dt><dd title={proton}>{proton.split(/[\\/]/).pop()}</dd></dl>
-        <p className="pi-hint">{mode === "add" ? tr("O executável será adicionado à biblioteca com o prefixo e o Proton selecionados.") : mode === "repair" ? tr("O prefixo será atualizado se o Proton escolhido for diferente do atual.") : tr("O instalador Windows abrirá suas próprias telas. Finalize a instalação nele para registrar os executáveis na biblioteca.")}</p>
+        <dl className="pi-summary"><dt>{tr("destination_2")}</dt><dd title={directory}>{directory}</dd><dt>Proton</dt><dd title={proton}>{proton.split(/[\\/]/).pop()}</dd></dl>
+        <p className="pi-hint">{mode === "add" ? tr("the_executable_will_be_added_to_the_library_with") : mode === "repair" ? tr("the_prefix_will_be_updated_if_the_selected_proton") : tr("the_windows_installer_will_open_its_own_windows_finish")}</p>
       </>}
 
       {step === 3 && <div className="pi-working" role="status">
         <div className="pi-indeterminate"><i /></div>
-        <h2>{cancelPending ? tr("Encerrando os processos…") : mode === "repair" ? tr("Atualizando o prefixo") : tr("Aguardando o instalador do Windows")}</h2>
-        <p className="pi-hint">{mode === "repair" ? tr("A conclusão será liberada quando o Proton terminar de preparar o prefixo.") : tr("Termine a instalação nas telas do próprio instalador. O Pelinstall fica aberto e registra o jogo quando ele fechar.")}</p>
+        <h2>{cancelPending ? tr("stopping_processes") : mode === "repair" ? tr("updating_the_prefix") : tr("waiting_for_the_windows_installer")}</h2>
+        <p className="pi-hint">{mode === "repair" ? tr("you_can_finish_when_proton_has_prepared_the_prefix") : tr("finish_the_installation_in_the_installer_s_own_windows")}</p>
       </div>}
 
       {step === 4 && choosingExecutable && <>
@@ -469,40 +469,40 @@ export function Pelinstall({ startup, embedded }: { startup: StartupInfo; embedd
       {step === 4 && !choosingExecutable && <>
         <div className="pi-done">
           <span className={`pi-check${error ? " warn" : ""}`}><MenuIcon name={error ? "info" : "check"} /></span>
-          <div><h2>{mode === "add" ? tr("Adicionado à biblioteca") : mode === "repair" ? tr("Reparação finalizada") : tr("Instalação finalizada")}</h2>
-            <p className="pi-hint">{entries.length === 1 ? tr("Pronto para jogar pelo PeliGames ou pelo atalho.") : `${entries.length} ${tr("executável(is) registrado(s) no PeliGames.")}`}</p></div>
+          <div><h2>{mode === "add" ? tr("added_to_the_library") : mode === "repair" ? tr("repair_complete") : tr("installation_complete")}</h2>
+            <p className="pi-hint">{entries.length === 1 ? tr("ready_to_play_from_peligames_or_the_shortcut") : `${entries.length} ${tr("executable_s_registered_in_peligames")}`}</p></div>
         </div>
-        {entries.length > 1 && <><div className="pi-label">{tr("Qual executável deseja usar?")}</div>
-          <EntrySelector label={tr("Qual executável deseja usar?")} value={chosen} onChange={setChosen} disabled={busy} options={entries.map(entry => ({ value: entry.path, label: `${entry.name} — ${entry.executable?.split(/[\\/]/).pop()}${entry.discovery_source ? ` (${entry.discovery_source})` : ""}` }))} /></>}
-        {entries.length > 0 && <button type="button" className="pi-play" disabled={!chosen || busy} onClick={launchChosen}><MenuIcon name="play" />{tr("Jogar agora")}</button>}
-        {desktop && !shortcut && entries.length > 1 && <button type="button" className="pi-btn" disabled={!chosen || busy} onClick={() => void createShortcut()}>{tr("Criar atalho")}</button>}
+        {entries.length > 1 && <><div className="pi-label">{tr("which_executable_should_be_used")}</div>
+          <EntrySelector label={tr("which_executable_should_be_used")} value={chosen} onChange={setChosen} disabled={busy} options={entries.map(entry => ({ value: entry.path, label: `${entry.name} — ${entry.executable?.split(/[\\/]/).pop()}${entry.discovery_source ? ` (${entry.discovery_source})` : ""}` }))} /></>}
+        {entries.length > 0 && <button type="button" className="pi-play" disabled={!chosen || busy} onClick={launchChosen}><MenuIcon name="play" />{tr("play_now")}</button>}
+        {desktop && !shortcut && entries.length > 1 && <button type="button" className="pi-btn" disabled={!chosen || busy} onClick={() => void createShortcut()}>{tr("create_shortcut")}</button>}
         <div className="pi-notes">
-          {shortcut && <p title={shortcut}><MenuIcon name="check" />{tr("Atalho criado na área de trabalho")}</p>}
-          {updatedShortcutCount > 0 && <p><MenuIcon name="check" />{tr("Atalho atualizado.")}</p>}
-          {removedShortcutCount > 0 && <p><MenuIcon name="check" />{removedShortcutCount === 1 ? tr("Atalho removido.") : tr("Atalhos removidos.")}</p>}
+          {shortcut && <p title={shortcut}><MenuIcon name="check" />{tr("desktop_shortcut_created")}</p>}
+          {updatedShortcutCount > 0 && <p><MenuIcon name="check" />{tr("shortcut_updated")}</p>}
+          {removedShortcutCount > 0 && <p><MenuIcon name="check" />{removedShortcutCount === 1 ? tr("shortcut_removed") : tr("shortcuts_removed")}</p>}
           {result?.log && <p title={result.log}>Log: {result.log}</p>}
         </div>
       </>}
 
-      {removed && step === 5 && <><h2>{tr("Prefixo desinstalado")}</h2><p className="pi-hint">{tr("Os registros que utilizavam esse prefixo foram removidos da biblioteca.")}</p></>}
+      {removed && step === 5 && <><h2>{tr("prefix_uninstalled")}</h2><p className="pi-hint">{tr("entries_using_this_prefix_were_removed_from_the_library")}</p></>}
 
       {error && <p className="pi-error" role="alert">{error}</p>}
 
       {(step === -2 || step >= 0 && step < 3) && <div className="pi-actions">
-        <button type="button" className="pi-btn" disabled={busy} onClick={back}><MenuIcon name="back" />{tr("Voltar")}</button>
-        {step < 2 ? <button type="button" className="pi-btn primary grow" disabled={nextDisabled} onClick={() => { setError(""); setStep(step === -2 ? 0 : step + 1); }}>{tr("Próximo")} <MenuIcon name="play" /></button>
-          : <button type="button" className="pi-btn primary grow" disabled={finishDisabled} onClick={() => void install()}><MenuIcon name={mode === "add" ? "folder" : mode === "repair" ? "repair" : "download"} />{busy ? mode === "add" ? tr("Adicionando…") : tr("Salvando…") : mode === "add" ? tr("Adicionar") : mode === "repair" ? tr("Reparar") : tr("Instalar")}</button>}
+        <button type="button" className="pi-btn" disabled={busy} onClick={back}><MenuIcon name="back" />{tr("back")}</button>
+        {step < 2 ? <button type="button" className="pi-btn primary grow" disabled={nextDisabled} onClick={() => { setError(""); setStep(step === -2 ? 0 : step + 1); }}>{tr("next")} <MenuIcon name="play" /></button>
+          : <button type="button" className="pi-btn primary grow" disabled={finishDisabled} onClick={() => void install()}><MenuIcon name={mode === "add" ? "folder" : mode === "repair" ? "repair" : "download"} />{busy ? mode === "add" ? tr("adding") : tr("saving") : mode === "add" ? tr("add") : mode === "repair" ? tr("repair") : tr("install")}</button>}
       </div>}
-      {step === 3 && <div className="pi-actions"><button type="button" className="pi-btn danger grow" disabled={cancelPending} onClick={() => { closeAfterCancel.current = false; setCancelConfirmation(true); }}>{cancelPending ? tr("Cancelando…") : mode === "repair" ? tr("Cancelar reparação") : tr("Cancelar instalação")}</button></div>}
+      {step === 3 && <div className="pi-actions"><button type="button" className="pi-btn danger grow" disabled={cancelPending} onClick={() => { closeAfterCancel.current = false; setCancelConfirmation(true); }}>{cancelPending ? tr("cancelling") : mode === "repair" ? tr("cancel_repair") : tr("cancel_installation")}</button></div>}
       {((step === 4 && !choosingExecutable) || step === 5) && <div className="pi-actions">
-        <button type="button" className="pi-btn grow" disabled={busy} onClick={() => void close()}>{tr("Concluir")}</button>
-        <button type="button" className="pi-btn grow" disabled={busy} onClick={() => void openLauncher()}>{tr("Abrir no PeliGames")}</button>
+        <button type="button" className="pi-btn grow" disabled={busy} onClick={() => void close()}>{tr("finish")}</button>
+        <button type="button" className="pi-btn grow" disabled={busy} onClick={() => void openLauncher()}>{tr("open_in_peligames")}</button>
       </div>}
     </div>
     {uninstallConfirmation && target && <PrefixUninstallModal name={target.entry.name} prefix={target.entry.prefix || ""} busy={busy} error={error} onRemoveOnly={()=>void removeOnly()} onConfirm={options => void uninstall(options)} onCancel={() => setUninstallConfirmation(false)} />}
-    {cancelConfirmation && <ConfirmModal title={mode === "repair" ? tr("Cancelar reparação?") : tr("Cancelar instalação?")} message={mode === "repair" ? tr("Deseja encerrar a atualização do prefixo? Os arquivos e logs serão preservados, mas a preparação pode ficar incompleta. As alterações do registro não serão salvas.") : tr("Deseja encerrar o instalador e os processos deste prefixo? A instalação pode ficar incompleta. O prefixo e os logs serão preservados e nenhum jogo será registrado por esta tentativa.")} confirmText={tr("Encerrar instalação")} onConfirm={() => void cancelInstallation()} onCancel={() => { closeAfterCancel.current = false; setCancelConfirmation(false); }} />}
+    {cancelConfirmation && <ConfirmModal title={mode === "repair" ? tr("cancel_repair_2") : tr("cancel_installation_2")} message={mode === "repair" ? tr("stop_updating_the_prefix_files_and_logs_will_be") : tr("stop_the_installer_and_this_prefix_s_processes_installation")} confirmText={tr("stop_installation")} onConfirm={() => void cancelInstallation()} onCancel={() => { closeAfterCancel.current = false; setCancelConfirmation(false); }} />}
     {removedPrefixNotice.dialog}
-    {exitConfirmation && <ConfirmModal title={tr("Configuração incompleta")} message={tr("Deseja sair e descartar a configuração iniciada?")} onConfirm={() => { stateRef.current.dirty = false; setExitConfirmation(false); void close(); }} onCancel={() => setExitConfirmation(false)} />}
+    {exitConfirmation && <ConfirmModal title={tr("incomplete_configuration")} message={tr("exit_and_discard_the_current_configuration")} onConfirm={() => { stateRef.current.dirty = false; setExitConfirmation(false); void close(); }} onCancel={() => setExitConfirmation(false)} />}
     {protonPreferencesOpen && <Suspense fallback={null}><ProtonPreferencesDialog overlayLayer={embedded ? 2300 : undefined} onClose={() => setProtonPreferencesOpen(false)} onBusyChange={setProtonPreferencesBusy} /></Suspense>}
   </main>;
 }

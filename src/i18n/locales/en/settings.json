@@ -1,0 +1,19 @@
+{
+  "effects": "Interface effects",
+  "elegant": "Elegant",
+  "performance": "Performance",
+  "tools": "Tools",
+  "actions": "Actions",
+  "title": "Launcher Settings",
+  "backend": "Backend Project",
+  "reset": "RECONFIGURE SETUP",
+  "openLogs": "OPEN LAUNCHER LOGS",
+  "cancel": "CANCEL",
+  "save": "SAVE",
+  "preferences": "Preferences",
+  "language": "Language",
+  "scale": "Interface Scale",
+  "manualDirs": "Manually Added Directories",
+  "manualDirsDesc": "The folders below are being tracked for installed games (like Epic/Heroic games).",
+  "removeDir": "Remove directory"
+}

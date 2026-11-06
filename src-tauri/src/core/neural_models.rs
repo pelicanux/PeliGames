@@ -1,11 +1,47 @@
 //! Model identities pinned by the upstream Linux installer. Models stay local.
-use std::{fs, io::{Read, Write}, path::Path};
+use std::{fs, io::{Read, Write}, path::{Path, PathBuf}};
 use sha2::{Digest, Sha256};
 
 pub const ORIGINAL: &str = "dlssnr.bin";
 pub const SMALL: &str = "dlssnr-small.bin";
+pub const ORIGINAL_NETWORK: &str = "CC_SILVER_AARDWOLD.bin";
+pub const SMALL_NETWORK: &str = "CC_SMALL_FP8.bin";
 const ORIGINAL_SHA: &str = "2b41c888cf4155b8958c665ba64018ab0bd25c85fc71a2b6db86d0d04d1f7fbd";
 const SMALL_SHA: &str = "7e966e2639dbec6596aa0bac3b8761137d2c40ca8cb4aca30df7ca10043c6e33";
+
+/// Keep the cache names stable while accepting upstream's network-based filenames.
+pub fn find(directory: &Path, identity: &str) -> Option<PathBuf> {
+    let aliases = match identity {
+        ORIGINAL => [ORIGINAL, ORIGINAL_NETWORK],
+        SMALL => [SMALL, SMALL_NETWORK],
+        _ => return None,
+    };
+    aliases.into_iter().map(|name| directory.join(name)).find(|path| path.is_file())
+}
+
+/// Adapt only the temporary package to the filenames its installer expects.
+pub fn prepare_for_backend(directory: &Path, script: &str) -> Result<(), String> {
+    let named = script.contains("/CC_SILVER_AARDWOLD.bin");
+    let mut models = Vec::new();
+    for (identity, network) in [(ORIGINAL, ORIGINAL_NETWORK), (SMALL, SMALL_NETWORK)] {
+        if let Some(source) = find(directory, identity) {
+            if identify(&source)? != identity {
+                return Err(format!("O nome do modelo não corresponde ao seu conteúdo: {identity}"));
+            }
+            models.push((source, directory.join(if named { network } else { identity })));
+        }
+    }
+    for (source, target) in models {
+        if source != target { copy_atomic(&source, &target)?; }
+    }
+    // install.sh copies this entire directory into the game. Keep one filename
+    // per identity there, without changing the persistent cache's stable names.
+    for obsolete in if named { [ORIGINAL, SMALL] } else { [ORIGINAL_NETWORK, SMALL_NETWORK] } {
+        let path = directory.join(obsolete);
+        if path.is_file() { fs::remove_file(path).map_err(|error| error.to_string())?; }
+    }
+    Ok(())
+}
 
 pub fn identify(path: &Path) -> Result<&'static str, String> {
     let mut file = fs::File::open(path).map_err(|e| format!("Não foi possível ler o modelo {}: {e}", path.display()))?;
@@ -46,8 +82,7 @@ pub fn stage(selected: &Path, destination: &Path) -> Result<(), String> {
     let mut sources = vec![(selected.to_path_buf(), selected_name)];
     if let Some(parent) = selected.parent() {
         let other = if selected_name == ORIGINAL { SMALL } else { ORIGINAL };
-        let companion = parent.join(other);
-        if companion.is_file() && companion != selected {
+        if let Some(companion) = find(parent, other).filter(|path| path != selected) {
             if identify(&companion)? != other { return Err("O nome do modelo complementar não corresponde ao seu conteúdo.".into()); }
             sources.push((companion, other));
         }
@@ -63,8 +98,7 @@ pub fn stage(selected: &Path, destination: &Path) -> Result<(), String> {
 pub fn cache(source: &Path, destination: &Path) -> Result<(), String> {
     let mut models = Vec::new();
     for name in [ORIGINAL, SMALL] {
-        let path = source.join(name);
-        if path.is_file() {
+        if let Some(path) = find(source, name) {
             if identify(&path)? != name { return Err(format!("Modelo extraído inválido: {name}")); }
             models.push((path, name));
         }
@@ -77,6 +111,26 @@ pub fn cache(source: &Path, destination: &Path) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn model_discovery_accepts_both_layouts_and_ignores_directories() {
+        let root = std::env::temp_dir().join(format!("model-test-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(root.join(ORIGINAL)).unwrap();
+        fs::write(root.join(ORIGINAL_NETWORK), b"placeholder").unwrap();
+        fs::write(root.join(SMALL_NETWORK), b"placeholder").unwrap();
+        assert_eq!(find(&root, ORIGINAL), Some(root.join(ORIGINAL_NETWORK)));
+        assert_eq!(find(&root, SMALL), Some(root.join(SMALL_NETWORK)));
+        assert_eq!(find(&root, "unknown"), None);
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn invalid_alias_does_not_publish_compatibility_files() {
+        let root = std::env::temp_dir().join(format!("model-test-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&root).unwrap();
+        fs::write(root.join(ORIGINAL), b"invalid").unwrap();
+        assert!(prepare_for_backend(&root, "pkg_model=$here/dlssnr-amd/CC_SILVER_AARDWOLD.bin").is_err());
+        assert!(!root.join(ORIGINAL_NETWORK).exists());
+        fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn invalid_bin_is_rejected_without_overwriting_destination() {
         let root = std::env::temp_dir().join(format!("model-test-{}", uuid::Uuid::new_v4()));

@@ -1,0 +1,11 @@
+{
+  "runtime_version": "Runtime version",
+  "selecting_automatically_switches_the_version_each_version_s_settings_are_preserved": "Selecting automatically switches the version. Each version’s settings are preserved.",
+  "choose_the_version_to_install_for_this_game": "Choose the version to install for this game.",
+  "daniel_runtime_version": "Daniel runtime version",
+  "prepare": " · Prepare",
+  "0_8_0_experimental_if_problems_occur_select_0_6_0_to_return": "0.8.0 experimental. If problems occur, select 0.6.0 to return.",
+  "prepare_other_versions": "Prepare other versions",
+  "a_version_change_was_interrupted_recover_the_previous_version_to_continue": "A version change was interrupted. Recover the previous version to continue.",
+  "recover_previous_version": "Recover previous version"
+}

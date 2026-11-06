@@ -9,8 +9,10 @@ import "./frameOverlay.css";
 interface Preferences {shortcut:string}
 interface Status {preferences:Preferences}
 export function FrameOverlaySettings({compact=false,disabled=false}:{compact?:boolean;disabled?:boolean}){
+  const {t: tx} = useI18n();
+
  if(!experimentalFrameGeneration)return null;
- const pt=useI18n().language==="pt";
+
  const [state,setState]=useState<Status>();
  const [error,setError]=useState("");
  const [busy,setBusy]=useState(false);
@@ -21,16 +23,16 @@ export function FrameOverlaySettings({compact=false,disabled=false}:{compact?:bo
   try{
    const profile=await loadMangoHudProfile();
    const conflict=shortcutConflict("frame_overlay",shortcut,profile.settings);
-   if(conflict)throw new Error(pt?`Atalho já usado: ${conflict}.`:`Shortcut already used: ${conflict}.`);
+   if(conflict)throw new Error(tx("ui-frame-overlay-settings", "shortcut_already_used", {"conflict": conflict}));
    const preferences={shortcut};
    await invoke("configure_frame_overlay",{preferences});
    setState({preferences});
   }catch(e){setError(String(e))}finally{setBusy(false)}
  };
  return <div className={`fg-overlay-settings fg-overlay-shortcut-row${compact?"":" fg-overlay-global-settings"}`}>
-  <div><strong>{pt?"Atalho do overlay":"Overlay shortcut"}</strong><small>{pt?"Mostra ou oculta os controles dentro do jogo.":"Show or hide the controls inside the game."}</small></div>
-  {state&&<fieldset disabled={busy||disabled} className="mm-shortcut-actions fg-overlay-shortcut-actions"><MangoHudShortcutRecorder label={pt?"Mostrar ou ocultar overlay":"Show or hide overlay"} value={state.preferences.shortcut} onChange={shortcut=>void save(shortcut)}/><button type="button" className="mm-ghost" aria-label={pt?"Restaurar atalho padrão: F8":"Restore default shortcut: F8"} title={pt?"Padrão: F8":"Default: F8"} disabled={busy||disabled||state.preferences.shortcut==="F8"} onClick={()=>void save("F8")}>{pt?"Padrão":"Default"}</button></fieldset>}
-  {!compact&&<small className="fg-overlay-shortcut-feedback">{pt?"Ative o overlay nos detalhes de cada jogo. Mudanças de tecla valem ao reabrir o jogo; não há registro de atalho global no desktop.":"Enable the overlay in each game's details. Shortcut changes apply when restarting the game; no desktop-wide shortcut is registered."}</small>}
+  <div><strong>{tx("ui-frame-overlay-settings", "overlay_shortcut")}</strong><small>{tx("ui-frame-overlay-settings", "show_or_hide_the_controls_inside_the_game")}</small></div>
+  {state&&<fieldset disabled={busy||disabled} className="mm-shortcut-actions fg-overlay-shortcut-actions"><MangoHudShortcutRecorder label={tx("ui-frame-overlay-settings", "show_or_hide_overlay")} value={state.preferences.shortcut} onChange={shortcut=>void save(shortcut)}/><button type="button" className="mm-ghost" aria-label={tx("ui-frame-overlay-settings", "restore_default_shortcut_f8")} title={tx("ui-frame-overlay-settings", "default_f8")} disabled={busy||disabled||state.preferences.shortcut==="F8"} onClick={()=>void save("F8")}>{tx("ui-frame-overlay-settings", "default")}</button></fieldset>}
+  {!compact&&<small className="fg-overlay-shortcut-feedback">{tx("ui-frame-overlay-settings", "enable_the_overlay_in_each_game_s_details_shortcut_changes_apply_when_restarting_the_gam")}</small>}
   {error&&<small className="fg-overlay-shortcut-feedback" role="alert">{error}</small>}
  </div>
 }

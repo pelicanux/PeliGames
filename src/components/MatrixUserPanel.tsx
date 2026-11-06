@@ -1,3 +1,5 @@
+import {useI18n} from "../i18n/I18nContext";
+import {translator} from "../i18n/engine";
 import {MatrixPlayingTicker} from "./MatrixPlayingTicker";
 // Account identity lives beside the members; audio controls stay below channels.
 import { useEffect, useState } from "react";
@@ -15,22 +17,24 @@ export const HeadphonesIcon = ({ off }: { off?: boolean }) => icon(["M4 15v-3a8 
 export const GearIcon = () => icon(["M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z", "M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"]);
 
 /** Noise suppression choices; `short` fits the narrow account panel. */
-export const noiseOptions = (pt: boolean, short = false) => [
-  { value: "off", label: pt ? "Desligada" : "Off" },
-  { value: "standard", label: short ? (pt ? "Padrão" : "Standard") : pt ? "Padrão (WebRTC)" : "Standard (WebRTC)" },
-  { value: "rnnoise", label: short ? "RNNoise" : pt ? "RNNoise (recomendado)" : "RNNoise (recommended)" },
-];
+export const noiseOptions = (language: string, short = false) => { const tx = translator(language); return [
+  { value: "off", label: tx("ui-matrix-user-panel", "off") },
+  { value: "standard", label: short ? (tx("ui-matrix-user-panel", "standard")) : tx("ui-matrix-user-panel", "standard_webrtc") },
+  { value: "rnnoise", label: short ? "RNNoise" : tx("ui-matrix-user-panel", "rnnoise_recommended") },
+]; };
 
 /** The signed-in account's picture, or its initials. */
-export function MatrixOwnAvatar({ user, name, version = 0, presence, pt = true }: { user: string; name: string; version?: number; presence?: MatrixPresenceChoice; pt?: boolean }) {
+export function MatrixOwnAvatar({ user, name, version = 0, presence, }: { user: string; name: string; version?: number; presence?: MatrixPresenceChoice; }) {
   const [avatar, setAvatar] = useState<string | null>(null);
   useEffect(() => { let active = true; void matrixAvatar(user).then(value => { if (active) setAvatar(value); }).catch(() => {}); return () => { active = false; }; }, [user, version]);
-  return <span className="matrix-user-avatar">{avatar ? <img src={avatar} alt=""/> : <span aria-hidden="true">{name.slice(0, 2).toUpperCase()}</span>}<MatrixPresenceBadge status={presence} pt={pt}/></span>;
+  return <span className="matrix-user-avatar">{avatar ? <img src={avatar} alt=""/> : <span aria-hidden="true">{name.slice(0, 2).toUpperCase()}</span>}<MatrixPresenceBadge status={presence}/></span>;
 }
 
-export function MatrixUserProfile({ pt, me, names, avatarVersion, connected }: {
-  pt: boolean; me: string; names: Record<string, string>; avatarVersion: number; connected: boolean;
+export function MatrixUserProfile({ me, names, avatarVersion, connected }: {
+  me: string; names: Record<string, string>; avatarVersion: number; connected: boolean;
 }) {
+  const {t: tx} = useI18n();
+
   const voice = useMatrixVoice();
   const presence = useMatrixPresenceChoice(me);
   const activity = useMatrixActivityPreferences();
@@ -38,35 +42,37 @@ export function MatrixUserProfile({ pt, me, names, avatarVersion, connected }: {
   const speaking = voice.phase === "connected" && voice.speaking.includes(me);
   const options = [
     { value: "online", label: "Online" },
-    { value: "idle", label: pt ? "Ausente" : "Idle" },
-    { value: "dnd", label: pt ? "Não perturbe" : "Do not disturb" },
-    { value: "invisible", label: pt ? "Invisível" : "Invisible" },
+    { value: "idle", label: tx("ui-matrix-user-panel", "idle") },
+    { value: "dnd", label: tx("ui-matrix-user-panel", "do_not_disturb") },
+    { value: "invisible", label: tx("ui-matrix-user-panel", "invisible") },
   ];
   return <div className={`matrix-own-profile matrix-user-identity${speaking ? " is-speaking" : ""}`} title={me}>
-    <MatrixOwnAvatar user={me} name={name} version={avatarVersion} presence={connected ? presence : undefined} pt={pt}/>
+    <MatrixOwnAvatar user={me} name={name} version={avatarVersion} presence={connected ? presence : undefined}/>
     <div className="matrix-own-profile-info"><b>{name}</b>
-      {connected ? <SelectionMenu className="matrix-user-presence" menuClassName="matrix-select-menu matrix-presence-menu" minMenuWidth={180} label={pt ? "Alterar status" : "Change status"} value={presence} options={options}
+      {connected ? <SelectionMenu className="matrix-user-presence" menuClassName="matrix-select-menu matrix-presence-menu" minMenuWidth={180} label={tx("ui-matrix-user-panel", "change_status")} value={presence} options={options}
         onChange={value => setMatrixPresenceChoice(me, value as MatrixPresenceChoice)}/>
-        : <small>{pt ? "Desconectado" : "Disconnected"}</small>}
-      {activity.sharing && activity.name && presence !== "invisible" && <MatrixPlayingTicker className="matrix-own-game" text={`${pt ? "Jogando" : "Playing"} · ${activity.name}`}/>}
+        : <small>{tx("ui-matrix-user-panel", "disconnected")}</small>}
+      {activity.sharing && activity.name && presence !== "invisible" && <MatrixPlayingTicker className="matrix-own-game" text={`${tx("ui-matrix-user-panel", "playing")} · ${activity.name}`}/>}
     </div>
   </div>;
 }
 
-export function MatrixUserPanel({ pt, onSettings }: { pt: boolean; onSettings: () => void }) {
+export function MatrixUserPanel({ onSettings }: { onSettings: () => void }) {
+  const {t: tx, language} = useI18n();
+
   const voice = useMatrixVoice();
   const busy = voice.phase === "joining" || voice.phase === "leaving";
-  return <section className="matrix-user-dock" aria-label={pt ? "Controles de áudio" : "Audio controls"}>
-    <label className="matrix-user-noise"><span>{pt ? "> ruído" : "> noise"}</span>
-      <SelectionMenu className="matrix-select" menuClassName="matrix-select-menu" label={pt ? "Redução de ruído" : "Noise suppression"} value={voice.noise} disabled={busy} onChange={value => void setMatrixVoiceControls({ noise: value as NoiseMode })} options={noiseOptions(pt, true)}/>
+  return <section className="matrix-user-dock" aria-label={tx("ui-matrix-user-panel", "audio_controls")}>
+    <label className="matrix-user-noise"><span>{tx("ui-matrix-user-panel", "noise")}</span>
+      <SelectionMenu className="matrix-select" menuClassName="matrix-select-menu" label={tx("ui-matrix-user-panel", "noise_suppression")} value={voice.noise} disabled={busy} onChange={value => void setMatrixVoiceControls({ noise: value as NoiseMode })} options={noiseOptions(language, true)}/>
     </label>
     <div className="matrix-user-row">
       <span className="matrix-user-buttons">
-        <button type="button" className={voice.muted ? "is-off" : ""} aria-pressed={!voice.muted} disabled={busy} title={voice.muted ? (pt ? "Ativar microfone" : "Unmute") : (pt ? "Silenciar microfone" : "Mute")} aria-label={voice.muted ? (pt ? "Ativar microfone" : "Unmute") : (pt ? "Silenciar microfone" : "Mute")}
+        <button type="button" className={voice.muted ? "is-off" : ""} aria-pressed={!voice.muted} disabled={busy} title={voice.muted ? (tx("ui-matrix-user-panel", "unmute")) : (tx("ui-matrix-user-panel", "mute"))} aria-label={voice.muted ? (tx("ui-matrix-user-panel", "unmute")) : (tx("ui-matrix-user-panel", "mute"))}
           onClick={() => void setMatrixVoiceControls(voice.deafened ? { muted: false, deafened: false } : { muted: !voice.muted })}><MicIcon off={voice.muted || voice.deafened}/></button>
-        <button type="button" className={voice.deafened ? "is-off" : ""} aria-pressed={voice.deafened} disabled={busy} title={voice.deafened ? (pt ? "Voltar a ouvir" : "Undeafen") : (pt ? "Silenciar áudio" : "Deafen")} aria-label={voice.deafened ? (pt ? "Voltar a ouvir" : "Undeafen") : (pt ? "Silenciar áudio" : "Deafen")}
+        <button type="button" className={voice.deafened ? "is-off" : ""} aria-pressed={voice.deafened} disabled={busy} title={voice.deafened ? (tx("ui-matrix-user-panel", "undeafen")) : (tx("ui-matrix-user-panel", "deafen"))} aria-label={voice.deafened ? (tx("ui-matrix-user-panel", "undeafen")) : (tx("ui-matrix-user-panel", "deafen"))}
           onClick={() => void setMatrixVoiceControls({ deafened: !voice.deafened })}><HeadphonesIcon off={voice.deafened}/></button>
-        <button type="button" title={pt ? "Configurações de perfil e áudio" : "Profile and audio settings"} aria-label={pt ? "Configurações de perfil e áudio" : "Profile and audio settings"} onClick={onSettings}><GearIcon/></button>
+        <button type="button" title={tx("ui-matrix-user-panel", "profile_and_audio_settings")} aria-label={tx("ui-matrix-user-panel", "profile_and_audio_settings")} onClick={onSettings}><GearIcon/></button>
       </span>
     </div>
   </section>;

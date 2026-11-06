@@ -5,7 +5,8 @@ import type {ModernTab} from "./ModernGameDetails";
 
 /** All game tabs remain reachable when their labels exceed the window width. */
 export function GameDetailsTabs({tabs, activeId, onChange}: {tabs: ModernTab[]; activeId?: string; onChange: (id: string) => void}) {
-  const pt=useI18n().language === "pt";
+  const {t: tx} = useI18n();
+
   const viewport=useRef<HTMLDivElement>(null);
   const marker=useRef<HTMLDivElement>(null);
   const [stuck,setStuck]=useState(false);
@@ -59,10 +60,10 @@ export function GameDetailsTabs({tabs, activeId, onChange}: {tabs: ModernTab[]; 
     next?.focus({preventScroll:true});next?.click();if(next)reveal(next);
   };
   return <><div ref={marker} className="modern-game-tabs-marker" aria-hidden="true"/><div className="modern-game-tabs" data-stuck={stuck || undefined} data-overflow={edges.overflow || undefined}>
-    <button type="button" className="modern-tab-scroll" aria-label={pt?"Mostrar abas anteriores":"Show previous tabs"} disabled={!edges.left} hidden={!edges.overflow} onClick={()=>move(-1)}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
-    <div ref={viewport} className="modern-tabs" role="tablist" aria-label={pt?"Configurações do jogo":"Game settings"} onKeyDown={keyboard}>
-      {tabs.map(item=>item.disabled?<HoverTooltip key={item.id} text={item.disabledHint || (pt?"Em desenvolvimento":"In development")}><button type="button" role="tab" disabled aria-selected={false} tabIndex={-1}>{item.label}</button></HoverTooltip>:<button type="button" key={item.id} role="tab" aria-selected={activeId===item.id} tabIndex={activeId===item.id?0:-1} onClick={()=>onChange(item.id)}>{item.label}{item.count?<span className="modern-tab-count">{item.count}</span>:null}</button>)}
+    <button type="button" className="modern-tab-scroll" aria-label={tx("ui-game-details-tabs", "show_previous_tabs")} disabled={!edges.left} hidden={!edges.overflow} onClick={()=>move(-1)}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+    <div ref={viewport} className="modern-tabs" role="tablist" aria-label={tx("ui-game-details-tabs", "game_settings")} onKeyDown={keyboard}>
+      {tabs.map(item=>item.disabled?<HoverTooltip key={item.id} text={item.disabledHint || (tx("ui-game-details-tabs", "in_development"))}><button type="button" role="tab" disabled aria-selected={false} tabIndex={-1}>{item.label}</button></HoverTooltip>:<button type="button" key={item.id} role="tab" aria-selected={activeId===item.id} tabIndex={activeId===item.id?0:-1} onClick={()=>onChange(item.id)}>{item.label}{item.count?<span className="modern-tab-count">{item.count}</span>:null}</button>)}
     </div>
-    <button type="button" className="modern-tab-scroll" aria-label={pt?"Mostrar próximas abas":"Show next tabs"} disabled={!edges.right} hidden={!edges.overflow} onClick={()=>move(1)}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+    <button type="button" className="modern-tab-scroll" aria-label={tx("ui-game-details-tabs", "show_next_tabs")} disabled={!edges.right} hidden={!edges.overflow} onClick={()=>move(1)}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
   </div></>;
 }

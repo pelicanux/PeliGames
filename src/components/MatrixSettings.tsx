@@ -1,3 +1,4 @@
+import {useI18n} from "../i18n/I18nContext";
 // Settings behind the gear: profile (name, picture), voice and audio
 // (devices, volumes, filters) and account, in the Matrix terminal look.
 import {MatrixShortcutSettings} from "./MatrixShortcutSettings";
@@ -15,11 +16,13 @@ type Tab = "profile" | "audio" | "screen" | "shortcuts" | "blocked" | "account";
 type Device = { id: string; name: string };
 const SYSTEM = "__system__";
 
-export function MatrixSettings({ pt, me, names, onClose, onError, onDisconnect, onAvatarChanged, avatarVersion }: {
-  pt: boolean; me: string; names: Record<string, string>; onClose: () => void;
+export function MatrixSettings({ me, names, onClose, onError, onDisconnect, onAvatarChanged, avatarVersion }: {
+  me: string; names: Record<string, string>; onClose: () => void;
   onError: (error: unknown, fallback: string) => void; onDisconnect: () => void;
   onAvatarChanged: () => void; avatarVersion: number;
 }) {
+  const {t: tx, language} = useI18n();
+
   const voice = useMatrixVoice();
   const screenFit = useMatrixScreenFit();
   const [tab, setTab] = useState<Tab>("profile");
@@ -28,7 +31,7 @@ export function MatrixSettings({ pt, me, names, onClose, onError, onDisconnect, 
   const unblock = async (user: string) => {
     setUnblocking(user);
     try { await setMatrixUserBlocked(user, false); }
-    catch (error) { onError(error, pt ? "Não foi possível desbloquear." : "Could not unblock."); }
+    catch (error) { onError(error, tx("ui-matrix-settings", "could_not_unblock")); }
     finally { setUnblocking(null); }
   };
   const [name, setName] = useState(displayName(me, names));
@@ -54,91 +57,91 @@ export function MatrixSettings({ pt, me, names, onClose, onError, onDisconnect, 
   const saveName = async () => {
     if (saving || !name.trim()) return;
     setSaving("name"); setNotice("");
-    try { await invoke("matrix_profile_set_name", { name: name.trim() }); setNotice(pt ? "> nome atualizado em todas as salas" : "> name updated in every room"); }
-    catch (error) { onError(error, pt ? "Não foi possível trocar o nome." : "Could not change the name."); }
+    try { await invoke("matrix_profile_set_name", { name: name.trim() }); setNotice(tx("ui-matrix-settings", "name_updated_in_every_room")); }
+    catch (error) { onError(error, tx("ui-matrix-settings", "could_not_change_the_name")); }
     finally { setSaving(""); }
   };
   const saveAvatar = async (picked: File) => {
     if (saving) return;
-    if (picked.size > 2 * 1024 * 1024) { onError(null, pt ? "A imagem deve ter até 2 MB." : "The image must be at most 2 MB."); return; }
+    if (picked.size > 2 * 1024 * 1024) { onError(null, tx("ui-matrix-settings", "the_image_must_be_at_most_2_mb")); return; }
     setSaving("avatar"); setNotice("");
     try {
       await invoke("matrix_profile_set_avatar", new Uint8Array(await picked.arrayBuffer()), { headers: { "x-matrix-mime": picked.type } });
       forgetMatrixAvatar(me); onAvatarChanged();
-      setNotice(pt ? "> foto de perfil atualizada" : "> profile picture updated");
-    } catch (error) { onError(error, pt ? "Não foi possível trocar a foto." : "Could not change the picture."); }
+      setNotice(tx("ui-matrix-settings", "profile_picture_updated"));
+    } catch (error) { onError(error, tx("ui-matrix-settings", "could_not_change_the_picture")); }
     finally { setSaving(""); }
   };
   const deviceOptions = (list: Device[] | undefined, chosen: string | null) => {
-    const options = [{ value: SYSTEM, label: pt ? "Padrão do sistema" : "System default" }, ...(list ?? []).map(device => ({ value: device.id, label: device.name }))];
+    const options = [{ value: SYSTEM, label: tx("ui-matrix-settings", "system_default") }, ...(list ?? []).map(device => ({ value: device.id, label: device.name }))];
     // A saved device that is unplugged now stays visible, marked as missing.
-    if (chosen && list && !list.some(device => device.id === chosen)) options.push({ value: chosen, label: pt ? `${chosen} (desconectado)` : `${chosen} (disconnected)` });
+    if (chosen && list && !list.some(device => device.id === chosen)) options.push({ value: chosen, label: tx("ui-matrix-settings", "disconnected", {"chosen": chosen}) });
     return options;
   };
   const slider = (label: string, value: number, change: (value: number) => void) => <label className="matrix-settings-slider">
     <span>{label}<b>{value}%</b></span>
     <input type="range" min="0" max="200" step="5" value={value} onChange={event => void change(Number(event.target.value))}/>
   </label>;
-  const tabs: [Tab, string][] = [["profile", pt ? "# perfil" : "# profile"], ["audio", pt ? "# voz e áudio" : "# voice & audio"], ["screen", pt ? "# transmissão" : "# screen"], ["shortcuts", pt ? "# atalhos" : "# shortcuts"], ["blocked", pt ? "# bloqueados" : "# blocked"], ["account", pt ? "# conta" : "# account"]];
+  const tabs: [Tab, string][] = [["profile", tx("ui-matrix-settings", "profile")], ["audio", tx("ui-matrix-settings", "voice_audio")], ["screen", tx("ui-matrix-settings", "screen")], ["shortcuts", tx("ui-matrix-settings", "shortcuts")], ["blocked", tx("ui-matrix-settings", "blocked")], ["account", tx("ui-matrix-settings", "account")]];
   return <div className="matrix-settings-overlay" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}
     onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onClose(); } }}>
-    <div ref={frame} className="matrix-settings" role="dialog" aria-modal="true" aria-label={pt ? "Configurações" : "Settings"}>
-      <header><strong>{pt ? "> configurações" : "> settings"}</strong><button type="button" className="matrix-settings-close" onClick={onClose} aria-label={pt ? "Fechar configurações" : "Close settings"}>[x]</button></header>
+    <div ref={frame} className="matrix-settings" role="dialog" aria-modal="true" aria-label={tx("ui-matrix-settings", "settings")}>
+      <header><strong>{tx("ui-matrix-settings", "settings_2")}</strong><button type="button" className="matrix-settings-close" onClick={onClose} aria-label={tx("ui-matrix-settings", "close_settings")}>[x]</button></header>
       <nav role="tablist">{tabs.map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => { setTab(id); setNotice(""); }}>{label}</button>)}</nav>
       <div className="matrix-settings-body" role="tabpanel">
-        {tab === "shortcuts" && <MatrixShortcutSettings pt={pt}/>}
+        {tab === "shortcuts" && <MatrixShortcutSettings/>}
         {tab === "blocked" && <div className="matrix-settings-field">
-          <span>{pt ? "> usuários bloqueados" : "> blocked users"}</span>
-          <small>{pt ? "As mensagens de quem você bloqueia somem de todas as salas. A lista fica na sua conta Matrix e vale também no Element." : "Messages from people you block disappear from every room. The list is kept in your Matrix account and also applies in Element."}</small>
+          <span>{tx("ui-matrix-settings", "blocked_users")}</span>
+          <small>{tx("ui-matrix-settings", "messages_from_people_you_block_disappear_from_every_room_the_list_is_kept_in_your_matrix")}</small>
           {chat.ignored.length ? <ul className="matrix-settings-blocked">{chat.ignored.map(user => <li key={user}>
             <span><b>{displayName(user, chat.names)}</b><code>{user}</code></span>
-            <button type="button" disabled={unblocking === user} onClick={() => void unblock(user)}>{unblocking === user ? (pt ? "[desbloqueando…]" : "[unblocking…]") : (pt ? "[desbloquear]" : "[unblock]")}</button>
-          </li>)}</ul> : <p className="matrix-settings-hint">{pt ? "> ninguém bloqueado" : "> nobody blocked"}</p>}
+            <button type="button" disabled={unblocking === user} onClick={() => void unblock(user)}>{unblocking === user ? (tx("ui-matrix-settings", "unblocking")) : (tx("ui-matrix-settings", "unblock"))}</button>
+          </li>)}</ul> : <p className="matrix-settings-hint">{tx("ui-matrix-settings", "nobody_blocked")}</p>}
         </div>}
         {tab === "profile" && <>
           <div className="matrix-settings-profile">
             <MatrixOwnAvatar user={me} name={displayName(me, names)} version={avatarVersion}/>
             <div>
               <input ref={file} type="file" hidden accept="image/png,image/jpeg,image/webp,image/gif" onChange={event => { const picked = event.target.files?.[0]; event.target.value = ""; if (picked) void saveAvatar(picked); }}/>
-              <button type="button" disabled={Boolean(saving)} onClick={() => file.current?.click()}>{saving === "avatar" ? (pt ? "[enviando…]" : "[uploading…]") : (pt ? "[trocar foto]" : "[change picture]")}</button>
-              <small>{pt ? "PNG, JPEG, WebP ou GIF, até 2 MB." : "PNG, JPEG, WebP or GIF, up to 2 MB."}</small>
+              <button type="button" disabled={Boolean(saving)} onClick={() => file.current?.click()}>{saving === "avatar" ? (tx("ui-matrix-settings", "uploading")) : (tx("ui-matrix-settings", "change_picture"))}</button>
+              <small>{tx("ui-matrix-settings", "png_jpeg_webp_or_gif_up_to_2_mb")}</small>
             </div>
           </div>
           <form className="matrix-settings-field" onSubmit={event => { event.preventDefault(); void saveName(); }}>
-            <label htmlFor="matrix-settings-name">{pt ? "> nome de exibição" : "> display name"}</label>
+            <label htmlFor="matrix-settings-name">{tx("ui-matrix-settings", "display_name")}</label>
             <div><input id="matrix-settings-name" value={name} maxLength={64} disabled={Boolean(saving)} onChange={event => setName(event.target.value)}/>
-              <button type="submit" disabled={Boolean(saving) || !name.trim() || name.trim() === displayName(me, names)}>{saving === "name" ? (pt ? "[salvando…]" : "[saving…]") : (pt ? "[salvar]" : "[save]")}</button></div>
-            <small>{pt ? "Vale para todas as salas Matrix, inclusive no Element." : "Applies to every Matrix room, Element included."}</small>
+              <button type="submit" disabled={Boolean(saving) || !name.trim() || name.trim() === displayName(me, names)}>{saving === "name" ? (tx("ui-matrix-settings", "saving")) : (tx("ui-matrix-settings", "save"))}</button></div>
+            <small>{tx("ui-matrix-settings", "applies_to_every_matrix_room_element_included")}</small>
           </form>
         </>}
         {tab === "audio" && <>
-          <div className="matrix-settings-field"><span>{pt ? "> microfone (entrada)" : "> microphone (input)"}</span>
-            <SelectionMenu className="matrix-select" menuClassName="matrix-select-menu" label={pt ? "Microfone" : "Microphone"} value={voice.input ?? SYSTEM} options={deviceOptions(devices?.inputs, voice.input)}
-              onChange={value => void setMatrixVoiceControls({ input: value === SYSTEM ? null : value }).catch(error => onError(error, pt ? "Não foi possível trocar o microfone." : "Could not change the microphone."))}/></div>
-          <div className="matrix-settings-field"><span>{pt ? "> saída de áudio" : "> audio output"}</span>
-            <SelectionMenu className="matrix-select" menuClassName="matrix-select-menu" label={pt ? "Saída de áudio" : "Audio output"} value={voice.output ?? SYSTEM} options={deviceOptions(devices?.outputs, voice.output)}
-              onChange={value => void setMatrixVoiceControls({ output: value === SYSTEM ? null : value }).catch(error => onError(error, pt ? "Não foi possível trocar a saída de áudio." : "Could not change the audio output."))}/></div>
-          {devices && !devices.inputs.length && <small className="matrix-settings-hint">{pt ? "Lista de dispositivos indisponível (o PipeWire/PulseAudio não respondeu). A chamada usa os padrões do sistema." : "Device list unavailable (PipeWire/PulseAudio did not answer). Calls use the system defaults."}</small>}
-          {slider(pt ? "> volume do microfone" : "> microphone volume", voice.micVolume, value => setMatrixVoiceControls({ micVolume: value }))}
-          <div className="matrix-settings-meter" aria-label={pt ? "Nível do microfone" : "Microphone level"}><span style={{ width: `${Math.round(meter * 100)}%` }}/></div>
-          <small className="matrix-settings-hint">{voice.phase === "connected" ? (pt ? "O medidor mostra o que os outros recebem (fica parado com o microfone mudo)." : "The meter shows what others receive (still while muted).") : (pt ? "O medidor funciona durante uma chamada." : "The meter works during a call.")}</small>
-          {slider(pt ? "> volume da recepção" : "> reception volume", voice.volume, value => setMatrixVoiceControls({ volume: value }))}
-          <div className="matrix-settings-field"><span>{pt ? "> redução de ruído" : "> noise suppression"}</span>
-            <SelectionMenu className="matrix-select" menuClassName="matrix-select-menu" label={pt ? "Redução de ruído" : "Noise suppression"} value={voice.noise} options={noiseOptions(pt)} onChange={value => void setMatrixVoiceControls({ noise: value as NoiseMode })}/></div>
+          <div className="matrix-settings-field"><span>{tx("ui-matrix-settings", "microphone_input")}</span>
+            <SelectionMenu className="matrix-select" menuClassName="matrix-select-menu" label={tx("ui-matrix-settings", "microphone")} value={voice.input ?? SYSTEM} options={deviceOptions(devices?.inputs, voice.input)}
+              onChange={value => void setMatrixVoiceControls({ input: value === SYSTEM ? null : value }).catch(error => onError(error, tx("ui-matrix-settings", "could_not_change_the_microphone")))}/></div>
+          <div className="matrix-settings-field"><span>{tx("ui-matrix-settings", "audio_output")}</span>
+            <SelectionMenu className="matrix-select" menuClassName="matrix-select-menu" label={tx("ui-matrix-settings", "audio_output_2")} value={voice.output ?? SYSTEM} options={deviceOptions(devices?.outputs, voice.output)}
+              onChange={value => void setMatrixVoiceControls({ output: value === SYSTEM ? null : value }).catch(error => onError(error, tx("ui-matrix-settings", "could_not_change_the_audio_output")))}/></div>
+          {devices && !devices.inputs.length && <small className="matrix-settings-hint">{tx("ui-matrix-settings", "device_list_unavailable_pipewire_pulseaudio_did_not_answer_calls_use_the_system_defaults")}</small>}
+          {slider(tx("ui-matrix-settings", "microphone_volume"), voice.micVolume, value => setMatrixVoiceControls({ micVolume: value }))}
+          <div className="matrix-settings-meter" aria-label={tx("ui-matrix-settings", "microphone_level")}><span style={{ width: `${Math.round(meter * 100)}%` }}/></div>
+          <small className="matrix-settings-hint">{voice.phase === "connected" ? (tx("ui-matrix-settings", "the_meter_shows_what_others_receive_still_while_muted")) : (tx("ui-matrix-settings", "the_meter_works_during_a_call"))}</small>
+          {slider(tx("ui-matrix-settings", "reception_volume"), voice.volume, value => setMatrixVoiceControls({ volume: value }))}
+          <div className="matrix-settings-field"><span>{tx("ui-matrix-settings", "noise_suppression")}</span>
+            <SelectionMenu className="matrix-select" menuClassName="matrix-select-menu" label={tx("ui-matrix-settings", "noise_suppression_2")} value={voice.noise} options={noiseOptions(language)} onChange={value => void setMatrixVoiceControls({ noise: value as NoiseMode })}/></div>
           <label className="matrix-settings-check"><input type="checkbox" checked={voice.agc} onChange={event => void setMatrixVoiceControls({ agc: event.target.checked })}/>
-            <span>{pt ? "Ganho automático do microfone" : "Automatic microphone gain"}<small>{pt ? "Iguala o volume da sua voz quando você fala baixo ou se afasta do microfone." : "Evens out your voice when you speak softly or move away from the microphone."}</small></span></label>
+            <span>{tx("ui-matrix-settings", "automatic_microphone_gain")}<small>{tx("ui-matrix-settings", "evens_out_your_voice_when_you_speak_softly_or_move_away_from_the_microphone")}</small></span></label>
         </>}
         {tab === "screen" && <div className="matrix-settings-field">
-          <span>{pt ? "> imagem em tela cheia" : "> full screen picture"}</span>
-          <SelectionMenu className="matrix-select" menuClassName="matrix-select-menu" label={pt ? "Enquadramento da transmissão" : "Stream framing"} value={screenFit}
-            options={[{ value: "fill", label: pt ? "Preencher a moldura" : "Fill the frame" }, { value: "contain", label: pt ? "Enquadrar imagem inteira" : "Fit the entire picture" }]}
+          <span>{tx("ui-matrix-settings", "full_screen_picture")}</span>
+          <SelectionMenu className="matrix-select" menuClassName="matrix-select-menu" label={tx("ui-matrix-settings", "stream_framing")} value={screenFit}
+            options={[{ value: "fill", label: tx("ui-matrix-settings", "fill_the_frame") }, { value: "contain", label: tx("ui-matrix-settings", "fit_the_entire_picture") }]}
             onChange={value => setMatrixScreenFit(value as ScreenFit)}/>
-          <small>{screenFit === "fill" ? (pt ? "Preenche a tela curva sem distorcer a imagem; as bordas podem ser cortadas." : "Fills the curved screen without stretching; edges may be cropped.") : (pt ? "Mostra a imagem inteira dentro da moldura, com margens quando necessário." : "Shows the entire picture inside the frame, with margins when needed.")}</small>
+          <small>{screenFit === "fill" ? (tx("ui-matrix-settings", "fills_the_curved_screen_without_stretching_edges_may_be_cropped")) : (tx("ui-matrix-settings", "shows_the_entire_picture_inside_the_frame_with_margins_when_needed"))}</small>
         </div>}
         {tab === "account" && <>
-          <div className="matrix-settings-field"><span>{pt ? "> conta Matrix" : "> Matrix account"}</span><code>{me}</code></div>
-          <small className="matrix-settings-hint">{pt ? "Desconectar encerra esta sessão do launcher no Matrix. Suas salas e mensagens continuam na conta." : "Disconnecting ends this launcher session on Matrix. Your rooms and messages stay in the account."}</small>
-          <button type="button" className="matrix-settings-danger" onClick={onDisconnect}>{pt ? "[desconectar]" : "[disconnect]"}</button>
+          <div className="matrix-settings-field"><span>{tx("ui-matrix-settings", "matrix_account")}</span><code>{me}</code></div>
+          <small className="matrix-settings-hint">{tx("ui-matrix-settings", "disconnecting_ends_this_launcher_session_on_matrix_your_rooms_and_messages_stay_in_the_a")}</small>
+          <button type="button" className="matrix-settings-danger" onClick={onDisconnect}>{tx("ui-matrix-settings", "disconnect")}</button>
         </>}
         {notice && <p className="matrix-settings-notice" role="status">{notice}</p>}
       </div>

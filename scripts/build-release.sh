@@ -18,6 +18,8 @@ export CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS:-$(nproc)}
 export CARGO_INCREMENTAL=0
 export PATH="${BUN_INSTALL:-$HOME/.bun}/bin:${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 source scripts/native-voice-toolchain.sh
+export PELIGAMES_INSTALLER_VERIFIER="$build_target/installer-verifier/osslsigncode.gz"
+bash scripts/installer-verifier.sh "$(dirname "$PELIGAMES_INSTALLER_VERIFIER")"
 bash scripts/license-notices.sh
 bun run build
 cargo build --manifest-path src-tauri/Cargo.toml --release --bins --features custom-protocol --offline -j "$CARGO_BUILD_JOBS"

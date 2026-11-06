@@ -13,7 +13,6 @@ import { useI18n } from '../i18n/I18nContext';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { isTauri } from '@tauri-apps/api/core';
 
-
 interface TitleBarProps {
   onShowCredits: () => void;
   onHome: () => void;
@@ -26,7 +25,8 @@ interface TitleBarProps {
 }
 
 export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeDisabled, settingsMenu, updateIndicator, notificationIndicator, disabled, runningGames = [] }) => {
-  const { t, language } = useI18n();
+
+  const { t } = useI18n();
   const appWindow = isTauri() ? getCurrentWindow() : null;
   const preview = "__PELI_UI_PREVIEW__" in window;
 
@@ -72,9 +72,9 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
       {/* Left section: Icon and Title */}
       <div data-tauri-drag-region="true" style={{ display: 'flex', alignItems: 'center', gap: '12.8px', height: '100%' }}>
         <img src="/peligames.svg" alt="Icon" style={{ width: '24px', height: '24px', objectFit: 'contain', pointerEvents: 'none' }} />
-        <button type="button" className="titlebar-title titlebar-home" data-tauri-drag-region="false" onClick={onHome} disabled={disabled || homeDisabled} aria-label={t("gameModes", "goHome")} title={t("gameModes", "goHome")} style={{ 
-          margin: 0, 
-          color: "var(--tone-edf4ff, #edf4ff)" 
+        <button type="button" className="titlebar-title titlebar-home" data-tauri-drag-region="false" onClick={onHome} disabled={disabled || homeDisabled} aria-label={t("gameModes", "goHome")} title={t("gameModes", "goHome")} style={{
+          margin: 0,
+          color: "var(--tone-edf4ff, #edf4ff)"
         }}>
           <BrandName />
         </button>
@@ -86,10 +86,10 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
         <CaptureIndicator />
         <MatrixCallIndicator onOpen={()=>setShowMatrix(true)}/>
         <div className="titlebar-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        
+
         {updateIndicator}
         <div className="titlebar-optional-actions" inert={disabled} style={{ display: "flex", alignItems: "center", opacity: disabled ? 0.3 : 1, pointerEvents: disabled ? "none" : "auto" }}>
-          <button 
+          <button
             data-tauri-drag-region="false"
             className="btn-titlebar"
             disabled={disabled}
@@ -110,31 +110,31 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
 
         <div className="titlebar-separator" style={{ width: '1px', height: '20px', background: 'rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)', marginRight: '8px' }}></div>
 
-        <button 
+        <button
           data-tauri-drag-region="false"
           className="btn-titlebar window-control retro-window-control minimize"
-          aria-label={language === "pt" ? "Minimizar" : "Minimize"}
-          title={language === "pt" ? "Minimizar" : "Minimize"}
+          aria-label={t("ui-title-bar", "minimize")}
+          title={t("ui-title-bar", "minimize")}
           disabled={disabled || (!appWindow && !preview)}
           onClick={() => appWindow?.minimize()}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><line x1="6" y1="17" x2="18" y2="17"></line></svg>
         </button>
-        <button 
+        <button
           data-tauri-drag-region="false"
           className="btn-titlebar window-control retro-window-control maximize"
-          aria-label={language === "pt" ? "Maximizar ou restaurar" : "Maximize or restore"}
-          title={language === "pt" ? "Maximizar ou restaurar" : "Maximize or restore"}
+          aria-label={t("ui-title-bar", "maximize_or_restore")}
+          title={t("ui-title-bar", "maximize_or_restore")}
           disabled={disabled || (!appWindow && !preview)}
           onClick={() => appWindow?.toggleMaximize()}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 9V5h14v14h-4M5 9h10v10H5Z"/></svg>
         </button>
-        <button 
+        <button
           data-tauri-drag-region="false"
           className="btn-titlebar window-control close retro-window-control"
-          aria-label={language === "pt" ? "Fechar" : "Close"}
-          title={language === "pt" ? "Fechar" : "Close"}
+          aria-label={t("ui-title-bar", "close")}
+          title={t("ui-title-bar", "close")}
           disabled={disabled || (!appWindow && !preview)}
           onClick={() => appWindow?.close()}
         >

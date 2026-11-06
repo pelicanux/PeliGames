@@ -223,6 +223,7 @@ fn run_mode(installer: bool) {
         })
         .invoke_handler({
             let handler: Box<dyn Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync> = Box::new(tauri::generate_handler![
+                commands::system_locale::system_language_preferences,
             commands::discord_presence::discord_presence_status,
             commands::discord_presence::discord_presence_preferences,
             commands::capture::capture_prepare_overlay,

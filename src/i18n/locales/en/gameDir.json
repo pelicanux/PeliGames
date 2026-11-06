@@ -1,0 +1,6 @@
+{
+  "title": "Game Directory",
+  "desc": "Select the exact folder where the game's executable (.exe) is located.",
+  "placeholder": "Ex: /mnt/SteamLibrary/steamapps/common/Game/Binaries/Win64",
+  "browse": "Browse"
+}

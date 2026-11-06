@@ -1,0 +1,12 @@
+{
+  "matrix_call": "Chamada Matrix",
+  "connected": "Conectado",
+  "reconnecting": "Reconectando…",
+  "leaving": "Saindo…",
+  "connecting": "Conectando…",
+  "active_matrix_call": "Chamada Matrix ativa",
+  "simulated": " · simulação",
+  "toggle_microphone": "Alternar microfone",
+  "toggle_deafen": "Alternar silenciamento geral",
+  "disconnect_call": "Desconectar da chamada"
+}

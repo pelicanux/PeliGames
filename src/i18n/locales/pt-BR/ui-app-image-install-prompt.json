@@ -1,0 +1,22 @@
+{
+  "install_peligames": "Instalar PeliGames",
+  "install_peligames_2": "Instalar o PeliGames?",
+  "the_nexus_site_s_mod_manager_download_button_opens_straight_in_peligames": "Botão “Mod Manager Download” do site do Nexus abre direto no PeliGames.",
+  "an_application_menu_entry_and_the_peligames_terminal_command": "Atalho no menu de aplicativos e o comando peligames no terminal.",
+  "updates_through_the_launcher_wherever_the_file_was_downloaded_game_shortcuts_keep_workin": "Atualizações pelo launcher sem depender de onde o arquivo foi baixado; atalhos de jogos continuam valendo.",
+  "install_mangohud_from_the_launcher": "Instalar o MangoHUD pelo launcher.",
+  "prepare_and_format_drives_with_a_single_password_prompt": "Preparar e formatar discos pedindo a senha uma vez só.",
+  "nexus_mods_only_through_peligames_internal_browser_or_by_importing_a_manual_download": "Mods do Nexus só pelo navegador interno do PeliGames ou importando o arquivo baixado à mão.",
+  "no_application_menu_entry": "Sem atalho no menu de aplicativos.",
+  "mangohud_must_be_installed_through_the_system": "MangoHUD precisa ser instalado pelo sistema.",
+  "drives_the_password_is_asked_at_every_step": "Discos: a senha é pedida em cada etapa.",
+  "moving_or_deleting_the_appimage_file_breaks_game_shortcuts": "Mover ou apagar o arquivo AppImage quebra os atalhos de jogos.",
+  "you_are_running_peligames_straight_from_the_appimage_file_it_works_this_way_but_installi": "Você está usando o PeliGames direto do arquivo AppImage. Ele funciona assim, mas instalar libera alguns recursos. A instalação fica na sua pasta pessoal, não pede senha e o arquivo AppImage baixado é removido.",
+  "installed": "Instalando",
+  "appimage_only": "Só com o AppImage",
+  "destination": "Destino:",
+  "don_t_ask_again_you_can_install_later_in_settings": "Não perguntar de novo (dá para instalar depois nas Configurações)",
+  "continue_without_installing": "Continuar sem instalar",
+  "installing": "Instalando…",
+  "install_now": "Instalar agora"
+}

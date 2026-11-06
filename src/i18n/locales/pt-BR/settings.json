@@ -1,0 +1,19 @@
+{
+  "effects": "Efeitos da interface",
+  "elegant": "Elegante",
+  "performance": "Desempenho",
+  "tools": "Ferramentas",
+  "actions": "Ações",
+  "title": "Configurações do Launcher",
+  "backend": "Projeto Backend",
+  "reset": "RECONFIGURAR SETUP",
+  "openLogs": "ABRIR LOGS DO LAUNCHER",
+  "cancel": "CANCELAR",
+  "save": "SALVAR",
+  "preferences": "Preferências",
+  "language": "Idioma",
+  "scale": "Escala da Interface",
+  "manualDirs": "Diretórios Adicionados Manualmente",
+  "manualDirsDesc": "As pastas abaixo estão sendo rastreadas para encontrar jogos instalados (como os jogos da Epic/Heroic).",
+  "removeDir": "Remover diretório"
+}

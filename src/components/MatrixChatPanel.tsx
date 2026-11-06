@@ -80,9 +80,11 @@ function Linked({ text, onError }: { text: string; onError: (error: unknown) => 
   return <>{parts}</>;
 }
 export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
+  const {t: tx, language} = useI18n();
+
   const screenClipId = `matrix-screen-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const screenShape = "M .10 .04 C .30 .013333 .70 .013333 .90 .04 C .953333 .047111 .965333 .08 .972 .14 C .992 .32 .992 .68 .972 .86 C .965333 .92 .953333 .952889 .90 .96 C .70 .986667 .30 .986667 .10 .96 C .046667 .952889 .034667 .92 .028 .86 C .008 .68 .008 .32 .028 .14 C .034667 .08 .046667 .047111 .10 .04 Z";
-  const { language } = useI18n(); const pt = language === "pt";
+
   const performance = usePerformanceMode();
   const [powerOn, setPowerOn] = useState(true);
   useEffect(() => { const timer = window.setTimeout(() => setPowerOn(false), 1300); return () => window.clearTimeout(timer); }, []);
@@ -173,7 +175,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
     if (roomRefreshLock.current) return;
     roomRefreshLock.current = true; setRefreshingRooms(true);
     try { await refreshMatrixRooms(); await refreshMatrixRoomMembers(room); }
-    catch (e) { fail(e, pt ? "Não foi possível atualizar as salas." : "Could not refresh rooms."); }
+    catch (e) { fail(e, tx("ui-matrix-chat-panel", "could_not_refresh_rooms")); }
     finally { roomRefreshLock.current = false; setRefreshingRooms(false); }
   };
   useEffect(() => {
@@ -233,7 +235,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
   const run = async (command: string, args?: Record<string, unknown>) => {
     if (actionLock.current) return false; actionLock.current = true; setBusy(true);
     try { await invoke(command,args); return true; }
-    catch (e) { fail(e, pt ? "Não foi possível concluir a operação." : "Could not complete the operation."); return false; }
+    catch (e) { fail(e, tx("ui-matrix-chat-panel", "could_not_complete_the_operation")); return false; }
     finally { actionLock.current = false; setBusy(false); }
   };
   // "Typing…" for the others: sent at most every 4 s, ended when the box empties or the message goes.
@@ -267,8 +269,8 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
     if (actionLock.current) return; actionLock.current = true; setBusy(true);
     try {
       // Offline, the account still leaves this computer; the server keeps the session until it is ended in Element.
-      if (!await disconnectMatrixChat()) fail(null, pt ? "Conta removida deste computador, mas sem conexão para encerrar a sessão no Matrix. Encerre-a no Element, em Configurações → Sessões." : "Account removed from this computer, but there was no connection to end the Matrix session. End it in Element, under Settings → Sessions.");
-    } catch (e) { fail(e, pt ? "Não foi possível desconectar." : "Could not disconnect."); }
+      if (!await disconnectMatrixChat()) fail(null, tx("ui-matrix-chat-panel", "account_removed_from_this_computer_but_there_was_no_connection_to_end_the_matrix_session"));
+    } catch (e) { fail(e, tx("ui-matrix-chat-panel", "could_not_disconnect")); }
     finally { actionLock.current = false; setBusy(false); }
   };
   // Reacting again with the same emoji removes the reaction (its event is redacted).
@@ -281,18 +283,18 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
   const join = async (target: string) => { if (await run("matrix_chat_join", { room: target })) await reloadMatrixRooms(); };
   const older = async () => {
     olderFrom.current = log.current?.scrollHeight ?? null;
-    try { await loadOlderMessages(room); } catch (e) { olderFrom.current = null; fail(e, pt ? "Não foi possível carregar mensagens anteriores." : "Could not load older messages."); }
+    try { await loadOlderMessages(room); } catch (e) { olderFrom.current = null; fail(e, tx("ui-matrix-chat-panel", "could_not_load_older_messages")); }
   };
   const upload = async (file: File) => {
     if (premiumSelected && !premiumReady) return;
-    if (file.size > 5*1024*1024) { fail(null, pt ? "O arquivo deve ter até 5 MB." : "File must be at most 5 MB."); return; }
+    if (file.size > 5*1024*1024) { fail(null, tx("ui-matrix-chat-panel", "file_must_be_at_most_5_mb")); return; }
     const mime = /\.(txt|log)$/i.test(file.name) ? "text/plain" : file.type;
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
       atBottom.current = true;
       if (actionLock.current) return; actionLock.current = true; setBusy(true);
       await invoke("matrix_chat_upload", bytes, { headers: { "x-matrix-room": encodeURIComponent(room), "x-matrix-name": encodeURIComponent(file.name), "x-matrix-mime": encodeURIComponent(mime) } });
-    } catch (e) { fail(e, pt ? "Não foi possível enviar o arquivo." : "Could not send the file."); }
+    } catch (e) { fail(e, tx("ui-matrix-chat-panel", "could_not_send_the_file")); }
     finally { actionLock.current = false; setBusy(false); }
   };
   const confirm = async (message: ChatMessage, kind: Pending["kind"]) => {
@@ -302,10 +304,10 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
     if (done) setPending(null);
   };
   const actionText = {
-    report: { title: pt ? "Denunciar aos moderadores" : "Report to moderators", button: pt ? "Enviar denúncia" : "Send report" },
-    redact: { title: pt ? "Apagar esta mensagem para todos" : "Remove this message for everyone", button: pt ? "Apagar" : "Remove" },
-    kick: { title: pt ? "Remover a pessoa da sala (ela pode voltar)" : "Remove the person from the room (they can come back)", button: pt ? "Expulsar" : "Kick" },
-    ban: { title: pt ? "Banir a pessoa desta sala" : "Ban the person from this room", button: pt ? "Banir" : "Ban" },
+    report: { title: tx("ui-matrix-chat-panel", "report_to_moderators"), button: tx("ui-matrix-chat-panel", "send_report") },
+    redact: { title: tx("ui-matrix-chat-panel", "remove_this_message_for_everyone"), button: tx("ui-matrix-chat-panel", "remove") },
+    kick: { title: tx("ui-matrix-chat-panel", "remove_the_person_from_the_room_they_can_come_back"), button: tx("ui-matrix-chat-panel", "kick") },
+    ban: { title: tx("ui-matrix-chat-panel", "ban_the_person_from_this_room"), button: tx("ui-matrix-chat-panel", "ban") },
   };
   const byId = new Map(messages.map(message => [message.id, message]));
   const communityJoined = chat.rooms[MATRIX_COMMUNITY_ID]?.joined;
@@ -316,7 +318,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
   const unreadRooms = useMemo(() => Object.fromEntries(Object.entries(chat.rooms).map(([id, value]) => [id, value.unread])), [chat.rooms]);
   const typingNames = (current?.typing ?? []).filter(user => !chat.ignored.includes(user)).map(user => displayName(user, chat.names));
   const selectedRoom = rooms.find(item=>item.room_id === room);
-  const roomName = selectedRoom?.name || (room === MATRIX_COMMUNITY_ID ? "Pelicanux" : pt ? "Sala" : "Room");
+  const roomName = selectedRoom?.name || (room === MATRIX_COMMUNITY_ID ? "Pelicanux" : tx("ui-matrix-chat-panel", "room"));
   const roomTopic = selectedRoom?.topic?.trim();
   return createPortal(<div className="modal-overlay matrix-chat-overlay" onMouseDown={event => { if (event.target === event.currentTarget) close.current(); }}>
     <ModalSurface ref={frame} className="modal-content dialog-glass matrix-chat" role="dialog" aria-modal="true" aria-label={`Matrix · ${roomName}`} onDismiss={() => close.current()}>
@@ -326,74 +328,74 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
       {powerOn && !performance && <div className="matrix-crt-power-beam" aria-hidden="true" />}
       {powerOn && !performance && <div className="matrix-crt-artifacts" aria-hidden="true" onAnimationEnd={event => { if (event.animationName === "matrix-crt-artifact-burst") setPowerOn(false); }} />}
       <div className={`matrix-crt-screen${powerOn && !performance ? " matrix-crt-power-on" : ""}`}>
-      <div className="matrix-terminal-status"><div className="matrix-terminal-session">{chat.userId ? <MatrixUserProfile pt={pt} me={chat.userId} names={chat.names} avatarVersion={avatarVersion} connected={chat.ready && !chat.error}/> : <><span className="matrix-terminal-dot"/><span>{pt ? "SESSÃO DESCONECTADA" : "DISCONNECTED SESSION"}</span></>}</div><div className="matrix-terminal-activity"><MatrixGameActivities key={`${chat.userId}:${room}`} users={memberUsers} supporters={supporterUsers} messages={current?.messages ?? []}/></div><small>{preview ? pt ? "DEMONSTRAÇÃO · SEM LOGIN OU ENVIO REAL" : "DEMO · NO REAL SIGN-IN OR MESSAGES" : pt ? "CHAT DA COMUNIDADE" : "COMMUNITY CHAT"}</small></div>
-      {!chat.userId ? <div className="matrix-terminal-welcome"><ConnectionStorageChoice service="matrix" disabled={busy||chat.pending} onChange={()=>void refreshMatrixStatus()}/><MatrixIcon/><h3>{pt ? "Conecte-se à comunidade" : "Connect to the community"}</h3><p>{pt ? "Converse sobre jogos, mods e Linux num chat com cara de terminal. Entre com sua conta Matrix pelo navegador." : "Talk about games, mods and Linux in a terminal-style chat. Sign in with your Matrix account through the browser."}</p><button className="btn btn-primary" disabled={busy || chat.pending} onClick={() => void run("connect_matrix_chat").then(() => refreshMatrixStatus())}><MatrixIcon/>{chat.pending ? pt ? "Aguardando login…" : "Waiting for sign-in…" : pt ? "Entrar com Matrix" : "Sign in with Matrix"}</button><p>{chat.pending ? pt ? "Autorize no navegador e volte aqui. O login expira em três minutos." : "Authorize in your browser and return here. Sign-in expires in three minutes." : pt ? "Sua senha não fica salva no launcher." : "Your password is not saved in the launcher."}</p></div> : <div className="matrix-terminal-layout">
+      <div className="matrix-terminal-status"><div className="matrix-terminal-session">{chat.userId ? <MatrixUserProfile me={chat.userId} names={chat.names} avatarVersion={avatarVersion} connected={chat.ready && !chat.error}/> : <><span className="matrix-terminal-dot"/><span>{tx("ui-matrix-chat-panel", "disconnected_session")}</span></>}</div><div className="matrix-terminal-activity"><MatrixGameActivities key={`${chat.userId}:${room}`} users={memberUsers} supporters={supporterUsers} messages={current?.messages ?? []}/></div><small>{preview ? tx("ui-matrix-chat-panel", "demo_no_real_sign_in_or_messages") : tx("ui-matrix-chat-panel", "community_chat")}</small></div>
+      {!chat.userId ? <div className="matrix-terminal-welcome"><ConnectionStorageChoice service="matrix" disabled={busy||chat.pending} onChange={()=>void refreshMatrixStatus()}/><MatrixIcon/><h3>{tx("ui-matrix-chat-panel", "connect_to_the_community")}</h3><p>{tx("ui-matrix-chat-panel", "talk_about_games_mods_and_linux_in_a_terminal_style_chat_sign_in_with_your_matrix_accoun")}</p><button className="btn btn-primary" disabled={busy || chat.pending} onClick={() => void run("connect_matrix_chat").then(() => refreshMatrixStatus())}><MatrixIcon/>{chat.pending ? tx("ui-matrix-chat-panel", "waiting_for_sign_in") : tx("ui-matrix-chat-panel", "sign_in_with_matrix")}</button><p>{chat.pending ? tx("ui-matrix-chat-panel", "authorize_in_your_browser_and_return_here_sign_in_expires_in_three_minutes") : tx("ui-matrix-chat-panel", "your_password_is_not_saved_in_the_launcher")}</p></div> : <div className="matrix-terminal-layout">
         <aside className="matrix-terminal-rooms">
-          {chat.ready && !communityJoined && <button className="matrix-terminal-join" disabled={busy} onClick={() => void join(MATRIX_COMMUNITY_ID)}>{pt ? "+ Entrar na comunidade" : "+ Join the community"}</button>}
-          {preview && <small className="matrix-rooms-demo">{pt ? "Lista simulada na preview" : "Simulated preview rooms"}</small>}
+          {chat.ready && !communityJoined && <button className="matrix-terminal-join" disabled={busy} onClick={() => void join(MATRIX_COMMUNITY_ID)}>{tx("ui-matrix-chat-panel", "join_the_community")}</button>}
+          {preview && <small className="matrix-rooms-demo">{tx("ui-matrix-chat-panel", "simulated_preview_rooms")}</small>}
           <div className="matrix-rooms-scroll">
-          <MatrixChannelList pt={pt} rooms={rooms} room={room} onSelect={selectRoom} me={chat.userId} names={chat.names} joined={joinedRooms} ready={chat.ready} unread={unreadRooms}
+          <MatrixChannelList rooms={rooms} room={room} onSelect={selectRoom} me={chat.userId} names={chat.names} joined={joinedRooms} ready={chat.ready} unread={unreadRooms}
             canCreate={canCreateChannels} locked={id => id === MATRIX_PREMIUM_ROOM_ID && !premiumReady} lockLabel={id => id === MATRIX_PREMIUM_ROOM_ID && !premiumReady ? " 🔒" : ""}
             onJoinRoom={async id => { if (!await run("matrix_chat_join", { room: id })) return false; await reloadMatrixRooms(); return true; }}
             onError={fail} refreshing={refreshingRooms} onRefresh={() => void refreshRooms()} permanent={id => id === MATRIX_COMMUNITY_ID || id === MATRIX_PREMIUM_ROOM_ID}
             onOpenChat={id => { setRoom(id); setCallChat(true); }} onEdit={(id, tab) => setChannelEdit({ room: id, tab })}
             canEdit={id => canCreateChannels || Boolean(chat.userId && chat.rooms[id]?.power && powerOf(chat.rooms[id]!.power, chat.userId) >= 50)}/>
           </div>
-          <MatrixUserPanel pt={pt} onSettings={() => setSettingsOpen(true)}/>
+          <MatrixUserPanel onSettings={() => setSettingsOpen(true)}/>
         </aside>
-        {inCall && !callChat ? <MatrixCallStage pt={pt} me={chat.userId} roomName={roomName} videoHidden={settingsOpen || Boolean(channelEdit)} onShowChat={() => setCallChat(true)}/> :
-        <section className="matrix-terminal-room"><header><div className="matrix-room-heading"><strong title={roomName}># {roomName}</strong>{roomTopic && <small className="matrix-room-topic" title={roomTopic}>{roomTopic}</small>}</div>{inCall && <button type="button" className="btn btn-secondary" onClick={() => setCallChat(false)}>{pt ? "Ver chamada" : "Show call"}</button>}{!premiumSelected && chat.ready && !current?.joined && <button className="btn btn-secondary" disabled={busy} onClick={() => void join(room)}>{pt ? "Entrar na sala" : "Join room"}</button>}</header>
+        {inCall && !callChat ? <MatrixCallStage me={chat.userId} roomName={roomName} videoHidden={settingsOpen || Boolean(channelEdit)} onShowChat={() => setCallChat(true)}/> :
+        <section className="matrix-terminal-room"><header><div className="matrix-room-heading"><strong title={roomName}># {roomName}</strong>{roomTopic && <small className="matrix-room-topic" title={roomTopic}>{roomTopic}</small>}</div>{inCall && <button type="button" className="btn btn-secondary" onClick={() => setCallChat(false)}>{tx("ui-matrix-chat-panel", "show_call")}</button>}{!premiumSelected && chat.ready && !current?.joined && <button className="btn btn-secondary" disabled={busy} onClick={() => void join(room)}>{tx("ui-matrix-chat-panel", "join_room")}</button>}</header>
           {premiumSelected && !premiumReady ? <div className="matrix-premium-gate" role="status">
             <h3>{roomName}</h3>
-            <p>{!benefitsChecked || premium?.phase === "checking" ? pt ? "Verificando o Discord e liberando sua conta Matrix…" : "Checking Discord and granting Matrix access…" : !exclusiveEffects ? pt ? "Exclusivo para membros do YouTube e impulsionadores do servidor no Discord. Entre com Discord em Preferências → Conexões para liberar." : "For YouTube members and Discord server boosters. Sign in with Discord in Preferences → Connections to unlock." : (pt ? "Confirme sua conexão para acessar esta sala." : "Confirm your connection to access this room.")}</p>
-            {exclusiveEffects && premium?.phase !== "checking" && <button type="button" className="btn btn-secondary" onClick={() => setPremiumAttempt(value=>value+1)}>{pt ? "Tentar novamente" : "Try again"}</button>}
+            <p>{!benefitsChecked || premium?.phase === "checking" ? tx("ui-matrix-chat-panel", "checking_discord_and_granting_matrix_access") : !exclusiveEffects ? tx("ui-matrix-chat-panel", "for_youtube_members_and_discord_server_boosters_sign_in_with_discord_in_preferences_conn") : (tx("ui-matrix-chat-panel", "confirm_your_connection_to_access_this_room"))}</p>
+            {exclusiveEffects && premium?.phase !== "checking" && <button type="button" className="btn btn-secondary" onClick={() => setPremiumAttempt(value=>value+1)}>{tx("ui-matrix-chat-panel", "try_again")}</button>}
           </div> : <>
           <div ref={log} className="matrix-terminal-messages" role="log" aria-live="polite" aria-relevant="additions" onScroll={event => { const element = event.currentTarget; atBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 80; }}>
-            {current?.encrypted ? <p>{pt ? "Esta sala usa criptografia. Abra o Element para conversar com segurança." : "This room uses encryption. Open Element to chat securely."}</p> : <>
-              {current?.prevBatch && messages.length > 0 && <button className="matrix-terminal-older" disabled={current.loadingOlder} onClick={() => void older()}>{current.loadingOlder ? pt ? "> carregando…" : "> loading…" : pt ? "> carregar mensagens anteriores" : "> load older messages"}</button>}
+            {current?.encrypted ? <p>{tx("ui-matrix-chat-panel", "this_room_uses_encryption_open_element_to_chat_securely")}</p> : <>
+              {current?.prevBatch && messages.length > 0 && <button className="matrix-terminal-older" disabled={current.loadingOlder} onClick={() => void older()}>{current.loadingOlder ? tx("ui-matrix-chat-panel", "loading") : tx("ui-matrix-chat-panel", "load_older_messages")}</button>}
               {messages.length ? messages.map(message => {
                 const name = displayName(message.sender, chat.names), color = userColor(message.sender);
                 const replied = message.reply_to ? byId.get(message.reply_to) : undefined;
                 return <article key={message.id} className={`matrix-terminal-message${chat.userId && mentionsMe(message, chat.userId, chat.names) ? " is-mention" : ""}${message.msgtype === "m.notice" ? " is-notice" : ""}`}>
                   <div className="matrix-terminal-avatar" style={{color,borderColor:color}} aria-hidden="true">{avatars[message.sender] ? <img src={avatars[message.sender]!} alt=""/> : name.slice(0,2).toUpperCase()}</div>
                   <div>
-                    <header><strong style={{color}} title={message.sender}>{name}</strong>{supporterUsers.has(message.sender) && <MatrixSupporterBadge/>}<time>{new Date(message.ts).toLocaleTimeString(pt ? "pt-BR" : "en-US",{hour:"2-digit",minute:"2-digit"})}</time>{message.edited && <small>{pt ? "(editada)" : "(edited)"}</small>}
+                    <header><strong style={{color}} title={message.sender}>{name}</strong>{supporterUsers.has(message.sender) && <MatrixSupporterBadge/>}<time>{new Date(message.ts).toLocaleTimeString(language,{hour:"2-digit",minute:"2-digit"})}</time>{message.edited && <small>{tx("ui-matrix-chat-panel", "edited")}</small>}
                       <span className="matrix-message-actions">
-                        <button type="button" onClick={() => { setEditing(null); setReplyTo(message); input.current?.focus(); }}>{pt ? "responder" : "reply"}</button>
-                        <button type="button" aria-expanded={reacting === message.id} onClick={() => setReacting(reacting === message.id ? null : message.id)}>{pt ? "reagir" : "react"}</button>
-                        <button type="button" className="matrix-message-more" aria-haspopup="menu" aria-expanded={messageMenu?.message.id === message.id} aria-label={pt ? "Mais ações" : "More actions"} title={pt ? "Mais ações" : "More actions"}
+                        <button type="button" onClick={() => { setEditing(null); setReplyTo(message); input.current?.focus(); }}>{tx("ui-matrix-chat-panel", "reply")}</button>
+                        <button type="button" aria-expanded={reacting === message.id} onClick={() => setReacting(reacting === message.id ? null : message.id)}>{tx("ui-matrix-chat-panel", "react")}</button>
+                        <button type="button" className="matrix-message-more" aria-haspopup="menu" aria-expanded={messageMenu?.message.id === message.id} aria-label={tx("ui-matrix-chat-panel", "more_actions")} title={tx("ui-matrix-chat-panel", "more_actions")}
                           onClick={event => { const box = event.currentTarget.getBoundingClientRect(); setMessageMenu({ message, x: box.right, y: box.bottom + 4 }); }}>⋯</button>
                       </span>
                     </header>
-                    {message.reply_to && <p className="matrix-message-reply">↳ {replied ? <><b>{displayName(replied.sender, chat.names)}</b>: {replied.body.slice(0, 120)}</> : pt ? "resposta a uma mensagem anterior" : "reply to an earlier message"}</p>}
-                    <p>{message.msgtype === "m.emote" ? <>* <b style={{color}}>{name}</b> </> : null}{message.msgtype === "m.file" ? `[${pt ? "arquivo" : "file"}] ` : null}{message.msgtype === "m.image" ? null : <MessageText text={message.body} onError={e => fail(e, pt ? "Não foi possível abrir o link." : "Could not open the link.")}/>}</p>
+                    {message.reply_to && <p className="matrix-message-reply">↳ {replied ? <><b>{displayName(replied.sender, chat.names)}</b>: {replied.body.slice(0, 120)}</> : tx("ui-matrix-chat-panel", "reply_to_an_earlier_message")}</p>}
+                    <p>{message.msgtype === "m.emote" ? <>* <b style={{color}}>{name}</b> </> : null}{message.msgtype === "m.file" ? `[${tx("ui-matrix-chat-panel", "file")}] ` : null}{message.msgtype === "m.image" ? null : <MessageText text={message.body} onError={e => fail(e, tx("ui-matrix-chat-panel", "could_not_open_the_link"))}/>}</p>
                     {message.msgtype === "m.image" && message.url && <ChatImage mxc={message.url} animated={message.mimetype === "image/gif" || message.mimetype === "image/webp"}/>}
                     {message.msgtype === "m.video" && message.url && <ChatVideo mxc={message.url}/>}
-                    {reacting === message.id && <div className="matrix-reaction-picker" role="group" aria-label={pt ? "Escolher reação" : "Choose a reaction"}>{REACTIONS.map(key => <button key={key} type="button" disabled={busy} onClick={() => void react(message, key)}>{key}</button>)}</div>}
+                    {reacting === message.id && <div className="matrix-reaction-picker" role="group" aria-label={tx("ui-matrix-chat-panel", "choose_a_reaction")}>{REACTIONS.map(key => <button key={key} type="button" disabled={busy} onClick={() => void react(message, key)}>{key}</button>)}</div>}
                     {(current?.reactions[message.id]?.length ?? 0) > 0 && <div className="matrix-reactions">{groupReactions(current!.reactions[message.id]).map(([key, senders]) => {
                       const mine = Boolean(chat.userId && senders.includes(chat.userId));
                       return <button key={key} type="button" className={mine ? "is-mine" : undefined} aria-pressed={mine} disabled={busy} title={senders.map(user => displayName(user, chat.names)).join(", ")} onClick={() => void react(message, key)}>{key} {senders.length}</button>;
                     })}</div>}
                     {pending?.id === message.id && <form className={`matrix-message-report${pending.kind === "kick" || pending.kind === "ban" ? " is-moderation" : ""}`} onSubmit={event => { event.preventDefault(); void confirm(message, pending.kind); }}>
                       <strong>{actionText[pending.kind].title}{pending.kind === "kick" || pending.kind === "ban" ? `: ${name}` : ""}</strong>
-                      <input value={reason} maxLength={pending.kind === "report" ? 1000 : 500} autoFocus onChange={event => setReason(event.target.value)} placeholder={pt ? "Motivo (opcional)" : "Reason (optional)"}/>
+                      <input value={reason} maxLength={pending.kind === "report" ? 1000 : 500} autoFocus onChange={event => setReason(event.target.value)} placeholder={tx("ui-matrix-chat-panel", "reason_optional")}/>
                       <button type="submit" className="btn btn-secondary" disabled={busy}>{actionText[pending.kind].button}</button>
-                      <button type="button" className="btn btn-secondary" onClick={() => setPending(null)}>{pt ? "Cancelar" : "Cancel"}</button>
+                      <button type="button" className="btn btn-secondary" onClick={() => setPending(null)}>{tx("ui-matrix-chat-panel", "cancel")}</button>
                     </form>}
                   </div>
                 </article>;
-              }) : <p className="matrix-terminal-empty">{!chat.ready ? pt ? "> conectando…" : "> connecting…" : current?.joined ? pt ? "> Nenhuma mensagem ainda. Diga oi!" : "> No messages yet. Say hi!" : pt ? "> Entre na sala para ver as mensagens." : "> Join the room to see the messages."}</p>}
+              }) : <p className="matrix-terminal-empty">{!chat.ready ? tx("ui-matrix-chat-panel", "connecting") : current?.joined ? tx("ui-matrix-chat-panel", "no_messages_yet_say_hi") : tx("ui-matrix-chat-panel", "join_the_room_to_see_the_messages")}</p>}
             </>}
           </div>
           <form className="matrix-terminal-compose" onSubmit={event=>{event.preventDefault();void send();}}>
-            {typingNames.length > 0 && <p className="matrix-typing" aria-live="polite">{typingNames.length > 3 ? (pt ? "> várias pessoas estão digitando…" : "> several people are typing…") : `> ${typingNames.join(", ")} ${typingNames.length > 1 ? (pt ? "estão digitando…" : "are typing…") : (pt ? "está digitando…" : "is typing…")}`}</p>}
-            {editing ? <p className="matrix-compose-reply">✎ {pt ? "editando sua mensagem · Esc cancela" : "editing your message · Esc cancels"} <button type="button" onClick={() => { setEditing(null); setText(""); }} aria-label={pt ? "Cancelar edição" : "Cancel edit"}>✕</button></p>
-              : replyTo ? <p className="matrix-compose-reply">↳ {pt ? "respondendo a" : "replying to"} <b>{displayName(replyTo.sender, chat.names)}</b>: {replyTo.body.slice(0, 80)} <button type="button" onClick={() => setReplyTo(null)} aria-label={pt ? "Cancelar resposta" : "Cancel reply"}>✕</button></p>
-              : <label htmlFor="matrix-message">{pt ? "> MENSAGEM · Enter envia, Shift+Enter quebra a linha, /me para ação" : "> MESSAGE · Enter sends, Shift+Enter new line, /me for actions"}</label>}
+            {typingNames.length > 0 && <p className="matrix-typing" aria-live="polite">{typingNames.length > 3 ? (tx("ui-matrix-chat-panel", "several_people_are_typing")) : `> ${typingNames.join(", ")} ${typingNames.length > 1 ? (tx("ui-matrix-chat-panel", "are_typing")) : (tx("ui-matrix-chat-panel", "is_typing"))}`}</p>}
+            {editing ? <p className="matrix-compose-reply">✎ {tx("ui-matrix-chat-panel", "editing_your_message_esc_cancels")} <button type="button" onClick={() => { setEditing(null); setText(""); }} aria-label={tx("ui-matrix-chat-panel", "cancel_edit")}>✕</button></p>
+              : replyTo ? <p className="matrix-compose-reply">↳ {tx("ui-matrix-chat-panel", "replying_to")} <b>{displayName(replyTo.sender, chat.names)}</b>: {replyTo.body.slice(0, 80)} <button type="button" onClick={() => setReplyTo(null)} aria-label={tx("ui-matrix-chat-panel", "cancel_reply")}>✕</button></p>
+              : <label htmlFor="matrix-message">{tx("ui-matrix-chat-panel", "message_enter_sends_shift_enter_new_line_me_for_actions")}</label>}
             <div><input ref={fileInput} type="file" hidden accept="image/png,image/jpeg,image/gif,image/webp,.txt,.log" onChange={event=>{const file = event.target.files?.[0]; event.target.value = ""; if (file) void upload(file);}}/>
-              <button type="button" className="btn btn-secondary matrix-attach-button" disabled={busy || current?.encrypted || !current?.joined} onClick={()=>fileInput.current?.click()} aria-label={pt ? "Enviar imagem ou log" : "Send image or log"} title={pt ? "Enviar imagem ou log" : "Send image or log"}><MenuIcon name="plus"/></button>
-              <textarea ref={input} id="matrix-message" value={text} maxLength={8000} disabled={current?.encrypted || !current?.joined} onChange={event=>{setText(event.target.value); typing(Boolean(event.target.value.trim()));}} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void send(); } }} placeholder={pt ? "Digite sua mensagem…" : "Type your message…"}/>
-              <button className="matrix-send-button" aria-label={pt ? "Enviar mensagem · Enter" : "Send message · Enter"} disabled={busy || current?.encrypted || !current?.joined || !text.trim()} type="submit">
+              <button type="button" className="btn btn-secondary matrix-attach-button" disabled={busy || current?.encrypted || !current?.joined} onClick={()=>fileInput.current?.click()} aria-label={tx("ui-matrix-chat-panel", "send_image_or_log")} title={tx("ui-matrix-chat-panel", "send_image_or_log")}><MenuIcon name="plus"/></button>
+              <textarea ref={input} id="matrix-message" value={text} maxLength={8000} disabled={current?.encrypted || !current?.joined} onChange={event=>{setText(event.target.value); typing(Boolean(event.target.value.trim()));}} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void send(); } }} placeholder={tx("ui-matrix-chat-panel", "type_your_message")}/>
+              <button className="matrix-send-button" aria-label={tx("ui-matrix-chat-panel", "send_message_enter")} disabled={busy || current?.encrypted || !current?.joined || !text.trim()} type="submit">
                 <svg className="matrix-enter-key" width="72" height="82" viewBox="0 0 120 140" fill="none" aria-hidden="true" focusable="false">
                   <g stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
                     <path d="M20 8Q61 11 102 8L114 26V125Q114 132 107 132H43Q36 132 36 125V70H14Q8 70 8 64V27L20 8Z"/>
@@ -411,23 +413,23 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
         const allowed = moderation(current?.power, chat.userId, message.sender);
         return <MatrixChannelMenu x={x} y={y} title={displayName(message.sender, chat.names)} onClose={() => setMessageMenu(null)} groups={[
           [
-            { label: pt ? "Perfil" : "Profile", action: () => setProfileOf({ user: message.sender, x, y }) },
-            { label: pt ? "Editar" : "Edit", hidden: !own || (message.msgtype !== "m.text" && message.msgtype !== "m.emote"), action: () => { setReplyTo(null); setEditing(message); setText(message.body); input.current?.focus(); } },
+            { label: tx("ui-matrix-chat-panel", "profile"), action: () => setProfileOf({ user: message.sender, x, y }) },
+            { label: tx("ui-matrix-chat-panel", "edit"), hidden: !own || (message.msgtype !== "m.text" && message.msgtype !== "m.emote"), action: () => { setReplyTo(null); setEditing(message); setText(message.body); input.current?.focus(); } },
           ],
           [
-            { label: pt ? "Denunciar" : "Report", hidden: own, action: () => ask(message.id, "report") },
-            { label: pt ? "Bloquear" : "Block", danger: true, hidden: own || busy, action: () => void setMatrixUserBlocked(message.sender, true).catch(error => fail(error, pt ? "Não foi possível bloquear." : "Could not block.")) },
+            { label: tx("ui-matrix-chat-panel", "report"), hidden: own, action: () => ask(message.id, "report") },
+            { label: tx("ui-matrix-chat-panel", "block"), danger: true, hidden: own || busy, action: () => void setMatrixUserBlocked(message.sender, true).catch(error => fail(error, tx("ui-matrix-chat-panel", "could_not_block"))) },
           ],
           [
-            { label: pt ? "Apagar mensagem" : "Remove message", danger: true, hidden: !allowed.redact, action: () => ask(message.id, "redact") },
-            { label: pt ? "Expulsar" : "Kick", danger: true, hidden: !allowed.kick, action: () => ask(message.id, "kick") },
-            { label: pt ? "Banir" : "Ban", danger: true, hidden: !allowed.ban, action: () => ask(message.id, "ban") },
+            { label: tx("ui-matrix-chat-panel", "remove_message"), danger: true, hidden: !allowed.redact, action: () => ask(message.id, "redact") },
+            { label: tx("ui-matrix-chat-panel", "kick"), danger: true, hidden: !allowed.kick, action: () => ask(message.id, "kick") },
+            { label: tx("ui-matrix-chat-panel", "ban"), danger: true, hidden: !allowed.ban, action: () => ask(message.id, "ban") },
           ],
         ]}/>;
       })()}
-      {profileOf && <MatrixUserMenu pt={pt} target={profileOf} profile onClose={() => setProfileOf(null)}/>}
-      {channelEdit && chat.userId && <MatrixChannelSettings key={channelEdit.room} pt={pt} room={channelEdit.room} names={chat.names} initialTab={channelEdit.tab} onClose={() => setChannelEdit(null)} onError={fail} onSaved={() => void reloadMatrixRooms()}/>}
-      {settingsOpen && chat.userId && <MatrixSettings pt={pt} me={chat.userId} names={chat.names} onClose={() => setSettingsOpen(false)} onError={fail}
+      {profileOf && <MatrixUserMenu target={profileOf} profile onClose={() => setProfileOf(null)}/>}
+      {channelEdit && chat.userId && <MatrixChannelSettings key={channelEdit.room} room={channelEdit.room} names={chat.names} initialTab={channelEdit.tab} onClose={() => setChannelEdit(null)} onError={fail} onSaved={() => void reloadMatrixRooms()}/>}
+      {settingsOpen && chat.userId && <MatrixSettings me={chat.userId} names={chat.names} onClose={() => setSettingsOpen(false)} onError={fail}
         onDisconnect={() => { setSettingsOpen(false); void disconnect(); }} onAvatarChanged={() => { setAvatarVersion(value => value + 1); setAvatars(previous => { const next = { ...previous }; delete next[chat.userId!]; return next; }); avatarLookups.current.delete(chat.userId!); }} avatarVersion={avatarVersion}/>}
       <footer className="matrix-terminal-footer"><h2 className="matrix-terminal-brand"><MatrixIcon/><span>Matrix</span><span className="matrix-terminal-tag">// Pelicanux</span></h2></footer>
       </div>

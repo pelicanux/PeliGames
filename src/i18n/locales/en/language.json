@@ -1,0 +1,9 @@
+{
+  "nativeName": "English",
+  "direction": "ltr",
+  "aliases": [
+    "en-US",
+    "en-GB"
+  ],
+  "published": true
+}

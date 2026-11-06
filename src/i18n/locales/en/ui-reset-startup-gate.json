@@ -1,0 +1,10 @@
+{
+  "reset_cleanup": "Reset cleanup",
+  "preview_no_files_will_change_and_no_program_will_restart": "Preview: no files will change and no program will restart.",
+  "recover_reset": "Recover reset",
+  "try_new_configuration": "Try new configuration",
+  "please_wait": "Please wait…",
+  "restore_and_restart": "Restore and restart",
+  "a_previous_maintenance_operation_was_interrupted_previous_files_were_preserved_you_can_r": "A previous maintenance operation was interrupted. Previous files were preserved. You can retry or restore the previous files.",
+  "restoring_restarts_the_app_and_preserves_the_new_configuration_until_recovery_is_validat": "Restoring restarts the app and preserves the new configuration until recovery is validated. Disconnected accounts must be linked again."
+}

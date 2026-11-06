@@ -1,0 +1,14 @@
+{
+  "useExisting": "Use existing file",
+  "fileSelected": "BIN file selected",
+  "dllHint": "Extract models from DLL 310.9.16 or 310.8.0",
+  "dllNotice": "NVIDIA owns nvngx_dlssnr.dll, which is not included with PeliGames. You must obtain your own copy from a game with DLSS 5 to extract the model.",
+  "info": "Information about the AI model",
+  "title": "AI Model Source",
+  "desc": "The mod needs the NVIDIA model (nvngx_dlssnr.dll).",
+  "binCached": "I have dlssnr.bin (Cache Found)",
+  "extractDll": "Extract from a DLL",
+  "selectBin": "Select dlssnr.bin...",
+  "selectDll": "Select nvngx_dlssnr.dll or .zip...",
+  "browse": "Browse"
+}

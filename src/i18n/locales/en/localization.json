@@ -1,0 +1,11 @@
+{
+  "automatic": "Automatic (system)",
+  "loading": "Loading language…",
+  "loadError": "Could not load the language. Your previous selection was kept.",
+  "search": "Search language",
+  "count_one": "{{count}} language available",
+  "count_other": "{{count}} languages available",
+  "installerSettings": "Installer settings",
+  "increaseScale": "Increase scale",
+  "decreaseScale": "Decrease scale"
+}

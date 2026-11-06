@@ -10,10 +10,11 @@ import type { GameInfo } from "./GameGrid";
 export function InstalledLaunchOptions({ game, disabled, onSave, errorMessage, inline = false }: {
   inline?: boolean; game: GameInfo; disabled: boolean; errorMessage: string; onSave: (options: string | null) => Promise<boolean>;
 }) {
-  const { language } = useI18n(), pt = language === "pt";
+  const {t: tx} = useI18n();
+
   const [open, setOpen] = useState(false), [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
-  const title = pt ? "Opções de inicialização" : "Launch options";
+  const title = tx("ui-installed-launch-options", "launch_options");
   const automatic = (game.launch_arguments ?? []).map(arg => JSON.stringify(arg)).join(" ");
   // Back to zero, keeping only what installed mods (DLSSNR-AMD) need to load.
   const restore = async () => {
@@ -23,7 +24,7 @@ export function InstalledLaunchOptions({ game, disabled, onSave, errorMessage, i
     catch (error) { notifyError(title, error); return; }
     await save(kept);
   };
-  const restoreHint = pt ? "Apaga o que foi digitado. As linhas dos mods instalados, como o DLSSNR-AMD, são mantidas." : "Clears what was typed. Lines of installed mods, such as DLSSNR-AMD, are kept.";
+  const restoreHint = tx("ui-installed-launch-options", "clears_what_was_typed_lines_of_installed_mods_such_as_dlssnr_amd_are_kept");
   const save = async (value: string | null) => {
     if (saving || disabled) return;
     setSaving(true);
@@ -31,25 +32,25 @@ export function InstalledLaunchOptions({ game, disabled, onSave, errorMessage, i
     finally { setSaving(false); }
   };
   if (inline) return <section className="nexus-advanced-launch-options">
-    <div><h4>{title}</h4><p className="nexus-hint">{pt ? "Argumentos e variáveis deste jogo." : "Arguments and variables for this game."}</p></div>
+    <div><h4>{title}</h4><p className="nexus-hint">{tx("ui-installed-launch-options", "arguments_and_variables_for_this_game")}</p></div>
     <RetractableInput open={open} setOpen={setOpen} label={title} value={draft} onChange={setDraft} onOpen={() => setDraft(game.advanced?.launch_options ?? "")} onSubmit={() => void save(draft || null)} disabled={disabled || saving} error={errorMessage}>
-      <button type="button" disabled={saving || disabled} title={restoreHint} onClick={() => void restore()}>{pt ? "Restaurar" : "Reset"}</button>
+      <button type="button" disabled={saving || disabled} title={restoreHint} onClick={() => void restore()}>{tx("ui-installed-launch-options", "reset")}</button>
     </RetractableInput>
     {game.advanced?.launch_options && <code className="modern-saved-launch-options">{game.advanced.launch_options}</code>}
   </section>;
   return <section className="nexus-advanced-launch-options">
-    <div><h4><MenuIcon name="play" />{title}</h4><p className="nexus-hint">{pt ? "Confira e edite os argumentos e variáveis do jogo." : "Review and edit game arguments and variables."}</p></div>
-    <button type="button" className="btn btn-secondary" disabled={disabled} onClick={() => { setDraft(game.advanced?.launch_options ?? (inline ? "" : automatic)); setOpen(true); }}><MenuIcon name="edit" />{pt ? "Editar" : "Edit"}</button>
+    <div><h4><MenuIcon name="play" />{title}</h4><p className="nexus-hint">{tx("ui-installed-launch-options", "review_and_edit_game_arguments_and_variables")}</p></div>
+    <button type="button" className="btn btn-secondary" disabled={disabled} onClick={() => { setDraft(game.advanced?.launch_options ?? (inline ? "" : automatic)); setOpen(true); }}><MenuIcon name="edit" />{tx("ui-installed-launch-options", "edit")}</button>
     {open && <LaunchOptionsSurface inline={inline} title={title} onClose={() => { if (!saving) setOpen(false); }} footer={<>
-      <button type="button" className="btn btn-secondary" disabled={saving || disabled} title={restoreHint} onClick={() => void restore()}>{pt ? "Restaurar automáticas" : "Restore automatic"}</button>
-      <button type="button" className="btn btn-primary" disabled={saving || disabled} onClick={() => void save(draft === automatic ? null : draft)}>{saving ? pt ? "Salvando…" : "Saving…" : pt ? "Salvar" : "Save"}</button>
+      <button type="button" className="btn btn-secondary" disabled={saving || disabled} title={restoreHint} onClick={() => void restore()}>{tx("ui-installed-launch-options", "restore_automatic")}</button>
+      <button type="button" className="btn btn-primary" disabled={saving || disabled} onClick={() => void save(draft === automatic ? null : draft)}>{saving ? tx("ui-installed-launch-options", "saving") : tx("ui-installed-launch-options", "save")}</button>
     </>}>
-      <label className="nexus-launch-options-label">{pt ? "Argumentos detectados no atalho do jogo" : "Arguments detected in the game shortcut"}</label>
-      <pre className="nexus-launch-options-automatic">{automatic || (pt ? "Nenhum argumento automático adicional." : "No additional automatic arguments.")}</pre>
-      <p className="nexus-hint">{pt ? "Variáveis vêm antes dos argumentos, por exemplo: MANGOHUD=1 %command% -windowed. Configure a prioridade das DLLs no campo próprio. Não são executados comandos de shell." : "Variables precede arguments, for example: MANGOHUD=1 %command% -windowed. Configure DLL priorities in their own field. Shell commands are not executed."}</p>
-      <label className="nexus-launch-options-label" htmlFor="installed-launch-options">{pt ? "Opções usadas ao iniciar" : "Options used on launch"}</label>
+      <label className="nexus-launch-options-label">{tx("ui-installed-launch-options", "arguments_detected_in_the_game_shortcut")}</label>
+      <pre className="nexus-launch-options-automatic">{automatic || (tx("ui-installed-launch-options", "no_additional_automatic_arguments"))}</pre>
+      <p className="nexus-hint">{tx("ui-installed-launch-options", "variables_precede_arguments_for_example_mangohud_1_command_windowed_configure_dll_priori")}</p>
+      <label className="nexus-launch-options-label" htmlFor="installed-launch-options">{tx("ui-installed-launch-options", "options_used_on_launch")}</label>
       <textarea id="installed-launch-options" className="nexus-launch-options-input" rows={inline ? 3 : 5} maxLength={4096} value={draft} disabled={saving || disabled} onChange={event => setDraft(event.target.value)} />
-      <p className="nexus-hint">{pt ? "As opções personalizadas substituem os argumentos automáticos ao iniciar este jogo pela biblioteca principal." : "Custom options replace automatic arguments when launching this game from the main library."}</p>
+      <p className="nexus-hint">{tx("ui-installed-launch-options", "custom_options_replace_automatic_arguments_when_launching_this_game_from_the_main_librar")}</p>
       {errorMessage && <p role="alert" className="nexus-error">{errorMessage}</p>}
     </LaunchOptionsSurface>}
   </section>;

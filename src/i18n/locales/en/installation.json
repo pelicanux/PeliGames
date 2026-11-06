@@ -1,0 +1,16 @@
+{
+  "missingModel": "The AI model was not found. Open initial setup to select your compatible DLL or ZIP and extract the model, or import an already extracted .bin file.",
+  "openSetup": "Open initial setup",
+  "repair": "Repair/Update",
+  "incompatibleTitle": "Backend Warning (Incompatible Installation):",
+  "incompatibleBody": "The mod detected a compatibility problem (you may have selected 64 bits for a 32-bit game, or the selected installation route is not supported by this game).",
+  "backendMissing": "Backend files were not found! Open the launcher settings and update the backend to download the required files.",
+  "fullLog": "Full log:",
+  "copyBin": "Failed to copy the binary file:",
+  "tempDirectory": "Failed to create the temporary directory:",
+  "extractResources": "Failed to extract the backend files:",
+  "extractCommand": "Failed to execute the extraction command",
+  "bashProcess": "Failed to run the installation process:",
+  "scriptError": "Script error (code:",
+  "success": "Success:"
+}

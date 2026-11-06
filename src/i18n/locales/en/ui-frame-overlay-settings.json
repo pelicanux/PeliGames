@@ -1,0 +1,10 @@
+{
+  "shortcut_already_used": "Shortcut already used: {{conflict}}.",
+  "overlay_shortcut": "Overlay shortcut",
+  "show_or_hide_the_controls_inside_the_game": "Show or hide the controls inside the game.",
+  "show_or_hide_overlay": "Show or hide overlay",
+  "restore_default_shortcut_f8": "Restore default shortcut: F8",
+  "default_f8": "Default: F8",
+  "default": "Default",
+  "enable_the_overlay_in_each_game_s_details_shortcut_changes_apply_when_restarting_the_gam": "Enable the overlay in each game's details. Shortcut changes apply when restarting the game; no desktop-wide shortcut is registered."
+}

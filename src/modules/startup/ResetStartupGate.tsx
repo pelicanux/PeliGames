@@ -28,7 +28,8 @@ function ResetHealth({ onFailure, onSuccess }: { onFailure: (error: unknown) => 
 }
 
 export function ResetStartupGate({ children }: { children: (health: ReactNode) => ReactNode }) {
-  const pt = useI18n().language === "pt";
+  const {t: tx} = useI18n();
+
   const [status, setStatus] = useState<Status | null>(null);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState("");
@@ -47,16 +48,16 @@ export function ResetStartupGate({ children }: { children: (health: ReactNode) =
   const healthFailure = useCallback(async (error: unknown) => {
     const latest = "__PELI_UI_PREVIEW__" in window ? status : await invoke<Status>("launcher_reset_status").catch(() => null);
     if (latest?.state === "cleanup") {
-      notifyError(pt ? "Limpeza da redefinição" : "Reset cleanup", error);
+      notifyError(tx("ui-reset-startup-gate", "reset_cleanup"), error);
       callbacks.success(); // Already committed; retry cleanup next start, never offer partial rollback.
     } else callbacks.failure(error);
-  }, [status?.state, pt, callbacks]);
+  }, [status?.state, tx, callbacks]);
   const recover = async (restore: boolean) => {
     if (busy) return;
     setBusy(true); setFailure("");
     try {
       if ("__PELI_UI_PREVIEW__" in window) {
-        if (restore) throw new Error(pt ? "Prévia: nenhum arquivo será alterado ou programa reiniciado." : "Preview: no files will change and no program will restart.");
+        if (restore) throw new Error(tx("ui-reset-startup-gate", "preview_no_files_will_change_and_no_program_will_restart"));
       } else await invoke(restore ? "launcher_reset_restore" : "launcher_reset_continue");
       if (!restore) setStatus(previous => ({ ...previous!, state: "checking" }));
     } catch (error) { setFailure(String(error)); }
@@ -65,13 +66,13 @@ export function ResetStartupGate({ children }: { children: (health: ReactNode) =
   if (!status) return <BootSplash />;
   if (status.state === "recovery") return <div className="reset-recovery-screen"><BootSplash /><SplashDone /><div className="modal-overlay">
     <ModalSurface className="modal-content dialog-glass steam-manual-popup maintenance-popup reset-recovery" hideClose role="dialog" aria-modal="true" aria-labelledby="reset-recovery-title"
-      header={<h2 id="reset-recovery-title">{pt ? "Recuperar redefinição" : "Recover reset"}</h2>}
+      header={<h2 id="reset-recovery-title">{tx("ui-reset-startup-gate", "recover_reset")}</h2>}
       footer={<div className="nexus-popup-footer">
-        <button className="btn btn-secondary" disabled={busy} onClick={() => void recover(false)}>{pt ? "Tentar configuração nova" : "Try new configuration"}</button>
-        <button className="btn btn-primary" disabled={busy} onClick={() => void recover(true)}>{busy ? (pt ? "Aguarde…" : "Please wait…") : (pt ? "Restaurar e reiniciar" : "Restore and restart")}</button>
+        <button className="btn btn-secondary" disabled={busy} onClick={() => void recover(false)}>{tx("ui-reset-startup-gate", "try_new_configuration")}</button>
+        <button className="btn btn-primary" disabled={busy} onClick={() => void recover(true)}>{busy ? (tx("ui-reset-startup-gate", "please_wait")) : (tx("ui-reset-startup-gate", "restore_and_restart"))}</button>
       </div>}>
-      <p>{pt ? "Uma manutenção anterior foi interrompida. Os arquivos anteriores foram preservados. Você pode tentar novamente ou restaurar os arquivos anteriores." : "A previous maintenance operation was interrupted. Previous files were preserved. You can retry or restore the previous files."}</p>
-      <p>{pt ? "A restauração reinicia o programa e preserva a configuração nova até validar a recuperação. Contas desconectadas precisam ser vinculadas novamente." : "Restoring restarts the app and preserves the new configuration until recovery is validated. Disconnected accounts must be linked again."}</p>
+      <p>{tx("ui-reset-startup-gate", "a_previous_maintenance_operation_was_interrupted_previous_files_were_preserved_you_can_r")}</p>
+      <p>{tx("ui-reset-startup-gate", "restoring_restarts_the_app_and_preserves_the_new_configuration_until_recovery_is_validat")}</p>
       {(failure || status.error) && <p role="alert">{failure || status.error}</p>}
       {status.backups.length > 0 && <ul className="maintenance-paths">{status.backups.map(path => <li key={path}><code>{path}</code></li>)}</ul>}
     </ModalSurface></div></div>;

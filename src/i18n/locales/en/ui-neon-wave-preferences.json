@@ -1,0 +1,15 @@
+{
+  "audio_reaction_off": "Audio reaction off",
+  "connecting_to_audio": "Connecting to audio…",
+  "reacting_to_audio_output": "Reacting to audio output",
+  "audio_unavailable_ambient_motion_active": "Audio unavailable — ambient motion active",
+  "effect_paused_to_save_resources": "Effect paused to save resources",
+  "simulated_preview_beats": "Simulated preview beats",
+  "soft_lava_synth_colors_and_audio_pulses_your_previous_palette_is_preserved_in_standard": "Soft lava, synth colors and audio pulses. Your previous palette is preserved in Standard.",
+  "react_to_computer_audio": "React to computer audio",
+  "uses_the_default_audio_output_without_microphone_access_or_recordings_pauses_while_hidde": "Uses the default audio output without microphone access or recordings. Pauses while hidden, with reduced motion or performance mode.",
+  "simulate_preview_beats_no_real_audio_capture": "Simulate preview beats (no real audio capture)",
+  "intensity": "Intensity",
+  "music_response": "Music response",
+  "controls_beat_strength_without_changing_background_brightness": "Controls beat strength without changing background brightness."
+}

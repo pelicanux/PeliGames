@@ -3,7 +3,8 @@
 .welcome-brand { display: flex; align-items: center; gap: 10px; }
 .welcome-brand > img { width: 26px; height: 26px; }
 .welcome-brand > span:last-child { margin-left: 12px; font-size: .78rem; color: var(--tone-94a3b8, #94a3b8); font-family: inherit; }
-.welcome-language { margin-left: auto; flex: 0 0 92px; width: 92px; }
+.welcome-language { margin-inline-start: auto; flex: 0 1 190px; width: min(190px, 42vw); min-width: 0; }
+.welcome-language .custom-select-trigger > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .welcome-language .custom-select-trigger { min-height: 32px; padding: 6px 10px; }
 .welcome-slide { display: grid; grid-template-columns: .9fr 1.15fr; gap: 20px; align-items: center; min-height: 470px; padding: 38px 34px 26px; animation: welcome-reveal .3s ease-out both; }
 .welcome-eyebrow { font-size: .68rem; letter-spacing: .16em; font-weight: 700; color: var(--accent-light); }

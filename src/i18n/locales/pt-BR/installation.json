@@ -1,0 +1,16 @@
+{
+  "missingModel": "O modelo de IA não foi encontrado. Abra a configuração inicial para selecionar sua DLL ou ZIP compatível e extrair o modelo, ou importar um arquivo .bin já extraído.",
+  "openSetup": "Abrir configuração inicial",
+  "repair": "Reparar/Atualizar",
+  "incompatibleTitle": "Aviso do Backend (Instalação Incompatível):",
+  "incompatibleBody": "O mod detectou um problema de compatibilidade (provavelmente você selecionou 64 bits para um jogo 32 bits, ou a rota selecionada não é suportada por este jogo).",
+  "backendMissing": "Arquivos do backend não encontrados! Abra as configurações do launcher e atualize o backend para baixar os arquivos necessários.",
+  "fullLog": "Log completo:",
+  "copyBin": "Falha ao copiar o arquivo binário:",
+  "tempDirectory": "Falha ao criar o diretório temporário:",
+  "extractResources": "Falha ao extrair os arquivos do backend:",
+  "extractCommand": "Falha ao executar o comando de extração",
+  "bashProcess": "Falha ao executar o processo de instalação:",
+  "scriptError": "Erro no script (código:",
+  "success": "Sucesso:"
+}

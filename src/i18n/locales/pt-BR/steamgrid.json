@@ -1,0 +1,15 @@
+{
+  "title": "Capas · SteamGridDB",
+  "description": "Adicione sua chave pessoal para consultar capas no SteamGridDB.",
+  "keyLabel": "Chave de API do SteamGridDB",
+  "placeholder": "Cole sua chave pessoal aqui",
+  "show": "Mostrar",
+  "hide": "Ocultar",
+  "remove": "Remover",
+  "localOnly": "Salva somente nas configurações deste computador.",
+  "getKey": "Obter minha chave",
+  "rescanHint": "A chave é salva automaticamente. Use Escanear para buscar as capas que faltam. Remover a chave desativa essa consulta opcional.",
+  "missingHint": "Para buscar capas no SteamGridDB, adicione sua chave pessoal em Preferências. Essa integração é opcional.",
+  "configuredHint": "Sua chave do SteamGridDB está configurada. Gerencie ou remova em Preferências.",
+  "configure": "Preferências → SteamGridDB"
+}

@@ -1,0 +1,11 @@
+{
+  "could_not_check_connection_storage": "Não foi possível consultar o modo da conexão.",
+  "could_not_change_connection_storage": "Não foi possível alterar o modo da conexão.",
+  "connection_storage": "Guardar conexão",
+  "session": "Sessão",
+  "save_in_keyring": "Salvar no chaveiro",
+  "temporary": "Temporária",
+  "for_systems_without_an_active_keyring_keys_and_tokens_stay_only_in_this_process_s_memory": "Indicada para sistemas sem chaveiro ativo. A chave e os tokens ficam somente na memória desta execução, sem serem salvos no disco. Ao encerrar completamente o PeliGames, será necessário entrar novamente. Fechar só a aba ou a janela do chat não encerra a sessão. Credenciais antigas no chaveiro permanecem lá; este modo não as importa nem apaga.",
+  "keeps_you_signed_in_between_launches_requires_an_available_unlocked_compatible_keyring_o": "Mantém o login entre aberturas. Requer um chaveiro compatível ativo e desbloqueado, em qualquer interface Linux.",
+  "disconnect_before_changing_modes_existing_keyring_credentials_are_not_migrated_into_temp": "Desconecte a conta antes de trocar o modo. Credenciais já salvas no chaveiro não são transferidas para a sessão temporária."
+}

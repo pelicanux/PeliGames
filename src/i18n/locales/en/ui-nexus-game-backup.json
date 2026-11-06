@@ -1,0 +1,22 @@
+{
+  "last_copy_failed": "Last copy failed: {{status_error}}",
+  "updating_the_recovery_copy": "Updating the recovery copy…",
+  "the_copy_is_created_once_mods_are_installed": "The copy is created once mods are installed.",
+  "last_copy": "Last copy: {{when}}{{size}}",
+  "creating_the_first_copy": "Creating the first copy…",
+  "old_copy_from_no_longer_updated_enable_it_to_update_or_delete_it": "Old copy from {{when}}{{size}}: no longer updated. Enable it to update, or delete it.",
+  "follows_the_general_option_in_settings_tools": "Follows the general option in Settings → Tools.",
+  "could_not_read_the_backup_information": "Could not read the backup information.",
+  "no_backup_saved_for_this_game": "No backup saved for this game.",
+  "checking_this_game_s_backup": "Checking this game's backup…",
+  "individual_backup": "Individual backup",
+  "saves_packages_and_records_in_this_game_s_peligames_folder_this_choice_applies_only_to_t": "Saves packages and records in this game's .peligames folder. This choice applies only to this game.",
+  "recovery_copy_for_this_game": "Recovery copy for this game",
+  "delete_this_game_s_backup": "Delete this game's backup",
+  "delete_individual_backup": "Delete individual backup",
+  "cancel": "Cancel",
+  "deleting": "Deleting…",
+  "delete_backup": "Delete backup",
+  "delete_the_mod_recovery_copy_in_this_game_s_folder_this_also_disables_individual_backup_": "Delete the mod recovery copy in this game's folder? This also disables individual backup to prevent the copy from being recreated automatically.",
+  "installed_mods_and_data_in_config_will_be_kept_this_deletion_cannot_be_undone": "Installed mods and data in .config will be kept. This deletion cannot be undone."
+}

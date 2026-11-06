@@ -1,0 +1,20 @@
+{
+  "mako_adaptive": "MAKO · adaptive",
+  "mako_frame_generation_enabled_in_the_game_profile": "MAKO frame generation enabled in the game profile.",
+  "mako_scaling": "MAKO · scaling",
+  "mako_image_scaling_enabled": "MAKO image scaling enabled.",
+  "mako_base_fps_cap_before_frame_generation": "MAKO base FPS cap, before frame generation.",
+  "afmf_frame_generation_enabled_for_the_next_game_launch": "AFMF frame generation enabled for the next game launch.",
+  "monitoring_enabled_for_this_game": "Monitoring enabled for this game.",
+  "peligames_overlay_enabled_in_the_profile": "PeliGames overlay enabled in the profile.",
+  "gamescope_enabled_for_this_game": "Gamescope enabled for this game.",
+  "gamescope_fps_limiter_enabled": "Gamescope FPS limiter enabled.",
+  "dxvk_fps_limiter_enabled_applies_to_games_using_dxvk": "DXVK FPS limiter enabled; applies to games using DXVK.",
+  "mangohud_fps_limit_cycle_the_selected_limit_may_change_in_game": "MangoHUD FPS limit cycle. The selected limit may change in game.",
+  "mangohud_fps_limiter_enabled": "MangoHUD FPS limiter enabled.",
+  "unfocused": "Unfocused",
+  "gamescope_fps_cap_while_the_game_is_unfocused": "Gamescope FPS cap while the game is unfocused.",
+  "peligames_overlay_fps_cap_while_the_game_is_unfocused": "PeliGames overlay FPS cap while the game is unfocused.",
+  "vulkan_vsync_configured_through_mangohud_depends_on_the_game_s_graphics_api": "Vulkan VSync configured through MangoHUD; depends on the game's graphics API.",
+  "opengl_vsync_configured_through_mangohud_depends_on_the_game_s_graphics_api": "OpenGL VSync configured through MangoHUD; depends on the game's graphics API."
+}

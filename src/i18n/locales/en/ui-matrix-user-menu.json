@@ -1,0 +1,19 @@
+{
+  "could_not_change_the_volume": "Could not change the volume.",
+  "profile": "Profile",
+  "user_volume": "User volume",
+  "mute": "Mute",
+  "copy_user_id": "Copy user ID",
+  "could_not_copy": "Could not copy.",
+  "block": "Block",
+  "could_not_block": "Could not block.",
+  "idle": "Idle",
+  "do_not_disturb": "Do not disturb",
+  "s_profile": "{{name}}'s profile",
+  "shrink_picture": "Shrink picture",
+  "enlarge_picture": "Enlarge picture",
+  "you": " (you)",
+  "activity": "> activity",
+  "playing": "Playing",
+  "not_playing_right_now": "Not playing right now"
+}

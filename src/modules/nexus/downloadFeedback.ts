@@ -1,3 +1,4 @@
+import {translator} from "../../i18n/engine";
 import { notifyError } from "../../services/notifications";
 import { notifyNexusAccountRequired } from "./requireNexusAccount";
 
@@ -9,10 +10,12 @@ export function showDownloadFeedback(detail: DownloadFeedback) {
 
 /** Recognize the backend's missing-account errors without relabeling network failures. */
 export function notifyNexusDownloadError(error: unknown, language: string) {
+  const tx = translator(language);
+
   const message = String(error ?? "").replace(/^Error:\s*/, "").trim();
   if (message === "Conecte sua conta na aba Conta Nexus." || message === "Conecte sua conta Nexus.") {
     notifyNexusAccountRequired(language, "download");
   } else {
-    notifyError(language === "en" ? "Nexus downloads" : "Downloads Nexus", error);
+    notifyError(tx("downloadFeedback", "nexus_downloads"), error);
   }
 }

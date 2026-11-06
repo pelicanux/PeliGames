@@ -83,6 +83,11 @@ pub(super) fn neural(out: &mut String, base: &Path) {
         "dlssnr_amd.addon32",
         "dlssnr-amd/dlssnr.bin",
         "dlssnr-amd/dlssnr-small.bin",
+        "dlssnr-amd/CC_SILVER_AARDWOLD.bin",
+        "dlssnr-amd/CC_SMALL_FP8.bin",
+        "dlssnr-amd/CC_SMALL_FP8_EXPERIMENTAL.bin",
+        "dlssnr-amd/CC_SILVER_AARDWOLD_OPTIMIZED.bin",
+        "dlssnr-amd/CC_SILVER_AARDWOLD_OPTIMIZED_INT4.bin",
         "dlssnr-amd/dlssnr-small-experimental.bin",
         "dlssnr-amd/dlssnr-int4.bin",
     ] {

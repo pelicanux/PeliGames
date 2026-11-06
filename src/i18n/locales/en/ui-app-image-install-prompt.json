@@ -1,0 +1,22 @@
+{
+  "install_peligames": "Install PeliGames",
+  "install_peligames_2": "Install PeliGames?",
+  "the_nexus_site_s_mod_manager_download_button_opens_straight_in_peligames": "The Nexus site's “Mod Manager Download” button opens straight in PeliGames.",
+  "an_application_menu_entry_and_the_peligames_terminal_command": "An application menu entry and the peligames terminal command.",
+  "updates_through_the_launcher_wherever_the_file_was_downloaded_game_shortcuts_keep_workin": "Updates through the launcher wherever the file was downloaded; game shortcuts keep working.",
+  "install_mangohud_from_the_launcher": "Install MangoHUD from the launcher.",
+  "prepare_and_format_drives_with_a_single_password_prompt": "Prepare and format drives with a single password prompt.",
+  "nexus_mods_only_through_peligames_internal_browser_or_by_importing_a_manual_download": "Nexus mods only through PeliGames' internal browser or by importing a manual download.",
+  "no_application_menu_entry": "No application menu entry.",
+  "mangohud_must_be_installed_through_the_system": "MangoHUD must be installed through the system.",
+  "drives_the_password_is_asked_at_every_step": "Drives: the password is asked at every step.",
+  "moving_or_deleting_the_appimage_file_breaks_game_shortcuts": "Moving or deleting the AppImage file breaks game shortcuts.",
+  "you_are_running_peligames_straight_from_the_appimage_file_it_works_this_way_but_installi": "You are running PeliGames straight from the AppImage file. It works this way, but installing unlocks a few features. It installs into your home folder, needs no password, and the downloaded AppImage file is removed.",
+  "installed": "Installed",
+  "appimage_only": "AppImage only",
+  "destination": "Destination:",
+  "don_t_ask_again_you_can_install_later_in_settings": "Don't ask again (you can install later in Settings)",
+  "continue_without_installing": "Continue without installing",
+  "installing": "Installing…",
+  "install_now": "Install now"
+}

@@ -9,7 +9,7 @@ import {ModernMangoHudEditor} from "./preferences/ModernMangoHudEditor";
 import {matchesPreferenceSearch,mangoSearchOptions,normalizePreferenceSearch} from "./preferences/preferenceSearch";
 import { MonitoringPreferences } from "./preferences/MonitoringPreferences";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { AppConfig } from "./SetupWizard";
+import type { AppConfig } from "../types/appConfig";
 import { invoke } from "@tauri-apps/api/core";
 import { LauncherLogsModal } from "./LauncherLogsModal";
 import { MenuIcon } from "./MenuIcon";
@@ -46,9 +46,10 @@ interface Props {
 export type SettingsPage = Page;
 type Page = "home" | "interface" | "mods" | "protons" | "covers" | "tools" | "connections" | "backendUpdate" | "diskAutomount" | "monitoring";
 export function SettingsModal({ onClose, initialSection: requestedSection = "general", initialBackendArch, onBusyChange, onConfigUpdated, onOpenWizard, onOpenWelcome, page: controlledPage, onPageChange }: Props) {
+
   const initialSection = requestedSection === "daniel" && !experimentalDanielNr ? "mods" : requestedSection;
   const text = usePreferencesText(), { t, language } = useI18n();
-  const preferences = usePreferencesConfig(onConfigUpdated);
+  const preferences = usePreferencesConfig();
   const initialPage: Page = initialSection === "mako" || initialSection === "afmf" || initialSection === "capture" || initialSection === "daniel" ? "mods" : initialSection === "general" ? "home" : initialSection === "appimageInstall" ? "tools" : initialSection === "nexusAccount" ? "connections" : initialSection;
   const [ownPage, setOwnPage] = useState<Page>(initialPage);
   const page = controlledPage ?? ownPage;
@@ -128,7 +129,7 @@ export function SettingsModal({ onClose, initialSection: requestedSection = "gen
   const query = normalize(search.trim());
   // Index each real control separately; category names provide context.
   const options = [
-    { id: "interface-theme", page: "interface", title: language === "pt" ? "Temas da interface" : "Interface themes", keywords: "Hackerman Neon Wave padrão standard temas theme Matrix Fallout retro hacker terminal verde green pixel música music áudio audio synthwave" },
+    { id: "interface-theme", page: "interface", title: t("ui-settings-modal", "interface_themes"), keywords: "Hackerman Neon Wave padrão standard temas theme Matrix Fallout retro hacker terminal verde green pixel música music áudio audio synthwave" },
     { id: "connection-nexus", page: "connections", title: "Nexus Mods", keywords: text.connectionsSearch },
     { id: "connection-discord", page: "connections", title: "Discord", keywords: `${text.connectionsSearch} YouTube` },
     { id: "connection-matrix", page: "connections", title: "Matrix", keywords: `${text.connectionsSearch} atividade presença som notificação áudio capas` },
@@ -182,7 +183,7 @@ export function SettingsModal({ onClose, initialSection: requestedSection = "gen
   const renderSearchControls=(target:Page,ids:string[])=>{
     if(target==="interface")return <ThemePreferences searchMode onApplied={()=>setNotice(text.applied)} onOpenConnections={()=>{setSearch("");setPage("connections");setSearchTarget(null)}}/>;
     if(target==="connections")return <ConnectionsPreferences searchMode/>;
-    if(target==="mods")return <>{experimentalDanielNr&&ids.includes("runtime-daniel")&&<DanielEnvironmentPreferences disabled={busy} onBusy={searchBusyHandlers.mods}/>}{ids.includes("runtime-capture")&&<CaptureRuntimePreferences disabled={busy} onBusy={searchBusyHandlers.mods}/>}{ids.some(id=>["backend-project","backend-update","setup","clear-cache"].includes(id))&&<ModPreferences {...configProps} onBusy={searchBusyHandlers.mods} onWizard={()=>{if(!preferences.isPending()){onOpenWizard();onClose()}}} onClear={()=>setCacheDialog("confirm")}/>} {ids.some(id=>id.startsWith("backup-"))&&<ModBackupPreferences onError={setActionError} onBusy={searchBusyHandlers.mods} onRestored={async()=>onConfigUpdated(await invoke<AppConfig|null>("load_app_config"))}/>} {(["mako"] as const).filter(backend=>ids.includes(`runtime-${backend}`)).map(backend=><div data-preference-id={`runtime-${backend}`} key={backend}><h3>{"MAKO"}</h3><FrameRuntimePreferences backend={backend} disabled={busy} onBusy={searchBusyHandlers.mods}/></div>)}</>;
+    if(target==="mods")return <>{experimentalDanielNr&&ids.includes("runtime-daniel")&&<DanielEnvironmentPreferences disabled={busy} onBusy={searchBusyHandlers.mods}/>}{ids.includes("runtime-capture")&&<CaptureRuntimePreferences disabled={busy} onBusy={searchBusyHandlers.mods}/>}{ids.some(id=>["backend-project","backend-update","setup","clear-cache"].includes(id))&&<ModPreferences {...configProps} onBusy={searchBusyHandlers.mods} onWizard={()=>{if(!preferences.isPending()){onOpenWizard();onClose()}}} onClear={()=>setCacheDialog("confirm")}/>} {ids.some(id=>id.startsWith("backup-"))&&<ModBackupPreferences onError={setActionError} onBusy={searchBusyHandlers.mods} onRestored={async()=>onConfigUpdated(await preferences.refresh())}/>} {(["mako"] as const).filter(backend=>ids.includes(`runtime-${backend}`)).map(backend=><div data-preference-id={`runtime-${backend}`} key={backend}><h3>{"MAKO"}</h3><FrameRuntimePreferences backend={backend} disabled={busy} onBusy={searchBusyHandlers.mods}/></div>)}</>;
     if(target==="protons")return <ProtonPreferences {...configProps} onBusy={searchBusyHandlers.protons} focusRef={steamRef} onConfirmationChange={setProtonConfirmationOpen}/>;
     if(target==="covers")return <CoverPreferences {...configProps} focusRef={coverRef} onError={setActionError}/>;
     if(target==="tools")return <ToolsPreferences onWelcome={()=>{if(!busy&&!preferences.isPending()){onClose();onOpenWelcome()}}} onError={setActionError} onLogs={()=>setShowLauncherLogs(true)}/>;
@@ -192,7 +193,7 @@ export function SettingsModal({ onClose, initialSection: requestedSection = "gen
   const tabbedSearch = ["interface", "mods", "connections", "monitoring"].includes(displayedPage);
   const searchControl = <div className="settings-page-search" data-tabbed={tabbedSearch || undefined} data-expanded={searchExpanded || undefined}
     onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) { searchFocused.current = false; setSearchExpanded(false); } }}>
-    <button type="button" disabled={busy} aria-label={text.searchSettings} aria-expanded={searchExpanded} onClick={() => { setSearchExpanded(true); requestAnimationFrame(() => searchInput.current?.focus()); }}><MenuIcon name="search"/>{tabbedSearch && <span>{language === "en" ? "Search" : "Buscar"}</span>}</button>
+    <button type="button" disabled={busy} aria-label={text.searchSettings} aria-expanded={searchExpanded} onClick={() => { setSearchExpanded(true); requestAnimationFrame(() => searchInput.current?.focus()); }}><MenuIcon name="search"/>{tabbedSearch && <span>{t("ui-settings-modal", "search")}</span>}</button>
     <input ref={node => { searchInput.current = node; if (node && searchFocused.current) node.focus({ preventScroll: true }); }} type="search" disabled={busy} aria-label={text.searchSettings} placeholder={text.searchPlaceholder} value={search}
       onFocus={() => { searchFocused.current = true; }} onChange={event => setSearch(event.target.value)} onKeyDown={event => { if (event.key === "Escape") { setSearch(""); setSearchExpanded(false); searchFocused.current = false; event.currentTarget.blur(); } }}/>
   </div>;
@@ -206,8 +207,8 @@ export function SettingsModal({ onClose, initialSection: requestedSection = "gen
         {displayedPage === "interface" && <ThemePreferences focusTarget={searchTarget} searchControl={searchControl} onApplied={() => setNotice(text.applied)} onOpenConnections={() => { if (!busy && !preferences.isPending()) { setPage("connections"); setSearch(""); setSearchTarget(null); setActionError(""); } }}/>}
         {displayedPage === "connections" && <ConnectionsPreferences focusTarget={searchTarget} searchControl={searchControl}/>}
         {displayedPage === "mods" && (modsTab ? <>
-          <div className="addon-menu-toolbar mod-workspace"><button type="button" className="mod-action-secondary" disabled={busy} onClick={closeAddon}><MenuIcon name="back"/>{language === "pt" ? "Todos os complementos" : "All add-ons"}</button></div>
-          <section className="mod-preferences-content addon-menu-content" id={`mod-preferences-panel-${modsTab}`} aria-label={addonLabel(modsTab, language === "pt")}>{modsTab === "dlss" ? <ModPreferences {...configProps} onBusy={setDownloadBusy} onWizard={() => { if (!preferences.isPending()) { onOpenWizard(); onClose(); } }} onClear={() => setCacheDialog("confirm")}/> : modsTab==="daniel" ? experimentalDanielNr && <DanielEnvironmentPreferences disabled={busy} onBusy={setDownloadBusy}/> : modsTab==="nexus" ? <ModBackupPreferences onError={setActionError} onBusy={setDownloadBusy} onRestored={async () => onConfigUpdated(await invoke<AppConfig | null>("load_app_config"))}/> : modsTab==="capture" ? <CaptureRuntimePreferences disabled={busy} onBusy={setDownloadBusy}/> : <FrameRuntimePreferences backend={modsTab} disabled={busy} onBusy={setDownloadBusy}/>}</section>
+          <div className="addon-menu-toolbar mod-workspace"><button type="button" className="mod-action-secondary" disabled={busy} onClick={closeAddon}><MenuIcon name="back"/>{t("ui-settings-modal", "all_add_ons")}</button></div>
+          <section className="mod-preferences-content addon-menu-content" id={`mod-preferences-panel-${modsTab}`} aria-label={addonLabel(modsTab, language)}>{modsTab === "dlss" ? <ModPreferences {...configProps} onBusy={setDownloadBusy} onWizard={() => { if (!preferences.isPending()) { onOpenWizard(); onClose(); } }} onClear={() => setCacheDialog("confirm")}/> : modsTab==="daniel" ? experimentalDanielNr && <DanielEnvironmentPreferences disabled={busy} onBusy={setDownloadBusy}/> : modsTab==="nexus" ? <ModBackupPreferences onError={setActionError} onBusy={setDownloadBusy} onRestored={async () => onConfigUpdated(await preferences.refresh())}/> : modsTab==="capture" ? <CaptureRuntimePreferences disabled={busy} onBusy={setDownloadBusy}/> : <FrameRuntimePreferences backend={modsTab} disabled={busy} onBusy={setDownloadBusy}/>}</section>
         </> : <AddonCatalog disabled={busy} onOpen={openAddon}/>)}
         {displayedPage === "protons" && <ProtonPreferences {...configProps} onBusy={setDownloadBusy} focusRef={steamRef} onConfirmationChange={setProtonConfirmationOpen}/>}
         {displayedPage === "covers" && preferences.ready && <CoverPreferences {...configProps} disabled={!preferences.ready} focusRef={coverRef} onError={setActionError}/>}

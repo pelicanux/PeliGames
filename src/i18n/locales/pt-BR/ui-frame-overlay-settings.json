@@ -1,0 +1,10 @@
+{
+  "shortcut_already_used": "Atalho já usado: {{conflict}}.",
+  "overlay_shortcut": "Atalho do overlay",
+  "show_or_hide_the_controls_inside_the_game": "Mostra ou oculta os controles dentro do jogo.",
+  "show_or_hide_overlay": "Mostrar ou ocultar overlay",
+  "restore_default_shortcut_f8": "Restaurar atalho padrão: F8",
+  "default_f8": "Padrão: F8",
+  "default": "Padrão",
+  "enable_the_overlay_in_each_game_s_details_shortcut_changes_apply_when_restarting_the_gam": "Ative o overlay nos detalhes de cada jogo. Mudanças de tecla valem ao reabrir o jogo; não há registro de atalho global no desktop."
+}

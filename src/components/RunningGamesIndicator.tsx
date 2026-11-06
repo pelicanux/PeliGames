@@ -14,9 +14,11 @@ export interface RunningGameSummary {
 
 // Status updates keep identical geometry, so finishing launch preparation does
 // not resize the track or change the compositor animation's timing.
-const RunningGameMarquee = memo(function RunningGameMarquee({ games, pt }: { games: RunningGameSummary[]; pt: boolean }) {
+const RunningGameMarquee = memo(function RunningGameMarquee({ games }: { games: RunningGameSummary[]; }) {
+  const {t: tx} = useI18n();
+
   const track = useRef<HTMLSpanElement>(null);
-  const labels = pt ? ["Preparando:", "Em execução:", "Encerrando:"] : ["Preparing:", "Running:", "Stopping:"];
+  const labels = [tx("ui-running-games-indicator", "preparing"), tx("ui-running-games-indicator", "running"), tx("ui-running-games-indicator", "stopping")];
   useLayoutEffect(() => {
     const element = track.current;
     if (!element) return;
@@ -52,20 +54,21 @@ const RunningGameMarquee = memo(function RunningGameMarquee({ games, pt }: { gam
       </span>{" "}{game.name}
     </span>)}</span>)}
   </span></span>;
-}, (before, after) => before.pt === after.pt && before.games.length === after.games.length && before.games.every((game, index) => {
+}, (before, after) => before.games.length === after.games.length && before.games.every((game, index) => {
   const next = after.games[index];
   return game.id === next.id && game.name === next.name && game.state === next.state;
 }));
 
 export function RunningGamesIndicator({ games }: { games: RunningGameSummary[] }) {
-  const { language } = useI18n(), pt = language === "pt";
+  const {t: tx} = useI18n();
+
   const [open, setOpen] = useState(false), [stopping, setStopping] = useState<string | null>(null), [error, setError] = useState("");
   const [position, setPosition] = useState({ left: 0, top: 50 });
   const trigger = useRef<HTMLButtonElement>(null), popup = useRef<HTMLDivElement>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pinned = useRef(false);
   const panelId = useId();
-  const label = (game: RunningGameSummary) => game.state === "starting" ? pt ? "Preparando" : "Preparing" : game.state === "stopping" ? pt ? "Encerrando" : "Stopping" : pt ? "Em execução" : "Running";
+  const label = (game: RunningGameSummary) => game.state === "starting" ? tx("ui-running-games-indicator", "preparing_2") : game.state === "stopping" ? tx("ui-running-games-indicator", "stopping_2") : tx("ui-running-games-indicator", "running_2");
   const message = games.map(game => `${label(game)}: ${game.name}`).join("   /   ");
   const close = () => { clearTimeout(hideTimer.current); pinned.current = false; setOpen(false); };
   const show = () => { clearTimeout(hideTimer.current); setOpen(true); };
@@ -88,7 +91,7 @@ export function RunningGamesIndicator({ games }: { games: RunningGameSummary[] }
   const stop = async (game: RunningGameSummary) => {
     if (stopping || game.stopDisabled) return;
     setStopping(game.id); setError("");
-    try { if (await game.onStop() === false) setError(pt ? "Não foi possível encerrar o jogo. Confira as notificações." : "Could not stop the game. Check notifications."); }
+    try { if (await game.onStop() === false) setError(tx("ui-running-games-indicator", "could_not_stop_the_game_check_notifications")); }
     catch (failure) { setError(String(failure)); }
     finally { setStopping(null); }
   };
@@ -96,16 +99,16 @@ export function RunningGamesIndicator({ games }: { games: RunningGameSummary[] }
     <button ref={trigger} type="button" className="titlebar-running-game" data-tauri-drag-region="false" aria-label={message} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? panelId : undefined}
       onMouseEnter={show} onMouseLeave={scheduleClose} onClick={() => { if (pinned.current) close(); else { pinned.current = true; show(); } }} onKeyDown={event => { if (event.key === "ArrowDown") { event.preventDefault(); pinned.current = true; show(); requestAnimationFrame(() => popup.current?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus()); } }}>
       <i aria-hidden="true" />
-      <RunningGameMarquee games={games} pt={pt} />
+      <RunningGameMarquee games={games} />
     </button>
-    {open && createPortal(<div ref={popup} id={panelId} role="dialog" aria-label={pt ? "Jogos em execução" : "Running games"} className="titlebar-running-popup dialog-popover" style={position} onMouseEnter={show} onMouseLeave={scheduleClose}>
+    {open && createPortal(<div ref={popup} id={panelId} role="dialog" aria-label={tx("ui-running-games-indicator", "running_games")} className="titlebar-running-popup dialog-popover" style={position} onMouseEnter={show} onMouseLeave={scheduleClose}>
       {games.map(game => <article key={game.id}>
-        <HoverTooltip text={pt ? "Detalhes" : "Details"} anchorClassName="titlebar-running-details-anchor">
-          <button type="button" className="titlebar-running-details" aria-label={pt ? "Detalhes" : "Details"} disabled={!game.onDetails} onClick={() => { close(); game.onDetails?.(); }}><MenuIcon name="externalLink" /></button>
+        <HoverTooltip text={tx("ui-running-games-indicator", "details")} anchorClassName="titlebar-running-details-anchor">
+          <button type="button" className="titlebar-running-details" aria-label={tx("ui-running-games-indicator", "details")} disabled={!game.onDetails} onClick={() => { close(); game.onDetails?.(); }}><MenuIcon name="externalLink" /></button>
         </HoverTooltip>
         <img src={game.cover || "/peligames.svg"} alt="" onError={event => { if (!event.currentTarget.src.endsWith("/peligames.svg")) event.currentTarget.src = "/peligames.svg"; }} />
         <div><strong>{game.name}</strong><small>{label(game)}</small></div>
-        <button type="button" className="btn btn-secondary" disabled={Boolean(stopping) || game.stopDisabled || game.state === "stopping"} onClick={() => void stop(game)}><MenuIcon name="stop" />{game.state === "stopping" || stopping === game.id ? pt ? "Encerrando…" : "Stopping…" : pt ? "Parar" : "Stop"}</button>
+        <button type="button" className="btn btn-secondary" disabled={Boolean(stopping) || game.stopDisabled || game.state === "stopping"} onClick={() => void stop(game)}><MenuIcon name="stop" />{game.state === "stopping" || stopping === game.id ? tx("ui-running-games-indicator", "stopping_3") : tx("ui-running-games-indicator", "stop")}</button>
       </article>)}
       {error && <p className="titlebar-running-error" role="alert">{error}</p>}
     </div>,document.body)}

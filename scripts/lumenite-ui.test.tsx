@@ -1,3 +1,5 @@
+import {loadLanguage} from "../src/i18n/engine";
+await loadLanguage("pt-BR");
 import { expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { I18nProvider } from "../src/i18n/I18nContext";
@@ -6,7 +8,7 @@ import type { ComponentProps } from "react";
 
 const noop = () => {};
 function render(overrides: Partial<ComponentProps<typeof ModernDlssPanel>> = {}) {
-  return renderToStaticMarkup(<I18nProvider><ModernDlssPanel
+  return renderToStaticMarkup(<I18nProvider initialPreference="pt-BR"><ModernDlssPanel
     route="reshade" onRoute={noop} bitness="64" onBitness={noop} gpuArch="rdna4"
     busy={false} startup={true} startupDisabled={false} onStartup={noop} renodx={false} onRenodx={noop}
     model="small" modelAvailable={true} unifiedNetworks={true} modelStatus="ready" onModel={noop}

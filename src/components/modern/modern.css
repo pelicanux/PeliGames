@@ -89,10 +89,10 @@
 .modern-details-art { position: absolute; inset: -40px; z-index: -2; background-size: cover; background-position: center 30%; filter: blur(22px) saturate(1.25); transform: scale(1.08); }
 .modern-details::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--modern-shade); pointer-events: none; }
 .modern-details-close { position: absolute; top: 14px; right: 14px; z-index: 5; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .14); background: rgba(0, 0, 0, .35); color: #fff; backdrop-filter: blur(calc(10px * var(--window-blur-factor, 1))); cursor: pointer; }
-.modern-details-top { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(210px, 250px); gap: 24px; align-items: end; padding: 26px 64px 18px 28px; }
+.modern-details-top { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(13.125rem, 15.625rem); gap: 1.5rem; align-items: end; padding: 1.625rem 4rem 1.125rem 1.75rem; }
 .modern-details-summary { padding: 22px 64px 12px 28px; }
 .modern-details-cover .selected-cover { display: block !important; border-radius: 16px !important; box-shadow: 0 16px 40px rgba(0, 0, 0, .55) !important; border-width: 1px !important; }
-.modern-details-cover .selected-cover img, .modern-details-cover .selected-cover > div:not(.glare) { width: 150px !important; }
+.modern-details-cover .selected-cover img, .modern-details-cover .selected-cover > div:not(.glare) { width: 9.375rem !important; }
 .modern-details-eyebrow { display: inline-flex; align-items: center; gap: 7px; font-size: 0.75rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--modern-muted); }
 .modern-details-info h1 { margin: 8px 0 10px; font-size: clamp(1.5rem, calc(3vw * var(--interface-scale, 1)), 2.625rem); line-height: 1.04; letter-spacing: -.03em; font-weight: 900; color: var(--modern-text); }
 .modern-details-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -115,29 +115,33 @@
 
 /* ---------- Library ---------- */
 .modern-library { flex: 1 1 0; min-height: 0; }
-.modern-library-viewport { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.modern-library-viewport { display: grid; grid-template: auto minmax(0, 1fr) / minmax(0, 1fr); height: 100%; min-height: 0; }
+/* The header and scroller overlap, but only the covers own a scroll layer.
+   Empty space between the controls passes pointer/wheel input to that layer. */
+.modern-library-header { grid-area: 1 / 1; position: relative; z-index: 6; min-width: 0; pointer-events: none; }
+.modern-library-header .modern-lib-toolbar > *, .modern-library-header > :not(.modern-lib-toolbar) { pointer-events: auto; }
 /* An inline installer can fill the page; keep a complete library viewport below it. */
 .selected-game-shell ~ .modern-library { flex: 0 0 100%; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 980px) {
-  .modern-details-top { grid-template-columns: auto minmax(0, 1fr); padding-right: 56px; }
+  .modern-details-top { grid-template-columns: auto minmax(0, 1fr); padding-right: 3.5rem; }
   .modern-details-actions { grid-column: 1 / -1; }
   .modern-details-actions .game-action-stack { flex-direction: row; flex-wrap: wrap; }
   .modern-details-actions .game-action-stack > * { flex: 1 1 180px; }
-  .modern-details-cover .selected-cover img, .modern-details-cover .selected-cover > div:not(.glare) { width: 110px !important; }
+  .modern-details-cover .selected-cover img, .modern-details-cover .selected-cover > div:not(.glare) { width: 6.875rem !important; }
 }
 @media (max-width: 640px) {
   .modern-scroll { padding: 12px 12px 24px; }
-  .modern-details-top { grid-template-columns: minmax(0, 1fr); padding: 22px 52px 14px 18px; }
+  .modern-details-top { grid-template-columns: minmax(0, 1fr); padding: 1.375rem 3.25rem 0.875rem 1.125rem; }
   .modern-details-cover { display: none; }
   .modern-tab-body { padding: 14px; }
 }
 
 /* ---------- Library of the new interface (same design as the prototype) ---------- */
-.modern-lib-toolbar { position: relative; flex-shrink: 0; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 0; margin: 0; background: linear-gradient(rgba(10, 11, 18, .82) 70%, transparent); backdrop-filter: blur(calc(16px * var(--window-blur-factor, 1))); -webkit-backdrop-filter: blur(calc(16px * var(--window-blur-factor, 1))); }
+.modern-lib-toolbar { position: relative; flex-shrink: 0; z-index: 6; display: flex; flex-wrap: nowrap; align-items: center; gap: 10px; padding: 12px 0; margin: 0; background: linear-gradient(rgba(10, 11, 18, .82) 70%, transparent); backdrop-filter: blur(calc(16px * var(--window-blur-factor, 1))); -webkit-backdrop-filter: blur(calc(16px * var(--window-blur-factor, 1))); }
 :root[data-appearance="light"] .modern-ui .modern-lib-toolbar { background: linear-gradient(rgba(246, 247, 252, .85) 70%, transparent); }
-.modern-lib-search { flex: 1 1 150px; min-width: min(150px, 100%); box-sizing: border-box; display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 12px 0 14px; border-radius: 14px; background: var(--modern-card-2); border: 1px solid var(--modern-line); color: var(--modern-muted); }
+.modern-lib-search { flex: 1 1 0; min-width: 42px; box-sizing: border-box; display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 12px 0 14px; border-radius: 14px; background: var(--modern-card-2); border: 1px solid var(--modern-line); color: var(--modern-muted); }
 .modern-lib-search:focus-within { border-color: rgba(var(--accent-rgb), .7); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), .18); }
 .modern-lib-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--modern-text); font-size: 0.875rem; }
 .modern-lib-search kbd { font: 600 0.6875rem Inter, system-ui, sans-serif; padding: 2px 6px; border-radius: 6px; border: 1px solid var(--modern-line); color: var(--modern-muted); }
@@ -148,7 +152,7 @@
 .modern-lib-chips button b { font-weight: 600; font-size: 0.71875rem; opacity: .7; }
 .modern-lib-chips button .menu-icon, .modern-lib-chips button .launcher-icon { width: 14px; height: 14px; }
 .modern-lib-chips button[aria-pressed="true"] { color: var(--modern-text); background: rgba(var(--accent-rgb), .18); border-color: rgba(var(--accent-rgb), .55); }
-.modern-lib-actions { flex: 0 1 auto; max-width: 100%; margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.modern-lib-actions { flex: 0 0 auto; max-width: 100%; margin-left: auto; display: flex; flex-wrap: nowrap; align-items: center; justify-content: flex-end; gap: 8px; }
 .modern-lib-button { display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--modern-line); background: var(--modern-card-2); color: var(--modern-text); font-size: 0.84375rem; font-weight: 600; white-space: nowrap; cursor: pointer; }
 .modern-lib-button:hover:not(:disabled) { border-color: rgba(var(--accent-rgb), .55); }
 .modern-lib-button img { width: 16px; height: 16px; }
@@ -163,52 +167,58 @@
 .modern-section-title { display: flex; align-items: baseline; gap: 10px; margin: 14px 0 12px; }
 .modern-section-title h2 { margin: 0; font-size: 1.125rem; letter-spacing: -.01em; color: var(--modern-text); }
 .modern-section-title small { color: var(--modern-muted); }
-/* Only covers scroll. The toolbar is a sibling, outside the moving surface. */
+/* Covers scroll behind the stationary glass controls. Header height is measured
+   on resize/wrapping, so the first section starts below them without a sticky offset. */
 .modern-grid-container {
   position: relative; z-index: 0; isolation: isolate;
-  flex: 1; min-height: 0; overflow: auto;
+  grid-area: 1 / 1 / 3 / 2; min-height: 0; overflow: auto;
   overscroll-behavior: contain; overflow-anchor: none;
   margin-top: 0 !important;
   will-change: transform;
 }
-.modern-all-games .game-collection--grid { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important; gap: 18px 16px !important; }
+.modern-library-viewport > .modern-grid-container { padding-block-start: calc(var(--library-header-height, 54px) + 16px); }
+.modern-all-games .game-collection--grid { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(9.375rem * var(--library-cover-scale, 1))), 1fr)) !important; gap: 1.125rem 1rem !important; }
+/* Cover geometry follows the root font size set by useInterfaceScale,
+   including the grid minimum so smaller scales actually fit more games. */
 /* Cards: rounded cover, store pill, favourite and quick play; name below. */
 .modern-grid-container .library-card-cell { position: relative; isolation: isolate; }
-.modern-grid-container .library-game-card { border-radius: 16px !important; border: 1px solid rgba(255, 255, 255, .1) !important; background: var(--modern-card-2) !important; box-shadow: 0 8px 20px rgba(0, 0, 0, .3); }
+.modern-grid-container .library-game-card { border-radius: 1rem !important; border: 1px solid rgba(255, 255, 255, .1) !important; background: var(--modern-card-2) !important; box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, .3); }
 .modern-grid-container .library-cover-thumbnail img, .modern-grid-container .fallback-cover { border-radius: 0; }
-.modern-card-store { position: absolute; left: 8px; bottom: 8px; z-index: 11; display: flex; align-items: center; gap: 6px; padding: 4px 9px 4px 7px; border-radius: 999px; background: rgba(0, 0, 0, .58); backdrop-filter: blur(calc(8px * var(--window-blur-factor, 1))); color: #fff; font-size: 0.6875rem; font-weight: 700; pointer-events: none; }
+.modern-card-store { position: absolute; left: 0.5rem; bottom: 0.5rem; z-index: 11; display: flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.5625rem 0.25rem 0.4375rem; border-radius: 62.4375rem; background: rgba(0, 0, 0, .58); backdrop-filter: blur(calc(0.5rem * var(--window-blur-factor, 1))); color: #fff; font-size: 0.6875rem; font-weight: 700; pointer-events: none; }
 .modern-card-fav, .modern-card-play { position: absolute; z-index: 12; display: grid; place-items: center; border: 0; border-radius: 50%; cursor: pointer; opacity: 0; transition: opacity .18s, transform .18s; }
-.modern-card-fav { right: 8px; top: 8px; width: 30px; height: 30px; background: rgba(0, 0, 0, .5); backdrop-filter: blur(calc(8px * var(--window-blur-factor, 1))); color: #fff; }
+.modern-card-fav { right: 0.5rem; top: 0.5rem; width: 1.875rem; height: 1.875rem; background: rgba(0, 0, 0, .5); backdrop-filter: blur(calc(0.5rem * var(--window-blur-factor, 1))); color: #fff; }
 .modern-card-fav.on { opacity: 1; color: #ff5c8a; }
 .modern-card-fav.on .menu-icon[data-icon="heart"] { fill: currentColor; }
-.modern-card-fav .menu-icon { width: 15px; height: 15px; }
-.modern-card-play { right: 8px; bottom: 8px; width: 38px; height: 38px; background: #1fd39a; color: #04130d; transform: translateY(6px); box-shadow: 0 6px 16px rgba(31, 211, 154, .4); }
+.modern-card-fav .menu-icon { width: 0.9375rem; height: 0.9375rem; }
+.modern-card-play { right: 0.5rem; bottom: 0.5rem; width: 2.375rem; height: 2.375rem; background: #1fd39a; color: #04130d; transform: translateY(0.375rem); box-shadow: 0 0.375rem 1rem rgba(31, 211, 154, .4); }
 .modern-card-play.running { opacity: 1; transform: none; background: #ef4444; color: #fff; }
 .modern-card-play:disabled { cursor: not-allowed; filter: grayscale(.6); }
-.modern-card-play .menu-icon { width: 18px; height: 18px; }
+.modern-card-play .menu-icon { width: 1.125rem; height: 1.125rem; }
 .library-game-card:hover .modern-card-fav, .library-game-card:hover .modern-card-play, .library-game-card:focus-within .modern-card-fav, .library-game-card:focus-within .modern-card-play { opacity: 1; transform: none; }
-.modern-card-caption { margin-top: 9px; padding: 0 2px; min-width: 0; }
+.modern-card-caption { margin-top: 0.5625rem; padding: 0 2px; min-width: 0; }
 .modern-card-caption p { margin: 0; font-size: 0.84375rem; font-weight: 600; color: var(--modern-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .modern-card-caption small { display: block; margin-top: 2px; font-size: 0.75rem; color: var(--modern-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .modern-grid-container .game-list-details { display: none; }
 /* Continue playing: the four latest games, wide artwork with the last play. */
 .modern-continue { margin-bottom: 8px; }
-.modern-continue-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(260px, 1fr); gap: 14px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: thin; }
-.modern-continue-card { position: relative; height: 148px; border-radius: 18px; overflow: hidden; border: 1px solid var(--modern-line); background: var(--modern-card-2); cursor: pointer; isolation: isolate; transition: transform .2s, border-color .2s; }
+/* Scale the column pitch as well as height; auto-fill keeps recent banners
+   at the chosen size instead of stretching four fixed columns across the row. */
+.modern-continue-row { --recent-columns: 4; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, calc((100% + 0.875rem) / var(--recent-columns) * var(--interface-scale, 1) - 0.875rem)), 1fr)); gap: 0.875rem; overflow-x: auto; padding: 2px 2px 0.5rem; scrollbar-width: thin; }
+.modern-continue-card { position: relative; height: 9.25rem; border-radius: 1.125rem; overflow: hidden; border: 1px solid var(--modern-line); background: var(--modern-card-2); cursor: pointer; isolation: isolate; transition: transform .2s, border-color .2s; }
 .modern-continue-card:hover, .modern-continue-card:focus-visible { transform: translateY(-3px); border-color: rgba(var(--accent-rgb), .55); outline: none; }
 .modern-continue-card::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(0deg, rgba(0, 0, 0, .85), rgba(0, 0, 0, .08) 72%); }
 .modern-continue-art { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
-.modern-continue-text { position: absolute; left: 16px; right: 64px; bottom: 14px; color: #fff; min-width: 0; }
+.modern-continue-text { position: absolute; left: 1rem; right: 4rem; bottom: 0.875rem; color: #fff; min-width: 0; }
 .modern-continue-text strong { display: block; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.modern-continue-text small { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: 0.78125rem; line-height: 20px; opacity: .82; }
-.modern-continue-play { position: absolute; right: 14px; bottom: 14px; width: 40px; height: 40px; display: grid; place-items: center; border: 0; border-radius: 50%; background: #1fd39a; color: #04130d; cursor: pointer; opacity: 0; transform: scale(.85); transition: opacity .2s, transform .2s; box-shadow: 0 6px 16px rgba(31, 211, 154, .4); }
-.modern-continue-play .menu-icon { width: 18px; height: 18px; }
+.modern-continue-text small { display: flex; align-items: center; gap: 0.375rem; margin-top: 0.1875rem; font-size: 0.78125rem; line-height: 1.25rem; opacity: .82; }
+.modern-continue-play { position: absolute; right: 0.875rem; bottom: 0.875rem; width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border: 0; border-radius: 50%; background: #1fd39a; color: #04130d; cursor: pointer; opacity: 0; transform: scale(.85); transition: opacity .2s, transform .2s; box-shadow: 0 0.375rem 1rem rgba(31, 211, 154, .4); }
+.modern-continue-play .menu-icon { width: 1.125rem; height: 1.125rem; }
 .modern-continue-play.running { opacity: 1; transform: none; background: #ef4444; color: #fff; }
 .modern-continue-play:disabled { cursor: not-allowed; filter: grayscale(.6); }
 .modern-continue-card:hover .modern-continue-play, .modern-continue-card:focus-within .modern-continue-play { opacity: 1; transform: none; }
 /* List view: one compact row per game. */
 .modern-all-games .game-collection--list .library-card-cell { display: grid; grid-template-columns: 1fr; }
-.modern-all-games .game-collection--list .modern-card-caption { position: absolute; left: 70px; top: 50%; transform: translateY(-50%); margin: 0; pointer-events: none; }
+.modern-all-games .game-collection--list .modern-card-caption { position: absolute; left: 4.375rem; top: 50%; transform: translateY(-50%); margin: 0; pointer-events: none; }
 .modern-all-games .game-collection--list :is(.modern-card-store, .modern-card-fav) { display: none; }
 /* Spotlight: playtime chips and the overview tiles. */
 .modern-meta-chip { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 999px; font-size: 0.78125rem; font-weight: 700; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .12); color: var(--modern-text); }
@@ -241,7 +251,7 @@
 /* Spotlight: sharp store artwork under the shade, 150 px cover, big Play. */
 .modern-details { margin: 0; background: rgba(12, 13, 21, .55); box-shadow: none; }
 .modern-details-art.sharp { inset: 0; filter: saturate(1.2); transform: scale(1.04); }
-.modern-details-top { grid-template-columns: 150px minmax(0, 1fr) auto; padding: 26px 28px 18px; }
+.modern-details-top { grid-template-columns: 9.375rem minmax(0, 1fr) auto; padding: 1.625rem 1.75rem 1.125rem; }
 .modern-details-actions { display: flex; flex-direction: column; gap: 10px; align-items: stretch; min-width: 210px; }
 .modern-ui .modern-play { position: relative; display: flex !important; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 56px; min-height: 56px; padding: 0 28px !important; border-radius: 16px !important; font-size: 1.125rem !important; font-weight: 800 !important; letter-spacing: .01em; }
 .modern-ui .modern-play .menu-icon { width: 20px; height: 20px; }
@@ -271,7 +281,7 @@
 .modern-mini-btn:hover:not(:disabled) { border-color: rgba(var(--accent-rgb), .6); }
 .modern-mini-btn.danger { color: #ff6b7a; }
 .modern-mini-btn .menu-icon { width: 15px; height: 15px; }
-@media (max-width: 980px) { .modern-details-top { grid-template-columns: 110px minmax(0, 1fr); } .modern-details-actions { grid-column: 1 / -1; } .modern-tile.wide { grid-column: 1 / -1; } }
+@media (max-width: 61.25rem) { .modern-details-top { grid-template-columns: 6.875rem minmax(0, 1fr); } .modern-details-actions { grid-column: 1 / -1; } .modern-tile.wide { grid-column: 1 / -1; } }
 
 /* Store chips retain their compact, horizontally scrollable layout. */
 .modern-lib-chips { order: 0; flex: 1 1 auto; padding-right: 24px; mask-image: linear-gradient(90deg, #000 92%, transparent); -webkit-mask-image: linear-gradient(90deg, #000 92%, transparent); }
@@ -347,15 +357,14 @@
 .modern-all-games .game-collection--grid .library-card-cell { aspect-ratio: auto; display: flex; flex-direction: column; min-width: 0; }
 .modern-all-games .game-collection--grid .library-card-cell > .library-game-card { height: auto; aspect-ratio: 2 / 3; flex: 0 0 auto; }
 .modern-all-games .game-collection--grid .library-cover-thumbnail { height: 100%; }
-.modern-continue-row { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: row; grid-auto-columns: auto; }
-.modern-continue-text { right: 16px; }
-.modern-continue-card:hover .modern-continue-text { right: 62px; }
+.modern-continue-text { right: 1rem; }
+.modern-continue-card:hover .modern-continue-text { right: 3.875rem; }
 .modern-lib-toolbar { gap: 10px; background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
 .modern-details { container: game-spotlight / inline-size; }
-.modern-details-top { grid-template-columns: 150px minmax(0, 1fr) 210px; align-items: end; gap: 24px; }
+.modern-details-top { grid-template-columns: 9.375rem minmax(0, 1fr) 13.125rem; align-items: end; gap: 1.5rem; }
 .modern-details-info h1 { overflow-wrap: anywhere; font-size: clamp(1.625rem, calc(3.2cqw * var(--interface-scale, 1)), 2.75rem); line-height: 1.1; }
 .modern-details-cover .selected-cover { width: fit-content; max-width: 100%; border: 0 !important; }
-.modern-details-cover .selected-cover > img { width: 150px !important; }
+.modern-details-cover .selected-cover > img { width: 9.375rem !important; }
 .modern-tab-body { grid-template-columns: minmax(0, 1fr); padding: 20px 28px 28px; }
 .modern-tab-body .menu-glass-panel { background: var(--modern-card) !important; border: 1px solid var(--modern-line); box-shadow: none; }
 .modern-tab-body .menu-glass-panel::before, .modern-tab-body .menu-glass-panel::after { content: none !important; }
@@ -367,13 +376,13 @@
 .modern-mod-preview li { min-width:0; padding:9px 12px; border:1px solid var(--modern-line); border-radius:10px; background:var(--modern-card); color:var(--modern-text); font-size:0.8125rem; line-height:1.4; overflow-wrap:anywhere; }
 .modern-tile p { color: var(--modern-muted); }
 @container library-workspace (max-width: 950px) {
-  .modern-continue-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .modern-continue-row { --recent-columns: 2; }
   .modern-lib-chips { flex: 1 1 100%; order: 3; }
 }
 @container game-spotlight (max-width: 820px) {
-  .modern-details-top { grid-template-columns: 110px minmax(0, 1fr); padding: 24px; gap: 20px; }
+  .modern-details-top { grid-template-columns: 6.875rem minmax(0, 1fr); padding: 1.5rem; gap: 1.25rem; }
   .modern-details-cover { display: block; }
-  .modern-details-cover .selected-cover > img { width: 110px !important; }
+  .modern-details-cover .selected-cover > img { width: 6.875rem !important; }
   .modern-details-actions { grid-column: 1 / -1; flex-direction: row; align-items: center; min-width: 0; }
   .modern-details-actions .modern-play { flex: 1; width: auto; }
   .modern-quick { flex: 0 0 auto; align-self: flex-end; }
@@ -391,8 +400,8 @@
 .modern-lib-actions > button, .modern-lib-actions .modern-lib-view { flex: 0 0 auto; }
 .modern-lib-actions .modern-lib-button { width: auto; max-width: none; box-sizing: border-box; }
 .modern-tile strong { white-space: normal; overflow-wrap: anywhere; }
-.modern-grid-container .library-game-card .game-platform-badge { right: 8px; bottom: 8px; transition: opacity .18s; }
-.modern-continue-card .game-platform-badge { right: 12px; bottom: 12px; transition: opacity .18s; }
+.modern-grid-container .library-game-card .game-platform-badge { right: 0.5rem; bottom: 0.5rem; transition: opacity .18s; }
+.modern-continue-card .game-platform-badge { right: 0.75rem; bottom: 0.75rem; transition: opacity .18s; }
 .modern-grid-container .library-game-card:is(:hover,:focus-within):has(.modern-card-play) .game-platform-badge,
 .modern-grid-container .library-game-card:has(.modern-card-play.running) .game-platform-badge,
 .modern-continue-card:is(:hover,:focus-within):has(.modern-continue-play) .game-platform-badge,
@@ -649,14 +658,14 @@
   transform: none;
 }
 .modern-ui .modern-tabs > button[aria-selected="true"]::after { background: var(--accent); }
-.modern-ui .modern-details-top { padding: 26px 28px 18px; }
+.modern-ui .modern-details-top { padding: 1.625rem 1.75rem 1.125rem; }
 .modern-ui .modern-details-meta { gap: 8px; }
 .modern-ui .modern-dlss-setting,
 .modern-ui .modern-dlss-option { box-sizing: border-box; min-height: 54px; padding: 10px 0; }
 .modern-ui .modern-dlss-card { padding: 18px; }
 .modern-ui .modern-dlss-description { margin-bottom: 12px; }
 @container game-spotlight (max-width: 820px) {
-  .modern-ui .modern-details-top { padding: 24px; }
+  .modern-ui .modern-details-top { padding: 1.5rem; }
 }
 .modern-ui .modern-dlss-option { padding: 6px 0; }
 .modern-ui .modern-dlss-setting { padding: 8px 0; }
@@ -709,7 +718,7 @@
   padding: 12px 62px 12px 20px;
 }
 .modern-ui .modern-details-browsing .modern-details-cover .selected-cover > img,
-.modern-ui .modern-details-browsing .modern-details-cover .selected-cover > div:not(.glare) { width: 52px !important; }
+.modern-ui .modern-details-browsing .modern-details-cover .selected-cover > div:not(.glare) { width: 3.25rem !important; }
 .modern-ui .modern-details-browsing .modern-details-cover .selected-cover { border-radius: 8px !important; }
 .modern-ui .modern-details-browsing .modern-details-info h1 { font-size: 1.375rem; margin: 3px 0 6px; line-height: 1.15; }
 .modern-details-browsing .modern-details-eyebrow { font-size: 0.625rem; }
@@ -732,11 +741,11 @@
 .modern-install-panels > .menu-glass-panel { width: 100%; min-height: 0; padding: 18px; }
 .modern-install-panels > .installation-config-panel--nexus-add { grid-column: 1 / -1; }
 .modern-ui .modern-details-summary { padding: 22px 62px 0 28px; }
-.modern-details-summary .game-install-summary { display: grid; grid-template-columns: 120px minmax(0, 1fr); align-items: center; gap: 20px; }
+.modern-details-summary .game-install-summary { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); align-items: center; gap: 1.25rem; }
 .modern-details-summary .game-cover-column { min-width: 0; }
 .modern-ui .modern-details-summary .installation-cover-image,
-.modern-ui .modern-details-summary .installation-cover-placeholder { width: 120px !important; }
-.modern-details-summary .installation-cover-placeholder img { width: 48px; height: 48px; }
+.modern-ui .modern-details-summary .installation-cover-placeholder { width: 7.5rem !important; }
+.modern-details-summary .installation-cover-placeholder img { width: 3rem; height: 3rem; }
 .modern-details-summary .game-action-column { padding-top: 0; align-items: flex-start; gap: 8px; }
 .modern-details-summary .selected-game-title { margin: 0 0 4px; font-size: 1.5rem; }
 .modern-details-summary .game-action-stack { width: 210px; max-width: 100%; display: flex; flex-direction: column; gap: 8px; }
@@ -746,9 +755,9 @@
 @container game-spotlight (max-width: 720px) {
   .modern-ui .modern-install-panels { grid-template-columns: minmax(0, 1fr); }
   .modern-ui .modern-details-summary { padding: 18px 50px 0 18px; }
-  .modern-details-summary .game-install-summary { grid-template-columns: 90px minmax(0, 1fr); gap: 14px; }
+  .modern-details-summary .game-install-summary { grid-template-columns: 5.625rem minmax(0, 1fr); gap: 0.875rem; }
   .modern-ui .modern-details-summary .installation-cover-image,
-  .modern-ui .modern-details-summary .installation-cover-placeholder { width: 90px !important; }
+  .modern-ui .modern-details-summary .installation-cover-placeholder { width: 5.625rem !important; }
   .modern-details-summary .selected-game-title { font-size: 1.25rem; }
 }
 /* Focus may scroll the outer workspace, but must not scroll the clipped frame. */
@@ -955,7 +964,7 @@
 .modern-ui .modern-lib-toolbar :is(.modern-lib-chips button, .modern-lib-filter-arrow, .modern-lib-icon):hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 14%, var(--library-control-glass)); }
 
 /* Both labels share a 24px footer baseline on library covers. */
-.modern-card-store { height: 24px; box-sizing: border-box; line-height: 16px; }
+.modern-card-store { height: 1.5rem; box-sizing: border-box; line-height: 1rem; }
 
 /* Nexus settings continue the Execution surface instead of nesting a disclosure card. */
 .modern-nexus-settings .nexus-settings-fields { display: flex; flex-direction: column; align-items: stretch; gap: 14px; margin: 0; }
@@ -1026,9 +1035,9 @@
 
 /* Installation shares the quiet surfaces and controls of the modern workspace. */
 .modern-ui .modern-details-summary { padding-top: 20px; }
-.modern-ui .modern-details-summary .game-install-summary { grid-template-columns: 96px minmax(0, 1fr); gap: 20px; }
+.modern-ui .modern-details-summary .game-install-summary { grid-template-columns: 6rem minmax(0, 1fr); gap: 1.25rem; }
 .modern-ui .modern-details-summary .installation-cover { border: 1px solid var(--modern-line) !important; border-radius: 14px; box-shadow: 0 6px 18px #0002 !important; overflow: hidden; }
-.modern-ui .modern-details-summary :is(.installation-cover-image, .installation-cover-placeholder) { width: 96px !important; }
+.modern-ui .modern-details-summary :is(.installation-cover-image, .installation-cover-placeholder) { width: 6rem !important; }
 .modern-ui .modern-details-summary .installation-cover-placeholder { background: var(--modern-card-2); }
 .modern-ui .modern-details-summary .installation-cover .glare { display: none; }
 .modern-ui .modern-details-summary .game-action-stack { width: auto; flex-direction: row; flex-wrap: wrap; }
@@ -1043,11 +1052,11 @@
 .modern-ui .modern-details-summary .game-action-stack .menu-icon { width: 17px; height: 17px; color: inherit; filter: none; }
 .modern-ui .modern-install-panels { gap: 16px; }
 .modern-ui .modern-details-installation { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px; padding: 20px; }
-.modern-ui .modern-details-installation > .modern-details-summary { flex: 0 1 244px; min-width: 0; padding: 0; }
+.modern-ui .modern-details-installation > .modern-details-summary { flex: 0 1 15.25rem; min-width: 0; padding: 0; }
 .modern-ui .modern-details-installation > .modern-tab-body { flex: 1 1 340px; min-width: 0; padding: 0; }
 .modern-ui .modern-details-installation > .modern-details-close { display: none; }
 .modern-ui .modern-details-installation .game-install-summary { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
-.modern-ui .modern-details-installation :is(.installation-cover-image, .installation-cover-placeholder) { width: 244px !important; }
+.modern-ui .modern-details-installation :is(.installation-cover-image, .installation-cover-placeholder) { width: 15.25rem !important; }
 .modern-ui .modern-details-installation .game-action-column { width: 100%; }
 .modern-ui .modern-details-installation .modern-install-panels { grid-template-columns: minmax(0, 1fr); }
 .modern-ui .modern-details-installation .selected-game-title { font-size: 1.375rem; line-height: 1.25; overflow-wrap: anywhere; }
@@ -1094,8 +1103,8 @@
 :root[data-appearance="light"] .custom-select-menu.modern-proton-menu { border-color: #14182818 !important; background: rgba(250,250,255,.97) !important; }
 :root[data-appearance="light"] .modern-proton-menu .custom-select-option { color: #141724; }
 @container game-spotlight (max-width: 720px) {
-  .modern-ui .modern-details-summary .game-install-summary { grid-template-columns: 80px minmax(0, 1fr); gap: 16px; }
-  .modern-ui .modern-details:not(.modern-details-installation) .modern-details-summary :is(.installation-cover-image, .installation-cover-placeholder) { width: 80px !important; }
+  .modern-ui .modern-details-summary .game-install-summary { grid-template-columns: 5rem minmax(0, 1fr); gap: 1rem; }
+  .modern-ui .modern-details:not(.modern-details-installation) .modern-details-summary :is(.installation-cover-image, .installation-cover-placeholder) { width: 5rem !important; }
 }
 
 /* The alternate runner chooser floats above the panel; only its results scroll. */
@@ -1157,13 +1166,13 @@
 
 /* Back remains alongside the compact game heading while the catalog scrolls. */
 .modern-catalog-navigation { position:absolute; top:58px; right:14px; z-index:5; max-width:188px; }
-.modern-ui .modern-details-browsing .modern-details-top { padding-right:214px; min-height:104px; box-sizing:border-box; }
+.modern-ui .modern-details-browsing .modern-details-top { padding-right:13.375rem; min-height:6.5rem; box-sizing:border-box; }
 :root .modern-catalog-back { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:36px; max-width:100%; padding:8px 12px; border:1px solid rgba(var(--accent-rgb),.55); border-radius:11px; background:color-mix(in srgb,var(--accent) 20%,var(--modern-overlay)); color:var(--modern-text); box-shadow:0 4px 12px #0002; text-shadow:none; font:650 0.8125rem/1.3 Inter,system-ui,sans-serif; cursor:pointer; transition:background .15s,border-color .15s; }
 :root .modern-catalog-back:is(:hover,:focus-visible) { background:color-mix(in srgb,var(--accent) 34%,var(--modern-overlay)); border-color:var(--accent); }
 :root .modern-catalog-back::before, :root .modern-catalog-back::after { content:none !important; }
 .modern-catalog-back .menu-icon { width:18px; height:18px; flex-shrink:0; color:inherit; }
 @container game-spotlight (max-width:600px) {
-  .modern-ui .modern-details-browsing .modern-details-top { padding-left:14px; padding-right:194px; gap:10px; }
+  .modern-ui .modern-details-browsing .modern-details-top { padding-left:0.875rem; padding-right:12.125rem; gap:0.625rem; }
   .modern-details-browsing .modern-details-info h1 { font-size:1.125rem; }
   .modern-catalog-navigation { max-width:170px; }
   :root .modern-catalog-back { font-size:0.75rem; gap:6px; }
@@ -1228,7 +1237,7 @@ html, body, #root { overflow: clip !important; }
 /* The row scrolls sideways, which also clips its top edge: room above for the
    card lifting on hover (and its border), taken back by the margin so the
    layout does not move. */
-.modern-continue-row { padding-top: 10px; margin-top: -8px; }
+.modern-continue-row { padding-top: 0.625rem; margin-top: -0.5rem; }
 
 /* WebKitGTK: the library's scroll areas are permanent layers. A tilted or
    lifted cover is then composited inside them. When a library was too short
@@ -1379,9 +1388,9 @@ html, body, #root { overflow: clip !important; }
 .modern-ui .modern-details-actions > .modern-quick > .modern-quick-anchor { flex: 0 0 40px; width: 40px; }
 .modern-details-info { min-width: 0; overflow-wrap: anywhere; }
 @container game-spotlight (max-width: 920px) {
-  .modern-details:not(.modern-details-browsing) > .modern-details-top { grid-template-columns: 110px minmax(0, 1fr); gap: 18px; }
+  .modern-details:not(.modern-details-browsing) > .modern-details-top { grid-template-columns: 6.875rem minmax(0, 1fr); gap: 1.125rem; }
   .modern-details:not(.modern-details-browsing) .modern-details-cover .selected-cover > img,
-  .modern-details:not(.modern-details-browsing) .modern-details-cover .selected-cover > div:not(.glare):not(.game-platform-badge) { width: 110px !important; }
+  .modern-details:not(.modern-details-browsing) .modern-details-cover .selected-cover > div:not(.glare):not(.game-platform-badge) { width: 6.875rem !important; }
   .modern-ui .modern-details-actions { grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px; }
   .modern-ui .modern-details-actions > .modern-quick { align-self: center; }
 }

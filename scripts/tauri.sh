@@ -37,6 +37,10 @@ done
 # Cargo resolves custom target directories configured through the environment or .cargo.
 target_root=$(cargo metadata --offline --no-deps --format-version 1 --manifest-path "$root/src-tauri/Cargo.toml" | bun -e 'let input = ""; for await (const chunk of process.stdin) input += chunk; console.log(JSON.parse(input).target_directory)')
 output="$target_root/${build_target:+$build_target/}$profile"
+if [[ "${1:-}" == build && "$(uname -s)" == Linux && -z ${PELIGAMES_INSTALLER_VERIFIER:-} ]]; then
+  export PELIGAMES_INSTALLER_VERIFIER="$target_root/installer-verifier/osslsigncode.gz"
+  bash "$root/scripts/installer-verifier.sh" "$(dirname "$PELIGAMES_INSTALLER_VERIFIER")"
+fi
 gtk_directory=
 gtk_source_name=
 # Resolve the compiled executable for release/debug and custom Cargo target directories.

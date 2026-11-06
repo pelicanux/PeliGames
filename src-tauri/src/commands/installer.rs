@@ -1,3 +1,4 @@
+use crate::core::neural_models::{self, ORIGINAL, SMALL};
 use tauri::AppHandle;
 use crate::core::script_runner::execute_standalone_install;
 use crate::commands::updater::get_backend_dir;
@@ -73,8 +74,8 @@ fn backend_ready(directory: &std::path::Path) -> bool {
 #[tauri::command]
 pub fn check_cached_bin(app: AppHandle, bitness: String, gpu_arch: String) -> Result<Option<String>, String> {
     backend_arch(&gpu_arch, &bitness)?;
-    let model = get_backend_dir(&app)?.join(gpu_arch).join(bitness).join("dlssnr-amd/dlssnr.bin");
-    Ok(model.is_file().then(|| model.to_string_lossy().to_string()))
+    let directory = get_backend_dir(&app)?.join(gpu_arch).join(bitness).join("dlssnr-amd");
+    Ok(neural_models::find(&directory, ORIGINAL).map(|model| model.to_string_lossy().to_string()))
 }
 #[derive(serde::Serialize)]
 pub struct BackendSetupStatus { path: String, ready: bool, cached: Vec<String> }
@@ -83,7 +84,7 @@ pub fn get_backend_setup_status(app: AppHandle, gpu_arch: String) -> Result<Back
     backend_arch(&gpu_arch, "64")?;
     let root = get_backend_dir(&app)?.join(gpu_arch);
     let directories: Vec<_> = ["64", "32"].into_iter().map(|bits| root.join(bits)).filter(|dir| backend_ready(dir)).collect();
-    let cached = directories.iter().map(|dir| dir.join("dlssnr-amd/dlssnr.bin")).filter(|file| file.is_file()).map(|file| file.to_string_lossy().to_string()).collect();
+    let cached = directories.iter().filter_map(|dir| neural_models::find(&dir.join("dlssnr-amd"), ORIGINAL)).map(|file| file.to_string_lossy().to_string()).collect();
     Ok(BackendSetupStatus {path:root.to_string_lossy().to_string(),ready:!directories.is_empty(),cached})
 }
 #[tauri::command]
@@ -112,13 +113,13 @@ pub fn get_neural_model_status(app: AppHandle, gpu_arch: String, bitness: String
     let canonical = resource.join("dlssnr-amd");
     let selected = bin_path.as_deref().map(std::path::Path::new);
     let old_root = crate::core::paths::mod_root()?;
-    let model_dir = if canonical.join("dlssnr.bin").is_file() { Some(canonical.as_path()) }
+    let model_dir = if neural_models::find(&canonical, ORIGINAL).is_some() { Some(canonical.as_path()) }
         else { selected.and_then(|p| p.parent()).filter(|p| *p != old_root.as_path()) };
-    let has = |name| model_dir.map(|dir| dir.join(name).is_file()).unwrap_or(false);
+    let has = |name| model_dir.and_then(|dir| neural_models::find(dir, name)).is_some();
     let installed_text=game_dir.as_deref().and_then(|p|installed_mod_directory(std::path::Path::new(p)))
         .map(|root|super::neural_settings::read_file(&root.join("dlssnr-amd.ini"))).transpose()?.unwrap_or_default();
     Ok(NeuralModelStatus {
-        small: has("dlssnr-small.bin") && has("dlssnr.bin"), original: has("dlssnr.bin"),
+        small: has(SMALL) && has(ORIGINAL), original: has(ORIGINAL),
         selectable: crate::core::script_runner::selectable_models(&script),
         unified_networks: crate::core::script_runner::unified_networks(&script),
         experimental: crate::core::script_runner::experimental_network(&script) && resource.join("experimental/dlssnr-small-experimental.delta").is_file(),
@@ -153,7 +154,7 @@ fn details_in_directory(dir: &std::path::Path) -> GameInstallationDetails {
     let optiscaler = plugin || has(&["OptiScaler.dll", "OptiScaler.ini", "dlssnr_core.dll", "nvngx.dll_dlssnr.dll", "nvngx_dlssnr.dll"]);
     let addon = has(&["dlssnr_amd.addon64", "dlssnr_amd.addon32"]);
     let manifest = dir.join("dlssnr-amd-install.txt").is_file()
-        && dir.join("dlssnr-amd/dlssnr.bin").is_file();
+        && neural_models::find(&dir.join("dlssnr-amd"), ORIGINAL).is_some();
     let proxy_names = ["vulkan-1.dll", "winevulkan.dll", "dxgi.dll", "d3d9.dll", "winmm.dll", "version.dll", "d3d12.dll", "d3d11.dll", "dinput8.dll", "ReShade64.dll", "ReShade32.dll", "OptiScaler.dll"];
     // Prefer the loader recorded by the installer over similarly named original game DLLs.
     use std::io::Read;
@@ -325,6 +326,17 @@ mod modern_library_detection_tests {
             let details = details_in_directory(&fixture.0);
             assert!(details.dlssnr_installed);
             assert!(details.installed_dll.is_some());
+        }
+    }
+    #[test]
+    fn manifest_detects_both_model_filename_layouts() {
+        for model in [super::ORIGINAL, super::neural_models::ORIGINAL_NETWORK] {
+            let fixture = Fixture::new(&["dxgi.dll", "dlssnr-amd-install.txt"]);
+            fs::create_dir(fixture.0.join("dlssnr-amd")).unwrap();
+            fs::write(fixture.0.join("dlssnr-amd").join(model), []).unwrap();
+            let details = details_in_directory(&fixture.0);
+            assert_eq!(details.status, "ReShade");
+            assert!(details.dlssnr_installed);
         }
     }
     #[test]

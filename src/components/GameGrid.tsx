@@ -1,3 +1,8 @@
+import {ModernLibrarySearch} from "./modern/ModernLibrarySearch";
+import {useLibraryAppearance} from "../services/libraryAppearance";
+import {ModernLibraryAppearance} from "./modern/ModernLibraryAppearance";
+import {useLibraryHeader} from "../hooks/useLibraryHeader";
+import {useMemo} from "react";
 import {notifyError} from "../services/notifications";
 import {LibraryRecoveryDialog} from "./LibraryRecoveryDialog";
 import { sameGameInstallation } from "../services/integrationGameIdentity";
@@ -41,7 +46,6 @@ import { SmoothImage } from "./SmoothImage";
 
 const COVER_HOLD_FEEDBACK_DELAY = 250;
 const COVER_HOLD_ANIMATION_DURATION = 1200;
-const libraryNameOrder = new Intl.Collator("pt-BR", { sensitivity: "base", numeric: true });
 
 export interface GameInfo {
   steam_pending?: boolean;
@@ -125,7 +129,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const favorites = useFavorites();
   const removedGames = useRemovedLibraryGames();
   const performanceMode = usePerformanceMode();
-  const gridRoot = useRef<HTMLDivElement>(null);
+  const {viewport: gridRoot, header: libraryHeader} = useLibraryHeader();
   const [cachedGames] = useState(() => readGameLibrary());
   const [initialSnapshots] = useState(() => ({
     all: cachedGames,
@@ -162,8 +166,8 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     window.addEventListener("peligamesLibraryChanged", refresh);
     return () => { ++ownRequest.current; window.removeEventListener("peligamesLibraryChanged", refresh); };
   }, [Boolean(managedLibrary)]);
+  const appearance = useLibraryAppearance();
   const [searchQuery, setSearchQuery] = useState("");
-  const searchInput = useRef<HTMLInputElement>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">(() =>
     localStorage.getItem("game_library_view") === "list" ? "list" : "grid"
   );
@@ -177,12 +181,6 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     const saved = localStorage.getItem("custom_folders");
     return saved ? JSON.parse(saved) : [];
   });
-  // New interface: Ctrl+K focuses the library search.
-  useEffect(() => {
-    const focusSearch = (event: KeyboardEvent) => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); searchInput.current?.focus(); } };
-    window.addEventListener("keydown", focusSearch);
-    return () => window.removeEventListener("keydown", focusSearch);
-  }, []);
   // New interface: one grid filtered by store chips instead of collapsible categories.
   const [storeFilter, setStoreFilter] = useState("all");
   useEffect(() => { setStoreFilter("all"); }, [libraryScope, Boolean(managedLibrary)]);
@@ -198,7 +196,8 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     return () => { alive = false; window.removeEventListener("focus", refresh); };
   }, [runningGamePath, runningPathsKey, homeRevision]);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, game: GameInfo } | null>(null);
-  const { t } = useI18n();
+  const {t, language} = useI18n();
+  const libraryNameOrder = useMemo(() => new Intl.Collator(language, {sensitivity: "base", numeric: true}), [language]);
   useEffect(() => { setSearchQuery(""); setContextMenu(null); }, [libraryScope]);
 
   useEffect(() => {
@@ -262,8 +261,6 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     return () => window.removeEventListener("focus", refreshOnFocus);
   }, [managed, customFolders, libraryScope]);
 
-
-
   useEffect(() => {
     if (managedLibrary) return;
     if (startupHandled.current !== libraryScope) {
@@ -307,7 +304,6 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     hoverFrame.current = null;
     hoverBounds.current = null;
   }, [performanceMode, viewMode]);
-
 
   const handleMouseEnter = (event: React.MouseEvent<HTMLDivElement>) => {
     if (viewMode === "list" || performanceMode || event.currentTarget.classList.contains("is-away")) return;
@@ -358,7 +354,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     card.style.zIndex = "1";
     card.style.boxShadow = "none";
     card.style.borderColor = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)";
-    
+
     const glare = card.querySelector('.glare') as HTMLDivElement;
     if (glare) {
       glare.style.opacity = "0";
@@ -519,7 +515,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
     // (only a class turns it grey), so returning from the details swaps nothing.
     if (gameViewKey(game) === selectedGameKey && viewMode === "list") {
       return (
-        <div 
+        <div
           key={gameViewKey(game)}
           className={`game-card-placeholder ${isPreparing(game) ? "is-preparing-game" : ""} ${viewMode === "list" ? "game-card-placeholder--list" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shatter" ? "is-holding-launch" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "particles" ? "is-holding-particles" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "shrink" ? "is-holding-shrink" : ""} ${holdingKey === gameViewKey(game) && launchEffect === "freeze" ? "is-holding-freeze" : ""}`}
           onPointerDown={event => { if (isRunning(game)) startHold(event, game); }}
@@ -584,10 +580,10 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
           card.style.transition = "box-shadow .35s ease, border-color .35s ease";
           card.style.removeProperty("transform");
         }}
-        style={{ 
-          background: "rgba(0,0,0,0.3)", 
-          borderRadius: "8px", 
-          overflow: "hidden", 
+        style={{
+          background: "rgba(0,0,0,0.3)",
+          borderRadius: "8px",
+          overflow: "hidden",
           cursor: "pointer",
           transition: "box-shadow 0.1s ease-out",
           border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)",
@@ -618,7 +614,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
           loading="lazy"
           decoding="async"
           onLoad={event => { if (!performanceMode && game.cover_url) warmAmbientCover(game.cover_url, event.currentTarget); }}
-          style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block" }} 
+          style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block" }}
           onError={async () => {
             setImageErrors(prev => new Set(prev).add(game.path));
             if (!hasCustomCover(game)) forgetAutomaticCover(game);
@@ -650,20 +646,20 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
           }}
         />
       ) : null}
-      <div 
-        className="fallback-cover" 
-        style={{ 
-          width: "100%", aspectRatio: "2/3", 
-          background: "linear-gradient(135deg, #1e3a8a, #312e81)", 
-          display: (!game.cover_url || imageErrors.has(game.path)) ? "flex" : "none", 
+      <div
+        className="fallback-cover"
+        style={{
+          width: "100%", aspectRatio: "2/3",
+          background: "linear-gradient(135deg, #1e3a8a, #312e81)",
+          display: (!game.cover_url || imageErrors.has(game.path)) ? "flex" : "none",
           position: "relative",
           textAlign: "center"
         }}
       >
         <span style={{ position: "absolute", top: "1rem", left: "0.5rem", right: "0.5rem", fontWeight: "bold", fontSize: "0.9rem", textShadow: "0 2px 4px rgba(0,0,0,0.8)" }}>{game.name}</span>
-        <img src="/peligames.svg" alt="Icon" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "48px", height: "48px", opacity: 0.5 }} />
+        <img src="/peligames.svg" alt="Icon" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "3rem", height: "3rem", opacity: 0.5 }} />
       </div>
-      
+
       <GamePlatformBadge game={game} />
       </div>
       <>
@@ -763,34 +759,32 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
   const showEmptyOwnLibrary = !scanning && ownLoaded && (libraryScope === "own" || mode === "mods") && !searchQuery && filteredGames.length === 0;
 
   return (
-    <div ref={gridRoot} className="modern-library-viewport">
+    <div ref={gridRoot} className="modern-library-viewport" style={{"--library-cover-scale":appearance.coverSize / 100} as React.CSSProperties}>
       {recoverLibrary&&<LibraryRecoveryDialog onClose={()=>setRecoverLibrary(false)}/>}
       <AnimatePresence>{teleport && <CoverLaunchTeleport value={teleport} reducedMotion={performanceMode} cancellingDisabled={launchCommitted} onCancel={() => cancelPendingLaunch.current?.()} />}</AnimatePresence>
-      <div className="modern-lib-toolbar">
-        <label className="modern-lib-search">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-          <input ref={searchInput} value={searchQuery} onChange={event => setSearchQuery(event.target.value)} placeholder={t("modern", "searchLibrary")} aria-label={t("gameGrid", "search")}
-            onKeyDown={event => { if (event.key === "Escape") setSearchQuery(""); }} />
-          {searchQuery ? <button type="button" aria-label={t("gameGrid", "clearSearch")} onClick={() => { setSearchQuery(""); searchInput.current?.focus(); }}>×</button> : <kbd>Ctrl K</kbd>}
-        </label>
+      <div ref={libraryHeader} className="modern-library-header">
+        <div className="modern-lib-toolbar">
+          <ModernLibrarySearch value={searchQuery} onChange={setSearchQuery}/>
 
-        <div className="modern-lib-actions">
-        <ModernLibraryFilters activeLabel={storeFilter==="all"?undefined:storeFilter==="favorites"?t("gameGrid","favorites"):storeFilter}>
-          <button type="button" aria-pressed={storeFilter === "all"} onClick={() => setStoreFilter("all")}>{t("modern", "all")} <b>{filteredGames.length}</b></button>
-          {favoriteGames.length > 0 && <button type="button" aria-pressed={storeFilter === "favorites"} onClick={() => setStoreFilter("favorites")}><i className="modern-chip-dot" />{t("gameGrid", "favorites")} <b>{favoriteGames.length}</b></button>}
-          {storeChips.map(category => <button type="button" key={category} aria-pressed={storeFilter === category} onClick={() => setStoreFilter(category)}>{chipIcon(category)}{category} <b>{filteredGames.filter(game => categoryOf(game) === category).length}</b></button>)}
-        </ModernLibraryFilters>
-          {managedLibrary && <button type="button" className="modern-lib-icon" onClick={managedLibrary.onAccount} title={managedLibrary.accountLabel} aria-label={managedLibrary.accountLabel}><img src="/nexus-mods.svg" alt="" /></button>}
-          {!managedLibrary&&<button type="button" className="modern-lib-icon modern-lib-labeled" disabled={modeDisabled||coverActionsBlocked||scanSpinning} onClick={()=>setRecoverLibrary(true)} title="Localizar instalações e cópias do PeliGames"><MenuIcon name="folder"/>Localizar biblioteca</button>}
-          <button type="button" className={`modern-lib-icon modern-lib-labeled${scanSpinning ? " spinning" : ""}`} disabled={scanSpinning || managedLibrary?.busy} onClick={() => void fetchGames()} title={t("gameGrid", "scanLibrary")} aria-label={t("gameGrid", "scanLibrary")}><MenuIcon name="repair" /><span>{t("gameGrid","rescan")}</span></button>
-          <div className="modern-lib-view" role="group" aria-label={t("gameGrid", "viewMode")}>
-            <button type="button" aria-pressed={viewMode === "grid"} aria-label={t("gameGrid", "gridView")} title={t("gameGrid", "gridView")} onClick={() => setViewMode("grid")}><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></button>
-            <button type="button" aria-pressed={viewMode === "list"} aria-label={t("gameGrid", "listView")} title={t("gameGrid", "listView")} onClick={() => setViewMode("list")}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></button>
+          <div className="modern-lib-actions">
+          <ModernLibraryFilters activeLabel={storeFilter==="all"?undefined:storeFilter==="favorites"?t("gameGrid","favorites"):storeFilter}>
+            <button type="button" aria-pressed={storeFilter === "all"} onClick={() => setStoreFilter("all")}>{t("modern", "all")} <b>{filteredGames.length}</b></button>
+            {favoriteGames.length > 0 && <button type="button" aria-pressed={storeFilter === "favorites"} onClick={() => setStoreFilter("favorites")}><i className="modern-chip-dot" />{t("gameGrid", "favorites")} <b>{favoriteGames.length}</b></button>}
+            {storeChips.map(category => <button type="button" key={category} aria-pressed={storeFilter === category} onClick={() => setStoreFilter(category)}>{chipIcon(category)}{category} <b>{filteredGames.filter(game => categoryOf(game) === category).length}</b></button>)}
+          </ModernLibraryFilters>
+            {managedLibrary && <button type="button" className="modern-lib-icon" onClick={managedLibrary.onAccount} title={managedLibrary.accountLabel} aria-label={managedLibrary.accountLabel}><img src="/nexus-mods.svg" alt="" /></button>}
+            {!managedLibrary&&<button type="button" className="modern-lib-icon modern-lib-labeled" disabled={modeDisabled||coverActionsBlocked||scanSpinning} onClick={()=>setRecoverLibrary(true)} title="Localizar instalações e cópias do PeliGames"><MenuIcon name="folder"/>Localizar biblioteca</button>}
+            <button type="button" className={`modern-lib-icon modern-lib-labeled${scanSpinning ? " spinning" : ""}`} disabled={scanSpinning || managedLibrary?.busy} onClick={() => void fetchGames()} title={t("gameGrid", "scanLibrary")} aria-label={t("gameGrid", "scanLibrary")}><MenuIcon name="repair" /><span>{t("gameGrid","rescan")}</span></button>
+            <div className="modern-lib-view" role="group" aria-label={t("gameGrid", "viewMode")}>
+              <button type="button" aria-pressed={viewMode === "grid"} aria-label={t("gameGrid", "gridView")} title={t("gameGrid", "gridView")} onClick={() => setViewMode("grid")}><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></button>
+              <button type="button" aria-pressed={viewMode === "list"} aria-label={t("gameGrid", "listView")} title={t("gameGrid", "listView")} onClick={() => setViewMode("list")}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></button>
+            </div>
+            <ModernLibraryAppearance/>
+            <button type="button" className="modern-lib-button primary" disabled={modeDisabled || Boolean(managedLibrary?.busy)} onClick={() => onModeChange("install")} title={t("modern", "addGame")}><MenuIcon name="plusCircle" />{t("modern", "add")}</button>
           </div>
-          <button type="button" className="modern-lib-button primary" disabled={modeDisabled || Boolean(managedLibrary?.busy)} onClick={() => onModeChange("install")} title={t("modern", "addGame")}><MenuIcon name="plusCircle" />{t("modern", "add")}</button>
         </div>
+        {(libraryError || managedLibrary?.error) && <TimedFeedback>{libraryError || managedLibrary?.error}</TimedFeedback>}
       </div>
-      {(libraryError || managedLibrary?.error) && <TimedFeedback>{libraryError || managedLibrary?.error}</TimedFeedback>}
 
       <div className={`game-grid-container game-library--${viewMode} modern-grid-container`}>
         {showScanScreen ? <div className="empty-library-state"><NexusLibraryLoading reducedMotion={performanceMode} /></div> : <>
@@ -831,7 +825,7 @@ export const GameGrid: React.FC<Props> = ({ onCoverAction, coverActionsBlocked, 
           </div> : <div role="status" style={{ textAlign: "center", padding: "2rem", color: "var(--tone-94a3b8, #94a3b8)" }}>
             <p>{searchQuery ? t("gameGrid", "noSearchResults") : libraryScope === "own" ? t("gameGrid", "noOwnGames") : t("app", "noGamesFound")}</p>
           </div>)}
-        {recentGames.length > 0 && <section className="modern-continue">
+        {appearance.showRecent && recentGames.length > 0 && <section className="modern-continue">
           <div className="modern-section-title"><h2>{t("modern", "continuePlaying")}</h2><small>{t("modern", "recent")}</small></div>
           <div key={cacheScope} className="modern-continue-row">{recentGames.map(game => {
             const cover = !imageErrors.has(game.path) ? game.cover_url : undefined;

@@ -1,14 +1,17 @@
+import {useI18n} from "../i18n/I18nContext";
 import {setNeonWaveOptions,useNeonWaveOptions,useNeonWaveAudioState} from "./neonWavePreferences";
-export function NeonWavePreferences({pt}:{pt:boolean}){
+export function NeonWavePreferences(){
+  const {t: tx} = useI18n();
+
  const options=useNeonWaveOptions(),state=useNeonWaveAudioState(),preview="__PELI_UI_PREVIEW__" in window;
- const labels=pt?{off:"Reação ao áudio desligada",connecting:"Conectando ao áudio…",listening:"Reagindo à saída de áudio",unavailable:"Áudio indisponível — movimento ambiente ativo",paused:"Efeito pausado para economizar recursos",demo:"Batidas simuladas na prévia"}:{off:"Audio reaction off",connecting:"Connecting to audio…",listening:"Reacting to audio output",unavailable:"Audio unavailable — ambient motion active",paused:"Effect paused to save resources",demo:"Simulated preview beats"};
- return <section className="preference-panel neon-wave-preferences"><h2>Neon Wave</h2><p>{pt?"Lava suave, cores de sintetizador e pulsação com o som. Sua paleta anterior fica guardada no tema Padrão.":"Soft lava, synth colors and audio pulses. Your previous palette is preserved in Standard."}</p>
- <label className="neon-wave-option"><input type="checkbox" checked={options.audio} onChange={event=>setNeonWaveOptions({audio:event.target.checked})}/>{pt?"Reagir ao áudio do computador":"React to computer audio"}</label>
- <small>{pt?"Usa a saída padrão de áudio, sem acessar o microfone nem salvar gravações. Pausa com a janela oculta, movimento reduzido ou modo de desempenho.":"Uses the default audio output without microphone access or recordings. Pauses while hidden, with reduced motion or performance mode."}</small>
- {preview&&<label className="neon-wave-option"><input type="checkbox" checked={options.demo} onChange={event=>setNeonWaveOptions({demo:event.target.checked})}/>{pt?"Simular batidas na prévia (sem capturar áudio real)":"Simulate preview beats (no real audio capture)"}</label>}
- <label className="neon-wave-intensity" htmlFor="neon-wave-intensity">{pt?"Intensidade":"Intensity"}<output>{options.intensity}%</output></label><input id="neon-wave-intensity" type="range" min="10" max="100" step="1" value={options.intensity} onChange={event=>setNeonWaveOptions({intensity:Number(event.target.value)})}/>
- <label className="neon-wave-intensity" htmlFor="neon-wave-reaction">{pt?"Resposta à música":"Music response"}<output>{options.reaction}%</output></label><input id="neon-wave-reaction" type="range" min="0" max="100" step="1" value={options.reaction} onChange={event=>setNeonWaveOptions({reaction:Number(event.target.value)})}/>
- <small>{pt?"Controla a força das batidas sem alterar o brilho do fundo.":"Controls beat strength without changing background brightness."}</small>
+ const labels={off: tx("ui-neon-wave-preferences", "audio_reaction_off"), connecting: tx("ui-neon-wave-preferences", "connecting_to_audio"), listening: tx("ui-neon-wave-preferences", "reacting_to_audio_output"), unavailable: tx("ui-neon-wave-preferences", "audio_unavailable_ambient_motion_active"), paused: tx("ui-neon-wave-preferences", "effect_paused_to_save_resources"), demo: tx("ui-neon-wave-preferences", "simulated_preview_beats")};
+ return <section className="preference-panel neon-wave-preferences"><h2>Neon Wave</h2><p>{tx("ui-neon-wave-preferences", "soft_lava_synth_colors_and_audio_pulses_your_previous_palette_is_preserved_in_standard")}</p>
+ <label className="neon-wave-option"><input type="checkbox" checked={options.audio} onChange={event=>setNeonWaveOptions({audio:event.target.checked})}/>{tx("ui-neon-wave-preferences", "react_to_computer_audio")}</label>
+ <small>{tx("ui-neon-wave-preferences", "uses_the_default_audio_output_without_microphone_access_or_recordings_pauses_while_hidde")}</small>
+ {preview&&<label className="neon-wave-option"><input type="checkbox" checked={options.demo} onChange={event=>setNeonWaveOptions({demo:event.target.checked})}/>{tx("ui-neon-wave-preferences", "simulate_preview_beats_no_real_audio_capture")}</label>}
+ <label className="neon-wave-intensity" htmlFor="neon-wave-intensity">{tx("ui-neon-wave-preferences", "intensity")}<output>{options.intensity}%</output></label><input id="neon-wave-intensity" type="range" min="10" max="100" step="1" value={options.intensity} onChange={event=>setNeonWaveOptions({intensity:Number(event.target.value)})}/>
+ <label className="neon-wave-intensity" htmlFor="neon-wave-reaction">{tx("ui-neon-wave-preferences", "music_response")}<output>{options.reaction}%</output></label><input id="neon-wave-reaction" type="range" min="0" max="100" step="1" value={options.reaction} onChange={event=>setNeonWaveOptions({reaction:Number(event.target.value)})}/>
+ <small>{tx("ui-neon-wave-preferences", "controls_beat_strength_without_changing_background_brightness")}</small>
  <p role="status" className="neon-wave-audio-status">{labels[state.status]}</p>{state.error&&<small role="alert">{state.error}</small>}
  </section>;
 }

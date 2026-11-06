@@ -1,0 +1,12 @@
+{
+  "automatic": "Automático (sistema)",
+  "loading": "Carregando idioma…",
+  "loadError": "Não foi possível carregar o idioma. A seleção anterior foi mantida.",
+  "search": "Buscar idioma",
+  "count_one": "{{count}} idioma disponível",
+  "count_other": "{{count}} idiomas disponíveis",
+  "installerSettings": "Configurações do instalador",
+  "increaseScale": "Aumentar escala",
+  "decreaseScale": "Diminuir escala",
+  "count_many": "{{count}} idiomas disponíveis"
+}

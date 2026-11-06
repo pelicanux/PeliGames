@@ -1,0 +1,16 @@
+{
+  "title": "Installation Mode (Route)",
+  "optiscaler": "OptiScaler",
+  "optiscalerDesc": "(64-bit only - Requires FSR/DLSS in-game)",
+  "reshade": "ReShade",
+  "reshadeDesc": "(D3D10/11/12 games without upscaler)",
+  "vulkan": "Vulkan / DX9",
+  "vulkanDesc": "(with DXVK)",
+  "dx9": "Classic DX9",
+  "dx9Desc": "(with old depth support)",
+  "renodx": "RenoDX",
+  "renodxHint": "Uses RenoDX image processing with the same NR network. Settings: NR Control (End) with OptiScaler, or Add-ons with ReShade. Saves automatically when installed; restart the game to change modes.",
+  "int4": "int4 mixed",
+  "int4Hint": "Speeds up part of the network at lower precision; may alter the image and delay NR startup. Ctrl+F11 switches to the default network. Applies when installing or repairing.",
+  "layersNote": "Copy the whole line: VK_ADD_LAYER_PATH and VK_INSTANCE_LAYERS are needed by NR Control (End key) and int4 mixed."
+}

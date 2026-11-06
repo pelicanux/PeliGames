@@ -1,0 +1,23 @@
+.modern-lib-search { container:library-search / inline-size; }
+.modern-ui .modern-lib-search .modern-library-search-trigger { position:relative; display:grid; place-items:center; flex:0 0 auto; padding:0; width:1rem; height:100%; border:0; background:transparent; color:inherit; }
+.modern-library-search-trigger .menu-icon { width:1rem; height:1rem; }
+.modern-ui .modern-lib-toolbar .modern-lib-search[data-compact] { padding:0; gap:0; border:0; background:transparent !important; box-shadow:none; }
+.modern-ui .modern-lib-toolbar .modern-lib-search[data-compact]::before { content:none !important; }
+.modern-ui .modern-lib-search[data-compact] .modern-library-search-trigger { width:42px; height:42px; border-radius:14px; border:1px solid var(--modern-line); background:var(--library-control-glass,var(--modern-card-2)); }
+.modern-library-search-trigger i { position:absolute; right:7px; top:7px; width:5px; height:5px; border-radius:50%; background:var(--accent); }
+@container library-search (max-width:240px) { .modern-lib-search > kbd { display:none; } }
+.modern-library-search-popup { box-sizing:border-box; display:flex; align-items:center; gap:10px; padding:12px; border:1px solid rgba(160,177,204,.25); border-radius:14px; color:var(--tone-f2f3f8,#f2f3f8); background:rgb(var(--glass-base-start,12,17,32)); box-shadow:0 12px 32px #0005; }
+.modern-library-search-popup input { flex:1; min-width:0; border:0; outline:0; background:transparent; color:inherit; font:inherit; font-size:.875rem; }
+.modern-library-search-popup button { border:0; background:transparent; color:inherit; cursor:pointer; font:inherit; font-size:1.125rem; }
+.modern-library-search-popup kbd { white-space:nowrap; font-size:.6875rem; color:var(--text-secondary); }
+@container library-workspace (max-width:52rem) {
+  .modern-ui .modern-lib-toolbar .modern-lib-actions .modern-lib-labeled { flex:0 0 42px; width:42px; max-width:42px; gap:0; padding:0 !important; }
+  .modern-lib-toolbar .modern-lib-labeled > span { display:none; }
+  .modern-ui .modern-lib-actions > .modern-lib-button.primary { flex:0 0 42px; width:42px; padding:0; gap:0; font-size:0; justify-content:center; }
+}
+@container library-workspace (max-width:500px) {
+  .modern-ui .modern-lib-toolbar, .modern-ui .modern-lib-toolbar .modern-lib-actions { gap:4px; }
+  .modern-ui .modern-lib-toolbar > .modern-lib-search { min-width:34px; height:36px; }
+  .modern-ui .modern-lib-search[data-compact] .modern-library-search-trigger, .modern-lib-actions > .modern-library-appearance > button, .modern-ui .modern-lib-toolbar .modern-lib-actions .modern-lib-labeled, .modern-ui .modern-lib-actions > .modern-lib-button.primary { flex-basis:34px; width:34px; min-width:34px; max-width:34px; height:36px; min-height:36px; }
+  .modern-ui .modern-lib-actions .modern-lib-view button { width:26px; height:28px; }
+}

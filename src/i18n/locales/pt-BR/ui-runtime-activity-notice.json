@@ -1,0 +1,11 @@
+{
+  "runtime_preparation": "Preparação do runtime",
+  "downloading_game_runtime": "Baixando runtime do jogo",
+  "extracting_runtime": "Extraindo runtime",
+  "runtime_preparation_failed": "Falha ao preparar o runtime",
+  "preparing_game_environment": "Preparando ambiente do jogo",
+  "preview": "Demonstração · ",
+  "received": "recebidos",
+  "runtime_preparation_failed_check_your_connection_and_retry_missing_runtime_files_require": "Não foi possível preparar o runtime. Verifique a conexão e tente novamente. Sem os arquivos instalados, o jogo precisa de internet para completar essa etapa.",
+  "the_game_waits_for_preparation_slow_connections_may_take_longer_the_runtime_is_kept_for_": "O jogo aguarda essa preparação. Com internet lenta, o download pode demorar. O runtime fica instalado para as próximas aberturas; novas atualizações podem exigir outro download."
+}

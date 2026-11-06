@@ -7,7 +7,8 @@ import { LauncherInstallWizard } from "./LauncherInstallWizard";
 import { useEffect, useState } from "react";
 
 export function GameEntryModal({ onClose, onSelect }: { onClose: () => void; onSelect: (mode: "install" | "add") => void }) {
-  const { t, language } = useI18n();
+
+  const { t } = useI18n();
   const [recipe, setRecipe] = useState<LauncherRecipe | null>(null);
   useEffect(() => {
     const escape = (event: KeyboardEvent) => { if (event.key === "Escape" && !recipe) { event.stopImmediatePropagation(); onClose(); } };
@@ -22,9 +23,9 @@ export function GameEntryModal({ onClose, onSelect }: { onClose: () => void; onS
         {(["install", "add"] as const).map(mode => <button key={mode} type="button" className="btn btn-secondary game-entry-option"
           onClick={() => onSelect(mode)}><InstallationActionIcon name={mode === "install" ? "download" : "plusCircle"} /><span>{t("gameModes", mode === "install" ? "install" : "addGame")}</span></button>)}
       </div>
-      <section className="game-entry-launchers" aria-label={language === "pt" ? "Instalar launcher" : "Install launcher"}>
-        <h3>{language === "pt" ? "Instalar launcher" : "Install launcher"}</h3>
-        <div className="game-entry-launcher-grid">{launcherRecipes.map(item => <button type="button" key={item.id} className="game-entry-launcher" aria-label={`${language === "pt" ? "Instalar" : "Install"} ${item.name}`} onClick={() => setRecipe(item)}><img src={`/launchers/${item.id}.svg`} alt="" /><span>{item.name}</span></button>)}</div>
+      <section className="game-entry-launchers" aria-label={t("ui-game-entry-modal", "install_launcher")}>
+        <h3>{t("ui-game-entry-modal", "install_launcher")}</h3>
+        <div className="game-entry-launcher-grid">{launcherRecipes.map(item => <button type="button" key={item.id} className="game-entry-launcher" aria-label={`${t("ui-game-entry-modal", "install")} ${item.name}`} onClick={() => setRecipe(item)}><img src={`/launchers/${item.id}.svg`} alt="" /><span>{item.name}</span></button>)}</div>
       </section>
     </ModalSurface>
   </div>;

@@ -1,0 +1,4 @@
+{
+  "backend_incomplete_check_the_downloaded_files": "Backend incompleto. Confira os arquivos baixados.",
+  "this_download_includes_the_dlss_nr_backend_and_extraction_and_installation_tools_it_does": "Este download inclui o backend DLSS NR e as ferramentas de extração e instalação. Não inclui a DLL da NVIDIA nem os modelos de IA: obtenha a nvngx_dlssnr.dll separadamente e extraia os modelos na etapa abaixo."
+}

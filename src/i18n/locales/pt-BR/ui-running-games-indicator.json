@@ -1,0 +1,13 @@
+{
+  "preparing": "Preparando:",
+  "running": "Em execução:",
+  "stopping": "Encerrando:",
+  "preparing_2": "Preparando",
+  "stopping_2": "Encerrando",
+  "running_2": "Em execução",
+  "could_not_stop_the_game_check_notifications": "Não foi possível encerrar o jogo. Confira as notificações.",
+  "running_games": "Jogos em execução",
+  "details": "Detalhes",
+  "stopping_3": "Encerrando…",
+  "stop": "Parar"
+}

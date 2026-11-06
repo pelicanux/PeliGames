@@ -1,4 +1,5 @@
 import {useEffect,useState} from "react";
+import {SelectionMenu} from "../SelectionMenu";
 import {listMangoHudPresets,saveMangoHudPreset,removeMangoHudPreset,type MangoHudPreset,type MangoHudSettings} from "../../services/mangohud";
 import {mangoHudDefaults} from "./mangoHudDefaults";
 export function MangoHudCustomPresets({settings,onLoad}:{settings:MangoHudSettings;onLoad:(settings:MangoHudSettings)=>void}) {
@@ -10,7 +11,7 @@ export function MangoHudCustomPresets({settings,onLoad}:{settings:MangoHudSettin
  return <div className="mm-custom-presets">
   <div className="mm-custom-heading"><strong>Meus presets</strong><button type="button" disabled={busy} onClick={()=>{setEditing(!editing);setError("");setMessage("");}}>Salvar preset atual</button></div>
   {editing&&<form className="mm-custom-controls" onSubmit={e=>{e.preventDefault();void save();}}><input autoFocus aria-label="Nome do preset" placeholder="Nome do preset" maxLength={64} value={name} disabled={busy} onChange={e=>setName(e.target.value)}/><button type="submit" disabled={busy||!name.trim()}>{busy?"Salvando…":"Salvar"}</button><button type="button" disabled={busy} onClick={()=>setEditing(false)}>Cancelar</button></form>}
-  {presets.length>0?<div className="mm-custom-controls"><select aria-label="Preset personalizado" value={selected} disabled={busy} onChange={e=>{setSelected(e.target.value);setConfirmDelete(false);setMessage("");}}><option value="">Escolha um preset</option>{presets.map(p=><option key={p.name} value={p.name}>{p.name}</option>)}</select><button type="button" disabled={busy||!selected} onClick={load}>Carregar</button><button type="button" disabled={busy||!selected} onClick={()=>void remove()}>{confirmDelete?"Confirmar exclusão":"Excluir"}</button>{confirmDelete&&<button type="button" disabled={busy} onClick={()=>setConfirmDelete(false)}>Cancelar</button>}</div>:<p className="mm-hint">Salve seus ajustes de aparência, informações e ordem para reutilizar depois.</p>}
+  {presets.length>0?<div className="mm-custom-controls"><SelectionMenu label="Preset personalizado" className="mm-setting-select" menuClassName="mm-setting-options" value={selected} disabled={busy} options={[{value:"",label:"Escolha um preset"},...presets.map(p=>({value:p.name,label:p.name}))]} onChange={value=>{setSelected(value);setConfirmDelete(false);setMessage("");}}/><button type="button" disabled={busy||!selected} onClick={load}>Carregar</button><button type="button" disabled={busy||!selected} onClick={()=>void remove()}>{confirmDelete?"Confirmar exclusão":"Excluir"}</button>{confirmDelete&&<button type="button" disabled={busy} onClick={()=>setConfirmDelete(false)}>Cancelar</button>}</div>:<p className="mm-hint">Salve seus ajustes de aparência, informações e ordem para reutilizar depois.</p>}
   {message&&<small role="status">{message}</small>}{error&&<small role="alert" className="mod-feedback-error">{error}</small>}
  </div>;
 }

@@ -1,0 +1,15 @@
+{
+  "audio_reaction_off": "Reação ao áudio desligada",
+  "connecting_to_audio": "Conectando ao áudio…",
+  "reacting_to_audio_output": "Reagindo à saída de áudio",
+  "audio_unavailable_ambient_motion_active": "Áudio indisponível — movimento ambiente ativo",
+  "effect_paused_to_save_resources": "Efeito pausado para economizar recursos",
+  "simulated_preview_beats": "Batidas simuladas na prévia",
+  "soft_lava_synth_colors_and_audio_pulses_your_previous_palette_is_preserved_in_standard": "Lava suave, cores de sintetizador e pulsação com o som. Sua paleta anterior fica guardada no tema Padrão.",
+  "react_to_computer_audio": "Reagir ao áudio do computador",
+  "uses_the_default_audio_output_without_microphone_access_or_recordings_pauses_while_hidde": "Usa a saída padrão de áudio, sem acessar o microfone nem salvar gravações. Pausa com a janela oculta, movimento reduzido ou modo de desempenho.",
+  "simulate_preview_beats_no_real_audio_capture": "Simular batidas na prévia (sem capturar áudio real)",
+  "intensity": "Intensidade",
+  "music_response": "Resposta à música",
+  "controls_beat_strength_without_changing_background_brightness": "Controla a força das batidas sem alterar o brilho do fundo."
+}

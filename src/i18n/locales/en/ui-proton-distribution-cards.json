@@ -1,0 +1,20 @@
+{
+  "installing": "Installing…",
+  "checking": "Checking…",
+  "not_checked": "Not checked",
+  "update_available": "Update available",
+  "installed": "Installed",
+  "none": "None",
+  "available": "Available",
+  "update": "Update",
+  "install": "Install",
+  "check_for_updates": "Check for updates",
+  "installation_complete": "Installation complete",
+  "preparing_download": "Preparing download…",
+  "install_location": "Install location",
+  "remove_this_version": "Remove this version",
+  "games_using_this_version_will_need_another_selection": "Games using this version will need another selection.",
+  "remove": "Remove",
+  "runtime_note_1": "Plain Wine (wow64), without the Steam Runtime container: it uses the system's libraries. For games, prefer a Proton.",
+  "runtime_note_2": "Community fork of Proton-CachyOS with Wayland improvements; not published by CachyOS."
+}

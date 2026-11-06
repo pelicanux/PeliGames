@@ -32,6 +32,7 @@ interface BackendVersionStatus {
 }
 
 export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbedded, onBack, onBusyChange, compact = false, disabled = false }) => {
+
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState(false);
@@ -47,8 +48,8 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
   const versionRequest = useRef(0);
   const [versionStatus, setVersionStatus] = useState<BackendVersionStatus | null>(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-  const { t, language } = useI18n();
-  const pt = language === "pt";
+  const { t } = useI18n();
+
   const downloadingRef = useRef(false);
   downloadingRef.current = isDownloading;
   const blocked = loading || disabled || checkingVersion;
@@ -69,10 +70,10 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
       if (manual) {
         const label = gpuArch === "rdna4" ? "DLSSNR-AMD" : "DLSSNR-RDNA3";
         const message = result.current?.includes("local-copy")
-          ? (pt ? `Versão disponível: ${result.latest}. Os arquivos importados não têm uma versão comparável.` : `Available version: ${result.latest}. Imported files have no comparable version.`)
+          ? (t("ui-backend-updater-modal", "available_version_imported_files_have_no_comparable_version", {"result_latest": result.latest}))
           : result.needs_update
-            ? (pt ? `Versão ${result.latest} disponível. Clique em ${result.current ? "Atualizar" : "Baixar"} para instalar.` : `Version ${result.latest} available. Choose ${result.current ? "Update" : "Download"} to install.`)
-            : (pt ? "Seu backend já está atualizado." : "Your backend is up to date.");
+            ? (t("ui-backend-updater-modal", "available_version_action", {version: result.latest, action: result.current ? t("updater", "update") : t("ui-backend-updater-modal", "download")}))
+            : (t("ui-backend-updater-modal", "your_backend_is_up_to_date"));
         notifyInfo(label, message);
       }
     } catch (err) {
@@ -83,7 +84,7 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
     } finally {
       if (request === versionRequest.current) { setCheckingVersion(false); setManualChecking(false); }
     }
-  }, [gpuArch, pt]);
+  }, [gpuArch, t]);
 
   useEffect(() => {
     void checkVersion();
@@ -95,7 +96,7 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
         const pct = (payload.downloaded / payload.total) * 100;
         setProgressPct(pct > 100 ? 100 : pct);
       }
-      
+
       if (payload.speed_bytes_per_sec > 0) {
         const speedMb = payload.speed_bytes_per_sec / (1024 * 1024);
         setSpeedStr(`${speedMb.toFixed(1)} MB/s`);
@@ -115,7 +116,7 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
 
   const handleDownload = async () => {
     if (blocked) return;
-    
+
     setLoading(true);
     setIsDownloading(true);
     setProgressPct(0);
@@ -123,7 +124,7 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
     setDownloadComplete(false);
     setStatus(t("updater", "preparing"));
     setError(false);
-    
+
     try {
       const response = await invoke<string>("update_backend", { gpuArch });
       setStatus(response);
@@ -211,14 +212,13 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
     } finally { setOpeningFolder(false); }
   };
 
-
   const compactContent = <div className="backend-inline-controls mod-workspace">
-    <div className="mod-component-state"><span className="mod-status-badge" data-ready={downloadComplete} role="status">{checkingVersion?t("updater", "checking"):downloadComplete?(pt?"Atualizado":"Up to date"):versionStatus?.current?(pt?"Atualização disponível":"Update available"):(pt?"Não instalado":"Not installed")}</span>{versionStatus?.current&&<span className="mod-version-label" title={versionStatus.current}>{versionStatus.current.includes("local-copy")?(pt?"Versão local não identificada":"Unidentified local version"):`${pt?"Versão instalada":"Installed version"}: ${versionStatus.current.replace(/-rdna[34]$/, "")}`}</span>}<button type="button" className="mod-action-quiet backend-check-update" disabled={blocked} onClick={()=>void checkVersion(true)}><MenuIcon name="repair"/>{checkingVersion?(pt?"Verificando…":"Checking…"):(pt?"Buscar atualização":"Check for updates")}</button></div>
-    <div className="mod-setting-row"><div className="mod-row-copy"><strong>{pt?"Arquivos do backend":"Backend files"}</strong><small>{downloadComplete?(pt?"Pronto para configurar nos seus jogos.":"Ready to configure in your games."):(pt?"Baixe os componentes do projeto, sem a DLL da NVIDIA.":"Download the project components, without the NVIDIA DLL.")}</small></div>{!downloadComplete&&<button type="button" className="mod-action-primary" disabled={blocked || checkingVersion} onClick={() => void handleDownload()}><MenuIcon name="download"/>{isDownloading?`${progressPct.toFixed(0)}%`:versionStatus?.current&&versionStatus.needs_update?t("updater", "update"):(pt?"Baixar":"Download")}</button>}{isDownloading&&<button type="button" className="mod-action-secondary" onClick={e=>void handleCancelDownload(e)}>{t("updater", "cancel")}</button>}</div>
+    <div className="mod-component-state"><span className="mod-status-badge" data-ready={downloadComplete} role="status">{checkingVersion?t("updater", "checking"):downloadComplete?(t("ui-backend-updater-modal", "up_to_date")):versionStatus?.current?(t("ui-backend-updater-modal", "update_available")):(t("ui-backend-updater-modal", "not_installed"))}</span>{versionStatus?.current&&<span className="mod-version-label" title={versionStatus.current}>{versionStatus.current.includes("local-copy")?(t("ui-backend-updater-modal", "unidentified_local_version")):`${t("ui-backend-updater-modal", "installed_version")}: ${versionStatus.current.replace(/-rdna[34]$/, "")}`}</span>}<button type="button" className="mod-action-quiet backend-check-update" disabled={blocked} onClick={()=>void checkVersion(true)}><MenuIcon name="repair"/>{checkingVersion?(t("ui-backend-updater-modal", "checking")):(t("ui-backend-updater-modal", "check_for_updates"))}</button></div>
+    <div className="mod-setting-row"><div className="mod-row-copy"><strong>{t("ui-backend-updater-modal", "backend_files")}</strong><small>{downloadComplete?(t("ui-backend-updater-modal", "ready_to_configure_in_your_games")):(t("ui-backend-updater-modal", "download_the_project_components_without_the_nvidia_dll"))}</small></div>{!downloadComplete&&<button type="button" className="mod-action-primary" disabled={blocked || checkingVersion} onClick={() => void handleDownload()}><MenuIcon name="download"/>{isDownloading?`${progressPct.toFixed(0)}%`:versionStatus?.current&&versionStatus.needs_update?t("updater", "update"):(t("ui-backend-updater-modal", "download"))}</button>}{isDownloading&&<button type="button" className="mod-action-secondary" onClick={e=>void handleCancelDownload(e)}>{t("updater", "cancel")}</button>}</div>
     {isDownloading&&<div className="mod-inline-progress" role="status"><span>{t("updater", "downloadingPct")} {progressPct.toFixed(0)}% {formatSpeed(speedStr)}</span><progress aria-label={t("updater", "downloadingPct")} max={100} value={progressPct}/></div>}
-    <div className="mod-setting-row"><div className="mod-row-copy"><strong>{pt?"Já tem os arquivos?":"Already have the files?"}</strong><small>{pt?"Importe uma pasta com os pacotes do backend.":"Import a folder with the backend packages."}</small></div><HoverTooltip text={t("updater", "localFolderHint")} align="right"><button type="button" className="mod-action-secondary" disabled={blocked} aria-label={t("updater", "localFolder")} onClick={()=>void handleLocalFolder()}><MenuIcon name="folderSearch"/>{pt?"Importar":"Import"}</button></HoverTooltip></div>
-    <div className="mod-setting-row"><div className="mod-row-copy"><strong>{pt?"Pasta do componente":"Component folder"}</strong><small>{pt?"Veja os arquivos usados pelo launcher.":"View the files used by the launcher."}</small></div><button type="button" className="mod-action-secondary" disabled={blocked||openingFolder} onClick={()=>void handleOpenFolder()}><MenuIcon name="folder"/>{pt?"Abrir":"Open"}</button></div>
-    <div className="mod-setting-row mod-destructive-row"><div className="mod-row-copy"><strong>{pt?"Remover arquivos locais":"Remove local files"}</strong><small>{pt?"Será preciso baixar ou importar novamente.":"You will need to download or import them again."}</small></div><button type="button" className="mod-action-quiet danger" disabled={blocked} onClick={()=>void handleDelete()}><MenuIcon name="trash"/>{pt?"Remover":"Remove"}</button></div>
+    <div className="mod-setting-row"><div className="mod-row-copy"><strong>{t("ui-backend-updater-modal", "already_have_the_files")}</strong><small>{t("ui-backend-updater-modal", "import_a_folder_with_the_backend_packages")}</small></div><HoverTooltip text={t("updater", "localFolderHint")} align="right"><button type="button" className="mod-action-secondary" disabled={blocked} aria-label={t("updater", "localFolder")} onClick={()=>void handleLocalFolder()}><MenuIcon name="folderSearch"/>{t("ui-backend-updater-modal", "import")}</button></HoverTooltip></div>
+    <div className="mod-setting-row"><div className="mod-row-copy"><strong>{t("ui-backend-updater-modal", "component_folder")}</strong><small>{t("ui-backend-updater-modal", "view_the_files_used_by_the_launcher")}</small></div><button type="button" className="mod-action-secondary" disabled={blocked||openingFolder} onClick={()=>void handleOpenFolder()}><MenuIcon name="folder"/>{t("ui-backend-updater-modal", "open")}</button></div>
+    <div className="mod-setting-row mod-destructive-row"><div className="mod-row-copy"><strong>{t("ui-backend-updater-modal", "remove_local_files")}</strong><small>{t("ui-backend-updater-modal", "you_will_need_to_download_or_import_them_again")}</small></div><button type="button" className="mod-action-quiet danger" disabled={blocked} onClick={()=>void handleDelete()}><MenuIcon name="trash"/>{t("ui-backend-updater-modal", "remove")}</button></div>
     {status&&<p className={error?"backend-inline-status mod-feedback-error":"backend-inline-status"} role={error?"alert":"status"}>{status}</p>}
   </div>;
 
@@ -226,7 +226,7 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
     <ModalSurface header={<h3 className="modal-title" style={{ marginTop: isEmbedded ? 0 : undefined }}>{t("updater", "title")}</h3>} onDismiss={onClose} closeDisabled={isDownloading} className={isEmbedded ? "" : "modal-content"} style={{ maxWidth: "480px", margin: "0 auto", animation: isEmbedded ? "fade-in 0.3s ease" : undefined }}>
       {isEmbedded && onBack && (
         <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
-          <button 
+          <button
             onClick={onBack}
             className="btn btn-secondary backend-back-button"
           >
@@ -235,13 +235,12 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
           </button>
         </div>
       )}
-      
-      
+
       <div className="modal-body">
         <p style={{ marginBottom: "1rem", fontSize: "0.85rem", opacity: 0.9 }}>
           {t("updater", "description")}
         </p>
-        
+
         <div className="backend-architecture">
           <label>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -250,14 +249,14 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginBottom: "1rem" }}>
-          
-          <button 
-            className="primary" 
-            style={{ 
-              padding: "0.8rem", 
+
+          <button
+            className="primary"
+            style={{
+              padding: "0.8rem",
               position: "relative",
-              display: "flex", 
-              justifyContent: "center", 
+              display: "flex",
+              justifyContent: "center",
               alignItems: "center",
               opacity: (loading && !isDownloading) ? 0.7 : 1,
               overflow: "hidden"
@@ -280,21 +279,21 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
             )}
 
             <span style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: "bold", zIndex: 1, pointerEvents: "none" }}>
-              {checkingVersion ? <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {t("updater", "checking")}</> : 
-               downloadComplete ? <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> {t("updater", "updated")}</> : 
+              {checkingVersion ? <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {t("updater", "checking")}</> :
+               downloadComplete ? <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> {t("updater", "updated")}</> :
                isDownloading ? <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> {t("updater", "downloadingPct")} {`${progressPct.toFixed(0)}% ${formatSpeed(speedStr)}`}</> :
                (versionStatus?.needs_update && versionStatus?.current) ? <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.92-10.44l5.58 5.58"/></svg> {t("updater", "update")}</> :
                <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> {t("updater", "downloading")}</>}
             </span>
-            
+
             {!downloadComplete && isDownloading && (
-              <div 
+              <div
                 onClick={handleCancelDownload}
-                style={{ 
+                style={{
                   position: "absolute",
                   right: "0.8rem",
-                  width: "24px", height: "24px", borderRadius: "50%", 
-                  background: "var(--tone-ef4444, #ef4444)", display: "flex", 
+                  width: "24px", height: "24px", borderRadius: "50%",
+                  background: "var(--tone-ef4444, #ef4444)", display: "flex",
                   alignItems: "center", justifyContent: "center", fontSize: "12px",
                   cursor: "pointer", boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
                   transition: "transform 0.2s ease",
@@ -310,7 +309,7 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
           </button>
 
           <HoverTooltip text={t("updater", "localFolderHint")} align="left"><button
-            onClick={handleLocalFolder} 
+            onClick={handleLocalFolder}
             disabled={loading}
             style={{ padding: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
           >
@@ -318,8 +317,8 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
             {t("updater", "localFolder")}
           </button></HoverTooltip>
 
-          <button 
-            onClick={handleOpenFolder} 
+          <button
+            onClick={handleOpenFolder}
             disabled={loading || openingFolder}
             style={{ padding: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
           >
@@ -327,8 +326,8 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
             {t("updater", "openModFolder")}
           </button>
 
-          <button 
-            onClick={handleDelete} 
+          <button
+            onClick={handleDelete}
             disabled={loading}
             style={{ padding: "0.8rem", color: "var(--tone-f87171, #f87171)", border: "1px solid rgba(248, 113, 113, 0.3)", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
           >
@@ -339,9 +338,9 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
 
         {status && (
           <div role={error ? "alert" : "status"} style={{
-            marginTop: "1rem", 
-            padding: "0.8rem", 
-            background: "rgba(0,0,0,0.3)", 
+            marginTop: "1rem",
+            padding: "0.8rem",
+            background: "rgba(0,0,0,0.3)",
             borderRadius: "6px",
             color: error ? "var(--tone-f87171, #f87171)" : "#86efac",
             fontSize: "0.85rem",
@@ -365,7 +364,7 @@ export const BackendUpdaterModal: React.FC<Props> = ({ gpuArch, onClose, isEmbed
   return (
     <>
       {showConfirmDelete && (
-        <ConfirmModal 
+        <ConfirmModal
           title={t("updater", "warning")}
           message={t("updater", "deleteConfirm")}
           isDanger={true}

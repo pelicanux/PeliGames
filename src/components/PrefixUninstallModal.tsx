@@ -21,25 +21,26 @@ interface Props {
 /** Uninstall like Heroic: the prefix and the settings/logs are separate choices;
  * the entries and their shortcuts always leave the library. */
 export function PrefixUninstallModal({ name, prefix, busy = false, error, onConfirm, onCancel, onRemoveOnly }: Props) {
-  const { language } = useI18n(); const pt = language !== "en";
+  const {t: tx} = useI18n();
+
   const [removePrefix, setRemovePrefix] = useState(false), [removeSettings, setRemoveSettings] = useState(false);
   const [removeOnly,setRemoveOnly]=useState(false);
-  const title = pt ? "Desinstalar?" : "Uninstall?";
-  const summary = removeOnly ? (pt ? "Somente esta entrada sai da biblioteca. O jogo, o prefixo, os saves, as configurações, os logs e os atalhos permanecem no disco." : "Only this entry leaves the library. Game files, prefix, saves, settings, logs and shortcuts stay on disk.") : removePrefix
-    ? (pt ? "O prefixo será apagado permanentemente, com o jogo, os programas e os saves que estão dentro dele." : "The prefix will be permanently deleted, with the game, programs and saves inside it.")
-    : (pt ? "O prefixo e o jogo continuam no disco; só saem da biblioteca." : "The prefix and the game stay on disk; they only leave the library.");
+  const title = tx("ui-prefix-uninstall-modal", "uninstall");
+  const summary = removeOnly ? (tx("ui-prefix-uninstall-modal", "only_this_entry_leaves_the_library_game_files_prefix_saves_settings_logs_and_shortcuts_s")) : removePrefix
+    ? (tx("ui-prefix-uninstall-modal", "the_prefix_will_be_permanently_deleted_with_the_game_programs_and_saves_inside_it"))
+    : (tx("ui-prefix-uninstall-modal", "the_prefix_and_the_game_stay_on_disk_they_only_leave_the_library"));
   return <NexusPopup className="game-copy-dialog prefix-uninstall-dialog" title={title} titleIcon={<MenuIcon name="trash"/>} onClose={()=>{if(!busy)onCancel();}} footer={        <>
-          <button disabled={busy} onClick={onCancel}>{pt ? "Cancelar" : "Cancel"}</button>
-          <button className="btn-primary" disabled={busy || (!removeOnly && !removePrefix && !removeSettings)} onClick={() => removeOnly ? onRemoveOnly?.() : onConfirm({ remove_prefix: removePrefix, remove_settings: removeSettings })}>{busy ? (pt ? "Desinstalando…" : "Uninstalling…") : removeOnly ? (pt ? "Remover da biblioteca" : "Remove from library") : (removePrefix && removeSettings ? (pt ? "Desinstalar tudo" : "Uninstall everything") : (pt ? "Desinstalar" : "Uninstall"))}</button>
+          <button disabled={busy} onClick={onCancel}>{tx("ui-prefix-uninstall-modal", "cancel")}</button>
+          <button className="btn-primary" disabled={busy || (!removeOnly && !removePrefix && !removeSettings)} onClick={() => removeOnly ? onRemoveOnly?.() : onConfirm({ remove_prefix: removePrefix, remove_settings: removeSettings })}>{busy ? (tx("ui-prefix-uninstall-modal", "uninstalling")) : removeOnly ? (tx("ui-prefix-uninstall-modal", "remove_from_library")) : (removePrefix && removeSettings ? (tx("ui-prefix-uninstall-modal", "uninstall_everything")) : (tx("ui-prefix-uninstall-modal", "uninstall_2")))}</button>
         </>}>
         <div className="uninstall-body">
           <p className="uninstall-target"><strong>{name}</strong><br/><code>{prefix}</code></p>
           <div className="uninstall-options">
-            <label className="uninstall-option"><input type="checkbox" checked={removePrefix} disabled={busy || removeOnly} onChange={event => setRemovePrefix(event.target.checked)}/><span><strong>{pt ? "Remover prefixo" : "Remove prefix"}</strong><small>{pt ? "Apaga a pasta do Wine/Proton e tudo o que foi instalado nela, inclusive saves." : "Deletes the Wine/Proton folder and everything installed in it, saves included."}</small></span></label>
-            <label className="uninstall-option"><input type="checkbox" checked={removeSettings} disabled={busy || removeOnly} onChange={event => setRemoveSettings(event.target.checked)}/><span><strong>{pt ? "Apagar configurações, logs e perfis" : "Delete settings, logs and profiles"}</strong><small>{pt ? "Apaga o registro e as pastas de logs do jogo. Com a remoção do prefixo marcada, também exclui os perfis e dados de mods criados pelo PeliGames. As cópias de recuperação dos mods são preservadas." : "Deletes the game record and log folders. When removing the prefix too, also deletes profiles and mod data created by PeliGames. Mod recovery backups are preserved."}</small></span></label>
-            {onRemoveOnly && <label className="uninstall-option"><input type="checkbox" checked={removeOnly} disabled={busy} onChange={event=>{setRemoveOnly(event.target.checked);setRemovePrefix(false);setRemoveSettings(false);}}/><span><strong>{pt ? "Só remover da biblioteca" : "Only remove from library"}</strong><small>{pt ? "Preserva todos os arquivos e remove somente esta entrada do PeliGames." : "Keeps all files and removes only this PeliGames entry."}</small></span></label>}
+            <label className="uninstall-option"><input type="checkbox" checked={removePrefix} disabled={busy || removeOnly} onChange={event => setRemovePrefix(event.target.checked)}/><span><strong>{tx("ui-prefix-uninstall-modal", "remove_prefix")}</strong><small>{tx("ui-prefix-uninstall-modal", "deletes_the_wine_proton_folder_and_everything_installed_in_it_saves_included")}</small></span></label>
+            <label className="uninstall-option"><input type="checkbox" checked={removeSettings} disabled={busy || removeOnly} onChange={event => setRemoveSettings(event.target.checked)}/><span><strong>{tx("ui-prefix-uninstall-modal", "delete_settings_logs_and_profiles")}</strong><small>{tx("ui-prefix-uninstall-modal", "deletes_the_game_record_and_log_folders_when_removing_the_prefix_too_also_deletes_profil")}</small></span></label>
+            {onRemoveOnly && <label className="uninstall-option"><input type="checkbox" checked={removeOnly} disabled={busy} onChange={event=>{setRemoveOnly(event.target.checked);setRemovePrefix(false);setRemoveSettings(false);}}/><span><strong>{tx("ui-prefix-uninstall-modal", "only_remove_from_library")}</strong><small>{tx("ui-prefix-uninstall-modal", "keeps_all_files_and_removes_only_this_peligames_entry")}</small></span></label>}
           </div>
-          <p className="uninstall-summary">{summary} {!removeOnly && (pt ? "Todos os jogos que usam esse prefixo saem da biblioteca, com seus atalhos. A limpeza completa inclui os dados associados criados pelo PeliGames fora do prefixo; arquivos externos do jogo que não pertencem ao PeliGames são preservados." : "All games using this prefix leave the library, with their shortcuts. Complete cleanup includes associated PeliGames data outside the prefix; external game files not owned by PeliGames are preserved.")}</p>
+          <p className="uninstall-summary">{summary} {!removeOnly && (tx("ui-prefix-uninstall-modal", "all_games_using_this_prefix_leave_the_library_with_their_shortcuts_complete_cleanup_incl"))}</p>
           {error && <p className="preferences-error" role="alert">{error}</p>}
         </div>
     </NexusPopup>;

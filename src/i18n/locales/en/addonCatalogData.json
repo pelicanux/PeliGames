@@ -1,0 +1,9 @@
+{
+  "daniel_nr_test": "Daniel NR (test)",
+  "addon_dlss_0": "Prepare the backend and models for Neural Rendering.",
+  "addon_daniel_0": "Prepare experimental versions of the Daniel runtime.",
+  "addon_nexus_0": "Manage backups and recovery for your mods.",
+  "addon_mako_0": "Install and manage the frame generation component.",
+  "addon_afmf_0": "Prepare AFMF frame generation for your games.",
+  "addon_capture_0": "Prepare gameplay recording and instant replays."
+}

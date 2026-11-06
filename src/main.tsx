@@ -28,7 +28,7 @@ void import("@tauri-apps/api/core").then(({ invoke }) => invoke<boolean>("window
   .then(opaque => { if (opaque) document.documentElement.dataset.opaqueWindow = "1"; })
   .catch(() => {});
 
-// Restores the interface frame meter (Settings → Logs and more → Developer mode).
+// Restores the interface frame meter (Settings → Maintenance → Developer mode).
 installFrameRateMeter();
 
 // The window's outer boxes never scroll; WebKitGTK may still scroll them (a focus,

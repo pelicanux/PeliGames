@@ -12,8 +12,9 @@ const pixels = [
   "00011011000",
 ];
 export function MatrixSupporterBadge() {
-  const { language } = useI18n();
-  const label = language === "pt" ? "Apoiador · membro do canal ou impulsionador do Discord" : "Supporter · channel member or Discord server booster";
+  const {t: tx} = useI18n();
+
+  const label = tx("ui-matrix-supporter-badge", "supporter_channel_member_or_discord_server_booster");
   return <span className="matrix-supporter-badge" role="img" aria-label={label} title={label}>
     <svg viewBox="0 0 11 8" fill="currentColor" shapeRendering="crispEdges" aria-hidden="true">
       {pixels.flatMap((row,y) => [...row].flatMap((pixel,x) => pixel === "1" ? [<rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" />] : []))}

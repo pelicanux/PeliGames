@@ -147,3 +147,5 @@ pub mod neon_wave;
 pub mod openrgb;
 
 pub mod daniel_nr;
+
+pub mod system_locale;

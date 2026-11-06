@@ -1,0 +1,19 @@
+{
+  "could_not_change_the_volume": "Não foi possível mudar o volume.",
+  "profile": "Perfil",
+  "user_volume": "Volume do usuário",
+  "mute": "Silenciar",
+  "copy_user_id": "Copiar ID do usuário",
+  "could_not_copy": "Não foi possível copiar.",
+  "block": "Bloquear",
+  "could_not_block": "Não foi possível bloquear.",
+  "idle": "Ausente",
+  "do_not_disturb": "Não perturbe",
+  "s_profile": "Perfil de {{name}}",
+  "shrink_picture": "Reduzir foto",
+  "enlarge_picture": "Ampliar foto",
+  "you": " (você)",
+  "activity": "> atividade",
+  "playing": "Jogando",
+  "not_playing_right_now": "Nenhum jogo no momento"
+}

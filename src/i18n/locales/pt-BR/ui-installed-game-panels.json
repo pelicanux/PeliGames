@@ -1,0 +1,7 @@
+{
+  "game_settings": "Configurações do jogo",
+  "select_an_existing_prefix_or_enter_a_new_or_empty_folder_the_prefix_is_created_with_the_": "Selecione um prefixo existente ou informe uma pasta nova ou vazia. O prefixo será criado com o Wine/Proton selecionado ao clicar em Jogar. O prefixo anterior é preservado.",
+  "bottles_shares_the_runner_in_the_same_bottle_change_in_bottles": "O Bottles compartilha o runner na mesma bottle. Altere no Bottles.",
+  "managed_in_bottles": "Gerenciado no Bottles",
+  "experimental_integration_changes_apply_on_the_next_game_launch_even_while_epic_is_open": "Integração experimental: alterações valem na próxima execução do jogo, mesmo com a Epic aberta."
+}

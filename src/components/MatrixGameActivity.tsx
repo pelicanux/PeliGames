@@ -14,9 +14,11 @@ import { MatrixPresenceBadge } from "./MatrixPresenceBadge";
 
 const covers = new Map<string, Promise<string | null>>();
 function Activity({ user, name, avatar, visible, supporter }: { supporter: boolean; user: string; name: string | null; avatar?: string | null; visible: boolean }) {
+  const {t: tx} = useI18n();
+
   const chat = useMatrixChat();
   const activity = useMatrixActivityPreferences();
-  const { language } = useI18n();
+
   const ownCover = user === chat.userId && activity.name === name ? activity.cover : undefined;
   const [found, setFound] = useState<{name: string; url: string | null} | null>(null);
   const [avatarFailed, setAvatarFailed] = useState(false);
@@ -33,14 +35,16 @@ function Activity({ user, name, avatar, visible, supporter }: { supporter: boole
   const cover = ownCover || (found?.name === name ? found.url : undefined);
   const memberName = displayName(user, chat.names);
   return <div className="matrix-game-activity" data-member={user}>
-    <div className="matrix-member-avatar">{avatar && !avatarFailed ? <img src={avatar} alt="" onError={() => setAvatarFailed(true)} /> : <span aria-hidden="true">{memberName.slice(0,2).toUpperCase()}</span>}<MatrixPresenceBadge status={chat.memberPresence[user]} pt={language === "pt"}/></div>
+    <div className="matrix-member-avatar">{avatar && !avatarFailed ? <img src={avatar} alt="" onError={() => setAvatarFailed(true)} /> : <span aria-hidden="true">{memberName.slice(0,2).toUpperCase()}</span>}<MatrixPresenceBadge status={chat.memberPresence[user]}/></div>
     {name && activity.covers && cover && failed !== cover && <img src={cover} alt="" onError={() => setFailed(cover)}/>}
-    <div className="matrix-member-details"><div className="matrix-member-name"><strong title={user}>{memberName}</strong>{supporter && <MatrixSupporterBadge/>}</div>{name && <MatrixPlayingTicker text={`${language === "pt" ? "Jogando" : "Playing"} · ${name}`}/>}</div>
+    <div className="matrix-member-details"><div className="matrix-member-name"><strong title={user}>{memberName}</strong>{supporter && <MatrixSupporterBadge/>}</div>{name && <MatrixPlayingTicker text={`${tx("ui-matrix-game-activity", "playing")} · ${name}`}/>}</div>
   </div>;
 }
 export function MatrixGameActivities({ users, supporters, messages }: { users: Set<string>; supporters: Set<string>; messages: readonly {sender:string;ts:number}[] }) {
+  const {t: tx} = useI18n();
+
   const chat = useMatrixChat();
-  const { language } = useI18n();
+
   const performance = usePerformanceMode();
   const activity=useMatrixActivityPreferences(), presence=useMatrixPresenceChoice(chat.userId);
   const ownGame=visibleOwnGame(activity.sharing,presence==="invisible",activity.name);
@@ -93,8 +97,8 @@ export function MatrixGameActivities({ users, supporters, messages }: { users: S
     element.scrollTo({left:next,behavior:performance || window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
   };
   if (!entries.length) return null;
-  return <section className="matrix-members-carousel" aria-label={language === "pt" ? "Membros da sala" : "Room members"}>
-    <div ref={viewport} className="matrix-game-activities" tabIndex={0} aria-label={language === "pt" ? "Lista de membros: use a barra de rolagem, a roda do mouse ou as setas do teclado" : "Member list: use the scrollbar, mouse wheel or keyboard arrows"}
+  return <section className="matrix-members-carousel" aria-label={tx("ui-matrix-game-activity", "room_members")}>
+    <div ref={viewport} className="matrix-game-activities" tabIndex={0} aria-label={tx("ui-matrix-game-activity", "member_list_use_the_scrollbar_mouse_wheel_or_keyboard_arrows")}
       onKeyDown={event => { if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); move(event.key === "ArrowLeft" ? -1 : 1); } }}>
       {entries.map(user => <Activity key={user} user={user} name={user===chat.userId ? ownGame : gameActivityName(chat.presence[user] ?? "")} avatar={avatars[user]} supporter={supporters.has(user)} visible={visible.has(user)} />)}
     </div>

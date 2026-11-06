@@ -1,0 +1,12 @@
+{
+  "version": "2.14",
+  "source": {
+    "url": "https://codeload.github.com/mtrojnar/osslsigncode/tar.gz/refs/tags/2.14",
+    "sha256": "0f033fd6069387d2e489fbd2187e62f624764eb8c2758ee94e3e793e5150b5c5"
+  },
+  "cmake": {
+    "version": "3.31.10",
+    "x86_64": "3cb3dd247b6a1de2d0f4b20c6fd4326c9024e894cebc9dc8699758887e566ca7",
+    "aarch64": "a343c6294f770742904e6a6792e0956b5ff8212abfb63cac99237de2e210fa0f"
+  }
+}

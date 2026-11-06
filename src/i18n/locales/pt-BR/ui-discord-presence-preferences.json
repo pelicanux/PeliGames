@@ -1,0 +1,13 @@
+{
+  "discord_activity": "Atividade no Discord",
+  "shows_a_peligames_activity_only_while_recording_the_screen_or_running_instant_replay_doe": "Mostra uma atividade do PeliGames somente enquanto grava a tela ou mantém o replay instantâneo ativo. Não publica a biblioteca nem o nome do jogo.",
+  "show_recording_and_replay_on_discord": "Mostrar gravação e replay no Discord",
+  "the_activity_disappears_when_capture_ends_video_audio_and_file_paths_are_not_sent": "A atividade desaparece ao encerrar a captura. Vídeos, áudio e caminhos de arquivos não são enviados.",
+  "loading_preferences": "Carregando preferências…",
+  "activity_sharing_is_off": "Compartilhamento desligado.",
+  "waiting_for_recording_or_replay_no_activity_published": "Aguardando gravação ou replay. Nenhuma atividade publicada.",
+  "recording_replay_shared_on_discord": "Gravação/replay compartilhado no Discord.",
+  "waiting_for_discord_desktop_reconnects_automatically": "Aguardando o Discord desktop. A reconexão é automática.",
+  "enable_activity_sharing_in_discord_s_privacy_settings_display_depends_on_your_discord_pr": "No Discord, habilite o compartilhamento de atividade nas configurações de privacidade. A forma de exibição depende das preferências do Discord.",
+  "preview_simulated_connection_no_activity_is_published_to_discord": "Prévia: conexão simulada. Nenhuma atividade é publicada no Discord."
+}

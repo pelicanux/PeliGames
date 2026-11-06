@@ -2,7 +2,7 @@
   <img src="public/images/readme-header.svg" alt="PeliGames" width="900" />
 </p>
 
-> **0.5.4 experimental:** automatic switching between MAKO and AFMF, failure notices for Nexus Mods downloads, a library toolbar that stays fixed while scrolling, and updated DLSSNR-AMD help. See the [0.5.4 release notes (Portuguese)](docs/releases/0.5.4.md). Capture, frame generation and the overlay are experimental; compatibility depends on the game, GPU, Proton and desktop environment. See the [usage and limitations guide](docs/overlay.md).
+> **0.5.5 experimental:** automatic interface language from the system and translation catalogues, adjustable cover size, built-in verification of launcher installers, and a fix for the DLSSNR-AMD missing-model error. See the [0.5.5 release notes (Portuguese)](docs/releases/0.5.5.md). Capture, frame generation and the overlay are experimental; compatibility depends on the game, GPU, Proton and desktop environment. See the [usage and limitations guide](docs/overlay.md).
 
 <p align="center"><a href="README.md">Português</a> · <strong>English</strong></p>
 
@@ -248,6 +248,8 @@ PeliGames installs Nexus Mods mods in **215 games**, with modules based on the V
 6. The executables are in `src-tauri/target/release/`: `peligames` opens the launcher and `pelinstall /path/to/program.exe` opens the installer.
 
 To build packages (AppImage, DEB and RPM) in `src-tauri/target/release/bundle/`, use `bun run tauri build`.
+
+To contribute interface translations, see the [translation guide](docs/translations.md).
 
 ## Credits and license
 

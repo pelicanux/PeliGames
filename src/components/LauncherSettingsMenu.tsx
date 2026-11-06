@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useI18n } from "../i18n/I18nContext";
+import {useLanguageChoices} from "../i18n/useLanguageChoices";
 import { MAX_INTERFACE_SCALE, useInterfaceScale } from "../hooks/useInterfaceScale";
 import { MenuIcon } from "./MenuIcon";
 
@@ -14,7 +14,8 @@ interface Props {
 }
 
 export function LauncherSettingsMenu({ open: showSettings, onOpenChange: setShowSettings, disabled, preferencesOpen, onPreferences, performanceMode, onPerformanceModeChange: setPerformanceMode }: Props) {
-  const { t, language, setLanguage } = useI18n();
+
+  const {t, preference, options, label, loading, error, setLanguage} = useLanguageChoices();
   const [showLangDropdown, setShowLangDropdown] = useState(false);
   const [showEffectsDropdown, setShowEffectsDropdown] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
@@ -64,20 +65,21 @@ export function LauncherSettingsMenu({ open: showSettings, onOpenChange: setShow
               </span>
               <div className="effects-menu-anchor">
                 <button type="button" className="effects-menu-trigger" aria-label={t("settings", "language")}
-                  aria-haspopup="menu" aria-expanded={showLangDropdown}
+                  disabled={loading} aria-busy={loading} aria-haspopup="menu" aria-expanded={showLangDropdown}
                   onClick={e => { e.stopPropagation(); setShowLangDropdown(!showLangDropdown); setShowEffectsDropdown(false); }}>
-                  {language === "pt" ? "BR" : "EN"}
+                  {label}
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
                 {showLangDropdown && <div className="effects-menu" role="menu" onKeyDown={e => { if (e.key === "Escape") setShowLangDropdown(false); }}>
-                  {(["pt", "en"] as const).map(lang => <button key={lang} type="button" role="menuitemradio" aria-checked={language === lang}
-                    onClick={() => { setLanguage(lang); setShowLangDropdown(false); setShowSettings(false); }}>
-                    {lang === "pt" ? "BR" : "EN"}
+                  {options.map(option => <button key={option.value} type="button" role="menuitemradio" aria-checked={preference === option.value}
+                    onClick={() => { void setLanguage(option.value); setShowLangDropdown(false); setShowSettings(false); }}>
+                    {option.label}
                   </button>)}
                 </div>}
               </div>
             </div>
 
+            {error && <p role="alert">{t("localization", "loadError")}</p>}
             <div className="effects-preference">
               <span className="effects-preference-label"><MenuIcon name="bolt" /> {t("settings", "effects")}</span>
               <div className="effects-menu-anchor">

@@ -6,21 +6,22 @@ export function DanielRuntimeVersion({ state, value, onChange, onRecover, disabl
   state: DanielState; value: string; onChange: (value: string) => void;
   onRecover: () => void; disabled: boolean;
 }) {
-  const pt = useI18n().language === "pt";
+  const {t: tx} = useI18n();
+
   const missing = state.runtimes.some(r => !r.ready);
   return <div className="daniel-loading-dll">
     <div className="modern-dlss-option daniel-loading-dll-row"><div>
-      <span>{pt ? "Versão do motor" : "Runtime version"}</span>
+      <span>{tx("ui-daniel-runtime-version", "runtime_version")}</span>
       <p>{state.installed
-        ? (pt ? "Ao selecionar, a versão é trocada automaticamente. Os ajustes de cada versão são preservados." : "Selecting automatically switches the version. Each version’s settings are preserved.")
-        : (pt ? "Escolha a versão que será instalada neste jogo." : "Choose the version to install for this game.")}</p>
+        ? (tx("ui-daniel-runtime-version", "selecting_automatically_switches_the_version_each_version_s_settings_are_preserved"))
+        : (tx("ui-daniel-runtime-version", "choose_the_version_to_install_for_this_game"))}</p>
     </div><div className="daniel-loading-dll-controls">
-      <SelectionMenu label={pt ? "Versão do motor Daniel" : "Daniel runtime version"} value={value}
-        options={state.runtimes.map(r => ({ value: r.version, label: r.version + (!r.ready ? (pt ? " · Preparar" : " · Prepare") : ""), disabled: state.installed && !r.ready }))}
+      <SelectionMenu label={tx("ui-daniel-runtime-version", "daniel_runtime_version")} value={value}
+        options={state.runtimes.map(r => ({ value: r.version, label: r.version + (!r.ready ? (tx("ui-daniel-runtime-version", "prepare")) : ""), disabled: state.installed && !r.ready }))}
         onChange={onChange} disabled={disabled || state.pending_version_change} minMenuWidth={190}/>
     </div></div>
-    {value === "0.8.0" && <p className="modern-dlss-description daniel-nr-note">{pt ? "0.8.0 experimental. Se houver problemas, selecione 0.6.0 para voltar." : "0.8.0 experimental. If problems occur, select 0.6.0 to return."}</p>}
-    {missing && state.installed && <button type="button" className="modern-mini-btn" disabled={disabled} onClick={openDanielPreferences}>{pt ? "Preparar outras versões" : "Prepare other versions"}</button>}
-    {state.pending_version_change && <><p role="alert" className="daniel-nr-test-error">{pt ? "Uma troca de versão foi interrompida. Recupere a versão anterior para continuar." : "A version change was interrupted. Recover the previous version to continue."}</p><button type="button" className="modern-mini-btn" disabled={disabled} onClick={onRecover}>{pt ? "Recuperar versão anterior" : "Recover previous version"}</button></>}
+    {value === "0.8.0" && <p className="modern-dlss-description daniel-nr-note">{tx("ui-daniel-runtime-version", "0_8_0_experimental_if_problems_occur_select_0_6_0_to_return")}</p>}
+    {missing && state.installed && <button type="button" className="modern-mini-btn" disabled={disabled} onClick={openDanielPreferences}>{tx("ui-daniel-runtime-version", "prepare_other_versions")}</button>}
+    {state.pending_version_change && <><p role="alert" className="daniel-nr-test-error">{tx("ui-daniel-runtime-version", "a_version_change_was_interrupted_recover_the_previous_version_to_continue")}</p><button type="button" className="modern-mini-btn" disabled={disabled} onClick={onRecover}>{tx("ui-daniel-runtime-version", "recover_previous_version")}</button></>}
   </div>;
 }

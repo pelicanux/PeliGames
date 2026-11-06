@@ -31,8 +31,9 @@ function readStore(): Store {
 const Bell = () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>;
 
 export function NotificationCenter({ launcherUpdate, onNavigate, onNexusAccount, nexusError = "", navigationBusy = false }: { nexusError?: string; navigationBusy?: boolean; launcherUpdate: LauncherUpdateInfo | null; onNavigate: (target: UpdateTarget) => void; onNexusAccount: () => void }) {
-  const { language } = useI18n();
-  const en = language === "en";
+
+  const {t: tx,  language } = useI18n();
+
   const reducedMotion = useReducedMotion();
   const [store, setStore] = useState(readStore);
   const storeRef = useRef(store);
@@ -235,18 +236,18 @@ export function NotificationCenter({ launcherUpdate, onNavigate, onNexusAccount,
     return () => window.removeEventListener("keydown", escape, true);
   }, []);
   const title = (n: Notice) => n.target === "matrix"
-    ? en ? `Matrix — you were mentioned in #${n.source || "PeliGames"}` : `Matrix — você foi mencionado em #${n.source || "PeliGames"}`
+    ? tx("ui-notification-center", "matrix_you_were_mentioned_in", {"n_source_peligames": n.source || "PeliGames"})
     : n.target === "info"
     ? n.source || "PeliGames"
     : n.target === "error"
-    ? `${n.source || "PeliGames"} — ${en ? "error" : "erro"}`
+    ? `${n.source || "PeliGames"} — ${tx("ui-notification-center", "error")}`
     : n.target === "nexus"
-    ? en ? "Nexus Mods — action failed" : "Nexus Mods — falha na ação"
+    ? tx("ui-notification-center", "nexus_mods_action_failed")
     : n.target === "launcher"
-    ? en ? "PeliGames update available" : "Atualização do PeliGames disponível"
+    ? tx("ui-notification-center", "peligames_update_available")
     : n.target === "ge-proton" || n.target === "cachyos-proton"
-    ? en ? `${n.target === "ge-proton" ? "Proton-GE Latest" : "Proton-CachyOS Latest"} update available` : `Atualização do ${n.target === "ge-proton" ? "Proton-GE Latest" : "Proton-CachyOS Latest"} disponível`
-    : en ? `RX ${n.target === "rdna4" ? "9000" : "7000"} backend update available` : `Atualização do backend RX ${n.target === "rdna4" ? "9000" : "7000"} disponível`;
+    ? tx("ui-notification-center", "update_available", {"n_target_ge_proton_proton_ge_latest": n.target === "ge-proton" ? "Proton-GE Latest" : "Proton-CachyOS Latest"})
+    : tx("ui-notification-center", "rx_backend_update_available", {"n_target_rdna4_9000_7000": n.target === "rdna4" ? "9000" : "7000"});
   const close = () => { openRef.current = false; setOpen(false); };
   const navigate = (notice: Notice) => {
     if (navigationBusy) return;
@@ -255,21 +256,21 @@ export function NotificationCenter({ launcherUpdate, onNavigate, onNexusAccount,
     close(); if (notice.action === "nexus-account") onNexusAccount(); else if (notice.action === "mangohud-install") openMangoHudInstallation(); else if (notice.action === "frame-mako") openFrameGenerationPreferences("mako"); else if (notice.action === "frame-afmf") openFrameGenerationPreferences("afmf"); else if (notice.target === "matrix") window.dispatchEvent(new Event(OPEN_MATRIX_CHAT_EVENT)); else if (notice.target !== "nexus" && notice.target !== "error" && notice.target !== "info") onNavigate(notice.target);
   };
   return <>
-    <button ref={bellRef} type="button" data-tauri-drag-region="false" className="btn-titlebar notification-bell" title={en ? "Notifications" : "Notificações"} aria-label={en ? "Notifications" : "Notificações"} aria-expanded={open} aria-controls="update-notifications" onClick={() => {
+    <button ref={bellRef} type="button" data-tauri-drag-region="false" className="btn-titlebar notification-bell" title={tx("ui-notification-center", "notifications")} aria-label={tx("ui-notification-center", "notifications")} aria-expanded={open} aria-controls="update-notifications" onClick={() => {
       openRef.current = !open; setOpen(!open);
       if (!open) { setToasts([]); commit({ ...storeRef.current, items: storeRef.current.items.map(n => ({ ...n, unread: false })) }); }
     }}><Bell/>{store.items.some(n => n.unread) && <span className="launcher-update-dot"/>}</button>
     {createPortal(<>
       <div className="notification-panel-viewport">
-      <motion.aside ref={panelRef} initial={false} animate={{ height: panelHeight ?? "auto" }} transition={{ height: { duration: reducedMotion ? .08 : .26, ease: [.4, 0, .2, 1] } }} id="update-notifications" className={`notification-panel menu-glass-panel${open ? " is-open" : ""}`} aria-label={en ? "Notifications" : "Notificações"} inert={!open} aria-hidden={!open} onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); close(); bellRef.current?.focus(); } }}>
+      <motion.aside ref={panelRef} initial={false} animate={{ height: panelHeight ?? "auto" }} transition={{ height: { duration: reducedMotion ? .08 : .26, ease: [.4, 0, .2, 1] } }} id="update-notifications" className={`notification-panel menu-glass-panel${open ? " is-open" : ""}`} aria-label={tx("ui-notification-center", "notifications")} inert={!open} aria-hidden={!open} onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); close(); bellRef.current?.focus(); } }}>
         <div ref={contentRef} className="notification-panel-content">
-        <header><h2><Bell/>{en ? "Notifications" : "Notificações"}</h2></header>
-        <div ref={listRef} className="notification-list" style={{ maxHeight: store.items.length > 3 || !store.items.length ? listHeight : undefined }}><AnimatePresence initial={false} mode="wait">{store.items.length ? <motion.div key="notices" initial="visible" animate="visible" exit="exit" variants={{ visible: {}, exit: { transition: { staggerChildren: reducedMotion ? 0 : .045, when: "afterChildren" } } }}>{store.items.map(n => <motion.button variants={{ visible: { x: 0, opacity: 1 }, exit: { x: reducedMotion ? 0 : "110%", opacity: 0 } }} transition={{ duration: reducedMotion ? .08 : .2, ease: "easeIn" }} type="button" className="notification-entry" disabled={navigationBusy} key={n.id} onClick={() => navigate(n)}><MenuIcon name={n.target === "nexus" || n.target === "error" || n.target === "info" ? "info" : n.target === "matrix" ? "chainLinked" : "download"}/><span><strong>{title(n)}</strong><small>{n.target === "nexus" || n.target === "error" || n.target === "info" || n.target === "matrix" ? n.message : `${en ? "Version" : "Versão"} ${n.version}`}</small>{n.target !== "nexus" && n.target !== "error" && n.target !== "info" && <small className="notification-link">{n.target === "matrix" ? en ? "Open chat" : "Abrir chat" : en ? "Open updater" : "Abrir atualização"} →</small>}</span></motion.button>)}</motion.div> : <motion.p key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .12 }}>{en ? "No notifications." : "Nenhuma notificação."}</motion.p>}</AnimatePresence></div>
-        <footer><button className="btn-primary" type="button" disabled={!store.items.length} onClick={() => { commit({ ...storeRef.current, items: [] }); setToasts([]); }}><MenuIcon name="trash"/>{en ? "Clear notifications" : "Limpar notificações"}</button></footer>
+        <header><h2><Bell/>{tx("ui-notification-center", "notifications")}</h2></header>
+        <div ref={listRef} className="notification-list" style={{ maxHeight: store.items.length > 3 || !store.items.length ? listHeight : undefined }}><AnimatePresence initial={false} mode="wait">{store.items.length ? <motion.div key="notices" initial="visible" animate="visible" exit="exit" variants={{ visible: {}, exit: { transition: { staggerChildren: reducedMotion ? 0 : .045, when: "afterChildren" } } }}>{store.items.map(n => <motion.button variants={{ visible: { x: 0, opacity: 1 }, exit: { x: reducedMotion ? 0 : "110%", opacity: 0 } }} transition={{ duration: reducedMotion ? .08 : .2, ease: "easeIn" }} type="button" className="notification-entry" disabled={navigationBusy} key={n.id} onClick={() => navigate(n)}><MenuIcon name={n.target === "nexus" || n.target === "error" || n.target === "info" ? "info" : n.target === "matrix" ? "chainLinked" : "download"}/><span><strong>{title(n)}</strong><small>{n.target === "nexus" || n.target === "error" || n.target === "info" || n.target === "matrix" ? n.message : `${tx("ui-notification-center", "version")} ${n.version}`}</small>{n.target !== "nexus" && n.target !== "error" && n.target !== "info" && <small className="notification-link">{n.target === "matrix" ? tx("ui-notification-center", "open_chat") : tx("ui-notification-center", "open_updater")} →</small>}</span></motion.button>)}</motion.div> : <motion.p key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .12 }}>{tx("ui-notification-center", "no_notifications")}</motion.p>}</AnimatePresence></div>
+        <footer><button className="btn-primary" type="button" disabled={!store.items.length} onClick={() => { commit({ ...storeRef.current, items: [] }); setToasts([]); }}><MenuIcon name="trash"/>{tx("ui-notification-center", "clear_notifications")}</button></footer>
         </div>
       </motion.aside>
       </div>
-      <div className="notification-toast-region" aria-live="polite" aria-atomic="true">{toast && <button ref={toastRef} key={toast.id} className="notification-toast menu-glass-panel" style={{ animationPlayState: toastHovered || toastFocused ? "paused" : "running" }} onMouseEnter={() => setToastHovered(true)} onMouseLeave={() => setToastHovered(false)} onFocus={() => setToastFocused(true)} onBlur={() => setToastFocused(false)} disabled={navigationBusy} type="button" onClick={() => navigate(toast)}><Bell/><span><strong>{title(toast)}</strong><small>{toast.target === "nexus" || toast.target === "error" || toast.target === "info" || toast.target === "matrix" ? toast.message : `${en ? "Version" : "Versão"} ${toast.version}`}</small></span></button>}</div>
+      <div className="notification-toast-region" aria-live="polite" aria-atomic="true">{toast && <button ref={toastRef} key={toast.id} className="notification-toast menu-glass-panel" style={{ animationPlayState: toastHovered || toastFocused ? "paused" : "running" }} onMouseEnter={() => setToastHovered(true)} onMouseLeave={() => setToastHovered(false)} onFocus={() => setToastFocused(true)} onBlur={() => setToastFocused(false)} disabled={navigationBusy} type="button" onClick={() => navigate(toast)}><Bell/><span><strong>{title(toast)}</strong><small>{toast.target === "nexus" || toast.target === "error" || toast.target === "info" || toast.target === "matrix" ? toast.message : `${tx("ui-notification-center", "version")} ${toast.version}`}</small></span></button>}</div>
     </>, document.body)}
   </>;
 }

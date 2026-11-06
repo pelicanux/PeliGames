@@ -1,0 +1,8 @@
+{
+  "start": "Start",
+  "preparing": "Preparing…",
+  "starting": "Starting…",
+  "cancel": "Stop",
+  "running": "Running",
+  "stopping": "Stopping…"
+}

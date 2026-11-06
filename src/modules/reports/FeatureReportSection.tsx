@@ -5,12 +5,13 @@ import { ReportModal } from "./ReportModal";
 import type { FeatureReportContext } from "./reportContext";
 import "./reports.css";
 export function FeatureReportSection({context, label, children}: {context: FeatureReportContext; label: string; children: ReactNode}) {
-  const pt = useI18n().language === "pt";
+  const {t: tx} = useI18n();
+
   // Freeze the selected installation and area when opening; a background tab
   // change must never replace the report currently being reviewed.
   const [target, setTarget] = useState<FeatureReportContext>();
   return <section className="feature-report-section">
-    <div className="feature-report-toolbar"><button type="button" className="modern-mini-btn feature-report-button" onClick={()=>setTarget(context)} aria-label={(pt ? "Reportar erro" : "Report a bug") + " · " + label}><MenuIcon name="bug" />{pt ? "Reportar erro" : "Report a bug"}</button></div>
+    <div className="feature-report-toolbar"><button type="button" className="modern-mini-btn feature-report-button" onClick={()=>setTarget(context)} aria-label={(tx("ui-feature-report-section", "report_a_bug")) + " · " + label}><MenuIcon name="bug" />{tx("ui-feature-report-section", "report_a_bug")}</button></div>
     {children}
     {target && <ReportModal target={{kind:"feature", context:target, label}} onClose={()=>setTarget(undefined)} />}
   </section>;

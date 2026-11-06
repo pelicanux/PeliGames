@@ -1,0 +1,6 @@
+{
+  "title": "Diretório do Jogo",
+  "desc": "Selecione a pasta exata onde fica o executável (.exe) do jogo.",
+  "placeholder": "Ex: /mnt/SteamLibrary/steamapps/common/Jogo/Binaries/Win64",
+  "browse": "Procurar"
+}

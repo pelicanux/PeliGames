@@ -1,3 +1,4 @@
+import type {Catalog} from "../../i18n/engine";
 import { ComponentDownloadProgress } from "../ComponentDownloadProgress";
 import { formatTransferBytes } from "../../services/downloadProgress";
 import { invoke } from "@tauri-apps/api/core";
@@ -8,12 +9,12 @@ import { MenuIcon } from "../MenuIcon";
 import { useI18n } from "../../i18n/I18nContext";
 import { checkRunner, installRunner, cancelRunner, uninstallRunner, type ProtonFamily, type RunnerRelease, type RunnerProgress } from "../../services/protonService";
 
-const WINE_NOTE = { pt: "Wine puro (wow64), sem o contêiner do Steam Runtime: usa as bibliotecas do sistema. Para jogos, prefira um Proton.", en: "Plain Wine (wow64), without the Steam Runtime container: it uses the system's libraries. For games, prefer a Proton." };
-const distributions: readonly { family: ProtonFamily; name: string; author: string; icon: string; note?: { pt: string; en: string } }[] = [
+const WINE_NOTE = "runtime_note_1" as const;
+const distributions: readonly { family: ProtonFamily; name: string; author: string; icon: string; note?: keyof Catalog["ui-proton-distribution-cards"] }[] = [
   { family: "ge-proton", name: "Proton-GE Latest", author: "GloriousEggroll", icon: "/icons/ge-proton.png" },
   { family: "cachyos-proton", name: "Proton-CachyOS Latest", author: "CachyOS", icon: "/icons/cachyos.svg" },
   { family: "cachyos-wineland", name: "Proton-CachyOS Wineland Latest", author: "nanomatters", icon: "/icons/cachyos.svg",
-    note: { pt: "Fork comunitário do Proton-CachyOS com melhorias para Wayland; não é publicado pelo CachyOS.", en: "Community fork of Proton-CachyOS with Wayland improvements; not published by CachyOS." } },
+    note: "runtime_note_2" },
   { family: "wine-staging", name: "Wine-Staging Latest", author: "Kron4ek", icon: "/icons/wine.svg", note: WINE_NOTE },
   { family: "wine-proton", name: "Wine-Proton Latest", author: "Kron4ek", icon: "/icons/wine.svg", note: WINE_NOTE },
 ];
@@ -21,8 +22,9 @@ const distributions: readonly { family: ProtonFamily; name: string; author: stri
 export function ProtonDistributionCards({ disabled, onBusy }: {
   disabled: boolean; onBusy: (busy: boolean) => void;
 }) {
-  const { t, language } = useI18n();
-  const pt=language==="pt";
+
+  const { t } = useI18n();
+
   const [releases, setReleases] = useState<Partial<Record<ProtonFamily, RunnerRelease>>>({});
   const [checking, setChecking] = useState<Partial<Record<ProtonFamily, boolean>>>({});
   const [messages, setMessages] = useState<Partial<Record<ProtonFamily, string>>>({});
@@ -86,21 +88,21 @@ export function ProtonDistributionCards({ disabled, onBusy }: {
   return <><div className="proton-download-grid">
     {distributions.map(d=>{
       const release=releases[d.family],downloading=active===d.family;
-      const stateLabel=downloading?(pt?"Instalando…":"Installing…"):checking[d.family]?(pt?"Verificando…":"Checking…"):!release?(pt?"Não verificado":"Not checked"):!release.current?t("runners","notInstalled"):release.needs_update?(pt?"Atualização disponível":"Update available"):t("updater","updated");
+      const stateLabel=downloading?(t("ui-proton-distribution-cards", "installing")):checking[d.family]?(t("ui-proton-distribution-cards", "checking")):!release?(t("ui-proton-distribution-cards", "not_checked")):!release.current?t("runners","notInstalled"):release.needs_update?(t("ui-proton-distribution-cards", "update_available")):t("updater","updated");
       const currentProgress=progress||{phase:"connecting",downloaded:0,total:null,speed_bytes_per_sec:0};
       return <section key={d.family} className="proton-runtime-card mod-workspace" aria-label={d.name} aria-busy={downloading}>
         <header className="proton-runtime-heading"><span className="proton-runtime-icon"><img src={d.icon} alt=""/></span><div><h4>{d.name.replace(" Latest","")}</h4><span>{d.author}</span></div><span className="mod-status-badge" data-ready={Boolean(release?.current&&!release.needs_update)} role="status">{stateLabel}</span></header>
-        {d.note&&<p className="proton-runtime-note">{pt?d.note.pt:d.note.en}</p>}
-        <dl className="proton-runtime-versions"><div><dt>{pt?"Instalada":"Installed"}</dt><dd>{release?.current||(pt?"Nenhuma":"None")}</dd></div><div><dt>{pt?"Disponível":"Available"}</dt><dd>{release?.latest||"—"}{release&&release.asset.size>0&&<small>{formatTransferBytes(release.asset.size)}</small>}</dd></div></dl>
+        {d.note&&<p className="proton-runtime-note">{t("ui-proton-distribution-cards", d.note)}</p>}
+        <dl className="proton-runtime-versions"><div><dt>{t("ui-proton-distribution-cards", "installed")}</dt><dd>{release?.current||(t("ui-proton-distribution-cards", "none"))}</dd></div><div><dt>{t("ui-proton-distribution-cards", "available")}</dt><dd>{release?.latest||"—"}{release&&release.asset.size>0&&<small>{formatTransferBytes(release.asset.size)}</small>}</dd></div></dl>
         <div className="proton-runtime-actions">
           {downloading?<button type="button" className="mod-action-secondary" disabled={cancelling||progress?.phase==="complete"} onClick={()=>void cancel()}><MenuIcon name="stop"/>{t("runners",cancelling?"cancelling":"cancel")}</button>:<>
-            {(!release?.current||release.needs_update)&&<button type="button" className="mod-action-primary" disabled={disabled||Boolean(active)||checking[d.family]||!release?.needs_update} onClick={()=>void download(d.family)}><MenuIcon name="download"/>{release?.current?(pt?"Atualizar":"Update"):(pt?"Instalar":"Install")}</button>}
-            <button type="button" className="mod-action-secondary" disabled={disabled||Boolean(active)||checking[d.family]} onClick={()=>void refresh(d.family)}><MenuIcon name="repair"/>{checking[d.family]?(pt?"Verificando…":"Checking…"):(pt?"Buscar atualização":"Check for updates")}</button>
+            {(!release?.current||release.needs_update)&&<button type="button" className="mod-action-primary" disabled={disabled||Boolean(active)||checking[d.family]||!release?.needs_update} onClick={()=>void download(d.family)}><MenuIcon name="download"/>{release?.current?(t("ui-proton-distribution-cards", "update")):(t("ui-proton-distribution-cards", "install"))}</button>}
+            <button type="button" className="mod-action-secondary" disabled={disabled||Boolean(active)||checking[d.family]} onClick={()=>void refresh(d.family)}><MenuIcon name="repair"/>{checking[d.family]?(t("ui-proton-distribution-cards", "checking")):(t("ui-proton-distribution-cards", "check_for_updates"))}</button>
           </>}
         </div>
-        {progressFamily===d.family&&(downloading||progress?.phase==="complete")&&<ComponentDownloadProgress progress={currentProgress} onDismiss={()=>{setProgress(null);setMessages(old=>old[d.family]===t("runners","installed")?{...old,[d.family]:""}:old)}} label={progress?.phase==="complete"?(pt?"Instalação concluída":"Installation complete"):cancelling?t("runners","cancelling"):progress?t("runners",progress.phase):(pt?"Preparando download…":"Preparing download…")}/>}
-        {release?.installed_path&&<div className="mod-destination"><MenuIcon name="folder"/><div><span>{pt?"Destino da instalação":"Install location"}</span><button type="button" title={release.installed_path} disabled={downloading} onClick={()=>void invoke("open_folder",{path:release.installed_path}).catch(error=>notifyError(d.name,String(error)))}>{release.installed_path}</button></div></div>}
-        {release?.current&&<div className="mod-setting-row mod-destructive-row"><div className="mod-row-copy"><strong>{pt?"Remover esta versão":"Remove this version"}</strong><small>{pt?"Jogos que usam esta versão precisarão de outra seleção.":"Games using this version will need another selection."}</small></div><button type="button" className="mod-action-quiet danger" disabled={disabled||Boolean(active)||checking[d.family]} onClick={()=>{setRemoval({family:d.family,name:d.name,version:release.current!});onBusy(true)}}><MenuIcon name="trash"/>{pt?"Remover":"Remove"}</button></div>}
+        {progressFamily===d.family&&(downloading||progress?.phase==="complete")&&<ComponentDownloadProgress progress={currentProgress} onDismiss={()=>{setProgress(null);setMessages(old=>old[d.family]===t("runners","installed")?{...old,[d.family]:""}:old)}} label={progress?.phase==="complete"?(t("ui-proton-distribution-cards", "installation_complete")):cancelling?t("runners","cancelling"):progress?t("runners",progress.phase):(t("ui-proton-distribution-cards", "preparing_download"))}/>}
+        {release?.installed_path&&<div className="mod-destination"><MenuIcon name="folder"/><div><span>{t("ui-proton-distribution-cards", "install_location")}</span><button type="button" title={release.installed_path} disabled={downloading} onClick={()=>void invoke("open_folder",{path:release.installed_path}).catch(error=>notifyError(d.name,String(error)))}>{release.installed_path}</button></div></div>}
+        {release?.current&&<div className="mod-setting-row mod-destructive-row"><div className="mod-row-copy"><strong>{t("ui-proton-distribution-cards", "remove_this_version")}</strong><small>{t("ui-proton-distribution-cards", "games_using_this_version_will_need_another_selection")}</small></div><button type="button" className="mod-action-quiet danger" disabled={disabled||Boolean(active)||checking[d.family]} onClick={()=>{setRemoval({family:d.family,name:d.name,version:release.current!});onBusy(true)}}><MenuIcon name="trash"/>{t("ui-proton-distribution-cards", "remove")}</button></div>}
         {messages[d.family]&&<p className="proton-runtime-message" role="status">{messages[d.family]}</p>}
       </section>;
     })}

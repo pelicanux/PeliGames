@@ -13,7 +13,8 @@ interface Props {
 }
 
 export const ShortcutKeySelector: React.FC<Props> = ({ shortcutKey, setShortcutKey, route, disabled = false }) => {
-  const { t, language } = useI18n();
+
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -49,13 +50,13 @@ export const ShortcutKeySelector: React.FC<Props> = ({ shortcutKey, setShortcutK
           </div>
           <div className="select-arrow">▼</div>
         </button>
-        
+
         {isOpen && createPortal(
           <div ref={menuRef} className={`custom-select-menu route-select-menu select-scroll-frame modern-shortcut-menu`} style={menuPosition} role="listbox" aria-label={t("gameInfo", "menuKey")}>
             <div className="select-options-scroll">
             {options.map((opt) => (
               <button type="button" role="option" disabled={disabled} aria-selected={shortcutKey === opt.value}
-                key={opt.value} 
+                key={opt.value}
                 className={`custom-select-option ${shortcutKey === opt.value ? "selected" : ""}`}
                 style={{ cursor: "pointer" }}
                 onClick={() => {
@@ -71,7 +72,7 @@ export const ShortcutKeySelector: React.FC<Props> = ({ shortcutKey, setShortcutK
           </div>, document.body
         )}
       </div>
-      {shortcutKey === "End" && <small className="shortcut-key-conflict" role="status">{language === "pt" ? "End não está disponível neste seletor. Escolha outra tecla para o menu." : "End is unavailable in this selector. Choose another menu key."}</small>}
+      {shortcutKey === "End" && <small className="shortcut-key-conflict" role="status">{t("ui-shortcut-key-selector", "end_is_unavailable_in_this_selector_choose_another_menu_key")}</small>}
     </div>
   );
 };

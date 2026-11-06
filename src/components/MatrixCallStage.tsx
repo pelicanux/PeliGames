@@ -1,3 +1,4 @@
+import {useI18n} from "../i18n/I18nContext";
 // The call view of a voice channel, as in Discord: who is in the call, the
 // screen being watched in focus, and the call controls. The video itself is a
 // native layer placed over the focus area (see matrixScreenView).
@@ -18,9 +19,11 @@ const PeopleIcon = () => <svg viewBox="0 0 24 24" width="16" height="16" fill="n
 /** Whether the people strip under a watched screen is collapsed; kept between calls. */
 const MEMBERS_HIDDEN = "peligames.matrix.callMembersHidden";
 /** Marks on a tile a person this listener muted. */
-function MutedForMe({ user, pt }: { user: string; pt: boolean }) {
+function MutedForMe({ user }: { user: string; }) {
+  const {t: tx} = useI18n();
+
   const { muted } = useMatrixUserVolume(user);
-  return muted ? <small>{pt ? " · silenciado" : " · muted for you"}</small> : null;
+  return muted ? <small>{tx("ui-matrix-call-stage", "muted_for_you")}</small> : null;
 }
 
 function Avatar({ user, name }: { user: string; name: string }) {
@@ -29,13 +32,15 @@ function Avatar({ user, name }: { user: string; name: string }) {
   return <span className="matrix-call-avatar" aria-hidden="true">{src ? <img src={src} alt=""/> : name.slice(0, 2).toUpperCase()}</span>;
 }
 
-export function MatrixCallStage({ pt, me, roomName, videoHidden, onShowChat }: {
-  pt: boolean; me: string; roomName: string;
+export function MatrixCallStage({ me, roomName, videoHidden, onShowChat }: {
+  me: string; roomName: string;
   /** Something of the page covers the stage (a dialog): the native video steps aside. */
   videoHidden: boolean;
   /** Back to the text chat of the channel; a watched screen goes to the mini player. */
   onShowChat: () => void;
 }) {
+  const {t: tx} = useI18n();
+
   const voice = useMatrixVoice();
   const video = useRef<HTMLDivElement>(null), fullVideo = useRef<HTMLDivElement>(null), stage = useRef<HTMLElement>(null);
   const fullscreen = useCallFullscreen();
@@ -94,22 +99,22 @@ export function MatrixCallStage({ pt, me, roomName, videoHidden, onShowChat }: {
     const share = own ? (voice.screen === "live" ? "local" : null) : voice.shares.includes(participant.id) ? participant.id : null;
     return { ...participant, user: userOf(participant.id), own, share };
   }).sort((a, b) => Number(b.own) - Number(a.own));
-  const focusedName = focused === "local" ? (pt ? "Sua tela" : "Your screen") : tiles.find(tile => tile.id === focused)?.name ?? "";
+  const focusedName = focused === "local" ? (tx("ui-matrix-call-stage", "your_screen")) : tiles.find(tile => tile.id === focused)?.name ?? "";
   const busy = voice.phase === "joining" || voice.phase === "leaving";
-  return <section ref={stage} className={`matrix-terminal-room matrix-call-stage${focused ? " is-watching" : ""}`} aria-label={pt ? `Chamada em ${roomName}` : `Call in ${roomName}`}>
-    <header><div className="matrix-room-heading"><strong title={roomName}>🔊 {roomName}</strong><small className="matrix-room-topic">{connected ? (pt ? `${tiles.length} na chamada` : `${tiles.length} in the call`) : voice.phase === "reconnecting" ? (pt ? "reconectando…" : "reconnecting…") : (pt ? "conectando…" : "connecting…")}</small></div>
-      <button type="button" className="btn btn-secondary" onClick={onShowChat}>{focused ? (pt ? "Minimizar e abrir o chat" : "Minimize and open chat") : (pt ? "Abrir o chat" : "Open chat")}</button></header>
+  return <section ref={stage} className={`matrix-terminal-room matrix-call-stage${focused ? " is-watching" : ""}`} aria-label={tx("ui-matrix-call-stage", "call_in", {"roomname": roomName})}>
+    <header><div className="matrix-room-heading"><strong title={roomName}>🔊 {roomName}</strong><small className="matrix-room-topic">{connected ? (tx("ui-matrix-call-stage", "in_the_call", {"tiles_length": tiles.length})) : voice.phase === "reconnecting" ? (tx("ui-matrix-call-stage", "reconnecting")) : (tx("ui-matrix-call-stage", "connecting"))}</small></div>
+      <button type="button" className="btn btn-secondary" onClick={onShowChat}>{focused ? (tx("ui-matrix-call-stage", "minimize_and_open_chat")) : (tx("ui-matrix-call-stage", "open_chat"))}</button></header>
     <div className="matrix-call-body">
       {focused && <div className="matrix-call-focus">
-        <div ref={video} className="matrix-call-video" onDoubleClick={() => setCallFullscreen(true)}><span>{pt ? "> carregando transmissão…" : "> loading stream…"}</span></div>
-        <div className="matrix-call-focus-bar"><span className="matrix-call-live">{pt ? "AO VIVO" : "LIVE"}</span><b>{focusedName}</b>
-          <button type="button" onClick={() => setCallFullscreen(true)}>{pt ? "[tela cheia]" : "[full screen]"}</button>
-          <button type="button" onClick={onShowChat}>{pt ? "[minimizar]" : "[minimize]"}</button>
-          <button type="button" onClick={() => void watchMatrixScreen(null)}>{focused === "local" ? (pt ? "[fechar prévia]" : "[close preview]") : (pt ? "[parar de assistir]" : "[stop watching]")}</button></div>
+        <div ref={video} className="matrix-call-video" onDoubleClick={() => setCallFullscreen(true)}><span>{tx("ui-matrix-call-stage", "loading_stream")}</span></div>
+        <div className="matrix-call-focus-bar"><span className="matrix-call-live">{tx("ui-matrix-call-stage", "live")}</span><b>{focusedName}</b>
+          <button type="button" onClick={() => setCallFullscreen(true)}>{tx("ui-matrix-call-stage", "full_screen")}</button>
+          <button type="button" onClick={onShowChat}>{tx("ui-matrix-call-stage", "minimize")}</button>
+          <button type="button" onClick={() => void watchMatrixScreen(null)}>{focused === "local" ? (tx("ui-matrix-call-stage", "close_preview")) : (tx("ui-matrix-call-stage", "stop_watching"))}</button></div>
       </div>}
       {focused && <button type="button" className="matrix-call-members-toggle" aria-expanded={!membersHidden} onClick={toggleMembers}
-        title={membersHidden ? (pt ? "Mostrar membros" : "Show members") : (pt ? "Ocultar membros" : "Hide members")}
-        aria-label={membersHidden ? (pt ? "Mostrar membros" : "Show members") : (pt ? "Ocultar membros" : "Hide members")}>
+        title={membersHidden ? (tx("ui-matrix-call-stage", "show_members")) : (tx("ui-matrix-call-stage", "hide_members"))}
+        aria-label={membersHidden ? (tx("ui-matrix-call-stage", "show_members")) : (tx("ui-matrix-call-stage", "hide_members"))}>
         <span aria-hidden="true">{membersHidden ? "▴" : "▾"}</span><PeopleIcon/></button>}
       {!(focused && membersHidden) && <ul className={focused ? "matrix-call-strip" : "matrix-call-grid"}>
         {tiles.map(tile => {
@@ -117,36 +122,36 @@ export function MatrixCallStage({ pt, me, roomName, videoHidden, onShowChat }: {
           const watching = tile.share !== null && tile.share === focused;
           return <li key={tile.id} onContextMenu={event => { event.preventDefault(); setMenu({ user: tile.user, x: event.clientX, y: event.clientY }); }} className={[speaking ? "is-speaking" : "", tile.share ? "is-sharing" : "", watching ? "is-watched" : ""].join(" ").trim() || undefined}>
             <Avatar user={tile.user} name={tile.name}/>
-            <span className="matrix-call-name">{tile.name}{tile.own ? (pt ? " (você)" : " (you)") : ""}{tile.own && (voice.muted || voice.deafened) ? <small>{voice.deafened ? (pt ? " · sem áudio" : " · deafened") : (pt ? " · mudo" : " · muted")}</small> : null}{!tile.own && <MutedForMe user={tile.user} pt={pt}/>}</span>
-            {tile.share && <span className="matrix-call-live">{pt ? "AO VIVO" : "LIVE"}</span>}
-            {tile.share && !watching && <button type="button" className="matrix-call-watch" onClick={() => void watchMatrixScreen(tile.share)}>{tile.share === "local" ? (pt ? "[ver prévia]" : "[preview]") : (pt ? "[assistir]" : "[watch]")}</button>}
+            <span className="matrix-call-name">{tile.name}{tile.own ? (tx("ui-matrix-call-stage", "you")) : ""}{tile.own && (voice.muted || voice.deafened) ? <small>{voice.deafened ? (tx("ui-matrix-call-stage", "deafened")) : (tx("ui-matrix-call-stage", "muted"))}</small> : null}{!tile.own && <MutedForMe user={tile.user}/>}</span>
+            {tile.share && <span className="matrix-call-live">{tx("ui-matrix-call-stage", "live")}</span>}
+            {tile.share && !watching && <button type="button" className="matrix-call-watch" onClick={() => void watchMatrixScreen(tile.share)}>{tile.share === "local" ? (tx("ui-matrix-call-stage", "preview")) : (tx("ui-matrix-call-stage", "watch"))}</button>}
           </li>;
         })}
       </ul>}
     </div>
-    <div className="matrix-call-controls" role="toolbar" aria-label={pt ? "Controles da chamada" : "Call controls"}>
-      <button type="button" className={voice.muted || voice.deafened ? "is-off" : ""} aria-pressed={!voice.muted} disabled={busy} title={voice.muted ? (pt ? "Ativar microfone" : "Unmute") : (pt ? "Silenciar microfone" : "Mute")} aria-label={voice.muted ? (pt ? "Ativar microfone" : "Unmute") : (pt ? "Silenciar microfone" : "Mute")}
+    <div className="matrix-call-controls" role="toolbar" aria-label={tx("ui-matrix-call-stage", "call_controls")}>
+      <button type="button" className={voice.muted || voice.deafened ? "is-off" : ""} aria-pressed={!voice.muted} disabled={busy} title={voice.muted ? (tx("ui-matrix-call-stage", "unmute")) : (tx("ui-matrix-call-stage", "mute"))} aria-label={voice.muted ? (tx("ui-matrix-call-stage", "unmute")) : (tx("ui-matrix-call-stage", "mute"))}
         onClick={() => void setMatrixVoiceControls(voice.deafened ? { muted: false, deafened: false } : { muted: !voice.muted })}><MicIcon off={voice.muted || voice.deafened}/></button>
-      <button type="button" className={voice.deafened ? "is-off" : ""} aria-pressed={voice.deafened} disabled={busy} title={voice.deafened ? (pt ? "Voltar a ouvir" : "Undeafen") : (pt ? "Silenciar áudio" : "Deafen")} aria-label={voice.deafened ? (pt ? "Voltar a ouvir" : "Undeafen") : (pt ? "Silenciar áudio" : "Deafen")}
+      <button type="button" className={voice.deafened ? "is-off" : ""} aria-pressed={voice.deafened} disabled={busy} title={voice.deafened ? (tx("ui-matrix-call-stage", "undeafen")) : (tx("ui-matrix-call-stage", "deafen"))} aria-label={voice.deafened ? (tx("ui-matrix-call-stage", "undeafen")) : (tx("ui-matrix-call-stage", "deafen"))}
         onClick={() => void setMatrixVoiceControls({ deafened: !voice.deafened })}><HeadphonesIcon off={voice.deafened}/></button>
-      <MatrixShareButton pt={pt} icon={<ScreenIcon off={voice.screen === "live"}/>}/>
-      <button type="button" className="matrix-call-leave" disabled={voice.phase === "leaving"} title={pt ? "Sair da chamada" : "Leave call"} aria-label={pt ? "Sair da chamada" : "Leave call"} onClick={() => void leaveMatrixVoice()}><LeaveIcon/></button>
+      <MatrixShareButton icon={<ScreenIcon off={voice.screen === "live"}/>}/>
+      <button type="button" className="matrix-call-leave" disabled={voice.phase === "leaving"} title={tx("ui-matrix-call-stage", "leave_call")} aria-label={tx("ui-matrix-call-stage", "leave_call")} onClick={() => void leaveMatrixVoice()}><LeaveIcon/></button>
     </div>
-    {menu && <MatrixUserMenu pt={pt} target={menu} onClose={() => setMenu(null)}/>}
-    {full && frame && createPortal(<div className={`matrix-call-fullscreen${controlsVisible ? " is-controls-visible" : ""}`} role="dialog" aria-label={pt ? `Transmissão de ${focusedName} em tela cheia` : `${focusedName}'s stream in full screen`}
+    {menu && <MatrixUserMenu target={menu} onClose={() => setMenu(null)}/>}
+    {full && frame && createPortal(<div className={`matrix-call-fullscreen${controlsVisible ? " is-controls-visible" : ""}`} role="dialog" aria-label={tx("ui-matrix-call-stage", "s_stream_in_full_screen", {"focusedname": focusedName})}
       onPointerEnter={wakeControls} onPointerMove={wakeControls} onPointerDown={wakeControls} onKeyDown={wakeControls}>
-      <div ref={fullVideo} className="matrix-call-video" onDoubleClick={() => setCallFullscreen(false)}><span>{pt ? "> carregando transmissão…" : "> loading stream…"}</span></div>
+      <div ref={fullVideo} className="matrix-call-video" onDoubleClick={() => setCallFullscreen(false)}><span>{tx("ui-matrix-call-stage", "loading_stream")}</span></div>
       <div ref={fullControls} className="matrix-call-focus-bar"
         onPointerEnter={() => { controlsHovered.current = true; wakeControls(); }}
         onPointerLeave={() => { controlsHovered.current = false; wakeControls(); }}
-        onFocus={wakeControls} onBlur={wakeControls}><span className="matrix-call-live">{pt ? "AO VIVO" : "LIVE"}</span><b>{focusedName}</b>
+        onFocus={wakeControls} onBlur={wakeControls}><span className="matrix-call-live">{tx("ui-matrix-call-stage", "live")}</span><b>{focusedName}</b>
         <div className="matrix-call-fullscreen-actions">
-          <select className="matrix-call-fit" aria-label={pt ? "Enquadramento da transmissão" : "Stream framing"} value={fit} onChange={event => setMatrixScreenFit(event.target.value as ScreenFit)}>
-            <option value="fill">{pt ? "Preencher a moldura" : "Fill the frame"}</option>
-            <option value="contain">{pt ? "Enquadrar imagem inteira" : "Fit the entire picture"}</option>
+          <select className="matrix-call-fit" aria-label={tx("ui-matrix-call-stage", "stream_framing")} value={fit} onChange={event => setMatrixScreenFit(event.target.value as ScreenFit)}>
+            <option value="fill">{tx("ui-matrix-call-stage", "fill_the_frame")}</option>
+            <option value="contain">{tx("ui-matrix-call-stage", "fit_the_entire_picture")}</option>
           </select>
-          <button type="button" onClick={() => setCallFullscreen(false)}>{pt ? "[sair da tela cheia · Esc]" : "[exit full screen · Esc]"}</button>
-          <button type="button" onClick={() => void watchMatrixScreen(null)}>{focused === "local" ? (pt ? "[fechar prévia]" : "[close preview]") : (pt ? "[parar de assistir]" : "[stop watching]")}</button>
+          <button type="button" onClick={() => setCallFullscreen(false)}>{tx("ui-matrix-call-stage", "exit_full_screen_esc")}</button>
+          <button type="button" onClick={() => void watchMatrixScreen(null)}>{focused === "local" ? (tx("ui-matrix-call-stage", "close_preview")) : (tx("ui-matrix-call-stage", "stop_watching"))}</button>
         </div></div>
     </div>, frame)}
   </section>;

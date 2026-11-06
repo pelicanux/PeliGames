@@ -1,0 +1,18 @@
+{
+  "uninstall": "Desinstalar?",
+  "only_this_entry_leaves_the_library_game_files_prefix_saves_settings_logs_and_shortcuts_s": "Somente esta entrada sai da biblioteca. O jogo, o prefixo, os saves, as configurações, os logs e os atalhos permanecem no disco.",
+  "the_prefix_will_be_permanently_deleted_with_the_game_programs_and_saves_inside_it": "O prefixo será apagado permanentemente, com o jogo, os programas e os saves que estão dentro dele.",
+  "the_prefix_and_the_game_stay_on_disk_they_only_leave_the_library": "O prefixo e o jogo continuam no disco; só saem da biblioteca.",
+  "cancel": "Cancelar",
+  "uninstalling": "Desinstalando…",
+  "remove_from_library": "Remover da biblioteca",
+  "uninstall_everything": "Desinstalar tudo",
+  "uninstall_2": "Desinstalar",
+  "remove_prefix": "Remover prefixo",
+  "deletes_the_wine_proton_folder_and_everything_installed_in_it_saves_included": "Apaga a pasta do Wine/Proton e tudo o que foi instalado nela, inclusive saves.",
+  "delete_settings_logs_and_profiles": "Apagar configurações, logs e perfis",
+  "deletes_the_game_record_and_log_folders_when_removing_the_prefix_too_also_deletes_profil": "Apaga o registro e as pastas de logs do jogo. Com a remoção do prefixo marcada, também exclui os perfis e dados de mods criados pelo PeliGames. As cópias de recuperação dos mods são preservadas.",
+  "only_remove_from_library": "Só remover da biblioteca",
+  "keeps_all_files_and_removes_only_this_peligames_entry": "Preserva todos os arquivos e remove somente esta entrada do PeliGames.",
+  "all_games_using_this_prefix_leave_the_library_with_their_shortcuts_complete_cleanup_incl": "Todos os jogos que usam esse prefixo saem da biblioteca, com seus atalhos. A limpeza completa inclui os dados associados criados pelo PeliGames fora do prefixo; arquivos externos do jogo que não pertencem ao PeliGames são preservados."
+}

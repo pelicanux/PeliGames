@@ -13,7 +13,8 @@ export function useTitlebarRunningGames({ execution, selected, source, nexusGame
   stopNexus: (id: string) => Promise<unknown>;
   onDetails: (game: GameInfo, source: "main" | "dlss" | "nexus") => void;
 }): RunningGameSummary[] {
-  const { language } = useI18n();
+  const {t: tx} = useI18n();
+
   const activeSessions=execution.sessions.filter(item=>["starting","running","stopping"].includes(item.state));
   const paths=activeSessions.map(item=>item.path);
   if(execution.pendingPath&&!paths.includes(execution.pendingPath))paths.push(execution.pendingPath);
@@ -37,7 +38,7 @@ export function useTitlebarRunningGames({ execution, selected, source, nexusGame
     const game=selected?.path===path?selected:resolved.find(item=>item.path===path);
     const origin=selected?.path===path?source:"main";
     games.push({id:`peligames:${status?.id||path}`,name:game?.name||path.split(/[\\/]/).filter(Boolean).pop()||"PeliGames",cover:game?.cover_url,
-      library:origin==="dlss"?"DLSSNR-AMD":language==="pt"?"Biblioteca principal":"Main library",
+      library:origin==="dlss"?"DLSSNR-AMD":tx("useTitlebarRunningGames", "main_library"),
       state:execution.cancellingPath===path||status?.state==="stopping"?"stopping":status?.state==="running"?"running":"starting",
       stopDisabled:status?.state==="stopping",onDetails:game?()=>onDetails(game,origin):undefined,onStop:()=>execution.cancel(path)});
   }

@@ -1,3 +1,5 @@
+import {Trans} from "react-i18next";
+import {engine} from "../i18n/engine";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke, isTauri } from "@tauri-apps/api/core";
@@ -14,7 +16,8 @@ interface ManualOptions { line: string; proton: string | null }
 export function SteamPendingActions({game, disabled, onSaved, children}: {
   game: GameInfo; disabled: boolean; onSaved: (game: GameInfo) => void; children: ReactNode;
 }) {
-  const pt = useI18n().language === "pt";
+  const {t: tx, language} = useI18n();
+
   const steamLabel = "Steam";
   const [busy, setBusy] = useState(false);
   const [restartPhase, setRestartPhase] = useState("");
@@ -83,7 +86,7 @@ export function SteamPendingActions({game, disabled, onSaved, children}: {
       setPending(Boolean(next.steam_pending));
       onSaved({...game, ...next, cover_url: game.cover_url});
       window.dispatchEvent(new Event("peligamesLibraryChanged"));
-      notifyInfo(steamLabel, action === "restart" ? (pt ? "Configurações aplicadas. Steam reiniciada." : "Settings applied. Steam restarted.") : action === "confirm-manual" ? (pt ? "Opções da Steam verificadas. Perfil preservado." : "Steam options verified. Profile preserved.") : (pt ? "Alterações revertidas." : "Changes reverted."));
+      notifyInfo(steamLabel, action === "restart" ? (tx("ui-steam-pending-actions", "settings_applied_steam_restarted")) : action === "confirm-manual" ? (tx("ui-steam-pending-actions", "steam_options_verified_profile_preserved")) : (tx("ui-steam-pending-actions", "changes_reverted")));
       if (action !== "revert") setManual(null);
     } catch (error) {
       notifyError(steamLabel, String(error));
@@ -113,31 +116,27 @@ export function SteamPendingActions({game, disabled, onSaved, children}: {
   };
   if (game.launcher !== "Steam" || !game.external_id) return children;
   const blocked = disabled || busy || exporting;
-  const phases: Record<string, string> = pt ? {
-    checking: "Verificando a Steam…", closing: "Encerrando a Steam…", terminating: "Finalizando o cliente que não encerrou…",
-    finishing: "Liberando o cliente da Steam…", applying: "Aplicando configurações…", starting: "Abrindo a Steam…", done: "Steam iniciada",
-  } : { checking: "Checking Steam…", closing: "Closing Steam…", terminating: "Terminating the unresponsive client…",
-    finishing: "Releasing the Steam client…", applying: "Applying settings…", starting: "Starting Steam…", done: "Steam started" };
+  const phases: Record<string, string> = {checking: tx("ui-steam-pending-actions", "checking_steam"), closing: tx("ui-steam-pending-actions", "closing_steam"), terminating: tx("ui-steam-pending-actions", "terminating_the_unresponsive_client"), finishing: tx("ui-steam-pending-actions", "releasing_the_steam_client"), applying: tx("ui-steam-pending-actions", "applying_settings"), starting: tx("ui-steam-pending-actions", "starting_steam"), done: tx("ui-steam-pending-actions", "steam_started")};
   const protonName = manual?.proton?.split(/[\\/]/).filter(Boolean).pop();
   return <>
     <div className="steam-action-slot">
       {pending ? <div className="steam-pending-actions">
-        <p className="steam-pending-label" role="status"><strong>{pt ? "Conclua a configuração na Steam" : "Complete Steam setup"}</strong>{pt ? "Vincule o perfil às opções de inicialização do jogo." : "Link the profile in the game’s launch options."}</p>
+        <p className="steam-pending-label" role="status"><strong>{tx("ui-steam-pending-actions", "complete_steam_setup")}</strong>{tx("ui-steam-pending-actions", "link_the_profile_in_the_game_s_launch_options")}</p>
         <div className="steam-pending-primary">
-          <button type="button" className="btn btn-play modern-play" disabled={blocked} aria-busy={exporting} onClick={() => void showManual()}><MenuIcon name="settings" />{exporting ? (pt ? "Aguarde…" : "Please wait…") : (pt ? "Configurar na Steam" : "Configure in Steam")}</button>
-          <button type="button" className="modern-mini-btn" disabled={blocked} onClick={() => void act("revert")}>{pt ? "Reverter alterações" : "Revert changes"}</button>
+          <button type="button" className="btn btn-play modern-play" disabled={blocked} aria-busy={exporting} onClick={() => void showManual()}><MenuIcon name="settings" />{exporting ? (tx("ui-steam-pending-actions", "please_wait")) : (tx("ui-steam-pending-actions", "configure_in_steam"))}</button>
+          <button type="button" className="modern-mini-btn" disabled={blocked} onClick={() => void act("revert")}>{tx("ui-steam-pending-actions", "revert_changes")}</button>
         </div>
-        <button type="button" className="modern-mini-btn steam-manual-open" disabled={blocked} aria-busy={busy} onClick={() => void act("restart")}><MenuIcon name="repair" />{busy ? (phases[restartPhase] || (pt ? "Aguarde…" : "Please wait…")) : (pt ? "Reiniciar Steam e aplicar automaticamente" : "Restart Steam and apply automatically")}</button>
+        <button type="button" className="modern-mini-btn steam-manual-open" disabled={blocked} aria-busy={busy} onClick={() => void act("restart")}><MenuIcon name="repair" />{busy ? (phases[restartPhase] || (tx("ui-steam-pending-actions", "please_wait"))) : (tx("ui-steam-pending-actions", "restart_steam_and_apply_automatically"))}</button>
       </div> : children}
     </div>
-    {manual && <NexusPopup className="steam-manual-popup" title={pt ? "Configurar na Steam" : "Configure in Steam"} titleIcon={<MenuIcon name="settings" />} onClose={() => { if (!busy) setManual(null); }} footer={<>
-      <button type="button" className="modern-mini-btn" disabled={blocked || !pending} onClick={() => void act("confirm-manual")}>{pending ? (pt ? "Já adicionei · verificar" : "I added it · verify") : (pt ? "Sem alterações pendentes" : "No pending changes")}</button>
-      <button type="button" className="btn btn-primary" onClick={() => void copy()}><MenuIcon name={copied ? "check" : "copy"} />{copied ? (pt ? "Copiado" : "Copied") : (pt ? "Copiar opções" : "Copy options")}</button>
+    {manual && <NexusPopup className="steam-manual-popup" title={tx("ui-steam-pending-actions", "configure_in_steam")} titleIcon={<MenuIcon name="settings" />} onClose={() => { if (!busy) setManual(null); }} footer={<>
+      <button type="button" className="modern-mini-btn" disabled={blocked || !pending} onClick={() => void act("confirm-manual")}>{pending ? (tx("ui-steam-pending-actions", "i_added_it_verify")) : (tx("ui-steam-pending-actions", "no_pending_changes"))}</button>
+      <button type="button" className="btn btn-primary" onClick={() => void copy()}><MenuIcon name={copied ? "check" : "copy"} />{copied ? (tx("ui-steam-pending-actions", "copied")) : (tx("ui-steam-pending-actions", "copy_options"))}</button>
     </>}>
-      <p className="steam-manual-intro">{pt ? "Na Steam, abra Propriedades do jogo → Geral → Opções de inicialização e substitua a linha pelas opções abaixo. Acrescente seus argumentos adicionais, se houver." : "In Steam, open game Properties → General → Launch Options and replace the line with the options below. Append any additional game arguments you use."}</p>
-      <label className="steam-manual-field"><span>{pt ? "Opções de inicialização geradas" : "Generated launch options"}</span><textarea readOnly spellCheck={false} rows={4} value={manual.line} onFocus={event => event.currentTarget.select()} /></label>
-      {protonName && <div className="steam-manual-proton"><MenuIcon name="info" /><p>{pt ? <>Para usar <strong>{protonName}</strong>, abra Propriedades → Compatibilidade na Steam e selecione essa versão do Proton. Ela precisa estar disponível na sua instalação da Steam.</> : <>To use <strong>{protonName}</strong>, open Properties → Compatibility in Steam and select that Proton version. It must be available in your Steam installation.</>}</p></div>}
-      <p className="steam-manual-help">{pt ? "Adicione esta linha uma vez e use “Já adicionei · verificar”. Depois, MangoHUD, geração de quadros e variáveis usarão o perfil atualizado na próxima abertura do jogo, sem reiniciar a Steam. Na Steam nativa, o Proton também pode ser escolhido no PeliGames; no Flatpak, continua em Compatibilidade." : "Add this command once and use “I added it · verify”. MangoHUD, frame generation and variables will then read the updated profile on the next game launch, without restarting Steam. With native Steam, Proton can also be selected in PeliGames; Flatpak keeps the Compatibility selection."}</p>
+      <p className="steam-manual-intro">{tx("ui-steam-pending-actions", "in_steam_open_game_properties_general_launch_options_and_replace_the_line_with_the_optio")}</p>
+      <label className="steam-manual-field"><span>{tx("ui-steam-pending-actions", "generated_launch_options")}</span><textarea readOnly spellCheck={false} rows={4} value={manual.line} onFocus={event => event.currentTarget.select()} /></label>
+      {protonName && <div className="steam-manual-proton"><MenuIcon name="info" /><p><Trans t={engine.getFixedT(language, "ui-steam-pending-actions")} i18nKey="select_proton_in_steam" values={{protonName}} components={{strong: <strong/>}}/></p></div>}
+      <p className="steam-manual-help">{tx("ui-steam-pending-actions", "add_this_command_once_and_use_i_added_it_verify_mangohud_frame_generation_and_variables_")}</p>
     </NexusPopup>}
   </>;
 }

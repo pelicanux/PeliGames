@@ -250,10 +250,10 @@
 .mm-custom-presets {display:flex;flex-direction:column;gap:10px;}
 .mm-custom-heading,.mm-custom-controls {display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .mm-custom-heading {justify-content:space-between;}
-.mm-custom-presets button,.mm-custom-presets select,.mm-custom-presets input {font:inherit;font-size:.8125rem;color:inherit;background:var(--mm-card);border:1px solid var(--mm-line);border-radius:10px;padding:8px 10px;min-width:0;}
+.mm-custom-heading > button,.mm-custom-controls > button,.mm-custom-controls > input {font:inherit;font-size:.8125rem;color:inherit;background:var(--mm-card);border:1px solid var(--mm-line);border-radius:10px;padding:8px 10px;min-width:0;}
 .mm-custom-presets button {cursor:pointer;}
 .mm-custom-presets button:disabled {opacity:.5;cursor:default;}
-.mm-custom-presets input,.mm-custom-presets select {flex:1;min-width:150px;}
+.mm-custom-controls > input,.mm-custom-controls > .selection-menu {flex:1 1 150px;min-width:0;}
 .mm-custom-presets small {font-size:.75rem;color:var(--mm-muted);}
 .mm-custom-presets .mm-hint {margin:0;}
 

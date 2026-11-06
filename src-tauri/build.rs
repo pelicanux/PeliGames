@@ -1,9 +1,13 @@
+#[path = "build/installer_verifier.rs"]
+mod installer_verifier;
+
 fn main() {
     println!("cargo:rerun-if-changed=../tools/storage_layout.rs");
     println!("cargo:rerun-if-changed=../tools/storage_names.rs");
     println!("cargo:rerun-if-changed=../release-features.json");
     println!("cargo:rerun-if-env-changed=PELIGAMES_NEXUS_CLIENT_ID");
     println!("cargo:rerun-if-env-changed=PELIGAMES_DISCORD_RELAY");
+    installer_verifier::embed();
     launch_helper();
     game_overlay();
     export_webkit_vblank_getters();

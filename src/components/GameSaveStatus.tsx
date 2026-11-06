@@ -33,11 +33,13 @@ export function useGameSaveStatus(status: SaveStatus, scope = "panel") {
 }
 
 export function GameSaveStatusIndicator({scope = "panel"}: {scope?: string}) {
-  const context = useContext(Context), pt = useI18n().language === "pt";
+  const {t: tx} = useI18n();
+
+  const context = useContext(Context);
   const status = context?.notices[scope]?.status;
-  const text = status === "saving" || status === "pending" ? (pt ? "Salvando…" : "Saving…")
-    : status === "saved" ? (pt ? "Salvo" : "Saved")
-    : status === "error" ? (pt ? "Falha ao salvar" : "Save failed") : "";
+  const text = status === "saving" || status === "pending" ? (tx("ui-game-save-status", "saving"))
+    : status === "saved" ? (tx("ui-game-save-status", "saved"))
+    : status === "error" ? (tx("ui-game-save-status", "save_failed")) : "";
   if (!context) return null;
   return <span className="modern-game-save-status" data-state={status || "idle"} role="status" aria-live="polite" aria-atomic="true">
     <span className="modern-game-save-badge">

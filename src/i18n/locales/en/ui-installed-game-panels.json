@@ -1,0 +1,7 @@
+{
+  "game_settings": "Game settings",
+  "select_an_existing_prefix_or_enter_a_new_or_empty_folder_the_prefix_is_created_with_the_": "Select an existing prefix or enter a new or empty folder. The prefix is created with the selected Wine/Proton when you click Play. The previous prefix is preserved.",
+  "bottles_shares_the_runner_in_the_same_bottle_change_in_bottles": "Bottles shares the runner in the same bottle. Change in Bottles.",
+  "managed_in_bottles": "Managed in Bottles",
+  "experimental_integration_changes_apply_on_the_next_game_launch_even_while_epic_is_open": "Experimental integration: changes apply on the next game launch, even while Epic is open."
+}

@@ -709,18 +709,18 @@ select option {
 
 /* Library view controls share the same selection/covers in both presentations. */
 .launcher-icon { flex-shrink: 0; vertical-align: middle; }
-.game-collection--grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 1rem; }
+.game-collection--grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 6.875rem), 1fr)); gap: 1rem; }
 .game-collection--list { display: flex; flex-direction: column; gap: .5rem; }
 .game-list-details { display: none; }
-.library-game-card--list { display: flex; align-items: center; gap: 16px; min-height: 76px; }
+.library-game-card--list { display: flex; align-items: center; gap: 1rem; min-height: 4.75rem; }
 .library-cover-thumbnail { position: relative; overflow: hidden; border-radius: inherit; }
-.library-game-card--list .library-cover-thumbnail { width: 48px; height: 72px; flex: 0 0 48px; }
-.library-game-card--list .library-cover-thumbnail > img, .library-game-card--list .fallback-cover { width: 100% !important; height: 72px; }
+.library-game-card--list .library-cover-thumbnail { width: 3rem; height: 4.5rem; flex: 0 0 3rem; }
+.library-game-card--list .library-cover-thumbnail > img, .library-game-card--list .fallback-cover { width: 100% !important; height: 4.5rem; }
 .library-game-card--list .fallback-cover > span { display: none; }
-.library-game-card--list .fallback-cover > img { width: 28px !important; height: 28px !important; }
+.library-game-card--list .fallback-cover > img { width: 1.75rem !important; height: 1.75rem !important; }
 .library-game-card--list .game-list-details { display: flex; flex: 1; min-width: 0; font-weight: 600; font-size: .9rem; overflow-wrap: anywhere; }
 .library-game-card--list .game-launcher-badge { position: static !important; padding: .5rem 1rem !important; background: none !important; flex-shrink: 0; }
-.game-card-placeholder--list { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 16px; box-sizing: border-box; min-height: 76px; aspect-ratio: auto !important; }
+.game-card-placeholder--list { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0 1rem; box-sizing: border-box; min-height: 4.75rem; aspect-ratio: auto !important; }
 .selected-game-list-note { font-size: .75rem; color: var(--tone-94a3b8, #94a3b8); }
 
 /* Collapse the details under the library while retaining the shared cover animation. */
@@ -922,8 +922,8 @@ body { height: 100dvh; min-height: 0; }
 .selected-cover-copy { display: block; width: 100%; aspect-ratio: 2 / 3; object-fit: cover; filter: grayscale(1); opacity: .45; }
 .selected-cover-copy--fallback { background: var(--tone-262631, #262631); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; font-size: .75rem; }
 .selected-cover-copy--fallback img { width: 40px; height: 40px; }
-.game-card-placeholder--list .selected-cover-copy { width: 48px; height: 72px; flex-shrink: 0; margin-left: -16px; }
-.game-card-placeholder--list .selected-cover-copy--fallback img { width: 28px; height: 28px; }
+.game-card-placeholder--list .selected-cover-copy { width: 3rem; height: 4.5rem; flex-shrink: 0; margin-left: -1rem; }
+.game-card-placeholder--list .selected-cover-copy--fallback img { width: 1.75rem; height: 1.75rem; }
 .selected-game-placeholder-name { flex: 1; min-width: 0; }
 .performance-mode .selected-cover-copy { filter: grayscale(1) !important; }
 .game-card-placeholder:not(.game-card-placeholder--list) .selected-cover-copy { position: absolute; inset: 0; height: 100%; }
@@ -958,7 +958,7 @@ body { height: 100dvh; min-height: 0; }
 .titlebar-games { color: var(--accent); }
 img[src="/peligames.svg"] { filter: hue-rotate(var(--brand-hue, 0deg)); }
 /* Reserve room inside the scrollport for the enlarged edge covers. */
-.game-collection--grid { padding: 12px 14px 20px; }
+.game-collection--grid { padding: 0.75rem 0.875rem 1.25rem; }
 
 /* Flat: the tilt uses perspective() in the transform itself. A 3D context and a
    layer created on every hover made WebKitGTK flash covers black and repaint
@@ -1597,7 +1597,7 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
 }
 @media(prefers-reduced-motion:reduce) { .library-game-card.is-holding-launch,.is-shattering-launch > :not(.library-cover-shatter) { animation:none; } .library-cover-shatter { display:none; } .library-hold-cracks { animation:none; opacity:.6; } }
 
-.game-collection--list .library-card-cell--shattered { min-height:76px; }
+.game-collection--list .library-card-cell--shattered { min-height:4.75rem; }
 .library-card-cell--shattered { pointer-events:none; }
 
 /* A dark vignette instead of blurring the whole window: the launch animations

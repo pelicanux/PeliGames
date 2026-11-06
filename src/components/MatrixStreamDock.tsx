@@ -26,7 +26,8 @@ export function openMatrixCallView(full = false) {
 }
 
 export function MatrixStreamDock() {
-  const { language } = useI18n(); const pt = language === "pt";
+  const {t: tx} = useI18n();
+
   const voice = useMatrixVoice();
   const stageShown = useCallStageShown();
   const shown = Boolean(voice.watching) && !stageShown && (voice.phase === "connected" || voice.phase === "reconnecting");
@@ -55,9 +56,9 @@ export function MatrixStreamDock() {
     return () => { observer.disconnect(); window.removeEventListener("resize", keep); };
   }, [shown]);
   if (!shown) return null;
-  const name = voice.watching === "local" ? (pt ? "Sua tela" : "Your screen") : voice.participants.find(item => item.id === voice.watching)?.name ?? "";
+  const name = voice.watching === "local" ? (tx("ui-matrix-stream-dock", "your_screen")) : voice.participants.find(item => item.id === voice.watching)?.name ?? "";
   // In the body, like the Matrix window: above it, so it can be dragged there too.
-  return createPortal(<aside ref={dock} className="matrix-stream-dock" style={{ right: position.right, bottom: position.bottom, width: WIDTH, maxWidth: `calc(100vw - ${MARGIN * 2}px)`, boxSizing: "border-box" }} aria-label={pt ? `Transmissão de ${name}` : `${name}'s stream`}>
+  return createPortal(<aside ref={dock} className="matrix-stream-dock" style={{ right: position.right, bottom: position.bottom, width: WIDTH, maxWidth: `calc(100vw - ${MARGIN * 2}px)`, boxSizing: "border-box" }} aria-label={tx("ui-matrix-stream-dock", "s_stream", {"name": name})}>
     <header onPointerDown={event => {
       if (event.button !== 0 || (event.target as HTMLElement).closest("button")) return;
       // No text selection while dragging across the launcher.
@@ -79,13 +80,13 @@ export function MatrixStreamDock() {
       drag.current = null;
       try { localStorage.setItem(POSITION_KEY, JSON.stringify(position)); } catch { /* Kept for this session only. */ }
     }} onLostPointerCapture={() => { document.body.classList.remove("is-dragging-dock"); drag.current = null; }}>
-      <span className="matrix-call-live">{pt ? "AO VIVO" : "LIVE"}</span><b title={name}>{name}</b>
-      <button type="button" title={pt ? "Voltar à sala em modo palco" : "Return to the room in stage mode"} aria-label={pt ? "Voltar à sala em modo palco" : "Return to the room in stage mode"} onClick={() => openMatrixCallView(false)}>
+      <span className="matrix-call-live">{tx("ui-matrix-stream-dock", "live")}</span><b title={name}>{name}</b>
+      <button type="button" title={tx("ui-matrix-stream-dock", "return_to_the_room_in_stage_mode")} aria-label={tx("ui-matrix-stream-dock", "return_to_the_room_in_stage_mode")} onClick={() => openMatrixCallView(false)}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5H4v5M4 5l8 8"/><path d="M14 4h6v16H4v-6"/></svg>
       </button>
-      <button type="button" title={pt ? "Tela cheia no Matrix" : "Full screen in Matrix"} aria-label={pt ? "Tela cheia no Matrix" : "Full screen in Matrix"} onClick={() => openMatrixCallView(true)}>⤢</button>
-      <button type="button" title={pt ? "Parar de assistir" : "Stop watching"} aria-label={pt ? "Parar de assistir" : "Stop watching"} onClick={() => void watchMatrixScreen(null)}>✕</button>
+      <button type="button" title={tx("ui-matrix-stream-dock", "full_screen_in_matrix")} aria-label={tx("ui-matrix-stream-dock", "full_screen_in_matrix")} onClick={() => openMatrixCallView(true)}>⤢</button>
+      <button type="button" title={tx("ui-matrix-stream-dock", "stop_watching")} aria-label={tx("ui-matrix-stream-dock", "stop_watching")} onClick={() => void watchMatrixScreen(null)}>✕</button>
     </header>
-    <div ref={video} className="matrix-stream-dock-video" role="button" tabIndex={0} aria-label={pt ? "Voltar para a chamada" : "Back to the call"} onClick={() => openMatrixCallView()} onKeyDown={event => { if (event.key === "Enter") openMatrixCallView(); }}/>
+    <div ref={video} className="matrix-stream-dock-video" role="button" tabIndex={0} aria-label={tx("ui-matrix-stream-dock", "back_to_the_call")} onClick={() => openMatrixCallView()} onKeyDown={event => { if (event.key === "Enter") openMatrixCallView(); }}/>
   </aside>, document.body);
 }

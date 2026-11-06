@@ -51,6 +51,8 @@ pub fn supports_lumenite(script: &str) -> bool {
 }
 
 fn model_arguments(script: &str, extras: InstallExtras, has_small: bool, has_original: bool) -> Result<Vec<&'static str>, String> {
+    // Every supported backend requires the original weights, even in auto mode.
+    if !has_original { return Err("MODEL_BIN_NOT_FOUND".into()); }
     if matches!(extras.model, Some(NeuralModel::Small | NeuralModel::Experimental)) && extras.int4 == Some(true) {
         return Err("int4 misto só funciona com o modelo original (310.8.0).".into());
     }
@@ -60,9 +62,6 @@ fn model_arguments(script: &str, extras: InstallExtras, has_small: bool, has_ori
     }
     if matches!(extras.model, Some(NeuralModel::Small | NeuralModel::Experimental)) && (!selectable || !has_small) {
         return Err("Modelo novo indisponível. Atualize o backend e extraia a DLL 310.9.16 no assistente.".into());
-    }
-    if (extras.model == Some(NeuralModel::Original) || extras.int4 == Some(true)) && !has_original {
-        return Err("Modelo original indisponível. Extraia novamente uma DLL compatível no assistente.".into());
     }
     if !selectable { return Ok(vec![]); }
     let old = extras.model == Some(NeuralModel::Original) || extras.int4 == Some(true) || !has_small;
@@ -117,6 +116,10 @@ pub fn execute_standalone_install(
     shortcut_key: &str,
     extras: InstallExtras,
 ) -> Result<String, String> {
+    if route != "remove" && dll_path.is_some_and(|path| !Path::new(path).is_file()) {
+        return Err("MODEL_BIN_NOT_FOUND".into());
+    }
+
     // 1. Create a unique temporary directory
     let temp_dir = env::temp_dir().join(format!("dlssnr-installer-{}", uuid::Uuid::new_v4()));
     if let Err(e) = fs::create_dir_all(&temp_dir) {
@@ -148,6 +151,14 @@ pub fn execute_standalone_install(
         }
     }
 
+    let script = fs::read_to_string(temp_dir.join("install.sh")).unwrap_or_default();
+    if route != "remove" {
+        if let Err(error) = super::neural_models::prepare_for_backend(&temp_dir.join("dlssnr-amd"), &script) {
+            let _ = fs::remove_dir_all(&temp_dir);
+            return Err(error);
+        }
+    }
+
     // 4. Patch extract_model.sh to print python errors if it fails
     let extract_script = temp_dir.join("model-tools/extract_model.sh");
     if extract_script.exists() {
@@ -174,7 +185,6 @@ pub fn execute_standalone_install(
     cmd.env_remove("PYTHONHOME");
     cmd.env_remove("PYTHONPATH");
     
-    let script = fs::read_to_string(temp_dir.join("install.sh")).unwrap_or_default();
     let (route, extra) = match extra_arguments(&script, &backend_route(&script, route), extras) {
         Ok(value) => value,
         Err(error) => { let _ = fs::remove_dir_all(&temp_dir); return Err(error); }
@@ -185,8 +195,8 @@ pub fn execute_standalone_install(
     cmd.arg(&route);
     cmd.args(extra);
     if route != "remove" {
-        let has_small = temp_dir.join("dlssnr-amd/dlssnr-small.bin").is_file() || dll_path.is_some();
-        match model_arguments(&script, extras, has_small, temp_dir.join("dlssnr-amd/dlssnr.bin").is_file() || dll_path.is_some()) {
+        let has_small = super::neural_models::find(&temp_dir.join("dlssnr-amd"), super::neural_models::SMALL).is_some() || dll_path.is_some();
+        match model_arguments(&script, extras, has_small, super::neural_models::find(&temp_dir.join("dlssnr-amd"), super::neural_models::ORIGINAL).is_some() || dll_path.is_some()) {
             Ok(arguments) => { cmd.args(arguments); }
             Err(error) => { let _ = fs::remove_dir_all(&temp_dir); return Err(error); }
         }
@@ -386,6 +396,24 @@ mod tests {
         assert!(extra_arguments("old backend", "reshade", on).is_err());
         assert!(extra_arguments("old backend", "reshade", InstallExtras { lumenite: Some(false), ..Default::default() }).unwrap().1.is_empty());
     }
+    #[test]
+    fn missing_model_does_not_start_installation_but_still_allows_removal() {
+        use super::execute_standalone_install;
+        let root = std::env::temp_dir().join(format!("peligames-model-preflight-{}", uuid::Uuid::new_v4()));
+        let backend = root.join("backend");
+        let game = root.join("game");
+        std::fs::create_dir_all(backend.join("dlssnr-amd")).unwrap();
+        std::fs::create_dir(&game).unwrap();
+        std::fs::write(backend.join("install.sh"), "printf called > \"$1/backend-ran\"\n").unwrap();
+        let game_path = game.to_string_lossy();
+        let install = || execute_standalone_install(&backend, &game_path, "optiscaler", None, None, "Insert", InstallExtras::default());
+        assert_eq!(install().unwrap_err(), "MODEL_BIN_NOT_FOUND");
+        assert!(!game.join("backend-ran").exists());
+        assert!(execute_standalone_install(&backend, &game_path, "remove", None, None, "Insert", InstallExtras::default()).is_ok());
+        assert!(game.join("backend-ran").exists());
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
     #[test]
     fn neural_model_selection_respects_cache_and_int4() {
         use super::{model_arguments, NeuralModel};

@@ -1,0 +1,17 @@
+{
+  "use_ctrl_alt_or_super_with_a_key_esc_cancels": "Use Ctrl, Alt ou Super com uma tecla; Esc cancela.",
+  "record_shortcuts_to_control_the_call_with_matrix_closed_for_use_while_gaming_apply_globa": "Grave combinações para controlar a chamada com o Matrix fechado. Para usar durante o jogo, aplique os atalhos globais e confirme a janela do sistema, se aparecer.",
+  "toggle_microphone": "Mutar / desmutar microfone",
+  "toggle_deafen": "Silenciar / reativar áudio e microfone",
+  "press_keys": "Pressione as teclas…",
+  "applying": "Aplicando…",
+  "apply_shortcuts": "Aplicar atalhos",
+  "restore_defaults_no_shortcuts": "Restaurar padrão (sem atalhos)",
+  "shortcuts_saved_for_simulation_while_the_preview_has_focus": "Atalhos salvos para simulação com a prévia em foco.",
+  "global_shortcuts_active_including_while_gaming": "Atalhos globais ativos, inclusive com o jogo em foco.",
+  "shortcuts_removed": "Atalhos removidos.",
+  "microphone": "Microfone",
+  "deafen": "Silenciamento geral",
+  "clear_microphone_shortcut": "Limpar atalho de microfone",
+  "clear_deafen_shortcut": "Limpar atalho de silenciamento geral"
+}

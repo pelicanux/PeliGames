@@ -10,11 +10,12 @@ export function NexusLaunchOptions({ gameId, disabled, busy, errorMessage, onSav
   inline?: boolean; gameId: string; disabled: boolean; busy: boolean; errorMessage: string;
   onSave: (gameId: string, options: string | null) => Promise<boolean>;
 }) {
-  const { language } = useI18n(), pt = language === "pt";
+  const {t: tx} = useI18n();
+
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState<Options | null>(null);
   const [draft, setDraft] = useState(""), [error, setError] = useState(""), [saving, setSaving] = useState(false);
-  const title = pt ? "Opções de inicialização" : "Launch options";
+  const title = tx("ui-nexus-launch-options", "launch_options");
   useEffect(() => { setOpen(false); setOptions(null); setError(""); }, [gameId]);
   useEffect(() => {
     if (!open && !inline) return;
@@ -31,28 +32,28 @@ export function NexusLaunchOptions({ gameId, disabled, busy, errorMessage, onSav
     finally { setSaving(false); }
   };
   if (inline) return <section className="nexus-advanced-launch-options">
-    <div><h4>{title}</h4><p className="nexus-hint">{pt ? "Argumentos e variáveis deste jogo." : "Arguments and variables for this game."}</p></div>
+    <div><h4>{title}</h4><p className="nexus-hint">{tx("ui-nexus-launch-options", "arguments_and_variables_for_this_game")}</p></div>
     <RetractableInput open={open} setOpen={setOpen} label={title} value={draft} onChange={setDraft} onSubmit={() => void save(draft || null)} disabled={disabled || busy || saving || !options} error={error || errorMessage}>
-      <button type="button" disabled={saving || busy || disabled} onClick={() => void save(null)}>{pt ? "Restaurar" : "Reset"}</button>
+      <button type="button" disabled={saving || busy || disabled} onClick={() => void save(null)}>{tx("ui-nexus-launch-options", "reset")}</button>
     </RetractableInput>
     {options?.customized && options.effective && <code className="modern-saved-launch-options">{options.effective}</code>}
     {error && !open && <p role="alert" className="nexus-error">{error}</p>}
   </section>;
   return <section className="nexus-advanced-launch-options">
-    <div><h4><MenuIcon name="play" />{title}</h4><p className="nexus-hint">{pt ? "Confira as opções dos mods e edite os argumentos do jogo." : "Review mod launch options and edit game arguments."}</p></div>
-    <button type="button" className="btn btn-secondary" disabled={disabled || busy} onClick={() => setOpen(true)}><MenuIcon name="edit" />{pt ? "Editar" : "Edit"}</button>
+    <div><h4><MenuIcon name="play" />{title}</h4><p className="nexus-hint">{tx("ui-nexus-launch-options", "review_mod_launch_options_and_edit_game_arguments")}</p></div>
+    <button type="button" className="btn btn-secondary" disabled={disabled || busy} onClick={() => setOpen(true)}><MenuIcon name="edit" />{tx("ui-nexus-launch-options", "edit")}</button>
     {open && <LaunchOptionsSurface inline={inline} title={title} onClose={() => { if (!saving && !busy) setOpen(false); }} footer={<>
-      <button type="button" className="btn btn-secondary" disabled={!options || saving || busy || disabled} onClick={() => void save(null)}>{pt ? "Restaurar automáticas" : "Restore automatic"}</button>
-      <button type="button" className="btn btn-primary" disabled={!options || saving || busy || disabled} onClick={() => void save(draft === options?.automatic ? null : draft)}>{saving ? pt ? "Salvando…" : "Saving…" : pt ? "Salvar" : "Save"}</button>
+      <button type="button" className="btn btn-secondary" disabled={!options || saving || busy || disabled} onClick={() => void save(null)}>{tx("ui-nexus-launch-options", "restore_automatic")}</button>
+      <button type="button" className="btn btn-primary" disabled={!options || saving || busy || disabled} onClick={() => void save(draft === options?.automatic ? null : draft)}>{saving ? tx("ui-nexus-launch-options", "saving") : tx("ui-nexus-launch-options", "save")}</button>
     </>}>
-      {!options && !error && <p role="status">{pt ? "Carregando…" : "Loading…"}</p>}
+      {!options && !error && <p role="status">{tx("ui-nexus-launch-options", "loading")}</p>}
       {options && <>
-        <label className="nexus-launch-options-label">{pt ? "Automáticas detectadas pelo launcher" : "Automatic options detected by the launcher"}</label>
-        <pre className="nexus-launch-options-automatic">{options.automatic || (pt ? "Nenhuma opção automática adicional." : "No additional automatic options.")}</pre>
-        <p className="nexus-hint">{pt ? "Edite os argumentos e variáveis abaixo. Variáveis vêm antes dos argumentos, por exemplo: MANGOHUD=1 %command% -windowed. Prioridade de DLLs é configurada em Prioridade das DLLs do Wine. Não são executados comandos de shell." : "Edit arguments and variables below. Variables precede arguments, for example: MANGOHUD=1 %command% -windowed. Configure DLL priorities under Wine DLL priority. Shell commands are not executed."}</p>
-        <label className="nexus-launch-options-label" htmlFor={`launch-options-${gameId}`}>{pt ? "Opções usadas ao iniciar" : "Options used on launch"}</label>
+        <label className="nexus-launch-options-label">{tx("ui-nexus-launch-options", "automatic_options_detected_by_the_launcher")}</label>
+        <pre className="nexus-launch-options-automatic">{options.automatic || (tx("ui-nexus-launch-options", "no_additional_automatic_options"))}</pre>
+        <p className="nexus-hint">{tx("ui-nexus-launch-options", "edit_arguments_and_variables_below_variables_precede_arguments_for_example_mangohud_1_co")}</p>
+        <label className="nexus-launch-options-label" htmlFor={`launch-options-${gameId}`}>{tx("ui-nexus-launch-options", "options_used_on_launch")}</label>
         <textarea id={`launch-options-${gameId}`} className="nexus-launch-options-input" value={draft} maxLength={4096} rows={inline ? 3 : 5} disabled={saving || busy || disabled} onChange={event => setDraft(event.target.value)} />
-        <p className="nexus-hint">{pt ? "Opções personalizadas substituem as automáticas mostradas acima. Após mudar mods, confira as opções ou restaure o modo automático. Estas opções valem apenas para iniciar por esta biblioteca Nexus." : "Custom options replace the automatic options shown above. After changing mods, review them or restore automatic mode. These options apply only when launching from this Nexus library."}</p>
+        <p className="nexus-hint">{tx("ui-nexus-launch-options", "custom_options_replace_the_automatic_options_shown_above_after_changing_mods_review_them")}</p>
       </>}
       {(error || errorMessage) && <p role="alert" className="nexus-error">{error || errorMessage}</p>}
     </LaunchOptionsSurface>}

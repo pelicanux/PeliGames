@@ -1,3 +1,6 @@
+import {loadLanguage, translator} from "../src/i18n/engine";
+await loadLanguage("pt-BR");
+const t = translator("pt-BR");
 import {expect, test, mock} from "bun:test";
 import type {DiscordStatus} from "../src/theme/discordBenefits";
 let cursor = 0, mounted = false;
@@ -12,7 +15,7 @@ mock.module("react",()=>({
  useEffect:(effect:()=>void)=>{if(!mounted)effects.push(effect);},
 }));
 mock.module("@tauri-apps/api/core",()=>({invoke:(command:string)=>new Promise((resolve,reject)=>requests.push({command,resolve,reject}))}));
-mock.module("../src/i18n/I18nContext",()=>({useI18n:()=>({language:"pt"})}));
+mock.module("../src/i18n/I18nContext",()=>({useI18n:()=>({language:"pt-BR",t})}));
 mock.module("../src/components/MenuIcon",()=>({MenuIcon:()=>null}));
 mock.module("../src/services/notifications",()=>({notifyError:()=>{}}));
 mock.module("../src/components/preferences/DiscordPresencePreferences",()=>({DiscordPresencePreferences:()=>null}));

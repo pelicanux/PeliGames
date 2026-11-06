@@ -1,0 +1,22 @@
+{
+  "automatic": "Automática",
+  "choosing_screen": "escolhendo tela…",
+  "stop_sharing": "parar transmissão",
+  "share_screen": "transmitir tela",
+  "stream_sound_and_quality": "Som e qualidade da transmissão",
+  "stream_sound": "> som da transmissão",
+  "all_pc_sound": "Todo o som do PC",
+  "except_the_call_itself": "menos a própria chamada",
+  "no_sound": "Sem som",
+  "one_application_only": "Só um aplicativo",
+  "refresh": "[atualizar]",
+  "looking": "procurando…",
+  "no_application_playing_sound_now_open_the_game_and_press_refresh": "Nenhum aplicativo tocando som agora. Abra o jogo e toque em [atualizar].",
+  "quality": "> qualidade",
+  "resolution": "Resolução",
+  "frames_per_second": "Quadros por segundo",
+  "sends_1080p_720p_and_360p_each_viewer_gets_what_their_connection_carries_adjusted_on_the": "Envia em 1080p, 720p e 360p: cada pessoa recebe o que a internet dela aguenta, e isso se ajusta sozinho.",
+  "choose_screen_and_share": "Escolher tela e transmitir",
+  "the_system_then_asks_which_screen_or_window_to_show": "Em seguida o sistema pergunta qual tela ou janela mostrar.",
+  "fixed_quality": "Fixo em {{height}}p a {{fps}} fps, cerca de {{bitrate}} Mbit/s."
+}

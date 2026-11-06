@@ -5,7 +5,9 @@ import type {GameInfo} from "../../components/GameGrid";
 import type {useNexusWorkspace} from "./useNexusWorkspace";
 import {useI18n} from "../../i18n/I18nContext";
 export function NexusGameTab({game,workspace,children}:{game:GameInfo;workspace:ReturnType<typeof useNexusWorkspace>;children:ReactNode}){
- const pt=useI18n().language==="pt";const [status,setStatus]=useState<"checking"|"unsupported"|"ready"|"error">("checking");const [error,setError]=useState("");const task=useRef<{key:string;promise:Promise<boolean>} | undefined>(undefined);
+  const {t: tx} = useI18n();
+
+ const [status,setStatus]=useState<"checking"|"unsupported"|"ready"|"error">("checking");const [error,setError]=useState("");const task=useRef<{key:string;promise:Promise<boolean>} | undefined>(undefined);
  const registered=workspace.workspace.games.some(g=>g.id===game.nexus_id||sameGameInstallation(g.game,game));
  const key=JSON.stringify([game.launcher,game.path,game.directory,game.prefix,game.external_id,game.nexus_id,registered]);
  useEffect(()=>{let alive=true;if(!workspace.loaded)return;
@@ -14,5 +16,5 @@ export function NexusGameTab({game,workspace,children}:{game:GameInfo;workspace:
   void task.current.promise.then(ok=>{if(alive)setStatus(ok?"ready":"unsupported")}).catch(e=>{if(alive){setError(String(e));setStatus("error")}});return()=>{alive=false};
  },[key,registered,workspace.loaded]);
  if(status==="ready"&&registered)return <>{children}</>;
- return <div className="modern-tile"><h3>{pt?"Mods Nexus":"Nexus Mods"}</h3><p role="status">{status==="checking"?(pt?"Identificando o módulo desta instalação…":"Identifying this installation's module…"):status==="error"?error:(pt?"Este jogo ainda não tem um módulo de mods compatível no PeliGames. A aba permanece disponível para você acompanhar o suporte; a instalação de mods por este módulo não está habilitada.":"This game does not yet have a compatible mod module in PeliGames. This tab remains available, but mod installation through this module is not enabled.")}</p></div>
+ return <div className="modern-tile"><h3>{tx("ui-nexus-game-tab", "nexus_mods")}</h3><p role="status">{status==="checking"?(tx("ui-nexus-game-tab", "identifying_this_installation_s_module")):status==="error"?error:(tx("ui-nexus-game-tab", "this_game_does_not_yet_have_a_compatible_mod_module_in_peligames_this_tab_remains_availa"))}</p></div>
 }

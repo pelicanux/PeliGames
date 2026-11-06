@@ -1,14 +1,13 @@
+import {translator} from "../../i18n/engine";
 import { invoke } from "@tauri-apps/api/core";
 import { notifyError, notifyInfo } from "../../services/notifications";
 
 export function notifyNexusAccountRequired(language: string, reason: "catalog" | "download" = "catalog") {
+  const tx = translator(language);
+
   const message = reason === "download"
-    ? language === "en"
-      ? "Download not started: connect your Nexus Mods account in PeliGames. Click here to connect it, then retry the download."
-      : "O download não foi iniciado: conecte sua conta Nexus Mods no PeliGames. Clique aqui para conectar e depois tente baixar novamente."
-    : language === "en"
-      ? "Connect your Nexus Mods account to use the online catalog and collections. Click here to sign in."
-      : "Conecte sua conta Nexus Mods para acessar o catálogo online e as coleções. Clique aqui para fazer login.";
+    ? tx("requireNexusAccount", "download_not_started_connect_your_nexus_mods_account_in_peligames_click_here_to_connect_")
+    : tx("requireNexusAccount", "connect_your_nexus_mods_account_to_use_the_online_catalog_and_collections_click_here_to_");
   notifyInfo("Nexus Mods", message, "nexus-account");
 }
 

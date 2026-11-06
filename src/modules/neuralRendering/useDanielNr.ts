@@ -17,7 +17,8 @@ export interface DanielPanelProps {
 type Action = "install" | "remove" | "toggle" | "link" | "switch-proxy" | "switch-version" | "recover-version";
 
 export function useDanielNr({ game, disabled, running = false, onSaved, onPersist, onBusy }: DanielPanelProps) {
-  const pt = useI18n().language === "pt";
+  const {t: tx} = useI18n();
+
   const [state, setState] = useState<DanielState>();
   const [executable, setExecutable] = useState("");
   const [dx12, setDx12] = useState(false);
@@ -80,7 +81,7 @@ export function useDanielNr({ game, disabled, running = false, onSaved, onPersis
   const fail = (e: unknown) => { if (mounted.current) setError(String(e)); notifyError("Daniel NR", String(e)); };
   const execute = async (action: Action, selection?: { runtime?: string; proxy?: string }) => {
     if (operation.current || !state || blocked) return;
-    operation.current = true; setBusy(true); onBusy(true); setError(""); setProgress(pt ? "Aplicando…" : "Applying…"); setDiagnostics(undefined);
+    operation.current = true; setBusy(true); onBusy(true); setError(""); setProgress(tx("useDanielNr", "applying")); setDiagnostics(undefined);
     try {
       if (action === "link") {
         await persist(withDanielWrapper(game.advanced, state.wrapper, true));
@@ -95,7 +96,7 @@ export function useDanielNr({ game, disabled, running = false, onSaved, onPersis
         }
         if (action === "install" || action === "toggle") await persist(withDanielWrapper(game.advanced, next.wrapper, true));
       }
-      if (mounted.current) setProgress(pt ? "Salvo. As alterações valem na próxima abertura do jogo." : "Saved. Changes apply on the next game launch.");
+      if (mounted.current) setProgress(tx("useDanielNr", "saved_changes_apply_on_the_next_game_launch"));
     } catch (e) { if (mounted.current) setProgress(""); fail(e); }
     finally { operation.current = false; if (mounted.current) { setBusy(false); void reload(false); } onBusy(false); }
   };
@@ -111,11 +112,11 @@ export function useDanielNr({ game, disabled, running = false, onSaved, onPersis
   };
   const chooseExecutable = async () => {
     try {
-      const path = await openFilePicker(pt ? "Executável que renderiza o jogo" : "Game rendering executable", ["exe"], request.directory);
+      const path = await openFilePicker(tx("useDanielNr", "game_rendering_executable"), ["exe"], request.directory);
       if (path && mounted.current) setExecutable(path);
     } catch (e) { fail(e); }
   };
   const diagnose = () => { void invoke<string>("daniel_nr_diagnostics", { game: request }).then(value => { if (mounted.current) setDiagnostics(value); }).catch(fail); };
-  return { pt, state, request, dx12, setDx12, proxy, selectedRuntime, packageReady, busy, loading, progress, error, diagnostics,
+  return { state, request, dx12, setDx12, proxy, selectedRuntime, packageReady, busy, loading, progress, error, diagnostics,
     unsupported, supportedProfile, blocked, linked, reload, fail, execute, selectRuntime, selectProxy, chooseExecutable, diagnose };
 }

@@ -87,3 +87,5 @@ pub mod component_uninstall;
 pub mod daniel_nr;
 
 pub(crate) mod prefix_selection;
+
+pub mod system_locale;

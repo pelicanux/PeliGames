@@ -1,6 +1,6 @@
+import {useAppConfig} from "../modules/appConfig/useAppConfig";
 import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "../i18n/I18nContext";
 
 export const CoverContextMenuPanel = forwardRef<HTMLDivElement, { x: number; y: number; children: ReactNode; onClose: () => void }>(
@@ -28,14 +28,8 @@ export const CoverContextMenuPanel = forwardRef<HTMLDivElement, { x: number; y: 
 
 export function SteamGridCoverHint() {
   const { t } = useI18n();
-  const [configured, setConfigured] = useState(false);
-  useLayoutEffect(() => {
-    let active = true;
-    invoke<{ steamgriddb_api_key?: string } | null>("load_app_config")
-      .then(config => { if (active) setConfigured(Boolean(config?.steamgriddb_api_key?.trim())); })
-      .catch(() => {});
-    return () => { active = false; };
-  }, []);
+  const {config} = useAppConfig();
+  const configured = Boolean(config?.steamgriddb_api_key?.trim());
   return <div className={`steamgrid-cover-hint ${configured ? "configured" : ""}`}>
     <p>{t("steamgrid", configured ? "configuredHint" : "missingHint")}</p>
     <button onClick={() => window.dispatchEvent(new Event("openCoverPreferences"))}>

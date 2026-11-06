@@ -40,9 +40,10 @@ export function NexusCatalogPanel({ game, onAssociate, onImport, onClose, embedd
   onImport: (id: string, source: string) => Promise<boolean>; onClose: () => void;
   embedded?: boolean; onLibrary?: () => void;
 }) {
+
   const text = useNexusText();
   const navigationHost = useContext(CatalogNavigationContext);
-  const { language, t } = useI18n();
+  const { t } = useI18n();
   const identifiedDomain = game?.adapter || "";
   const domain = identifiedDomain || game?.nexus_domain || "";
   const [feed, setFeed] = useState("all");
@@ -173,11 +174,11 @@ export function NexusCatalogPanel({ game, onAssociate, onImport, onClose, embedd
     const scroll = content.current?.closest(".modern-catalog-scroll");
     if (scroll) scroll.scrollTop = viewKey === "catalog" ? catalogScroll.current : 0;
   }, [embedded, viewKey]);
-  const backButton = <button type="button" className="modern-catalog-back" onClick={viewKey === "catalog" ? onClose : back}><MenuIcon name="back" />{viewKey === "catalog" ? (language === "pt" ? "Voltar ao jogo" : "Back to game") : text.backCatalog}</button>;
+  const backButton = <button type="button" className="modern-catalog-back" onClick={viewKey === "catalog" ? onClose : back}><MenuIcon name="back" />{viewKey === "catalog" ? (t("ui-nexus-catalog-panel", "back_to_game")) : text.backCatalog}</button>;
   return <NexusPopup embedded={embedded} className={embedded ? "modern-nexus-catalog" : `nexus-catalog-popup ${viewKey === "catalog" ? "nexus-catalog-browser" : ""}`} title={choosing ? text.associateGame : details ? details.info.name : text.catalog} viewKey={viewKey} onBack={viewKey === "catalog" ? undefined : back} onClose={onClose}>
     {embedded && navigationHost && createPortal(backButton, navigationHost)}
     {embedded && <header className="modern-catalog-header">
-      <nav className="modern-catalog-breadcrumbs" aria-label={language === "pt" ? "Navegação do catálogo" : "Catalog navigation"}>
+      <nav className="modern-catalog-breadcrumbs" aria-label={t("ui-nexus-catalog-panel", "catalog_navigation")}>
         <button type="button" onClick={onLibrary ?? onClose}>{t("modern", "library")}</button><span aria-hidden="true">/</span>
         <button type="button" onClick={onClose}>{game?.game.name}</button><span aria-hidden="true">/</span>
         <button type="button" aria-current={viewKey === "catalog" ? "page" : undefined} onClick={() => { setChoosing(false); setDetails(null); }}>{text.onlineCatalog}</button>

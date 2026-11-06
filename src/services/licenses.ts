@@ -17,6 +17,7 @@ const dependencyNotices = (file: string) => generated[`../../licenses/generated/
 const notices = [
   { name: 'PeliGames', label: 'GPL-3.0-only · © 2026 Pelicano', text: launcherLicense },
   { name: 'React · Motion · Tauri APIs', label: 'Interface', text: dependencyNotices('Frontend-Dependencies.txt') },
+  { name: 'Verificação dos instaladores', label: 'osslsigncode · OpenSSL · zlib', text: dependencyNotices('Installer-Verifier-Notices.txt') },
   { name: 'Rust', label: 'Bibliotecas do launcher, PeliRun e overlay', text: dependencyNotices('Rust-Dependencies.txt') },
   { name: 'Overlay', label: 'Atribuições do código adaptado', text: overlayNotices },
   { name: 'WebRTC · LiveKit', label: 'Transmissão de tela', text: webrtcNotices },

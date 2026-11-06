@@ -173,3 +173,7 @@ __pycache__/
 
 !/docs/releases/0.5.3.md
 !/docs/releases/0.5.4.md
+!/docs/releases/0.5.5.md
+
+# Contributor guide for translation catalogues.
+!/docs/translations.md

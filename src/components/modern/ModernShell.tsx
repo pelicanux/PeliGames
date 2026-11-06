@@ -94,7 +94,7 @@ export function ModernShell({ active, disabled = false, onNavigate, activeDownlo
           <h6><span>{t("modern", "toolsGroup")}</span></h6>
           {page("monitoring", "monitoring", t("modern", "monitoringPage"), "MangoHUD")}
           {page("diskAutomount", "disks", t("modern", "disksPage"), t("modern", "disksHint"))}
-          {page("tools", "logs", t("modern", "logsPage"), t("modern", "logsHint"))}
+          {page("tools", "logs", t("preferences", "tools"), t("preferences", "toolsHint"))}
         </> : <>
           <h6><span>{t("modern", "play")}</span></h6>
           {item("library", "library", t("modern", "library"), t("modern", "libraryHint"), libraryCount)}

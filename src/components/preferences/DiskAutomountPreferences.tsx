@@ -15,7 +15,8 @@ type StorageOperation = "mount" | "unmount" | "remount";
 type FstabEntry = { key: string; source: string; mount_path: string; line: string; managed: boolean; automatic: boolean };
 export type Volume = { id: string; uuid: string; device: string; label: string; partition_name: string; filesystem: string; size: number; mounts: string[]; mount_at_startup: boolean; configured_path: string; blocked_reason: string; format_blocked_reason?: string; operations_blocked_reason?: string; preparation_kind?: "disk" | "partition" | "free_space"; preparation_identity?: Record<string, unknown>; parent_id?: string; offset?: number; extent_size?: number; shared_between_systems?: boolean };
 export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (busy: boolean) => void; onDialogChange: (open: boolean) => void }) {
-  const { language } = useI18n(); const pt = language === "pt";
+  const {t: tx} = useI18n();
+
   const [volumes, setVolumes] = useState<Volume[]>([]), [selected, setSelected] = useState("");
   const [name, setName] = useState(""), [startup, setStartup] = useState(true), [shared, setShared] = useState(false);
   const [loading, setLoading] = useState(true), [saving, setSaving] = useState(false);
@@ -70,11 +71,11 @@ export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (
     setSaving(true); setError(""); setSuccess("");
     try {
       const result = await invoke<{mount_path:string}>("save_storage_automount", {id:volume.id, uuid:volume.uuid, name, mountAtStartup:startup, sharedBetweenSystems:shared && !volume.shared_between_systems});
-      setSuccess(pt ? `Configuração salva. Volume montado em ${result.mount_path}.` : `Settings saved. Volume mounted at ${result.mount_path}.`);
+      setSuccess(tx("ui-disk-automount-preferences", "settings_saved_volume_mounted_at", {"result_mount_path": result.mount_path}));
       await refresh();
     } catch (e) { setError(String(e)); } finally { setSaving(false); setConfirm(null); }
   };
-  const operationNames = { mount: pt ? "Montar" : "Mount", unmount: pt ? "Ejetar" : "Eject", remount: pt ? "Remontar" : "Remount" };
+  const operationNames = { mount: tx("ui-disk-automount-preferences", "mount"), unmount: tx("ui-disk-automount-preferences", "eject"), remount: tx("ui-disk-automount-preferences", "remount") };
   const entryName = (entry: FstabEntry) => {
     const disk = volumes.find(item => entry.source === `UUID=${item.uuid}` || entry.source === `/dev/disk/by-uuid/${item.uuid}` || entry.source === `LABEL=${item.label}` || entry.source === item.device);
     return { name: disk?.label || disk?.partition_name || entry.mount_path.split("/").filter(Boolean).pop() || entry.mount_path, connected: Boolean(disk) };
@@ -84,8 +85,8 @@ export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (
     operationLock.current = true; setSaving(true);
     try {
       await invoke("remove_storage_fstab_entry", { key: removeEntry.key });
-      notifyInfo(pt ? "Montagem automática" : "Automatic mounting", pt ? "Entrada removida do fstab. O disco não será montado por essa configuração na próxima inicialização. A montagem atual e os arquivos foram preservados." : "Entry removed from fstab. This configuration will no longer mount the drive on startup. Its current mount and files were preserved.");
-    } catch (error) { notifyError(pt ? "Remover montagem automática" : "Remove automatic mounting", error); }
+      notifyInfo(tx("ui-disk-automount-preferences", "automatic_mounting"), tx("ui-disk-automount-preferences", "entry_removed_from_fstab_this_configuration_will_no_longer_mount_the_drive_on_startup_it"));
+    } catch (error) { notifyError(tx("ui-disk-automount-preferences", "remove_automatic_mounting"), error); }
     finally { await refresh(); setSaving(false); operationLock.current = false; setRemoveEntry(null); triggerRef.current?.focus(); }
   };
   const requestOperation = async (item: Volume, operation: StorageOperation) => {
@@ -94,23 +95,23 @@ export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (
     setSaving(true); setError(""); setSuccess("");
     try {
       await invoke("manage_storage_volume", {id:item.id, uuid:item.uuid, operation});
-      setSuccess(operation === "unmount" ? (pt ? "Partição desmontada. A configuração de automontagem foi preservada." : "Partition unmounted. Automatic mounting settings were preserved.") : (pt ? "Partição montada no caminho configurado." : "Partition mounted at the configured path."));
+      setSuccess(operation === "unmount" ? (tx("ui-disk-automount-preferences", "partition_unmounted_automatic_mounting_settings_were_preserved")) : (tx("ui-disk-automount-preferences", "partition_mounted_at_the_configured_path")));
       await refresh();
     } catch (e) {
-      setOperationFailure({ title: pt ? `Não foi possível ${operation === "unmount" ? "ejetar" : operation === "remount" ? "remontar" : "montar"} o armazenamento` : `Could not ${operation === "unmount" ? "eject" : operation === "remount" ? "remount" : "mount"} storage`, message: `${item.device}\n${String(e)}` });
+      setOperationFailure({ title: tx("ui-disk-automount-preferences", "mount_confirmation_4", {value1: (operation === "unmount" ? tx("ui-disk-automount-preferences", "mount_confirmation_1") : (operation === "remount" ? tx("ui-disk-automount-preferences", "mount_confirmation_2") : tx("ui-disk-automount-preferences", "mount_confirmation_3")))}), message: `${item.device}\n${String(e)}` });
     } finally { setSaving(false); operationLock.current = false; }
   };
-  return <><h2>{pt ? "Automontagem de discos" : "Automatic drive mounting"}</h2>
-    <p>{pt ? "Escolha a partição de armazenamento. Um único nome define o label, o nome da partição GPT e a pasta em /mnt." : "Choose a storage partition. One name sets the filesystem label, GPT partition name and folder under /mnt."}</p>
-    {import.meta.env.DEV && "__PELI_UI_PREVIEW__" in window && <p className="storage-warning">{pt ? "Demonstração: os discos abaixo são exemplos. Nenhum armazenamento será alterado na preview." : "Demo: the drives below are examples. No storage is changed in the preview."}</p>}
+  return <><h2>{tx("ui-disk-automount-preferences", "automatic_drive_mounting")}</h2>
+    <p>{tx("ui-disk-automount-preferences", "choose_a_storage_partition_one_name_sets_the_filesystem_label_gpt_partition_name_and_fol")}</p>
+    {import.meta.env.DEV && "__PELI_UI_PREVIEW__" in window && <p className="storage-warning">{tx("ui-disk-automount-preferences", "demo_the_drives_below_are_examples_no_storage_is_changed_in_the_preview")}</p>}
     <section className="preference-section first storage-volume-section">
-      <button type="button" className="preference-outline" disabled={loading || saving || confirmationOpen} onClick={() => void refresh()}><MenuIcon name="repair"/>{loading ? (pt ? "Buscando discos…" : "Finding drives…") : (pt ? "Atualizar discos" : "Refresh drives")}</button>
-      <div className="preference-choice-list storage-volume-list" aria-label={pt ? "Partições disponíveis" : "Available partitions"}>
+      <button type="button" className="preference-outline" disabled={loading || saving || confirmationOpen} onClick={() => void refresh()}><MenuIcon name="repair"/>{loading ? (tx("ui-disk-automount-preferences", "finding_drives")) : (tx("ui-disk-automount-preferences", "refresh_drives"))}</button>
+      <div className="preference-choice-list storage-volume-list" aria-label={tx("ui-disk-automount-preferences", "available_partitions")}>
         {volumes.map(item => {
           const mounted = item.mounts.length > 0, configured = item.configured_path.startsWith("/mnt/");
           const blocked = Boolean(item.operations_blocked_reason ?? item.blocked_reason);
           return <div className="storage-volume-card" key={item.id}>
-            <button type="button" disabled={saving || confirmationOpen} className={`preference-choice storage-volume-select${item.id === selected ? " selected" : ""}`} aria-pressed={item.id === selected} aria-haspopup="dialog" onClick={event => { triggerRef.current = event.currentTarget; choose(item); }}><span><strong>{item.label || item.partition_name || (item.preparation_kind === "free_space" ? (pt ? "Espaço não particionado" : "Unallocated space") : item.device)}</strong><small>{item.device} · {item.filesystem || (item.preparation_kind === "free_space" ? (pt ? "Espaço livre" : "Free space") : pt ? "Sem sistema de arquivos" : "No filesystem")}</small><small className="storage-volume-capacity">{pt ? "Capacidade:" : "Capacity:"} {(item.size / 1024 ** 3).toFixed(1)} GiB</small><small>{mounted ? item.mounts.join(", ") : (pt ? "Não montado" : "Not mounted")}</small></span></button>
+            <button type="button" disabled={saving || confirmationOpen} className={`preference-choice storage-volume-select${item.id === selected ? " selected" : ""}`} aria-pressed={item.id === selected} aria-haspopup="dialog" onClick={event => { triggerRef.current = event.currentTarget; choose(item); }}><span><strong>{item.label || item.partition_name || (item.preparation_kind === "free_space" ? (tx("ui-disk-automount-preferences", "unallocated_space")) : item.device)}</strong><small>{item.device} · {item.filesystem || (item.preparation_kind === "free_space" ? (tx("ui-disk-automount-preferences", "free_space")) : tx("ui-disk-automount-preferences", "no_filesystem"))}</small><small className="storage-volume-capacity">{tx("ui-disk-automount-preferences", "capacity")} {(item.size / 1024 ** 3).toFixed(1)} GiB</small><small>{mounted ? item.mounts.join(", ") : (tx("ui-disk-automount-preferences", "not_mounted"))}</small></span></button>
             <div className="storage-volume-card-actions">
               {mounted || !configured
                 ? <button type="button" className="preference-outline" title={operationNames.unmount} aria-label={`${operationNames.unmount} · ${item.label || item.device}`} disabled={saving || confirmationOpen || blocked || !mounted} onClick={() => void requestOperation(item, "unmount")}><MenuIcon name="eject"/></button>
@@ -120,45 +121,45 @@ export function DiskAutomountPreferences({ onBusy, onDialogChange }: { onBusy: (
           </div>;
         })}
       </div>
-      {!loading && !error && !volumes.length && <p>{pt ? "Nenhuma partição de armazenamento encontrada." : "No storage partitions found."}</p>}
+      {!loading && !error && !volumes.length && <p>{tx("ui-disk-automount-preferences", "no_storage_partitions_found")}</p>}
     </section>
-    <div className="storage-fstab" aria-label={pt ? "Entradas de montagem no fstab" : "fstab mount entries"}>
-      <h3>{pt ? "Entradas em /etc/fstab" : "Entries in /etc/fstab"}</h3>
-      <p>{pt ? "Montagens de dados em /mnt. O X remove somente a configuração dessa linha; não ejeta o disco nem apaga seus arquivos." : "Data mounts under /mnt. The X removes only that line's configuration; it does not eject the drive or delete its files."}</p>
+    <div className="storage-fstab" aria-label={tx("ui-disk-automount-preferences", "fstab_mount_entries")}>
+      <h3>{tx("ui-disk-automount-preferences", "entries_in_etc_fstab")}</h3>
+      <p>{tx("ui-disk-automount-preferences", "data_mounts_under_mnt_the_x_removes_only_that_line_s_configuration_it_does_not_eject_the")}</p>
       {fstabEntries.map(entry => {
         const disk = entryName(entry);
         return <div className="storage-fstab-entry" key={entry.key}>
-          <div><div className="storage-fstab-entry-heading"><strong>{disk.name}</strong><small>{entry.managed ? (pt ? "Gerenciado pelo PeliGames" : "Managed by PeliGames") : (pt ? "Entrada existente" : "Existing entry")} · {entry.automatic ? (pt ? "Montagem na inicialização" : "Mount at startup") : (pt ? "Inicialização desativada (noauto)" : "Startup disabled (noauto)")}{!disk.connected && (pt ? " · Disco não detectado" : " · Drive not detected")}</small></div><code>{entry.line}</code></div>
-          <button type="button" className="storage-fstab-remove" disabled={saving || loading || confirmationOpen || Boolean(volume)} title={pt ? `Remover entrada de ${disk.name}` : `Remove ${disk.name} entry`} aria-label={pt ? `Remover entrada de ${disk.name}` : `Remove ${disk.name} entry`} onClick={event => { triggerRef.current = event.currentTarget; setRemoveEntry(entry); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+          <div><div className="storage-fstab-entry-heading"><strong>{disk.name}</strong><small>{entry.managed ? (tx("ui-disk-automount-preferences", "managed_by_peligames")) : (tx("ui-disk-automount-preferences", "existing_entry"))} · {entry.automatic ? (tx("ui-disk-automount-preferences", "mount_at_startup")) : (tx("ui-disk-automount-preferences", "startup_disabled_noauto"))}{!disk.connected && (tx("ui-disk-automount-preferences", "drive_not_detected"))}</small></div><code>{entry.line}</code></div>
+          <button type="button" className="storage-fstab-remove" disabled={saving || loading || confirmationOpen || Boolean(volume)} title={tx("ui-disk-automount-preferences", "remove_entry", {"disk_name": disk.name})} aria-label={tx("ui-disk-automount-preferences", "remove_entry", {"disk_name": disk.name})} onClick={event => { triggerRef.current = event.currentTarget; setRemoveEntry(entry); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
         </div>;
       })}
-      {!loading && !fstabEntries.length && <p>{pt ? "Nenhuma entrada de dados compatível em /mnt." : "No supported data entries under /mnt."}</p>}
+      {!loading && !fstabEntries.length && <p>{tx("ui-disk-automount-preferences", "no_supported_data_entries_under_mnt")}</p>}
     </div>
     {volume && createPortal(<div className="modal-overlay storage-editor-overlay">
-      <ModalSurface ref={editorRef} tabIndex={-1} className="modal-content dialog-glass storage-editor-modal" role="dialog" aria-modal="true" aria-label={pt ? "Editar armazenamento" : "Edit storage"} onDismiss={closeEditor} closeDisabled={saving || confirmationOpen} header={<h2><MenuIcon name="eject"/>{pt ? "Editar armazenamento" : "Edit storage"}</h2>}>
-      <div className="storage-editor-content"><p className="storage-editor-device"><strong>{volume.label || volume.partition_name || volume.device}</strong> · {volume.device} · {volume.filesystem || (pt ? "Sem sistema de arquivos" : "No filesystem")}</p>
+      <ModalSurface ref={editorRef} tabIndex={-1} className="modal-content dialog-glass storage-editor-modal" role="dialog" aria-modal="true" aria-label={tx("ui-disk-automount-preferences", "edit_storage")} onDismiss={closeEditor} closeDisabled={saving || confirmationOpen} header={<h2><MenuIcon name="eject"/>{tx("ui-disk-automount-preferences", "edit_storage")}</h2>}>
+      <div className="storage-editor-content"><p className="storage-editor-device"><strong>{volume.label || volume.partition_name || volume.device}</strong> · {volume.device} · {volume.filesystem || (tx("ui-disk-automount-preferences", "no_filesystem"))}</p>
       <section className="storage-mount-form">
-      {(volume.filesystem.startsWith("ntfs") || volume.preparation_kind) ? <NtfsMigrationWizard key={volume.id} volume={volume} onBusy={setSaving} onDone={async mountPath => { setSuccess(pt ? `Partição formatada e montada em ${mountPath}.` : `Partition formatted and mounted at ${mountPath}.`); await refresh(); }}/> : volume.blocked_reason ? <div className="storage-warning" role="status">{volume.blocked_reason}</div> : <>
-        <label htmlFor="storage-name">{pt ? "Nome do armazenamento" : "Storage name"}</label>
+      {(volume.filesystem.startsWith("ntfs") || volume.preparation_kind) ? <NtfsMigrationWizard key={volume.id} volume={volume} onBusy={setSaving} onDone={async mountPath => { setSuccess(tx("ui-disk-automount-preferences", "partition_formatted_and_mounted_at", {"mountpath": mountPath})); await refresh(); }}/> : volume.blocked_reason ? <div className="storage-warning" role="status">{volume.blocked_reason}</div> : <>
+        <label htmlFor="storage-name">{tx("ui-disk-automount-preferences", "storage_name")}</label>
         <input ref={nameRef} id="storage-name" value={name} maxLength={16} disabled={saving || confirmationOpen} onChange={event => setName(storageNameInput(event.target.value))} autoComplete="off" spellCheck={false} aria-describedby="storage-name-hint"/>
-        <p id="storage-name-hint">{pt ? "Use até 16 caracteres e inicie o nome com uma letra ou número. São permitidos: letras (sem acentos), números, ponto, hífen e sublinhado." : "Use up to 16 characters and start the name with a letter or number. Allowed: unaccented letters, numbers, dots, hyphens and underscores."}</p>
-        <p>{pt ? "Pasta de montagem:" : "Mount folder:"} <strong className="storage-mount-path">/mnt/{name || "…"}</strong></p>
-        <label className="preference-switch"><input type="checkbox" checked={startup} disabled={saving || confirmationOpen} onChange={event => setStartup(event.target.checked)}/><span className="preference-switch-track"/><span>{pt ? "Montar ao iniciar o sistema" : "Mount at system startup"}</span></label>
-        <label className="preference-switch"><input type="checkbox" checked={shared} disabled={saving || confirmationOpen || volume.shared_between_systems} onChange={event => setShared(event.target.checked)}/><span className="preference-switch-track"/><span>{pt ? "Usar em mais de um sistema Linux" : "Use in more than one Linux system"}</span></label>
-        <p>{volume.shared_between_systems ? (pt ? "Este armazenamento já está liberado para outros sistemas Linux: qualquer conta pode gravar nele." : "This storage is already open to other Linux systems: any account can write to it.") : pt ? "Para outro Linux instalado neste computador também gravar aqui. Ao salvar, todos os arquivos e pastas atuais passam a poder ser alterados por qualquer conta de qualquer sistema, e os novos também. Nada é apagado; em discos grandes isso pode levar alguns minutos." : "So another Linux installed on this computer can write here too. On save, every current file and folder becomes changeable by any account on any system, and new ones too. Nothing is deleted; large drives may take a few minutes."}</p>
-        <p>{pt ? "A configuração usa UUID para identificar a partição e nofail para não bloquear a inicialização se o disco estiver desconectado. Salvar também monta o volume agora." : "Uses UUID to identify the partition and nofail so a disconnected drive does not block startup. Saving also mounts the volume now."}{!shared || volume.shared_between_systems ? (pt ? " As permissões dos arquivos permanecem como estão." : " Existing file permissions are preserved.") : ""}</p>
-        <button type="button" className="preference-outline" disabled={!valid || saving || confirmationOpen} onClick={() => setConfirm("save")}><MenuIcon name="floppy"/>{saving ? (pt ? "Aplicando…" : "Applying…") : (pt ? "Salvar automontagem" : "Save automatic mounting")}</button>
+        <p id="storage-name-hint">{tx("ui-disk-automount-preferences", "use_up_to_16_characters_and_start_the_name_with_a_letter_or_number_allowed_unaccented_le")}</p>
+        <p>{tx("ui-disk-automount-preferences", "mount_folder")} <strong className="storage-mount-path">/mnt/{name || "…"}</strong></p>
+        <label className="preference-switch"><input type="checkbox" checked={startup} disabled={saving || confirmationOpen} onChange={event => setStartup(event.target.checked)}/><span className="preference-switch-track"/><span>{tx("ui-disk-automount-preferences", "mount_at_system_startup")}</span></label>
+        <label className="preference-switch"><input type="checkbox" checked={shared} disabled={saving || confirmationOpen || volume.shared_between_systems} onChange={event => setShared(event.target.checked)}/><span className="preference-switch-track"/><span>{tx("ui-disk-automount-preferences", "use_in_more_than_one_linux_system")}</span></label>
+        <p>{volume.shared_between_systems ? (tx("ui-disk-automount-preferences", "this_storage_is_already_open_to_other_linux_systems_any_account_can_write_to_it")) : tx("ui-disk-automount-preferences", "so_another_linux_installed_on_this_computer_can_write_here_too_on_save_every_current_fil")}</p>
+        <p>{tx("ui-disk-automount-preferences", "uses_uuid_to_identify_the_partition_and_nofail_so_a_disconnected_drive_does_not_block_st")}{!shared || volume.shared_between_systems ? (tx("ui-disk-automount-preferences", "existing_file_permissions_are_preserved")) : ""}</p>
+        <button type="button" className="preference-outline" disabled={!valid || saving || confirmationOpen} onClick={() => setConfirm("save")}><MenuIcon name="floppy"/>{saving ? (tx("ui-disk-automount-preferences", "applying")) : (tx("ui-disk-automount-preferences", "save_automatic_mounting"))}</button>
       </>}
       </section>
       {error && <div className="preferences-error" role="alert">{error}</div>}
-      {!volume.filesystem.startsWith("ntfs") && <button type="button" className="preference-outline storage-editor-cancel" disabled={saving || confirmationOpen} onClick={closeEditor}>{pt ? "Fechar" : "Close"}</button>}
+      {!volume.filesystem.startsWith("ntfs") && <button type="button" className="preference-outline storage-editor-cancel" disabled={saving || confirmationOpen} onClick={closeEditor}>{tx("ui-disk-automount-preferences", "close")}</button>}
       </div></ModalSurface>
     </div>, document.body)}
     {error && !volume && <div className="preferences-error" role="alert">{error}</div>}
     {success && <p role="status">{success}</p>}
-    {confirm === "save" && volume && <ConfirmModal title={pt ? "Aplicar automontagem?" : "Apply automatic mounting?"} message={pt ? `Dispositivo: ${volume.device}. O volume será desmontado sem forçar, receberá o nome e label “${name}”, e sua configuração em /etc/fstab será atualizada para /mnt/${name}. Montagem na inicialização: ${startup ? "ativada" : "desativada"}.${shared && !volume.shared_between_systems ? " Todos os arquivos e pastas do volume passarão a poder ser alterados por qualquer conta de qualquer sistema Linux." : ""} A configuração do systemd será recarregada e o volume será montado nesse caminho, sem reiniciar o computador. Feche jogos e arquivos abertos nesse disco. O sistema pedirá a senha de administrador. Não haverá formatação nem exclusão de arquivos. Se uma etapa falhar, a mensagem informará o que já foi concluído.` : `Device: ${volume.device}. The volume will be unmounted without force, renamed to “${name}” (partition and label), configured in /etc/fstab at /mnt/${name}, then systemd will reload its configuration and the volume will be mounted there, without rebooting. Startup mounting: ${startup ? "enabled" : "disabled"}.${shared && !volume.shared_between_systems ? " Every file and folder on the volume becomes changeable by any account on any Linux system." : ""} Close games and files on this drive. The system will ask for the administrator password. No formatting or file deletion. Any failure will report completed steps.`} confirmText={pt ? "Autorizar e salvar" : "Authorize and save"} cancelText={pt ? "Cancelar" : "Cancel"} busy={saving} onConfirm={() => void save()} onCancel={() => { if (!saving) setConfirm(null); }}/>}
-    {removeEntry && <ConfirmModal title={pt ? "Remover entrada do fstab?" : "Remove fstab entry?"}
-      message={pt ? `${entryName(removeEntry).name} — ${removeEntry.mount_path}\n\n${removeEntry.line}\n\n${removeEntry.automatic ? "Essa linha deixará de montar o disco automaticamente ao iniciar o sistema." : "Essa linha já usa noauto. Sua configuração de montagem manual será removida."} O disco continuará montado agora, caso já esteja em uso. Nenhum arquivo, partição ou pasta será apagado. A alteração remove somente essa linha de /etc/fstab, mantém as outras entradas e recarrega o systemd. O comentário do PeliGames será removido se não restar nenhuma entrada gerenciada. ${!removeEntry.managed ? "Esta entrada não está identificada como gerenciada pelo PeliGames. " : ""}O sistema pedirá autorização de administrador.` : `${entryName(removeEntry).name} — ${removeEntry.mount_path}\n\n${removeEntry.line}\n\n${removeEntry.automatic ? "This line will no longer mount the drive automatically at startup." : "This line already uses noauto. Its manual mount configuration will be removed."} The current mount stays active. No files, partitions or folders are deleted. Only this line is removed from /etc/fstab; other entries are preserved and systemd is reloaded. The PeliGames comment is removed after its last managed entry. ${!removeEntry.managed ? "This entry is not marked as managed by PeliGames. " : ""}Administrator authorization is required.`}
-      confirmText={pt ? "Autorizar e remover" : "Authorize and remove"} cancelText={pt ? "Cancelar" : "Cancel"} busy={saving} onConfirm={() => void removeFstab()} onCancel={() => { if (!saving) { setRemoveEntry(null); triggerRef.current?.focus(); } }}/>}
+    {confirm === "save" && volume && <ConfirmModal title={tx("ui-disk-automount-preferences", "apply_automatic_mounting")} message={tx("ui-disk-automount-preferences", "mount_confirmation_8", {value1: volume.device, value2: name, value3: name, value4: (startup ? tx("ui-disk-automount-preferences", "mount_confirmation_5") : tx("ui-disk-automount-preferences", "mount_confirmation_6")), value5: (shared && !volume.shared_between_systems ? tx("ui-disk-automount-preferences", "mount_confirmation_7") : "")})} confirmText={tx("ui-disk-automount-preferences", "authorize_and_save")} cancelText={tx("ui-disk-automount-preferences", "cancel")} busy={saving} onConfirm={() => void save()} onCancel={() => { if (!saving) setConfirm(null); }}/>}
+    {removeEntry && <ConfirmModal title={tx("ui-disk-automount-preferences", "remove_fstab_entry")}
+      message={tx("ui-disk-automount-preferences", "mount_confirmation_12", {value1: entryName(removeEntry).name, value2: removeEntry.mount_path, value3: removeEntry.line, value4: (removeEntry.automatic ? tx("ui-disk-automount-preferences", "mount_confirmation_9") : tx("ui-disk-automount-preferences", "mount_confirmation_10")), value5: (!removeEntry.managed ? tx("ui-disk-automount-preferences", "mount_confirmation_11") : "")})}
+      confirmText={tx("ui-disk-automount-preferences", "authorize_and_remove")} cancelText={tx("ui-disk-automount-preferences", "cancel")} busy={saving} onConfirm={() => void removeFstab()} onCancel={() => { if (!saving) { setRemoveEntry(null); triggerRef.current?.focus(); } }}/>}
     {operationFailure && <ResultModal title={operationFailure.title} message={operationFailure.message} type="error" logs="" showLogButton={false} onClose={() => setOperationFailure(null)}/>}</>;
 }

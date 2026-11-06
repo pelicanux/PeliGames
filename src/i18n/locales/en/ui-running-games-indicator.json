@@ -1,0 +1,13 @@
+{
+  "preparing": "Preparing:",
+  "running": "Running:",
+  "stopping": "Stopping:",
+  "preparing_2": "Preparing",
+  "stopping_2": "Stopping",
+  "running_2": "Running",
+  "could_not_stop_the_game_check_notifications": "Could not stop the game. Check notifications.",
+  "running_games": "Running games",
+  "details": "Details",
+  "stopping_3": "Stopping…",
+  "stop": "Stop"
+}

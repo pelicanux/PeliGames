@@ -7,7 +7,8 @@ import { useI18n } from "../../i18n/I18nContext";
 import "./modernMangoHud.css";
 
 export function GameBenchmarkView({ game, onBack }: { game: BenchmarkGame; onBack: () => void }) {
-  const { language } = useI18n();
+  const {t: tx} = useI18n();
+
   const [shortcut,setShortcut] = useState("atalho de gravação configurado");
   const [ready,setReady] = useState(false);
   useEffect(() => {
@@ -21,7 +22,7 @@ export function GameBenchmarkView({ game, onBack }: { game: BenchmarkGame; onBac
   return <section className="mango-modern game-benchmark-view">
     <div className="game-benchmark-header">
       <button type="button" autoFocus className="modern-mini-btn" onClick={onBack}>
-        {language === "pt" ? "← Voltar ao desempenho" : "← Back to performance"}
+        {tx("ui-game-benchmark-view", "back_to_performance")}
       </button>
     </div>
     {ready ? <MangoHudBenchmarkComparison shortcut={shortcut} game={game} /> : <p role="status">Carregando comparação…</p>}

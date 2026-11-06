@@ -7,7 +7,8 @@ import {loadMangoHudProfile,type MangoHudSettings} from "../../services/mangohud
 import {experimentalFrameGeneration} from "../../services/releaseFeatures";
 
 export function GameConfigurationChips({gameKey,advanced}:{gameKey:string;advanced?:AdvancedSettings}){
- const pt=useI18n().language==="pt";
+  const {t: tx, language} = useI18n();
+
  const [profile,setProfile]=useState<MangoHudSettings>();
  const [revision,setRevision]=useState(0);
  const [mako,setMako]=useState<{key:string;settings:MakoSummary}>();
@@ -24,6 +25,6 @@ export function GameConfigurationChips({gameKey,advanced}:{gameKey:string;advanc
   if(experimentalFrameGeneration&&wrapper)void invoke<{settings:MakoSummary}>("frame_generation_state",{gameKey,backend:"saved",activeProfile:wrapper.program}).then(result=>{if(active)setMako({key:requestKey,settings:result.settings})}).catch(()=>{});
   return()=>{active=false};
  },[requestKey,revision]);
- const badges=gameConfigurationBadges(advanced,profile,wrapper&&mako?.key===requestKey?mako.settings:undefined,pt);
- return <>{badges.map(badge=><span key={badge.id} className="modern-meta-chip configuration" title={`${badge.description} ${pt?"Configuração salva; não confirma funcionamento em tempo real.":"Saved configuration; not a live runtime confirmation."}`} data-configuration={badge.id}>{badge.label}</span>)}</>;
+ const badges=gameConfigurationBadges(advanced,profile,wrapper&&mako?.key===requestKey?mako.settings:undefined,language);
+ return <>{badges.map(badge=><span key={badge.id} className="modern-meta-chip configuration" title={`${badge.description} ${tx("ui-game-configuration-chips", "saved_configuration_not_a_live_runtime_confirmation")}`} data-configuration={badge.id}>{badge.label}</span>)}</>;
 }

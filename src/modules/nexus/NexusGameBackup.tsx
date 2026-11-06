@@ -9,10 +9,11 @@ import { useI18n } from "../../i18n/I18nContext";
 type BackupSettings = { per_game: boolean; game_overrides?: Record<string, boolean> };
 /** The game's recovery copy as the backend sees it (shared with the general backup settings). */
 export type GameBackupStatus = { game_id: string; name: string; enabled: boolean; choice: boolean | null; has_mods: boolean; updated: number | null; size: number | null; error: string | null; updating: boolean };
-export const backupDate = (seconds: number, pt: boolean) => new Date(seconds * 1000).toLocaleString(pt ? "pt-BR" : "en-US", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+export const backupDate = (seconds: number, language: string) => { return new Date(seconds * 1000).toLocaleString(language, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); };
 export const backupSize = (bytes: number) => bytes >= 1e9 ? `${(bytes / 1e9).toFixed(1)} GB` : `${Math.max(0.1, bytes / 1e6).toFixed(1)} MB`;
 export function NexusGameBackup({ gameId, disabled, onError, onSaved, onStatusTextChange }: { gameId: string; disabled: boolean; onError: (error: string) => void; onSaved: () => void; onStatusTextChange?: (text: string) => void }) {
-  const { language } = useI18n(), pt = language === "pt";
+
+  const {t: tx,  language } = useI18n();
   const [settings, setSettings] = useState<BackupSettings | null>(null), [saving, setSaving] = useState(false), [confirmDelete, setConfirmDelete] = useState(false), [deleteError, setDeleteError] = useState("");
   const [status, setStatus] = useState<GameBackupStatus | null>(null);
   const [statusLoaded, setStatusLoaded] = useState(false), [statusReadFailed, setStatusReadFailed] = useState(false);
@@ -64,33 +65,33 @@ export function NexusGameBackup({ gameId, disabled, onError, onSaved, onStatusTe
     }
   };
   const locked = disabled || saving || !settings;
-  const when = status?.updated ? backupDate(status.updated, pt) : "", size = status?.size ? ` · ${backupSize(status.size)}` : "";
-  const line = !status ? "" : status.error ? (pt ? `Falha na última cópia: ${status.error}` : `Last copy failed: ${status.error}`)
-    : status.updating ? (pt ? "Atualizando a cópia de recuperação…" : "Updating the recovery copy…")
-    : status.enabled ? (!status.has_mods ? (pt ? "A cópia será criada quando houver mods instalados." : "The copy is created once mods are installed.")
-      : when ? (pt ? `Última cópia: ${when}${size}` : `Last copy: ${when}${size}`) : (pt ? "Criando a primeira cópia…" : "Creating the first copy…"))
-    : when ? (pt ? `Cópia antiga de ${when}${size}: não é mais atualizada. Ative para atualizar ou apague.` : `Old copy from ${when}${size}: no longer updated. Enable it to update, or delete it.`) : "";
-  const follows = status && status.choice === null ? (pt ? "Segue a opção geral de Configurações → Ferramentas." : "Follows the general option in Settings → Tools.") : "";
-  const statusText = statusReadFailed ? pt ? "Não foi possível consultar os dados do backup." : "Could not read the backup information."
-    : [line || (statusLoaded ? pt ? "Nenhum backup salvo para este jogo." : "No backup saved for this game." : pt ? "Consultando o backup deste jogo…" : "Checking this game's backup…"), follows].filter(Boolean).join("\n");
+  const when = status?.updated ? backupDate(status.updated, language) : "", size = status?.size ? ` · ${backupSize(status.size)}` : "";
+  const line = !status ? "" : status.error ? (tx("ui-nexus-game-backup", "last_copy_failed", {"status_error": status.error}))
+    : status.updating ? (tx("ui-nexus-game-backup", "updating_the_recovery_copy"))
+    : status.enabled ? (!status.has_mods ? (tx("ui-nexus-game-backup", "the_copy_is_created_once_mods_are_installed"))
+      : when ? (tx("ui-nexus-game-backup", "last_copy", {"when": when, "size": size})) : (tx("ui-nexus-game-backup", "creating_the_first_copy")))
+    : when ? (tx("ui-nexus-game-backup", "old_copy_from_no_longer_updated_enable_it_to_update_or_delete_it", {"when": when, "size": size})) : "";
+  const follows = status && status.choice === null ? (tx("ui-nexus-game-backup", "follows_the_general_option_in_settings_tools")) : "";
+  const statusText = statusReadFailed ? tx("ui-nexus-game-backup", "could_not_read_the_backup_information")
+    : [line || (statusLoaded ? tx("ui-nexus-game-backup", "no_backup_saved_for_this_game") : tx("ui-nexus-game-backup", "checking_this_game_s_backup")), follows].filter(Boolean).join("\n");
   useEffect(() => { onStatusTextChange?.(statusText); }, [statusText, onStatusTextChange]);
   return <div className="installation-field nexus-game-backup-control">
-    <label><MenuIcon name="floppy" />{pt ? "Backup individual" : "Individual backup"}</label>
+    <label><MenuIcon name="floppy" />{tx("ui-nexus-game-backup", "individual_backup")}</label>
     <div className="nexus-game-backup-actions">
-      <HoverTooltip text={pt ? "Salva os pacotes e registros na pasta .peligames deste jogo. Esta escolha vale somente para este jogo." : "Saves packages and records in this game's .peligames folder. This choice applies only to this game."} anchorClassName="nexus-game-backup-tooltip">
-        <ModOptionSwitch label={pt ? "Cópia de recuperação deste jogo" : "Recovery copy for this game"} enabled={enabled} disabled={locked} onToggle={() => void toggle(!enabled)} />
+      <HoverTooltip text={tx("ui-nexus-game-backup", "saves_packages_and_records_in_this_game_s_peligames_folder_this_choice_applies_only_to_t")} anchorClassName="nexus-game-backup-tooltip">
+        <ModOptionSwitch label={tx("ui-nexus-game-backup", "recovery_copy_for_this_game")} enabled={enabled} disabled={locked} onToggle={() => void toggle(!enabled)} />
       </HoverTooltip>
-      <HoverTooltip text={pt ? "Apagar backup deste jogo" : "Delete this game's backup"}>
-        <button type="button" className="nexus-game-backup-delete" aria-label={pt ? "Apagar backup deste jogo" : "Delete this game's backup"} disabled={locked} onClick={() => { setDeleteError(""); setConfirmDelete(true); }}><MenuIcon name="trash" /></button>
+      <HoverTooltip text={tx("ui-nexus-game-backup", "delete_this_game_s_backup")}>
+        <button type="button" className="nexus-game-backup-delete" aria-label={tx("ui-nexus-game-backup", "delete_this_game_s_backup")} disabled={locked} onClick={() => { setDeleteError(""); setConfirmDelete(true); }}><MenuIcon name="trash" /></button>
       </HoverTooltip>
     </div>
     {!onStatusTextChange && <small className={`nexus-game-backup-status${statusReadFailed || status?.error ? " is-error" : status?.updated && !status.enabled ? " is-stale" : ""}`} role={statusReadFailed || status?.error ? "alert" : "status"}>{statusText}</small>}
-    {confirmDelete && <NexusPopup className="nexus-remove-popup" title={pt ? "Apagar backup individual" : "Delete individual backup"} onClose={() => { if (!pending.current) setConfirmDelete(false); }} footer={<>
-      <button type="button" className="btn btn-secondary" disabled={saving} onClick={() => setConfirmDelete(false)}>{pt ? "Cancelar" : "Cancel"}</button>
-      <button type="button" className="btn btn-primary" disabled={locked} onClick={() => void removeBackup()}><MenuIcon name="trash" />{saving ? pt ? "Apagando…" : "Deleting…" : pt ? "Apagar backup" : "Delete backup"}</button>
+    {confirmDelete && <NexusPopup className="nexus-remove-popup" title={tx("ui-nexus-game-backup", "delete_individual_backup")} onClose={() => { if (!pending.current) setConfirmDelete(false); }} footer={<>
+      <button type="button" className="btn btn-secondary" disabled={saving} onClick={() => setConfirmDelete(false)}>{tx("ui-nexus-game-backup", "cancel")}</button>
+      <button type="button" className="btn btn-primary" disabled={locked} onClick={() => void removeBackup()}><MenuIcon name="trash" />{saving ? tx("ui-nexus-game-backup", "deleting") : tx("ui-nexus-game-backup", "delete_backup")}</button>
     </>}>
-      <p className="nexus-hint">{pt ? "Apagar a cópia de recuperação dos mods na pasta deste jogo? Esta ação também desativa o backup individual para evitar que a cópia seja recriada automaticamente." : "Delete the mod recovery copy in this game's folder? This also disables individual backup to prevent the copy from being recreated automatically."}</p>
-      <p className="nexus-hint">{pt ? "Os mods instalados e os dados na .config serão mantidos. Esta exclusão não pode ser desfeita." : "Installed mods and data in .config will be kept. This deletion cannot be undone."}</p>
+      <p className="nexus-hint">{tx("ui-nexus-game-backup", "delete_the_mod_recovery_copy_in_this_game_s_folder_this_also_disables_individual_backup_")}</p>
+      <p className="nexus-hint">{tx("ui-nexus-game-backup", "installed_mods_and_data_in_config_will_be_kept_this_deletion_cannot_be_undone")}</p>
       {deleteError && <p role="alert" className="nexus-error">{deleteError}</p>}
     </NexusPopup>}
   </div>;

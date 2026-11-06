@@ -15,7 +15,8 @@ interface Submission { title: string; description: string; discord: string; vers
 export type ReportTarget = { kind: "nexus"; gameId: string } | { kind: "feature"; context: FeatureReportContext; label: string };
 interface Report {path: string; content: string; bytes: number; truncated: boolean}
 export function ReportModal({target,onClose}: {target: ReportTarget; onClose: () => void}) {
-  const pt = useI18n().language === "pt";
+  const {t: tx} = useI18n();
+
   const [review, setReview] = useState<Submission>();
   const [preparing, setPreparing] = useState(false);
   const identity = JSON.stringify(target);
@@ -76,7 +77,7 @@ export function ReportModal({target,onClose}: {target: ReportTarget; onClose: ()
     <button type="button" className="btn btn-primary" onClick={()=>open("https://discord.gg/78XSB9bHst")}><MenuIcon name="discord" />{text.reportInvite}</button>
   </>}>
     <p className="nexus-hint">{relay ? text.reportSendHint : text.reportHint}</p>
-    <p className="nexus-hint">{pt ? "Inclui ajustes técnicos e logs desta instalação. Não anexa vídeos, áudio, capturas de tela ou credenciais. Revise o texto filtrado antes de confirmar." : "Includes technical settings and logs for this installation. No video, audio, screenshots or credentials are attached. Review the filtered text before confirming."}</p>
+    <p className="nexus-hint">{tx("ui-report-modal", "includes_technical_settings_and_logs_for_this_installation_no_video_audio_screenshots_or")}</p>
     {relay && <section className="nexus-game-checks">
       <label className="nexus-profile-name-field"><span>{text.reportTitleLabel}</span>
         <input type="text" className="nexus-profile-name-input" value={review?.title ?? title} maxLength={100} disabled={sending || preparing} readOnly={Boolean(review)} onChange={event=>setTitle(event.target.value)} /></label>
@@ -86,15 +87,15 @@ export function ReportModal({target,onClose}: {target: ReportTarget; onClose: ()
         <input type="text" className="nexus-profile-name-input" value={review?.discord ?? discord} maxLength={40} disabled={sending || preparing} readOnly={Boolean(review)} onChange={event=>setDiscord(event.target.value)} /></label>
       <p className="nexus-hint">{text.reportPublicNotice}</p>
       <div className="nexus-tabs">
-        <button type="button" className="btn btn-primary" disabled={sending || preparing || loading || !report || !title.trim() || sent !== undefined} onClick={()=>void (review ? send() : prepare())}><MenuIcon name="discord" />{sending ? text.reportSending : preparing ? (pt ? "Preparando…" : "Preparing…") : review ? text.reportSend : (pt ? "Revisar envio" : "Review submission")}</button>
-        {review && sent === undefined && <button type="button" className="btn btn-secondary" disabled={sending} onClick={()=>setReview(undefined)}>{pt ? "Voltar à edição" : "Back to editing"}</button>}
+        <button type="button" className="btn btn-primary" disabled={sending || preparing || loading || !report || !title.trim() || sent !== undefined} onClick={()=>void (review ? send() : prepare())}><MenuIcon name="discord" />{sending ? text.reportSending : preparing ? (tx("ui-report-modal", "preparing")) : review ? text.reportSend : (tx("ui-report-modal", "review_submission"))}</button>
+        {review && sent === undefined && <button type="button" className="btn btn-secondary" disabled={sending} onClick={()=>setReview(undefined)}>{tx("ui-report-modal", "back_to_editing")}</button>}
         {sent && <button type="button" className="btn btn-secondary" onClick={()=>open(sent)}><MenuIcon name="discord" />{text.reportOpenPost}</button>}
       </div>
       {sent !== undefined && <p className="nexus-hint" role="status">{text.reportSent}</p>}
     </section>}
     {error && <p className="nexus-error" role="alert">{error}</p>}
     {loading ? <p role="status">{text.loading}</p> : report && <>
-      <div className="nexus-report-summary"><span>{report.path.split(/[\\/]/).pop()} · {(report.bytes/1024).toFixed(1)} KB{report.truncated ? (pt ? " · reduzido" : " · truncated") : ""}</span><div className="nexus-report-actions"><HoverTooltip text={copied ? text.reportCopied : text.reportCopy}><button type="button" className="btn btn-secondary nexus-report-copy" aria-label={text.reportCopy} disabled={copying} onClick={()=>void copy()}><MenuIcon name={copied ? "check" : "copy"} /></button></HoverTooltip><button type="button" className="btn btn-secondary" disabled={sending || preparing || Boolean(review)} onClick={()=>setRevision(v=>v+1)}><MenuIcon name="repair" />{text.reportRefresh}</button></div></div>
+      <div className="nexus-report-summary"><span>{report.path.split(/[\\/]/).pop()} · {(report.bytes/1024).toFixed(1)} KB{report.truncated ? (tx("ui-report-modal", "truncated")) : ""}</span><div className="nexus-report-actions"><HoverTooltip text={copied ? text.reportCopied : text.reportCopy}><button type="button" className="btn btn-secondary nexus-report-copy" aria-label={text.reportCopy} disabled={copying} onClick={()=>void copy()}><MenuIcon name={copied ? "check" : "copy"} /></button></HoverTooltip><button type="button" className="btn btn-secondary" disabled={sending || preparing || Boolean(review)} onClick={()=>setRevision(v=>v+1)}><MenuIcon name="repair" />{text.reportRefresh}</button></div></div>
       {copied && <p className="nexus-hint" role="status">{text.reportCopied}</p>}
       <pre className="game-log-output nexus-report-preview" tabIndex={0}><LogText content={review?.report ?? report.content}/></pre>
     </>}

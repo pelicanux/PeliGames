@@ -1,0 +1,14 @@
+.modern-library-appearance { flex:0 0 auto; }
+.modern-library-appearance > button[aria-expanded="true"] { border-color:var(--accent); }
+.modern-library-appearance-popover { box-sizing:border-box; display:grid; gap:.75rem; padding:.875rem; overflow:auto; border:1px solid var(--modern-line); border-radius:14px; background:#191a24; color:var(--modern-text); box-shadow:0 12px 32px #0004; }
+:root[data-appearance="light"] .modern-library-appearance-popover { background:#f7f8fb; }
+.modern-library-appearance-popover h3 { margin:0; font-size:.875rem; font-weight:600; }
+.library-cover-size > div { display:flex; align-items:center; justify-content:space-between; gap:1rem; font-weight:500; font-size:.8125rem; }
+.library-cover-size output { font-variant-numeric:tabular-nums; color:var(--modern-text); }
+.library-cover-size p { margin:.375rem 0 .625rem; color:var(--modern-muted); font-size:.75rem; line-height:1.5; }
+.library-cover-size input { display:block; width:100%; margin:0; accent-color:var(--accent); cursor:pointer; }
+.library-recent-choice { display:flex; align-items:center; justify-content:space-between; gap:1rem; font-size:.8125rem; }
+.modern-library-appearance-popover footer { border-top:1px solid var(--modern-line); padding-top:.625rem; }
+.modern-library-appearance-popover .modern-mini-btn { width:100%; max-width:100%; white-space:normal; justify-content:center; text-align:center; }
+.modern-library-appearance-popover .modern-mini-btn:disabled { opacity:.45; cursor:default; }
+.modern-library-appearance-popover :is(button,input):focus-visible { outline:2px solid var(--accent); outline-offset:2px; }

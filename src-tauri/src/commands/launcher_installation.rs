@@ -1,8 +1,10 @@
 //! Only bundled, reviewed recipes are executable. Requests never supply URLs or commands.
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
-use std::{fs, io::Write, path::{Path, PathBuf}, process::Command, sync::{Arc, Mutex, atomic::{AtomicBool, Ordering}}};
+use std::{fs, io::Write, path::PathBuf, sync::{Arc, Mutex, atomic::{AtomicBool, Ordering}}};
 use tauri::Emitter;
+#[path = "launcher_installation/verifier.rs"]
+mod verifier;
 static CANCEL: Mutex<Option<Arc<AtomicBool>>> = Mutex::new(None);
 struct CancelGuard;
 impl Drop for CancelGuard { fn drop(&mut self) { if let Ok(mut slot)=CANCEL.lock() { *slot=None; } } }
@@ -31,42 +33,6 @@ fn trusted_host(id: &str, url: &reqwest::Url) -> bool {
         _ => false,
     }
 }
-fn normalized(value: &str) -> String { value.chars().filter(|c| c.is_ascii_alphanumeric()).flat_map(char::to_lowercase).collect() }
-fn publisher_matches(id: &str, output: &str) -> bool {
-    // -index 0 restricts verification to the same signature whose leaf is inspected.
-    let section = match output.split("Signer's certificate:").nth(1) { Some(s) => s, None => return false };
-    let subject = match section.lines().find_map(|line| line.trim().strip_prefix("Subject:")) { Some(s) => s, None => return false };
-    let organization = if subject.contains("/O=") {
-        subject.split("/O=").nth(1).and_then(|s|s.split('/').next()).map(normalized).unwrap_or_default()
-    } else {
-        // Current osslsigncode prints RFC2253 names; commas in O are escaped.
-        let mut attributes=Vec::new(); let mut field=String::new(); let mut escaped=false;
-        for c in subject.trim().chars() {
-            if escaped { field.push(c); escaped=false; }
-            else if c=='\\' { escaped=true; }
-            else if c==',' || c=='+' { attributes.push(std::mem::take(&mut field)); }
-            else { field.push(c); }
-        }
-        attributes.push(field);
-        let organizations: Vec<_> = attributes.iter().filter_map(|field|field.trim().strip_prefix("O=")).collect();
-        if organizations.len()!=1 { return false; }
-        normalized(organizations[0])
-    };
-    let expected: &[&str] = match id {
-        "ubisoft-connect" => &["Ubisoft Entertainment", "Ubisoft Entertainment SA"],
-        "ea-app" => &["Electronic Arts Inc.", "Electronic Arts, Inc."],
-        "battle-net" => &["Blizzard Entertainment, Inc.", "Blizzard Entertainment Inc."],
-        _ => &[],
-    };
-    expected.iter().any(|name| organization == normalized(name))
-}
-fn verify_signature(id: &str, path: &Path) -> Result<(), String> {
-    let ca = ["/etc/ssl/certs/ca-certificates.crt", "/etc/pki/tls/certs/ca-bundle.crt", "/etc/ssl/ca-bundle.pem"].into_iter().find(|p| Path::new(p).is_file()).ok_or("Pacote de certificados CA não encontrado no sistema.")?;
-    let output = Command::new("osslsigncode").args(["verify", "-index", "0", "-CAfile", ca, "-TSA-CAfile", ca, "-in"]).arg(path).output().map_err(|e| format!("Instale osslsigncode para verificar a assinatura do instalador: {e}"))?;
-    let text = String::from_utf8_lossy(&output.stdout);
-    if !output.status.success() || !publisher_matches(id, &text) { return Err("Não foi possível confirmar a assinatura e o fornecedor do instalador. Nenhum executável foi iniciado.".into()); }
-    Ok(())
-}
 #[tauri::command]
 pub fn cancel_launcher_installation() -> Result<(), String> {
     let slot=CANCEL.lock().map_err(|e|e.to_string())?;
@@ -87,7 +53,7 @@ pub async fn install_launcher(app: tauri::AppHandle, request: Request) -> Result
     if request.dependencies.len() > 8 || request.dependencies.iter().any(|verb| !data["dependencies"].as_array().is_some_and(|items| items.iter().any(|item| item["verb"] == *verb))) { return Err("Componente não autorizado pela receita.".into()); }
     crate::core::game_installation::validate_proton(&request.proton)?;
     // Preflight before downloading or creating the destination.
-    Command::new("osslsigncode").arg("--version").output().map_err(|_| "Instale osslsigncode para verificar os instaladores oficiais.")?;
+    let verifier = verifier::prepare()?;
     // Reuse the game's automatic artwork lookup. Missing artwork/network never
     // prevents installation: each launcher also ships a local portrait cover.
     let cover_name=data["name"].as_str().ok_or("Receita inválida.")?.to_string();
@@ -130,7 +96,7 @@ pub async fn install_launcher(app: tauri::AppHandle, request: Request) -> Result
     let installation = crate::core::game_installation::InstallationRequest { name:data["name"].as_str().ok_or("Receita inválida.")?.into(), directory:directory.to_string_lossy().into_owned(), executable:target.to_string_lossy().into_owned(), proton:request.proton, cover_url:Some(cover) };
     let plan = crate::core::game_installation::LauncherInstallPlan { id:request.id, executable_paths:paths, dependencies:request.dependencies, cancel:cancel.clone() };
     let result = tauri::async_runtime::spawn_blocking(move || {
-        verify_signature(&id, &target)?;
+        verifier.verify(&id, &target)?;
         if cancel.load(Ordering::Acquire) { return Err("Instalação cancelada.".into()); }
         crate::core::game_installation::run_launcher(installation, plan)
     }).await.map_err(|e|e.to_string())??;
@@ -164,9 +130,5 @@ pub fn category(entry: &crate::core::installed_library::InstalledEntry) -> bool 
         entry.shortcut=None; entry.executable=prefix.join("Game.exe").to_string_lossy().into_owned(); assert!(!category(&entry));
         fs::remove_dir_all(prefix).unwrap();
     }
-    #[test] fn binds_leaf_publisher() {
-        assert!(publisher_matches("ea-app", "Signer's certificate:\n Subject: /C=US/O=Electronic Arts, Inc./CN=Electronic Arts, Inc.\n"));
-        assert!(publisher_matches("ea-app", "Signer's certificate:\n Subject: CN=Electronic Arts\\, Inc.,O=Electronic Arts\\, Inc.,C=US\n"));
-        assert!(!publisher_matches("ea-app", "Signer's certificate:\n Subject: /O=Attacker/CN=Electronic Arts, Inc.\n"));
-    }
+
 }

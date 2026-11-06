@@ -1,0 +1,20 @@
+{
+  "off": "Desligada",
+  "standard": "Padrão",
+  "standard_webrtc": "Padrão (WebRTC)",
+  "rnnoise_recommended": "RNNoise (recomendado)",
+  "idle": "Ausente",
+  "do_not_disturb": "Não perturbe",
+  "invisible": "Invisível",
+  "change_status": "Alterar status",
+  "disconnected": "Desconectado",
+  "playing": "Jogando",
+  "audio_controls": "Controles de áudio",
+  "noise": "> ruído",
+  "noise_suppression": "Redução de ruído",
+  "unmute": "Ativar microfone",
+  "mute": "Silenciar microfone",
+  "undeafen": "Voltar a ouvir",
+  "deafen": "Silenciar áudio",
+  "profile_and_audio_settings": "Configurações de perfil e áudio"
+}

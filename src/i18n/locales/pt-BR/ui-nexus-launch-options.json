@@ -1,0 +1,16 @@
+{
+  "launch_options": "Opções de inicialização",
+  "arguments_and_variables_for_this_game": "Argumentos e variáveis deste jogo.",
+  "reset": "Restaurar",
+  "review_mod_launch_options_and_edit_game_arguments": "Confira as opções dos mods e edite os argumentos do jogo.",
+  "edit": "Editar",
+  "restore_automatic": "Restaurar automáticas",
+  "saving": "Salvando…",
+  "save": "Salvar",
+  "loading": "Carregando…",
+  "automatic_options_detected_by_the_launcher": "Automáticas detectadas pelo launcher",
+  "no_additional_automatic_options": "Nenhuma opção automática adicional.",
+  "edit_arguments_and_variables_below_variables_precede_arguments_for_example_mangohud_1_co": "Edite os argumentos e variáveis abaixo. Variáveis vêm antes dos argumentos, por exemplo: MANGOHUD=1 %command% -windowed. Prioridade de DLLs é configurada em Prioridade das DLLs do Wine. Não são executados comandos de shell.",
+  "options_used_on_launch": "Opções usadas ao iniciar",
+  "custom_options_replace_the_automatic_options_shown_above_after_changing_mods_review_them": "Opções personalizadas substituem as automáticas mostradas acima. Após mudar mods, confira as opções ou restaure o modo automático. Estas opções valem apenas para iniciar por esta biblioteca Nexus."
+}

@@ -1,0 +1,20 @@
+{
+  "installing": "Instalando…",
+  "checking": "Verificando…",
+  "not_checked": "Não verificado",
+  "update_available": "Atualização disponível",
+  "installed": "Instalada",
+  "none": "Nenhuma",
+  "available": "Disponível",
+  "update": "Atualizar",
+  "install": "Instalar",
+  "check_for_updates": "Buscar atualização",
+  "installation_complete": "Instalação concluída",
+  "preparing_download": "Preparando download…",
+  "install_location": "Destino da instalação",
+  "remove_this_version": "Remover esta versão",
+  "games_using_this_version_will_need_another_selection": "Jogos que usam esta versão precisarão de outra seleção.",
+  "remove": "Remover",
+  "runtime_note_1": "Wine puro (wow64), sem o contêiner do Steam Runtime: usa as bibliotecas do sistema. Para jogos, prefira um Proton.",
+  "runtime_note_2": "Fork comunitário do Proton-CachyOS com melhorias para Wayland; não é publicado pelo CachyOS."
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Cover art · SteamGridDB",
+  "description": "Add your personal key to search SteamGridDB for cover art.",
+  "keyLabel": "SteamGridDB API key",
+  "placeholder": "Paste your personal key here",
+  "show": "Show",
+  "hide": "Hide",
+  "remove": "Remove",
+  "localOnly": "Saved only in this computer's application settings.",
+  "getKey": "Get my key",
+  "rescanHint": "The key is saved automatically. Use Scan to find missing covers. Removing the key disables this optional lookup.",
+  "missingHint": "To search SteamGridDB for cover art, add your personal API key in Preferences. This integration is optional.",
+  "configuredHint": "Your SteamGridDB key is configured. Manage or remove it in Preferences.",
+  "configure": "Preferences → SteamGridDB"
+}

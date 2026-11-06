@@ -1,0 +1,16 @@
+{
+  "launch_options": "Launch options",
+  "arguments_and_variables_for_this_game": "Arguments and variables for this game.",
+  "reset": "Reset",
+  "review_mod_launch_options_and_edit_game_arguments": "Review mod launch options and edit game arguments.",
+  "edit": "Edit",
+  "restore_automatic": "Restore automatic",
+  "saving": "Saving…",
+  "save": "Save",
+  "loading": "Loading…",
+  "automatic_options_detected_by_the_launcher": "Automatic options detected by the launcher",
+  "no_additional_automatic_options": "No additional automatic options.",
+  "edit_arguments_and_variables_below_variables_precede_arguments_for_example_mangohud_1_co": "Edit arguments and variables below. Variables precede arguments, for example: MANGOHUD=1 %command% -windowed. Configure DLL priorities under Wine DLL priority. Shell commands are not executed.",
+  "options_used_on_launch": "Options used on launch",
+  "custom_options_replace_the_automatic_options_shown_above_after_changing_mods_review_them": "Custom options replace the automatic options shown above. After changing mods, review them or restore automatic mode. These options apply only when launching from this Nexus library."
+}

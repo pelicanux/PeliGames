@@ -1,0 +1,11 @@
+{
+  "could_not_check_connection_storage": "Could not check connection storage.",
+  "could_not_change_connection_storage": "Could not change connection storage.",
+  "connection_storage": "Connection storage",
+  "session": "Session",
+  "save_in_keyring": "Save in keyring",
+  "temporary": "Temporary",
+  "for_systems_without_an_active_keyring_keys_and_tokens_stay_only_in_this_process_s_memory": "For systems without an active keyring. Keys and tokens stay only in this process's memory, without being saved to disk. Sign in again after fully exiting PeliGames. Closing a tab or the chat window does not end the session. Existing keyring credentials stay there; this mode neither imports nor deletes them.",
+  "keeps_you_signed_in_between_launches_requires_an_available_unlocked_compatible_keyring_o": "Keeps you signed in between launches. Requires an available, unlocked compatible keyring on any Linux desktop.",
+  "disconnect_before_changing_modes_existing_keyring_credentials_are_not_migrated_into_temp": "Disconnect before changing modes. Existing keyring credentials are not migrated into temporary sessions."
+}

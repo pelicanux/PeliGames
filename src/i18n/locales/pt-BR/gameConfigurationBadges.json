@@ -1,0 +1,20 @@
+{
+  "mako_adaptive": "MAKO · adaptativo",
+  "mako_frame_generation_enabled_in_the_game_profile": "Geração de quadros MAKO habilitada no perfil do jogo.",
+  "mako_scaling": "MAKO · escala",
+  "mako_image_scaling_enabled": "Escalonamento de imagem do MAKO habilitado.",
+  "mako_base_fps_cap_before_frame_generation": "Limite de FPS base do MAKO; não é o FPS final após a geração de quadros.",
+  "afmf_frame_generation_enabled_for_the_next_game_launch": "Geração de quadros AFMF habilitada para a próxima abertura do jogo.",
+  "monitoring_enabled_for_this_game": "Monitoramento habilitado para este jogo.",
+  "peligames_overlay_enabled_in_the_profile": "Overlay PeliGames habilitado no perfil.",
+  "gamescope_enabled_for_this_game": "Gamescope habilitado para este jogo.",
+  "gamescope_fps_limiter_enabled": "Limitador do Gamescope habilitado.",
+  "dxvk_fps_limiter_enabled_applies_to_games_using_dxvk": "Limitador DXVK habilitado; aplica-se aos jogos que usam DXVK.",
+  "mangohud_fps_limit_cycle_the_selected_limit_may_change_in_game": "Lista de limites do MangoHUD. O limite selecionado durante o jogo pode variar.",
+  "mangohud_fps_limiter_enabled": "Limitador de FPS do MangoHUD habilitado.",
+  "unfocused": "Sem foco",
+  "gamescope_fps_cap_while_the_game_is_unfocused": "Limite do Gamescope quando o jogo perde o foco.",
+  "peligames_overlay_fps_cap_while_the_game_is_unfocused": "Limitador de FPS sem foco do Overlay PeliGames habilitado.",
+  "vulkan_vsync_configured_through_mangohud_depends_on_the_game_s_graphics_api": "VSync configurado pelo MangoHUD para Vulkan; depende da API usada pelo jogo.",
+  "opengl_vsync_configured_through_mangohud_depends_on_the_game_s_graphics_api": "VSync configurado pelo MangoHUD para OpenGL; depende da API usada pelo jogo."
+}

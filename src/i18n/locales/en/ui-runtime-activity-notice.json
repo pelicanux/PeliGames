@@ -1,0 +1,11 @@
+{
+  "runtime_preparation": "Runtime preparation",
+  "downloading_game_runtime": "Downloading game runtime",
+  "extracting_runtime": "Extracting runtime",
+  "runtime_preparation_failed": "Runtime preparation failed",
+  "preparing_game_environment": "Preparing game environment",
+  "preview": "Preview · ",
+  "received": "received",
+  "runtime_preparation_failed_check_your_connection_and_retry_missing_runtime_files_require": "Runtime preparation failed. Check your connection and retry. Missing runtime files require internet access.",
+  "the_game_waits_for_preparation_slow_connections_may_take_longer_the_runtime_is_kept_for_": "The game waits for preparation. Slow connections may take longer. The runtime is kept for later launches; updates may require another download."
+}

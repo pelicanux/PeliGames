@@ -1,0 +1,13 @@
+{
+  "discord_activity": "Discord activity",
+  "shows_a_peligames_activity_only_while_recording_the_screen_or_running_instant_replay_doe": "Shows a PeliGames activity only while recording the screen or running instant replay. Does not publish library activity or game names.",
+  "show_recording_and_replay_on_discord": "Show recording and replay on Discord",
+  "the_activity_disappears_when_capture_ends_video_audio_and_file_paths_are_not_sent": "The activity disappears when capture ends. Video, audio and file paths are not sent.",
+  "loading_preferences": "Loading preferences…",
+  "activity_sharing_is_off": "Activity sharing is off.",
+  "waiting_for_recording_or_replay_no_activity_published": "Waiting for recording or replay. No activity published.",
+  "recording_replay_shared_on_discord": "Recording/replay shared on Discord.",
+  "waiting_for_discord_desktop_reconnects_automatically": "Waiting for Discord desktop. Reconnects automatically.",
+  "enable_activity_sharing_in_discord_s_privacy_settings_display_depends_on_your_discord_pr": "Enable activity sharing in Discord's privacy settings. Display depends on your Discord preferences.",
+  "preview_simulated_connection_no_activity_is_published_to_discord": "Preview: simulated connection. No activity is published to Discord."
+}

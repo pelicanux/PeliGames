@@ -1,6 +1,7 @@
+import {modelSourcePaths} from "../../services/modConfiguration";
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { AppConfig } from "../../components/SetupWizard";
+import type { AppConfig } from "../../types/appConfig";
 
 interface NeuralModelStatus {
   small: boolean;
@@ -39,7 +40,7 @@ export function useNeuralModels({ active: enabled, gamePath, gameDir, config, gp
       setNeuralModelsError(false);
       try {
         const status = await invoke<NeuralModelStatus>("get_neural_model_status", {
-          gpuArch, bitness, gameDir, binPath: config.dll_version.endsWith(".bin") ? config.dll_version : null,
+          gpuArch, bitness, gameDir, binPath: modelSourcePaths(config).binPath,
         });
         if (!active || revision !== current) return;
         setNeuralModels(status);

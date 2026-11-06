@@ -1,0 +1,16 @@
+{
+  "launch_options": "Opções de inicialização",
+  "clears_what_was_typed_lines_of_installed_mods_such_as_dlssnr_amd_are_kept": "Apaga o que foi digitado. As linhas dos mods instalados, como o DLSSNR-AMD, são mantidas.",
+  "arguments_and_variables_for_this_game": "Argumentos e variáveis deste jogo.",
+  "reset": "Restaurar",
+  "review_and_edit_game_arguments_and_variables": "Confira e edite os argumentos e variáveis do jogo.",
+  "edit": "Editar",
+  "restore_automatic": "Restaurar automáticas",
+  "saving": "Salvando…",
+  "save": "Salvar",
+  "arguments_detected_in_the_game_shortcut": "Argumentos detectados no atalho do jogo",
+  "no_additional_automatic_arguments": "Nenhum argumento automático adicional.",
+  "variables_precede_arguments_for_example_mangohud_1_command_windowed_configure_dll_priori": "Variáveis vêm antes dos argumentos, por exemplo: MANGOHUD=1 %command% -windowed. Configure a prioridade das DLLs no campo próprio. Não são executados comandos de shell.",
+  "options_used_on_launch": "Opções usadas ao iniciar",
+  "custom_options_replace_automatic_arguments_when_launching_this_game_from_the_main_librar": "As opções personalizadas substituem os argumentos automáticos ao iniciar este jogo pela biblioteca principal."
+}

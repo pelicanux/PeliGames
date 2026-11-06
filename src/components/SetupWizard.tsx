@@ -1,3 +1,5 @@
+import type {AppConfig} from "../types/appConfig";
+import {appConfigStore} from "../modules/appConfig/appConfig";
 import "./SetupWizard.css";
 import { ModalSurface } from "./ModalSurface";
 import { MenuIcon } from "./MenuIcon";
@@ -11,17 +13,6 @@ import { ModelSource } from "../types/installer";
 
 import { useI18n } from "../i18n/I18nContext";
 import { hasDlssnrConfiguration } from "../services/modConfiguration";
-
-export interface AppConfig {
-  steamgriddb_api_key?: string;
-  scan_steam_protons?: boolean;
-  backend: string;
-  dll_version: string;
-  shortcut_key: string;
-  game_shortcut_keys?: Record<string, string>;
-  custom_game_paths?: Record<string, string>;
-  preferred_proton_family?: "ge-proton" | "cachyos-proton";
-}
 
 interface DetectedGpu { model: string; pciAddress: string; backend: "rdna3" | "rdna4" | null; primary: boolean; }
 
@@ -45,7 +36,8 @@ interface BackendVersionStatus {
 }
 
 export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel, onBack }) => {
-  const { t, language } = useI18n();
+
+  const { t } = useI18n();
   const [gpuArch, setGpuArch] = useState<"rdna4" | "rdna3">("rdna4");
   const [gpus, setGpus] = useState<DetectedGpu[]>([]);
   const [detectingGpu, setDetectingGpu] = useState(true);
@@ -120,17 +112,17 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
 
   const handleDownload = async () => {
     if (!gpuCompatible || isDownloading) return;
-    
+
     setIsDownloading(true);
     setProgressPct(0);
     setSpeedStr("");
     setDownloadComplete(false);
     setErrorMsg(null);
-    
+
     try {
       await invoke<string>("update_backend", { gpuArch });
       const installed = await readBackend();
-      if (!installed.ready) throw new Error(language === "pt" ? "Backend incompleto. Confira os arquivos baixados." : "Backend incomplete. Check the downloaded files.");
+      if (!installed.ready) throw new Error(t("ui-setup-wizard", "backend_incomplete_check_the_downloaded_files"));
       const vStatus = await invoke<BackendVersionStatus>("check_backend_version", { gpuArch }).catch(() => null);
       if (vStatus) setVersionStatus(vStatus);
     } catch (err: any) {
@@ -160,7 +152,7 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
     try {
       await invoke<string>("copy_local_backend", { sourcePath: path, gpuArch });
       const installed = await readBackend();
-      if (!installed.ready) throw new Error(language === "pt" ? "Backend incompleto. Confira os arquivos baixados." : "Backend incomplete. Check the downloaded files.");
+      if (!installed.ready) throw new Error(t("ui-setup-wizard", "backend_incomplete_check_the_downloaded_files"));
       const vStatus = await invoke<BackendVersionStatus>("check_backend_version", { gpuArch }).catch(() => null);
       if (vStatus) setVersionStatus(vStatus);
     } catch (err) {
@@ -190,7 +182,7 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
         setLoading(false);
         return;
       }
-      
+
       if (modelSource === "dll") {
         setExtractingDll(true);
         // Give browser time to paint the extraction loading animation (two frames to be safe)
@@ -205,7 +197,7 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
         }
         setExtractingDll(false);
       }
-      
+
       if (modelSource === "bin") selectedPath = await invoke<string>("import_model_bins", {gpuArch, binPath:selectedPath});
       await readBackend();
       const config: AppConfig = {
@@ -213,9 +205,8 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
         dll_version: selectedPath,
         shortcut_key: "Insert"
       };
-      
-      await invoke("save_app_config", { config });
-      const saved = await invoke<AppConfig | null>("load_app_config");
+
+      const saved = await appConfigStore.update(config);
       if (!hasDlssnrConfiguration(saved)) throw new Error("A configuração do mod não foi persistida.");
       onComplete(saved!);
     } catch (err) {
@@ -277,7 +268,7 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
         <p className="setup-wizard-subtitle">
           {t("setupWizard", "subtitle")}
         </p>
-        
+
         <div className={`wizard-gpu-status${gpuCompatible ? " compatible" : ""}`} role="status" aria-live="polite">
           <MenuIcon name="chip" />
           <div>{detectingGpu ? t("setupWizard", "gpuChecking") : <>
@@ -307,9 +298,7 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
             </button>
           </div>)}
         </div>
-        <p className="wizard-backend-explanation">{language === "pt"
-          ? "Este download inclui o backend DLSS NR e as ferramentas de extração e instalação. Não inclui a DLL da NVIDIA nem os modelos de IA: obtenha a nvngx_dlssnr.dll separadamente e extraia os modelos na etapa abaixo."
-          : "This download includes the DLSS NR backend and extraction and installation tools. It does not include NVIDIA’s DLL or AI models: obtain nvngx_dlssnr.dll separately and extract the models below."}</p>
+        <p className="wizard-backend-explanation">{t("ui-setup-wizard", "this_download_includes_the_dlss_nr_backend_and_extraction_and_installation_tools_it_does")}</p>
 
         {errorMsg && (
           <div style={{ fontSize: "0.85rem", color: "var(--tone-f87171, #f87171)", background: "rgba(248, 113, 113, 0.1)", padding: "0.8rem", borderRadius: "8px", border: "1px solid rgba(248, 113, 113, 0.2)", display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
@@ -319,9 +308,9 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
         )}
 
         <div className="wizard-backend-download-actions">
-          <button 
+          <button
             className="btn wizard-download"
-            style={{ 
+            style={{
               flex: 1, padding: "0.8rem", borderRadius: "8px", position: "relative",
               background: downloadComplete ? "rgba(16, 185, 129, 0.1)" : "rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)",
               border: downloadComplete ? "1px solid var(--tone-10b981, #10b981)" : "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)",
@@ -354,18 +343,18 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
                 )}
             </span>
           </button>
-          
+
           {isDownloading ? (
-            <button 
-              className="btn" 
+            <button
+              className="btn"
               onClick={handleCancelDownload}
               style={{ padding: "0.8rem 1.5rem", borderRadius: "8px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", color: "var(--tone-f87171, #f87171)", fontWeight: "bold" }}
             >
               {t("setupWizard", "cancel")}
             </button>
           ) : (
-            <button 
-              className="btn" 
+            <button
+              className="btn"
               onClick={handleLocalFolder}
               disabled={loading}
               title={t("setupWizard", "selectLocalFolderTitle")}
@@ -379,7 +368,7 @@ export const SetupWizard: React.FC<Props> = ({ onComplete, allowCancel, onCancel
 
         {backendPath && downloadComplete && !isDownloading && <button type="button" className="wizard-backend-path"
           title={backendPath} onClick={() => { void invoke("open_backend_folder", {gpuArch}).catch(error => setErrorMsg(String(error))); }}>{backendPath}</button>}
-        <ModelSourceSelector 
+        <ModelSourceSelector
           modelSource={modelSource}
           setModelSource={setModelSource}
           dllPath={dllPath}

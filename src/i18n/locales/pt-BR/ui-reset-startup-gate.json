@@ -1,0 +1,10 @@
+{
+  "reset_cleanup": "Limpeza da redefinição",
+  "preview_no_files_will_change_and_no_program_will_restart": "Prévia: nenhum arquivo será alterado ou programa reiniciado.",
+  "recover_reset": "Recuperar redefinição",
+  "try_new_configuration": "Tentar configuração nova",
+  "please_wait": "Aguarde…",
+  "restore_and_restart": "Restaurar e reiniciar",
+  "a_previous_maintenance_operation_was_interrupted_previous_files_were_preserved_you_can_r": "Uma manutenção anterior foi interrompida. Os arquivos anteriores foram preservados. Você pode tentar novamente ou restaurar os arquivos anteriores.",
+  "restoring_restarts_the_app_and_preserves_the_new_configuration_until_recovery_is_validat": "A restauração reinicia o programa e preserva a configuração nova até validar a recuperação. Contas desconectadas precisam ser vinculadas novamente."
+}

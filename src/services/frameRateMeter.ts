@@ -46,7 +46,7 @@ export function frameRateMeterShown(): boolean {
   return label !== null;
 }
 
-/** Shows or hides the meter (Settings → Logs and more → Developer mode). */
+/** Shows or hides the meter (Settings → Maintenance → Developer mode). */
 export function setFrameRateMeter(shown: boolean) {
   remember(shown);
   if (shown === Boolean(label)) return;

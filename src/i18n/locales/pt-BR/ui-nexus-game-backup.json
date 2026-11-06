@@ -1,0 +1,22 @@
+{
+  "last_copy_failed": "Falha na última cópia: {{status_error}}",
+  "updating_the_recovery_copy": "Atualizando a cópia de recuperação…",
+  "the_copy_is_created_once_mods_are_installed": "A cópia será criada quando houver mods instalados.",
+  "last_copy": "Última cópia: {{when}}{{size}}",
+  "creating_the_first_copy": "Criando a primeira cópia…",
+  "old_copy_from_no_longer_updated_enable_it_to_update_or_delete_it": "Cópia antiga de {{when}}{{size}}: não é mais atualizada. Ative para atualizar ou apague.",
+  "follows_the_general_option_in_settings_tools": "Segue a opção geral de Configurações → Ferramentas.",
+  "could_not_read_the_backup_information": "Não foi possível consultar os dados do backup.",
+  "no_backup_saved_for_this_game": "Nenhum backup salvo para este jogo.",
+  "checking_this_game_s_backup": "Consultando o backup deste jogo…",
+  "individual_backup": "Backup individual",
+  "saves_packages_and_records_in_this_game_s_peligames_folder_this_choice_applies_only_to_t": "Salva os pacotes e registros na pasta .peligames deste jogo. Esta escolha vale somente para este jogo.",
+  "recovery_copy_for_this_game": "Cópia de recuperação deste jogo",
+  "delete_this_game_s_backup": "Apagar backup deste jogo",
+  "delete_individual_backup": "Apagar backup individual",
+  "cancel": "Cancelar",
+  "deleting": "Apagando…",
+  "delete_backup": "Apagar backup",
+  "delete_the_mod_recovery_copy_in_this_game_s_folder_this_also_disables_individual_backup_": "Apagar a cópia de recuperação dos mods na pasta deste jogo? Esta ação também desativa o backup individual para evitar que a cópia seja recriada automaticamente.",
+  "installed_mods_and_data_in_config_will_be_kept_this_deletion_cannot_be_undone": "Os mods instalados e os dados na .config serão mantidos. Esta exclusão não pode ser desfeita."
+}

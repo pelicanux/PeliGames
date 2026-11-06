@@ -1,0 +1,17 @@
+{
+  "use_ctrl_alt_or_super_with_a_key_esc_cancels": "Use Ctrl, Alt or Super with a key; Esc cancels.",
+  "record_shortcuts_to_control_the_call_with_matrix_closed_for_use_while_gaming_apply_globa": "Record shortcuts to control the call with Matrix closed. For use while gaming, apply global shortcuts and confirm the system dialog if shown.",
+  "toggle_microphone": "Toggle microphone",
+  "toggle_deafen": "Toggle deafen",
+  "press_keys": "Press keys…",
+  "applying": "Applying…",
+  "apply_shortcuts": "Apply shortcuts",
+  "restore_defaults_no_shortcuts": "Restore defaults (no shortcuts)",
+  "shortcuts_saved_for_simulation_while_the_preview_has_focus": "Shortcuts saved for simulation while the preview has focus.",
+  "global_shortcuts_active_including_while_gaming": "Global shortcuts active, including while gaming.",
+  "shortcuts_removed": "Shortcuts removed.",
+  "microphone": "Microphone",
+  "deafen": "Deafen",
+  "clear_microphone_shortcut": "Clear microphone shortcut",
+  "clear_deafen_shortcut": "Clear deafen shortcut"
+}

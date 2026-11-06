@@ -1,0 +1,12 @@
+{
+  "matrix_call": "Matrix call",
+  "connected": "Connected",
+  "reconnecting": "Reconnecting…",
+  "leaving": "Leaving…",
+  "connecting": "Connecting…",
+  "active_matrix_call": "Active Matrix call",
+  "simulated": " · simulated",
+  "toggle_microphone": "Toggle microphone",
+  "toggle_deafen": "Toggle deafen",
+  "disconnect_call": "Disconnect call"
+}

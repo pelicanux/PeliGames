@@ -1,6 +1,9 @@
+import {loadLanguage, translator} from "../src/i18n/engine";
+await loadLanguage("pt-BR");
+const t = translator("pt-BR");
 import {test,expect,mock} from "bun:test";
 import {renderToStaticMarkup} from "react-dom/server";
-mock.module("../src/i18n/I18nContext",()=>({useI18n:()=>({language:"pt",t:(_section:string,key:string)=>key==="defaultKey"?"Padrão":key})}));
+mock.module("../src/i18n/I18nContext",()=>({useI18n:()=>({language:"pt-BR",t})}));
 const {ShortcutKeySelector}=await import("../src/components/ShortcutKeySelector");
 const render=(route:string,key:string,disabled=false)=>renderToStaticMarkup(<ShortcutKeySelector route={route} shortcutKey={key} disabled={disabled} setShortcutKey={()=>{}}/>);
 test("Default label follows the route, not the last key chosen",()=>{

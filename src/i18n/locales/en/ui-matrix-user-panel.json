@@ -1,0 +1,20 @@
+{
+  "off": "Off",
+  "standard": "Standard",
+  "standard_webrtc": "Standard (WebRTC)",
+  "rnnoise_recommended": "RNNoise (recommended)",
+  "idle": "Idle",
+  "do_not_disturb": "Do not disturb",
+  "invisible": "Invisible",
+  "change_status": "Change status",
+  "disconnected": "Disconnected",
+  "playing": "Playing",
+  "audio_controls": "Audio controls",
+  "noise": "> noise",
+  "noise_suppression": "Noise suppression",
+  "unmute": "Unmute",
+  "mute": "Mute",
+  "undeafen": "Undeafen",
+  "deafen": "Deafen",
+  "profile_and_audio_settings": "Profile and audio settings"
+}

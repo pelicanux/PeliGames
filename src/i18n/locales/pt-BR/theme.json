@@ -1,0 +1,15 @@
+{
+  "appearance": "Tema da interface",
+  "dark": "Escuro",
+  "light": "Claro",
+  "title": "Cor de destaque",
+  "description": "Escolha a cor dos destaques, bordas, brilhos e do fundo do launcher.",
+  "saved": "Aplicação imediata. Sua escolha é salva automaticamente.",
+  "red": "Vermelho",
+  "orange": "Laranja",
+  "yellow": "Amarelo",
+  "green": "Verde",
+  "blue": "Azul",
+  "indigo": "Anil",
+  "violet": "Violeta"
+}

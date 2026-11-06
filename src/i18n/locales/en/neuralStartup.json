@@ -1,0 +1,6 @@
+{
+  "title": "DLSS 5 NR",
+  "hint": "Sets whether the DLSS 5 NR checkbox starts checked when launching the game. The mod stays loaded and the effect can be enabled from the in-game menu. Changes apply to the next game launch.",
+  "nextLaunch": "Saved for the next game launch.",
+  "error": "Could not save the setting."
+}

@@ -1,0 +1,22 @@
+{
+  "automatic": "Automatic",
+  "choosing_screen": "choosing screen…",
+  "stop_sharing": "stop sharing",
+  "share_screen": "share screen",
+  "stream_sound_and_quality": "Stream sound and quality",
+  "stream_sound": "> stream sound",
+  "all_pc_sound": "All PC sound",
+  "except_the_call_itself": "except the call itself",
+  "no_sound": "No sound",
+  "one_application_only": "One application only",
+  "refresh": "[refresh]",
+  "looking": "looking…",
+  "no_application_playing_sound_now_open_the_game_and_press_refresh": "No application playing sound now. Open the game and press [refresh].",
+  "quality": "> quality",
+  "resolution": "Resolution",
+  "frames_per_second": "Frames per second",
+  "sends_1080p_720p_and_360p_each_viewer_gets_what_their_connection_carries_adjusted_on_the": "Sends 1080p, 720p and 360p: each viewer gets what their connection carries, adjusted on the fly.",
+  "choose_screen_and_share": "Choose screen and share",
+  "the_system_then_asks_which_screen_or_window_to_show": "The system then asks which screen or window to show.",
+  "fixed_quality": "Fixed at {{height}}p, {{fps}} fps, about {{bitrate}} Mbit/s."
+}

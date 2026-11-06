@@ -10,7 +10,7 @@ import "./preferences/preferences.css";
 // The standalone installer uses the same Proton controls as launcher preferences.
 export function ProtonPreferencesDialog({ onClose, onBusyChange, overlayLayer }: { onClose: () => void; onBusyChange: (busy: boolean) => void; overlayLayer?: number }) {
   const { t } = useI18n();
-  const preferences = usePreferencesConfig(() => {});
+  const preferences = usePreferencesConfig();
   const [downloadBusy, setDownloadBusy] = useState(false);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const focusRef = useRef<HTMLInputElement>(null);

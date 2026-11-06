@@ -34,7 +34,8 @@ for (const piece of pieces) for (let index = 0; index < 3; index++) {
 }
 export const coverCrackPaths = [...crackEdges.values()].sort((a, b) => a.distance - b.distance).map(edge => edge.d);
 export function CoverLaunchTeleport({ value, reducedMotion, onCancel, cancellingDisabled }: { value: CoverTeleport; reducedMotion: boolean; onCancel: () => void; cancellingDisabled: boolean }) {
-  const { language } = useI18n();
+  const {t: tx} = useI18n();
+
   const [assembled, setAssembled] = useState(reducedMotion);
   const [thawing, setThawing] = useState(false);
   const [viewport, setViewport] = useState({ width: window.innerWidth, height: window.innerHeight });
@@ -115,11 +116,11 @@ export function CoverLaunchTeleport({ value, reducedMotion, onCancel, cancelling
       : <div className={`cover-launch-remounted cover-launch-remounted--shatter${assembled ? " is-assembled" : ""}`} style={target} ref={destination} aria-hidden="true" />}
     <motion.div className="cover-launch-message" style={{ top: target.top + height + 20 }} initial={{ opacity: 0 }} animate={{ opacity: assembled ? 1 : 0 }} transition={{ duration: .2 }} role="status" aria-live="polite">
       <div className="nexus-loading-emblem" aria-hidden="true"><span className="nexus-loading-ring" /><img src="/peligames.svg" alt="" /></div>
-      <div><strong>{language === "en" ? "Starting game…" : "Iniciando jogo…"}</strong><span>{value.game.name}</span>
+      <div><strong>{tx("ui-cover-launch-teleport", "starting_game")}</strong><span>{value.game.name}</span>
         <span className="cover-launch-countdown" aria-hidden="true"><i style={{ animationDuration: `${value.delay}ms` }} /></span></div>
     </motion.div>
     {assembled && <div className="cover-launch-cancel" style={{ top: target.top + height + 122 }}>
-      <button type="button" className="button-secondary" disabled={cancellingDisabled} onClick={onCancel}>{language === "en" ? "Cancel" : "Cancelar"}</button>
+      <button type="button" className="button-secondary" disabled={cancellingDisabled} onClick={onCancel}>{tx("ui-cover-launch-teleport", "cancel")}</button>
     </div>}
   </motion.div>, document.body);
 }

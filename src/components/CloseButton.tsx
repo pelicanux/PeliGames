@@ -1,8 +1,9 @@
 import { useI18n } from "../i18n/I18nContext";
 
 export function CloseButton({ onClose, disabled = false }: { onClose?: () => void; disabled?: boolean }) {
-  const { language } = useI18n();
-  const label = language === "en" ? "Close" : "Fechar";
+  const {t: tx} = useI18n();
+
+  const label = tx("ui-close-button", "close");
   return <button type="button" className="btn-titlebar window-control close surface-close-button"
     aria-label={label} title={label} disabled={disabled || !onClose}
     onClick={event => { event.stopPropagation(); onClose?.(); }}>

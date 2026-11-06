@@ -1,0 +1,9 @@
+{
+  "title": "Limpar informações dos jogos",
+  "confirm": "Plataforma, arquitetura, API gráfica e data de lançamento serão consultadas novamente. A biblioteca, as capas e os arquivos do mod serão preservados. Deseja continuar?",
+  "clear": "Limpar cache",
+  "successTitle": "Cache limpo",
+  "success": "As informações salvas dos jogos foram removidas. O painel aberto será atualizado agora; os demais jogos serão verificados quando você selecionar suas capas.",
+  "errorTitle": "Falha ao limpar o cache",
+  "error": "Não foi possível concluir a limpeza. Tente novamente. Detalhes: "
+}

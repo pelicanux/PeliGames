@@ -1,0 +1,14 @@
+{
+  "useExisting": "Usar arquivo existente",
+  "fileSelected": "Arquivo BIN selecionado",
+  "dllHint": "Extrair modelos da DLL 310.9.16 ou 310.8.0",
+  "dllNotice": "A nvngx_dlssnr.dll pertence à NVIDIA e não acompanha o PeliGames. Você deve obtê-la em um jogo com DLSS 5 para extrair o modelo.",
+  "info": "Informações sobre o modelo de IA",
+  "title": "Fonte do Modelo de IA",
+  "desc": "O mod precisa do modelo da NVIDIA (nvngx_dlssnr.dll).",
+  "binCached": "Tenho o dlssnr.bin (Cache Encontrado)",
+  "extractDll": "Extrair de uma DLL",
+  "selectBin": "Selecione o dlssnr.bin...",
+  "selectDll": "Selecione nvngx_dlssnr.dll ou .zip...",
+  "browse": "Procurar"
+}

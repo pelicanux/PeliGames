@@ -2,11 +2,12 @@ import { useId, useLayoutEffect, useRef, useState, type CSSProperties } from "re
 import { createPortal } from "react-dom";
 import { useBoundedDropdown } from "../../hooks/useBoundedDropdown";
 import { MenuIcon } from "../../components/MenuIcon";
-import { useI18n } from "../../i18n/I18nContext";
+import {useLanguageChoices} from "../../i18n/useLanguageChoices";
 import { MAX_INTERFACE_SCALE, useInterfaceScale } from "../../hooks/useInterfaceScale";
 
 export function InstallerSettingsMenu() {
-  const { language, setLanguage, t } = useI18n();
+
+  const {preference, options, label: languageLabel, loading, error, setLanguage, t} = useLanguageChoices();
   const [scale, setScale] = useInterfaceScale();
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<CSSProperties>({});
@@ -16,7 +17,7 @@ export function InstallerSettingsMenu() {
   const languageAnchor = useRef<HTMLDivElement>(null), languageMenu = useRef<HTMLDivElement>(null);
   const languagePosition = useBoundedDropdown(languageOpen, languageAnchor, languageMenu, setLanguageOpen);
   const closeLanguage = () => { setLanguageOpen(false); languageAnchor.current?.querySelector<HTMLButtonElement>("button")?.focus(); };
-  const label = language === "pt" ? "Configurações do instalador" : "Installer settings";
+  const label = t("ui-installer-settings-menu", "installer_settings");
   useLayoutEffect(() => {
     if (!open) return;
     const update = () => {
@@ -52,17 +53,18 @@ export function InstallerSettingsMenu() {
         <span className="effects-preference-label"><MenuIcon name="language" />{t("settings", "language")}</span>
         <div ref={languageAnchor} className="custom-select-wrapper">
           <button type="button" className={`custom-select-trigger pelinstall-language-trigger ${languageOpen ? "open" : ""}`}
-            aria-label={t("settings", "language")} aria-haspopup="listbox" aria-expanded={languageOpen} aria-controls={languageOpen ? `${id}-language` : undefined}
+            disabled={loading} aria-busy={loading} aria-label={t("settings", "language")} aria-haspopup="listbox" aria-expanded={languageOpen} aria-controls={languageOpen ? `${id}-language` : undefined}
             onClick={() => setLanguageOpen(!languageOpen)} onKeyDown={event => { if (event.key === "ArrowDown" || event.key === "ArrowUp") { event.preventDefault(); setLanguageOpen(true); } }}>
-            <span>{language === "pt" ? "Português (BR)" : "English"}</span><span className="select-arrow" aria-hidden="true">▼</span>
+            <span>{languageLabel}</span><span className="select-arrow" aria-hidden="true">▼</span>
           </button>
         </div>
       </div>
+      {error && <p role="alert">{t("localization", "loadError")}</p>}
       <div className="pelinstall-scale-preference">
         <span>{t("settings", "scale")}</span>
-        <div><button type="button" disabled={scale <= 0.6} aria-label={language === "pt" ? "Diminuir escala" : "Decrease scale"} onClick={() => setScale(value => Math.max(0.6, Math.round((value - 0.1) * 10) / 10))}>−</button>
+        <div><button type="button" disabled={scale <= 0.6} aria-label={t("ui-installer-settings-menu", "decrease_scale")} onClick={() => setScale(value => Math.max(0.6, Math.round((value - 0.1) * 10) / 10))}>−</button>
           <output aria-live="polite">{Math.round(scale * 100)}%</output>
-          <button type="button" disabled={scale >= MAX_INTERFACE_SCALE} aria-label={language === "pt" ? "Aumentar escala" : "Increase scale"} onClick={() => setScale(value => Math.min(MAX_INTERFACE_SCALE, Math.round((value + 0.1) * 10) / 10))}>+</button></div>
+          <button type="button" disabled={scale >= MAX_INTERFACE_SCALE} aria-label={t("ui-installer-settings-menu", "increase_scale")} onClick={() => setScale(value => Math.min(MAX_INTERFACE_SCALE, Math.round((value + 0.1) * 10) / 10))}>+</button></div>
       </div>
     </div>, document.body)}
     {open && languageOpen && createPortal(<div ref={languageMenu} id={`${id}-language`} role="listbox" aria-label={t("settings", "language")}
@@ -75,9 +77,9 @@ export function InstallerSettingsMenu() {
           buttons[(index + (event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length]?.focus();
         }
       }}>
-      {(["pt", "en"] as const).map(option => <button key={option} type="button" role="option" aria-selected={language === option}
-        autoFocus={language === option} className={`custom-select-option ${language === option ? "selected" : ""}`}
-        onClick={() => { setLanguage(option); closeLanguage(); }}>{option === "pt" ? "Português (BR)" : "English"}</button>)}
+      {options.map(option => <button key={option.value} type="button" role="option" aria-selected={preference === option.value}
+        autoFocus={preference === option.value} className={`custom-select-option ${preference === option.value ? "selected" : ""}`}
+        onClick={() => { void setLanguage(option.value); closeLanguage(); }}>{option.label}</button>)}
     </div>, document.body)}
   </>;
 }

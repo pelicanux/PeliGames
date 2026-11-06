@@ -1,0 +1,11 @@
+{
+  "open_close_the_daniel_panel": "Open / close the Daniel panel",
+  "switch_tabs": "Switch tabs",
+  "select_an_option": "Select an option",
+  "change_the_value": "Change the value",
+  "restore_the_option_default": "Restore the option default",
+  "amdnr_optiscaler_menu_with_the_daniel_panel_closed": "AMDNR / OptiScaler menu (with the Daniel panel closed)",
+  "open_amdnr_optiscaler_neural": "Open AMDNR / OptiScaler → Neural",
+  "launch_with_proton_and_enable_fsr_dlss_or_xess_in_graphics_settings_the_runtime_needs_a_": "Launch with Proton and enable FSR, DLSS or XeSS in graphics settings. The runtime needs a compatible upscaler to process the image.",
+  "the_daniel_0_8_panel_uses_keyboard_controls_adjust_the_image_inside_the_game": "The Daniel 0.8 panel uses keyboard controls. Adjust the image inside the game."
+}

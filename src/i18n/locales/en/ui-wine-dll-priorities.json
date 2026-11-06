@@ -1,0 +1,16 @@
+{
+  "wine_dll_priority": "Wine DLL priority",
+  "use_the_format_dxgi_n_b_dinput8_n_b": "Use the format dxgi=n,b;dinput8=n,b.",
+  "remove": "Remove",
+  "reset": "Reset",
+  "priorities_applied_when_launching_the_game_open_the_editor_to_add_or_remove_dlls": "Priorities applied when launching the game. Open the editor to add or remove DLLs.",
+  "edit_wine_dll_priorities": "Edit Wine DLL priorities",
+  "back": "Back",
+  "edit": "Edit",
+  "detected_in_mods_managed_automatically": "Detected in mods; managed automatically.",
+  "add_wine_dll": "Add Wine DLL",
+  "enter_adds_and_saves_closing_the_editor_keeps_priorities_active_dlls_marked_as_mod_are_m": "Enter adds and saves. Closing the editor keeps priorities active. DLLs marked as mod are managed automatically.",
+  "added_dlls_applied_automatically": "Added DLLs · applied automatically",
+  "no_dll_overrides_added": "No DLL overrides added.",
+  "remove_custom_priorities_and_detect_mod_dll_overrides_again": "Remove custom priorities and detect mod DLL overrides again."
+}

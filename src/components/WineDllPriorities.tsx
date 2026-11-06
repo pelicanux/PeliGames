@@ -10,7 +10,8 @@ export function WineDllPriorities({ settings, disabled, automatic, detectionErro
   onReset?: () => void;
   onChange: (settings: AdvancedSettings) => boolean;
 }) {
-  const { language } = useI18n(), pt = language === "pt";
+  const {t: tx} = useI18n();
+
   const [editing, setEditing] = useState(false), [draft, setDraft] = useState("");
   const [error, setError] = useState("");
   const input = useRef<HTMLInputElement>(null);
@@ -24,13 +25,13 @@ export function WineDllPriorities({ settings, disabled, automatic, detectionErro
     for (const name of names.split(",")) effective.set(name.toLowerCase(), order);
   }
   const displayed = [...effective].map(([name, order]) => `${name}=${order}`);
-  const title = pt ? "Prioridade das DLLs do Wine" : "Wine DLL priority";
+  const title = tx("ui-wine-dll-priorities", "wine_dll_priority");
   const save = (next: string[]) => onChange({ ...settings, dll_overrides: next.join(";"), options: { ...settings.options, dll_overrides: next.length > 0 } });
   const add = () => {
     const value = draft.trim();
     if (!value || disabled) return;
     if (!/^[\w.*-]+(?:,[\w.*-]+)*=(?:n|b|d|n,b|b,n)?(?:;[\w.*-]+(?:,[\w.*-]+)*=(?:n|b|d|n,b|b,n)?)*$/.test(value)) {
-      setError(pt ? "Use o formato dxgi=n,b;dinput8=n,b." : "Use the format dxgi=n,b;dinput8=n,b."); return;
+      setError(tx("ui-wine-dll-priorities", "use_the_format_dxgi_n_b_dinput8_n_b")); return;
     }
     // Each name has one priority; adding it again updates its existing pill.
     const priorities = new Map<string, string>();
@@ -45,24 +46,24 @@ export function WineDllPriorities({ settings, disabled, automatic, detectionErro
     <RetractableInput open={editing} setOpen={setEditing} label={title} value={draft} onChange={value => { setDraft(value); setError(""); }} onOpen={() => { setDraft(""); setError(""); }} onSubmit={add} disabled={disabled} error={error || detectionError} maxLength={2048} />
     {displayed.length > 0 && <div className="advanced-dll-summary"><div className="advanced-dll-pills">
       {displayed.map(entry => <span className={`advanced-dll-pill${manual.includes(entry) ? "" : " detected"}`} key={entry}>{entry}{manual.includes(entry)
-        ? <button type="button" disabled={disabled} aria-label={`${pt ? "Remover" : "Remove"} ${entry}`} onClick={() => save(manual.filter(item => item !== entry))}><span aria-hidden="true">×</span></button>
+        ? <button type="button" disabled={disabled} aria-label={`${tx("ui-wine-dll-priorities", "remove")} ${entry}`} onClick={() => save(manual.filter(item => item !== entry))}><span aria-hidden="true">×</span></button>
         : <small>mod</small>}</span>)}
     </div></div>}
-    {manual.length > 0 && <div className="modern-dll-reset"><button type="button" className="modern-mini-btn" disabled={disabled} onClick={() => { if (save([])) onReset?.(); }}>{pt ? "Redefinir" : "Reset"}</button></div>}
+    {manual.length > 0 && <div className="modern-dll-reset"><button type="button" className="modern-mini-btn" disabled={disabled} onClick={() => { if (save([])) onReset?.(); }}>{tx("ui-wine-dll-priorities", "reset")}</button></div>}
     {detectionError && !editing && <p role="alert" className="advanced-dll-error">{detectionError}</p>}
   </div>;
   return <div className={`advanced-option advanced-wine-dlls${compact ? " modern-inline-dlls" : ""}`}>
-    <div className="advanced-option-description"><label htmlFor="advanced-dll-editor-toggle">{title}</label><p>{pt ? "Prioridades aplicadas ao iniciar o jogo. Abra o editor para adicionar ou remover DLLs." : "Priorities applied when launching the game. Open the editor to add or remove DLLs."}</p></div>
-    <button id="advanced-dll-editor-toggle" type="button" role={compact ? undefined : "switch"} aria-expanded={compact ? editing : undefined} aria-label={pt ? "Editar prioridades das DLLs do Wine" : "Edit Wine DLL priorities"} aria-checked={compact ? undefined : editing} disabled={disabled} className={compact ? "modern-mini-btn" : `advanced-toggle ${editing ? "enabled" : ""}`} onClick={() => { setEditing(value => !value); setDraft(""); setError(""); }}>{compact ? (editing ? (pt ? "Voltar" : "Back") : (pt ? "Editar" : "Edit")) : <span />}</button>
+    <div className="advanced-option-description"><label htmlFor="advanced-dll-editor-toggle">{title}</label><p>{tx("ui-wine-dll-priorities", "priorities_applied_when_launching_the_game_open_the_editor_to_add_or_remove_dlls")}</p></div>
+    <button id="advanced-dll-editor-toggle" type="button" role={compact ? undefined : "switch"} aria-expanded={compact ? editing : undefined} aria-label={tx("ui-wine-dll-priorities", "edit_wine_dll_priorities")} aria-checked={compact ? undefined : editing} disabled={disabled} className={compact ? "modern-mini-btn" : `advanced-toggle ${editing ? "enabled" : ""}`} onClick={() => { setEditing(value => !value); setDraft(""); setError(""); }}>{compact ? (editing ? (tx("ui-wine-dll-priorities", "back")) : (tx("ui-wine-dll-priorities", "edit"))) : <span />}</button>
     {editing ? <form className="advanced-dll-tags-editor" onSubmit={event => { event.preventDefault(); add(); }}>
       <div className="advanced-dll-pills">
-        {detected.filter(entry => !manual.includes(entry)).map(entry => <span className="advanced-dll-pill detected" key={`auto-${entry}`} title={pt ? "Detectada nos mods; gerenciada automaticamente." : "Detected in mods; managed automatically."}>{entry}<small>mod</small></span>)}
-        {manual.map(entry => <span className="advanced-dll-pill" key={entry}>{entry}<button type="button" disabled={disabled} aria-label={`${pt ? "Remover" : "Remove"} ${entry}`} onClick={() => { if (save(manual.filter(item => item !== entry))) setError(""); }}><span aria-hidden="true">×</span></button></span>)}
-        <input ref={input} maxLength={2048} aria-label={pt ? "Adicionar DLL do Wine" : "Add Wine DLL"} value={draft} disabled={disabled} onChange={event => { setDraft(event.target.value); setError(""); }} onKeyDown={event => { if(event.key === "Enter" && event.nativeEvent.isComposing) event.preventDefault(); }} placeholder="dxgi=n,b" />
+        {detected.filter(entry => !manual.includes(entry)).map(entry => <span className="advanced-dll-pill detected" key={`auto-${entry}`} title={tx("ui-wine-dll-priorities", "detected_in_mods_managed_automatically")}>{entry}<small>mod</small></span>)}
+        {manual.map(entry => <span className="advanced-dll-pill" key={entry}>{entry}<button type="button" disabled={disabled} aria-label={`${tx("ui-wine-dll-priorities", "remove")} ${entry}`} onClick={() => { if (save(manual.filter(item => item !== entry))) setError(""); }}><span aria-hidden="true">×</span></button></span>)}
+        <input ref={input} maxLength={2048} aria-label={tx("ui-wine-dll-priorities", "add_wine_dll")} value={draft} disabled={disabled} onChange={event => { setDraft(event.target.value); setError(""); }} onKeyDown={event => { if(event.key === "Enter" && event.nativeEvent.isComposing) event.preventDefault(); }} placeholder="dxgi=n,b" />
       </div>
-      <p>{pt ? "Enter adiciona e salva. Recolher o editor mantém as prioridades ativas. DLLs marcadas como mod são gerenciadas automaticamente." : "Enter adds and saves. Closing the editor keeps priorities active. DLLs marked as mod are managed automatically."}</p>
-    </form> : <div className="advanced-dll-summary"><small>{pt ? "DLLs adicionadas · aplicadas automaticamente" : "Added DLLs · applied automatically"}</small><div className="advanced-dll-pills">{displayed.map(entry => <span className="advanced-dll-pill" key={entry}>{entry}</span>)}</div>{!displayed.length && <p>{pt ? "Nenhuma DLL adicionada." : "No DLL overrides added."}</p>}</div>}
-    <div className="advanced-dll-reset"><button type="button" className="btn btn-secondary" disabled={disabled} title={pt ? "Remover prioridades personalizadas e detectar novamente as DLLs dos mods." : "Remove custom priorities and detect mod DLL overrides again."} onClick={() => { if(save([])) { setDraft(""); setError(""); onReset?.(); } }}><MenuIcon name="repair" />{pt ? "Redefinir" : "Reset"}</button></div>
+      <p>{tx("ui-wine-dll-priorities", "enter_adds_and_saves_closing_the_editor_keeps_priorities_active_dlls_marked_as_mod_are_m")}</p>
+    </form> : <div className="advanced-dll-summary"><small>{tx("ui-wine-dll-priorities", "added_dlls_applied_automatically")}</small><div className="advanced-dll-pills">{displayed.map(entry => <span className="advanced-dll-pill" key={entry}>{entry}</span>)}</div>{!displayed.length && <p>{tx("ui-wine-dll-priorities", "no_dll_overrides_added")}</p>}</div>}
+    <div className="advanced-dll-reset"><button type="button" className="btn btn-secondary" disabled={disabled} title={tx("ui-wine-dll-priorities", "remove_custom_priorities_and_detect_mod_dll_overrides_again")} onClick={() => { if(save([])) { setDraft(""); setError(""); onReset?.(); } }}><MenuIcon name="repair" />{tx("ui-wine-dll-priorities", "reset")}</button></div>
     {(error || detectionError) && <p role="alert" className="advanced-dll-error">{error || detectionError}</p>}
   </div>;
 }

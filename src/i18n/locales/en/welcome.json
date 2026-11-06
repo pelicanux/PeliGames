@@ -1,0 +1,15 @@
+{
+  "title": "Welcome to PeliGames",
+  "start": "Get started",
+  "back": "Back",
+  "subtitle": "Your Windows games on Linux, in one place.",
+  "library": "One library: Steam, Heroic, Lutris, Bottles, Faugus and the games you install.",
+  "install": "Install Windows games and programs with Proton, no manual setup.",
+  "mods": "Nexus Mods and DLSSNR mods in a few clicks.",
+  "launchers": "EA app, Battle.net, Ubisoft and Epic, with a profile for each game.",
+  "installTitle": "Install PeliGames on this computer",
+  "installHint": "The AppImage's contents are extracted to the folder below, with no root or FUSE needed. PeliGames and Pelinstall show up in the applications menu (Games), the peligames command is available in the terminal and updates are applied there. The AppImage file is removed afterwards.",
+  "installButton": "Install and open",
+  "installing": "Installing…",
+  "later": "Not now"
+}

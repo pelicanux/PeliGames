@@ -32,8 +32,9 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
   onRunProgram: (path: string, executable: string) => Promise<void>;
   onStartShortcut: (path: string, id: string) => Promise<void>;
 }) {
-  const { t, language } = useI18n();
-  const pt = language === "pt";
+
+  const { t } = useI18n();
+
   const reducedMotion = usePerformanceMode();
   const [panel, setPanel] = useState<"information" | "advanced" | "programs">("information");
   // App mounts a fresh panel for each selected game. Its first frame must already
@@ -102,7 +103,7 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
     catch (error) {
       setError(String(error));
       // The header only says "Falha ao salvar"; the reason goes to the notification centre.
-      notifyError(pt ? "Configurações do jogo" : "Game settings", error);
+      notifyError(t("ui-installed-game-panels", "game_settings"), error);
       if (patch.proton !== undefined) setProton(currentGame.current?.proton || "");
       return false;
     } finally { saving.current = false; setBusy(false); }
@@ -163,7 +164,7 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
                   </div>
                 </HoverTooltip>
                 {prefixChanged && Boolean(prefix.trim()) && <button type="submit" className="installation-name-confirm" disabled={blocked}><MenuIcon name="check" />{t("gameModes", "confirmName")}</button>}
-                <small className="installed-prefix-hint">{pt ? "Selecione um prefixo existente ou informe uma pasta nova ou vazia. O prefixo será criado com o Wine/Proton selecionado ao clicar em Jogar. O prefixo anterior é preservado." : "Select an existing prefix or enter a new or empty folder. The prefix is created with the selected Wine/Proton when you click Play. The previous prefix is preserved."}</small>
+                <small className="installed-prefix-hint">{t("ui-installed-game-panels", "select_an_existing_prefix_or_enter_a_new_or_empty_folder_the_prefix_is_created_with_the_")}</small>
               </form>
           <form className="installation-field" onSubmit={event => { event.preventDefault(); if (executableChanged && executable.trim()) void save({ executable: executable.trim() }); }}>
             <label htmlFor={`${id}-exe`}>{t("gameModes", "executable")}</label>
@@ -183,15 +184,15 @@ export function InstalledGamePanels({ game, disabled, programsDisabled, onSaved,
   const isBottles = external && game?.launcher === "Bottles";
   const protonDisabled = isBottles;
   const protonDisabledHint = isBottles
-    ? (pt ? "O Bottles compartilha o runner na mesma bottle. Altere no Bottles." : "Bottles shares the runner in the same bottle. Change in Bottles.")
+    ? (t("ui-installed-game-panels", "bottles_shares_the_runner_in_the_same_bottle_change_in_bottles"))
     : undefined;
   const protonDisabledLabel = isBottles
-    ? (pt ? "Gerenciado no Bottles" : "Managed in Bottles")
+    ? (t("ui-installed-game-panels", "managed_in_bottles"))
     : undefined;
 
   if (section === "options") return game ? <><ModernGameOptions name={game.name} steamProtonMode={game.launcher === "Steam" && !game.flatpak ? game.steam_profile_proton ? "profile" : "steam" : undefined} protonLabel={game.steam_proton_name || undefined} protonDisabled={protonDisabled} protonDisabledHint={protonDisabledHint} protonDisabledLabel={protonDisabledLabel} value={game.advanced} proton={proton} onProton={value=>save({proton:value})} onAdvanced={value=>save({advanced:value})} disabled={blocked} toolsDisabled={Boolean(programsDisabled || busy || !game)} native={game.native_linux || game.nexus_platform === "native"} maintenancePath={game.external_id ? `external:${game.external_id}` : game.path} onUninstall={onUninstall} onChangeExecutable={onChangeExecutable}
     launchOptions={<InstalledLaunchOptions inline game={game} disabled={blocked} errorMessage={error} onSave={options=>save({advanced:{...normalizeAdvanced(currentGame.current?.advanced),launch_options:options}})}/>} configuration={
-      <section className="modern-game-fields modern-options-section"><h4>{t("installedSettings", "title")}</h4>{game.launcher === "Epic Games" && !game.native_linux && <p className="modern-performance-hint">{pt ? "Integração experimental: alterações valem na próxima execução do jogo, mesmo com a Epic aberta." : "Experimental integration: changes apply on the next game launch, even while Epic is open."}</p>}<fieldset className="installation-fields" disabled={blocked}>{nameField}</fieldset>{gameDirectoryField}{directoryFields}
+      <section className="modern-game-fields modern-options-section"><h4>{t("installedSettings", "title")}</h4>{game.launcher === "Epic Games" && !game.native_linux && <p className="modern-performance-hint">{t("ui-installed-game-panels", "experimental_integration_changes_apply_on_the_next_game_launch_even_while_epic_is_open")}</p>}<fieldset className="installation-fields" disabled={blocked}>{nameField}</fieldset>{gameDirectoryField}{directoryFields}
         {error && <TimedFeedback>{error}</TimedFeedback>}{!headerStatus && saved === "settings" && <TimedFeedback>{t("installedSettings", "saved")}</TimedFeedback>}
       </section>} prefixPrograms={<section className="modern-prefix-actions modern-options-section"><h4>{t("installedSettings", "runTitle")}</h4>
         <div className="modern-prefix-buttons"><button type="button" className="modern-mini-btn" disabled={programsBlocked} onClick={() => void runProgram()}><MenuIcon name="play" />{t("installedSettings", "runProgram")}</button>

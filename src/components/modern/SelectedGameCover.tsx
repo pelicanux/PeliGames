@@ -55,7 +55,7 @@ export function SelectedGameCover({ game, preparing, platform, coverRef, onMove,
           decoding="async"
           onError={() => setCoverError(true)}
           style={{
-            width: "180px",
+            width: "11.25rem",
             objectFit: "cover",
             aspectRatio: "2/3",
             display: "block"
@@ -63,13 +63,13 @@ export function SelectedGameCover({ game, preparing, platform, coverRef, onMove,
         />
       ) : (
         <div style={{
-            width: "180px", aspectRatio: "2/3",
+            width: "11.25rem", aspectRatio: "2/3",
             background: "linear-gradient(135deg, #1e3a8a, #312e81)",
             position: "relative",
             textAlign: "center"
           }}>
           <span style={{ position: "absolute", top: "1.5rem", left: "1rem", right: "1rem", fontWeight: "bold", fontSize: "1.1rem", textShadow: "0 2px 4px rgba(0,0,0,0.8)" }}>{game.name}</span>
-          <img src="/peligames.svg" alt="Icon" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "60px", height: "60px", opacity: 0.5 }} />
+          <img src="/peligames.svg" alt="Icon" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "3.75rem", height: "3.75rem", opacity: 0.5 }} />
         </div>
       )}
     </motion.div>

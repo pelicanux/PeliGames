@@ -1,14 +1,20 @@
 {
   "name": "peligames",
   "private": true,
-  "version": "0.5.4",
+  "version": "0.5.5",
   "type": "module",
   "scripts": {
-    "dev": "bun run icons && vite",
-    "build": "bun run icons && tsc && vite build",
+    "dev": "bun run i18n:generate && bun run icons && vite",
+    "build": "bun run i18n:generate && bun run icons && tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "icons": "bun node_modules/@tauri-apps/cli/tauri.js icon public/peligames.svg --output src-tauri/icons/generated"
+    "icons": "bun node_modules/@tauri-apps/cli/tauri.js icon public/peligames.svg --output src-tauri/icons/generated",
+    "i18n:check": "bun scripts/i18n.ts check",
+    "i18n:generate": "bun scripts/i18n.ts generate",
+    "i18n:export": "bun scripts/i18n.ts export",
+    "i18n:import": "bun scripts/i18n.ts import",
+    "i18n:test": "bun test scripts/i18n",
+    "i18n:audit": "bun scripts/i18n.ts audit"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
@@ -16,9 +22,11 @@
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-shell": "~2",
     "framer-motion": "^14.0.0",
+    "i18next": "^26.7.2",
     "matrix-js-sdk": "44.0.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-i18next": "^17.1.13"
   },
   "devDependencies": {
     "@types/react": "^19.1.8",

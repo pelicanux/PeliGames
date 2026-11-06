@@ -1,0 +1,23 @@
+{
+  "copied": "Copied",
+  "copy": "Copy",
+  "select_where_you_will_launch_this_game_the_identifier_and_profile_stay_the_same_across_l": "Select where you will launch this game. The identifier and profile stay the same across launchers.",
+  "target_launcher": "Target launcher",
+  "game_properties_general_launch_options_use_the_line_below_and_keep_proton_selection_in_s": "Game properties → General → Launch options. Use the line below and keep Proton selection in Steam.",
+  "game_settings_advanced_wrapper_command_enter_the_executable_and_arguments_in_their_respe": "Game settings → Advanced → Wrapper command. Enter the executable and arguments in their respective fields.",
+  "configure_game_system_options_command_prefix_use_the_line_below": "Configure game → System options → Command prefix. Use the line below.",
+  "use_the_launcher_s_wrapper_or_command_prefix_setting_it_must_pass_the_complete_game_comm": "Use the launcher's wrapper or command prefix setting. It must pass the complete game command to PeliRun; a game-arguments-only field is insufficient.",
+  "executable": "Executable",
+  "wrapper_arguments": "Wrapper arguments",
+  "command": "Command",
+  "set_up_once_then_save_changes_in_peligames_and_relaunch_the_game_this_does_not_automatic": "Set up once. Then save changes in PeliGames and relaunch the game. This does not automatically change the other launcher's selected Proton.",
+  "flatpak_the_launcher_needs_access_to_pelirun_its_profile_and_the_game_s_components_no_pe": "Flatpak: the launcher needs access to PeliRun, its profile, and the game's components. No permissions are changed automatically.",
+  "use_this_profile_in_another_launcher_settings_saved_here_apply_on_the_next_game_launch": "Use this profile in another launcher. Settings saved here apply on the next game launch.",
+  "preparing": "Preparing…",
+  "use_in_another_launcher": "Use in another launcher",
+  "preparing_pelirun_profile": "Preparing PeliRun profile…",
+  "could_not_prepare_the_profile_try_again": "Could not prepare the profile. Try again.",
+  "retry": "Retry",
+  "close": "Close",
+  "other_launcher": "Other"
+}

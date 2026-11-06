@@ -1,0 +1,14 @@
+{
+  "matrix_you_were_mentioned_in": "Matrix — você foi mencionado em #{{n_source_peligames}}",
+  "error": "erro",
+  "nexus_mods_action_failed": "Nexus Mods — falha na ação",
+  "peligames_update_available": "Atualização do PeliGames disponível",
+  "update_available": "Atualização do {{n_target_ge_proton_proton_ge_latest}} disponível",
+  "rx_backend_update_available": "Atualização do backend RX {{n_target_rdna4_9000_7000}} disponível",
+  "notifications": "Notificações",
+  "version": "Versão",
+  "open_chat": "Abrir chat",
+  "open_updater": "Abrir atualização",
+  "no_notifications": "Nenhuma notificação.",
+  "clear_notifications": "Limpar notificações"
+}

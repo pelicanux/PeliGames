@@ -1,0 +1,9 @@
+{
+  "title": "Clear game information",
+  "confirm": "Platform, architecture, graphics API and release date will be checked again. Your library, covers and mod files will be kept. Continue?",
+  "clear": "Clear cache",
+  "successTitle": "Cache cleared",
+  "success": "Saved game information has been removed. The open panel will refresh now; other games will be checked when you select their covers.",
+  "errorTitle": "Could not clear the cache",
+  "error": "The cache could not be fully cleared. Please try again. Details: "
+}
