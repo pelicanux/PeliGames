@@ -1,0 +1,9 @@
+[package]
+name = "peligames-example-service"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-only"
+
+[dependencies]
+peligames-addon-kit = { path = "../../sdk", default-features = false }
+serde_json = "1"

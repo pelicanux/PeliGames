@@ -1,3 +1,5 @@
+import {MatrixEmojiPicker} from "./MatrixEmojiPicker";
+import {useAutosizeTextarea} from "../hooks/useAutosizeTextarea";
 import { ConnectionStorageChoice } from "./ConnectionStorageChoice";
 import { MatrixChannelList } from "./MatrixChannelList";
 import { MatrixUserPanel, MatrixUserProfile } from "./MatrixUserPanel";
@@ -161,6 +163,16 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
   const ask = (id: string, kind: Pending["kind"]) => { setPending(pending?.id === id && pending.kind === kind ? null : { id, kind }); setReason(""); };
   const fileInput = useRef<HTMLInputElement>(null);
   const frame = useRef<HTMLDivElement>(null), log = useRef<HTMLDivElement>(null), input = useRef<HTMLTextAreaElement>(null);
+  useAutosizeTextarea(input,text,Boolean(chat.userId)&&(!inCall||callChat)&&(!premiumSelected||premiumReady),4);
+  const insertEmoji=(emoji:string)=>{
+    const field=input.current;
+    if(!field)return;
+    const start=field.selectionStart,end=field.selectionEnd;
+    const next=text.slice(0,start)+emoji+text.slice(end);
+    if(next.length>field.maxLength)return;
+    setText(next);typing(true);
+    requestAnimationFrame(()=>{if(input.current!==field)return;field.focus();field.setSelectionRange(start+emoji.length,start+emoji.length)});
+  };
   const atBottom = useRef(true), olderFrom = useRef<number | null>(null);
   const actionLock = useRef(false);
   const [refreshingRooms, setRefreshingRooms] = useState(false);
@@ -394,7 +406,7 @@ export function MatrixChatPanel({ onClose }: { onClose: () => void }) {
               : <label htmlFor="matrix-message">{tx("ui-matrix-chat-panel", "message_enter_sends_shift_enter_new_line_me_for_actions")}</label>}
             <div><input ref={fileInput} type="file" hidden accept="image/png,image/jpeg,image/gif,image/webp,.txt,.log" onChange={event=>{const file = event.target.files?.[0]; event.target.value = ""; if (file) void upload(file);}}/>
               <button type="button" className="btn btn-secondary matrix-attach-button" disabled={busy || current?.encrypted || !current?.joined} onClick={()=>fileInput.current?.click()} aria-label={tx("ui-matrix-chat-panel", "send_image_or_log")} title={tx("ui-matrix-chat-panel", "send_image_or_log")}><MenuIcon name="plus"/></button>
-              <textarea ref={input} id="matrix-message" value={text} maxLength={8000} disabled={current?.encrypted || !current?.joined} onChange={event=>{setText(event.target.value); typing(Boolean(event.target.value.trim()));}} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void send(); } }} placeholder={tx("ui-matrix-chat-panel", "type_your_message")}/>
+              <div className="matrix-message-field"><textarea ref={input} rows={1} id="matrix-message" value={text} maxLength={8000} disabled={current?.encrypted || !current?.joined} onChange={event=>{setText(event.target.value); typing(Boolean(event.target.value.trim()));}} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void send(); } }} placeholder={tx("ui-matrix-chat-panel", "type_your_message")}/><MatrixEmojiPicker key={room} disabled={busy || Boolean(current?.encrypted) || !current?.joined} onSelect={insertEmoji}/></div>
               <button className="matrix-send-button" aria-label={tx("ui-matrix-chat-panel", "send_message_enter")} disabled={busy || current?.encrypted || !current?.joined || !text.trim()} type="submit">
                 <svg className="matrix-enter-key" width="72" height="82" viewBox="0 0 120 140" fill="none" aria-hidden="true" focusable="false">
                   <g stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">

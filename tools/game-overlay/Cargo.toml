@@ -14,6 +14,8 @@ name = "peligames-overlay-run"
 path = "src/runner.rs"
 
 [dependencies]
+peligames-mod-config={path="../../addons/_infra/shared/config"}
+peligames-capture-contract={path="../../addons/_infra/shared/capture-contract"}
 ash = { version = "=0.38.0", default-features = false, features = ["std", "debug"] }
 egui = "=0.31.1"
 egui-ash-renderer = { version = "=0.8.0", default-features = false }

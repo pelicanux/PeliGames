@@ -1,7 +1,7 @@
 import {useEffect,useState} from "react";
 import {invoke} from "@tauri-apps/api/core";
 import {listen} from "@tauri-apps/api/event";
-import "./capturePreview.css";
+import "./CaptureIndicator.css";
 type Status={phase:string;recording:boolean;replay:boolean};
 export function CaptureIndicator(){
  const [status,setStatus]=useState<Status>(),[busy,setBusy]=useState(false),[error,setError]=useState("");

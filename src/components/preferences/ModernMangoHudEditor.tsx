@@ -112,6 +112,8 @@ export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=
   const [query, setQuery] = useState("");
   const [tick, setTick] = useState(0), [graph, setGraph] = useState(() => Array.from({ length: 48 }, () => 16 + Math.random() * 3));
   const [screenWidth, setScreenWidth] = useState(480);
+  const [dockedPreview, setDockedPreview] = useState(false);
+  const editorRoot = useRef<HTMLDivElement>(null);
   const screen = useRef<HTMLDivElement>(null);
   const mounted = useRef(false), saveLock = useRef(false), previewLock = useRef(false), globalLock = useRef(false), previewQueue = useRef(Promise.resolve());
   const readyRef = useRef(ready), savedRef = useRef(saved), latest = useRef(settings);
@@ -168,6 +170,17 @@ export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=
     observer.observe(element);
     return () => observer.disconnect();
   }, [ready,searching,visible]);
+  useEffect(() => {
+    const element = editorRoot.current;
+    const viewport = element?.closest<HTMLElement>(".modern-settings-scroll");
+    if (!element || !viewport || !visible || searching) return;
+    const measure = () => setDockedPreview(element.clientWidth > 900 && viewport.clientHeight >= 600);
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    observer.observe(viewport);
+    measure();
+    return () => observer.disconnect();
+  }, [ready, searching, visible]);
   const update = (patch: MangoHudSettings) => {
     const next = { ...latest.current, ...patch };
     for (const option of options) {
@@ -231,7 +244,7 @@ export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=
     </section>;
   }
   if (!ready) return <div className="mango-modern"><section className="mm-card"><p>{error || "Carregando configuração…"}</p>{error && <button type="button" className="mm-ghost" onClick={() => void load()}>Tentar novamente</button>}</section></div>;
-  return <div className="mango-modern">
+  return <div ref={editorRoot} className="mango-modern" data-docked-preview={(dockedPreview && visible) || undefined}>
     <div className="monitoring-editor-screen">
     <div className="mm-head">
       <div className="mm-head-copy"><h2>{advancedOpen?"Configuração avançada":"Configuração simples"}</h2><p>{advancedOpen?"Todas as opções do MangoHUD, organizadas por categoria.":"Estilos prontos e ajustes essenciais para o seu painel."}</p></div>
@@ -240,7 +253,7 @@ export function ModernMangoHudEditor({ onDirtyChange, searchQuery = "", visible=
     {saveError && <div role="alert" className="preferences-error"><p>Não foi possível salvar automaticamente: {saveError}</p><div className="monitoring-actions"><button type="button" disabled={saving} onClick={() => setSaveError("")}>Tentar novamente</button><button type="button" disabled={saving} onClick={() => { setSettings(JSON.parse(saved)); setSaveError(""); }}>Desfazer alterações</button></div></div>}
     {error && <p role="alert" className="preferences-error">{error}</p>}
     <div className="mm-grid">
-      <div className="mm-stack">
+      <div className="mm-stack" tabIndex={dockedPreview ? 0 : undefined} aria-label="Configuração do MangoHUD">
         <section className="mm-card mm-master">
           <div className="mm-big-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M3 12h4l3-8 4 16 3-8h4" /></svg></div>
           <div><strong>Mostrar nos jogos</strong><small>Em todos os jogos abertos pelo PeliGames. No jogo, <kbd>{keyLabel(String(settings.toggle_hud || "Shift_R+F12"))}</kbd> mostra ou esconde.</small>

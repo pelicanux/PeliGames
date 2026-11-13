@@ -1,5 +1,6 @@
 import { groupNexusFiles } from "./fileGroups";
 import { HoverTooltip } from "../../components/HoverTooltip";
+import { MenuIcon } from "../../components/MenuIcon";
 import { NexusFileChoices } from "./NexusFileChoices";
 import { showDownloadFeedback } from "./downloadFeedback";
 import { useEffect, useRef, useState } from "react";
@@ -11,6 +12,7 @@ import { collectQueue, queueFileGroups, type QueueDetails, type Entry, type Exte
 export type { QueueDetails } from "./queueGraph";
 import type { NexusGame } from "./useNexusWorkspace";
 import { useNexusText } from "./text";
+import "./NexusDownloadQueue.css";
 export function NexusDownloadQueue({ game, domain, modId, details, fileId, onClose, onStarted, embedded = false }: {
   game: NexusGame; domain: string; modId: number; details: QueueDetails; fileId?: number;
   onClose: () => void; onStarted: () => void; embedded?: boolean;
@@ -45,7 +47,8 @@ export function NexusDownloadQueue({ game, domain, modId, details, fileId, onClo
     } catch (e) { showDownloadFeedback({ phase: "error", error: String(e) }); if (mounted.current) setError(String(e)); }
     finally { starting.current = false; if (mounted.current) setBusy(false); }
   };
-  return <NexusPopup embedded={embedded} className="nexus-queue-popup" title={text.queueTitle} onClose={onClose} footer={<button className="btn btn-primary" disabled={busy || !ready || game.running} onClick={() => void start()}>{text.queueDownload} ({downloadCount})</button>}>
+  return <NexusPopup embedded={embedded} className="nexus-queue-popup steam-manual-popup modern-ui" title={text.queueTitle} onClose={onClose} footer={<button type="button" className="mod-action-primary nexus-queue-download" disabled={busy || !ready || game.running} onClick={() => void start()}><MenuIcon name="download"/>{text.queueDownload} ({downloadCount})</button>}>
+    <p className="nexus-queue-intro">{text.queueSingleFileHint}</p>
     {busy && <p role="status" className="nexus-hint">{text.loading}</p>}
     {downloadCount > 16 && <p role="alert" className="nexus-requirements-warning">{text.queueLimit}</p>}
     {error && <p role="alert" className="nexus-requirements-warning">{error}</p>}
@@ -54,7 +57,7 @@ export function NexusDownloadQueue({ game, domain, modId, details, fileId, onClo
       {entry.installed && <small className="nexus-status">{text.queueAlreadyInstalled}</small>}
       {entry.error && <p className="nexus-error">{entry.error}</p>}
       {!entry.installed && entry.details?.supports_vortex === false && <p className="nexus-hint">{text.noManagerDownload}</p>}
-      <div className="nexus-queue-entry-columns">{!entry.installed && entry.checked && entry.details && <section className="nexus-queue-main-files"><h4>{text.queueChooseFile}</h4><p className="nexus-hint">{text.queueSingleFileHint}</p><NexusFileChoices files={queueFileGroups(entry.details.files, entry.file).main} name={`queue-file-${entry.id}`} modName={entry.name} selected={entry.file} disabled={busy} onSelect={file => setSelectedFiles(values => ({ ...values, [entry.id]: file }))} /></section>}
+      <div className="nexus-queue-entry-columns">{!entry.installed && entry.checked && entry.details && <section className="nexus-queue-main-files"><h4>{text.queueChooseFile}</h4><NexusFileChoices files={queueFileGroups(entry.details.files, entry.file).main} name={`queue-file-${entry.id}`} modName={entry.name} selected={entry.file} disabled={busy} onSelect={file => setSelectedFiles(values => ({ ...values, [entry.id]: file }))} /></section>}
     {entry.details && queueFileGroups(entry.details.files, entry.file).additional.length > 0 && <section className="nexus-queue-optionals">
       <h4>{text.queueAdditionalFiles}</h4><p className="nexus-hint">{text.queueAdditionalHint}</p>
       <div className="nexus-queue-files" role="group" aria-label={`${text.optionalFiles}: ${entry.name}`}>{groupNexusFiles(queueFileGroups(entry.details.files, entry.file).additional).map(group => <section key={group.category} className="nexus-file-choice-group"><h5>{group.category === 3 ? text.optionalFiles : group.category === 2 ? text.patchFiles : text.otherFiles}</h5>{group.files.map(file => <label className={`nexus-queue-file ${optionalFiles[entry.id]?.includes(file.file_id) ? "selected" : ""}`} key={file.file_id}>

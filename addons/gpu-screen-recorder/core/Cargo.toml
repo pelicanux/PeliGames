@@ -1,0 +1,16 @@
+[package]
+name="peligames-gpu-screen-recorder"
+version="0.1.0"
+edition="2021"
+license="GPL-3.0-only"
+[dependencies]
+peligames-addon-kit={path="../../_infra/sdk",default-features=false}
+serde={version="1",features=["derive"]}
+sha2="0.10"
+uuid={version="1",features=["v4"]}
+libc="0.2"
+peligames-mod-config={path="../../_infra/shared/config"}
+peligames-capture-contract={path="../../_infra/shared/capture-contract"}
+peligames-audio-processing={path="../../_infra/shared/audio"}
+serde_json="1"
+dirs="5"

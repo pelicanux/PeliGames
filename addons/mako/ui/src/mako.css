@@ -1,0 +1,23 @@
+.mako-addon{min-width:0;font-size:.8125rem;line-height:1.55}
+.mako-addon h3{font-size:.9375rem;margin:0 0 8px}
+.mako-addon h4{font-size:.8125rem;margin:18px 0 8px}
+.mako-addon p,.mako-addon small{color:var(--modern-muted);font-size:.75rem}
+.mako-addon p{margin:6px 0 16px}
+.mako-runtime-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.mako-runtime-heading p{margin:4px 0 14px}
+.mako-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px}
+.mako-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.mako-actions svg{flex:none;width:15px;height:15px}
+.mako-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));column-gap:24px}
+.mako-field{display:flex;align-items:center;justify-content:space-between;gap:14px;min-width:0;border-bottom:1px solid var(--mod-line);padding:13px 0}
+.mako-field>span{min-width:0;flex:1}
+.mako-field small{display:block;margin-top:4px}
+.mako-field--stacked{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:10px}
+.mako-field--stacked>div,.mako-field--stacked>input{flex:none;width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+.mako-field input{background:var(--modern-card,#171a22);border:1px solid var(--mod-line);border-radius:8px;color:inherit;padding:7px 9px;font:inherit}
+.mako-overview{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.mako-overview span{color:var(--modern-muted);font-size:.75rem}
+.mako-command{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.75rem}
+.mako-version{display:flex;align-items:center;flex-wrap:wrap;gap:8px;border-top:1px solid var(--mod-line);padding:10px 0}
+.mako-version>span{margin-right:auto}
+.mako-version>p{flex-basis:100%}

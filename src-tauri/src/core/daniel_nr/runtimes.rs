@@ -199,9 +199,9 @@ pub(super) fn verify(folder: &Path) -> Result<(), String> {
         }
     }
     let settings =
-        super::super::neural_config::sections(&text(&folder.join(HUB).join("settings.ini")));
-    if super::super::neural_config::get(&settings, "Compute", "Backend") != Some("HIP")
-        || super::super::neural_config::get(&settings, "Debug", "HipPredicatedWait") != Some("0")
+        peligames_mod_config::ini::sections(&text(&folder.join(HUB).join("settings.ini")));
+    if peligames_mod_config::ini::get(&settings, "Compute", "Backend") != Some("HIP")
+        || peligames_mod_config::ini::get(&settings, "Debug", "HipPredicatedWait") != Some("0")
     {
         return Err("Pacote requer Backend=HIP e HipPredicatedWait=0.".into());
     }

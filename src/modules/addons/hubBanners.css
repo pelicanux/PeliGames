@@ -1,0 +1,41 @@
+.addon-hub-banner{position:relative;isolation:isolate;min-height:215px;overflow:hidden;border:1px solid var(--modern-line);border-radius:16px;margin:0 0 20px;background:#080b14;box-shadow:inset 0 1px 0 #ffffff12,0 12px 30px #0003;--banner-accent:#aaa4ff}
+.addon-hub-banner[data-banner=matrix]{--banner-accent:#78dfb9}.addon-hub-banner[data-banner=support]{--banner-accent:#ffc17a}
+.addon-hub-banner-art{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;object-position:center}
+.addon-hub-banner::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(5,8,16,.7),rgba(5,8,16,.2) 52%,transparent 75%)}
+.addon-hub-banner-copy{padding:24px 26px 42px;max-width:58%;box-sizing:border-box}
+.addon-hub-banner-label{display:flex;align-items:center;gap:7px;color:var(--banner-accent);font-size:.65rem;font-weight:600;letter-spacing:.03em}
+.addon-hub-banner-label .menu-icon{width:16px;height:16px}
+.addon-hub-banner h3{font-size:clamp(1.2rem,2.2vw,1.8rem);line-height:1.15;letter-spacing:-.035em;color:#fafaff;margin:9px 0}
+.addon-hub-banner p{font-size:.73rem;line-height:1.5;color:#c0c5d3;margin:0 0 14px}
+.addon-hub-banner-copy>:is(a,.addon-hub-banner-action){font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:8px;border-radius:9px;border:1px solid color-mix(in srgb,var(--banner-accent) 40%,transparent);background:linear-gradient(130deg,color-mix(in srgb,var(--banner-accent) 25%,#121420),color-mix(in srgb,var(--banner-accent) 10%,#121420));padding:8px 12px;color:#fff;text-decoration:none;font-size:.7rem;font-weight:600}
+.addon-hub-banner-copy>a .menu-icon{width:13px;height:13px}
+.addon-hub-banner-copy>:is(a,.addon-hub-banner-action):hover{background:color-mix(in srgb,var(--banner-accent) 24%,transparent)}
+.addon-hub-banner-pages{position:absolute;bottom:10px;left:24px;display:flex;gap:3px}
+.addon-hub-banner-pages button{display:grid;place-items:center;width:22px;height:16px;padding:0;border:0;border-radius:6px;background:transparent;cursor:pointer}
+.addon-hub-banner-pages button span{display:block;width:5px;height:5px;background:#ffffff55;border-radius:5px;transition:width .18s,background .18s}
+.addon-hub-banner-pages button[aria-pressed=true] span{width:16px;background:var(--banner-accent)}
+.addon-hub-banner button:focus-visible,.addon-hub-banner a:focus-visible{outline:2px solid var(--banner-accent);outline-offset:2px}
+@media(max-width:760px){.addon-hub-banner-copy{max-width:75%;padding:16px 16px 30px}.addon-hub-banner-art{object-position:65% center}.addon-hub-banner::before{background:linear-gradient(90deg,#050810dc,#05081080 60%,#05081010)}.addon-hub-banner-pages{left:16px}}
+@media(prefers-reduced-motion:reduce){.addon-hub-banner-pages button span{transition:none}}
+
+/* One canonical image in every banner; filters change light, never anatomy. */
+.addon-hub-banner-logo{position:absolute;z-index:-1;right:4%;top:8%;width:29%;height:84%;object-fit:contain;pointer-events:none;filter:hue-rotate(85deg) drop-shadow(0 0 9px #7467ff55)}
+.addon-hub-banner[data-banner=matrix] .addon-hub-banner-logo{filter:drop-shadow(0 0 9px #39eebc44)}
+.addon-hub-banner[data-banner=support] .addon-hub-banner-logo{filter:hue-rotate(-130deg) drop-shadow(0 0 9px #ffad4a55)}
+@media(max-width:760px){.addon-hub-banner-logo{right:2%;width:31%;opacity:.8}.addon-hub-banner-copy{position:relative;z-index:1}}
+.addon-hub-banner-controls{position:absolute;right:14px;bottom:10px;display:flex;align-items:center;gap:6px}
+.addon-hub-banner-controls button{display:grid;place-items:center;flex-shrink:0;padding:0;border:1px solid #ffffff26;background:#0a0d19a6;color:#e5e8f5;backdrop-filter:blur(8px);cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
+.addon-hub-banner-controls .addon-hub-banner-arrow{width:30px;height:30px;border-radius:50%}
+.addon-hub-banner-controls .addon-hub-banner-pause{width:24px;height:24px;border-radius:50%;color:#c2c8d6}
+.addon-hub-banner-controls .menu-icon{width:15px;height:15px}
+.addon-hub-banner-arrow.previous .menu-icon{transform:rotate(90deg)}
+.addon-hub-banner-arrow.next .menu-icon{transform:rotate(-90deg)}
+.addon-hub-banner-controls button:hover{border-color:var(--banner-accent);background:color-mix(in srgb,var(--banner-accent) 18%,#0a0d19);color:white;transform:translateY(-1px)}
+.addon-hub-banner-controls button:active{transform:translateY(0)}
+.addon-hub-banner-art{animation:hub-banner-reveal .45s ease-out}
+@keyframes hub-banner-reveal{from{opacity:.35}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.addon-hub-banner-art{animation:none}.addon-hub-banner-controls button{transition:none}}
+
+.addon-hub-banner[data-banner=members]{--banner-accent:#e2b2ff}
+.addon-hub-banner[data-banner=members] .addon-hub-banner-copy>a{margin:0 8px 6px 0}
+.addon-hub-banner[data-banner=members] .addon-hub-banner-logo{right:27%;width:18%;height:76%;top:12%;filter:hue-rotate(100deg) drop-shadow(0 0 12px #e0a3ff55)}

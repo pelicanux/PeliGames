@@ -1,6 +1,6 @@
 import {useOpenRGB} from "../../theme/openrgbSync";
 import {OpenRGBPreferences} from "./OpenRGBPreferences";
-import { useEffect, useLayoutEffect, useRef, useState, useMemo, type RefObject, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject, type CSSProperties, type ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { AppConfig } from "../../types/appConfig";
@@ -16,7 +16,6 @@ import { LaunchEffectIcon } from "./LaunchEffectIcon";
 import { usePreferencesText } from "./labels";
 import { notifyError } from "../../services/notifications";
 import { ConfirmModal } from "../ConfirmModal";
-import { BackendUpdaterModal } from "../BackendUpdaterModal";
 import { MaintenancePreferences } from "./MaintenancePreferences";
 import { frameRateMeterShown, setFrameRateMeter } from "../../services/frameRateMeter";
 
@@ -109,21 +108,6 @@ export function ThemePreferences({ onApplied, onOpenConnections, searchMode=fals
       </div>
     </section>
   </div></div>;
-}
-export function ModPreferences({ disabled, onBusy, onWizard, onClear }: { disabled: boolean; onBusy: (busy: boolean) => void; onWizard: () => void; onClear: () => void }) {
-
-  const text = usePreferencesText(), { t } = useI18n();
-
-  const [backendBusy,setBackendBusy]=useState({rdna3:false,rdna4:false});
-  const busyHandlers=useMemo(()=>Object.fromEntries((["rdna3","rdna4"] as const).map(arch=>[arch,(value:boolean)=>setBackendBusy(old=>old[arch]===value?old:{...old,[arch]:value})])) as Record<"rdna3"|"rdna4",(busy:boolean)=>void>,[]);
-  useEffect(()=>{onBusy(backendBusy.rdna3||backendBusy.rdna4);return()=>onBusy(false)},[backendBusy,onBusy]);
-  return <><section className="preference-panel mod-backend-workspace"><header className="mod-intro"><h3>{text.projectHint}</h3><p>{t("ui-preference-pages", "choose_the_project_for_your_gpu_then_configure_the_model_and_games_in_the_initial_setup")}</p></header>
-    <div data-preference-id="backend-project"><div data-preference-id="backend-update" className="preference-choice-list preference-backend-projects">{(["rdna4", "rdna3"] as const).map(architecture => <div key={architecture} className="mod-backend-card">
-      <header className="mod-backend-heading"><span className="mod-component-icon"><MenuIcon name="graphics"/></span><div><h4>{architecture === "rdna4" ? "DLSSNR-AMD" : "DLSSNR-RDNA3"}</h4><span>{architecture === "rdna4" ? "RDNA 4 · RX 9000" : "RDNA 3 · RX 7000"}</span></div></header>
-      <BackendUpdaterModal gpuArch={architecture} compact disabled={disabled} onBusyChange={busyHandlers[architecture]} onClose={()=>{}}/>
-    </div>)}</div></div>
-    <div className="mod-backend-tools mod-workspace"><div className="mod-row-copy"><h4>{t("ui-preference-pages", "next_configure_the_model")}</h4><p>{t("ui-preference-pages", "use_your_nvidia_dll_or_an_existing_bin_model_the_backend_does_not_include_these_files")}</p></div><div className="mod-tool-actions"><button className="mod-action-secondary" type="button" data-preference-id="setup" disabled={disabled} onClick={onWizard}><MenuIcon name="repair"/>{t("settings", "reset")}</button><button type="button" data-preference-id="clear-cache" className="mod-action-quiet" disabled={disabled} onClick={onClear}><MenuIcon name="trash"/>{t("gameCache", "clear")}</button></div></div></section>
-  </>;
 }
 export function ProtonPreferences({ config, disabled, save, onBusy, focusRef, onConfirmationChange }: ConfigProps & { onBusy: (busy: boolean) => void; focusRef: RefObject<HTMLInputElement | null>; onConfirmationChange: (open: boolean) => void }) {
   const {t: tx} = useI18n();

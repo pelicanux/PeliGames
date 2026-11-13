@@ -1,0 +1,12 @@
+.modern-ui .neural-startup-switch.mod-option-switch.mod-option-switch--rail { --switch-width:40px; --switch-thumb-width:15px; --switch-thumb-height:18px; display:flex; align-items:center; justify-content:center; flex:0 0 var(--switch-width); width:var(--switch-width); height:28px; min-height:28px; margin:0; padding:0; border:0; border-radius:7px; background:transparent; box-shadow:none; transition:none; }
+.mod-option-switch.mod-option-switch--rail::before,.mod-option-switch.mod-option-switch--rail::after { content:none; }
+.modern-ui .mod-option-switch.mod-option-switch--rail .neural-switch-track { position:relative; display:block; flex:0 0 var(--switch-width); width:var(--switch-width); height:8px; padding:0; box-sizing:border-box; border-radius:5px; background:rgba(140,150,172,.36); box-shadow:none; transition:background-color .18s ease; }
+.modern-ui .mod-option-switch.mod-option-switch--rail .neural-switch-track > span { position:absolute; top:50%; left:0; display:block; width:var(--switch-thumb-width); height:var(--switch-thumb-height); border-radius:5px; background:#bec5d3; box-shadow:0 1px 3px #0003; transform:translate(0,-50%); transition:transform .18s ease-in-out,background-color .18s ease; }
+.modern-ui .mod-option-switch.mod-option-switch--rail.enabled .neural-switch-track { background:rgba(var(--accent-rgb,22,125,186),.35); box-shadow:none; }
+.modern-ui .mod-option-switch.mod-option-switch--rail.enabled .neural-switch-track > span { background:rgb(var(--accent-rgb,22,125,186)); transform:translate(calc(var(--switch-width) - var(--switch-thumb-width)),-50%); }
+.mod-option-switch.mod-option-switch--rail .neural-switch-track > span::before,.mod-option-switch.mod-option-switch--rail .neural-switch-track > span::after { content:none; }
+:root[data-appearance=light] .mod-option-switch.mod-option-switch--rail:not(.enabled) .neural-switch-track > span { background:#687387; }
+.mod-option-switch.mod-option-switch--rail:hover:not(:disabled) .neural-switch-track > span { filter:brightness(1.1); }
+.mod-option-switch.mod-option-switch--rail:focus-visible { outline:2px solid var(--accent-color,var(--accent)); outline-offset:3px; }
+.mod-option-switch.mod-option-switch--rail:disabled { opacity:.45; cursor:default; }
+@media(prefers-reduced-motion:reduce) { .modern-ui .mod-option-switch.mod-option-switch--rail .neural-switch-track,.modern-ui .mod-option-switch.mod-option-switch--rail .neural-switch-track > span { transition:none; } }

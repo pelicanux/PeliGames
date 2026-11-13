@@ -38,7 +38,7 @@ export function DiscordPanel({ onClose }: { onClose: () => void }) {
     try { await openBrowserUrl(url); } catch (error) { setError(String(error)); }
   };
   return createPortal(<div className="modal-overlay discord-panel-overlay" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-    <ModalSurface ref={frame} className="modal-content dialog-glass discord-panel" role="dialog" aria-modal="true" aria-labelledby="discord-panel-heading" onDismiss={onClose}
+    <ModalSurface ref={frame} className="modal-content dialog-glass discord-panel modern-dialog" role="dialog" aria-modal="true" aria-labelledby="discord-panel-heading" onDismiss={onClose}
       header={<h2 id="discord-panel-heading"><MenuIcon name="discord" />{tx("ui-discord-panel", "peligames_community")}</h2>}
       footer={<div className="discord-panel-footer"><button type="button" className="btn btn-primary" onClick={() => void join()}><MenuIcon name="discord" />{tx("ui-discord-panel", "join_server")}</button></div>}>
       <iframe title={tx("ui-discord-panel", "peligames_discord_server")} src="https://discord.com/widget?id=1088170837921779812&theme=dark" width="350" height="500" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts" />

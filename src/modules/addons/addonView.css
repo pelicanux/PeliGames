@@ -1,0 +1,5 @@
+.addon-view { min-width: 0; width: 100%; }
+.addon-view-message { padding: 16px 0; color: var(--modern-muted); font-size: .8125rem; line-height: 1.5; }
+.addon-view-message p { margin: 0 0 12px; }
+.addon-installed-catalog { margin-top: 22px; }
+.addon-installed-catalog h3 { margin: 0 0 12px; font-size: .875rem; }

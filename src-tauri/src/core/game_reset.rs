@@ -52,6 +52,7 @@ pub fn settings(mut value: AdvancedSettings, section: Section) -> AdvancedSettin
     }
     if matches!(section, Section::All | Section::FrameGeneration) {
         value.wrappers.retain(|w| !frame_wrapper(&w.program));
+        for selection in value.addon_launch.values_mut().filter(|s|s.group==Some(peligames_addon_kit::manifest::Category::FrameGeneration)){selection.enabled=false;}
     }
     if matches!(section, Section::All | Section::Advanced) {
         for (key, enabled) in value.options.iter_mut() {

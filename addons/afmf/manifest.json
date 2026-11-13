@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "host_api": 1,
+  "id": "afmf",
+  "version": "0.1.0",
+  "name": "AFMF",
+  "summary": "Per-game frame generation and presentation compatibility for afmf-linux.",
+  "author": "PeliGames contributors",
+  "license": "GPL-3.0-only",
+  "repository": "https://github.com/serialexperimentslainnnn/afmf-linux",
+  "host_version": ">=0.5.5, <0.6.0",
+  "platforms": [
+    "linux-x86_64"
+  ],
+  "category": "frame-generation",
+  "component_directory": "components/FrameGeneration",
+  "entrypoints": {
+    "ui": "ui/index.js",
+    "service": "bin/afmf-service"
+  },
+  "contributions": [
+    {
+      "target": "settings",
+      "route": "preferences",
+      "title": "AFMF"
+    },
+    {
+      "target": "game-frame-generation",
+      "route": "game",
+      "title": "Vulkan · 2×",
+      "descriptions": {
+        "en": "Vulkan 2× frame generation, with motion settings and HUD detection.",
+        "pt-BR": "Geração de quadros 2× via Vulkan, com ajustes de movimento e detecção de HUD."
+      }
+    },
+    {
+      "target": "game-overview",
+      "route": "overview",
+      "title": "AFMF"
+    }
+  ],
+  "dependencies": {},
+  "capabilities": [
+    "launch-profiles",
+    "native-launch"
+  ]
+}

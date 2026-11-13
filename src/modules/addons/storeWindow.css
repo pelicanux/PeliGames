@@ -1,0 +1,14 @@
+/* A standalone catalog surface; cards share the app's material and accent. */
+.addon-store-overlay { z-index:5500; padding:20px; background:rgba(4,7,13,.62); backdrop-filter:blur(calc(12px * var(--backdrop-blur-factor,1))); -webkit-backdrop-filter:blur(calc(12px * var(--backdrop-blur-factor,1))); }
+:root .addon-store-window.modal-content { width:min(1240px,100%); max-width:1240px; height:min(860px,calc(100dvh - 70px)); max-height:calc(100dvh - 70px); padding:0; color:var(--modern-text); outline:none; border-color:rgba(var(--accent-rgb),.25); background:radial-gradient(ellipse at 100% 0%,rgba(var(--accent-rgb),.045),transparent 50%),var(--modern-bg,#0d1018); box-shadow:0 30px 100px rgba(0,0,0,.5),0 0 0 1px #ffffff04; }
+:root .addon-store-window.modern-dialog > .dialog-titlebar { display:flex; align-items:center; box-sizing:border-box; min-height:48px; padding:10px 60px 10px 24px; border-bottom:1px solid var(--modern-line); margin-bottom:18px; }
+:root .addon-store-window .dialog-titlebar > .surface-close-button { top:50%; transform:translateY(-50%); }
+.addon-store-window .dialog-titlebar h2 { display:flex; align-items:center; gap:10px; margin:0; }
+.addon-store-access { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; margin-bottom:22px; }
+.addon-store-access p { flex:1; min-width:200px; margin:0; }
+.addon-store-access button { display:inline-flex; align-items:center; gap:7px; }
+@media(max-width:700px) {
+ .addon-store-overlay { padding:10px; }
+ :root .addon-store-window.modal-content { height:calc(100dvh - 70px); max-height:calc(100dvh - 70px); }
+}
+@media(prefers-reduced-motion:reduce) { .addon-store-window .addon-store-card { transition:none; } }

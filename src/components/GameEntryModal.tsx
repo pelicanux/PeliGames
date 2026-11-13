@@ -17,10 +17,10 @@ export function GameEntryModal({ onClose, onSelect }: { onClose: () => void; onS
   }, [onClose, recipe]);
   if (recipe) return <LauncherInstallWizard recipe={recipe} onClose={() => setRecipe(null)} />;
   return <div className="modal-overlay" onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
-    <ModalSurface className="modal-content dialog-glass mod-manager-modal" role="dialog" aria-modal="true" aria-labelledby="game-entry-title"
+    <ModalSurface className="modal-content dialog-glass mod-manager-modal modern-dialog game-entry-dialog" role="dialog" aria-modal="true" aria-labelledby="game-entry-title"
       onDismiss={onClose} header={<h2 id="game-entry-title">{t("gameModes", "entryTitle")}</h2>}>
       <div className="mod-manager-options game-entry-options">
-        {(["install", "add"] as const).map(mode => <button key={mode} type="button" className="btn btn-secondary game-entry-option"
+        {(["install", "add"] as const).map(mode => <button key={mode} type="button" className="game-entry-option"
           onClick={() => onSelect(mode)}><InstallationActionIcon name={mode === "install" ? "download" : "plusCircle"} /><span>{t("gameModes", mode === "install" ? "install" : "addGame")}</span></button>)}
       </div>
       <section className="game-entry-launchers" aria-label={t("ui-game-entry-modal", "install_launcher")}>

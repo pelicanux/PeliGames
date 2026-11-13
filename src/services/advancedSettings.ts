@@ -26,19 +26,15 @@ export interface AdvancedSettings {
   mangohud_preset?: import("./mangohud").MangoHudPreset | null;
   overlay_enabled?: boolean | null; background_fps?: number | null; mangohud_enabled?: boolean | null; mangohud_fps_limit?: number | null; schema_version?: number; launch_options?: string | null; options: Record<string, boolean>; option_values?: Record<string,string>; dll_overrides: string;
   wrappers?: LaunchWrapper[]; launch_backend: "system" | "gamescope"; gamescope?: GamescopeSettings;
-  afmf?: AfmfSettings | null;
+  addon_launch?: Record<string,AddonLaunchSettings>;
+  [extension: string]: unknown;
 }
-/** afmf-linux options for one game; read once when the game starts. */
-export interface AfmfSettings {
-  enabled: boolean; performance_mode: "auto" | "quality" | "performance"; search_mode: "auto" | "standard" | "high";
-  fast_motion: "blend" | "repeat"; min_fps: number; hud_detect: boolean; pacing: boolean;
-}
-export const defaultAfmf: AfmfSettings = { enabled: false, performance_mode: "auto", search_mode: "auto", fast_motion: "blend", min_fps: 30, hud_detect: true, pacing: true };
+export interface AddonLaunchSettings {enabled:boolean;group:"mods"|"frame-generation"|"captures"|null;data:Record<string,unknown>}
 export const defaultGamescope: GamescopeSettings = { model_version: 2, enable_upscaling: false, enable_limiter: false, force_grab_cursor: false, hdr: false, adaptive_sync: false, width: 0, height: 0, output_width: 0, output_height: 0, fps: 0, fps_unfocused: 0, filter: "fsr", window_type: "fullscreen", additional_options: "" };
 export function normalizeAdvanced(value?: AdvancedSettings): AdvancedSettings {
   // Version 1 accidentally enabled screenshot selections by default. Reset once.
   const saved = value?.schema_version === 2 ? value : undefined;
-  return { mangohud_preset: saved?.mangohud_preset ?? null, overlay_enabled: saved?.overlay_enabled ?? null, background_fps: saved?.background_fps ?? null, mangohud_enabled: saved?.mangohud_enabled ?? null, mangohud_fps_limit: saved?.mangohud_fps_limit ?? null, schema_version: 2, option_values: saved?.option_values ?? {}, launch_options: saved?.launch_options ?? null, wrappers: saved?.wrappers ?? [], options: Object.fromEntries(catalog.map(option => [option.id, saved?.options[option.id] ?? false])), dll_overrides: saved?.options.dll_overrides ? saved.dll_overrides ?? "" : "", launch_backend: saved?.launch_backend ?? "system", gamescope: { ...defaultGamescope, ...(saved?.gamescope?.model_version === 2 ? saved.gamescope : {}) }, afmf: saved?.afmf ? { ...defaultAfmf, ...saved.afmf } : null };
+  return { ...saved, mangohud_preset: saved?.mangohud_preset ?? null, overlay_enabled: saved?.overlay_enabled ?? null, background_fps: saved?.background_fps ?? null, mangohud_enabled: saved?.mangohud_enabled ?? null, mangohud_fps_limit: saved?.mangohud_fps_limit ?? null, schema_version: 2, option_values: saved?.option_values ?? {}, launch_options: saved?.launch_options ?? null, wrappers: saved?.wrappers ?? [], options: Object.fromEntries(catalog.map(option => [option.id, saved?.options[option.id] ?? false])), dll_overrides: saved?.options.dll_overrides ? saved.dll_overrides ?? "" : "", launch_backend: saved?.launch_backend ?? "system", gamescope: { ...defaultGamescope, ...(saved?.gamescope?.model_version === 2 ? saved.gamescope : {}) }, addon_launch: saved?.addon_launch ?? {} };
 }
 export function advancedOptionValue(settings:AdvancedSettings,id:string):string {
  return settings.option_values?.[id] ?? catalog.find(option=>option.id===id)?.value ?? "";

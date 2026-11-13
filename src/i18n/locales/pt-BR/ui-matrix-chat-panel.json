@@ -64,5 +64,6 @@
   "report": "Denunciar",
   "block": "Bloquear",
   "could_not_block": "Não foi possível bloquear.",
-  "remove_message": "Apagar mensagem"
+  "remove_message": "Apagar mensagem",
+  "insert_emoji": "Inserir emoji"
 }

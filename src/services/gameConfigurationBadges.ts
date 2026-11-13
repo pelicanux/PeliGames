@@ -1,21 +1,14 @@
 import {translator} from "../i18n/engine";
 import {advancedOptionValue, gamescopeEnabled, normalizeAdvanced, type AdvancedSettings} from "./advancedSettings";
 import type {MangoHudSettings} from "./mangohud";
-export interface MakoSummary {backend:string;enabled:boolean;multiplier:number;adaptive:boolean;live_enabled?:boolean;base_fps_cap?:number;scaling_enabled?:boolean;}
 export interface ConfigurationBadge {id:string;label:string;description:string;}
 /** Saved launch configuration, never a claim that an effect is running in the game. */
-export function gameConfigurationBadges(raw:AdvancedSettings|undefined, profile:MangoHudSettings|undefined, mako:MakoSummary|undefined, language: string):ConfigurationBadge[]{
+export function gameConfigurationBadges(raw:AdvancedSettings|undefined, profile:MangoHudSettings|undefined, language: string):ConfigurationBadge[]{
   const tx = translator(language);
 
  const s=normalizeAdvanced(raw),badges:ConfigurationBadge[]=[];
  const add=(id:string,label:string,description:string)=>badges.push({id,label,description});
  const g=s.gamescope!,scope=gamescopeEnabled(g);
- if(mako?.backend==="mako"&&mako.enabled){
-  if(mako.live_enabled!==false)add("mako",mako.adaptive?(tx("gameConfigurationBadges", "mako_adaptive")):`MAKO · ${mako.multiplier}×`,tx("gameConfigurationBadges", "mako_frame_generation_enabled_in_the_game_profile"));
-  if(mako.scaling_enabled)add("mako-scaling",tx("gameConfigurationBadges", "mako_scaling"),tx("gameConfigurationBadges", "mako_image_scaling_enabled"));
-  if((mako.base_fps_cap??0)>0)add("mako-cap",`MAKO · ${mako.base_fps_cap} FPS`,tx("gameConfigurationBadges", "mako_base_fps_cap_before_frame_generation"));
- }
- if(s.afmf?.enabled)add("afmf","AFMF",tx("gameConfigurationBadges", "afmf_frame_generation_enabled_for_the_next_game_launch"));
  const gameLimit=s.mangohud_fps_limit;
  const background=s.overlay_enabled&&(s.background_fps??0)>0;
  const display=s.mangohud_enabled??Boolean(profile?.launcher_enabled||s.options.mangohud||s.options.mangohud_env);

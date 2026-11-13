@@ -3,21 +3,24 @@ import { createPortal } from "react-dom";
 import { useBoundedDropdown } from "../hooks/useBoundedDropdown";
 
 // Shared choice menu, using the language/performance selector material.
-export function SelectionMenu({ label, value, options, onChange, disabled = false, className = "", menuClassName = "", leadingIcon, minMenuWidth = 0, onOpen }: {
+export function SelectionMenu({ label, value, options, onChange, disabled = false, className = "", menuClassName = "", leadingIcon, minMenuWidth = 0, menuAlign = "left", onOpen, appearance = "default", showSelectedMark = appearance === "compact" }: {
   label: string; value: string; options: { value: string; label: string; disabled?: boolean }[];
   onChange: (value: string) => void; disabled?: boolean; className?: string;
   leadingIcon?: ReactNode;
   minMenuWidth?: number;
+  menuAlign?: "left" | "right";
   onOpen?: () => void;
   /** Extra class of the option list, which opens in document.body. */
   menuClassName?: string;
+  appearance?: "default" | "compact";
+  showSelectedMark?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [fieldsetDisabled, setFieldsetDisabled] = useState(false);
   const anchor = useRef<HTMLDivElement>(null), menu = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const id = useId();
-  const position = useBoundedDropdown(open, anchor, menu, setOpen, minMenuWidth);
+  const position = useBoundedDropdown(open, anchor, menu, setOpen, minMenuWidth, menuAlign);
   const blocked = disabled || fieldsetDisabled;
   useEffect(() => {
     const fieldsets: HTMLFieldSetElement[] = [];
@@ -49,9 +52,9 @@ export function SelectionMenu({ label, value, options, onChange, disabled = fals
   const close = () => { setOpen(false); trigger.current?.focus({preventScroll:true}); };
   // The menu lives in document.body: it must open above whatever window holds
   // the selector (the Matrix chat sits at 2100, Nexus popups set their own).
-  const overlay = anchor.current?.closest<HTMLElement>(".nexus-popup-overlay, .modal-overlay, .capture-overlay-preview-backdrop");
+  const overlay = anchor.current?.closest<HTMLElement>(".nexus-popup-overlay, .modal-overlay");
   const popupLayer = Math.max(1200, Number(overlay?.style.zIndex) || 0, overlay ? Number(getComputedStyle(overlay).zIndex) || 0 : 0);
-  return <div ref={anchor} className={`custom-select-wrapper selection-menu ${className}`}>
+  return <div ref={anchor} className={`custom-select-wrapper selection-menu ${appearance === "compact" ? "selection-menu-compact" : ""} ${className}`}>
     <button ref={trigger} type="button" className={`custom-select-trigger ${open ? "open" : ""}`} disabled={blocked}
       aria-label={label} aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? id : undefined}
       onClick={() => { if (!open) onOpen?.(); setOpen(!open); }} onKeyDown={event => {
@@ -61,7 +64,7 @@ export function SelectionMenu({ label, value, options, onChange, disabled = fals
       <span>{options.find(option => option.value === value)?.label ?? value}</span>
       <span className="select-arrow" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg></span>
     </button>
-    {open && !blocked && createPortal(<div ref={menu} id={id} role="listbox" aria-label={label} className={`custom-select-menu selection-options ${menuClassName}`.trim()} style={{ ...position, zIndex: popupLayer + 1 }}
+    {open && !blocked && createPortal(<div ref={menu} id={id} role="listbox" aria-label={label} className={`custom-select-menu selection-options ${appearance === "compact" ? "selection-options-compact" : ""} ${menuClassName}`.trim()} style={{ ...position, zIndex: popupLayer + 1 }}
       onKeyDown={event => {
         if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); close(); }
         if (event.key === "Tab") { event.preventDefault(); close(); }
@@ -75,7 +78,7 @@ export function SelectionMenu({ label, value, options, onChange, disabled = fals
       }}>
       <div className="selection-options-scroll">
       {options.map(option => <button key={option.value} type="button" role="option" aria-selected={value === option.value} disabled={option.disabled}
-        className={`custom-select-option ${value === option.value ? "selected" : ""}`} onClick={() => { if (!blocked) { close(); onChange(option.value); } }}>{option.label}</button>)}
+        className={`custom-select-option ${value === option.value ? "selected" : ""}`} onClick={() => { if (!blocked) { close(); onChange(option.value); } }}>{showSelectedMark?<><span className="selection-option-label">{option.label}</span><svg className="selection-option-check" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m5 12 4 4L19 6"/></svg></>:option.label}</button>)}
       </div>
     </div>, document.body)}
   </div>;

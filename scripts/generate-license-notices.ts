@@ -66,8 +66,21 @@ function generate(label: string, packages: [Package, [string, string][]][], dest
   return [rows, missing] as const;
 }
 
-const metadataPaths = process.argv.slice(2);
-if (!metadataPaths.length) { console.error("Usage: bun scripts/generate-license-notices.ts <cargo-metadata.json> [additional-metadata.json ...]"); process.exit(2); }
+// Standalone add-ons reuse the generator without changing the application's notices.
+const metadataPaths: string[] = [];
+let rustOnly = false, output = join(ROOT, "licenses/generated");
+const args = process.argv.slice(2);
+for (let index = 0; index < args.length; index++) {
+  const argument = args[index];
+  if (argument === "--rust-only") rustOnly = true;
+  else if (argument === "--output-dir") {
+    const directory = args[++index];
+    if (!directory || directory.startsWith("--")) throw new Error("--output-dir requires a directory");
+    output = directory;
+  } else if (argument.startsWith("--")) throw new Error(`Unknown option: ${argument}`);
+  else metadataPaths.push(argument);
+}
+if (!metadataPaths.length) { console.error("Usage: bun scripts/generate-license-notices.ts [--rust-only] [--output-dir DIRECTORY] <cargo-metadata.json> [additional-metadata.json ...]"); process.exit(2); }
 // The bundled PeliRun and in-game overlay have separate locked Cargo graphs.
 // Their runtime dependencies need the same notices as the main application.
 const merged = new Map<string, any>();
@@ -93,7 +106,7 @@ for (const pkg of metadata.packages) {
     source: `https://crates.io/crates/${pkg.name}/${pkg.version}`, repository: pkg.repository ?? null, authors: pkg.authors ?? [] }, files]);
 }
 // Only frontend production dependencies and their transitive dependencies.
-const pending = Object.keys(JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")).dependencies);
+const pending = rustOnly ? [] : Object.keys(JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")).dependencies);
 const seen = new Set<string>(), frontend: [Package, [string, string][]][] = [];
 while (pending.length) {
   const name = pending.pop()!;
@@ -110,10 +123,9 @@ while (pending.length) {
   }
   frontend.push([{ name: pkg.name, version: pkg.version, license: pkg.license ?? "UNKNOWN", source: `https://www.npmjs.com/package/${pkg.name}/v/${pkg.version}` }, files]);
 }
-const output = join(ROOT, "licenses/generated");
 mkdirSync(output, { recursive: true });
 const [r, rm] = generate("Rust dependencies", rust, join(output, "Rust-Dependencies.txt"));
-const [f, fm] = generate("Frontend production dependencies", frontend, join(output, "Frontend-Dependencies.txt"));
+const [f, fm] = rustOnly ? [[], []] : generate("Frontend production dependencies", frontend, join(output, "Frontend-Dependencies.txt"));
 console.log(`Avisos de licença: ${r.length} pacotes Rust, ${f.length} da interface.`);
 // A package without its license text cannot ship: add the upstream text to licenses/upstream/<name>/.
 if (rm.length || fm.length) {

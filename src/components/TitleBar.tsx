@@ -53,7 +53,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onShowCredits, onHome, homeD
     <div className="app-titlebar"
       data-tauri-drag-region="true"
       style={{
-        height: '50px',
+        height: '44px',
         background: 'rgba(var(--surface-26-26-26, 26, 26, 26), 0.4)',
         backdropFilter: 'blur(24px) saturate(1.2)',
         WebkitBackdropFilter: 'blur(24px) saturate(1.2)',

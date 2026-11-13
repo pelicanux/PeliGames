@@ -1,0 +1,12 @@
+{
+  "received_title": "Authorization received",
+  "received_message": "PeliGames received the response from Nexus Mods. The app will verify your account to finish connecting.",
+  "received_next": "Continue in PeliGames",
+  "cancelled_title": "Authorization cancelled",
+  "cancelled_message": "The Nexus Mods connection was not authorized. Your account was not connected by this attempt.",
+  "cancelled_next": "To try again, connect your account from PeliGames.",
+  "invalid_title": "Unrecognized response",
+  "invalid_message": "This page does not match the current authorization. Return to the browser where you started signing in or start a new connection from PeliGames.",
+  "invalid_next": "Check the connection in the app",
+  "close": "You can close this tab and return to the app."
+}

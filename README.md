@@ -78,6 +78,8 @@ Proton, UMU e Winetricks são baixados conforme necessário. Configurações, fe
 
 Na aba **Mods** dos detalhes do jogo, conecte sua conta em **Configurações → Conexões → Nexus Mods** para acessar o catálogo e as coleções. Arquivos ZIP, 7z e RAR podem ser importados pelo botão **Mod Local**, sem conta conectada. Jogos sem módulo compatível exibem a explicação de indisponibilidade nessa mesma aba. Para receber downloads do site, habilite **Usar PeliGames nos links Nexus** e escolha **Mod Manager Download**.
 
+Clique em **Entrar com Nexus Mods**, conclua o login no navegador e autorize o PeliGames. Depois, volte ao launcher. A sessão pode ser guardada no chaveiro ou apenas em memória, conforme a opção escolhida em Conexões. Instalações que usavam uma chave pessoal precisam conectar a conta novamente pelo navegador.
+
 Contas gratuitas confirmam o download na página do Nexus; Premium permite download direto. Acompanhe a fila em **Downloads Nexus** e, na lista de mods, confira os requisitos antes de **Instalar**, **Ativar** ou **Desativar**.
 
 Integração independente, sem afiliação ao Nexus Mods. Reporte erros ao PeliGames, não ao Nexus Mods.
@@ -90,7 +92,7 @@ Em **Configurações → Ferramentas**, crie um backup ZIP dos jogos com mods Ne
 
 Nexus Mods, DLSSNR e geração de quadros ficam nas abas dos **detalhes de cada jogo**, acessíveis pela biblioteca principal. A Visão geral distingue a raiz da instalação, o prefixo e o destino específico do DLSSNR. Escolher o destino do mod não altera a pasta usada para identificar o jogo. Pastas manuais continuam permitindo adicionar uma coleção com várias subpastas de jogos.
 
-Na aba **Geração de quadros**, configure o **MAKO Renderer 4.5.0** (multiplicador fixo ou adaptativo), versão estável verificada em 18/10/2026. O botão de instalação baixa o pacote oficial, valida a estrutura e confere o SHA-256 quando há um checksum de referência; a ativação e as configurações são específicas de cada instalação e valem na próxima execução. Componentes e perfis ficam em `~/.config/PeliGames/components/FrameGeneration`, sem arquivos novos nas pastas dos jogos ou ativação Vulkan global. A busca de lançamentos estáveis usa cache de seis horas e também pode ser solicitada na interface. Atualizações preservam os runtimes anteriores: em **Versões e backups**, selecione a versão para este jogo; as alterações são salvas automaticamente. A lixeira só remove backups sem vínculo com perfis. Versões maiores que precisem de adaptação da integração não são instaladas automaticamente.
+Instale o add-on **MAKO** pela loja para disponibilizar seus controles em **Geração de quadros**. Em **Gerenciar**, prepare o MAKO Renderer; em **Preparar**, selecione a DLL e a versão para este jogo; em **Ajustes**, configure o multiplicador fixo ou adaptativo. O botão de instalação baixa o pacote oficial, valida a estrutura e confere o SHA-256 quando há um checksum de referência; a ativação e as configurações são específicas de cada instalação e valem na próxima execução. Componentes e perfis ficam em `~/.config/PeliGames/components/FrameGeneration`, sem arquivos novos nas pastas dos jogos ou ativação Vulkan global. A busca de lançamentos estáveis usa cache de seis horas e também pode ser solicitada na interface. Atualizações preservam os runtimes anteriores: em **Versão do runtime**, selecione a versão para este jogo; as alterações são salvas automaticamente. A lixeira só remove backups sem vínculo com perfis. Versões maiores que precisem de adaptação da integração não são instaladas automaticamente.
 
 O overlay é opcional, começa oculto e usa **F8** (configurável) para abrir e fechar dentro do jogo. Ele não registra atalho global no desktop e Esc continua reservado ao jogo. Multiplicador, modo adaptativo, FPS alvo, escala de movimento e modelo leve podem ser ajustados pelo launcher durante a partida, com salvamento automático; a ativação e o carregamento do overlay exigem reabrir o jogo. Os detalhes e limites estão no [guia do overlay](docs/overlay.md).
 
@@ -98,9 +100,9 @@ O overlay é opcional, começa oculto e usa **F8** (configurável) para abrir e 
 
 A geração exige uma instalação própria do **Lossless Scaling**: O MAKO utiliza a ramificação pública padrão e `Lossless.dll`. O PeliGames procura essas DLLs nas bibliotecas Steam e permite selecioná-las manualmente. Não fornece essas DLLs.
 
-Use um único gerador de quadros. Desative o FG interno do jogo e do OptiScaler; o launcher bloqueia combinações conhecidas com MLFG, camadas de baixa latência DX12/Vulkan e captura Vulkan OBS. OptiScaler para upscaling e DLSSNR não são automaticamente considerados incompatíveis; o resultado depende do jogo. Configuração explícita de FG ativado no `OptiScaler.ini` impede ativar outro gerador. Requer Vulkan, diretamente ou via DXVK/VKD3D. A integração inicial é para jogos no host; launchers Flatpak informam a necessidade da extensão de runtime correspondente. MangoHUD pode contar somente os quadros reais.
+Use um único gerador de quadros. Desative o FG interno do jogo e do OptiScaler; o launcher bloqueia combinações conhecidas com MLFG, camadas de baixa latência DX12/Vulkan e captura Vulkan OBS. OptiScaler para upscaling e DLSSNR não são automaticamente considerados incompatíveis; o resultado depende do jogo. Configuração explícita de FG ativado no `OptiScaler.ini` impede ativar outro gerador. Requer Vulkan, diretamente ou via DXVK/VKD3D. A integração inicial é para jogos no host; launchers Flatpak informam a necessidade da extensão de runtime correspondente. A integração do MangoHUD mantém suas camadas de monitoramento junto à geração.
 
-A primeira ativação mostra a linha necessária nas opções de inicialização da Steam. É possível colar e verificar com a Steam aberta, ou pedir aplicação automática com reinício da Steam; ajustes do perfil não repetem essa etapa. Flatpak exige extensão e acesso aos perfis/DLL: use **Preparar / verificar Flatpak**, que mostra a ABI e os comandos específicos antes de liberar a ativação. O multiplicador vai de **2× a 5×** e o FPS alvo adaptativo de **10 a 1000**. Veja o [guia de uso e compatibilidade](docs/overlay.md) para requisitos e limites de cada launcher.
+Em **Como usar**, prepare a linha PeliRun necessária nas opções de inicialização da Steam. É possível colar e verificar com a Steam aberta, ou pedir aplicação automática com reinício da Steam; ajustes do perfil não repetem essa etapa. Flatpak exige extensão e acesso aos perfis/DLL: use **Preparar / verificar Flatpak**, que mostra a ABI e os comandos específicos antes de liberar a ativação. O multiplicador vai de **2× a 5×** e o FPS alvo adaptativo de **10 a 1000**. Veja o [guia de uso e compatibilidade](docs/overlay.md) para requisitos e limites de cada launcher.
 
 O auxiliar Rust **PeliRun** exporta perfis com identificadores legíveis, como `tomb-raider`, para Steam, Heroic, Lutris e outros launchers com suporte a wrapper/prefixo de comando. A interface fornece o executável e os argumentos adequados a cada formato; um perfil identifica a instalação, sem depender apenas do AppID da Steam.
 
@@ -111,7 +113,7 @@ Referências: [MAKO Renderer](https://github.com/eugeniosegala/MAKO/blob/main/en
 ## DLSS 5 Neural Rendering em placas AMD (DLSSNR)
 
 
-Nos detalhes do jogo, abra **Mods → DLSSNR-AMD** para instalar e configurar o Neural Rendering. O PeliGames gerencia o backend, os modelos e as opções de inicialização de cada instalação.
+Nos detalhes do jogo, abra **Mods → DLSSNR → Mochizuki** para instalar e configurar o Neural Rendering. O PeliGames gerencia o backend, os modelos e as opções de inicialização de cada instalação.
 
 > Projetos experimentais (versões 0.0.x), sem afiliação com a NVIDIA nem com a AMD. **Não use em jogos online com anti-cheat**: DLLs injetadas podem levar ao banimento da conta. O instalador coloca arquivos na pasta do jogo; **Remover** apaga só o que ele instalou.
 
@@ -120,15 +122,14 @@ Nos detalhes do jogo, abra **Mods → DLSSNR-AMD** para instalar e configurar o 
 | Placa | Backend | Referência dos autores |
 |---|---|---|
 | RX 9000 (RDNA 4) | [DLSSNR-AMD, de mochizuki0323](https://gitlab.com/mochizuki0323/DLSSNR-AMD) | Mesa 26.2 ou superior e Proton recente; o 0.0.8 foi testado com GE-Proton 11-11 e Mesa 26.2.5 |
-| RX 7000 (RDNA 3) | [DLSSNR-RDNA3, de mauri870](https://github.com/mauri870/DLSSNR-RDNA3/blob/rdna3/README-RDNA3.md) | Fork próprio para RX 7000; testado pelo autor na RX 7900 XTX com Mesa 26.2.3 |
 
-O backend RDNA 4 usa instruções FP8; o fork RDNA 3 adapta o processamento para FP16. As opções mostradas pelo PeliGames dependem das capacidades do pacote instalado. Não se presume que os dois projetos tenham os mesmos recursos.
+As opções mostradas pelo add-on dependem das capacidades do pacote do Mochizuki instalado.
 
 ### Preparar o modelo e instalar no jogo
 
-1. Abra **Configurações → Complementos → DLSSNR-AMD** e baixe o backend da sua GPU. **Importar backend local** aceita uma pasta com os pacotes Linux do projeto ou as subpastas de arquitetura já extraídas.
-2. No assistente de configuração, use **Extrair de uma DLL** com sua `nvngx_dlssnr.dll`, ou **Usar arquivo existente** com modelos `.bin` válidos. Essas opções ficam disponíveis depois da preparação do backend. Os modelos são conferidos por SHA-256.
-3. Na biblioteca, abra os detalhes do jogo e **Mods → DLSSNR-AMD**. Confira o destino do mod, selecione o modo, a arquitetura e a rede inicial e clique em **Instalar** ou **Reparar**.
+1. Instale e habilite o add-on **DLSSNR · Mochizuki** na loja. Abra **Gerenciar** no add-on e baixe o backend. **Importar backend local** aceita uma pasta com os pacotes Linux do projeto ou as subpastas de arquitetura já extraídas.
+2. Em **Gerenciar**, use **Extrair DLL / ZIP** com sua `nvngx_dlssnr.dll`, ou **Importar BIN** com modelos `.bin` válidos. Essas opções ficam disponíveis depois da preparação do backend. Os modelos são conferidos por SHA-256.
+3. Na biblioteca, abra os detalhes do jogo e **Mods → DLSSNR → Mochizuki**. Confira o destino do mod, selecione o modo, a arquitetura e a rede inicial e clique em **Instalar** ou **Reparar**.
 4. Conclua **Configurar na Steam**, quando solicitado, ou use o perfil PeliRun no outro launcher. Depois, abra o jogo.
 
 A DLL e os pesos da NVIDIA **não acompanham o PeliGames nem o download do backend**. Obtenha uma DLL compatível a partir de um jogo que a forneça. O instalador do backend utiliza `bash` e `python3`.
@@ -138,7 +139,7 @@ A DLL e os pesos da NVIDIA **não acompanham o PeliGames nem o download do backe
 | **310.8.0** | `dlssnr.bin` — modelo antigo |
 | **310.9.16** | `dlssnr.bin` e `dlssnr-small.bin` — modelos antigo e novo |
 
-Os arquivos ficam em `~/.config/PeliGames/components/Mods/DLSSNR/backend-files/<rdna3|rdna4>/<32|64>/dlssnr-amd/`. Ao importar os modelos da 310.9.16, mantenha os dois `.bin` juntos. Modelos válidos em cache podem ser reutilizados nas próximas instalações.
+Os arquivos ficam em `~/.config/PeliGames/components/Mods/DLSSNR/backend-files/rdna4/<32|64>/dlssnr-amd/`. Ao importar os modelos da 310.9.16, mantenha os dois `.bin` juntos. Modelos válidos em cache podem ser reutilizados nas próximas instalações.
 
 ### Rede inicial e opções do launcher
 
@@ -212,10 +213,8 @@ Tempos publicados pelos autores, em milissegundos por quadro, somente da rede:
 |---|---|---|---|
 | RX 9070 XT — Novo | 3,27 ms | 5,53 ms | 12,67 ms |
 | RX 9070 XT — Experimental | 2,90 ms | 4,84 ms | 11,09 ms |
-| RX 7900 XTX — Antigo | 15 ms | 26 ms | 56 ms |
-| RX 7900 XTX — int4 do antigo | 13,3 ms | 22,8 ms | 50,8 ms |
 
-São referências de versões e métodos de medição diferentes, sem incluir o restante do jogo nem todo o processamento do mod. Não representam o FPS final nem garantem o mesmo resultado em outra máquina. Confira as condições nas referências de [RDNA 4](https://gitlab.com/mochizuki0323/DLSSNR-AMD#performance) e [RDNA 3](https://github.com/mauri870/DLSSNR-RDNA3/blob/rdna3/README-RDNA3.md#what-it-costs). Reduzir a resolução de processamento da rede pode diminuir o custo, com impacto na imagem.
+São referências de versões e métodos de medição diferentes, sem incluir o restante do jogo nem todo o processamento do mod. Não representam o FPS final nem garantem o mesmo resultado em outra máquina. Confira as condições nas referências de [RDNA 4](https://gitlab.com/mochizuki0323/DLSSNR-AMD#performance). Reduzir a resolução de processamento da rede pode diminuir o custo, com impacto na imagem.
 
 ### Quando algo não funciona
 
@@ -271,7 +270,7 @@ Para contribuir com novos idiomas, consulte o [guia de tradução da interface](
 
 PeliGames é desenvolvido por Pelicano e distribuído sob [GNU GPL 3.0](LICENSE). Versões derivadas distribuídas devem disponibilizar o código-fonte correspondente sob a mesma licença.
 
-Integra [DLSSNR-AMD, de mochizuki0323](https://gitlab.com/mochizuki0323/DLSSNR-AMD), e [DLSSNR-RDNA3, de mauri870](https://github.com/mauri870/DLSSNR-RDNA3).
+O add-on integra [DLSSNR-AMD, de mochizuki0323](https://gitlab.com/mochizuki0323/DLSSNR-AMD).
 
 A tradução opcional das descrições de mods utiliza a API online [MyMemory, da Translated S.r.l.](https://mymemory.translated.net/). O texto é enviado ao serviço somente ao solicitar a tradução. Consulte os [termos e a privacidade do serviço](https://mymemory.translated.net/terms-and-conditions).
 

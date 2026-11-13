@@ -13,6 +13,8 @@ name = "pelirun"
 path = "src/main.rs"
 
 [dependencies]
+peligames-mod-config={path="../../addons/_infra/shared/config"}
+peligames-addon-kit = {path="../../addons/_infra/sdk"}
 libc = "0.2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

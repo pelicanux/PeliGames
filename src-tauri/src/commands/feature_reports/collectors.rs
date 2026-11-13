@@ -4,7 +4,7 @@ use super::{
     projection::neural_settings_snapshot,
 };
 use crate::{
-    commands::{capture as commands_capture, frame_generation, installer},
+    commands::capture as commands_capture,
     core::{paths, report_privacy::select},
 };
 use serde_json::{json, Value};
@@ -57,24 +57,14 @@ pub(super) fn system(out: &mut String) {
     );
 }
 pub(super) fn neural(out: &mut String, base: &Path) {
-    for arch in ["rdna3", "rdna4"] {
+    for arch in ["rdna4"] {
         if let Ok(backend) = paths::app_path(format!("Mod/DLSSNR/backend-files/{arch}")) {
             if let Some(version) = read_at(&backend, "version.txt") {
                 section(out, &format!("BACKEND NR {arch}"), &version);
             }
         }
     }
-    let Some(root) = installer::installed_mod_directory(base) else {
-        section(out, "DLSSNR", "Instalação não detectada neste destino.");
-        return;
-    };
-    if let Ok(settings) = crate::commands::neural_settings::get_settings(&root) {
-        technical(
-            out,
-            "ATIVAÇÃO CONFIGURADA DO NR",
-            &serde_json::to_value(settings).unwrap_or_default(),
-        );
-    }
+    let root = base.to_path_buf();
     let mut presence = serde_json::Map::new();
     for name in [
         "OptiScaler.dll",
@@ -115,20 +105,14 @@ pub(super) fn neural(out: &mut String, base: &Path) {
     }
 }
 pub(super) fn frame_profiles(out: &mut String, value: &Value) {
-    for backend in ["afmf", "mako"] {
-        if let Ok(version) = frame_generation::versions::current(backend) {
-            section(out, backend, &format!("Versão selecionada: {version}"));
-        }
-    }
     let Ok(root) = paths::app_path("FrameGeneration/profiles")
         .and_then(|p| p.canonicalize().map_err(|e| e.to_string()))
     else {
         return;
     };
-    for wrapper in value["wrappers"].as_array().into_iter().flatten().take(16) {
-        let Some(program) = wrapper["program"].as_str() else {
-            continue;
-        };
+    let wrappers=value["wrappers"].as_array().into_iter().flatten().filter_map(|v|v["program"].as_str());
+    let integrations=value["addon_launch"].as_object().into_iter().flatten().filter_map(|(_,v)|v["data"]["profile"].as_str().or_else(||v["data"]["legacy_profile"].as_str()));
+    for program in wrappers.chain(integrations).take(16) {
         let program = Path::new(program);
         if program
             .parent()
@@ -180,35 +164,8 @@ pub(super) fn frame_profiles(out: &mut String, value: &Value) {
     }
 }
 pub(super) fn captures(out: &mut String, key: &str) {
-    match crate::core::capture::saved_settings(key) {
-        Ok(Some(settings)) => technical(
-            out,
-            "CAPTURA CONFIGURADA",
-            &select(
-                &serde_json::to_value(settings).unwrap_or_default(),
-                &[
-                    "method",
-                    "replay_seconds",
-                    "format",
-                    "codec",
-                    "resolution",
-                    "fps",
-                    "rate_control",
-                    "bitrate_kbps",
-                    "quality_preset",
-                    "desktop_audio",
-                    "microphone",
-                    "microphone_noise_reduction",
-                ],
-            ),
-        ),
-        Ok(None) => section(
-            out,
-            "CAPTURA CONFIGURADA",
-            "Ainda não há ajustes salvos para este jogo.",
-        ),
-        Err(error) => section(out, "CAPTURA CONFIGURADA", &error),
-    }
+    if let Ok(snapshot)=commands_capture::diagnostics(key){technical(out,"CONFIGURAÇÃO DA CAPTURA", &snapshot);}
+
     let status = commands_capture::capture_status();
     if status.game_key.as_deref() == Some(key) {
         technical(
@@ -226,21 +183,5 @@ pub(super) fn captures(out: &mut String, key: &str) {
             "Nenhuma sessão de captura vinculada a este jogo.",
         );
     }
-    if let Ok(status) = crate::core::capture_runtime::status() {
-        technical(
-            out,
-            "GPU SCREEN RECORDER",
-            &select(
-                &serde_json::to_value(status).unwrap_or_default(),
-                &["installed", "version"],
-            ),
-        );
-    }
-    if let Ok(shortcuts) = crate::core::capture::shortcut_preferences() {
-        technical(
-            out,
-            "ATALHOS DE CAPTURA",
-            &serde_json::to_value(shortcuts).unwrap_or_default(),
-        );
-    }
+
 }

@@ -1,0 +1,10 @@
+[package]
+name = "peligames-mod-config"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.89"
+license = "GPL-3.0-only"
+description = "Shared sparse INI edits and coordinated configuration writes"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"

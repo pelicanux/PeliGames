@@ -1,4 +1,5 @@
 //! Public desktop OAuth client: no client secret and no credentials in the webview.
+mod page;
 use super::nexus_account::{credential_for, with_account, NexusAccount};
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use serde::{Deserialize, Serialize};
@@ -19,11 +20,7 @@ const USERS: &str = "https://users.nexusmods.com";
 const REDIRECT: &str = "http://127.0.0.1:17849/callback";
 static LOGIN: tokio::sync::Mutex<Option<Arc<AtomicBool>>> = tokio::sync::Mutex::const_new(None);
 
-fn client_id() -> &'static str {
-    option_env!("PELIGAMES_NEXUS_CLIENT_ID")
-        .unwrap_or("")
-        .trim()
-}
+const CLIENT_ID: &str = "peligames";
 fn now() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -117,7 +114,9 @@ impl From<String> for TokenError {
 impl From<TokenError> for String {
     fn from(error: TokenError) -> Self {
         match error {
-            TokenError::Refused => "O Nexus recusou a autorização. Conecte sua conta novamente.".into(),
+            TokenError::Refused => {
+                "O Nexus recusou a autorização. Conecte sua conta novamente.".into()
+            }
             TokenError::Other(error) => error,
         }
     }
@@ -137,7 +136,9 @@ async fn exchange(
         .form(fields)
         .send()
         .await
-        .map_err(|_| "Não foi possível concluir o login Nexus. Verifique sua conexão.".to_string())?;
+        .map_err(|_| {
+            "Não foi possível concluir o login Nexus. Verifique sua conexão.".to_string()
+        })?;
     if grant_refused(response.status().as_u16()) {
         super::nexus_account::observe_response(&response);
         return Err(TokenError::Refused);
@@ -185,7 +186,7 @@ fn parse_session(
         access_token: access.into(),
         refresh_token: refresh.into(),
         expires_at: expiry,
-        client_id: client_id().into(),
+        client_id: CLIENT_ID.into(),
     })
 }
 // Called inside with_account: refresh-token rotation and persistence survive
@@ -196,14 +197,14 @@ pub(super) async fn access(force_refresh: bool) -> Result<Option<String>, String
     };
     let mut session: Session =
         serde_json::from_str(&data).map_err(|_| "Reconecte sua conta Nexus.")?;
-    if client_id().is_empty() || session.client_id != client_id() {
+    if session.client_id != CLIENT_ID {
         return Err("O registro OAuth mudou. Reconecte sua conta Nexus.".into());
     }
     if force_refresh || session.expires_at <= now().saturating_add(60) {
         let renewed = exchange(
             &[
                 ("grant_type", "refresh_token"),
-                ("client_id", client_id()),
+                ("client_id", CLIENT_ID),
                 ("refresh_token", &session.refresh_token),
             ],
             Some(&session.refresh_token),
@@ -215,7 +216,9 @@ pub(super) async fn access(force_refresh: bool) -> Result<Option<String>, String
             // sending its refresh token again on every request.
             Err(TokenError::Refused) => {
                 clear().await?;
-                return Err("A autorização Nexus foi encerrada. Conecte sua conta novamente.".into());
+                return Err(
+                    "A autorização Nexus foi encerrada. Conecte sua conta novamente.".into(),
+                );
             }
             Err(error) => return Err(error.into()),
         };
@@ -299,7 +302,7 @@ pub struct Status {
 #[tauri::command]
 pub async fn nexus_oauth_status() -> Status {
     Status {
-        configured: !client_id().is_empty(),
+        configured: true,
         pending: LOGIN.lock().await.is_some(),
     }
 }
@@ -308,6 +311,21 @@ pub async fn cancel_nexus_oauth() {
     if let Some(cancel) = LOGIN.lock().await.as_ref() {
         cancel.store(true, Ordering::SeqCst);
     }
+}
+
+fn authorization_url(verifier: &str, state: &str) -> Result<reqwest::Url, String> {
+    let mut url = reqwest::Url::parse(&format!("{USERS}/oauth/authorize"))
+        .map_err(|_| "Endereço Nexus inválido.")?;
+    url.query_pairs_mut().extend_pairs([
+        ("client_id", CLIENT_ID),
+        ("response_type", "code"),
+        ("scope", "openid profile"),
+        ("redirect_uri", REDIRECT),
+        ("state", state),
+        ("code_challenge_method", "S256"),
+        ("code_challenge", &challenge(verifier)),
+    ]);
+    Ok(url)
 }
 
 fn callback(target: &str, state: &str) -> Result<Option<String>, String> {
@@ -339,6 +357,7 @@ fn receive(
     listener: TcpListener,
     state: String,
     cancel: Arc<AtomicBool>,
+    language: &str,
 ) -> Result<String, String> {
     let start = Instant::now();
     while start.elapsed() < Duration::from_secs(180) && !cancel.load(Ordering::SeqCst) {
@@ -370,13 +389,12 @@ fn receive(
                 } else {
                     Ok(None)
                 };
-                let accepted = !matches!(result, Ok(None));
-                let body = if accepted {
-                    "Retorno recebido. Volte ao PeliGames para acompanhar a autorização. Esta página pode ser fechada."
-                } else {
-                    "Retorno inválido."
+                let outcome = match &result {
+                    Ok(Some(_)) => page::Outcome::Received,
+                    Err(_) => page::Outcome::Cancelled,
+                    Ok(None) => page::Outcome::Invalid,
                 };
-                let _ = write!(stream, "HTTP/1.1 {}\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: {}\r\nCache-Control: no-store\r\nReferrer-Policy: no-referrer\r\nConnection: close\r\n\r\n{}", if accepted { "200 OK" } else { "400 Bad Request" }, body.len(), body);
+                page::write(&mut stream, outcome, language);
                 match result {
                     Ok(Some(code)) => return Ok(code),
                     Err(e) => return Err(e),
@@ -397,10 +415,10 @@ fn receive(
     .into())
 }
 #[tauri::command]
-pub async fn connect_nexus_oauth(app: tauri::AppHandle) -> Result<NexusAccount, String> {
-    if client_id().is_empty() {
-        return Err("O login Nexus aguarda o registro do PeliGames e o client_id oficial.".into());
-    }
+pub async fn connect_nexus_oauth(
+    app: tauri::AppHandle,
+    language: Option<String>,
+) -> Result<NexusAccount, String> {
     let cancel = Arc::new(AtomicBool::new(false));
     {
         let mut login = LOGIN.lock().await;
@@ -421,30 +439,26 @@ pub async fn connect_nexus_oauth(app: tauri::AppHandle) -> Result<NexusAccount, 
             listener
                 .set_nonblocking(true)
                 .map_err(|_| "Retorno Nexus indisponível.")?;
-            let mut url = reqwest::Url::parse(&format!("{USERS}/oauth/authorize"))
-                .map_err(|_| "Endereço Nexus inválido.")?;
-            url.query_pairs_mut().extend_pairs([
-                ("client_id", client_id()),
-                ("response_type", "code"),
-                ("redirect_uri", REDIRECT),
-                ("state", &state),
-                ("code_challenge_method", "S256"),
-                ("code_challenge", &challenge(&verifier)),
-            ]);
+            let url = authorization_url(&verifier, &state)?;
             // System browser, never an embedded credential form or developer-console token.
             app.opener()
                 .open_url(url.as_str(), None::<&str>)
                 .map_err(|_| "Não foi possível abrir o navegador para autorizar o Nexus.")?;
             let callback_cancel = cancel.clone();
             let code = tauri::async_runtime::spawn_blocking(move || {
-                receive(listener, state, callback_cancel)
+                receive(
+                    listener,
+                    state,
+                    callback_cancel,
+                    language.as_deref().unwrap_or("en"),
+                )
             })
             .await
             .map_err(|_| "Retorno Nexus indisponível.")??;
             let session = exchange(
                 &[
                     ("grant_type", "authorization_code"),
-                    ("client_id", client_id()),
+                    ("client_id", CLIENT_ID),
                     ("redirect_uri", REDIRECT),
                     ("code", &code),
                     ("code_verifier", &verifier),
@@ -459,6 +473,9 @@ pub async fn connect_nexus_oauth(app: tauri::AppHandle) -> Result<NexusAccount, 
                     return Err("Login Nexus cancelado.".into());
                 }
                 let previous = storage("lookup", None).await?;
+                if !super::credential_storage::temporary("nexus")? {
+                    super::nexus_account::clear_legacy_key().await?;
+                }
                 save(&session).await?;
                 // Cancel may arrive while secret-tool is waiting for an unlock.
                 // Roll back under the same lock so logout cannot be undone later.
@@ -488,6 +505,23 @@ pub async fn connect_nexus_oauth(app: tauri::AppHandle) -> Result<NexusAccount, 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn registered_desktop_authorization_uses_pkce_and_loopback() {
+        let url = authorization_url("one-time-verifier", "one-time-state").unwrap();
+        assert_eq!(url.origin().ascii_serialization(), USERS);
+        assert_eq!(url.path(), "/oauth/authorize");
+        let query: std::collections::HashMap<_, _> = url.query_pairs().into_owned().collect();
+        assert_eq!(query["client_id"], "peligames");
+        assert_eq!(query["redirect_uri"], REDIRECT);
+        assert_eq!(query["scope"], "openid profile");
+        assert_eq!(query["response_type"], "code");
+        assert_eq!(query["state"], "one-time-state");
+        assert_eq!(query["code_challenge_method"], "S256");
+        assert_eq!(query["code_challenge"], challenge("one-time-verifier"));
+        assert!(!query.contains_key("client_secret"));
+        assert!(!query.contains_key("code_verifier"));
+        assert!(!query.contains_key("apikey"));
+    }
     #[test]
     fn rfc7636_challenge() {
         assert_eq!(
@@ -538,11 +572,14 @@ mod tests {
     fn cancelled_listener_exits_without_callback() {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         listener.set_nonblocking(true).unwrap();
-        assert!(
-            receive(listener, "state".into(), Arc::new(AtomicBool::new(true)))
-                .unwrap_err()
-                .contains("cancelado")
-        );
+        assert!(receive(
+            listener,
+            "state".into(),
+            Arc::new(AtomicBool::new(true)),
+            "en"
+        )
+        .unwrap_err()
+        .contains("cancelado"));
     }
     #[test]
     fn invalid_callback_does_not_consume_listener() {
@@ -554,6 +591,7 @@ mod tests {
                 listener,
                 "expected".into(),
                 Arc::new(AtomicBool::new(false)),
+                "en",
             )
         });
         for state in ["wrong", "expected"] {

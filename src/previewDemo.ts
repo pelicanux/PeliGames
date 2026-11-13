@@ -105,8 +105,6 @@ let jobs: NexusDownload[] = new URLSearchParams(location.search).get("downloads"
   { id: "demo-download-error", domain: "cyberpunk2077", mod_id: 2, file_id: 2, game_id: "demo-2", name: "Texturas — exemplo de nova tentativa.zip", status: "error", received: 0, error: "Demonstração: conexão interrompida. Tente novamente." },
   { id: "demo-download-active", domain: "cyberpunk2077", mod_id: 3, file_id: 3, game_id: "demo-2", name: "Mod visual — exemplo em andamento.zip", status: "downloading", received: 4194304, total: 8388608 },
 ] : [];
-const previewFrameProfiles = new Map<string,Record<string,unknown>>();
-const previewFrameInstalled = new Set<string>();
 const demoLoadOrder = {
   entries: ["Interface de exemplo", "Dados de exemplo"].map((name, i) => ({
     file: `demo-bg3-${i}.pak`, name, uuid: `demo-bg3-${i}`, locked: false,
@@ -296,15 +294,6 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "set_game_mod_destination": return {value:{root:args.directory,executable:String(args.destination)+"/game.exe",dlss_destination:args.destination}};
     case "resolve_game_mod_paths": { const root=String(args.directory); return {value:{root,executable:root+"/bin/x64/game.exe",dlss_destination:root+"/bin/x64"}}; }
     case "read_saved_game_folders": return {value:[]};
-    case "frame_generation_dll_external_filesystem": return {value:/^\/(mnt|media|run\/media)\//.test(String(args.path))};
-    case "frame_generation_flatpak_status": return {value:{app_id:"com.valvesoftware.Steam",runtime:"org.freedesktop.Platform/x86_64/25.08",branch:"25.08",extension_installed:false,ready:false,message:"Prévia: o Flatpak precisa da extensão MAKO e acesso ao perfil e à DLL.",commands:["flatpak install --user ./org.freedesktop.Platform.VulkanLayer.makorender-25.08.flatpak","flatpak override --user --filesystem='/home/demo/.config/PeliGames/components/FrameGeneration/profiles:rw' com.valvesoftware.Steam","flatpak override --user --filesystem='/home/demo/Steam/Lossless Scaling:ro' com.valvesoftware.Steam"],release_url:"https://github.com/eugeniosegala/MAKO/releases/tag/render-v4.5.0"}};
-    case "afmf_support": return {value:{available:true,reason:"Compatível: processo gráfico de 64 bits. Precisa de Vulkan, diretamente ou pelo DXVK/VKD3D do Proton."}};
-    case "frame_generation_state": { const key=String(args.gameKey);const previous=previewFrameProfiles.get(key);const backend=args.backend==="afmf"?"afmf":"mako";const version=backend==="afmf"?"1.3.1":"4.5.0";const download_url=backend==="afmf"?"https://github.com/serialexperimentslainnnn/afmf-linux/releases/download/v1.3.1/afmf-linux-1.3.1-x86_64.tar.xz":"https://github.com/eugeniosegala/MAKO/releases/download/render-v4.5.0/MAKO-Renderer-v4.5.0-linux.tar.xz";const directory=`/home/demo/.config/PeliGames/components/FrameGeneration/${backend}/versions/${version}`;return {value:{download_url,package_name:download_url.split("/").pop(),install_directory:directory,settings:{enabled:false,overlay_enabled:false,dll:"",multiplier:2,adaptive:false,target_fps:60,flow_scale:1,performance:false,gpu:"",base_fps_cap:0,refresh_threshold:0,ultra_performance:false,allow_fp16:true,live_enabled:true,scaling_enabled:false,scaling_method:"native",scaling_factor:1.5,scaling_sharpness:.8,...previous,backend},versions:{mako:version},dll:"/preview/Steam/steamapps/common/Lossless Scaling/Lossless.dll",update_available:false,install_version:version,current_version:version,available_version:version,update_compatible:true,installed_versions:previewFrameInstalled.has(backend)?[{version,current:true,in_use:false,directory}]:[],installed:previewFrameInstalled.has(backend),warning:"Demonstração: desative o FG interno do jogo e do OptiScaler. Requer Vulkan; a compatibilidade depende do jogo."}}; }
-    case "frame_generation_check_updates": return {value:{version:"4.5.0",available:false,compatible:true,download_url:"https://github.com/eugeniosegala/MAKO/releases/download/render-v4.5.0/MAKO-Renderer-v4.5.0-linux.tar.xz",package_name:"MAKO-Renderer-v4.5.0-linux.tar.xz",install_directory:"/home/demo/.config/PeliGames/components/FrameGeneration/mako/versions/4.5.0"}};
-    case "frame_generation_uninstall": previewFrameInstalled.delete(String(args.backend));return {value:null};
-    case "frame_generation_remove_backup": return {value:null};
-    case "install_frame_generation": { const channel=args.onProgress as {onmessage?:(p:unknown)=>void};for(const [phase,downloaded] of [["connecting",0],["downloading",0],["downloading",200000],["downloading",400000],["verifying",561348],["extracting",561348],["installing",561348],["complete",561348]] as const){channel?.onmessage?.({phase,downloaded,total:561348});await new Promise(resolve=>setTimeout(resolve,350));}previewFrameInstalled.add(String(args.backend));return {value:null}; }
-    case "prepare_frame_generation": {const profile=args.settings as Record<string,unknown>;previewFrameProfiles.set(String(args.gameKey),profile);return {value:{program:"/preview/FrameGeneration/profiles/"+"0".repeat(64)+".sh",arguments:"",enabled:Boolean(profile.enabled)}};}
     case "inspect_nexus_game": {
       const game = workspace.games.find(g => g.game.directory === args.source);
       if(!game || !game.adapter)return {value:{domain:null,vortex_supported:false,platform:"proton"}};
@@ -353,12 +342,11 @@ export async function demoInvoke(command: string, args: Record<string, unknown>)
     case "matrix_chat_history": return {value:{events:[{kind:"message",id:"$preview-matrix-older",sender:"@pelicanux:matrix.org",ts:Date.now()-3600000,msgtype:"m.notice",body:"Histórico de demonstração: mensagem anterior à conversa atual."}],end:null,names:{"@pelicanux:matrix.org":"Pelicano"}}};
     case "matrix_chat_ignore": case "matrix_chat_report": case "matrix_chat_moderate": throw new Error("Prévia visual: nada é enviado ao Matrix.");
     case "matrix_chat_send": { const message = {kind:"message",id:`$preview-matrix-${Date.now()}`,sender:"@demo-preview:matrix.org",ts:Date.now(),msgtype:args.emote ? "m.emote" : "m.text",body:String(args.text),reply_to:args.replyTo ?? null}; demoMatrixMessages.push(message); demoMatrixSent.push(message); return {value:null}; }
-    case "nexus_oauth_status": return {value: {configured:false,pending:false}};
-    case "connect_nexus_oauth": throw new Error("O login real Nexus depende do client_id e está disponível somente no aplicativo nativo.");
+    case "nexus_oauth_status": return {value: {configured:true,pending:false}};
+    case "connect_nexus_oauth": demoNexusConnected = true; return {value:{user_id:0,name:"Demonstração visual",is_premium:false,is_supporter:false}};
     case "cancel_nexus_oauth": return {value:null};
     case "load_nexus_account": return { value: demoNexusConnected ? { user_id: 0, name: "Demonstração visual", is_premium: false, is_supporter: false } : null };
     case "disconnect_nexus_account": demoNexusConnected = false; return {value:null};
-    case "connect_nexus_account": demoNexusConnected = true; return {value:{user_id:0,name:"Demonstração visual",is_premium:false,is_supporter:false}};
     case "official_build_status": return {value:"unknown"};
     case "cached_discord_account":
     case "load_discord_account": return { value: { configured: false, pending: false, offline: false, account: null } };

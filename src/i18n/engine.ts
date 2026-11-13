@@ -1,4 +1,4 @@
-import {createInstance, type i18n, type TOptions} from "i18next";
+import {createInstance, type i18n, type Resource, type TOptions} from "i18next";
 import {baseResources, languageLoaders} from "./catalog.generated";
 import type {Catalog, Namespace} from "./catalog.generated";
 export type {Catalog, Namespace};
@@ -6,11 +6,11 @@ export type TranslationValues = Record<string, unknown> & Pick<TOptions, "count"
 type PluralKey<K> = K extends `${infer Base}_${"zero" | "one" | "two" | "few" | "many" | "other"}` ? Base : never;
 export type MessageKey<N extends Namespace> = (keyof Catalog[N] & string) | PluralKey<keyof Catalog[N] & string>;
 export type Translator = <N extends Namespace>(namespace: N, key: MessageKey<N>, values?: TranslationValues) => string;
-export function createTranslationEngine(): i18n {
+export function createTranslationEngine(resources: Resource = {en: baseResources}, fallbackLanguage = "en", namespace = "localization"): i18n {
   const instance = createInstance();
   void instance.init({
-    lng: "en", fallbackLng: "en", initAsync: false, resources: {en: baseResources},
-    defaultNS: "localization", ns: Object.keys(baseResources), keySeparator: false,
+    lng: fallbackLanguage, fallbackLng: fallbackLanguage, initAsync: false, resources,
+    defaultNS: namespace, ns: [...new Set(Object.values(resources).flatMap(messages => Object.keys(messages)))], keySeparator: false,
     interpolation: {escapeValue: false}, returnNull: false, returnEmptyString: false,
   });
   return instance;

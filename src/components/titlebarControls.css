@@ -1,8 +1,8 @@
 /* Shared rounded-square proportions; each theme keeps its own finish. */
 :root .app-titlebar .btn-titlebar.window-control.retro-window-control {
-  flex: 0 0 30px;
-  width: 30px;
-  height: 28px;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 26px;
   border-radius: 8px !important;
 }
 
@@ -10,9 +10,9 @@
 :root[data-interface-theme="neon-wave"] .app-titlebar .btn-titlebar.window-control.retro-window-control {
   --control-ink: #c4a1ff;
   position: relative;
-  flex: 0 0 30px;
-  width: 30px;
-  height: 28px;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 26px;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--control-ink) 42%, transparent) !important;
   border-top-color: color-mix(in srgb, var(--control-ink) 70%, transparent) !important;

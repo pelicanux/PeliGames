@@ -158,6 +158,7 @@ __pycache__/
 !/tools/storage_names.rs
 
 /src/previewNeural.ts
+/src/previewUpscaler.ts
 
 !/docs/releases/0.5.2.md
 

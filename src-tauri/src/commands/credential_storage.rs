@@ -137,6 +137,10 @@ pub(super) fn credential(
     service: &str,
     system: impl FnOnce() -> Result<Option<String>, String>,
 ) -> Result<Option<String>, String> {
+    // Keep the obsolete service only for deleting credentials from older builds.
+    if service == "nexusmods-personal-api" && action != "clear" {
+        return Err("A conexão Nexus usa somente autorização pelo navegador.".into());
+    }
     let group = group(service)?;
     let slot = store_for(group)?;
     let mut store = slot
@@ -147,6 +151,15 @@ pub(super) fn credential(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn legacy_nexus_key_cannot_be_read_or_stored() {
+        for action in ["lookup", "store"] {
+            let result = credential(action, Some("unused-test-key"), "nexusmods-personal-api", || {
+                panic!("obsolete API key must never reach the credential provider")
+            });
+            assert!(result.is_err());
+        }
+    }
     #[test]
     fn temporary_secrets_rotate_clear_and_never_reach_persistent_provider() {
         let mut store = Store::default();

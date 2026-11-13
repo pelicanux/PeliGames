@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "host_api": 1,
+  "id": "mako",
+  "version": "0.1.0",
+  "name": "MAKO",
+  "summary": "Per-game MAKO frame generation and runtime management.",
+  "author": "PeliGames contributors",
+  "license": "GPL-3.0-only",
+  "repository": "https://github.com/eugeniosegala/MAKO",
+  "host_version": ">=0.5.5, <0.6.0",
+  "platforms": [
+    "linux-x86_64"
+  ],
+  "category": "frame-generation",
+  "component_directory": "components/FrameGeneration",
+  "entrypoints": {
+    "ui": "ui/index.js",
+    "service": "bin/mako-service"
+  },
+  "contributions": [
+    {
+      "target": "settings",
+      "route": "preferences",
+      "title": "MAKO"
+    },
+    {
+      "target": "game-frame-generation",
+      "route": "game",
+      "title": "MAKO",
+      "descriptions": {
+        "en": "Lossless Scaling frame generation, adaptive output and image scaling.",
+        "pt-BR": "Gera\u00e7\u00e3o de quadros com Lossless Scaling, sa\u00edda adaptativa e escala de imagem."
+      }
+    },
+    {
+      "target": "game-overview",
+      "route": "overview",
+      "title": "MAKO"
+    }
+  ],
+  "dependencies": {},
+  "capabilities": [
+    "component-downloads",
+    "launch-profiles",
+    "native-launch"
+  ]
+}

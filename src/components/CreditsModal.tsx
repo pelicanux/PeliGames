@@ -192,21 +192,7 @@ export const CreditsModal: React.FC<Props> = ({ onClose }) => {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </div>
 
-          <div className="credits-neon-card"
-            style={{ display: "flex", alignItems: "center", gap: "1rem", background: "rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)", border: "1px solid rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)", borderRadius: "8px", padding: "0.6rem 0.8rem", cursor: "pointer", transition: "all 0.2s" }}
-            onClick={() => handleLink("https://github.com/mauri870/DLSSNR-RDNA3")}
-            onMouseOver={(e) => e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.1)"}
-            onMouseOut={(e) => e.currentTarget.style.background = "rgba(var(--surface-255-255-255, 255, 255, 255), 0.05)"}
-          >
-            <div style={{ width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--tone-e2e8f0, #e2e8f0)" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-            </div>
-            <div style={{ flex: 1, overflow: "hidden" }}>
-              <div className="credits-card-title" style={{ color: "var(--tone-ffffff, #fff)", fontWeight: "bold", fontSize: "0.9rem" }}>{t("credits", "forkRdna3")}</div>
-              <div className="credits-card-detail" style={{ color: "var(--tone-94a3b8, #94a3b8)", fontSize: "0.75rem", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>mauri870 / DLSSNR-RDNA3</div>
-            </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          </div>
+
           </div>
         </section>
 

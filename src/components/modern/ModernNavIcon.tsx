@@ -6,6 +6,7 @@ import { NexusIcon } from "../NexusIcon";
 // stroke style (24 px grid, 2 px, round joins) inside a gradient squircle
 // with a soft glass highlight. Bodies are fixed SVG markup from this file.
 const ICONS = {
+  addonStore: { colors: ["var(--modern-accent-hi)", "var(--modern-accent-lo)"], body: "" },
   library: { colors: ["var(--modern-accent-hi)","var(--modern-accent-lo)"], body: "<line x1=\"6\" x2=\"10\" y1=\"11\" y2=\"11\"/><line x1=\"8\" x2=\"8\" y1=\"9\" y2=\"13\"/><line x1=\"15\" x2=\"15.01\" y1=\"12\" y2=\"12\"/><line x1=\"18\" x2=\"18.01\" y1=\"10\" y2=\"10\"/><path d=\"M17.32 5H6.68a4 4 0 0 0-3.98 3.59C2.6 9.42 2 14.46 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.41-1.41A2 2 0 0 1 9.83 16h4.34a2 2 0 0 1 1.41.59L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.55-.6-6.58-.69-7.26A4 4 0 0 0 17.32 5z\"/>" },
   install: { colors: ["#5aa9ff","#2058d8"], body: "<path d=\"M12 15V3\"/><path d=\"m7 10 5 5 5-5\"/><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/>" },
   nexus: { colors: ["#ffb54d","#ef6a17"], body: "" },
@@ -33,6 +34,6 @@ export type ModernIconName = keyof typeof ICONS;
 export function ModernNavIcon({ name }: { name: ModernIconName }) {
   const icon = ICONS[name];
   return <span className={`modern-nav-icon modern-nav-icon-${name}`} style={{ "--icon-from": icon.colors[0], "--icon-to": icon.colors[1] } as React.CSSProperties} aria-hidden="true">
-    {name === "nexus" ? <NexusIcon /> : name === "discord" ? <MenuIcon name="discord" /> : name === "matrix" ? <MatrixIcon /> : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: icon.body }} />}
+    {name === "addonStore" ? <MenuIcon name="addonStore" /> : name === "nexus" ? <NexusIcon /> : name === "discord" ? <MenuIcon name="discord" /> : name === "matrix" ? <MatrixIcon /> : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: icon.body }} />}
   </span>;
 }

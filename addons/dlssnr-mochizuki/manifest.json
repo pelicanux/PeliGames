@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "host_api": 1,
+  "id": "dlssnr-mochizuki",
+  "version": "0.1.0",
+  "name": "DLSSNR · Mochizuki",
+  "summary": "Neural Rendering for Radeon GPUs through DLSSNR-AMD.",
+  "author": "PeliGames contributors",
+  "license": "GPL-3.0-only",
+  "repository": "https://gitlab.com/mochizuki0323/DLSSNR-AMD",
+  "host_version": ">=0.5.5, <0.6.0",
+  "platforms": [
+    "linux-x86_64",
+    "linux-aarch64"
+  ],
+  "entrypoints": {
+    "ui": "ui/index.js",
+    "service": "bin/dlssnr-service"
+  },
+  "contributions": [
+    {
+      "target": "settings",
+      "route": "preferences",
+      "title": "DLSSNR · Mochizuki"
+    },
+    {
+      "target": "game-mods",
+      "route": "game",
+      "title": "Mochizuki",
+      "descriptions": {
+        "en": "Neural Rendering for AMD GPUs through OptiScaler, ReShade, Vulkan or DX9.",
+        "pt-BR": "Renderização neural para GPUs AMD via OptiScaler, ReShade, Vulkan ou DX9."
+      }
+    },
+    {
+      "target": "game-overview",
+      "route": "overview",
+      "title": "DLSSNR"
+    }
+  ],
+  "dependencies": {},
+  "capabilities": [
+    "game-files",
+    "component-downloads",
+    "launch-profiles"
+  ],
+  "category": "mods",
+  "component_directory": "components/Mods/DLSSNR/backend-files",
+  "group": "dlssnr"
+}

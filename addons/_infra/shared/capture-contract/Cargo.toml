@@ -1,0 +1,9 @@
+[package]
+name="peligames-capture-contract"
+version="0.1.0"
+edition="2021"
+license="GPL-3.0-only"
+[dependencies]
+serde={version="1",features=["derive"]}
+[dev-dependencies]
+serde_json="1"

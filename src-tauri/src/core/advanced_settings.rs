@@ -43,58 +43,9 @@ pub struct AdvancedSettings {
     pub dll_overrides: String,
     pub wrappers: Vec<LaunchWrapper>,
     pub launch_backend: String,
-    /// AFMF frame generation for this game (a Vulkan layer driven by environment variables).
-    pub afmf: Option<AfmfSettings>,
-}
-/// afmf-linux options. Read once at game start; there is no live control.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(default)]
-pub struct AfmfSettings {
-    pub enabled: bool,
-    /// auto, quality or performance.
-    pub performance_mode: String,
-    /// auto, standard or high.
-    pub search_mode: String,
-    /// blend or repeat.
-    pub fast_motion: String,
-    /// Real frame rate below which no frame is generated; 0 always generates.
-    pub min_fps: u32,
-    pub hud_detect: bool,
-    pub pacing: bool,
-}
-impl Default for AfmfSettings {
-    fn default() -> Self {
-        Self { enabled: false, performance_mode: "auto".into(), search_mode: "auto".into(), fast_motion: "blend".into(), min_fps: 30, hud_detect: true, pacing: true }
-    }
-}
-impl AfmfSettings {
-    fn validate(&self) -> Result<(), String> {
-        if !["auto", "quality", "performance"].contains(&self.performance_mode.as_str())
-            || !["auto", "standard", "high"].contains(&self.search_mode.as_str())
-            || !["blend", "repeat"].contains(&self.fast_motion.as_str())
-        {
-            return Err("Opção do AFMF inválida.".into());
-        }
-        if self.min_fps > 240 { return Err("Informe o FPS mínimo do AFMF entre 0 e 240.".into()); }
-        Ok(())
-    }
-    /// The variables afmf-linux reads, without the layer path.
-    pub fn environment(&self, gamescope: bool) -> Vec<(&'static str, String)> {
-        let flag = |on: bool| if on { "1" } else { "0" }.to_string();
-        let mut env = vec![
-            ("AFMF_ENABLE", "1".to_string()),
-            ("AFMF_PERFORMANCE_MODE", self.performance_mode.clone()),
-            ("AFMF_SEARCH_MODE", self.search_mode.clone()),
-            ("AFMF_FAST_MOTION_RESPONSE", self.fast_motion.clone()),
-            ("AFMF_MIN_FPS", self.min_fps.to_string()),
-            ("AFMF_HUD_DETECT", flag(self.hud_detect)),
-            ("AFMF_PACING", flag(self.pacing)),
-            // Never stack another frame generator layer.
-            ("DISABLE_LSFGVK", "1".to_string()),
-        ];
-        if gamescope { env.push(("AFMF_GAMESCOPE", "1".to_string())); }
-        env
-    }
+    pub addon_launch: peligames_addon_kit::launch::Selections,
+    #[serde(flatten)]
+    pub legacy_extensions: BTreeMap<String,serde_json::Value>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct LaunchWrapper { #[serde(deserialize_with = "managed_program")] pub program: String, pub arguments: String, pub enabled: bool }
@@ -163,7 +114,9 @@ struct SavedSettings {
     wrappers: Vec<LaunchWrapper>,
     launch_backend: Option<String>,
     gamescope: GamescopeSettings,
-    afmf: Option<AfmfSettings>,
+    addon_launch: peligames_addon_kit::launch::Selections,
+    #[serde(flatten)]
+    legacy_extensions: BTreeMap<String,serde_json::Value>,
 }
 impl From<SavedSettings> for AdvancedSettings {
     fn from(saved: SavedSettings) -> Self {
@@ -180,7 +133,8 @@ impl From<SavedSettings> for AdvancedSettings {
             settings.wrappers = saved.wrappers;
             settings.dll_overrides = if settings.options.get("dll_overrides") == Some(&true) { saved.dll_overrides.unwrap_or_default() } else { String::new() };
             settings.launch_backend = saved.launch_backend.unwrap_or_else(|| "system".into());
-            settings.afmf = saved.afmf;
+            settings.addon_launch = saved.addon_launch;
+            settings.legacy_extensions = saved.legacy_extensions;
             if saved.gamescope.model_version == 2 {
                 settings.gamescope = saved.gamescope;
             }
@@ -212,7 +166,8 @@ impl Default for AdvancedSettings {
             dll_overrides: String::new(),
             wrappers: Vec::new(),
             launch_backend: "system".into(),
-            afmf: None,
+            addon_launch: BTreeMap::new(),
+            legacy_extensions: BTreeMap::new(),
         }
     }
 }
@@ -222,19 +177,8 @@ impl AdvancedSettings {
         if self.background_fps.is_some_and(|fps| fps > 1000) { return Err("Informe FPS sem foco entre 1 e 1000, ou use Automático.".into()); }
         if self.background_fps.is_some() && self.overlay_enabled != Some(true) { return Err("Ative o Overlay PeliGames para limitar FPS sem foco.".into()); }
         if self.mangohud_fps_limit.is_some_and(|fps| fps > 1000) { return Err("Informe um limite de FPS entre 0 e 1000.".into()); }
-        if super::release_features::enabled() && self.wrappers.iter().any(|w|w.enabled && w.program.contains("/FrameGeneration/profiles/") && w.program.ends_with(".sh")) {
-            crate::commands::frame_generation::conflicts(self)?;
-        }
         if let Some(value) = &self.launch_options { crate::commands::nexus_launch_options::validate_custom(value)?; }
-        if let Some(afmf) = self.afmf.as_ref().filter(|a| a.enabled) {
-            afmf.validate()?;
-            if self.wrappers.iter().any(|w| w.enabled && w.program.contains("/FrameGeneration/profiles/") && w.program.ends_with(".sh")) {
-                return Err("MAKO e AFMF não podem ser usados juntos. Desative um deles na aba Geração de quadros.".into());
-            }
-            if self.on("mlfg") || self.on("optiscaler") {
-                return Err("Desative a geração de quadros por ML e o OptiScaler nas opções avançadas antes de usar o AFMF.".into());
-            }
-        }
+        peligames_addon_kit::launch::validate(&self.addon_launch)?;
         if self.wrappers.len() > 16 { return Err("Use até 16 wrappers.".into()); }
         for wrapper in &self.wrappers {
             if wrapper.program.trim().is_empty() || wrapper.program.len() > 4096 || wrapper.program.chars().any(|c| c.is_control()) { return Err("Informe o executável do wrapper.".into()); }
@@ -565,7 +509,8 @@ pub(crate) fn configured_launch_command(umu: &Path, settings: Option<&AdvancedSe
     if let Some(settings)=settings { super::advanced_capabilities::validate(settings)?; }
     let global = super::mangohud_config::global_enabled()?;
     if settings.is_none() && !global { return Ok(Command::new(umu)); }
-    let effective = with_global_monitoring(settings, global);
+    let mut effective = with_global_monitoring(settings, global);
+    super::addon_launch::migrate(&mut effective)?;
     if global && effective.mangohud_enabled != Some(false) && effective.gamescope.enabled() {
         return Err("O MangoHUD global não é compatível com este modo de Gamescope. Desative a chave global de MangoHUD para executar com Gamescope.".into());
     }
@@ -577,10 +522,7 @@ pub(crate) fn configured_launch_command(umu: &Path, settings: Option<&AdvancedSe
     if effective.on("dxvk_limit") {
         command.env("MANGOHUD_CONFIG", "read_cfg,fps_limit=0");
     }
-    if super::release_features::enabled() {
-        crate::commands::frame_generation::configure_monitoring(&mut command, &effective)?;
-        super::afmf_compatibility::apply(&mut command);
-    }
+    command = super::addon_launch::wrap(command, &effective)?;
     if !super::release_features::enabled() {
         let mut words: Vec<String> = std::iter::once(command.get_program()).chain(command.get_args()).map(|s|s.to_string_lossy().into_owned()).collect();
         let mut environment = command.get_envs().map(|(k,v)|(k.to_string_lossy().into_owned(),v.map(|s|s.to_string_lossy().into_owned()))).collect();
@@ -656,15 +598,6 @@ fn launch_command_with_tools(
     }
     command.env_remove("PELI_OVERLAY_BACKGROUND_FPS");
     if let Some(fps)=settings.background_fps {command.env("PELI_OVERLAY_BACKGROUND_FPS",fps.to_string());}
-    command.env_remove("AFMF_ENABLE").env_remove("AFMF_GAMESCOPE").env_remove("AFMF_ASYNC");
-    if let Some(afmf) = settings.afmf.as_ref().filter(|a| a.enabled) {
-        // The layer stays in PeliGames' folder and is offered only to this game.
-        super::afmf_compatibility::layer(&mut command,
-            &crate::commands::frame_generation::afmf_layer_dir()?,
-            std::env::var_os("VK_ADD_LAYER_PATH"), std::env::var_os("VK_INSTANCE_LAYERS"),
-            std::env::var_os("VK_LAYER_PATH"))?;
-        for (key, value) in afmf.environment(settings.gamescope.enabled()) { command.env(key, value); }
-    }
     if settings.on("hdr") {
         command.env("DXVK_HDR", "1");
     } else {
@@ -826,43 +759,15 @@ mod overlay_monitoring_tests {
 }
 
 #[cfg(test)]
-mod afmf_tests {
+mod advanced_value_tests {
     use super::*;
     #[test]
-    fn afmf_variables_follow_the_game_settings() {
-        let afmf = AfmfSettings { enabled: true, performance_mode: "quality".into(), min_fps: 45, hud_detect: false, ..Default::default() };
-        let env: std::collections::BTreeMap<_, _> = afmf.environment(true).into_iter().collect();
-        assert_eq!(env["AFMF_ENABLE"], "1");
-        assert_eq!(env["AFMF_PERFORMANCE_MODE"], "quality");
-        assert_eq!(env["AFMF_MIN_FPS"], "45");
-        assert_eq!(env["AFMF_HUD_DETECT"], "0");
-        assert_eq!(env["AFMF_PACING"], "1");
-        assert_eq!(env["AFMF_GAMESCOPE"], "1");
-        assert_eq!(env["DISABLE_LSFGVK"], "1");
-        assert!(!afmf.environment(false).iter().any(|(k, _)| *k == "AFMF_GAMESCOPE"));
-    }
-    #[test]
-    fn afmf_never_runs_with_another_frame_generator() {
-        let mut settings = AdvancedSettings { afmf: Some(AfmfSettings { enabled: true, ..Default::default() }), ..Default::default() };
-        settings.validate().unwrap();
-        settings.wrappers.push(LaunchWrapper { program: "/home/u/.config/PeliGames/FrameGeneration/profiles/game.sh".into(), arguments: String::new(), enabled: true });
-        assert!(settings.validate().unwrap_err().contains("MAKO e AFMF"));
-        settings.wrappers.clear();
-        settings.options.insert("optiscaler".into(), true);
-        assert!(settings.validate().unwrap_err().contains("OptiScaler"));
-        settings.options.insert("optiscaler".into(), false);
-        settings.afmf.as_mut().unwrap().performance_mode = "turbo".into();
-        assert!(settings.validate().is_err());
-        // A disabled AFMF entry is kept but never checked or applied.
-        settings.afmf.as_mut().unwrap().enabled = false;
-        settings.validate().unwrap();
-    }
-    #[test]
-    fn saved_settings_keep_the_afmf_choice() {
-        let mut settings = AdvancedSettings::default();
-        settings.afmf = Some(AfmfSettings { enabled: true, min_fps: 0, ..Default::default() });
-        let restored: AdvancedSettings = serde_json::from_slice(&serde_json::to_vec(&settings).unwrap()).unwrap();
-        assert_eq!(restored.afmf, settings.afmf);
+    fn legacy_extension_values_are_preserved_without_linking_an_integration() {
+        let document=serde_json::json!({"schema_version":2,"example-module":{"enabled":true,"quality":"high"}});
+        let settings:AdvancedSettings=serde_json::from_value(document).unwrap();
+        assert_eq!(settings.legacy_extensions["example-module"]["quality"],"high");
+        let restored=serde_json::to_value(settings).unwrap();
+        assert_eq!(restored["example-module"]["enabled"],true);
     }
     #[test]
     fn configurable_values_are_bounded_and_survive_roundtrip() {

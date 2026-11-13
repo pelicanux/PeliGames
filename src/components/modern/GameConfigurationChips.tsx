@@ -1,30 +1,28 @@
-import {useEffect,useState} from "react";
+import {useAddonStore} from "../../modules/addons/store";
+import {activeFrameGenerationAddons} from "../../modules/addons/launchSettings";
 import {invoke} from "@tauri-apps/api/core";
+import {useEffect,useState} from "react";
 import {useI18n} from "../../i18n/I18nContext";
-import {isFrameGenerationWrapper,type AdvancedSettings} from "../../services/advancedSettings";
-import {gameConfigurationBadges,type MakoSummary} from "../../services/gameConfigurationBadges";
+import {type AdvancedSettings} from "../../services/advancedSettings";
+import {gameConfigurationBadges} from "../../services/gameConfigurationBadges";
 import {loadMangoHudProfile,type MangoHudSettings} from "../../services/mangohud";
-import {experimentalFrameGeneration} from "../../services/releaseFeatures";
 
 export function GameConfigurationChips({gameKey,advanced}:{gameKey:string;advanced?:AdvancedSettings}){
   const {t: tx, language} = useI18n();
 
  const [profile,setProfile]=useState<MangoHudSettings>();
- const [revision,setRevision]=useState(0);
- const [mako,setMako]=useState<{key:string;settings:MakoSummary}>();
- const wrapper=advanced?.schema_version===2?advanced.wrappers?.find(w=>w.enabled&&isFrameGenerationWrapper(w)):undefined;
- const requestKey=JSON.stringify([gameKey,wrapper?.program]);
  useEffect(()=>{let active=true;
   void loadMangoHudProfile().then(p=>{if(active)setProfile(p.settings)}).catch(()=>{});
   const changed=(event:Event)=>setProfile((event as CustomEvent<MangoHudSettings>).detail);
   window.addEventListener("mangohudProfileChanged",changed);
   return()=>{active=false;window.removeEventListener("mangohudProfileChanged",changed);};
  },[]);
- useEffect(()=>{const changed=()=>setRevision(v=>v+1);for(const name of ["peligamesLibraryChanged","frameGenerationProfileChanged","frameGenerationRuntimeChanged"])window.addEventListener(name,changed);return()=>{for(const name of ["peligamesLibraryChanged","frameGenerationProfileChanged","frameGenerationRuntimeChanged"])window.removeEventListener(name,changed);};},[]);
- useEffect(()=>{let active=true;setMako(undefined);
-  if(experimentalFrameGeneration&&wrapper)void invoke<{settings:MakoSummary}>("frame_generation_state",{gameKey,backend:"saved",activeProfile:wrapper.program}).then(result=>{if(active)setMako({key:requestKey,settings:result.settings})}).catch(()=>{});
-  return()=>{active=false};
- },[requestKey,revision]);
- const badges=gameConfigurationBadges(advanced,profile,wrapper&&mako?.key===requestKey?mako.settings:undefined,language);
- return <>{badges.map(badge=><span key={badge.id} className="modern-meta-chip configuration" title={`${badge.description} ${tx("ui-game-configuration-chips", "saved_configuration_not_a_live_runtime_confirmation")}`} data-configuration={badge.id}>{badge.label}</span>)}</>;
+ const signature=JSON.stringify([gameKey,advanced?.wrappers,advanced?.addon_launch]);
+ const [legacy,setLegacy]=useState<{signature:string;selections:AdvancedSettings["addon_launch"]}>();
+ useEffect(()=>{let active=true;if(advanced?.wrappers?.length)void invoke<AdvancedSettings["addon_launch"]>("addon_launch_settings",{advanced}).then(selections=>{if(active)setLegacy({signature,selections})}).catch(()=>{});return()=>{active=false}},[signature]);
+ const effective=legacy?.signature===signature?{...advanced,addon_launch:legacy.selections} as AdvancedSettings:advanced;
+ const overview=useAddonStore().overview;
+ const external=activeFrameGenerationAddons(effective,overview);
+ const badges=gameConfigurationBadges(advanced,profile,language);
+ return <>{external.map(item=><span key={`addon:${item.id}`} className="modern-meta-chip configuration" title={tx("ui-game-configuration-chips","saved_configuration_not_a_live_runtime_confirmation")}>{item.name}</span>)}{badges.map(badge=><span key={badge.id} className="modern-meta-chip configuration" title={`${badge.description} ${tx("ui-game-configuration-chips", "saved_configuration_not_a_live_runtime_confirmation")}`} data-configuration={badge.id}>{badge.label}</span>)}</>;
 }

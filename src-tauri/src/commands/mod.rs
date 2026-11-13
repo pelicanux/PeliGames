@@ -1,7 +1,5 @@
 pub mod discord_presence;
 pub mod capture;
-pub mod installer;
-pub mod updater;
 pub mod scanner;
 mod steam_readiness;
 mod steam_installation;
@@ -22,7 +20,6 @@ pub mod app_updates;
 pub mod gpu;
 
 mod upscalers;
-pub mod neural_settings;
 
 pub mod proton;
 
@@ -129,7 +126,6 @@ mod epic_library;
 
 pub mod maintenance;
 
-pub mod frame_generation;
 
 pub mod frame_overlay_shortcut;
 
@@ -149,3 +145,6 @@ pub mod openrgb;
 pub mod daniel_nr;
 
 pub mod system_locale;
+pub mod addons;
+pub mod game_mod_paths;
+pub mod backend_folder;

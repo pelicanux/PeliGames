@@ -1,4 +1,4 @@
-//! Personal-key connection for local testing. Secrets never enter config files.
+//! OAuth account access, request throttling and private credential storage.
 use serde::{Deserialize, Serialize};
 use std::{
     io::{Read, Write},
@@ -54,9 +54,6 @@ pub struct NexusAccount {
 }
 
 // Pass secrets on stdin, never as process arguments. Only our own item is queried.
-fn credential(action: &str, key: Option<&str>) -> Result<Option<String>, String> {
-    credential_for(action, key, "nexusmods-personal-api", "PeliGames — Nexus Mods")
-}
 pub(super) fn credential_for(action: &str, key: Option<&str>, service: &str, label: &str) -> Result<Option<String>, String> {
     super::credential_storage::credential(action,key,service,||system_credential_for(action,key,service,label))
 }
@@ -146,89 +143,20 @@ fn credential_result(action: &str, code: Option<i32>, output: String, diagnostic
         Ok(None)
     }
 }
-async fn stored(action: &'static str, key: Option<String>) -> Result<Option<String>, String> {
-    tauri::async_runtime::spawn_blocking(move || credential(action, key.as_deref()))
-        .await
-        .map_err(|_| "Falha ao acessar o chaveiro.".to_string())?
-}
-fn checked_key(key: &str) -> Result<&str, String> {
-    let key = key.trim();
-    if key.is_empty() || key.len() > 4096 || !key.bytes().all(|b| b.is_ascii_graphic()) {
-        return Err("Informe uma chave pessoal Nexus válida, sem espaços internos.".into());
-    }
-    Ok(key)
-}
-async fn validate(key: &str) -> Result<NexusAccount, String> {
-    let mut header =
-        reqwest::header::HeaderValue::from_str(checked_key(key)?).map_err(|_| "Chave inválida.")?;
-    header.set_sensitive(true);
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(20))
-        .redirect(reqwest::redirect::Policy::none())
-        .build()
-        .map_err(|_| "Não foi possível iniciar a conexão Nexus.")?;
-    before_request().await?;
-    let response = client
-        .get("https://api.nexusmods.com/v1/users/validate.json")
-        .header(reqwest::header::USER_AGENT, concat!("PeliGames/", env!("CARGO_PKG_VERSION")))
-        .header("apikey", header)
-        .header("Application-Name", "PeliGames")
-        .header("Application-Version", env!("CARGO_PKG_VERSION"))
-        .send()
-        .await
-        .map_err(|_| {
-            "Não foi possível conectar ao Nexus Mods. Verifique sua conexão e tente novamente."
-        })?;
-    observe_response(&response);
-    match response.status().as_u16() {
-        200 => {}
-        401 | 403 => return Err(
-            "A chave foi recusada pelo Nexus Mods. Confira se ela está correta e não foi revogada."
-                .into(),
-        ),
-        429 => {
-            return Err(
-                "Limite de consultas Nexus atingido. Aguarde antes de tentar novamente.".into(),
-            )
-        }
-        _ => {
-            return Err(
-                "O Nexus Mods não conseguiu validar a conta. Tente novamente mais tarde.".into(),
-            )
-        }
-    }
-    // The validation response may contain the API key and email. Deserialize only
-    // the account summary; never return the raw response to the webview or logs.
-    let account: NexusAccount = response
-        .json()
-        .await
-        .map_err(|_| "Resposta de conta Nexus inválida.")?;
-    if account.user_id == 0 || account.name.is_empty() {
-        return Err("Resposta de conta Nexus incompleta.".into());
-    }
-    Ok(account)
-}
-#[tauri::command]
-pub async fn connect_nexus_account(api_key: String) -> Result<NexusAccount, String> {
-    super::nexus_oauth::cancel_nexus_oauth().await;
-    with_account(async move {
-        let key = checked_key(&api_key)?.to_string();
-        let account = validate(&key).await?;
-        stored("store", Some(key)).await?;
-        super::nexus_oauth::clear().await?;
-        Ok(account)
-    }).await
+// Migration only: an old personal key is never read, validated or sent to Nexus.
+pub(super) async fn clear_legacy_key() -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        credential_for("clear", None, "nexusmods-personal-api", "PeliGames — Nexus Mods")
+    }).await.map_err(|_| "Falha ao remover a credencial antiga Nexus.".to_string())??;
+    Ok(())
 }
 #[tauri::command]
 pub async fn load_nexus_account() -> Result<Option<NexusAccount>, String> {
     with_account(async {
-        if let Some(account) = super::nexus_oauth::load_account().await? {
-            return Ok(Some(account));
+        if !super::credential_storage::temporary("nexus")? {
+            clear_legacy_key().await?;
         }
-        match stored("lookup", None).await? {
-            Some(key) => validate(&key).await.map(Some),
-            None => Ok(None),
-        }
+        super::nexus_oauth::load_account().await
     }).await
 }
 #[tauri::command]
@@ -237,7 +165,7 @@ pub async fn disconnect_nexus_account() -> Result<(), String> {
     with_account(async {
         // Try both removals even when one service reports an actual failure.
         let oauth = super::nexus_oauth::clear().await;
-        let personal = stored("clear", None).await;
+        let personal = clear_legacy_key().await;
         oauth?;
         personal?;
         Ok(())
@@ -245,7 +173,7 @@ pub async fn disconnect_nexus_account() -> Result<(), String> {
 }
 
 // Internal only: callers select fixed metadata endpoints and return typed summaries.
-/// GraphQL v2 request with the user's key; GraphQL errors are refused.
+/// OAuth-authenticated GraphQL request; GraphQL errors are refused.
 pub(super) async fn graphql(body: serde_json::Value) -> Result<serde_json::Value, String> {
     let data = request_metadata("https://api.nexusmods.com/v2/graphql", Some(body)).await?;
     if data.get("errors").is_some_and(|value| value.as_array().is_none_or(|errors| !errors.is_empty())) {
@@ -342,7 +270,7 @@ pub(super) async fn mod_requirements(
         .cloned()
         .ok_or_else(|| "Requisitos Nexus indisponíveis.".into())
 }
-// Fixed official endpoints only; never send the account key to metadata URLs.
+// Fixed official endpoints only; never send tokens to external metadata URLs.
 pub(super) async fn file_requirements(game_domain: &str, file_id: u64) -> Result<serde_json::Value, String> {
     super::nexus_catalog::domain(game_domain)?;
     if file_id == 0 { return Err("Arquivo Nexus inválido.".into()); }
@@ -363,13 +291,10 @@ async fn request_metadata_locked(
     url: &str,
     body: Option<serde_json::Value>,
 ) -> Result<serde_json::Value, String> {
-    let oauth = super::nexus_oauth::access(false).await?;
-    let mut header = if let Some(token) = oauth.as_ref() {
-        reqwest::header::HeaderValue::from_str(&format!("Bearer {token}"))
-    } else {
-        let key = stored("lookup", None).await?.ok_or("Conecte sua conta na aba Conta Nexus.")?;
-        reqwest::header::HeaderValue::from_str(checked_key(&key)?)
-    }.map_err(|_| "Credencial Nexus inválida.")?;
+    let token = super::nexus_oauth::access(false).await?
+        .ok_or("Conecte sua conta na aba Conta Nexus.")?;
+    let mut header = reqwest::header::HeaderValue::from_str(&format!("Bearer {token}"))
+        .map_err(|_| "Credencial Nexus inválida.")?;
     header.set_sensitive(true);
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(25))
@@ -382,12 +307,11 @@ async fn request_metadata_locked(
             .header("Application-Name", "PeliGames")
             .header("Application-Version", env!("CARGO_PKG_VERSION"))
     };
-    let auth_header = if oauth.is_some() { "Authorization" } else { "apikey" };
     before_request().await?;
-    let mut response = request().header(auth_header, header).send().await
+    let mut response = request().header(reqwest::header::AUTHORIZATION, header).send().await
         .map_err(|_| "Não foi possível consultar o Nexus Mods. Verifique sua conexão.")?;
     // Retry authentication once only; never turn rate-limit responses into loops.
-    if response.status().as_u16() == 401 && oauth.is_some() {
+    if response.status().as_u16() == 401 {
         observe_response(&response);
         let token = super::nexus_oauth::access(true).await?.ok_or("Reconecte sua conta Nexus.")?;
         before_request().await?;

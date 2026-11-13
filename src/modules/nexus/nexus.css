@@ -121,13 +121,6 @@
   .nexus-catalog-browser > .modal-scroll-body { overflow-y: auto; }
   .nexus-catalog-browser .nexus-catalog-grid { flex: none; height: 180px; }
 }
-:root .modal-content.nexus-popup.nexus-queue-popup {
-  width: min(1120px, calc(100vw - 32px)) !important;
-  height: min(900px, calc(100dvh - 82px));
-  max-width: calc(100vw - 32px); max-height: calc(100dvh - 82px) !important;
-  min-width: min(540px, calc(100vw - 32px)); min-height: min(420px, calc(100dvh - 82px));
-  resize: both;
-}
 .nexus-popup .dialog-titlebar h2 { display: flex; align-items: center; gap: .55rem; }
 .nexus-popup .nexus-tabs { margin-top: .8rem; }
 .nexus-panel .nexus-mods-content { padding: .8rem; }
@@ -203,7 +196,6 @@
 .nexus-queue-file + .nexus-queue-file { border-top: 1px solid rgba(var(--surface-255-255-255,255,255,255),.1); }
 .nexus-queue-file span { min-width: 0; }
 
-:root .nexus-queue-popup.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { padding: 76px 1.1rem 1rem; }
 .nexus-queue-popup .nexus-queue-list { gap: 1rem; grid-template-columns: minmax(0, 1fr); }
 .nexus-queue-popup .nexus-queue-list > article { padding: 1rem; min-width: 0; container-type: inline-size; }
 .nexus-queue-popup .nexus-queue-files { margin-top: .5rem; padding: .5rem .65rem; min-width: 0; }
@@ -230,7 +222,6 @@
   50% { transform: scale(1.14); opacity: 1; filter: drop-shadow(0 0 6px rgba(var(--accent-rgb), .85)); }
 }
 @media (prefers-reduced-motion: reduce) { .nexus-queue-note svg { animation: none; filter: drop-shadow(0 0 3px rgba(var(--accent-rgb), .5)); } }
-.nexus-queue-popup .nexus-popup-footer { padding: .75rem 1.1rem; }
 /* One row per mod: its main version and additional downloads stay together. */
 .nexus-queue-entry-columns { display: grid; grid-template-columns: minmax(0,1fr); gap: 1rem; margin-top: .8rem; }
 .nexus-queue-entry-columns:empty { display: none; }

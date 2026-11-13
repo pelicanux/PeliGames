@@ -1,3 +1,5 @@
+import {useAddonStore} from "../modules/addons/store";
+import {activeFrameGenerationAddons} from "../modules/addons/launchSettings";
 import {SelectionMenu} from "./SelectionMenu";
 import {PRESETS, applyPreset} from "./preferences/mangoHudPresets";
 import {listMangoHudPresets, type MangoHudPreset} from "../services/mangohud";
@@ -37,7 +39,7 @@ export function GamePerformancePanel({value, disabled, onChange, game}: {
   const alive = useRef(true), lock = useRef(false), latest = useRef(value); latest.current = value;
   useEffect(() => { alive.current = true; let active = true;
     void loadMangoHudProfile().then(result => {if(active) {setProfile({...mangoHudDefaults(), ...result.settings});setLoaded(true);}}).catch(e => {if(active)setProfileError(String(e));});
-    return () => {active = false; alive.current = false;};
+     return () => {active = false; alive.current = false;};
   }, []);
   useEffect(() => {
     const updated = (event: Event) => {setProfile({...mangoHudDefaults(), ...(event as CustomEvent<MangoHudSettings>).detail});setLoaded(true);setProfileError("");};
@@ -46,6 +48,7 @@ export function GamePerformancePanel({value, disabled, onChange, game}: {
   }, []);
   useEffect(() => setFps(String(value?.mangohud_fps_limit ?? "")), [value?.mangohud_fps_limit]);
   const settings = normalizeAdvanced(value);
+  const hasGeneratedFrames=activeFrameGenerationAddons(settings,useAddonStore().overview).length>0;
   const overlayEnabled=settings.overlay_enabled??Boolean(overlaySupport?.legacy_enabled);
   const enabled = settings.mangohud_enabled ?? Boolean(settings.options.mangohud || settings.options.mangohud_env || profile.launcher_enabled);
   const commit = async (next: AdvancedSettings) => {
@@ -88,12 +91,12 @@ export function GamePerformancePanel({value, disabled, onChange, game}: {
 
       </div>
       {presetError&&<p role="alert">{presetError}</p>}
-      <div className="modern-performance-row"><label htmlFor={`${id}-fps`}>{settings.afmf?.enabled ? (tx("ui-game-performance-panel", "limit_total_fps")) : (tx("ui-game-performance-panel", "limit_fps"))}</label><div className="modern-performance-limits">
+      <div className="modern-performance-row"><label htmlFor={`${id}-fps`}>{hasGeneratedFrames ? (tx("ui-game-performance-panel", "limit_total_fps")) : (tx("ui-game-performance-panel", "limit_fps"))}</label><div className="modern-performance-limits">
         <div className="modern-dlss-segments" role="group" aria-label={tx("ui-game-performance-panel", "limit_fps")}>{[0,60,120,144].map(n => <button type="button" key={n} disabled={blocked} aria-pressed={settings.mangohud_fps_limit === n} onClick={()=>limit(n)}>{n || (tx("ui-game-performance-panel", "unlimited"))}</button>)}</div>
         <input id={`${id}-fps`} type="number" min="0" max="1000" step="1" value={fps} placeholder={tx("ui-game-performance-panel", "default")} aria-label={tx("ui-game-performance-panel", "custom_fps_limit")} disabled={blocked} onChange={e=>setFps(e.target.value)} onBlur={()=>{if(fps !== String(settings.mangohud_fps_limit ?? ""))limit(fps.trim() ? Number(fps) : null);}} onKeyDown={e=>{if(e.key === "Enter")e.currentTarget.blur();}}/>
       </div></div>
       <p className="modern-performance-hint">{tx("ui-game-performance-panel", "the_limit_applies_only_to_this_game_even_with_the_hud_hidden_leave_blank_to_use_the_glob")}</p>
-      {experimentalFrameGeneration && settings.afmf?.enabled && <p className="modern-performance-hint">{tx("ui-game-performance-panel", "with_afmf_mangohud_measures_and_limits_the_total_including_generated_frames")}</p>}
+      {hasGeneratedFrames && <p className="modern-performance-hint">{tx("ui-game-performance-panel", "with_frame_generation_mangohud_measures_and_limits_total")}</p>}
       {experimentalFrameGeneration&&<>
       <div className="modern-performance-row"><div><label htmlFor={`${id}-background`}>{tx("ui-game-performance-panel", "limit_fps_when_unfocused")}</label><p>{tx("ui-game-performance-panel", "uses_mangohud_while_the_overlay_is_loaded_even_with_both_panels_hidden")}</p></div><button id={`${id}-background`} type="button" role="switch" aria-checked={settings.background_fps!=null} className={`neural-startup-switch mod-option-switch${settings.background_fps!=null?" enabled":""}`} disabled={blocked||!overlayEnabled} onClick={()=>void commit({...settings,overlay_enabled:true,background_fps:settings.background_fps==null?0:null})}><span className="neural-switch-track"><span/></span></button></div>
       {settings.background_fps!=null&&<div className="modern-performance-row"><label htmlFor={`${id}-background-fps`}>{tx("ui-game-performance-panel", "background_fps")}</label><div className="modern-performance-limits"><div className="modern-dlss-segments">{[0,30,60].map(n=><button type="button" key={n} disabled={blocked} aria-pressed={settings.background_fps===n} onClick={()=>void commit({...normalizeAdvanced(latest.current),background_fps:n})}>{n||(tx("ui-game-performance-panel", "automatic"))}</button>)}</div><input id={`${id}-background-fps`} type="number" min="1" max="1000" step="1" value={backgroundFps==="0"?"":backgroundFps} placeholder={tx("ui-game-performance-panel", "custom_fps")} disabled={blocked} aria-label={tx("ui-game-performance-panel", "custom_background_fps")} onChange={e=>setBackgroundFps(e.target.value)} onBlur={()=>{if(backgroundFps!==String(settings.background_fps)&&backgroundFps.trim())void commit({...normalizeAdvanced(latest.current),background_fps:Number(backgroundFps)});}} onKeyDown={e=>{if(e.key==="Enter")e.currentTarget.blur();}}/></div></div>}

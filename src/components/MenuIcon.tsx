@@ -1,7 +1,15 @@
 import type { ReactNode } from "react";
 
-type IconName = "bug" | "externalLink" | "eject" | "stop" | "arrowUpDown" | "chainLinked" | "chainBroken" | "sliders" | "floppy" | "copy" | "discord" | "eye" | "language" | "image" | "tools" | "gamepad" | "gamepadSearch" | "heart" | "wine" | "search" | "info" | "home" | "plus" | "plusCircle" | "back" | "play" | "trash" | "folderSearch" | "edit" | "check" | "folder" | "calendar" | "platform" | "chip" | "graphics" | "puzzle" | "logs" | "document" | "settings" | "cube" | "keyboard" | "download" | "repair" | "bolt" | "neural" | "chevronUp" | "chevronDown";
+type IconName = "close" | "packageImport" | "grid" | "checkCircle" | "filter" | "addonStore" | "bug" | "externalLink" | "eject" | "stop" | "arrowUpDown" | "chainLinked" | "chainBroken" | "sliders" | "floppy" | "copy" | "discord" | "eye" | "language" | "image" | "tools" | "gamepad" | "gamepadSearch" | "heart" | "wine" | "search" | "info" | "home" | "plus" | "plusCircle" | "back" | "play" | "trash" | "folderSearch" | "edit" | "check" | "folder" | "calendar" | "platform" | "chip" | "graphics" | "puzzle" | "logs" | "document" | "settings" | "cube" | "keyboard" | "download" | "repair" | "bolt" | "neural" | "chevronUp" | "chevronDown";
+const puzzleShape = <path d="M6 5h4V4a2 2 0 0 1 4 0v1h4a1 1 0 0 1 1 1v4h1a2 2 0 0 1 0 4h-1v4a1 1 0 0 1-1 1h-4v-1a2 2 0 0 0-4 0v1H6a1 1 0 0 1-1-1v-4h1a2 2 0 0 0 0-4H5V6a1 1 0 0 1 1-1Z"/>;
+
 const drawings: Record<IconName, ReactNode> = {
+  close: <path d="m6 6 12 12M18 6 6 18"/>,
+  packageImport: <><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Zm0 0 9 4 9-4M12 11v10M7.5 5l9 4"/><path d="M19 1v6m-3-3 3 3 3-3"/></>,
+  grid: <>{[3,14].flatMap(x=>[3,14].map(y=><rect key={x+"-"+y} x={x} y={y} width="7" height="7" rx="1.5" fill="currentColor" stroke="none"/>))}</>,
+  checkCircle: <><circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="m8 12 3 3 5-6" stroke="var(--modern-bg,#0d1018)" strokeWidth="2"/></>,
+  filter: <path d="M3 4h18l-7 8v7l-4 2v-9L3 4Z"/>,
+  addonStore: <><path d="M5 7h14l1 13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1L5 7Z"/><path d="M9 8V5a3 3 0 0 1 6 0v3"/><g transform="translate(5.25 9.25) scale(.5)" strokeWidth="3">{puzzleShape}</g></>,
   bug: <><rect x="7" y="7" width="10" height="13" rx="5"/><path d="M12 7V4M3 13h4M17 13h4M5 7l3 2M19 7l-3 2M5 19l3-2M19 19l-3-2"/></>,
   externalLink: <><path d="M14 3h7v7M21 3l-11 11"/><path d="M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></>,
   eject: <><path d="m12 4 8 10H4L12 4Z"/><path d="M4 19h16"/></>,
@@ -39,7 +47,7 @@ const drawings: Record<IconName, ReactNode> = {
   platform: <><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></>,
   chip: <><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 3v3m6-3v3M9 18v3m6-3v3M3 9h3m-3 6h3m12-6h3m-3 6h3"/></>,
   graphics: <><rect x="5" y="6" width="16" height="12" rx="2"/><circle cx="13" cy="12" r="3"/><path d="M2 5v14h3M8 18v3h8v-3"/></>,
-  puzzle: <path d="M6 5h4V4a2 2 0 0 1 4 0v1h4a1 1 0 0 1 1 1v4h1a2 2 0 0 1 0 4h-1v4a1 1 0 0 1-1 1h-4v-1a2 2 0 0 0-4 0v1H6a1 1 0 0 1-1-1v-4h1a2 2 0 0 0 0-4H5V6a1 1 0 0 1 1-1Z"/>,
+  puzzle: puzzleShape,
   logs: <><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5M8 18h8"/></>,
   document: <><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></>,
   settings: <><path d="M9.5 3h5l.6 2.4 1.6.9 2.4-.7 2.5 4.3-1.8 1.7v1.8l1.8 1.7-2.5 4.3-2.4-.7-1.6.9-.6 2.4h-5l-.6-2.4-1.6-.9-2.4.7-2.5-4.3 1.8-1.7v-1.8L2.4 9.9l2.5-4.3 2.4.7 1.6-.9L9.5 3Z"/><circle cx="12" cy="12" r="3"/></>,

@@ -1,0 +1,9 @@
+.optiscaler-software-status { min-width:0; padding-top:12px; border-top:1px solid var(--modern-line,#ffffff18); }
+.modern-ui .optiscaler-software-status h4 { margin:0 0 10px; font-size:.8125rem; font-weight:600; }
+.optiscaler-software-status dl { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr)); gap:8px 22px; margin:0; }
+.optiscaler-software-status dl > div { display:flex; align-items:baseline; justify-content:space-between; gap:10px; min-width:0; }
+.optiscaler-software-status dt { display:flex; align-items:center; gap:7px; font-size:.75rem; }
+.optiscaler-software-status dd { margin:0; color:var(--modern-muted); font-size:.6875rem; text-align:right; overflow-wrap:anywhere; }
+.optiscaler-software-dot { width:7px; height:7px; flex:none; border-radius:50%; background:var(--modern-muted,#858a96); opacity:.5; }
+.optiscaler-software-status [data-present=true] .optiscaler-software-dot { background:#39b978; opacity:1; }
+.modern-ui .optiscaler-software-status p { margin:10px 0 0; color:var(--modern-muted); font-size:.6875rem; line-height:1.5; }

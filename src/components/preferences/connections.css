@@ -29,12 +29,6 @@
 .connection-info-row strong { display:block; font-size:.8125rem; font-weight:500; }
 .modern-ui .settings-page .connection-info-row p { margin:5px 0 0; font-size:.8125rem; }
 .connection-card .mod-destructive-row { margin-top:18px; padding-top:15px; border-top:1px solid var(--mod-line); }
-.connection-api-details { margin-top:18px; border-top:1px solid var(--mod-line); padding-top:14px; }
-.connection-api-details > summary { cursor:pointer; font-size:.8125rem; font-weight:500; padding:4px 0; }
-.connection-key-form { display:grid; gap:10px; padding-top:12px; }
-.connection-key-form label { display:grid; gap:7px; font-size:.8125rem; }
-.modern-ui .settings-page .connection-key-form input { width:100%; box-sizing:border-box; min-height:35px; padding:7px 10px; border:1px solid var(--mod-line); border-radius:8px; background:var(--modern-card-2); color:var(--mod-text); }
-.connection-key-form small { color:var(--mod-muted); font-size:.75rem; line-height:1.5; }
 .connection-privacy-note { display:flex; gap:9px; align-items:flex-start; margin-top:20px; max-width:850px; color:var(--mod-muted); }
 .connection-privacy-note .menu-icon { margin-top:2px; }
 .modern-ui .settings-page .connection-privacy-note p { font-size:.75rem; margin:0; line-height:1.5; }

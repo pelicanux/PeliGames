@@ -1,4 +1,4 @@
-//! Read-only Nexus metadata; browser downloads never carry the personal API key.
+//! Read-only Nexus metadata; browser downloads never carry OAuth credentials.
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,

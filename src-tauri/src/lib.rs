@@ -108,6 +108,9 @@ fn run_mode(installer: bool) {
         for error in commands::external_library::organize_steam_tools() { core::logger::event("WARN", &format!("Integração Proton da Steam: {error}")); }
         if let Err(error) = commands::launch_profiles::enforce_release_policy() { eprintln!("Política PeliRun: {error}"); }
         if let Err(error) = commands::steam_runtime::enforce_release_policy() { eprintln!("Política de recursos PeliGames: {error}"); }
+        if startup.module=="launcher"&&launcher_instance.is_some(){
+            if let Err(error)=commands::addons::refresh_launch_profiles(){core::logger::event("WARN",&format!("Perfis dos add-ons: {error}"));}
+        }
     }
     if startup.module == "background" {
         let entry = startup.entry.clone().unwrap_or_default();
@@ -161,6 +164,12 @@ fn run_mode(installer: bool) {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(move |app| {
+            commands::capture::initialize(app.handle().clone());
+            {
+                use tauri::Emitter;
+                let handle = app.handle().clone();
+                commands::addons::set_change_sink(std::sync::Arc::new(move |snapshot| { let _ = handle.emit("addon-store-changed", snapshot); }));
+            }
             std::thread::spawn(core::bounded_logs::startup_cleanup);
             core::logger::startup();
             #[cfg(target_os = "linux")]
@@ -226,27 +235,10 @@ fn run_mode(installer: bool) {
                 commands::system_locale::system_language_preferences,
             commands::discord_presence::discord_presence_status,
             commands::discord_presence::discord_presence_preferences,
-            commands::capture::capture_prepare_overlay,
-            commands::capture::capture_runtime_status,
-            commands::capture::capture_runtime_install,
-            commands::capture::capture_runtime_remove,
-            commands::capture::capture_encoder_support,
-            commands::capture::capture_selection,
             commands::capture::capture_settings,
-            commands::capture::capture_audio_sources,
-            commands::capture::capture_support,
             commands::capture::capture_status,
-            commands::capture::capture_shortcut_preferences,
-            commands::capture::configure_capture_shortcuts,
             commands::capture::capture_start,
             commands::capture::capture_action,
-            commands::capture::capture_clips,
-            commands::capture::capture_clip_details,
-            commands::capture::capture_clip_title,
-            commands::capture::capture_clip_open,
-            commands::capture::capture_folder,
-            commands::capture::capture_storage_preferences,
-            commands::capture::configure_capture_storage,
             commands::gpu::get_advanced_capabilities,
             commands::nexus_downloads::list_nexus_downloads,
             commands::nexus_local::refresh_nexus_mod_labels,
@@ -270,7 +262,6 @@ fn run_mode(installer: bool) {
             commands::nexus_oauth::connect_nexus_oauth,
             commands::nexus_oauth::cancel_nexus_oauth,
             commands::nexus_oauth::nexus_oauth_status,
-            commands::nexus_account::connect_nexus_account,
             commands::nexus_account::load_nexus_account,
             commands::nexus_account::disconnect_nexus_account,
             commands::discord_account::connect_discord_account,
@@ -478,8 +469,26 @@ fn run_mode(installer: bool) {
             commands::proton::install_proton,
             commands::proton::cancel_proton_install,
             commands::proton::uninstall_proton,
-            commands::neural_settings::get_neural_settings,
-            commands::neural_settings::set_neural_startup,
+            commands::addons::addon_store_state,
+            commands::addons::addon_refresh_catalog,
+            commands::addons::addon_game_probe,
+            commands::addons::addon_machine_context,
+            commands::addons::addon_open_file,
+            commands::addons::addon_launch_settings,
+            commands::addons::addon_game_refresh,
+            commands::addons::addon_install_plan,
+            commands::addons::addon_local_plan,
+            commands::addons::addon_import_local,
+            commands::addons::addon_install,
+            commands::addons::addon_select_version,
+            commands::addons::addon_set_enabled,
+            commands::addons::addon_remove_version,
+            commands::addons::addon_complete_selection,
+            commands::addons::addon_service_call,
+            commands::addons::addon_service_stop,
+            commands::addons::addon_service_status,
+            commands::addons::addon_ui_contributions,
+            commands::addons::addon_ui_load,
             commands::app_updates::check_launcher_update,
             commands::app_updates::launcher_experimental_updates,
             commands::app_updates::set_launcher_experimental_updates,
@@ -489,24 +498,6 @@ fn run_mode(installer: bool) {
             commands::daniel_nr::daniel_nr_component_state,
             commands::daniel_nr::daniel_nr_operate,
             commands::daniel_nr::daniel_nr_diagnostics,
-            commands::installer::install_mod,
-            commands::installer::extract_dll,
-            commands::installer::extract_dll_wizard,
-            commands::installer::check_cached_bin,
-            commands::installer::get_backend_setup_status,
-            commands::installer::import_model_bins,
-            commands::installer::get_neural_model_status,
-            commands::installer::check_game_installation,
-            commands::installer::get_installed_dll,
-            commands::installer::get_game_installation_details,
-            commands::installer::update_shortcut_key_in_game,
-            commands::updater::update_backend,
-            commands::updater::copy_local_backend,
-            commands::updater::delete_backend,
-            commands::updater::cancel_update,
-            commands::updater::check_backend_version,
-            commands::updater::get_backend_path,
-            commands::updater::open_backend_folder,
             commands::covers::cover_directories,
             commands::covers::import_game_cover,
             commands::covers::cache_automatic_game_cover,
@@ -565,24 +556,14 @@ fn run_mode(installer: bool) {
             commands::config::log_cached_library,
             commands::maintenance::launcher_maintenance_plan,
             commands::maintenance::launcher_maintenance_apply,
-            commands::frame_generation::frame_generation_state,
-            commands::frame_generation::afmf_support,
-            commands::frame_generation::versions::frame_generation_check_updates,
-            commands::frame_generation::versions::frame_generation_remove_backup,
-            commands::frame_generation::versions::frame_generation_uninstall,
-            commands::frame_generation::frame_generation_dll_external_filesystem,
-            commands::frame_generation::install_frame_generation,
-            commands::frame_generation::prepare_frame_generation,
-            commands::frame_generation::update_frame_generation_live,
-            commands::frame_generation::flatpak::frame_generation_flatpak_status,
             commands::frame_overlay_shortcut::frame_overlay_preferences,
             commands::frame_overlay_runtime::frame_overlay_support,
             commands::frame_overlay_runtime::frame_overlay_last_session,
             #[cfg(target_os = "linux")]
             core::webkit_graphics::window_opaque,
             commands::frame_overlay_shortcut::configure_frame_overlay,
-            commands::frame_generation::resolve_game_mod_paths,
-            commands::frame_generation::set_game_mod_destination,
+            commands::game_mod_paths::resolve_game_mod_paths,
+            commands::game_mod_paths::set_game_mod_destination,
             commands::maintenance::reset::launcher_reset_status,
             commands::maintenance::reset::launcher_reset_confirm_health,
             commands::maintenance::reset::launcher_reset_continue,
@@ -603,6 +584,6 @@ fn run_mode(installer: bool) {
             if matches!(&event, tauri::RunEvent::WindowEvent { label, event: tauri::WindowEvent::Destroyed, .. } if label == "main") {
                 handle.exit(0);
             }
-            if matches!(event, tauri::RunEvent::Exit) { commands::mangohud::stop_preview(); commands::matrix_call::stop(); commands::capture::shutdown(); commands::discord_presence::shutdown(); }
+            if matches!(event, tauri::RunEvent::Exit) { commands::addons::shutdown(); commands::mangohud::stop_preview(); commands::matrix_call::stop(); commands::discord_presence::shutdown(); }
         });
 }

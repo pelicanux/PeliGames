@@ -10,7 +10,7 @@ pub struct GpuInfo {
     pub primary: bool,
 }
 
-// Only the Radeon RX series supported by the launcher's two backends qualify.
+// Identify Radeon generations for compatibility diagnostics.
 fn recommended_backend(vendor: u32, model: &str) -> Option<String> {
     if vendor != 0x1002 { return None; }
     let upper = model.to_uppercase();
@@ -114,6 +114,4 @@ pub async fn get_advanced_capabilities(runner:Option<String>) -> Result<std::col
 }
 
 /// Empty means automatic; otherwise a canonical Linux PCI BDF, never an ordinal.
-pub(crate) fn valid_pci_address(value: &str) -> bool {
-    value.is_empty() || (value.len()==12 && value.bytes().enumerate().all(|(i,b)| match i {4|7=>b==b':',10=>b==b'.',_=>b.is_ascii_hexdigit()}) && value.as_bytes()[11]<=b'7')
-}
+pub(crate) use peligames_mod_config::pci::valid_pci_address;

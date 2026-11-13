@@ -28,11 +28,16 @@ serde_json = "1"
 custom-protocol = ["tauri/custom-protocol"]
 
 [dependencies]
+peligames-audio-processing={path="../addons/_infra/shared/audio"}
+peligames-capture-contract={path="../addons/_infra/shared/capture-contract"}
+peligames-mangohud-layers={path="../addons/_infra/shared/mangohud-layers"}
+peligames-archive = { path = "../addons/_infra/shared/archive",features=["tar-xz"] }
+peligames-mod-config = { path = "../addons/_infra/shared/config" }
+peligames-addon-kit = { path = "../addons/_infra/sdk", features = ["runtime"] }
 tokio-stream = "0.1"
 livekit = { version = "=0.9.5", features = ["rustls-tls-native-roots"] }
 # Only to choose the process-wide TLS crypto backend (see run_mode).
 rustls = { version = "0.23", default-features = false, features = ["aws_lc_rs"] }
-nnnoiseless = { version = "=0.5.2", default-features = false }
 cpal = "=0.15.3"
 libloot = { version = "=0.29.6", default-features = false }
 saphyr = "=0.0.6"

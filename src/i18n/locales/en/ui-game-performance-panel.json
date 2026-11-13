@@ -13,7 +13,6 @@
   "default": "Default",
   "custom_fps_limit": "Custom FPS limit",
   "the_limit_applies_only_to_this_game_even_with_the_hud_hidden_leave_blank_to_use_the_glob": "The limit applies only to this game, even with the HUD hidden. Leave blank to use the global limit.",
-  "with_afmf_mangohud_measures_and_limits_the_total_including_generated_frames": "With AFMF, MangoHUD measures and limits the total, including generated frames.",
   "limit_fps_when_unfocused": "Limit FPS when unfocused",
   "uses_mangohud_while_the_overlay_is_loaded_even_with_both_panels_hidden": "Uses MangoHUD while the overlay is loaded, even with both panels hidden.",
   "background_fps": "Background FPS",
@@ -33,5 +32,6 @@
   "experimental_requires_64_bit_vulkan_native_linux_input_requires_wayland_32_bit_windows_g": "Experimental: requires 64-bit Vulkan. Native Linux input requires Wayland. 32-bit Windows games may need WoW64 in Advanced; disable it if it fails. 32-bit Linux is unsupported.",
   "on_flatpak_steam_the_overlay_is_prepared_inside_the_sandbox": " On Flatpak Steam, the overlay is prepared inside the sandbox.",
   "last_launch": "Last launch",
-  "recorded_steps": "Recorded steps"
+  "recorded_steps": "Recorded steps",
+  "with_frame_generation_mangohud_measures_and_limits_total": "With frame generation, MangoHUD measures and limits total FPS, including generated frames."
 }

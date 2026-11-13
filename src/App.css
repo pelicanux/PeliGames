@@ -1994,7 +1994,7 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
 .steam-manual-proton p { margin: 0; font-size: 0.8125rem; line-height: 1.6; color: var(--text-primary, #edf0f8); }
 
 /* Manual Steam setup follows the current rounded, restrained dialog design. */
-:root[data-appearance] .steam-manual-popup.fixed-glass-frame {
+:root[data-appearance] :is(.steam-manual-popup,.modern-dialog).fixed-glass-frame {
   border-radius: 22px !important;
   --glass-corner-fill: .035;
   --glass-base-start: 12, 16, 24;
@@ -2002,32 +2002,32 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
   --glass-opacity-start: .96;
   --glass-opacity-end: .94;
 }
-:root[data-appearance] .steam-manual-popup::after { content: none !important; }
-:root .steam-manual-popup > .dialog-titlebar {
+:root[data-appearance] :is(.steam-manual-popup,.modern-dialog)::after { content: none !important; }
+:root :is(.steam-manual-popup,.modern-dialog) > .dialog-titlebar {
   position: relative; inset: auto; flex-shrink: 0; height: auto; min-height: 68px;
   padding: 20px 68px 16px 24px; border: 0; border-radius: 0;
   background: none; box-shadow: none; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
 }
-:root .steam-manual-popup .dialog-titlebar h2 { font-family: inherit !important; font-size: 1.125rem !important; font-weight: 650; letter-spacing: -.02em; }
-:root .steam-manual-popup .dialog-titlebar h2 > svg { color: var(--accent-color, var(--accent)); width: 21px; height: 21px; }
-:root .steam-manual-popup.fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { padding: 0 24px 22px; }
-.steam-manual-popup .steam-manual-intro { margin: 0 0 18px; }
-.steam-manual-popup .steam-manual-field { gap: 8px; margin: 0 0 16px; font-weight: 600; }
-.steam-manual-popup .steam-manual-field textarea { border-radius: 12px; background: rgba(0, 0, 0, .24); border-color: rgba(160, 177, 204, .2); }
-.steam-manual-popup .steam-manual-proton { border: 1px solid rgba(var(--accent-rgb), .18); background: rgba(var(--accent-rgb), .07); }
-.steam-manual-popup .steam-manual-help { margin: 16px 0 0; font-size: 0.75rem; }
-:root .steam-manual-popup .nexus-popup-footer { padding: 14px 24px; border-color: rgba(160, 177, 204, .12); background: rgba(0, 0, 0, .12); gap: 8px; }
-:root .steam-manual-popup .nexus-popup-footer button {
+:root :is(.steam-manual-popup,.modern-dialog) .dialog-titlebar h2 { font-family: inherit !important; font-size: 1.125rem !important; font-weight: 650; letter-spacing: -.02em; }
+:root :is(.steam-manual-popup,.modern-dialog) .dialog-titlebar h2 > svg { color: var(--accent-color, var(--accent)); width: 21px; height: 21px; }
+:root :is(.steam-manual-popup,.modern-dialog).fixed-glass-frame.has-dialog-titlebar > .modal-scroll-body { padding: 0 24px 22px; }
+:is(.steam-manual-popup,.modern-dialog) .steam-manual-intro { margin: 0 0 18px; }
+:is(.steam-manual-popup,.modern-dialog) .steam-manual-field { gap: 8px; margin: 0 0 16px; font-weight: 600; }
+:is(.steam-manual-popup,.modern-dialog) .steam-manual-field textarea { border-radius: 12px; background: rgba(0, 0, 0, .24); border-color: rgba(160, 177, 204, .2); }
+:is(.steam-manual-popup,.modern-dialog) .steam-manual-proton { border: 1px solid rgba(var(--accent-rgb), .18); background: rgba(var(--accent-rgb), .07); }
+:is(.steam-manual-popup,.modern-dialog) .steam-manual-help { margin: 16px 0 0; font-size: 0.75rem; }
+:root :is(.steam-manual-popup,.modern-dialog) .nexus-popup-footer { padding: 14px 24px; border-color: rgba(160, 177, 204, .12); background: rgba(0, 0, 0, .12); gap: 8px; }
+:root :is(.steam-manual-popup,.modern-dialog) .nexus-popup-footer button {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   min-height: 38px; padding: 9px 14px; border-radius: 12px !important;
   border: 1px solid rgba(160, 177, 204, .2); background: rgba(160, 177, 204, .08) !important;
   color: var(--text-primary, #edf0f8); box-shadow: none !important; font-family: inherit; font-weight: 600; font-size: 0.8125rem; line-height: 1.3;
 }
-:root .steam-manual-popup .nexus-popup-footer .btn-primary { background: rgba(var(--accent-rgb), .18) !important; border-color: rgba(var(--accent-rgb), .4); }
-:root .steam-manual-popup .nexus-popup-footer button:hover:not(:disabled) { background: rgba(var(--accent-rgb), .25) !important; }
-:root[data-appearance="light"] .steam-manual-popup { --glass-base-start: 240, 244, 250; --glass-base-end: 225, 232, 243; }
+:root :is(.steam-manual-popup,.modern-dialog) .nexus-popup-footer .btn-primary { background: rgba(var(--accent-rgb), .18) !important; border-color: rgba(var(--accent-rgb), .4); }
+:root :is(.steam-manual-popup,.modern-dialog) .nexus-popup-footer button:hover:not(:disabled) { background: rgba(var(--accent-rgb), .25) !important; }
+:root[data-appearance="light"] :is(.steam-manual-popup,.modern-dialog) { --glass-base-start: 240, 244, 250; --glass-base-end: 225, 232, 243; }
 @media (max-width: 600px) {
-  :root .steam-manual-popup .nexus-popup-footer button { flex: 1 1 200px; }
+  :root :is(.steam-manual-popup,.modern-dialog) .nexus-popup-footer button { flex: 1 1 200px; }
 }
 
 /* Compact launcher controls use the same dark, rounded surfaces as the new UI. */
@@ -2073,17 +2073,6 @@ html.log-monitor-window, .log-monitor-window body, .log-monitor-window #root { b
 .launcher-settings-menu .effects-preference-label > svg { flex-shrink: 0; }
 .launcher-settings-menu .launcher-settings-scale > div:first-child { min-width: 0; }
 
-.pelirun-export { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:16px 0; border-top:1px solid var(--border-color, #ffffff18); }
-.pelirun-export p { margin:5px 0 0; font-size:13px; color:var(--text-secondary, #aab0bb); }
-.pelirun-export > button { flex-shrink:0; }
-.pelirun-export-targets { display:flex; flex-wrap:wrap; gap:6px; margin:16px 0; }
-.pelirun-export-targets [aria-pressed="true"] { background:var(--accent-color, #167dba); color:white; }
-.pelirun-export-field { display:block; margin:14px 0; font-size:13px; }
-.pelirun-export-field > span { display:block; margin-bottom:7px; }
-.pelirun-export-field > div { display:flex; align-items:center; gap:8px; }
-.pelirun-export-field input { flex:1; min-width:0; padding:9px 10px; border:1px solid #ffffff20; border-radius:8px; background:#0003; color:inherit; font-size:12px; }
-.pelirun-export-note { font-size:12px; opacity:.8; line-height:1.5; }
-@media (max-width:640px) { .pelirun-export { align-items:flex-start; flex-direction:column; } }
 
 .log-view-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .log-delete-button { color:var(--tone-ef4444, #ef4444); }

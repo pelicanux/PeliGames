@@ -5,5 +5,8 @@
   "addon_nexus_0": "Manage backups and recovery for your mods.",
   "addon_mako_0": "Install and manage the frame generation component.",
   "addon_afmf_0": "Prepare AFMF frame generation for your games.",
-  "addon_capture_0": "Prepare gameplay recording and instant replays."
+  "addon_capture_0": "Prepare gameplay recording and instant replays.",
+  "addon_optiscaler": "Prepare official OptiScaler and configure it per game.",
+  "support_projects": "Explore and support the projects",
+  "visit_project": "Visit the project"
 }

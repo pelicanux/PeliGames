@@ -1,5 +1,11 @@
-:root .game-entry-options .game-entry-option { display:flex; flex-direction:row; align-items:center; justify-content:flex-start; gap:12px; text-align:left; min-width:0; }
+:root .game-entry-options .game-entry-option { display:flex; flex-direction:row; align-items:center; justify-content:flex-start; gap:12px; text-align:left; min-width:0; min-height:88px; padding:16px; border:1px solid rgba(150,160,180,.18); border-radius:14px; background:rgba(150,160,180,.06); color:var(--text-primary); font:inherit; font-size:.9375rem; font-weight:600; cursor:pointer; }
+:root .game-entry-options .game-entry-option:hover { border-color:rgba(var(--accent-rgb),.4); background:rgba(var(--accent-rgb),.08); }
+:root .game-entry-options .game-entry-option::before,
+:root .game-entry-options .game-entry-option::after { content:none !important; }
 .game-entry-option > span:last-child { min-width:0; overflow-wrap:anywhere; }
 :root .game-entry-option .installation-action-icon { flex-shrink:0; }
 :root .game-entry-option .installation-action-icon > .menu-icon { width:19px; height:19px; color:#fff; }
 :root .game-entry-option > .installation-action-icon { background:linear-gradient(150deg,var(--action-icon-top),var(--action-icon-bottom)); color:#fff; }
+.game-entry-dialog .game-entry-launchers { border-color:rgba(150,160,180,.14); }
+.game-entry-dialog .game-entry-launcher { min-height:92px; border-color:rgba(150,160,180,.18); border-radius:12px; background:rgba(150,160,180,.04); }
+.game-entry-dialog .game-entry-launcher:hover { border-color:rgba(var(--accent-rgb),.4); background:rgba(var(--accent-rgb),.08); box-shadow:none; }

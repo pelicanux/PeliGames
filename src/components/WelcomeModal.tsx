@@ -1,3 +1,4 @@
+import {AddonGuideVisual} from "../modules/addons/AddonGuide";
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { ModalSurface } from "./ModalSurface";
@@ -80,10 +81,10 @@ export function WelcomeModal({ onStart, onNavigate }: { onStart: () => void; onN
           {error && <p role="alert" className="preferences-error">{error}</p>}
         </div>
         <figure className={`welcome-art ${intro ? "welcome-art-stack" : ""}`}>
-          <div className="welcome-screens">
+          {slide.id==="addons"?<AddonGuideVisual/>:<div className="welcome-screens">
             {intro && <><img className="welcome-screen welcome-screen-back" src="/welcome/monitoring.jpg" alt="" /><img className="welcome-screen welcome-screen-middle" src="/welcome/nexus.jpg" alt="" /></>}
             <img className="welcome-screen welcome-screen-front" src={`/welcome/${slide.image}.jpg`} alt={slide.alt} />
-          </div>
+          </div>}
           <figcaption>{tx("ui-welcome-modal", "interface_screenshots_demonstration_data")}</figcaption>
         </figure>
       </section>

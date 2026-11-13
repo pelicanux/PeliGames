@@ -34,18 +34,15 @@ pub(super) fn advanced(value: &Value) -> Value {
             "launch_backend",
         ],
     );
-    out["afmf"] = select(
-        &value["afmf"],
-        &[
-            "enabled",
-            "performance_mode",
-            "search_mode",
-            "fast_motion",
-            "min_fps",
-            "hud_detect",
-            "pacing",
-        ],
-    );
+    // Integration payloads are opaque and may contain private values. Report only
+    // bounded identifiers and activation metadata, never arbitrary module data.
+    out["addons"] = value["addon_launch"].as_object().into_iter().flatten()
+        .take(16).filter(|(id, _)| peligames_addon_kit::manifest::identifier(id).is_ok())
+        .map(|(id, settings)| {
+            let group=settings["group"].as_str().filter(|value| ["mods","frame-generation","captures"].contains(value));
+            (id.clone(),json!({"enabled":settings["enabled"].as_bool(),"group":group}))
+        })
+        .collect::<serde_json::Map<String, Value>>().into();
     out["gamescope"] = select(
         &value["gamescope"],
         &[
@@ -98,7 +95,7 @@ pub(super) fn neural_settings_snapshot(text: &str) -> Value {
         serde_json::from_str(include_str!("../../../resources/neural-controls.json"))
             .unwrap_or_default();
     let mut result = serde_json::Map::new();
-    for (group, fields) in crate::core::neural_config::sections(text) {
+    for (group, fields) in peligames_mod_config::ini::sections(text) {
         let layer = group
             .strip_prefix("layer")
             .and_then(|s| s.parse::<u16>().ok())
@@ -199,6 +196,14 @@ mod tests {
         for value in ["Alice", "hidden", "secret", "additional_options", "program"] {
             assert!(!out.contains(value), "{out}");
         }
+    }
+    #[test]
+    fn integration_reports_include_activation_but_never_opaque_module_payloads() {
+        let value=json!({"addon_launch":{"fixture":{"enabled":true,"group":"frame-generation","data":{"token":"private-secret","username":"Alice"}},"malformed":{"enabled":"private-secret","group":{"token":"private-secret"}}}});
+        let output=advanced(&value);
+        assert_eq!(output["addons"]["fixture"],json!({"enabled":true,"group":"frame-generation"}));
+        let text=output.to_string();
+        assert!(!text.contains("private-secret")&&!text.contains("Alice")&&!text.contains("token"));
     }
     #[test]
     fn neural_snapshot_keeps_layers_and_controls_but_excludes_unknown_fields() {

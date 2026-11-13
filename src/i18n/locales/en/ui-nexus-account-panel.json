@@ -3,8 +3,6 @@
   "connected": "Connected",
   "waiting_for_sign_in": "Waiting for sign-in",
   "not_connected": "Not connected",
-  "authorize_in_your_browser_or_use_your_personal_api_key": "Authorize in your browser or use your personal API key.",
-  "connect_with_a_personal_key": "Connect with a personal key",
   "remove_connection": "Remove connection",
   "deletes_credentials_from_this_device_your_account_and_mods_are_preserved": "Deletes credentials from this device. Your account and mods are preserved.",
   "disconnect": "Disconnect",
@@ -15,5 +13,6 @@
   "you_can_install_your_own_files_without_connecting_an_account": "You can install your own files without connecting an account.",
   "internal_browser": "Internal browser",
   "sign_in_to_the_website_and_manage_your_nexus_account": "Sign in to the website and manage your Nexus account.",
-  "open": "Open"
+  "open": "Open",
+  "authorize_in_your_browser": "Sign in through your browser and authorize PeliGames on Nexus Mods. Your password never passes through the launcher."
 }

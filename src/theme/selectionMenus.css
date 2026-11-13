@@ -39,3 +39,33 @@
 :root .custom-select-menu.selection-options{overflow:hidden}
 .selection-options>.selection-options-scroll{position:relative;display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
 .selection-options-scroll>.custom-select-option{flex-shrink:0}
+
+/* A single quiet surface: options use a checkmark instead of individual frames. */
+:root .selection-menu-compact .custom-select-trigger.custom-select-trigger {
+ background:rgba(140,150,170,.08) !important; background-image:none !important;
+ border:1px solid rgba(150,160,180,.18) !important; border-radius:10px !important;
+ box-shadow:none !important;
+}
+:root .selection-menu-compact .custom-select-trigger:is(:hover,.open) { border-color:rgba(var(--accent-rgb),.5) !important; }
+:root .custom-select-menu.selection-options-compact {
+ padding:5px; border:1px solid rgba(150,160,180,.2) !important; border-radius:14px !important;
+ background:#1b1e27 !important; background-image:none !important; box-shadow:0 12px 32px #0005 !important;
+}
+:root .selection-menu-compact .custom-select-trigger::before,
+:root .selection-menu-compact .custom-select-trigger::after,
+:root .selection-options-compact::before,
+:root .selection-options-compact::after,
+:root .selection-options-compact .custom-select-option::before,
+:root .selection-options-compact .custom-select-option::after { content:none !important; }
+:root .custom-select-menu.selection-options-compact .custom-select-option.custom-select-option {
+ display:flex; flex-direction:row; align-items:center; justify-content:space-between; gap:12px;
+ min-height:28px; margin:1px 0; padding:5px 8px; font-size:.75rem; line-height:1.4; border:0 !important; border-radius:8px !important;
+ background:transparent !important; background-image:none !important; box-shadow:none !important; color:#d9deea;
+}
+:root .custom-select-menu.selection-options-compact .custom-select-option:is(:hover,:focus-visible):not(:disabled) { background:rgba(160,170,190,.1) !important; color:#fff; }
+:root .custom-select-menu.selection-options-compact .custom-select-option.selected { background:rgba(var(--accent-rgb),.14) !important; color:var(--accent-soft); }
+.selection-options-compact .selection-option-label { min-width:0; }
+.selection-options-compact .selection-option-check { flex:none; visibility:hidden; }
+.selection-options-compact [aria-selected=true] .selection-option-check { visibility:visible; }
+:root[data-appearance=light] .custom-select-menu.selection-options-compact { background:#f8f9fc !important; }
+:root[data-appearance=light] .custom-select-menu.selection-options-compact .custom-select-option { color:#242b3a; }

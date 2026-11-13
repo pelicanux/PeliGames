@@ -1,4 +1,11 @@
 {
   "mods_for_this_game": "Mods deste jogo",
-  "daniel_nr_test": "Daniel NR (teste)"
+  "daniel_nr_test": "Daniel NR (teste)",
+  "choose_type": "Escolha o tipo de mod para configurar neste jogo.",
+  "nexus_hint": "Instale e gerencie mods, coleções e backups deste jogo.",
+  "upscaler_hint": "Configure o OptiScaler, a reconstrução de imagem e o menu antes de jogar.",
+  "nr_hint": "Escolha o projeto de Neural Rendering para sua placa de vídeo.",
+  "choose_backend": "Escolha o backend de Neural Rendering. Cada projeto tem seus próprios requisitos e componentes.",
+  "all_mods": "Todos os mods",
+  "backends": "Backends DLSSNR-AMD"
 }

@@ -1,0 +1,14 @@
+.afmf-addon{min-width:0;font-size:.8125rem;line-height:1.55}
+.afmf-addon h3{font-size:.9375rem;margin:0 0 8px}.afmf-addon h4{font-size:.8125rem;margin:18px 0 8px}
+.afmf-addon p,.afmf-addon small,.afmf-hint{color:var(--modern-muted);font-size:.75rem}.afmf-addon p{margin:6px 0 16px}
+.afmf-runtime header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.afmf-runtime header p{margin:4px 0 14px}
+.afmf-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px}.afmf-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.afmf-actions svg{flex:none;width:15px;height:15px}
+.afmf-path{display:flex;align-items:center;gap:14px;border-block:1px solid var(--mod-line);padding:10px 0;margin:14px 0;font-size:.75rem;min-width:0}
+.afmf-path>span{flex:none;color:var(--modern-muted)}.afmf-path button{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:none;border:0;color:var(--modern-muted);padding:0;text-align:left;font:inherit;cursor:pointer}.afmf-path button:disabled{cursor:default;opacity:.7}
+.afmf-versions>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--mod-line);padding:10px 0}.afmf-versions>div>span:first-child{margin-right:auto}.afmf-confirm{color:var(--modern-muted);flex:1 1 180px;font-size:.75rem}
+.afmf-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));column-gap:24px}.afmf-field{display:flex;align-items:center;justify-content:space-between;gap:14px;min-width:0;border-bottom:1px solid var(--mod-line);padding:13px 0}.afmf-field>span{min-width:0;flex:1}.afmf-field small{display:block;margin-top:4px}.afmf-field>div,.afmf-field>input{flex:0 1 120px;max-width:50%;min-width:0}.afmf-field input{width:90px;background:var(--modern-card,#171a22);border:1px solid var(--mod-line);border-radius:8px;color:inherit;padding:7px 9px;font:inherit}
+.afmf-overview{display:flex;flex-wrap:wrap;align-items:center;gap:12px}.afmf-overview span{color:var(--modern-muted);font-size:.75rem}
+
+.afmf-field--stacked{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:10px}
+.afmf-field--stacked>div,.afmf-field--stacked>input{flex:none;width:100%;max-width:100%;min-width:0;box-sizing:border-box}

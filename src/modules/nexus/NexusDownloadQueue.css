@@ -1,0 +1,39 @@
+/* The download chooser shares the current dialog surface and mod controls. */
+:root .modal-content.nexus-popup.nexus-queue-popup { width:min(1000px,calc(100vw - 32px)) !important; height:min(840px,calc(100dvh - 82px)); max-width:calc(100vw - 32px); max-height:calc(100dvh - 82px) !important; min-width:min(440px,calc(100vw - 32px)); min-height:min(360px,calc(100dvh - 82px)); resize:both; }
+:root .nexus-queue-popup.steam-manual-popup > .dialog-titlebar { min-height:64px; padding:20px 64px 16px 22px; }
+:root .nexus-queue-popup.steam-manual-popup.has-dialog-titlebar > .modal-scroll-body { padding:0 22px 20px; }
+.nexus-queue-popup.modern-ui .nexus-queue-intro { margin:0 0 16px; color:var(--modern-muted); font-size:.8125rem; line-height:1.5; }
+.nexus-queue-popup.modern-ui .nexus-queue-list { gap:12px; }
+.nexus-queue-popup.modern-ui .nexus-queue-list > article { padding:16px; border:1px solid var(--modern-line); border-radius:14px; background:var(--modern-card); }
+.nexus-queue-popup.modern-ui .nexus-queue-choice { display:grid; grid-template-columns:18px minmax(0,1fr) auto; gap:10px; align-items:start; }
+.nexus-queue-popup.modern-ui .nexus-queue-choice strong { font-size:.875rem; line-height:1.5; font-weight:600; overflow-wrap:anywhere; }
+.nexus-queue-popup.modern-ui .nexus-queue-list input { width:16px; height:16px; margin:3px 0 0; }
+.nexus-queue-popup.modern-ui .nexus-queue-badge { padding:3px 8px; border:1px solid var(--modern-line); border-radius:999px; background:var(--modern-card-2); color:var(--modern-muted); font-size:.6875rem; font-weight:500; white-space:nowrap; }
+.nexus-queue-popup.modern-ui .nexus-queue-entry-columns { margin-top:14px; gap:16px; }
+.nexus-queue-popup.modern-ui .nexus-queue-entry-columns h4 { margin:0 0 8px; font-size:.75rem; font-weight:500; color:var(--modern-muted); }
+.nexus-queue-popup.modern-ui .nexus-queue-files { display:grid; gap:8px; margin:0; }
+.nexus-queue-popup.modern-ui .nexus-file-choice-group { min-width:0; }
+.nexus-queue-popup.modern-ui .nexus-queue-file { gap:10px; margin:4px 0 0; padding:10px 12px; border:1px solid transparent; border-radius:10px; background:var(--modern-card); }
+.nexus-queue-popup.modern-ui .nexus-queue-file:hover { background:var(--modern-card-2); }
+.nexus-queue-popup.modern-ui .nexus-queue-file.selected { background:rgba(var(--accent-rgb),.08); border-color:rgba(var(--accent-rgb),.35); }
+.nexus-queue-popup.modern-ui .nexus-queue-file:has(input:disabled) { cursor:default; opacity:.6; }
+.nexus-queue-popup.modern-ui .nexus-queue-file-info strong { font-size:.8125rem; font-weight:500; line-height:1.4; }
+.nexus-queue-popup.modern-ui .nexus-queue-file-info small { font-size:.6875rem; color:var(--modern-muted); }
+.nexus-queue-popup.modern-ui .nexus-queue-selected-description { margin:8px 0 0; padding:0; color:var(--modern-muted); font-size:.75rem; }
+.nexus-queue-popup.modern-ui .nexus-queue-optionals { border-color:var(--modern-line); }
+.nexus-queue-popup.modern-ui .nexus-queue-note { width:28px; height:28px; padding:5px; border:1px solid var(--modern-line); border-radius:8px; background:transparent; color:var(--modern-muted); }
+.nexus-queue-popup.modern-ui .nexus-queue-note svg { width:16px; height:16px; filter:none; }
+.nexus-queue-popup.modern-ui .nexus-requirement-list article { padding:12px 14px; border-color:var(--modern-line); border-radius:12px; background:var(--modern-card); }
+.nexus-queue-popup.modern-ui .nexus-queue-external-heading strong { font-size:.8125rem; font-weight:500; }
+:root .nexus-queue-popup.modern-ui .nexus-popup-footer { padding:14px 22px; }
+.nexus-queue-download { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:38px; padding:9px 14px; border:1px solid #ffffff18; border-radius:10px; font:inherit; font-size:.8125rem; font-weight:600; cursor:pointer; }
+:root .nexus-queue-popup.steam-manual-popup .nexus-popup-footer .nexus-queue-download { background:#f2f3f8 !important; color:#171a22; }
+:root .nexus-queue-popup.steam-manual-popup .nexus-popup-footer .nexus-queue-download:hover:not(:disabled) { background:#fff !important; }
+.nexus-queue-download:disabled { opacity:.45; cursor:not-allowed; }
+.nexus-queue-download > svg { width:16px; height:16px; }
+@media (max-width:600px) {
+ :root .nexus-queue-popup.steam-manual-popup.has-dialog-titlebar > .modal-scroll-body { padding-inline:14px; }
+ .nexus-queue-popup.modern-ui .nexus-queue-list > article { padding:12px; }
+ .nexus-queue-popup.modern-ui .nexus-queue-choice { grid-template-columns:18px minmax(0,1fr); }
+ .nexus-queue-popup.modern-ui .nexus-queue-badge { grid-column:2; justify-self:start; }
+}

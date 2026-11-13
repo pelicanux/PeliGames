@@ -224,11 +224,11 @@ pub fn state(base: &Path, game: &Game) -> Result<State, String> {
         installed: managed && directory.join(JOURNAL).is_file(),
         enabled: {
             let ini = text(&directory.join("OptiScaler.ini"));
-            let flags = super::neural_config::sections(&ini);
+            let flags = peligames_mod_config::ini::sections(&ini);
             startup_enabled(&ini)
                 && (runtimes::installed(&directory, &executable) != Some(runtimes::Runtime::V08)
-                    || super::neural_config::flag(
-                        super::neural_config::get(&flags, "DLSS", "NeuralHubNrEnabled"),
+                    || peligames_mod_config::ini::flag(
+                        peligames_mod_config::ini::get(&flags, "DLSS", "NeuralHubNrEnabled"),
                         false,
                     ))
         },
@@ -409,9 +409,9 @@ fn recorded_executable(root: &Path, preferred: Option<&Path>) -> Result<Option<P
 }
 
 fn startup_enabled(text: &str) -> bool {
-    let sections = super::neural_config::sections(text);
-    super::neural_config::flag(
-        super::neural_config::get(&sections, "DlssNr", "Enabled"),
+    let sections = peligames_mod_config::ini::sections(text);
+    peligames_mod_config::ini::flag(
+        peligames_mod_config::ini::get(&sections, "DlssNr", "Enabled"),
         false,
     )
 }

@@ -50,10 +50,6 @@
 .preference-mod-tabs[data-active=nexus]::before { transform:translateX(calc(100% + 3px)); }
 .preference-mod-tabs[data-active=mako]::before { transform:translateX(calc(200% + 6px)); }
 /* The game's frame generators share the two-option pill. */
-.preference-mod-tabs.fg-generator-tabs { grid-template-columns:repeat(2,minmax(0,1fr)); }
-.preference-mod-tabs.fg-generator-tabs::before { width:calc((100% - 9px)/2); }
-.preference-mod-tabs.fg-generator-tabs[data-active=mako]::before { transform:none; }
-.preference-mod-tabs.fg-generator-tabs[data-active=afmf]::before { transform:translateX(calc(100% + 3px)); }
 .preference-mod-tabs button { min-width:0; padding:7px 12px; border:1px solid transparent; border-radius:9px; background:transparent; color:#a9b1c1; font:inherit; font-size:.8125rem; font-weight:600; cursor:pointer; }
 .preference-mod-tabs button[aria-selected=true] { color:#f2f6ff; }
 .preference-mod-tabs button:hover:not(:disabled) { color:#f2f6ff; background:rgba(var(--accent-rgb),.07); }

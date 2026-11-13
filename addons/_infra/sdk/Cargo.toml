@@ -1,0 +1,28 @@
+[package]
+name = "peligames-addon-kit"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-only"
+description = "Package contracts and transactional storage for PeliGames add-ons"
+
+[features]
+default = ["packages"]
+packages = ["dep:sha2", "dep:zip"]
+jobs = ["dep:tokio"]
+runtime = ["packages", "dep:tokio", "dep:libc"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+semver = "1"
+sha2 = { version = "0.10", optional = true }
+zip = { version = "0.6.6", default-features = false, features = ["deflate"], optional = true }
+tokio = { version = "1", features = ["rt-multi-thread", "process", "io-util", "sync", "time", "macros"], optional = true }
+
+[target.'cfg(unix)'.dependencies]
+libc = { version = "0.2", optional = true }
+
+[[bin]]
+name = "peligames-addon"
+path = "src/main.rs"
+required-features = ["packages"]

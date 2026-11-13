@@ -1,11 +1,7 @@
 {
   "copied": "Copiado",
   "copy": "Copiar",
-  "select_where_you_will_launch_this_game_the_identifier_and_profile_stay_the_same_across_l": "Selecione onde você vai iniciar este jogo. O identificador e o perfil são os mesmos em todos os launchers.",
   "target_launcher": "Launcher de destino",
-  "game_properties_general_launch_options_use_the_line_below_and_keep_proton_selection_in_s": "Propriedades do jogo → Geral → Opções de inicialização. Use a linha abaixo e mantenha a seleção do Proton na Steam.",
-  "game_settings_advanced_wrapper_command_enter_the_executable_and_arguments_in_their_respe": "Configurações do jogo → Avançado → Comando wrapper. Informe o executável e os argumentos nos respectivos campos.",
-  "configure_game_system_options_command_prefix_use_the_line_below": "Configurar jogo → Opções do sistema → Prefixo de comando. Use a linha abaixo.",
   "use_the_launcher_s_wrapper_or_command_prefix_setting_it_must_pass_the_complete_game_comm": "Use o campo de wrapper ou prefixo de comando do launcher. Ele deve passar o comando completo do jogo ao PeliRun; um campo que aceita apenas argumentos do jogo não é suficiente.",
   "executable": "Executável",
   "wrapper_arguments": "Argumentos do wrapper",
@@ -19,5 +15,12 @@
   "could_not_prepare_the_profile_try_again": "Não foi possível preparar o perfil. Tente novamente.",
   "retry": "Tentar novamente",
   "close": "Fechar",
-  "other_launcher": "Outro"
+  "other_launcher": "Outro",
+  "command_ready": "Comando PeliRun pronto",
+  "refresh_command": "Atualizar comando",
+  "steam_destination": "Steam → Propriedades → Geral → Opções de inicialização",
+  "heroic_destination": "Heroic → Configurações do jogo → Avançado → Comando wrapper",
+  "lutris_destination": "Lutris → Configurar → Opções do sistema → Prefixo de comando",
+  "setup_once": "Cole uma vez no launcher. Depois, ajuste pelo PeliGames e reabra o jogo.",
+  "compatibility_details": "Proton e permissões do Flatpak"
 }

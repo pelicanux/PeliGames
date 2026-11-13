@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="{{LANGUAGE}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>{{TITLE}} — PeliGames</title>
+  <style>
+    :root { color-scheme:dark; font-family:system-ui,sans-serif; color:#edf1f8; background:#0d0e16; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100svh; display:grid; place-items:center; padding:24px; background:radial-gradient(ellipse at 50% 0,#18283b 0,transparent 65%),#0d0e16; }
+    main { width:min(100%,510px); padding:clamp(24px,6vw,40px); border:1px solid #ffffff17; border-radius:20px; background:#171a22; box-shadow:0 24px 80px #0005; }
+    .brand { margin-bottom:32px; }
+    .service { display:block; margin:0 0 14px; color:#a7b4c9; font-size:13px; font-weight:600; }
+    .status { display:grid; place-items:center; width:48px; height:48px; margin-bottom:20px; border:1px solid #3399dd55; border-radius:14px; background:#169bff18; color:#89cfff; }
+    .status.error { color:#efb483; border-color:#efb48344; background:#efb48312; }
+    .status svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+    h1 { margin:0 0 12px; font-size:clamp(23px,5vw,28px); line-height:1.25; letter-spacing:-.6px; }
+    p { margin:0; color:#acb6c8; font-size:15px; line-height:1.65; overflow-wrap:anywhere; }
+    .next { margin-top:24px; padding-top:20px; border-top:1px solid #ffffff14; }
+    .next strong { display:block; margin-bottom:5px; font-size:14px; font-weight:600; }
+    .next p { font-size:13px; }
+  </style>
+  <style>{{BRAND_STYLES}}</style>
+</head>
+<body>
+  <main>
+    {{BRAND_MARKUP}}
+    <span class="service">Nexus Mods</span>
+    <div class="status {{STATUS}}" aria-hidden="true"><svg viewBox="0 0 24 24">{{ICON}}</svg></div>
+    <h1>{{TITLE}}</h1>
+    <p>{{MESSAGE}}</p>
+    <div class="next"><strong>{{NEXT}}</strong><p>{{CLOSE}}</p></div>
+  </main>
+</body>
+</html>

@@ -6,6 +6,7 @@ mod steam_proton_dispatch;
 mod release_features;
 
 mod profile_io;
+mod addons;
 use profile::app_id;
 use std::ffi::OsString;
 use std::os::unix::process::CommandExt;
@@ -20,6 +21,7 @@ fn run() -> Result<(), String> {
     if mode == "--epic-runtime" {
         return epic::run(args);
     }
+    if mode == "--addon" {return addons::run(args);}
     let identity = args
         .next()
         .and_then(|v| v.into_string().ok())
@@ -91,6 +93,8 @@ fn run() -> Result<(), String> {
         )?,
         None => original,
     };
+    let monitoring=profile.as_ref().and_then(|p|p.environment.get("MANGOHUD")).and_then(|v|v.as_deref())==Some("1") || std::env::var("MANGOHUD").is_ok_and(|v|v=="1");
+    let words=addons::migrate_legacy(words,&executable,monitoring)?;
     let mut command = Command::new(&words[0]);
     command.args(&words[1..]);
     if let Some(profile) = profile {

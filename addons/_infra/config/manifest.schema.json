@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PeliGames add-on manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "host_api",
+    "id",
+    "version",
+    "name",
+    "summary",
+    "author",
+    "license",
+    "repository",
+    "host_version",
+    "platforms",
+    "entrypoints",
+    "contributions",
+    "dependencies",
+    "capabilities"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "host_api": {
+      "const": 1
+    },
+    "id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 120,
+      "description": "Canonical SemVer without build metadata; validated by the SDK."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240
+    },
+    "author": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "repository": {
+      "type": "string",
+      "pattern": "^https://",
+      "maxLength": 300
+    },
+    "host_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "platforms": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "linux-x86_64",
+          "linux-aarch64",
+          "windows-x86_64",
+          "windows-aarch64"
+        ]
+      }
+    },
+    "entrypoints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ui",
+        "service"
+      ],
+      "properties": {
+        "ui": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/file"
+                },
+                {
+                  "pattern": "\\.js$"
+                }
+              ]
+            }
+          ]
+        },
+        "service": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/file"
+            }
+          ]
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "ui": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "properties": {
+            "service": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "contributions": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "route",
+          "title"
+        ],
+        "properties": {
+          "target": {
+            "enum": [
+              "settings",
+              "game-mods",
+              "game-frame-generation",
+              "game-captures",
+              "game-overview"
+            ]
+          },
+          "route": {
+            "$ref": "#/$defs/identifier"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "descriptions": {
+            "type": "object",
+            "maxProperties": 32,
+            "propertyNames": {
+              "type": "string",
+              "maxLength": 35,
+              "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 320
+            }
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "maxProperties": 32,
+      "propertyNames": {
+        "$ref": "#/$defs/identifier"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 120
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "game-files",
+          "component-downloads",
+          "launch-profiles",
+          "native-launch", "background-service"
+        ]
+      }
+    },
+    "category": {
+      "enum": [
+        "mods",
+        "frame-generation",
+        "captures"
+      ]
+    },
+    "group": {
+      "$ref": "#/$defs/identifier"
+    },
+    "component_directory": {
+      "type": "string",
+      "maxLength": 240,
+      "pattern": "^components/[A-Za-z0-9_./-]+$"
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240,
+      "description": "Portable relative file path; traversal, links and ambiguous paths are refused by the SDK."
+    }
+  }
+}

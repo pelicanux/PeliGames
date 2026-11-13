@@ -374,7 +374,6 @@ fn merge_dll_overrides(base: &str, custom: &str) -> String {
 #[cfg(test)]
 mod vulkan_tests {
     use super::*;
-    use crate::core::afmf_compatibility;
 
     #[test]
     fn installed_dlssnr_keeps_the_configured_afmf_and_monitoring_chain() {
@@ -382,10 +381,9 @@ mod vulkan_tests {
         command.arg("original").env("AFMF_ENABLE", "1")
             .env("MANGOHUD_CONFIGFILE", "/fixture/MangoHUD.conf")
             .env("MANGOHUD_CONFIG", "read_cfg,fps_limit=144,no_display=1");
-        afmf_compatibility::layer(&mut command, Path::new("/fixture/afmf"), None,
-            Some("VK_LAYER_VALVE_steam_overlay_64:VK_LAYER_PELIGAMES_overlay".into()), None).unwrap();
-        afmf_compatibility::monitoring(&mut command, Path::new("/fixture/mango")).unwrap();
-        afmf_compatibility::apply(&mut command);
+        command.env("VK_INSTANCE_LAYERS","VK_LAYER_VALVE_steam_overlay_64:VK_LAYER_PELIGAMES_overlay:VK_LAYER_AFMF:VK_LAYER_MANGOHUD_overlay_x86_64")
+            .env("VK_ADD_LAYER_PATH","/fixture/mango:/fixture/afmf").env("AFMF_ASYNC","1").env("DISABLE_MANGOHUD","1")
+            .env("MANGOHUD_CONFIG","read_cfg,fps_limit=144,no_display=1,vsync=-1");
         let options = r#"VK_ADD_LAYER_PATH="/fixture/game with spaces/int4/layer:/fixture/control/layer" VK_INSTANCE_LAYERS=VK_LAYER_DLSSNR_int4:VK_LAYER_DLSSNR_control WINEDLLOVERRIDES="dxgi=n,b" %command% -dx12"#;
         apply_custom(&mut command, options).unwrap();
         let environment: BTreeMap<_, _> = command.get_envs()

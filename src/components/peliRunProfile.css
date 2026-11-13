@@ -1,0 +1,25 @@
+.pelirun-export { min-width:0; padding:16px 0; border-top:1px solid var(--modern-line,var(--border-color,#ffffff18)); }
+.pelirun-export-intro { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+.pelirun-export-intro > div { min-width:0; }
+.pelirun-export-intro > button { flex-shrink:0; }
+.pelirun-export p { margin:5px 0 0; color:var(--modern-muted,var(--text-secondary,#aab0bb)); font-size:.75rem; line-height:1.5; }
+.pelirun-export-inline .pelirun-export-intro { align-items:flex-start; flex-direction:column; gap:10px; }
+.pelirun-instructions { display:grid; gap:12px; min-width:0; }
+.pelirun-ready, .pelirun-ready > div { display:flex; align-items:center; gap:8px; }
+.pelirun-ready { justify-content:space-between; }
+.pelirun-ready strong { font-size:.8125rem; font-weight:600; }
+.pelirun-ready > div > svg { color:var(--accent-color,var(--accent)); width:16px; height:16px; }
+.pelirun-ready > button { padding:5px; min-height:28px; }
+.pelirun-export-targets { display:flex; flex-wrap:wrap; gap:6px; }
+.pelirun-export-targets button { min-height:32px; padding:6px 12px; font-size:.75rem; }
+.pelirun-export-targets [aria-pressed=true] { background:rgba(var(--accent-rgb,22,125,186),.18); border-color:rgba(var(--accent-rgb,22,125,186),.5); color:var(--modern-text,inherit); }
+.pelirun-export .pelirun-launcher-route { margin:0; }
+.pelirun-export-field { display:grid; gap:6px; min-width:0; font-size:.75rem; }
+.pelirun-export-field > div { display:flex; align-items:center; gap:8px; min-width:0; }
+.pelirun-export-field input { flex:1; min-width:0; padding:9px 10px; border:1px solid var(--modern-line,#ffffff20); border-radius:8px; background:var(--modern-input-bg,#0003); color:inherit; font: .75rem ui-monospace,monospace; }
+.pelirun-export-field button { flex-shrink:0; }
+.pelirun-export .pelirun-export-note { margin:0; }
+.pelirun-export-help { border-top:1px solid var(--modern-line,#ffffff18); padding-top:10px; color:var(--modern-muted,var(--text-secondary,#aab0bb)); font-size:.75rem; }
+.pelirun-export-help summary { cursor:pointer; }
+.pelirun-export-help p { margin-top:10px; }
+@media(max-width:640px) { .pelirun-export-intro { align-items:flex-start; flex-direction:column; } }

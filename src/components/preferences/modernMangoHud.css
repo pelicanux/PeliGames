@@ -84,7 +84,25 @@
 .mm-advanced-row input[type=number] { width: 90px; }
 .mm-advanced-row input[type=color] { width: 36px; height: 26px; border: 0; background: none; padding: 0; }
 .mm-empty { color: var(--mm-muted); font-size: 0.8125rem; padding: 10px 2px; }
-.mm-preview-column { position: sticky; top: 0; min-width: 0; }
+.mm-preview-column { position: relative; min-width: 0; }
+/* Keep the preview outside the settings' scroll layer, like the library toolbar.
+   Narrow or short windows retain one natural page scroll, without sticky offsets. */
+.modern-settings-scroll:has(.mango-modern[data-docked-preview]) { display: flex; overflow: hidden; }
+.modern-settings-scroll:has(.mango-modern[data-docked-preview]) > .settings-page {
+  display: flex; flex-direction: column; flex: 1; min-height: 0; width: 100%; box-sizing: border-box;
+}
+.settings-page:has(.mango-modern[data-docked-preview]) > .monitoring-workspace,
+.monitoring-tab-panel:has(> .mango-modern[data-docked-preview]),
+.mango-modern[data-docked-preview],
+.mango-modern[data-docked-preview] > .monitoring-editor-screen {
+  display: flex; flex-direction: column; flex: 1; min-height: 0;
+}
+.settings-page:has(.mango-modern[data-docked-preview]) > .settings-page-body:empty { display: none; }
+.mango-modern[data-docked-preview] .mm-grid { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch; }
+.mango-modern[data-docked-preview] .mm-grid > :is(.mm-stack, .mm-preview-column) {
+  min-height: 0; overflow: auto; overscroll-behavior: contain; overflow-anchor: none; scrollbar-width: thin;
+}
+.mango-modern[data-docked-preview] .mm-stack { align-content: start; padding-right: 8px; }
 .mm-preview { padding: 14px; }
 .mm-preview-column .monitoring-actions { flex-wrap: wrap; }
 .mm-preview-column code { overflow-wrap: anywhere; }

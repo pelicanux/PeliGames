@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "host_api": 1,
+  "id": "optiscaler",
+  "version": "0.1.0",
+  "name": "OptiScaler",
+  "summary": "Manage OptiScaler installations, official component channels and game configuration.",
+  "author": "PeliGames contributors",
+  "license": "GPL-3.0-only",
+  "repository": "https://github.com/pelicanux/PeliGames",
+  "host_version": ">=0.5.5, <0.6.0",
+  "platforms": [
+    "linux-x86_64",
+    "linux-aarch64"
+  ],
+  "entrypoints": {
+    "ui": "ui/index.js",
+    "service": "bin/optiscaler-service"
+  },
+  "contributions": [
+    {
+      "target": "settings",
+      "route": "preferences",
+      "title": "OptiScaler",
+      "descriptions": {
+        "en": "Manage OptiScaler installations, official channels and per-game settings.",
+        "pt-BR": "Gerencie a instalação do OptiScaler, os canais oficiais e os ajustes por jogo."
+      }
+    },
+    {
+      "target": "game-mods",
+      "route": "game",
+      "title": "Upscaling, frame generation and compatibility"
+    }
+  ],
+  "dependencies": {},
+  "capabilities": [
+    "game-files",
+    "component-downloads",
+    "launch-profiles"
+  ],
+  "category": "mods",
+  "component_directory": "components/OptiScaler"
+}

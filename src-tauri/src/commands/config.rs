@@ -2,15 +2,7 @@ use crate::core::config_manager::{preserve_saved_preferences, save_config, AppCo
 
 #[tauri::command]
 pub fn load_app_config(app: tauri::AppHandle) -> Result<Option<AppConfig>, String> {
-    let mut config = crate::core::config_manager::load_config_result()?;
-    if let Some(ref mut current) = config {
-        let root = crate::core::paths::mod_root()?;
-        if std::path::Path::new(&current.dll_version).parent() == Some(root.as_path()) && current.dll_version.ends_with(".bin") {
-            let gpu = if current.backend == "AMDNR" { "rdna4" } else { "rdna3" };
-            let canonical = ["64", "32"].into_iter().find_map(|bits| crate::core::neural_models::find(&root.join("backend-files").join(gpu).join(bits).join("dlssnr-amd"), crate::core::neural_models::ORIGINAL));
-            if let Some(file) = canonical { current.dll_version = file.to_string_lossy().to_string(); save_config(current)?; }
-        }
-    }
+    let config = crate::core::config_manager::load_config_result()?;
     crate::core::logger::log_launcher(&app, "INFO", if config.is_some() { "Configuração carregada" } else { "Sem configuração válida; abrindo wizard inicial" });
     Ok(config)
 }

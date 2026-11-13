@@ -1,0 +1,12 @@
+{
+  "received_title": "Autorização recebida",
+  "received_message": "O retorno do Nexus Mods chegou ao PeliGames. O aplicativo vai verificar sua conta para concluir a conexão.",
+  "received_next": "Continue no PeliGames",
+  "cancelled_title": "Autorização cancelada",
+  "cancelled_message": "A conexão com o Nexus Mods não foi autorizada. Sua conta não foi conectada por esta tentativa.",
+  "cancelled_next": "Para tentar novamente, conecte sua conta pelo PeliGames.",
+  "invalid_title": "Retorno não reconhecido",
+  "invalid_message": "Esta página não corresponde à autorização em andamento. Retorne ao navegador onde iniciou o login ou comece uma nova conexão pelo PeliGames.",
+  "invalid_next": "Confira a conexão no aplicativo",
+  "close": "Você pode fechar esta aba e voltar ao aplicativo."
+}

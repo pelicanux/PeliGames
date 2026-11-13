@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { MenuIcon } from "./MenuIcon";
 import { HoverTooltip } from "./HoverTooltip";
+import "./modSwitch.css";
 
 type Icon = Parameters<typeof MenuIcon>[0]["name"];
 
@@ -14,11 +15,10 @@ export function ModOptionRow({ icon, label, hint, dimmed = false, children }: { 
   </div>;
 }
 
-/** The panel's on/off switch, compact for a row. The switch shows its state;
- * screen readers get it from role="switch" and aria-checked. */
-export function ModOptionSwitch({ label, enabled, disabled, onToggle }: { label: string; enabled: boolean; disabled?: boolean; onToggle: () => void }) {
+/** Compact on/off control with an accessible name and checked state. */
+export function ModOptionSwitch({ label, enabled, disabled, onToggle, appearance }: { label: string; enabled: boolean; disabled?: boolean; onToggle: () => void; appearance?: "rail" }) {
   return <button type="button" role="switch" aria-checked={enabled} aria-label={label}
-    className={`neural-startup-switch mod-option-switch ${enabled ? "enabled" : ""}`} disabled={disabled} onClick={onToggle}>
+    className={`neural-startup-switch mod-option-switch ${enabled ? "enabled" : ""}${appearance === "rail" ? " mod-option-switch--rail" : ""}`} disabled={disabled} onClick={onToggle}>
     <span className="neural-switch-track" aria-hidden="true"><span /></span>
   </button>;
 }

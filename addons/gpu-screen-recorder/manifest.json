@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "host_api": 1,
+  "id": "gpu-screen-recorder",
+  "version": "0.1.0",
+  "name": "GPU Screen Recorder",
+  "summary": "Gameplay recording, instant replay and video library.",
+  "author": "PeliGames contributors",
+  "license": "GPL-3.0-only",
+  "repository": "https://git.dec05eba.com/gpu-screen-recorder/",
+  "host_version": ">=0.5.5, <0.6.0",
+  "platforms": [
+    "linux-x86_64"
+  ],
+  "category": "captures",
+  "component_directory": "components/GPU-Screen-Recorder",
+  "entrypoints": {
+    "ui": "ui/index.js",
+    "service": "bin/capture-service"
+  },
+  "contributions": [
+    {
+      "target": "settings",
+      "route": "preferences",
+      "title": "GPU Screen Recorder"
+    },
+    {
+      "target": "game-captures",
+      "route": "game",
+      "title": "Captures",
+      "descriptions": {
+        "en": "Record gameplay, save instant replays and organize your clips.",
+        "pt-BR": "Grave partidas, salve replays instant\u00e2neos e organize seus clipes."
+      }
+    }
+  ],
+  "dependencies": {},
+  "capabilities": [
+    "component-downloads",
+    "background-service"
+  ]
+}

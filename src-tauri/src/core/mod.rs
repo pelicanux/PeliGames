@@ -1,10 +1,7 @@
 pub mod discord_presence;
-pub mod capture;
 pub mod audio_denoise;
 #[cfg(test)]
 pub(crate) mod test_support;
-pub mod script_runner;
-pub mod neural_config;
 #[path = "../../launch-runtime/src/release_features.rs"]
 pub mod release_features;
 #[cfg(target_os = "linux")]
@@ -27,7 +24,7 @@ pub mod installation_layout;
 pub mod game_execution;
 
 pub mod advanced_settings;
-pub(crate) mod afmf_compatibility;
+pub(crate) mod addon_launch;
 pub(crate) mod launch_environment;
 
 pub mod wine_tools;
@@ -58,7 +55,6 @@ pub mod mangohud_root;
 pub mod pe_imports;
 pub mod game_executable;
 
-pub mod neural_models;
 
 pub mod game_copies;
 pub mod mangohud_presets;
@@ -78,11 +74,8 @@ pub mod webkit_vblank;
 
 pub mod advanced_capabilities;
 
-pub mod capture_overlay;
 
-pub mod capture_runtime;
 
-pub mod component_uninstall;
 
 pub mod daniel_nr;
 

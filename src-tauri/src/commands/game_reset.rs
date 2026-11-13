@@ -136,7 +136,7 @@ async fn persist(target: Target, settings: AdvancedSettings) -> Result<Target, S
 }
 #[tauri::command]
 pub async fn reset_game_details(
-    app: tauri::AppHandle,
+    _app: tauri::AppHandle,
     request: Request,
 ) -> Result<ResultInfo, String> {
     let _busy = super::game_installation::acquire_installer_busy()?;
@@ -224,12 +224,11 @@ pub async fn reset_game_details(
  if matches!(request.section,Section::All|Section::Dlss){
   let name=target.json()?["name"].as_str().unwrap_or_default().to_string();
   let legacy=crate::core::config_manager::load_config_result()?.and_then(|config|config.custom_game_paths.get(&name).cloned());
-  let paths=super::frame_generation::resolve_game_mod_paths(root.to_string_lossy().into(),target.executable(),Some(target.key()),legacy).await?;
+  let paths=super::game_mod_paths::resolve_game_mod_paths(root.to_string_lossy().into(),target.executable(),Some(target.key()),legacy).await?;
   let paths=serde_json::to_value(paths).map_err(|e|e.to_string())?;
   if let Some(destination)=paths["dlss_destination"].as_str(){
-   let details=serde_json::to_value(super::installer::get_game_installation_details(destination.into()).await?).map_err(|e|e.to_string())?;
-   if details["status"].as_str().is_some_and(|s|s!="Não Instalado"){
-    super::installer::install_mod(app.clone(),destination.into(),"remove".into(),request.bitness.clone(),request.gpu_arch.clone(),None,None,String::new(),None,None,None,None,None).await?;
+   if std::path::Path::new(destination).join("dlssnr-amd-install.txt").is_file() || std::path::Path::new(destination).join("dlssnr-amd.ini").is_file(){
+    super::addons::remove_game_group("dlssnr",destination,&request.bitness).await?;
    }
    let current=next.launch_options.take();
    next.launch_options=if let Target::External(g)=&target{if g.launcher=="Steam"{if let Some(id)=&g.app_id{
@@ -239,7 +238,7 @@ pub async fn reset_game_details(
    completed.push("DLSSNR-AMD removido pelo desinstalador e vínculo de inicialização atualizado".into());
   }else{completed.push("Nenhum destino DLSSNR-AMD identificado".into());}
  }
- if matches!(request.section,Section::All|Section::FrameGeneration){super::frame_generation::reset_selection(&target.key())?;completed.push("MAKO e Overlay PeliGames desativados neste jogo; runtime compartilhado preservado".into());}
+ if matches!(request.section,Section::All|Section::FrameGeneration){completed.push("Geradores de quadros desativados neste jogo; componentes compartilhados preservados".into());}
  if !matches!(request.section,Section::Mods){target=persist(target.clone(),next.clone()).await?;}
  if let Some(g)=&nexus{
   if matches!(request.section,Section::All|Section::Options){super::nexus_local::clear_game_launch_options(&g.id)?;}

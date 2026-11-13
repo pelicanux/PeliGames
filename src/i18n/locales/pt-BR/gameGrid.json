@@ -23,5 +23,7 @@
   "removeGame": "Remover Jogo",
   "changeCover": "Alterar Capa (Local)",
   "rescan": "Rescanear",
-  "scanLibrary": "Escanear Biblioteca"
+  "scanLibrary": "Escanear Biblioteca",
+  "locateLibrary": "Localizar biblioteca",
+  "locateLibraryHint": "Localizar instalações e cópias do PeliGames"
 }

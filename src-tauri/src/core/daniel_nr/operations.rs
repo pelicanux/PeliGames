@@ -454,14 +454,14 @@ pub fn set_startup(game: &Game, enabled: bool) -> Result<(), String> {
         return Err("Ajustes Daniel NR não são um arquivo regular.".into());
     }
     let current = fs::read_to_string(&path).map_err(|e| e.to_string())?;
-    let mut next = super::super::neural_config::put(
+    let mut next = peligames_mod_config::ini::put(
         &current,
         "DlssNr",
         "Enabled",
         Some(if enabled { "true" } else { "false" }),
     );
     if runtimes::installed(&directory, &executable) == Some(runtimes::Runtime::V08) {
-        next = super::super::neural_config::put(
+        next = peligames_mod_config::ini::put(
             &next,
             "Libraries",
             "NvngxPath",
@@ -479,7 +479,7 @@ pub fn set_startup(game: &Game, enabled: bool) -> Result<(), String> {
             ("NeuralHubNrSelected", "true"),
             ("NeuralHubNrEnabled", if enabled { "true" } else { "false" }),
         ] {
-            next = super::super::neural_config::put(&next, "DLSS", key, Some(value));
+            next = peligames_mod_config::ini::put(&next, "DLSS", key, Some(value));
         }
     }
     let temporary = directory.join(".peligames-daniel-settings.tmp");

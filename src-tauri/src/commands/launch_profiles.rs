@@ -137,14 +137,7 @@ fn save_at(root: &Path, installation: &str, mut profile: Profile) -> Result<Expo
     profile.validate_id(&id)?;
     let bytes = serde_json::to_vec_pretty(&profile).map_err(|e| e.to_string())?;
     if bytes.len() as u64 > steam_runtime::contract::MAX_BYTES { return Err("Perfil PeliRun muito grande.".into()); }
-    let binary = root.join("pelirun");
-    if steam_runtime::HELPER.len() < 64 { return Err("PeliRun indisponível neste pacote.".into()); }
-    // Atomic replacement also supports a helper which is currently executing.
-    let valid_binary = fs::symlink_metadata(&binary).is_ok_and(|m| m.is_file() && !m.file_type().is_symlink()
-        && m.uid() == unsafe { libc::geteuid() } && m.permissions().mode() & 0o111 != 0 && m.mode() & 0o022 == 0);
-    if !valid_binary || !fs::read(&binary).is_ok_and(|bytes| bytes == steam_runtime::HELPER) {
-        steam_runtime::atomic_write(&binary, steam_runtime::HELPER, 0o700)?;
-    }
+    let binary = helper_at(root)?;
     steam_runtime::atomic_write(&directory.join(format!("{id}.json")), &bytes, 0o600)?;
     let executable = binary.to_str().ok_or("Caminho PeliRun não usa UTF-8.")?.to_string();
     let arguments = format!("--profile {id} --");
@@ -310,4 +303,18 @@ pub(super) fn remove_installation(installation:&Path)->Result<(),String>{
         if let Some(profile)=profile_io::universal(&directory,id)?{if profile.installation.as_deref()==installation.to_str(){fs::remove_file(&path).map_err(|e|e.to_string())?;}}
     }
     Ok(())
+}
+
+pub(crate) fn helper()->Result<PathBuf,String>{helper_at(&root()?)}
+fn helper_at(root:&Path)->Result<PathBuf,String>{
+    steam_runtime::private_directory(root)?;
+    let binary = root.join("pelirun");
+    if steam_runtime::HELPER.len() < 64 { return Err("PeliRun indisponível neste pacote.".into()); }
+    // Atomic replacement also supports a helper which is currently executing.
+    let valid_binary = fs::symlink_metadata(&binary).is_ok_and(|m| m.is_file() && !m.file_type().is_symlink()
+        && m.uid() == unsafe { libc::geteuid() } && m.permissions().mode() & 0o111 != 0 && m.mode() & 0o022 == 0);
+    if !valid_binary || !fs::read(&binary).is_ok_and(|bytes| bytes == steam_runtime::HELPER) {
+        steam_runtime::atomic_write(&binary, steam_runtime::HELPER, 0o700)?;
+    }
+    Ok(binary)
 }

@@ -162,7 +162,7 @@ pub(crate) fn install(config: &Path) -> Result<(), String> {
                 && m.len() == bytes.len() as u64
         }) && fs::read(&path).is_ok_and(|existing| existing == bytes);
         if !intact {
-            super::frame_generation::write(&path, bytes, 0o700)?;
+            peligames_mod_config::write_atomic_bytes(&path, bytes, 0o700)?;
         }
     }
     Ok(())
@@ -196,7 +196,7 @@ pub(crate) fn mirror_preferences(root: &Path) -> Result<(), String> {
     let source = crate::core::paths::app_path("frame-overlay.json")?;
     let target = crate::core::paths::layout::join(&root, "frame-overlay.json");
     match fs::read(&source) {
-        Ok(bytes) if bytes.len() <= 65536 => super::frame_generation::write(&target, &bytes, 0o600),
+        Ok(bytes) if bytes.len() <= 65536 => peligames_mod_config::write_atomic_bytes(&target, &bytes, 0o600),
         Ok(_) => Err("Preferências do overlay grandes demais.".into()),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => match fs::remove_file(&target) {
             Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e.to_string()),

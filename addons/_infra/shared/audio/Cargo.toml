@@ -1,0 +1,7 @@
+[package]
+name="peligames-audio-processing"
+version="0.1.0"
+edition="2021"
+license="GPL-3.0-only"
+[dependencies]
+nnnoiseless={version="=0.5.2",default-features=false}

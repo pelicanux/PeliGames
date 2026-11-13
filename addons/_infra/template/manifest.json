@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "host_api": 1,
+  "id": "example-service",
+  "version": "0.1.0",
+  "name": "Example service",
+  "summary": "Minimal independent service and shared UI for add-on development.",
+  "author": "PeliGames contributors",
+  "license": "GPL-3.0-only",
+  "repository": "https://github.com/pelicanux/PeliGames",
+  "host_version": ">=0.5.5, <0.6.0",
+  "platforms": ["linux-x86_64", "linux-aarch64"],
+  "entrypoints": {"ui": "ui/index.js", "service": "bin/example-service"},
+  "contributions": [{"target": "settings", "route": "preferences", "title": "Example add-on"}],
+  "dependencies": {},
+  "capabilities": []
+}

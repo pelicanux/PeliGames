@@ -1,3 +1,5 @@
+import {useAddonStore} from "../modules/addons/store";
+import {activeFrameGenerationAddons} from "../modules/addons/launchSettings";
 import { AdvancedValueSelector } from "./AdvancedValueSelector";
 import {invoke,isTauri} from "@tauri-apps/api/core";
 import {useGameSaveStatus, GameSaveStatusIndicator} from "./GameSaveStatus";
@@ -33,6 +35,7 @@ export function AdvancedGameSettings({ value, disabled, reducedMotion, saved, on
   const { t } = useI18n();
   const headerStatus=useGameSaveStatus(saved ? "saved" : "");
   const settings = normalizeAdvanced(value);
+  const hasGeneratedFrames=activeFrameGenerationAddons(settings,useAddonStore().overview).length>0;
   const [capabilities,setCapabilities]=useState<Record<string,string>>({});
   useEffect(()=>{if(!isTauri()||"__PELI_UI_PREVIEW__" in window)return;let active=true;void invoke<Record<string,string>>("get_advanced_capabilities",{runner:runner||null}).then(value=>{if(active)setCapabilities(value);}).catch(()=>{if(active)setCapabilities({});});return()=>{active=false;};},[runner]);
   const reportError = (message: string) => notifyError(t("installedSettings", "advancedTitle"), message);
@@ -40,7 +43,7 @@ export function AdvancedGameSettings({ value, disabled, reducedMotion, saved, on
   const [checkingMonitoring, setCheckingMonitoring] = useState(false);
   const mounted = useRef(false), checkingRef = useRef(false);
   const latest = useRef({ value, disabled, onChange }); latest.current = { value, disabled, onChange };
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => { mounted.current = true;  return () => { mounted.current = false; }; }, []);
   const commitMonitoring = async (next: AdvancedSettings, requiresMonitoring: boolean) => {
     if (disabled || checkingRef.current) return false;
     const issue = advancedError(next); if (issue) reportError(issue);
@@ -90,7 +93,7 @@ export function AdvancedGameSettings({ value, disabled, reducedMotion, saved, on
               {!searching && group === "gamescope" && <GamescopeSettingsPanel value={scope} onChange={gamescope => apply({ ...settings, gamescope, launch_backend: gamescopeEnabled(gamescope) ? "gamescope" : "system" })} />}
               {foundGamescope && <button type="button" className="advanced-search-gamescope" onClick={() => { setSearch(""); setGroup("gamescope"); }}><MenuIcon name="platform" /><span>Gamescope · Escala, FPS, janela e cursor</span><span aria-hidden="true">›</span></button>}
               {searching && !foundOptions.length && !foundLimiter && !foundGamescope && !foundWrappers && !foundLaunch && <p className="advanced-search-empty" role="status">Nenhuma opção encontrada.</p>}
-              {foundLimiter && <PerGameFpsLimiter generated={Boolean(settings.afmf?.enabled)} value={settings.mangohud_fps_limit ?? null} onCommit={limit => {
+              {foundLimiter && <PerGameFpsLimiter generated={Boolean(hasGeneratedFrames)} value={settings.mangohud_fps_limit ?? null} onCommit={limit => {
                 return commitMonitoring({ ...normalizeAdvanced(latest.current.value), mangohud_fps_limit: limit }, (limit ?? 0) > 0);
               }} />}
               {foundOptions.map(option => option.id === "dll_overrides" ? <WineDllPriorities key={option.id} settings={settings} disabled={disabled} automatic={automaticDllOverrides} detectionError={dllOverridesError} onChange={apply} onReset={onResetDlls} /> : <div className={`advanced-option${option.choices || option.min != null ? " advanced-option-configurable" : ""}`} key={option.id}>
@@ -124,7 +127,7 @@ function PerGameFpsLimiter({ value, onCommit, generated }: { value: number | nul
   };
   return <div className="advanced-option advanced-fps-limiter">
     <div className="advanced-option-description"><label htmlFor="game-fps-limit">{generated ? "Limite de FPS total" : "Limite de FPS"}</label>
-      <p>Limita apenas este jogo usando MangoHUD, mesmo com o painel oculto. Vazio usa o padrão geral; 0 deixa este jogo sem limite.{generated && " Com AFMF, o limite inclui os quadros gerados."}</p>
+      <p>Limita apenas este jogo usando MangoHUD, mesmo com o painel oculto. Vazio usa o padrão geral; 0 deixa este jogo sem limite.{generated && " Com geração de quadros, o limite inclui os quadros gerados."}</p>
     </div>
     <input id="game-fps-limit" type="number" min={0} max={1000} step={1} placeholder="Padrão" aria-label="Limite de FPS" aria-invalid={invalid}
       value={draft} onChange={event => { setDraft(event.target.value); setInvalid(false); }} onBlur={commit}

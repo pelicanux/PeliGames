@@ -11,6 +11,7 @@ interface Props {
   active: ModernSection;
   disabled?: boolean;
   onNavigate: (section: ModernSection) => void;
+  onOpenAddons: () => void;
   /** Number of active Nexus downloads, shown on the Downloads item. */
   activeDownloads?: number;
   /** Number of games in the library, shown on the Library item. */
@@ -25,7 +26,7 @@ const COLLAPSED_KEY = "peligames.modernMenuCollapsed";
 type MenuMode = "full" | "rail";
 
 /** Side navigation switches between the full menu and an icon rail. */
-export function ModernShell({ active, disabled = false, onNavigate, activeDownloads = 0, libraryCount, settingsPage = null, onSettingsNavigate, children }: Props) {
+export function ModernShell({ active, disabled = false, onNavigate, onOpenAddons, activeDownloads = 0, libraryCount, settingsPage = null, onSettingsNavigate, children }: Props) {
   const { t } = useI18n();
   const frame = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(() => window.innerWidth);
@@ -65,8 +66,8 @@ export function ModernShell({ active, disabled = false, onNavigate, activeDownlo
     setCollapsed(next);
     try { localStorage.setItem(COLLAPSED_KEY, next ? "1" : "0"); } catch { /* Session only. */ }
   };
-  const button = (key: string, current: boolean, icon: ModernIconName, label: string, hint: string, onClick: () => void, badge?: number) =>
-    <button type="button" key={key} className="modern-nav" title={label} aria-current={current ? "page" : undefined} disabled={disabled} onClick={onClick}>
+  const button = (key: string, current: boolean, icon: ModernIconName, label: string, hint: string, onClick: () => void, badge?: number, dialog = false) =>
+    <button type="button" key={key} className="modern-nav" title={label} aria-current={current ? "page" : undefined} aria-haspopup={dialog ? "dialog" : undefined} disabled={disabled} onClick={onClick}>
       <ModernNavIcon name={icon} />
       <span className="modern-nav-label">{label}<NavSubtitle text={hint}/></span>
       {badge ? <span className="modern-nav-badge">{badge}</span> : null}
@@ -101,6 +102,7 @@ export function ModernShell({ active, disabled = false, onNavigate, activeDownlo
           {item("install", "install", t("modern", "install"), t("modern", "installHint"))}
           {item("downloads", "downloads", t("modern", "downloads"), t("modern", "downloadsHint"), activeDownloads)}
         </>}
+        {button("addon-store", false, "addonStore", t("addons", "store"), t("addons", "categories"), onOpenAddons, undefined, true)}
         <h6><span>{t("modern", "community")}</span></h6>
         {item("discord", "discord", "Discord", t("modern", "discordHint"))}
         {item("community", "matrix", t("modern", "matrixChat"), t("modern", "matrixHint"))}

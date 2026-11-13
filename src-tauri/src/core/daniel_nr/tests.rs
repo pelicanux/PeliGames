@@ -502,21 +502,21 @@ fn version08_startup_sets_all_required_selectors_and_preserves_other_settings() 
     )
     .unwrap();
     set_startup(&game, false).unwrap();
-    let s = super::super::neural_config::sections(&text(&f.0.join("OptiScaler.ini")));
+    let s = peligames_mod_config::ini::sections(&text(&f.0.join("OptiScaler.ini")));
     assert_eq!(
-        super::super::neural_config::get(&s, "DLSS", "NeuralHubNrEnabled"),
+        peligames_mod_config::ini::get(&s, "DLSS", "NeuralHubNrEnabled"),
         Some("false")
     );
     assert_eq!(
-        super::super::neural_config::get(&s, "DLSS", "NeuralHubEnabled"),
+        peligames_mod_config::ini::get(&s, "DLSS", "NeuralHubEnabled"),
         Some("true")
     );
     assert_eq!(
-        super::super::neural_config::get(&s, "Other", "Keep"),
+        peligames_mod_config::ini::get(&s, "Other", "Keep"),
         Some("1")
     );
     assert!(
-        super::super::neural_config::get(&s, "Libraries", "NvngxPath")
+        peligames_mod_config::ini::get(&s, "Libraries", "NvngxPath")
             .unwrap()
             .contains("neuralhub_host.dll")
     );

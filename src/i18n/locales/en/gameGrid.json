@@ -23,5 +23,7 @@
   "removeGame": "Remove Game",
   "changeCover": "Change Cover (Local)",
   "rescan": "Rescan",
-  "scanLibrary": "Scan Library"
+  "scanLibrary": "Scan Library",
+  "locateLibrary": "Locate library",
+  "locateLibraryHint": "Find PeliGames installations and copies"
 }

@@ -1,9 +1,3 @@
-.preference-mod-tabs.game-modules-tabs[data-count="3"] { --game-mod-tabs:3; --game-mod-gap:12px; }
-.preference-mod-tabs.game-modules-tabs { --game-mod-tabs:2; --game-mod-gap:9px; grid-template-columns:repeat(var(--game-mod-tabs),minmax(0,1fr)); }
-.preference-mod-tabs.game-modules-tabs::before { width:calc((100% - var(--game-mod-gap))/var(--game-mod-tabs)); }
-.preference-mod-tabs.game-modules-tabs[data-active=nexus]::before { transform:none; }
-.preference-mod-tabs.game-modules-tabs[data-active=dlss]::before { transform:translateX(calc(100% + 3px)); }
-
-.preference-mod-tabs.game-modules-tabs[data-active=daniel]::before { transform:translateX(calc(200% + 6px)); }
-
+.game-modules-content { min-width:0; outline:none; }
 .game-modules .modern-overview-paths + .modern-dlss-panels { margin-top:16px; }
+.game-modules .component-catalog { grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr)); }

@@ -1,0 +1,10 @@
+.matrix-message-field { position:relative; display:flex; flex:1; min-width:0; }
+.matrix-terminal-compose .matrix-message-field textarea { width:100%; padding-right:52px; }
+.matrix-emoji-anchor { position:absolute; right:16px; bottom:6px; }
+:root .matrix-chat .matrix-emoji-trigger { display:grid; place-items:center; width:28px; height:28px; min-height:0; padding:3px; border:0; border-radius:4px; background:transparent; box-shadow:none; color:#7ba88e; cursor:pointer; }
+:root .matrix-chat .matrix-emoji-trigger:hover:not(:disabled) { color:#b4ffcd; background:#14251e; }
+:root .matrix-chat .matrix-emoji-trigger:focus-visible { outline:1px solid #62b584; outline-offset:1px; }
+:root .matrix-chat .matrix-emoji-trigger:disabled { opacity:.45; cursor:default; }
+.matrix-emoji-picker { box-sizing:border-box; display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:2px; padding:6px; overflow:auto; border:1px solid #38644f; border-radius:6px; background:#090e12; box-shadow:0 4px 18px #0008; }
+.matrix-emoji-picker button { display:grid; place-items:center; min-width:0; padding:4px 0; border:0; border-radius:4px; background:transparent; color:#d3e3db; font:1.3rem/1.25 sans-serif; cursor:pointer; }
+.matrix-emoji-picker button:hover,.matrix-emoji-picker button:focus-visible { outline:1px solid #62b584; background:#14251e; }

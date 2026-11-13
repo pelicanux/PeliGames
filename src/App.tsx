@@ -1,31 +1,28 @@
+import type {AdvancedSettings} from "./services/advancedSettings";
+import {gameContributions,usesBundledTarget} from "./modules/addons/navigation";
+import {AddonGameHost} from "./modules/addons/gameHost";
+import {AddonStoreWindow} from "./modules/addons/AddonStoreWindow";
+import {useAddonStore} from "./modules/addons/store";
+import {composeAddonGameTabs,GameAddonPanel} from "./modules/addons/GameAddonPanels";
+import {useReplayOnPlay} from "./modules/capture/useReplayOnPlay";
 import {LibraryEntryDialogs} from "./modules/launcher/LibraryEntryDialogs";
 import {useLibraryEntryDialogs} from "./modules/launcher/useLibraryEntryDialogs";
-import {useGameMenuShortcut} from "./modules/dlssnr/useGameMenuShortcut";
 import {usePreferencesRequests, type PreferencesSection} from "./modules/launcher/usePreferencesRequests";
-import {useSelectedGameStatus} from "./modules/launcher/useSelectedGameStatus";
+import {useGameReleaseDate} from "./modules/launcher/useGameReleaseDate";
 import {useLauncherAppearance} from "./modules/launcher/useLauncherAppearance";
 import {useLauncherWelcome} from "./modules/launcher/useLauncherWelcome";
 import {useLauncherOpenRequest} from "./modules/launcher/useLauncherOpenRequest";
 import {SelectedGameOverview} from "./modules/launcher/SelectedGameOverview";
-import {GamePathTile} from "./modules/launcher/GamePathTile";
-import {getUpscalerFamilies} from "./modules/launcher/gameInfoPresentation";
-import { useNeuralModels } from "./modules/dlssnr/useNeuralModels";
 import { PeliRunProfile } from "./components/PeliRunProfile";
-import { useDlssInstallation } from "./modules/dlssnr/useDlssInstallation";
-import { DlssInstallationDialogs } from "./modules/dlssnr/DlssInstallationDialogs";
 import {useDiscordPresenceEvents} from "./services/discordPresence";
 import {GameConfigurationChips} from "./components/modern/GameConfigurationChips";
-import {CapturePanel} from "./modules/capture/CapturePanel";
 import { GameResetPanel } from "./components/GameResetPanel";
 import { useRemovedPrefixNotice } from "./components/RemovedPrefixNotice";
 import { useGameCopyReference } from "./hooks/useGameCopyReference";
 import {GameCopyDialog} from "./components/GameCopyDialog";
-import {experimentalFrameGeneration, experimentalDanielNr} from "./services/releaseFeatures";
 import { sameGameInstallation } from "./services/integrationGameIdentity";
 import { GamePerformancePanel } from "./components/GamePerformancePanel";
-import { FrameGeneratorTabs } from "./modules/frameGeneration/FrameGeneratorTabs";
 import { GameModsTabs, type GameModsTab } from "./modules/nexus/GameModsTabs";
-import { DanielNrTestPanel } from "./modules/neuralRendering/DanielNrTestPanel";
 import { NexusGameTab } from "./modules/nexus/NexusGameTab";
 import { DropImportDialog } from "./components/DropImportDialog";
 import { useLauncherFileDrop } from "./hooks/useLauncherFileDrop";
@@ -47,7 +44,7 @@ import { GameLogsModal } from "./components/GameLogsModal";
 import { gameViewKey } from "./services/gameIdentity";
 import { GameEntryModal } from "./components/GameEntryModal";
 import { type UninstallOptions, addPeliGamesEntry, uninstallPeliGamesEntry, listPeliGamesEntries, choosePeliGamesEntry, listPeliGamesExecutableChoices } from "./services/installedLibrary";
-import { notifyError, notifyInfo } from "./services/notifications";
+import { notifyError } from "./services/notifications";
 import { useGameExecution } from "./hooks/useGameExecution";
 import { useTitlebarRunningGames } from "./hooks/useTitlebarRunningGames";
 import { HoverTooltip } from "./components/HoverTooltip";
@@ -58,11 +55,9 @@ import { InstalledGamePanels, type InstalledPanelSection } from "./components/In
 import { useInstallationLocation } from "./hooks/useInstallationLocation";
 import { useGameInstaller } from "./hooks/useGameInstaller";
 import { useInstallationGameDraft } from "./hooks/useInstallationGameDraft";
-import { useNeuralStartup } from "./hooks/useNeuralStartup";
-import { isInstalledMod } from "./services/installationStatus";
 import { GameCoverMenu } from "./components/GameCoverMenu";
 import { canRemoveFromLibrary, setLibraryGameRemoved } from "./services/libraryVisibility";
-import { cloneElement, useState, useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
+import { cloneElement, useState, useEffect, useLayoutEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { GameDetailsOverlay } from "./components/modern/GameDetailsOverlay";
 import { useAnimatedDetailsHeight } from "./hooks/useAnimatedDetailsHeight";
@@ -80,7 +75,6 @@ import type { GamePanelMode } from "./types/gamePanel";
 import { InstallGameSummary, InstallGamePanels, InstallGameSubmit } from "./components/InstallGameView";
 
 // Types
-import { InstallRoute } from "./types/installer";
 
 // Services
 import { openDirectoryPicker } from "./services/tauriService";
@@ -90,17 +84,14 @@ import { OPEN_MATRIX_CHAT_EVENT } from "./services/matrixChat";
 import { LauncherUpdateIndicator } from "./components/LauncherUpdateIndicator";
 import { useLauncherUpdate } from "./modules/launcherUpdates/useLauncherUpdate";
 import { AppUpdateModal } from "./components/AppUpdateModal";
-import { BackendUpdaterModal } from "./components/BackendUpdaterModal";
 import { CreditsModal } from "./components/CreditsModal";
 import { NotificationCenter } from "./components/NotificationCenter";
 import { RuntimeActivityNotice } from "./components/RuntimeActivityNotice";
 import { TitleBar } from "./components/TitleBar";
-import {SetupWizard} from "./components/SetupWizard";
-import type {AppConfig} from "./types/appConfig";
 import {useAppConfig} from "./modules/appConfig/useAppConfig";
 import { SettingsModal, type SettingsPage } from "./components/SettingsModal";
 import { useFavorites, toggleFavorite } from "./services/favorites";
-import { FeatureReportSection } from "./modules/reports/FeatureReportSection";
+import { FeatureReportSection,type FeatureReportContent } from "./modules/reports/FeatureReportSection";
 import { featureReportContext, type ReportCategory } from "./modules/reports/reportContext";
 import { NexusReportModal } from "./modules/nexus/NexusReportModal";
 import { NexusLogsModal } from "./modules/nexus/NexusLogsModal";
@@ -116,7 +107,6 @@ import "./theme/controlStability.css";
 import { ModManagerModal } from "./components/ModManagerModal";
 import { WelcomeModal } from "./components/WelcomeModal";
 import { AppImageInstallPrompt } from "./components/AppImageInstallPrompt";
-import { hasDlssnrConfiguration, modelSourcePaths } from "./services/modConfiguration";
 import { GameGrid, GameInfo } from "./components/GameGrid";
 import { InstructionsModal } from "./components/InstructionsModal";
 import { PrefixUninstallModal } from "./components/PrefixUninstallModal";
@@ -124,14 +114,11 @@ import { ConfirmModal } from "./components/ConfirmModal";
 import { activityOf, daysSince, formatPlaytime, loadGameActivity, type ActivityMap } from "./services/gameActivity";
 import { ModernShell, type ModernSection, type ModernSettingsPage } from "./components/modern/ModernShell";
 import { ModernGameDetails, type ModernTab } from "./components/modern/ModernGameDetails";
-import { ModernDlssPanel } from "./components/modern/ModernDlssPanel";
 import { LauncherIcon } from "./components/LauncherIcon";
 import "./components/modern/modern.css";
-import { ShortcutKeySelector } from "./components/ShortcutKeySelector";
 
 import { EffectsContext } from "./components/EffectsContext";
 import { APP_BUILD_LABEL } from "./services/buildInfo";
-import { menuShortcutForRoute } from "./services/routeDefaults";
 // Launch report shown over the library (same order as when Pelinstall was bundled here).
 import "./modules/pelinstall/pelinstall.css";
 
@@ -149,35 +136,24 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   const [downloadsRequest, setDownloadsRequest] = useState(0), [activeDownloads, setActiveDownloads] = useState(0);
   useLauncherOpenRequest(initialGamePath, entry => {
     setShowWelcome(false);
-    setSelectedGame(entry); setGamePanelMode("installed"); setLibraryScope("own"); setGameDir(entry.directory || entry.path);
+    setSelectedGame(entry); setGamePanelMode("installed"); setLibraryScope("own");
   });
-  const [gameDir, setGameDir] = useState("");
-  const [route, setRoute] = useState<InstallRoute>("optiscaler");
-  const [bitness, setBitness] = useState<"32" | "64">("64");
-  const [gpuArch, setGpuArch] = useState<"rdna4" | "rdna3">("rdna4");
   const { t, language } = useI18n();
+  const addonSnapshot = useAddonStore();
 
-  const modInstallation = useDlssInstallation();
 
   const launcherUpdate = useLauncherUpdate();
-  const [showUpdaterModal, setShowUpdaterModal] = useState(false);
   const [showInstructionsModal, setShowInstructionsModal] = useState(false);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
-  const [showSetupWizard, setShowSetupWizard] = useState(false);
+  const [showAddonStore, setShowAddonStore] = useState(false);
+  const [showAddonGuide,setShowAddonGuide]=useState(false);
   const {showWelcome, setShowWelcome, appImageTarget, setAppImageTarget} = useLauncherWelcome(initialGamePath);
   const [settingsSection, setSettingsSection] = useState<PreferencesSection>("general");
   const [preferencesBusy, setPreferencesBusy] = useState(false);
-  const [notificationBackendArch, setNotificationBackendArch] = useState<"rdna3" | "rdna4">("rdna4");
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const preferences = useAppConfig();
   const appConfig = preferences.config;
-  const changeMenuShortcut = useGameMenuShortcut();
   const appConfigLoaded = preferences.loaded;
-
-  const changeInstallRoute = (nextRoute: InstallRoute) => {
-    if (nextRoute === route) return;
-    setRoute(nextRoute);
-  };
 
   const [showSettings, setShowSettings] = useState(false);
   const [directoryPickerBusy, setDirectoryPickerBusy] = useState(false);
@@ -186,12 +162,6 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   const [removeLibraryTarget, setRemoveLibraryTarget] = useState<GameInfo | null>(null);
   const [gameLogsTarget, setGameLogsTarget] = useState<GameInfo | null>(null);
   const [coverContextMenu, setCoverContextMenu] = useState<{ x: number, y: number } | null>(null);
-
-  useEffect(() => {
-    if (appConfig) {
-      setGpuArch(appConfig.backend === "AMDNR" ? "rdna4" : "rdna3");
-    }
-  }, [appConfig]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -203,47 +173,10 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [coverContextMenu]);
 
-  useEffect(() => {
-    if (bitness === "32" && route === "optiscaler") {
-      changeInstallRoute("reshade"); // Fallback to reshade
-    }
-  }, [bitness, route]);
-
-  const modOperationContext = (path: string) => ({
-    game: selectedGame && (selectedGameDirectory === path || selectedGame.path === path) ? selectedGame : null,
-    displayName: selectedGame?.name,
-    onGameUpdated: (game: GameInfo) => setSelectedGame(previous => previous?.path === game.path ? game : previous),
-    onRefresh: async () => {
-      if (selectedGame && (selectedGameDirectory === path || selectedGame.path === path)) {
-        await refreshInstallationDetails(path);
-        setGameInfoRevision(value => value + 1);
-      }
-    },
-  });
-  const handleInstall = () => {
-    if (gpuArch === "rdna3" && bitness === "32") return;
-    if (!gameDir) { setShowInstructionsModal(true); return; }
-    const context = modOperationContext(gameDir);
-    return modInstallation.install({
-      ...context, modelConfigured: hasDlssnrConfiguration(appConfig), installed: isInstalledMod(installStatus),
-      onRefresh: async () => { await context.onRefresh(); if (context.game) neuralStartup.refresh(); },
-      payload: {
-        gameDir, route, bitness, gpuArch,
-        ...modelSourcePaths(appConfig),
-        shortcutKey: menuShortcutForRoute(appConfig?.game_shortcut_keys, selectedGame?.path || gameDir, gameDir, route),
-        neuralStartup: neuralStartup.enabled, model: neuralModel, int4: int4Mixed, renodx: neuralStartup.renodx,
-        lumenite: route !== "optiscaler" && Boolean(neuralModels?.lumenite) && (lumeniteChoices[gameDir] ?? neuralModels?.lumenite_selected ?? false),
-      },
-    });
-  };
-  const proceedUninstallForPath = (path: string) => modInstallation.uninstall({
-    ...modOperationContext(path), payload: { gameDir: path, route: "remove", bitness, gpuArch, dllPath: null, binPath: null },
-  });
-
   const [selectedGame, setSelectedGame] = useState<GameInfo | null>(null);
 
   const [unifiedTab, setUnifiedTab] = useState("overview");
-  const [gameModsTab, setGameModsTab] = useState<GameModsTab>("nexus");
+  const [gameModsTab, setGameModsTab] = useState<GameModsTab>("catalog");
   const nexus = useNexusWorkspace(unifiedTab === "nexus" || unifiedTab === "tools");
   const [addingNexusGame, setAddingNexusGame] = useState(false);
   const [nexusAdditionPrefix, setNexusAdditionPrefix] = useState("");
@@ -256,16 +189,13 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   const modViewRequest = useRef(0);
   const [nexusTab, setNexusTab] = useState<"mods" | "catalog">("mods");
   const [gamePanelMode, setGamePanelMode] = useState<GamePanelMode>(emptyPreview?.startsWith("nexus") ? "nexus" : emptyPreview === "dlss" ? "mods" : "install");
-  const dlssActive = (unifiedTab === "nexus" && gameModsTab === "dlss") || (gamePanelMode === "mods" && gameModsTab !== "daniel");
+  const modDestinationActive = (unifiedTab === "nexus" && gameContributions(addonSnapshot.overview,"game-mods").length>0) || (unifiedTab === "overview" && gameContributions(addonSnapshot.overview,"game-overview").some(entry=>entry.category==="mods"));
+  const [addonUiBusy,setAddonUiBusy]=useState(false);
+  const openGameMod=(tab:GameModsTab)=>{if(!addonUiBusy)setGameModsTab(tab)};
   const [modPaths, setModPaths] = useState<{key:string; root:string; executable?:string; dlss_destination?:string}>();
-  const [modPathsError, setModPathsError] = useState("");
   const modPathCache = useRef(new Map<string,{root:string;executable?:string;dlss_destination?:string}>());
   const selectedTabIntent = useRef<string | null>(null);
   useEffect(() => {if(selectedGame){setUnifiedTab(selectedTabIntent.current || "overview");selectedTabIntent.current=null;}}, [selectedGame?.path]);
-  const { neuralModel, setNeuralModel, neuralModels, neuralModelsError, lumeniteChoices, setLumeniteChoices, int4Mixed, setInt4Mixed } = useNeuralModels({
-    active: dlssActive, gamePath: selectedGame?.path, gameDir, config: appConfig, gpuArch, bitness,
-    paused: modInstallation.busy || showSetupWizard || showSettingsModal,
-  });
   const [executableAlternatives, setExecutableAlternatives] = useState<GameInfo[]>([]);
   useEffect(() => {
     let active = true;
@@ -293,10 +223,11 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   const [installationProton, setInstallationProton] = useState("");
   const gameInstaller = useGameInstaller();
   const gameExecution = useGameExecution();
+  const replayOnPlay = useReplayOnPlay(gameExecution.sessions,nexus.workspace.games);
   const libraryDialogs = useLibraryEntryDialogs({
     mutation: {busy: libraryMutationBusy, lock: libraryMutationLock, setBusy: setLibraryMutationBusy}, sessions: gameExecution.sessions,
     onSelected: (game, changing) => {
-      if (changing) {setSelectedGame(previous => previous ? {...game, library_view: previous.library_view} : previous); setGameDir(game.directory || game.path);}
+      if (changing) {setSelectedGame(previous => previous ? {...game, library_view: previous.library_view} : previous); }
       else showCompletedGameEntry(game);
     },
   });
@@ -342,14 +273,14 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     installationDraft.name.trim() || installationDraft.draftName.trim() || installationLocation.selected || installationExecutable.trim() || installationProton
   );
   const requestDraftExit = (action: () => void) => {
-    if (gameInstaller.busy || libraryMutationBusy || nexus.busy || pendingDraftExit.current) return;
+    if (gameInstaller.busy || libraryMutationBusy || addonUiBusy || nexus.busy || pendingDraftExit.current) return;
     if (hasUnfinishedDraft) {
       pendingDraftExit.current = action;
       setShowDiscardDraft(true);
     } else action();
   };
   const collapseGameDetailsNow = (deferSelection = false) => {
-    if (gameInstaller.busy || libraryMutationBusy) return;
+    if (gameInstaller.busy || libraryMutationBusy || addonUiBusy) return;
     setNexusTab("mods");
     if (deferSelection && detailsOpen && selectedGame) {
       const cell = Array.from(document.querySelectorAll<HTMLElement>(".library-card-cell"))
@@ -368,7 +299,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     setAddingNexusGame(false); setNexusAdditionPrefix("");
     installationDraft.reset();
     installationLocation.reset(); setInstallationExecutable(""); setInstallationProton("");
-    setGameDir("");
+
   };
   const collapseGameDetails = () => requestDraftExit(() => collapseGameDetailsNow(true));
   const returnToLauncherHome = () => requestDraftExit(() => transitionLibrary(() => {
@@ -380,7 +311,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     setHomeRevision(value => value + 1);
   }, gamePanelMode === "mods" || gamePanelMode === "nexus" || libraryScope !== "own"));
   const changeGamePanelMode = (mode: GamePanelMode) => requestDraftExit(() => {
-    if (gameInstaller.busy || libraryMutationBusy) return;
+    if (gameInstaller.busy || libraryMutationBusy || addonUiBusy) return;
     if (mode === "mods") {
       setShowModManagerModal(true);
       return;
@@ -395,29 +326,9 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     }
     setCoverContextMenu(null);
   });
-  const openModLibrary = (config: AppConfig | null = appConfig) => requestDraftExit(() => {
-    if (!hasDlssnrConfiguration(config)) {
-      collapseGameDetailsNow();
-      setGamePanelMode("install"); setLibraryScope("own");
-      setShowSetupWizard(true);
-      return;
-    }
-    transitionLibrary(() => {
-      collapseGameDetailsNow();
-      setGamePanelMode("installed");
-      setLibraryScope("own");
-    }, gamePanelMode !== "mods" || libraryScope !== "all");
-  });
-  useEffect(() => {
-    if (!appConfigLoaded || gamePanelMode !== "mods" || hasDlssnrConfiguration(appConfig)) return;
-    collapseGameDetailsNow();
-    setGamePanelMode("install"); setLibraryScope("own");
-    setShowSetupWizard(true);
-  }, [appConfigLoaded, gamePanelMode, appConfig?.backend, appConfig?.dll_version]); // eslint-disable-line react-hooks/exhaustive-deps
-  const closeDlssSetup = () => {
-    setShowSetupWizard(false); setShowModManagerModal(false); setShowSettingsModal(false);
-    returnToLauncherHome();
-  };
+  const openModLibrary = () => requestDraftExit(() => transitionLibrary(() => {
+    collapseGameDetailsNow();setGamePanelMode("installed");setLibraryScope("own");
+  },gamePanelMode!=="mods"));
   const openNexusAddition = () => requestDraftExit(() => {
     setShowGameEntryModal(true);
   });
@@ -433,7 +344,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       const matches = workspace.games.filter(item => item.nexus_domain === domain);
       collapseGameDetailsNow();
       setShowWelcome(false); setGamePanelMode("nexus"); setLibraryScope("all"); setModManagerOpen(matches.length === 1); setIsCollapsingGame(false);
-      if (matches.length === 1) { setSelectedGame(matches[0].game); setGameDir(matches[0].game.directory || matches[0].game.path); }
+      if (matches.length === 1) { setSelectedGame(matches[0].game);  }
       void nexus.refresh();
     }).catch(error => nexus.setError(String(error)));
   });
@@ -467,9 +378,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       const game = (event as CustomEvent<GameInfo>).detail;
       setSelectedGame(previous => previous && gameViewKey({ ...previous, library_view: gamePanelMode === "nexus" ? "nexus" : libraryScope }) === gameViewKey(game) ? { ...previous, cover_url: game.cover_url, automatic_cover_url: game.automatic_cover_url } : previous);
     };
-    const coverError = () => {
-      modInstallation.showError(t("gameGrid", "coverErrorTitle"), t("gameGrid", "coverError"));
-    };
+    const coverError = () => {notifyError(t("gameGrid","coverErrorTitle"),t("gameGrid","coverError"));};
     window.addEventListener("gameCoverChanged", coverChanged);
     window.addEventListener("gameCoverError", coverError);
     return () => { window.removeEventListener("gameCoverChanged", coverChanged); window.removeEventListener("gameCoverError", coverError); };
@@ -484,32 +393,18 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   const modPathKey = selectedGame ? `${selectedGame.external_id || selectedGame.path}:${registeredGameDirectory}:${selectedGame.executable || ""}:${gameInfoRevision}` : "";
   const selectedGameRoot = nexusGame?.game.directory || (modPaths?.key === modPathKey ? modPaths.root : registeredGameDirectory);
   useEffect(() => {
-    if (!dlssActive || !selectedGameRoot) return;
+    if (!modDestinationActive || !selectedGameRoot) return;
     let alive = true;
     const cached = modPathCache.current.get(modPathKey);
-    if (cached) {setModPaths({...cached,key:modPathKey});setGameDir(cached.dlss_destination || selectedGameRoot);return;}
-    setModPathsError("");
+    if (cached) {setModPaths({...cached,key:modPathKey});return;}
     void invoke<{root:string;executable?:string;dlss_destination?:string}>("resolve_game_mod_paths", {directory:selectedGameRoot,executable:selectedGame?.executable || null,gameKey:selectedGame?.external_id || selectedGame?.path,legacyOverride:appConfig?.custom_game_paths?.[selectedGame?.name || ""] || null})
-      .then(paths=>{if(alive){modPathCache.current.set(modPathKey,paths);setModPaths({...paths,key:modPathKey});setGameDir(paths.dlss_destination || selectedGameRoot);}})
-      .catch(e=>{if(alive)setModPathsError(String(e));});
+      .then(paths=>{if(alive){modPathCache.current.set(modPathKey,paths);setModPaths({...paths,key:modPathKey});}})
+      .catch(e=>{if(alive)notifyError(t("gameInfo","editDirectory"),e);});
     return()=>{alive=false};
-  }, [dlssActive, modPathKey]);
-  const selectedGameDirectory = dlssActive && modPaths?.key === modPathKey ? modPaths.dlss_destination || selectedGameRoot : selectedGameRoot;
-  const {releaseDate, installStatus, installedDll, dlssNrInstalled, refreshInstallationDetails, prepareSelection} = useSelectedGameStatus(selectedGame, selectedGameDirectory, gameInfoRevision);
-  const analysis = useGameAnalysis(dlssActive ? selectedGameDirectory : undefined, selectedGame?.name, selectedGame?.app_id || undefined, gameInfoRevision);
-  // New interface: the overview shows the same read-only analysis for every library.
+  }, [modDestinationActive, modPathKey]);
+  const selectedGameDirectory = modDestinationActive && modPaths?.key === modPathKey ? modPaths.dlss_destination || selectedGameRoot : selectedGameRoot;
+  const releaseDate = useGameReleaseDate(selectedGame);
   const overviewAnalysis = useGameAnalysis(selectedGame && !["mods", "install", "add"].includes(gamePanelMode) ? selectedGameDirectory : undefined, selectedGame?.name, selectedGame?.app_id || undefined, gameInfoRevision);
-  const upscalerFamilies = getUpscalerFamilies(analysis.upscalers);
-  const manualRoutes = useRef(new Map<string, InstallRoute>());
-  const detectedBitness = analysis.architecture === "32-bits" ? "32" : analysis.architecture === "64-bits" ? "64" : null;
-  useEffect(() => {
-    if (detectedBitness) setBitness(detectedBitness);
-  }, [selectedGame?.path, detectedBitness, gameInfoRevision]);
-  const recommendOptiscaler = detectedBitness === "64" && bitness === "64" && upscalerFamilies.some(name => ["DLSS", "FSR", "XeSS"].includes(name));
-  useEffect(() => {
-    if (selectedGame && recommendOptiscaler && !manualRoutes.current.has(selectedGame.path)) changeInstallRoute("optiscaler");
-  }, [selectedGame?.path, recommendOptiscaler]);
-  const neuralStartup = useNeuralStartup(dlssActive ? selectedGameDirectory : undefined, dlssActive && isInstalledMod(installStatus));
   const titlebarRunningGames = useTitlebarRunningGames({execution:gameExecution, selected:selectedGame,
     source:gamePanelMode === "mods" || libraryScope === "all" ? "dlss" : "main",
     nexusGames:nexus.workspace.games, nexusLaunching:nexus.launching, nexusStopping:nexus.stopping, nexusBusy:nexus.busy, stopNexus:nexus.stop, onDetails:(game, origin)=>handleSelectGame(game, undefined, true, origin)});
@@ -517,7 +412,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   useMatrixGameActivity(titlebarRunningGames);
   useDiscordPresenceEvents();
   const handleSelectGame = (game: GameInfo, portrait?: HTMLElement, forceOpen = false, origin?: "main" | "dlss" | "nexus") => requestDraftExit(() => {
-    if (gameInstaller.busy || libraryMutationBusy) return;
+    if (gameInstaller.busy || libraryMutationBusy || addonUiBusy) return;
     if (!forceOpen && gamePanelMode !== "install" && gamePanelMode !== "add" && selectedGame && gameViewKey(game) === gameViewKey(selectedGame)) {
       collapseGameDetails();
     } else {
@@ -526,14 +421,11 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       if (installationOpen) collapseGameDetailsNow();
       setIsCollapsingGame(false);
       setPlayGameEntrance(true);
-      prepareSelection();
       const scope = origin ? origin === "main" ? "own" : "all" : libraryScope;
       if (origin) { setLibraryScope(scope); setShowWelcome(false); setShowSettings(false); }
-      const manualRoute = manualRoutes.current.get(game.path);
-      if (scope === "all" && manualRoute) changeInstallRoute(manualRoute);
       setModManagerOpen(true);
-      setGamePanelMode("installed"); setLibraryScope("own"); setGameModsTab(origin === "dlss" ? "dlss" : "nexus"); selectedTabIntent.current=origin === "nexus" || origin === "dlss" ? "nexus" : "overview"; setUnifiedTab(selectedTabIntent.current);
-      setGameDir(game.directory ?? game.path);
+      setGamePanelMode("installed"); setLibraryScope("own"); setGameModsTab(origin === "dlss" ? "dlss" : origin === "nexus" ? "nexus" : "catalog"); selectedTabIntent.current=origin === "nexus" || origin === "dlss" ? "nexus" : "overview"; setUnifiedTab(selectedTabIntent.current);
+
       setSelectedGame(game);
     }
   });
@@ -546,7 +438,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     const modEntry = nexus.workspace.games.find(entry => entry.id === game.nexus_id || entry.game.path === game.path || (entry.game.directory || entry.game.path) === (game.directory || game.path));
     if ((action === "start" || action === "stop") && modEntry && (modEntry.mods.some(m=>m.installed && m.enabled) || modEntry.profile || game.nexus_id)) {
       if(action === "stop")return nexus.stop(modEntry.id);
-      return (async()=>{ if(game.advanced && !await nexus.configureAdvanced(modEntry.id,game.advanced))return; await nexus.start(modEntry.id); })();
+      return (async()=>{ if(game.advanced && !await nexus.configureAdvanced(modEntry.id,game.advanced))return; await replayOnPlay.launch({...game,nexus_id:modEntry.id},()=>nexus.start(modEntry.id)); })();
     }
     if (action === "favorite") return;
     if (action === "scan") { if (game.library_view === "nexus") void nexus.refresh(); else window.dispatchEvent(new Event("rescanGames")); return; }
@@ -567,14 +459,14 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     if (action === "start") {
       if (game.library_view === "nexus") {
         const entry = nexus.workspace.games.find(item => item.game.path === game.path && item.game.launcher === game.launcher);
-        if (entry) return entry.running ? nexus.stop(entry.id) : nexus.start(entry.id);
+        if (entry) return entry.running ? nexus.stop(entry.id) : replayOnPlay.launch({...game,nexus_id:entry.id},()=>nexus.start(entry.id));
         return;
       }
-      if (game.launcher === "PeliGames") return gameExecution.start(game.path);
+      if (game.launcher === "PeliGames") return replayOnPlay.launch(game,()=>gameExecution.start(game.path));
       // Launch errors go to the bell only: the execution state already reports a Steam failure there.
       const execution = t("ui-app", "game_execution");
-      if (game.launcher === "Steam") return game.app_id ? gameExecution.startSteam(game.path, game.app_id, game.external_id || undefined).catch(() => {}) : notifyError(execution, t("ui-app", "steam_appid_unavailable"));
-      else if (game.external_id) return gameExecution.startExternal(game.path, game.external_id).catch(() => {});
+      if (game.launcher === "Steam") return game.app_id ? replayOnPlay.launch(game,()=>gameExecution.startSteam(game.path, game.app_id!, game.external_id || undefined)).catch(() => {}) : notifyError(execution, t("ui-app", "steam_appid_unavailable"));
+      else if (game.external_id) return replayOnPlay.launch(game,()=>gameExecution.startExternal(game.path, game.external_id!)).catch(() => {});
     } else if (game.launcher === "PeliGames") setUninstallTarget({path: game.path, name: game.name, prefix: game.prefix || ""});
     else if (game.launcher === "Steam") void invoke("request_steam_uninstall", { appId: game.app_id }).catch(error => notifyError(t("ui-app", "uninstall"), error));
   };
@@ -603,7 +495,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     setSelectedGame(game);
     setGamePanelMode("installed");
     setLibraryScope("own");
-    setGameDir(game.directory || game.path);
+
   };
 
   const submitGameEntry = async () => {
@@ -651,7 +543,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     libraryMutationLock.current=true;setLibraryMutationBusy(true);setLibraryMutationError("");
     try{
       await invoke("remove_peligames_library_entry",{path:uninstallTarget.path});
-      setUninstallTarget(null);setSelectedGame(null);setModManagerOpen(false);setGameDir("");
+      setUninstallTarget(null);setSelectedGame(null);setModManagerOpen(false);
       setHomeRevision(value=>value+1);window.dispatchEvent(new Event("peligamesLibraryChanged"));
     }catch(error){setLibraryMutationError(String(error));}
     finally{libraryMutationLock.current=false;setLibraryMutationBusy(false);}
@@ -662,7 +554,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     try {
       await uninstallPeliGamesEntry(uninstallTarget.path, options);
       setUninstallTarget(null);
-      setSelectedGame(null); setInstallationOpen(false); setModManagerOpen(false); setGameDir("");
+      setSelectedGame(null); setInstallationOpen(false); setModManagerOpen(false);
       gameInstaller.reset(); installationDraft.reset(); installationLocation.reset(); setInstallationExecutable(""); setInstallationProton("");
       window.dispatchEvent(new Event("peligamesLibraryChanged"));
     } catch (error) { setLibraryMutationError(String(error)); }
@@ -680,7 +572,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       if (!path || path === (selectedGameDirectory || game.path)) return;
       const paths=await invoke<{root:string;executable?:string;dlss_destination?:string}>("set_game_mod_destination",{gameKey:game.external_id||game.path,directory:selectedGameRoot||game.directory||game.path,destination:path});
       modPathCache.current.set(modPathKey,paths);setModPaths({...paths,key:modPathKey});
-      setGameDir(path);
+
     } catch (error) {
       notifyError(t("gameInfo", "editDirectory"), error);
     } finally {
@@ -698,7 +590,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     update();
     return () => observer.disconnect();
   }, []);
-  const hasBlockingDialog = Boolean(droppedPath) || hasOverlayDialog || showDiscardDraft || showGameEntryModal || Boolean(uninstallTarget) || Boolean(gameLogsTarget) || showWelcome || Boolean(appImageTarget) || showModManagerModal || launcherUpdate.open || showSetupWizard || showCreditsModal || showInstructionsModal || showUpdaterModal || modInstallation.hasDialog;
+  const hasBlockingDialog = Boolean(droppedPath) || hasOverlayDialog || showDiscardDraft || showGameEntryModal || Boolean(uninstallTarget) || Boolean(gameLogsTarget) || showWelcome || Boolean(appImageTarget) || showModManagerModal || launcherUpdate.open || showCreditsModal || showAddonStore || showAddonGuide || showInstructionsModal;
   const hasOpenDialog = (detailsOpen && gameDetailsOverlay && !showSettingsModal) || hasBlockingDialog;
   const fileDropHover = useLauncherFileDrop(hasOpenDialog || preferencesBusy || gameInstaller.busy || libraryMutationBusy || nexus.busy || hasUnfinishedDraft, setDroppedPath);
 
@@ -710,16 +602,17 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   }, [hasOpenDialog]);
 
   usePreferencesRequests({
+    openAddonStore: () => {if (!hasOpenDialog && !preferencesBusy) setShowAddonStore(true);},
     coverBlocked: hasOpenDialog,
     runnerBlocked: hasBlockingDialog || preferencesBusy || gameInstaller.busy || libraryMutationBusy || nexus.busy || nexus.settingsBusy,
-    featureBlocked: modInstallation.busy || preferencesBusy || showDiscardDraft,
+    featureBlocked: preferencesBusy || showDiscardDraft,
     open: (section, page, closeMenu) => {
       if (closeMenu) setShowSettings(false);
       setSettingsSection(section); if (page) setSettingsPage(page); setShowSettingsModal(true);
     },
   });
 
-  const viewDownloadedMod = (gameId: string, modId: string) => requestDraftExit(() => { const entry = nexus.workspace.games.find(item => item.id === gameId); if (!entry) return; setGameModsTab("nexus"); setNexusModToView({gameId,modId,requestId: ++modViewRequest.current}); setNexusTab("mods"); setShowWelcome(false); setGamePanelMode("nexus"); setLibraryScope("all"); setModManagerOpen(true); setIsCollapsingGame(false); setSelectedGame({ ...entry.game, nexus_platform: entry.platform, nexus_id: entry.id }); setGameDir(entry.game.directory || entry.game.path); });
+  const viewDownloadedMod = (gameId: string, modId: string) => requestDraftExit(() => { const entry = nexus.workspace.games.find(item => item.id === gameId); if (!entry) return; setGameModsTab("nexus"); setNexusModToView({gameId,modId,requestId: ++modViewRequest.current}); setNexusTab("mods"); setShowWelcome(false); setGamePanelMode("nexus"); setLibraryScope("all"); setModManagerOpen(true); setIsCollapsingGame(false); setSelectedGame({ ...entry.game, nexus_platform: entry.platform, nexus_id: entry.id });  });
   const detailsSummary = (gamePanelMode === "install" || gamePanelMode === "add") ? <InstallGameSummary nexusAddition={addingNexusGame} mode={gamePanelMode} draft={installationDraft} ready={installationReady} busy={gameInstaller.busy || libraryMutationBusy || (addingNexusGame && nexus.busy)} installationResult={gameInstaller.result} installationError={libraryMutationError || (addingNexusGame ? nexus.error : gameInstaller.error)}
               onInstall={() => void submitGameEntry()}
               onUninstall={gameInstaller.result ? () => setUninstallTarget({ path: gameInstaller.result!.prefix.replace(/[\\/]prefix[\\/]?$/, ""), prefix: gameInstaller.result!.prefix, name: installationDraft.name }) : undefined}
@@ -759,15 +652,13 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
   const selectedDays = selectedActivity?.last_played ? daysSince(selectedActivity.last_played) : -1;
   const selectedLastPlayed = selectedDays < 0 ? t("modern", "neverPlayed") : selectedDays === 0 ? t("modern", "playedToday") : selectedDays === 1 ? t("modern", "playedYesterday") : t("modern", "playedDaysAgo").replace("{n}", String(selectedDays));
   const selectedPlaytime = formatPlaytime(selectedActivity?.minutes ?? 0);
-  const openSelectedFolder = () => invoke("open_folder", { path: selectedGameRoot }).catch((error: unknown) => {
-    modInstallation.showError(t("gameInfo", "openFolder"), String(error));
-  });
+  const openSelectedFolder = () => invoke("open_folder", { path: selectedGameRoot }).catch((error: unknown) => {notifyError(t("modern","gameFolder"),error);});
   const selectedProton = gamePanelMode === "nexus" ? nexusGame?.proton : selectedGame?.proton;
   const overviewTiles = selectedGame ? <SelectedGameOverview selectedGame={selectedGame} gamePanelMode={gamePanelMode}
-    info={dlssActive ? analysis : overviewAnalysis} nexusGame={nexusGame} selectedGameRoot={selectedGameRoot}
-    releaseDate={releaseDate} installStatus={installStatus} installedDll={installedDll} copyReference={copyReference}
-    modPathsChecked={modPaths?.key === modPathKey} modPaths={modPaths} directoryPickerBusy={directoryPickerBusy}
-    onChooseCustomPath={handleChooseCustomPath} onDuplicate={setCopyTarget}/> : null;
+    info={overviewAnalysis} nexusGame={nexusGame} selectedGameRoot={selectedGameRoot}
+    releaseDate={releaseDate} copyReference={copyReference}
+    directoryPickerBusy={directoryPickerBusy}
+    onChooseCustomPath={handleChooseCustomPath} onDuplicate={setCopyTarget} showModInformation={usesBundledTarget(addonSnapshot.overview,"game-mods")}/> : null;
   // Spotlight actions: one big Play button and quick buttons, wired to the
   // same handlers as the cover menu and the classic panel.
   const usesNexusLaunch = Boolean(nexusGame && (nexusGame.mods.some(m=>m.installed && m.enabled) || nexusGame.profile || selectedGame?.nexus_id));
@@ -782,7 +673,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     : (gameExecution.cancellingPath === selectedGame?.path || (selectedSession?.path === selectedGame?.path && selectedSession?.state === "stopping")) || (!selectedActive && Boolean(gameInstaller.busy || libraryMutationBusy || (gameExecution.active&&selectedGame?.launcher!=="PeliGames") || gameExecution.pendingPath));
   const playSelected = () => {
     if (!selectedView) return;
-    if (usesNexusLaunch && nexusGame) { if(selectedActive)void nexus.stop(nexusGame.id);else void (async()=>{if(selectedGame?.advanced && !await nexus.configureAdvanced(nexusGame.id,selectedGame.advanced))return;await nexus.start(nexusGame.id)})();return; }
+    if (usesNexusLaunch && nexusGame) { if(selectedActive)void nexus.stop(nexusGame.id);else void (async()=>{if(selectedGame?.advanced && !await nexus.configureAdvanced(nexusGame.id,selectedGame.advanced))return;await replayOnPlay.launch({...selectedView,nexus_id:nexusGame.id},()=>nexus.start(nexusGame.id))})();return; }
     void coverAction(selectedActive ? "stop" : "start", selectedView);
   };
   const quick = (icon: Parameters<typeof MenuIcon>[0]["name"], label: string, onClick: () => void, options: { pressed?: boolean; disabled?: boolean; danger?: boolean } = {}) =>
@@ -807,84 +698,43 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     </div>
   </> : null;
   // DLSS 5 NR tab: install or repair first, then its options.
-  const dlssInstallPanel = dlssActive ? <ModernDlssPanel route={route} bitness={bitness} gpuArch={gpuArch}
-    recommendedBitness={detectedBitness} recommendOptiscaler={recommendOptiscaler}
-    busy={modInstallation.busy || modPaths?.key !== modPathKey} onRoute={value => { if (selectedGame) manualRoutes.current.set(selectedGame.path, value); changeInstallRoute(value); }} onBitness={setBitness}
-    recommendation={recommendOptiscaler ? (t("ui-app", "recommended_for_this_game_optiscaler_based_on_the_detected_upscalers")) : undefined}
-    startup={neuralStartup.enabled} startupDisabled={modInstallation.busy || neuralStartup.initializing || installStatus === "Verificando..."}
-    onStartup={() => neuralStartup.change(!neuralStartup.enabled)} renodx={neuralStartup.renodx} onRenodx={() => neuralStartup.changeRenodx(!neuralStartup.renodx)}
-    unifiedNetworks={Boolean(neuralModels?.unified_networks)} experimentalAvailable={Boolean(neuralModels?.experimental)} nrPlugin={Boolean(neuralModels?.nr_plugin)}
-    lumeniteAvailable={Boolean(neuralModels?.lumenite)} lumenite={lumeniteChoices[gameDir] ?? neuralModels?.lumenite_selected ?? false}
-    onLumenite={value => setLumeniteChoices(previous => ({...previous, [gameDir]: value}))}
-    model={neuralModel} installed={isInstalledMod(installStatus)} modelAvailable={Boolean(neuralModels?.small && neuralModels.original && neuralModels.selectable)}
-    modelStatus={neuralModelsError ? "error" : !neuralModels ? "checking" : !neuralModels.selectable ? "backend" : !neuralModels.small ? "missing" : "ready"}
-    onModel={value => {
-      if (value !== neuralModel && isInstalledMod(installStatus)) {
-        notifyInfo("DLSS 5 NR", t("ui-app", "model_selected_click_repair_reinstall_to_apply_the_change_to_the_game"));
-      }
-      setNeuralModel(value); if (value === "small" || value === "experimental") setInt4Mixed(false);
-    }}
-    int4={int4Mixed} onInt4={() => setInt4Mixed(value => !value)}
-    actions={<>
-      <button type="button" className="modern-dlss-primary" disabled={modInstallation.busy || modPaths?.key !== modPathKey || neuralStartup.busy || neuralStartup.initializing || installStatus === "Verificando..." || (gpuArch === "rdna3" && bitness === "32")}
-        onClick={() => void handleInstall()}>{modInstallation.busy ? t("installAction", "loading") : isInstalledMod(installStatus) ? (t("ui-app", "repair_reinstall")) : t("installAction", "install")}</button>
-      {isInstalledMod(installStatus) && <button type="button" className="modern-mini-btn danger" disabled={modInstallation.busy || neuralStartup.busy} onClick={() => modInstallation.requestUninstall(selectedGameDirectory!)}><MenuIcon name="trash" />{t("gameInfo", "uninstall")}</button>}
-    </>}
-    shortcut={<ShortcutKeySelector key={`${selectedGame?.path || gameDir}:${route}`} disabled={modInstallation.busy || installStatus === "Verificando..."} route={route} shortcutKey={menuShortcutForRoute(preferences.draft.game_shortcut_keys, selectedGame?.path || gameDir, gameDir, route)} setShortcutKey={val => {
-      if (appConfig && selectedGame) {
-        void changeMenuShortcut({path: selectedGame.path, directory: selectedGameDirectory, route, key: val, installed: isInstalledMod(installStatus)})
-          .catch(error => notifyError(t("ui-app", "menu_shortcut"), String(error)));
-      }
-    }} />}
-    feedback={<>{neuralStartup.feedback && <p role="status" className="neural-startup-feedback">{t("neuralStartup", neuralStartup.feedback)}</p>}
-      {neuralStartup.error && <p role="alert" className="neural-startup-error">{t("neuralStartup", "error")} {neuralStartup.error}</p>}</>}
-  /> : null;
   const installedModCount = Math.max(nexusGame?.mods.filter(mod => mod.installed).length ?? 0, nexusGame?.detected_mods?.filter(mod => mod.enabled).length ?? 0);
   const supportsExecutionSettings = selectedGame?.launcher === "PeliGames" || Boolean(selectedGame?.external_id);
   const executionPanel = (section: "performance" | "options" | "advanced") => supportsExecutionSettings ? installedPanel(section) : nexusGame ? section === "performance" ? <GamePerformancePanel game={{path:String(nexusGame.game.path||""),executable:String(nexusGame.game.executable||""),flatpak:Boolean(nexusGame.game.flatpak)}} value={nexusGame.advanced} disabled={nexus.busy || nexus.settingsBusy || Boolean(nexusGame.running)} onChange={value=>nexus.configureAdvanced(nexusGame.id,value)}/> : cloneElement(nexusPanels,{section}) : <div className="modern-tile"><h3>{t("modern", section === "advanced" ? "options" : section)}</h3><p>{t("ui-app", "this_game_s_launch_options_are_managed_by_its_original_launcher")}</p></div>;
-  const dlssGamePanel = selectedGame?.native_linux ? <div className="modern-tile"><h3>DLSSNR-AMD</h3><p>{t("ui-app", "this_is_a_native_linux_installation_the_dlssnr_amd_dll_installer_targets_windows_games_r")}</p></div> : !hasDlssnrConfiguration(appConfig) ? <div className="modern-tile"><h3>DLSSNR-AMD</h3><p>{t("ui-app", "configure_the_backend_and_model_before_installing_dlssnr_amd_in_this_game")}</p><button className="modern-mini-btn" onClick={()=>setShowSetupWizard(true)}>{t("ui-app", "initial_setup")}</button></div> : modPathsError ? <div className="modern-tile" role="alert">{modPathsError}</div> : modPaths?.key !== modPathKey ? <p role="status">{t("ui-app", "locating_the_executable_and_dlssnr_amd_destination")}</p> : !modPaths.dlss_destination ? <div className="modern-tile"><p>{t("ui-app", "could_not_locate_this_installation_s_executable_choose_its_folder_to_configure_dlssnr_am")}</p><button className="modern-mini-btn" disabled={directoryPickerBusy} onClick={()=>void handleChooseCustomPath()}>{t("ui-app", "choose_destination")}</button></div> : <><div className="modern-overview-paths">{<GamePathTile label={t("ui-app", "dlssnr_amd_destination_executable_folder")} path={modPaths.dlss_destination} action={<button className="modern-mini-btn" disabled={directoryPickerBusy || modInstallation.busy} onClick={()=>void handleChooseCustomPath()}>{t("ui-app", "change_destination")}</button>}/>}</div>{dlssInstallPanel}</>;
-  const danielTestPanel = experimentalDanielNr && selectedGame && <DanielNrTestPanel
-    key={detailsResetKey}
-    game={!supportsExecutionSettings && nexusGame ? {...selectedGame, advanced: nexusGame.advanced} : selectedGame}
-    disabled={modInstallation.busy || gameInstaller.busy || libraryMutationBusy || nexus.busy || nexus.settingsBusy}
-    running={gameExecution.active || Boolean(nexusGame?.running)}
-    onBusy={setLibraryMutationBusy}
-    onPersist={!supportsExecutionSettings && nexusGame ? async settings => {
-      if (!await nexus.configureAdvanced(nexusGame.id, settings)) throw new Error("Não foi possível salvar o perfil de execução.");
-    } : undefined}
-    onSaved={game => {
-      setSelectedGame(previous => previous?.path === game.path ? game : previous);
-      if (supportsExecutionSettings && nexusGame) void nexus.configureAdvanced(nexusGame.id, game.advanced!);
-    }}
-  />;
   const reportGame = selectedGame ? {...selectedGame, nexus_id: nexusGame?.id ?? selectedGame.nexus_id,
     advanced: !supportsExecutionSettings && nexusGame ? nexusGame.advanced : selectedGame.advanced, proton: selectedProton || selectedGame.proton} : null;
-  const withFeatureReport = (category: ReportCategory, label: string, content: ReactNode) => reportGame
-    ? <FeatureReportSection key={detailsResetKey + ":" + category} context={featureReportContext(reportGame, category, selectedGameRoot || reportGame.directory || reportGame.path, modPaths?.key === modPathKey ? modPaths.dlss_destination || "" : "")} label={label}>{content}</FeatureReportSection> : content;
-  const modernTabs: ModernTab[] = gamePanelMode === "install" || gamePanelMode === "add"
+  const withFeatureReport = (category: ReportCategory, label: string, content: FeatureReportContent) => reportGame
+    ? <FeatureReportSection key={detailsResetKey + ":" + category} context={featureReportContext(reportGame, category, selectedGameRoot || reportGame.directory || reportGame.path, modPaths?.key === modPathKey ? modPaths.dlss_destination || "" : "")} label={label}>{content}</FeatureReportSection> : typeof content==="function"?content(null):content;
+  const persistNexusLaunchSettings=!supportsExecutionSettings&&nexusGame?async(settings:AdvancedSettings)=>{if(!await nexus.configureAdvanced(nexusGame.id,settings))throw new Error("Não foi possível salvar o perfil de execução.");}:undefined;
+  const addonGame=selectedGame?{id:selectedGame.path,directory:selectedGameRoot || selectedGame.directory || "",native:Boolean(selectedGame.native_linux),running:Boolean(gameExecution.active||nexusGame?.running),
+    executableDirectory:modPaths?.key===modPathKey?modPaths.dlss_destination||undefined:undefined}:undefined;
+  const baseModernTabs: ModernTab[] = gamePanelMode === "install" || gamePanelMode === "add"
     ? [{ id: "installation", label: t("modern", "installation"), content: <div className="modern-install-panels">{installationPanels}</div> }]
     : [
       { id: "overview", label: t("modern", "overview"), content: overviewTiles },
-      { id: "nexus", label: t("modern", "mods"), count:installedModCount, content: selectedGame && <GameModsTabs activeTab={gameModsTab} onTabChange={setGameModsTab} nexus={<NexusGameTab key={detailsResetKey} game={selectedGame} workspace={nexus}>{cloneElement(nexusPanels,{section:"mods"})}</NexusGameTab>} dlss={withFeatureReport("dlssnr", "DLSSNR-AMD", dlssGamePanel)} daniel={danielTestPanel} /> },
-      ...(nexusToolState.available ? [{ id:"tools",label:t("ui-app", "tools"),content:cloneElement(nexusPanels,{section:"tools"}) }] : []),
-      { id: "frame-generation", disabled: !experimentalFrameGeneration, disabledHint: t("ui-app", "under_development_unavailable_in_this_release"), label: t("ui-app", "frame_generation"), content: withFeatureReport("frame-generation", t("ui-app", "frame_generation"), experimentalFrameGeneration && selectedGame && <FrameGeneratorTabs key={detailsResetKey} game={!supportsExecutionSettings && nexusGame ? {...selectedGame,advanced:nexusGame.advanced} : selectedGame} onPersist={!supportsExecutionSettings && nexusGame ? async settings=>{if(!await nexus.configureAdvanced(nexusGame.id,settings))throw new Error("Não foi possível salvar o perfil de execução.");} : undefined} running={gameExecution.active || Boolean(nexusGame?.running)} disabled={Boolean(gameExecution.pendingPath) || Boolean(nexus.launching) || nexus.busy || nexus.settingsBusy} onSaved={game=>{setSelectedGame(game);if(supportsExecutionSettings && nexusGame)void nexus.configureAdvanced(nexusGame.id,game.advanced!);}} />) },
+      { id: "nexus", label: t("modern", "mods"), count:installedModCount, content: selectedGame && <GameModsTabs activeTab={gameModsTab} onTabChange={openGameMod} disabled={addonUiBusy} nexus={<NexusGameTab key={detailsResetKey} game={selectedGame} workspace={nexus}>{cloneElement(nexusPanels,{section:"mods"})}</NexusGameTab>} externalEntries={gameContributions(addonSnapshot.overview,"game-mods")} game={addonGame} onBusyChange={setAddonUiBusy}/> },
+      ...(usesBundledTarget(addonSnapshot.overview,"game-mods") && nexusToolState.available ? [{ id:"tools",label:t("ui-app", "tools"),content:cloneElement(nexusPanels,{section:"tools"}) }] : []),
+      { id: "frame-generation", label: t("ui-app", "frame_generation"), content: <GameAddonPanel entries={gameContributions(addonSnapshot.overview,"game-frame-generation")} game={addonGame} disabled={Boolean(gameExecution.pendingPath) || Boolean(nexus.launching) || nexus.busy || nexus.settingsBusy} onBusyChange={setAddonUiBusy}/> },
       { id: "performance", label: t("modern", "performance"), content: withFeatureReport("performance", t("ui-app", "performance_and_overlay"), executionPanel("performance")) },
-      {id:"captures",label:t("ui-app", "captures"),content: withFeatureReport("captures", t("ui-app", "captures"), selectedGame&&<CapturePanel key={detailsResetKey} gameKey={selectedGame.external_id||selectedGame.path} gameName={selectedGame.name} gameDirectory={selectedGameRoot} gameExecutable={selectedGame.executable||""} steamAppId={selectedGame.launcher==="Steam"?selectedGame.app_id||"":""}/>)},
-      { id: "options", label: t("modern", "options"), content: withFeatureReport("options", t("ui-app", "launch_options"), <>{executionPanel("options")}{selectedGame && <PeliRunProfile key={detailsResetKey} game={!supportsExecutionSettings && nexusGame ? {...selectedGame,advanced:nexusGame.advanced} : selectedGame} disabled={modInstallation.busy || gameInstaller.busy || libraryMutationBusy || nexus.busy || nexus.settingsBusy} />}</>) },
+      {id:"captures",label:t("ui-app", "captures"),content:<GameAddonPanel entries={gameContributions(addonSnapshot.overview,"game-captures")} game={addonGame} disabled={Boolean(gameExecution.pendingPath)} onBusyChange={setAddonUiBusy}/>},
+      { id: "options", label: t("modern", "options"), content: withFeatureReport("options", t("ui-app", "launch_options"), <>{executionPanel("options")}{selectedGame && <PeliRunProfile key={detailsResetKey} game={!supportsExecutionSettings && nexusGame ? {...selectedGame,advanced:nexusGame.advanced} : selectedGame} disabled={gameInstaller.busy || libraryMutationBusy || nexus.busy || nexus.settingsBusy} />}</>) },
       { id: "advanced", label: t("ui-app", "advanced"), content: withFeatureReport("advanced", t("ui-app", "advanced"), executionPanel("advanced")) },
-      { id: "reset", label: t("ui-app", "reset"), content: selectedGame&&<GameResetPanel key={detailsResetKey} game={selectedGame} nexusId={nexusGame?.id} gpuArch={gpuArch} bitness={bitness} disabled={modInstallation.busy||gameInstaller.busy||libraryMutationBusy||gameExecution.active||Boolean(gameExecution.pendingPath)||Boolean(nexusGame?.running)||Boolean(nexus.launching)||nexus.busy||nexus.settingsBusy||reservedBase} onBusy={busy=>{setLibraryMutationBusy(busy);if(!busy){nexus.refresh();setHomeRevision(value=>value+1);setGameInfoRevision(value=>value+1);}}} onSaved={game=>{setSelectedGame(previous=>previous?.path===game.path?game:previous);}}/> },
+      { id: "reset", label: t("ui-app", "reset"), content: selectedGame&&<GameResetPanel key={detailsResetKey} game={selectedGame} nexusId={nexusGame?.id} gpuArch="rdna4" bitness="64" disabled={gameInstaller.busy||libraryMutationBusy||gameExecution.active||Boolean(gameExecution.pendingPath)||Boolean(nexusGame?.running)||Boolean(nexus.launching)||nexus.busy||nexus.settingsBusy||reservedBase} onBusy={busy=>{setLibraryMutationBusy(busy);if(!busy){nexus.refresh();setHomeRevision(value=>value+1);setGameInfoRevision(value=>value+1);}}} onSaved={game=>{setSelectedGame(previous=>previous?.path===game.path?game:previous);}}/> },
     ];
+  const modernTabs = gamePanelMode === "install" || gamePanelMode === "add" ? baseModernTabs : composeAddonGameTabs(baseModernTabs, addonSnapshot.overview,
+    addonGame,
+    gameExecution.active || Boolean(gameExecution.pendingPath) || addonUiBusy, setAddonUiBusy);
   if(reservedBase){for(const tab of modernTabs){if(tab.id!=="overview"){tab.disabled=true;tab.disabledHint="Base reservada para cópias overlay. Use as configurações de uma cópia.";tab.content=<p>Base reservada. Configure uma das cópias overlay.</p>;}}}
   const gameGrid = <GameGrid key="unified-library" supplementalGames={(nexus.loaded ? nexus.workspace.games : cachedNexus.games).map(item=>({...item.game,nexus_id:item.id,nexus_platform:item.platform}))} onCoverAction={coverAction} coverHoldBlocked={gameInstaller.busy || libraryMutationBusy || nexus.busy || Boolean(gameExecution.pendingPath)} coverActionsBlocked={gameInstaller.busy || libraryMutationBusy || nexus.busy || Boolean(gameExecution.pendingPath)} homeRevision={homeRevision} onSelectGame={handleSelectGame} startingGamePath={gameExecution.pendingPath || (gameExecution.session?.state === "starting" ? gameExecution.session.path : undefined)} runningGamePaths={[...gameExecution.sessions.filter(item=>item.state==="running"||item.state==="stopping").map(item=>item.path),...nexus.workspace.games.filter(item=>item.running).map(item=>item.game.path)]} startingGamePaths={[...gameExecution.sessions.filter(item=>item.state==="starting").map(item=>item.path),...nexus.workspace.games.filter(item=>item.id===nexus.launching&&!item.running).map(item=>item.game.path)]} selectedGameKey={selectedGame ? gameViewKey(selectedGame) : undefined} mode={gamePanelMode === "mods" || gamePanelMode === "nexus" ? "installed" : gamePanelMode} libraryScope="own" modeDisabled={gameInstaller.busy || libraryMutationBusy || nexus.busy} onModeChange={changeGamePanelMode} onCountChange={setLibraryCount} />;
 
   const selectedBanner = useGameBanner(selectedGame || undefined, !["install", "add"].includes(gamePanelMode));
   const installingGame = gamePanelMode === "install" || gamePanelMode === "add";
   const installationBanner = useGameBanner(installingGame && installationDraft.name && !installationDraft.editing ? { name: installationDraft.name, path: "installation-draft", launcher: "PeliGames", cover_url: installationDraft.coverStatus === "found" ? installationDraft.coverUrl : undefined } : undefined, true);
-  const modernCatalogOpen = unifiedTab === "nexus" && gameModsTab === "nexus" && detailsOpen && Boolean(nexusGame) && nexusTab === "catalog";
-  const modernDetails = <GameBenchmarkNavigationContext.Provider value={selectedGame ? openGameBenchmarks : null}><ModernGameDetails resetKey={detailsResetKey}
+  const modernCatalogOpen = usesBundledTarget(addonSnapshot.overview,"game-mods") && unifiedTab === "nexus" && gameModsTab === "nexus" && detailsOpen && Boolean(nexusGame) && nexusTab === "catalog";
+  const modernDetails = <AddonGameHost resolvedExecutable={modPaths?.key===modPathKey?modPaths.executable:undefined} game={!supportsExecutionSettings&&nexusGame&&selectedGame?{...selectedGame,advanced:nexusGame.advanced}:selectedGame} running={gameExecution.active||Boolean(nexusGame?.running)} persistAdvanced={persistNexusLaunchSettings} onChooseExecutableDirectory={handleChooseCustomPath} onUpdated={game=>{setSelectedGame(previous=>previous?.path===game.path?game:previous);if(supportsExecutionSettings&&nexusGame&&game.advanced)void nexus.configureAdvanced(nexusGame.id,game.advanced);}}><GameBenchmarkNavigationContext.Provider value={selectedGame ? openGameBenchmarks : null}><ModernGameDetails resetKey={detailsResetKey}
     contentView={benchmarkOpen && selectedGame ? <GameBenchmarkView key={detailsResetKey} game={selectedGame} onBack={() => setBenchmarkViewKey(null)} /> : undefined}
     activeTab={installingGame ? undefined : detailsReturnTab?.key === detailsResetKey ? detailsReturnTab.tab : unifiedTab}
-    onTabChange={tab => {if(tab !== "nexus") setNexusModToView(null);setUnifiedTab(tab);setDetailsReturnTab({ key: detailsResetKey, tab });}}
+    onTabChange={tab => {if(addonUiBusy&&modernTabs.some(item=>item.id===unifiedTab&&!item.disabled))return;if(tab !== "nexus") setNexusModToView(null);setUnifiedTab(tab);setDetailsReturnTab({ key: detailsResetKey, tab });}}
     artSharp={Boolean(installingGame ? installationBanner : selectedBanner)}
     artwork={installingGame ? [installationBanner, installationDraft.coverUrl].filter((url): url is string => Boolean(url)) : selectedGame ? [
       ...(selectedBanner ? [selectedBanner] : []),
@@ -895,23 +745,21 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
     title={selectedGame?.name} meta={selectedGame ? <>
       {selectedPlaytime && <span className="modern-meta-chip">{t("modern", "hoursPlayed").replace("{n}", selectedPlaytime)}</span>}
       {selectedActivity?.last_played ? <span className="modern-meta-chip">{selectedLastPlayed}</span> : null}
-      {gamePanelMode !== "nexus" && dlssNrInstalled && <span className="modern-meta-chip ok">{t("modern", "dlssInstalled")}</span>}
-      {installedModCount > 0 && <span className="modern-meta-chip">{installedModCount} {installedModCount === 1 ? "mod" : "mods"}</span>}
+      {usesBundledTarget(addonSnapshot.overview,"game-mods") && installedModCount > 0 && <span className="modern-meta-chip">{installedModCount} {installedModCount === 1 ? "mod" : "mods"}</span>}
       <GameConfigurationChips gameKey={selectedGame.external_id||selectedGame.path} advanced={supportsExecutionSettings?selectedGame.advanced:nexusGame?.advanced??selectedGame.advanced}/>
     </> : undefined}
     actions={modernActions ?? undefined}
     tabRequest={nexusModToView && nexusModToView.gameId === nexusGame?.id ? {tab:"nexus",revision:nexusModToView.requestId} : undefined}
     catalog={modernCatalogOpen ? <NexusCatalogPanel key={nexusGame!.id} embedded game={nexusGame} onAssociate={nexus.configureDomain} onImport={nexus.importArchive}
       onClose={() => setNexusTab("mods")} onLibrary={() => { setNexusTab("mods"); collapseGameDetails(); }} /> : undefined}
-    tabs={modernTabs} onClose={() => {setNexusModToView(null);collapseGameDetails();}} closeLabel={t("modern", "closeDetails")} /></GameBenchmarkNavigationContext.Provider>;
+    tabs={modernTabs} onClose={() => {setNexusModToView(null);collapseGameDetails();}} closeLabel={t("modern", "closeDetails")} /></GameBenchmarkNavigationContext.Provider></AddonGameHost>;
   const modernMain = <ModernShell active={modernSection} disabled={hasOpenDialog || (showSettingsModal && preferencesBusy)} onNavigate={navigateModern} activeDownloads={activeDownloads}
-    libraryCount={libraryCount} settingsPage={modernSettingsPage}
+    onOpenAddons={() => setShowAddonStore(true)} libraryCount={libraryCount} settingsPage={modernSettingsPage}
     onSettingsNavigate={next => { if (!preferencesBusy) setSettingsPage(next); }}>
     {showSettingsModal && <div className="modern-scroll modern-settings-scroll">
-      <SettingsModal page={settingsPage} onPageChange={setSettingsPage} onBusyChange={setPreferencesBusy} initialSection={settingsSection} initialBackendArch={settingsSection === "backendUpdate" ? notificationBackendArch : undefined}
+      <SettingsModal page={settingsPage} onPageChange={setSettingsPage} onBusyChange={setPreferencesBusy} initialSection={settingsSection}
         onClose={() => setShowSettingsModal(false)}
-        onConfigUpdated={config => { if (!config) setShowSetupWizard(true); }}
-        onOpenWizard={() => setShowSetupWizard(true)}
+        onConfigUpdated={config => { if (!config) setShowAddonStore(true); }}
         onOpenWelcome={() => setShowWelcome(true)} />
     </div>}
     <div ref={launcherScroll} className="container modern-scroll" style={gameDetailsOverlay && detailsOpen ? { overflow: "hidden" } : undefined} hidden={showSettingsModal}>
@@ -946,7 +794,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
           notificationIndicator={<NotificationCenter onNexusAccount={() => { setShowSettings(false); setSettingsSection("nexusAccount"); setSettingsPage("connections"); setShowSettingsModal(true); }} nexusError={nexus.error} navigationBusy={preferencesBusy || Boolean(launcherUpdate.downloadProgress)} launcherUpdate={launcherUpdate.info} onNavigate={target => {
             setShowSettings(false);
             if (target === "launcher") launcherUpdate.setOpen(true);
-            else if (target === "rdna4" || target === "rdna3") { setNotificationBackendArch(target); setSettingsSection("backendUpdate"); setShowSettingsModal(true); }
+            else if (target === "rdna4") { setShowAddonStore(true); }
             else { setSettingsSection("protons"); setShowSettingsModal(true); }
           }}/>}
           updateIndicator={<LauncherUpdateIndicator status={launcherUpdate.status} disabled={hasOpenDialog} downloadProgress={launcherUpdate.downloadProgress}
@@ -963,16 +811,9 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       <div className="launcher-build-label">{APP_BUILD_LABEL}</div>
     </div>
 
-    <DlssInstallationDialogs installation={modInstallation} onUninstall={path => void proceedUninstallForPath(path)} onSetup={() => setShowSetupWizard(true)} />
+    {(showAddonStore||showAddonGuide) && <AddonStoreWindow initialGuide={showAddonGuide} onClose={() => {setShowAddonStore(false);setShowAddonGuide(false)}}/>}
 
     {launcherUpdate.open && <AppUpdateModal onDownloadProgress={launcherUpdate.setDownloadProgress} initialInfo={launcherUpdate.info ?? undefined} onClose={() => launcherUpdate.setOpen(false)} />}
-
-    {showUpdaterModal && (
-      <BackendUpdaterModal
-        gpuArch={gpuArch}
-        onClose={() => setShowUpdaterModal(false)}
-      />
-    )}
 
     {showInstructionsModal && (
       <InstructionsModal onClose={() => setShowInstructionsModal(false)} />
@@ -989,7 +830,7 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
         const imported = await nexus.importArchive(id,path);
         if (!imported) { notifyError("Mod local", "Não foi possível importar o pacote. Confira o arquivo e tente novamente."); return false; }
         const entry=nexus.workspace.games.find(game=>game.id===id) ?? cachedNexus.games.find(game=>game.id===id);
-        if(entry){setShowSettingsModal(false);setGamePanelMode("nexus");setLibraryScope("all");setNexusTab("mods");setSelectedGame({...entry.game,nexus_id:entry.id,nexus_platform:entry.platform});setGameDir(entry.game.directory||entry.game.path);setModManagerOpen(true);}
+        if(entry){setShowSettingsModal(false);setGamePanelMode("nexus");setLibraryScope("all");setNexusTab("mods");setSelectedGame({...entry.game,nexus_id:entry.id,nexus_platform:entry.platform});setModManagerOpen(true);}
         return true;
       }}/>}
     {showGameEntryModal && <GameEntryModal onClose={() => setShowGameEntryModal(false)} onSelect={mode => requestDraftExit(() => {
@@ -1017,11 +858,13 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       localStorage.setItem("peligames_welcome_completed", "1");
       setShowWelcome(false);
       collapseGameDetails();
-      setGamePanelMode("install");
-      setLibraryScope("own");
+      if (!addonSnapshot.overview?.state.selection_completed) {
+        setShowAddonGuide(true);
+      } else { setGamePanelMode("install"); setLibraryScope("own"); }
     }} onNavigate={destination => {
       localStorage.setItem("peligames_welcome_completed", "1");
       setShowWelcome(false);
+      if (destination === "addons") {setShowAddonGuide(true);return;}
       if (destination === "nexus") { openNexusLibrary(); return; }
       if (destination === "dlssnr") { openModLibrary(); return; }
       if (destination === "matrix") { window.dispatchEvent(new Event(OPEN_MATRIX_CHAT_EVENT)); return; }
@@ -1031,22 +874,10 @@ function App({ initialGamePath }: { initialGamePath?: string }) {
       setSettingsSection(destination); setShowSettingsModal(true);
     }} />}
 
-    {showSetupWizard && (
-      <SetupWizard
-        allowCancel
-        onCancel={closeDlssSetup}
-        onComplete={(config) => {
-          setShowSetupWizard(false);
-          openModLibrary(config);
-        }}
-      />
-    )}
-
     {showModManagerModal && <ModManagerModal disabled={!appConfigLoaded} onClose={() => setShowModManagerModal(false)} onSelect={integration => {
       setShowModManagerModal(false);
       if (integration === "nexus") { openNexusLibrary(); return; }
-      if (hasDlssnrConfiguration(appConfig)) openModLibrary();
-      else setShowSetupWizard(true);
+      openModLibrary();
     }} />}
 
     {nexusReportTarget && <NexusReportModal gameId={nexusReportTarget} onClose={() => setNexusReportTarget(null)} />}

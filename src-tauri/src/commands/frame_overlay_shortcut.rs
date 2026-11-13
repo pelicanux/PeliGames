@@ -83,7 +83,7 @@ pub async fn configure_frame_overlay(preferences: Preferences) -> Result<(), Str
             ));
         }
     }
-    super::frame_generation::write(
+    peligames_mod_config::write_atomic_bytes(
         &path()?,
         &serde_json::to_vec(&preferences).map_err(|e| e.to_string())?,
         0o600,

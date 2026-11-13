@@ -1,9 +1,14 @@
+import {useAddonStore} from "../modules/addons/store";
+import {contributionRoute} from "../modules/addons/contracts";
+import {openAddonStore} from "../modules/addons/storeNavigation";
+import {AddonProjectLinks} from "./preferences/AddonProjectLinks";
+import {AddonView} from "../modules/addons/AddonView";
+import {ModDetailHeader} from "./ModDetailHeader";
+import type {AddonRoute} from "../modules/addons/contracts";
 import {experimentalDanielNr} from "../services/releaseFeatures";
 import {AddonCatalog} from "./preferences/AddonCatalog";
 import {addonAvailable, addonLabel, type AddonId} from "./preferences/addonCatalogData";
 import {DanielEnvironmentPreferences} from "../modules/neuralRendering/DanielEnvironmentPreferences";
-import {CaptureRuntimePreferences} from "./preferences/CaptureRuntimePreferences";
-import {FrameRuntimePreferences} from "./preferences/FrameRuntimePreferences";
 import {PreferenceSearchScope} from "./preferences/PreferenceSearchScope";
 import {ModernMangoHudEditor} from "./preferences/ModernMangoHudEditor";
 import {matchesPreferenceSearch,mangoSearchOptions,normalizePreferenceSearch} from "./preferences/preferenceSearch";
@@ -16,8 +21,7 @@ import { MenuIcon } from "./MenuIcon";
 import { useI18n } from "../i18n/I18nContext";
 import { ConfirmModal } from "./ConfirmModal";
 import { ResultModal } from "./ResultModal";
-import { BackendUpdaterModal } from "./BackendUpdaterModal";
-import { ThemePreferences, ModPreferences, ProtonPreferences, CoverPreferences, ToolsPreferences } from "./preferences/PreferencePages";
+import { ThemePreferences, ProtonPreferences, CoverPreferences, ToolsPreferences } from "./preferences/PreferencePages";
 import { usePreferencesConfig } from "./preferences/usePreferencesConfig";
 import { usePreferencesText } from "./preferences/labels";
 import { ConnectionsPreferences } from "./preferences/ConnectionsPreferences";
@@ -30,14 +34,12 @@ import "./preferences/connections.css";
 import "./preferences/protonPreferences.css";
 import "./preferences/interfacePreferences.css";
 
-const modPreferenceTabFor=(id:string):AddonId=>id==="runtime-daniel"?"daniel":id==="runtime-capture"?"capture":id==="runtime-mako"?"mako":id.startsWith("backup-")?"nexus":"dlss";
+const modPreferenceTabFor=(id:string):AddonId=>id==="runtime-daniel"?"daniel":id.startsWith("backup-")?"nexus":"nexus";
 interface Props {
   onClose: () => void;
   onBusyChange?: (busy: boolean) => void;
-  initialSection?: "general" | "covers" | "protons" | "backendUpdate" | "diskAutomount" | "monitoring" | "interface" | "connections" | "nexusAccount" | "appimageInstall" | "mako" | "afmf" | "capture" | "mods" | "daniel";
-  initialBackendArch?: "rdna3" | "rdna4";
+  initialSection?: "general" | "covers" | "protons" | "backendUpdate" | "diskAutomount" | "monitoring" | "interface" | "connections" | "nexusAccount" | "appimageInstall" | "mako" | "capture" | "mods" | "daniel" | `addon:${string}`;
   onConfigUpdated: (config: AppConfig | null) => void;
-  onOpenWizard: () => void;
   onOpenWelcome: () => void;
   /** Settings are a page of the window; its side menu picks the page. */
   page?: SettingsPage;
@@ -45,20 +47,25 @@ interface Props {
 }
 export type SettingsPage = Page;
 type Page = "home" | "interface" | "mods" | "protons" | "covers" | "tools" | "connections" | "backendUpdate" | "diskAutomount" | "monitoring";
-export function SettingsModal({ onClose, initialSection: requestedSection = "general", initialBackendArch, onBusyChange, onConfigUpdated, onOpenWizard, onOpenWelcome, page: controlledPage, onPageChange }: Props) {
+export function SettingsModal({ onClose, initialSection: requestedSection = "general", onBusyChange, onConfigUpdated, onOpenWelcome, page: controlledPage, onPageChange }: Props) {
 
-  const initialSection = requestedSection === "daniel" && !experimentalDanielNr ? "mods" : requestedSection;
+  const requestedAddon=requestedSection==="mako"?"mako":requestedSection==="capture"?"gpu-screen-recorder":requestedSection.startsWith("addon:")?requestedSection.slice(6):null;
+  const initialSection = requestedAddon?"mods":requestedSection === "daniel" && !experimentalDanielNr ? "mods" : requestedSection as Exclude<NonNullable<Props["initialSection"]>,`addon:${string}`|"mako"|"capture">;
   const text = usePreferencesText(), { t, language } = useI18n();
   const preferences = usePreferencesConfig();
-  const initialPage: Page = initialSection === "mako" || initialSection === "afmf" || initialSection === "capture" || initialSection === "daniel" ? "mods" : initialSection === "general" ? "home" : initialSection === "appimageInstall" ? "tools" : initialSection === "nexusAccount" ? "connections" : initialSection;
+  const initialPage: Page = initialSection === "daniel" ? "mods" : initialSection === "general" ? "home" : initialSection === "appimageInstall" ? "tools" : initialSection === "nexusAccount" ? "connections" : initialSection;
   const [ownPage, setOwnPage] = useState<Page>(initialPage);
   const page = controlledPage ?? ownPage;
   const setPage = (next: Page) => { if (onPageChange) onPageChange(next); else setOwnPage(next); };
-  const displayedPage = page === "home" ? "interface" : page;
-  const [modsTab, setModsTab] = useState<AddonId | null>(initialSection === "mako" || initialSection === "afmf" || initialSection === "capture" || initialSection === "daniel" ? initialSection : null);
+  const displayedPage = page === "home" ? "interface" : page === "backendUpdate" ? "mods" : page;
+  const [modsTab, setModsTab] = useState<AddonId | null>(initialSection === "daniel" ? initialSection : null);
+  const [externalAddon, setExternalAddon] = useState<AddonRoute | null>(null);
+  useEffect(() => {setExternalAddon(null)}, [initialSection, page]);
+  const addonOverview=useAddonStore().overview;
+  useEffect(()=>{if(!requestedAddon||!addonOverview)return;const entry=addonOverview.contributions.find(item=>item.id===requestedAddon&&item.contribution.target==="settings");setExternalAddon(entry?contributionRoute(entry):null);},[requestedAddon,addonOverview]);
   const [searchBusy,setSearchBusy]=useState<Record<string,boolean>>({});
   const searchBusyHandlers=useMemo(()=>Object.fromEntries(["mango","protons","mods","diskAutomount"].map(id=>[id,(value:boolean)=>setSearchBusy(old=>old[id]===value?old:{...old,[id]:value})])) as Record<string,(value:boolean)=>void>,[]);
-  const [backendArch, setBackendArch] = useState(initialBackendArch);
+
   const [protonConfirmationOpen, setProtonConfirmationOpen] = useState(false);
   const [downloadBusy, setDownloadBusy] = useState(false), [actionError, setActionError] = useState("");
   const [storageDialogOpen, setStorageDialogOpen] = useState(false);
@@ -73,20 +80,20 @@ export function SettingsModal({ onClose, initialSection: requestedSection = "gen
   const [clearingCache, setClearingCache] = useState(false), [cacheError, setCacheError] = useState("");
   const steamRef = useRef<HTMLInputElement>(null), coverRef = useRef<HTMLInputElement>(null), wasSaving = useRef(false);
   const busy = preferences.saving || downloadBusy || clearingCache || Object.values(searchBusy).some(Boolean);
-  useEffect(() => { if(initialSection === "mako" || initialSection === "afmf" || initialSection === "capture" || initialSection === "daniel") setModsTab(initialSection); setBackendArch(initialBackendArch); setPage(initialPage); setSearchTarget(initialSection === "appimageInstall" ? "appimage-install" : initialSection === "nexusAccount" ? "connection-nexus" : null); }, [initialPage, initialSection, initialBackendArch]);
+  useEffect(() => { if(initialSection === "daniel") setModsTab(initialSection); setPage(initialPage); setSearchTarget(initialSection === "appimageInstall" ? "appimage-install" : initialSection === "nexusAccount" ? "connection-nexus" : null); }, [initialPage, initialSection ]);
   useEffect(() => { onBusyChange?.(busy); return () => onBusyChange?.(false); }, [busy, onBusyChange]);
   useEffect(() => { if (page !== "mods" && page !== "backendUpdate") setModsTab(null); }, [page]);
   const parent: Page = page === "backendUpdate" ? "mods" : "home";
   const openAddon = (next: AddonId) => {
     if (busy || preferences.isPending() || !addonAvailable(next)) return;
-    setModsTab(next); setActionError("");
+    setExternalAddon(null); setModsTab(next); setActionError("");
     requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(".addon-menu-toolbar button")?.focus());
   };
   const closeAddon = () => {
     if (busy || preferences.isPending()) return;
-    const previous = modsTab;
-    setModsTab(null); setActionError(""); setSearchTarget(null);
-    requestAnimationFrame(() => document.getElementById(`addon-button-${previous}`)?.focus());
+    const previous = externalAddon ? `external-addon-${externalAddon.id}-${externalAddon.route}` : `addon-button-${modsTab}`;
+    setExternalAddon(null); setModsTab(null); setActionError(""); setSearchTarget(null);
+    requestAnimationFrame(() => document.getElementById(previous)?.focus());
   };
   const back = () => { if (!busy && !preferences.isPending()) { setPage(parent); setActionError(""); } };
   useEffect(() => {
@@ -106,10 +113,10 @@ export function SettingsModal({ onClose, initialSection: requestedSection = "gen
       if (document.querySelector(".modern-drawer-open, .maintenance-popup")) return;
       // A portaled choice menu consumes Escape before navigating out of preferences.
       if (event.target instanceof Element && (event.target.closest('.custom-select-menu[role="listbox"]') || (event.target.getAttribute("aria-haspopup") === "listbox" && event.target.getAttribute("aria-expanded") === "true"))) return;
-      if (event.key === "Escape" && !storageDialogOpen && !cacheDialog && !showLauncherLogs && !protonConfirmationOpen) { event.stopImmediatePropagation(); if (search) { setSearch(""); return; } if (!busy && !preferences.isPending()) { if (displayedPage === "mods" && modsTab) closeAddon(); else if (parent === "home") onClose(); else setPage(parent); } }
+      if (event.key === "Escape" && !storageDialogOpen && !cacheDialog && !showLauncherLogs && !protonConfirmationOpen) { event.stopImmediatePropagation(); if (search) { setSearch(""); return; } if (!busy && !preferences.isPending()) { if (displayedPage === "mods" && (modsTab || externalAddon)) closeAddon(); else if (parent === "home") onClose(); else setPage(parent); } }
     };
     window.addEventListener("keydown", escape, true); return () => window.removeEventListener("keydown", escape, true);
-  }, [busy, storageDialogOpen, cacheDialog, showLauncherLogs, protonConfirmationOpen, page, parent, onClose, search, modsTab]);
+  }, [busy, storageDialogOpen, cacheDialog, showLauncherLogs, protonConfirmationOpen, page, parent, onClose, search, modsTab, externalAddon]);
   const clearCache = async () => {
     if (clearingCache) return;
     setClearingCache(true);
@@ -140,11 +147,6 @@ export function SettingsModal({ onClose, initialSection: requestedSection = "gen
     { id: "launch-effect", page: "interface", title: text.launchEffect, keywords: `${text.freezeEffect} ${text.freezeHint} ${text.shatterEffect} ${text.smoothEffect} ${text.aquariumEffect} ${text.aquariumHint} ${text.particlesEffect} ${text.particlesHint} ${text.penguinEffect} ${text.penguinHint} ${text.shrinkEffect} ${text.shrinkHint} ${text.noLaunchEffect} ${text.launchEffectHint}` },
     { id: "backup-delete-all", page: "mods", title: "Apagar todos os backups de mods", keywords: "backup recuperação excluir remover apagar cópias Nexus" },
     { id: "runtime-daniel", page: "mods", title: "Daniel NR", keywords: "DLSS neural 0.6 0.8 ambiente preparo experimental HIP AMDNR" },
-    { id: "runtime-capture", page: "mods", title: "GPU Screen Recorder", keywords: "captura gravador gravação tela gameplay replay instalar reparar componente vídeo" },
-    { id: "runtime-mako", page: "mods", title: "MAKO", keywords: "frame generation geração quadros Lossless Scaling download instalação atualização versões backups" },
-    { id: "backend-project", page: "mods", title: text.project, keywords: `${text.rdna4} ${text.rdna3} DLSSNR AMD OptiScaler` },
-    { id: "backend-update", page: "mods", title: text.backendUpdate, keywords: text.backendHint },
-    { id: "setup", page: "mods", title: t("settings", "reset"), keywords: text.modTools },
     { id: "clear-cache", page: "mods", title: t("gameCache", "clear"), keywords: "cache" },
     { id: "proton-family", page: "protons", title: text.distribution, keywords: `GE-Proton CachyOS GloriousEggroll ${text.runnerUpdate} ${t("runners", "download")} ${t("runners", "check")}` },
     { id: "steam-scan", page: "protons", title: text.steamScan, keywords: `${text.steam} ${text.steamHint}` },
@@ -183,7 +185,7 @@ export function SettingsModal({ onClose, initialSection: requestedSection = "gen
   const renderSearchControls=(target:Page,ids:string[])=>{
     if(target==="interface")return <ThemePreferences searchMode onApplied={()=>setNotice(text.applied)} onOpenConnections={()=>{setSearch("");setPage("connections");setSearchTarget(null)}}/>;
     if(target==="connections")return <ConnectionsPreferences searchMode/>;
-    if(target==="mods")return <>{experimentalDanielNr&&ids.includes("runtime-daniel")&&<DanielEnvironmentPreferences disabled={busy} onBusy={searchBusyHandlers.mods}/>}{ids.includes("runtime-capture")&&<CaptureRuntimePreferences disabled={busy} onBusy={searchBusyHandlers.mods}/>}{ids.some(id=>["backend-project","backend-update","setup","clear-cache"].includes(id))&&<ModPreferences {...configProps} onBusy={searchBusyHandlers.mods} onWizard={()=>{if(!preferences.isPending()){onOpenWizard();onClose()}}} onClear={()=>setCacheDialog("confirm")}/>} {ids.some(id=>id.startsWith("backup-"))&&<ModBackupPreferences onError={setActionError} onBusy={searchBusyHandlers.mods} onRestored={async()=>onConfigUpdated(await preferences.refresh())}/>} {(["mako"] as const).filter(backend=>ids.includes(`runtime-${backend}`)).map(backend=><div data-preference-id={`runtime-${backend}`} key={backend}><h3>{"MAKO"}</h3><FrameRuntimePreferences backend={backend} disabled={busy} onBusy={searchBusyHandlers.mods}/></div>)}</>;
+    if(target==="mods")return <>{experimentalDanielNr&&ids.includes("runtime-daniel")&&<DanielEnvironmentPreferences disabled={busy} onBusy={searchBusyHandlers.mods}/>} {ids.some(id=>id.startsWith("backup-"))&&<ModBackupPreferences onError={setActionError} onBusy={searchBusyHandlers.mods} onRestored={async()=>onConfigUpdated(await preferences.refresh())}/>}</>;
     if(target==="protons")return <ProtonPreferences {...configProps} onBusy={searchBusyHandlers.protons} focusRef={steamRef} onConfirmationChange={setProtonConfirmationOpen}/>;
     if(target==="covers")return <CoverPreferences {...configProps} focusRef={coverRef} onError={setActionError}/>;
     if(target==="tools")return <ToolsPreferences onWelcome={()=>{if(!busy&&!preferences.isPending()){onClose();onOpenWelcome()}}} onError={setActionError} onLogs={()=>setShowLauncherLogs(true)}/>;
@@ -206,15 +208,18 @@ export function SettingsModal({ onClose, initialSection: requestedSection = "gen
         </> : <>
         {displayedPage === "interface" && <ThemePreferences focusTarget={searchTarget} searchControl={searchControl} onApplied={() => setNotice(text.applied)} onOpenConnections={() => { if (!busy && !preferences.isPending()) { setPage("connections"); setSearch(""); setSearchTarget(null); setActionError(""); } }}/>}
         {displayedPage === "connections" && <ConnectionsPreferences focusTarget={searchTarget} searchControl={searchControl}/>}
-        {displayedPage === "mods" && (modsTab ? <>
+        {displayedPage === "mods" && (externalAddon ? <>
+          <ModDetailHeader title={externalAddon.title ?? externalAddon.id} project={externalAddon.project} disabled={busy} onBack={closeAddon} backLabel={t("ui-settings-modal", "all_add_ons")}/>
+          <AddonView route={externalAddon} disabled={busy} onBusyChange={setDownloadBusy}/>
+        </> : modsTab ? <>
           <div className="addon-menu-toolbar mod-workspace"><button type="button" className="mod-action-secondary" disabled={busy} onClick={closeAddon}><MenuIcon name="back"/>{t("ui-settings-modal", "all_add_ons")}</button></div>
-          <section className="mod-preferences-content addon-menu-content" id={`mod-preferences-panel-${modsTab}`} aria-label={addonLabel(modsTab, language)}>{modsTab === "dlss" ? <ModPreferences {...configProps} onBusy={setDownloadBusy} onWizard={() => { if (!preferences.isPending()) { onOpenWizard(); onClose(); } }} onClear={() => setCacheDialog("confirm")}/> : modsTab==="daniel" ? experimentalDanielNr && <DanielEnvironmentPreferences disabled={busy} onBusy={setDownloadBusy}/> : modsTab==="nexus" ? <ModBackupPreferences onError={setActionError} onBusy={setDownloadBusy} onRestored={async () => onConfigUpdated(await preferences.refresh())}/> : modsTab==="capture" ? <CaptureRuntimePreferences disabled={busy} onBusy={setDownloadBusy}/> : <FrameRuntimePreferences backend={modsTab} disabled={busy} onBusy={setDownloadBusy}/>}</section>
-        </> : <AddonCatalog disabled={busy} onOpen={openAddon}/>)}
+          <section className="mod-preferences-content addon-menu-content" id={`mod-preferences-panel-${modsTab}`} aria-label={addonLabel(modsTab, language)}>{modsTab==="daniel" ? experimentalDanielNr && <DanielEnvironmentPreferences disabled={busy} onBusy={setDownloadBusy}/> : modsTab==="nexus" ? <ModBackupPreferences onError={setActionError} onBusy={setDownloadBusy} onRestored={async () => onConfigUpdated(await preferences.refresh())}/> : null}</section>
+          <AddonProjectLinks addon={modsTab}/>
+        </> : <><div className="addon-store-access"><p>{t("addons","manage_hint")}</p><button type="button" className="modern-mini-btn" disabled={busy} onClick={openAddonStore}><MenuIcon name="addonStore"/>{t("addons","store")}</button></div><AddonCatalog disabled={busy} onOpen={openAddon} onOpenExternal={route=>{setModsTab(null);setExternalAddon(route)}}/></>)}
         {displayedPage === "protons" && <ProtonPreferences {...configProps} onBusy={setDownloadBusy} focusRef={steamRef} onConfirmationChange={setProtonConfirmationOpen}/>}
         {displayedPage === "covers" && preferences.ready && <CoverPreferences {...configProps} disabled={!preferences.ready} focusRef={coverRef} onError={setActionError}/>}
         {displayedPage === "tools" && <ToolsPreferences onWelcome={() => { if (!busy && !preferences.isPending()) { onClose(); onOpenWelcome(); } }} onError={setActionError} onLogs={() => setShowLauncherLogs(true)}/>}
         {displayedPage === "diskAutomount" && <DiskAutomountPreferences onBusy={setDownloadBusy} onDialogChange={setStorageDialogOpen}/>}
-        {displayedPage === "backendUpdate" && <section className="preference-panel"><BackendUpdaterModal key={backendArch ?? preferences.config.backend} gpuArch={backendArch ?? (preferences.config.backend === "AMDNR" ? "rdna4" : "rdna3")} isEmbedded onBusyChange={setDownloadBusy} onClose={() => setPage("mods")}/></section>}
         {(preferences.error || actionError) && <div className="preferences-error" role="alert"><p>{preferences.error || actionError}</p>{preferences.error && <button type="button" disabled={busy} onClick={preferences.retry}>{text.retry}</button>}</div>}
         </>}
   </>;

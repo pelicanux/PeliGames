@@ -42,7 +42,7 @@ pub fn discord_presence_preferences(
     Ok(status)
 }
 fn capture_activity(
-    status: &crate::core::capture::CaptureStatus,
+    status: &peligames_capture_contract::CaptureStatus,
 ) -> crate::core::discord_presence::CaptureActivity {
     crate::core::discord_presence::CaptureActivity {
         active: status.phase == "active",
@@ -50,7 +50,7 @@ fn capture_activity(
         replay: status.replay,
     }
 }
-pub fn capture(status: &crate::core::capture::CaptureStatus) {
+pub fn capture(status: &peligames_capture_contract::CaptureStatus) {
     if let Some(Ok(service)) = SERVICE.get() {
         service.capture(capture_activity(status));
     }

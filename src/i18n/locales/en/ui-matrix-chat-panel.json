@@ -64,5 +64,6 @@
   "report": "Report",
   "block": "Block",
   "could_not_block": "Could not block.",
-  "remove_message": "Remove message"
+  "remove_message": "Remove message",
+  "insert_emoji": "Insert emoji"
 }

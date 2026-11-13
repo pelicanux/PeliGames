@@ -59,6 +59,11 @@ export function ModernGameDetails({ artwork, artSharp = false, cover, eyebrow, t
   // object on render; its identity must not override later tab selections.
   useEffect(() => { if (tabRequest?.revision && tabs.some(item => item.id === tabRequest.tab)) { setTab(tabRequest.tab); onTabChange?.(tabRequest.tab); } }, [tabRequest?.tab, tabRequest?.revision, resetKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const current = tabs.find(item => !item.disabled && item.id === (activeTab ?? tab)) ?? tabs.find(item => !item.disabled);
+  const availability = tabs.filter(item=>!item.disabled).map(item=>item.id).join("\n");
+  useEffect(()=>{
+    const selected=activeTab??tab;
+    if(current&&selected!==current.id){setTab(current.id);onTabChange?.(current.id)}
+  },[availability,activeTab,tab]);
   return <GameSaveStatusProvider key={resetKey}><section ref={frame} className={`modern-details${contentView ? " modern-details-secondary" : ""}${catalog ? " modern-details-browsing" : ""}${tabs[0]?.id === "installation" ? " modern-details-installation" : ""}`} aria-label={typeof title === "string" ? title : undefined}>
     <div className={`modern-details-art${artSharp ? " sharp" : ""}`} style={{
       ...(artwork?.length ? { backgroundImage: artwork.map(url => `url("${url.replace(/"/g, "%22")}")`).join(", ") } : {}),

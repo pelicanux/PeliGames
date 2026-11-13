@@ -1,0 +1,75 @@
+.upscaler-panel { display:flex; flex-direction:column; gap:12px; min-width:0; container:upscaler-panel / inline-size; }
+.modern-ui .upscaler-installation { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; padding:0; }
+.upscaler-summary-row, .upscaler-summary-heading, .upscaler-summary-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; min-width:0; }
+.upscaler-summary-heading { flex:1 1 180px; }
+.modern-ui .upscaler-summary-heading h3 { margin:0; font-size:.875rem; }
+.upscaler-summary-heading > span { color:var(--modern-muted); font-size:.75rem; }
+.upscaler-summary-actions { justify-content:flex-end; }
+.upscaler-summary-actions:empty { display:none; }
+.upscaler-summary-actions .selection-menu { width:160px; max-width:100%; }
+.upscaler-summary-note { margin:0; color:var(--modern-muted); font-size:.75rem; line-height:1.5; }
+.upscaler-conflict { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding-top:8px; border-top:1px solid var(--modern-line); }
+.upscaler-conflict > svg { flex:none; color:var(--modern-muted); }
+.upscaler-conflict > p { flex:1 1 240px; min-width:0; margin:0; color:var(--modern-muted); font-size:.75rem; line-height:1.5; }
+.upscaler-installation .game-path-inline { gap:4px 10px; }
+.upscaler-installation .modern-path { gap:6px; }
+.upscaler-installation .modern-mini-btn { padding:6px 10px; font-size:.75rem; }
+.upscaler-patcher { min-width:0; padding-top:8px; border-top:1px solid var(--modern-line); }
+.upscaler-patcher-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.upscaler-patcher-row > div { min-width:0; }
+.modern-ui .upscaler-patcher h3 { margin:0 0 3px; font-size:.8125rem; }
+.upscaler-patcher small { display:block; color:var(--modern-muted); font-size:.75rem; line-height:1.4; }
+.upscaler-category-heading { margin-bottom:12px; }
+.upscaler-category-heading h3 { margin:0; font-size:.9375rem; }
+.upscaler-category-heading p { margin:6px 0 0; color:var(--modern-muted); font-size:.75rem; line-height:1.5; }
+.upscaler-setting-section { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr)); align-items:start; gap:14px 18px; min-width:0; margin:0 0 16px; padding:12px 0; border:0; border-top:1px solid var(--modern-line); border-radius:0; }
+.upscaler-setting-section:last-child { margin-bottom:0; }
+.upscaler-setting-section > legend { padding:0 6px; color:var(--modern-muted); font-size:.75rem; font-weight:600; }
+.upscaler-control-row, .upscaler-setting-section .upscaler-menu-key { display:grid; grid-template-columns:minmax(0,1fr); align-content:start; gap:7px; min-width:0; padding:0; margin:0; }
+.upscaler-control-row > span, .upscaler-toggle > div > span, .upscaler-menu-key > label { font-size:.8125rem; color:var(--modern-text); }
+.upscaler-setting > .selection-menu { min-width:0; width:200px; max-width:100%; }
+:root .upscaler-setting .custom-select-trigger.custom-select-trigger { width:100%; min-width:0; min-height:32px; padding:6px 9px; font-size:.75rem; }
+.upscaler-setting .custom-select-trigger > span:first-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.upscaler-control-row.upscaler-toggle { grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:10px; }
+.upscaler-toggle small { display:block; margin-top:4px; color:var(--modern-muted); font-size:.6875rem; }
+@container upscaler-panel (max-width:640px) {
+ .upscaler-setting-section { grid-template-columns:minmax(0,1fr); padding:10px 0; }
+}
+.upscaler-launch-line { display:block; white-space:pre-wrap;overflow-wrap:anywhere; font-size:.75rem; }
+.upscaler-confirm { display:flex; gap:10px; flex-wrap:wrap; padding-top:12px; }
+.upscaler-confirm p { flex-basis:100%; }
+
+/* Keep the recorder identical in shape to the overlay shortcut control. */
+.upscaler-setting-section .upscaler-menu-key { grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:12px; }
+.upscaler-shortcut-copy { display:grid; gap:5px; }
+.upscaler-shortcut-copy strong { font-size:.8125rem; font-weight:600; }
+.upscaler-shortcut-copy small { color:var(--modern-muted); font-size:.75rem; line-height:1.5; }
+.upscaler-shortcut-actions { display:grid; justify-items:center; gap:5px; min-width:0; }
+.upscaler-shortcut-buttons { display:flex; justify-content:center; flex-wrap:wrap; gap:8px; }
+.upscaler-shortcut-actions .modern-mini-btn { min-height:34px; padding:7px 12px; font-size:.8125rem; }
+.upscaler-shortcut-actions small { max-width:250px; color:var(--modern-muted); font-size:.6875rem; line-height:1.5; text-align:center; }
+.upscaler-field-hint { grid-column:1 / -1; margin:0; color:var(--modern-muted); font-size:.75rem; line-height:1.5; }
+.upscaler-menu-key button[aria-pressed=true] { outline:2px solid var(--accent); outline-offset:2px; }
+.upscaler-management { display:grid; gap:18px; min-width:0; }
+.upscaler-management > .mod-workspace { padding-top:16px; border-top:1px solid var(--modern-line); }
+.upscaler-management .mod-step-heading { gap:9px; }
+.modern-ui .upscaler-management .mod-step-heading h4 { font-size:.875rem; }
+.upscaler-management .mod-step-heading :is(h4,p) { margin:0; }
+.modern-ui .upscaler-management .mod-row-copy strong { font-size:.8125rem; font-weight:500; }
+.modern-ui .upscaler-management :is(.mod-row-copy p,.mod-version-label,.mod-step-heading p) { margin:4px 0 0; color:var(--modern-muted); font-size:.75rem; line-height:1.5; }
+.upscaler-management .component-download-progress { margin:0 0 12px; }
+.upscaler-management .addon-project-links { margin-top:0; padding-top:0; }
+.upscaler-usage { display:grid; gap:18px; min-width:0; }
+.upscaler-usage-step { display:flex; align-items:flex-start; gap:10px; min-width:0; }
+.upscaler-usage-step > .menu-icon { flex:none; width:17px; height:17px; margin-top:2px; color:var(--modern-muted); }
+.upscaler-usage-step > div { min-width:0; }
+.modern-ui .upscaler-usage h4 { margin:0 0 5px; font-size:.8125rem; font-weight:600; }
+.modern-ui .upscaler-usage p { margin:0; color:var(--modern-muted); font-size:.75rem; line-height:1.6; }
+.upscaler-usage-launcher { padding-top:16px; border-top:1px solid var(--modern-line); }
+.upscaler-usage .upscaler-usage-note { margin-top:8px; }
+.upscaler-usage .pelirun-export { margin:14px 0 0; padding:0; border:0; }
+.upscaler-usage .pelirun-export-field { min-width:0; }
+@container upscaler-panel (max-width:640px) {
+ .upscaler-setting-section .upscaler-menu-key { grid-template-columns:minmax(0,1fr); }
+ .upscaler-shortcut-actions { justify-self:start; }
+}

@@ -16,9 +16,9 @@ function render(reserved = false) {
   return renderToStaticMarkup(<I18nProvider initialPreference="pt-BR"><SelectedGameOverview
     selectedGame={{name: "Example", launcher: "PeliGames", path: "/games/example", prefix: "/prefix"}} gamePanelMode="installed"
     info={{platform: "Windows", architecture: "64-bits", graphics_api: "DirectX 12", upscalers: ["DLSS 3", "DLSS"]}}
-    selectedGameRoot="/games/example" releaseDate="Desconhecido" installStatus="Nenhum" installedDll={null}
+    selectedGameRoot="/games/example" releaseDate="Desconhecido"
     copyReference={reserved ? {reserved: true, dependents: ["Example (1)"], base: null, kind: null} : null}
-    modPathsChecked={false} directoryPickerBusy={false} onChooseCustomPath={() => {}} onDuplicate={() => {}}/>
+    directoryPickerBusy={false} onChooseCustomPath={() => {}} onDuplicate={() => {}}/>
   </I18nProvider>);
 }
 test("overview preserves capability, path and reserved-base controls without displaying unknown data", () => {
