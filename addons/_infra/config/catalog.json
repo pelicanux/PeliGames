@@ -1,4 +1,279 @@
 {
   "schema_version": 1,
-  "addons": []
+  "addons": [
+    {
+      "manifest": {
+        "schema_version": 1,
+        "host_api": 1,
+        "id": "optiscaler",
+        "version": "0.1.0",
+        "name": "OptiScaler",
+        "summary": "Manage OptiScaler installations, official component channels and game configuration.",
+        "author": "PeliGames contributors",
+        "license": "GPL-3.0-only",
+        "repository": "https://github.com/pelicanux/PeliGames",
+        "host_version": ">=0.5.5, <0.6.0",
+        "platforms": [
+          "linux-x86_64"
+        ],
+        "entrypoints": {
+          "ui": "ui/index.js",
+          "service": "bin/optiscaler-service"
+        },
+        "contributions": [
+          {
+            "target": "settings",
+            "route": "preferences",
+            "title": "OptiScaler",
+            "descriptions": {
+              "en": "Manage OptiScaler installations, official channels and per-game settings.",
+              "pt-BR": "Gerencie a instalação do OptiScaler, os canais oficiais e os ajustes por jogo."
+            }
+          },
+          {
+            "target": "game-mods",
+            "route": "game",
+            "title": "Upscaling, frame generation and compatibility"
+          }
+        ],
+        "dependencies": {},
+        "capabilities": [
+          "game-files",
+          "component-downloads",
+          "launch-profiles"
+        ],
+        "category": "mods",
+        "component_directory": "components/OptiScaler"
+      },
+      "artifacts": {
+        "linux-x86_64": {
+          "url": "https://github.com/pelicanux/PeliGames/releases/download/addons-v0.1.0/optiscaler-0.1.0-linux-x86_64.zip",
+          "sha256": "2b436386c958d7d2655c5b21ea0d2906d4aaf6ba736a2687898a9ff907a14d5c",
+          "bytes": 3371073
+        }
+      }
+    },
+    {
+      "manifest": {
+        "schema_version": 1,
+        "host_api": 1,
+        "id": "afmf",
+        "version": "0.1.0",
+        "name": "AFMF",
+        "summary": "Per-game frame generation and presentation compatibility for afmf-linux.",
+        "author": "PeliGames contributors",
+        "license": "GPL-3.0-only",
+        "repository": "https://github.com/serialexperimentslainnnn/afmf-linux",
+        "host_version": ">=0.5.5, <0.6.0",
+        "platforms": [
+          "linux-x86_64"
+        ],
+        "category": "frame-generation",
+        "component_directory": "components/FrameGeneration",
+        "entrypoints": {
+          "ui": "ui/index.js",
+          "service": "bin/afmf-service"
+        },
+        "contributions": [
+          {
+            "target": "settings",
+            "route": "preferences",
+            "title": "AFMF"
+          },
+          {
+            "target": "game-frame-generation",
+            "route": "game",
+            "title": "Vulkan · 2×",
+            "descriptions": {
+              "en": "Vulkan 2× frame generation, with motion settings and HUD detection.",
+              "pt-BR": "Geração de quadros 2× via Vulkan, com ajustes de movimento e detecção de HUD."
+            }
+          },
+          {
+            "target": "game-overview",
+            "route": "overview",
+            "title": "AFMF"
+          }
+        ],
+        "dependencies": {},
+        "capabilities": [
+          "launch-profiles",
+          "native-launch"
+        ]
+      },
+      "artifacts": {
+        "linux-x86_64": {
+          "url": "https://github.com/pelicanux/PeliGames/releases/download/addons-v0.1.0/afmf-0.1.0-linux-x86_64.zip",
+          "sha256": "bef2a398ad12e4ae4d670c5449f0d17919e05a745818435dacaaf23c594e4a8b",
+          "bytes": 3056429
+        }
+      }
+    },
+    {
+      "manifest": {
+        "schema_version": 1,
+        "host_api": 1,
+        "id": "mako",
+        "version": "0.1.0",
+        "name": "MAKO",
+        "summary": "Per-game MAKO frame generation and runtime management.",
+        "author": "PeliGames contributors",
+        "license": "GPL-3.0-only",
+        "repository": "https://github.com/eugeniosegala/MAKO",
+        "host_version": ">=0.5.5, <0.6.0",
+        "platforms": [
+          "linux-x86_64"
+        ],
+        "category": "frame-generation",
+        "component_directory": "components/FrameGeneration",
+        "entrypoints": {
+          "ui": "ui/index.js",
+          "service": "bin/mako-service"
+        },
+        "contributions": [
+          {
+            "target": "settings",
+            "route": "preferences",
+            "title": "MAKO"
+          },
+          {
+            "target": "game-frame-generation",
+            "route": "game",
+            "title": "MAKO",
+            "descriptions": {
+              "en": "Lossless Scaling frame generation, adaptive output and image scaling.",
+              "pt-BR": "Geração de quadros com Lossless Scaling, saída adaptativa e escala de imagem."
+            }
+          },
+          {
+            "target": "game-overview",
+            "route": "overview",
+            "title": "MAKO"
+          }
+        ],
+        "dependencies": {},
+        "capabilities": [
+          "component-downloads",
+          "launch-profiles",
+          "native-launch"
+        ]
+      },
+      "artifacts": {
+        "linux-x86_64": {
+          "url": "https://github.com/pelicanux/PeliGames/releases/download/addons-v0.1.0/mako-0.1.0-linux-x86_64.zip",
+          "sha256": "c1d9e49ca0d6fb22b003da96d54d39edfae06aefaa497cbfb7b4507b8f749978",
+          "bytes": 3129118
+        }
+      }
+    },
+    {
+      "manifest": {
+        "schema_version": 1,
+        "host_api": 1,
+        "id": "dlssnr-mochizuki",
+        "version": "0.1.0",
+        "name": "DLSSNR · Mochizuki",
+        "summary": "Neural Rendering for Radeon GPUs through DLSSNR-AMD.",
+        "author": "PeliGames contributors",
+        "license": "GPL-3.0-only",
+        "repository": "https://gitlab.com/mochizuki0323/DLSSNR-AMD",
+        "host_version": ">=0.5.5, <0.6.0",
+        "platforms": [
+          "linux-x86_64"
+        ],
+        "entrypoints": {
+          "ui": "ui/index.js",
+          "service": "bin/dlssnr-service"
+        },
+        "contributions": [
+          {
+            "target": "settings",
+            "route": "preferences",
+            "title": "DLSSNR · Mochizuki"
+          },
+          {
+            "target": "game-mods",
+            "route": "game",
+            "title": "Mochizuki",
+            "descriptions": {
+              "en": "Neural Rendering for AMD GPUs through OptiScaler, ReShade, Vulkan or DX9.",
+              "pt-BR": "Renderização neural para GPUs AMD via OptiScaler, ReShade, Vulkan ou DX9."
+            }
+          },
+          {
+            "target": "game-overview",
+            "route": "overview",
+            "title": "DLSSNR"
+          }
+        ],
+        "dependencies": {},
+        "capabilities": [
+          "game-files",
+          "component-downloads",
+          "launch-profiles"
+        ],
+        "category": "mods",
+        "component_directory": "components/Mods/DLSSNR/backend-files",
+        "group": "dlssnr"
+      },
+      "artifacts": {
+        "linux-x86_64": {
+          "url": "https://github.com/pelicanux/PeliGames/releases/download/addons-v0.1.0/dlssnr-mochizuki-0.1.0-linux-x86_64.zip",
+          "sha256": "64ece264e3b0b3280fbfe51e5623860cf1a819a722686a150f18ccd18cce36f1",
+          "bytes": 3126077
+        }
+      }
+    },
+    {
+      "manifest": {
+        "schema_version": 1,
+        "host_api": 1,
+        "id": "gpu-screen-recorder",
+        "version": "0.1.0",
+        "name": "GPU Screen Recorder",
+        "summary": "Gameplay recording, instant replay and video library.",
+        "author": "PeliGames contributors",
+        "license": "GPL-3.0-only",
+        "repository": "https://git.dec05eba.com/gpu-screen-recorder/",
+        "host_version": ">=0.5.5, <0.6.0",
+        "platforms": [
+          "linux-x86_64"
+        ],
+        "category": "captures",
+        "component_directory": "components/GPU-Screen-Recorder",
+        "entrypoints": {
+          "ui": "ui/index.js",
+          "service": "bin/capture-service"
+        },
+        "contributions": [
+          {
+            "target": "settings",
+            "route": "preferences",
+            "title": "GPU Screen Recorder"
+          },
+          {
+            "target": "game-captures",
+            "route": "game",
+            "title": "Captures",
+            "descriptions": {
+              "en": "Record gameplay, save instant replays and organize your clips.",
+              "pt-BR": "Grave partidas, salve replays instantâneos e organize seus clipes."
+            }
+          }
+        ],
+        "dependencies": {},
+        "capabilities": [
+          "component-downloads",
+          "background-service"
+        ]
+      },
+      "artifacts": {
+        "linux-x86_64": {
+          "url": "https://github.com/pelicanux/PeliGames/releases/download/addons-v0.1.0/gpu-screen-recorder-0.1.0-linux-x86_64.zip",
+          "sha256": "54360d955a6fdb0fb6505addd57f40c96389398f0fb19a05aa5ee0b4da96a7e5",
+          "bytes": 3650482
+        }
+      }
+    }
+  ]
 }

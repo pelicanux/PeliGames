@@ -8,8 +8,7 @@ remain separate from the PeliGames integration that manages them.
 Services start on their first explicit request, after package verification and a
 versioned handshake. Installed UI contributions appear in Settings → Add-ons;
 their code loads only when opened. The existing integrated features continue to
-use their current paths. The official catalog is empty until reviewed packages
-are published.
+use their current paths. Reviewed packages are published in the official catalog.
 
 ## Source layout
 
@@ -115,7 +114,7 @@ bytes cannot silently replace an already installed version number.
 The [OptiScaler integration](../optiscaler/README.md) owns its interface,
 translations, installation, settings and downloads. The launcher discovers its
 menus from package contributions and calls its independent service through the
-generic protocol. It is not yet published in the official catalog.
+generic protocol. It is available in the official catalog for Linux x86_64.
 
 The [Mochizuki integration](../dlssnr-mochizuki/README.md) owns NR backend downloads,
 model preparation, game installation and configuration. It uses the same generic
@@ -301,3 +300,19 @@ releases its UI resources while retaining the worker. Disabling, removing or
 changing the selected package, and exiting PeliGames, stop the worker. It has up
 to eight seconds to finalize its own child processes before forced cleanup.
 Do not rely on a view's timers to manage a recording's lifetime.
+
+## Publish a release
+
+Build each service and the SDK packager in a compatible Linux environment, using a
+shared Cargo target directory. Remap build paths so binaries contain no personal
+source paths. Generate third-party Rust notices before staging a release. Then run:
+
+```sh
+bun addons/_infra/tools/package-release.ts TARGET_DIR OUTPUT_DIR addons-v0.1.0
+```
+
+The tool stages only compiled services, self-contained interfaces and license
+notices. It packages Linux x86_64 artifacts and validates the generated catalog.
+Test each service handshake and inspect every archive before publishing. Upload
+the ZIPs to the matching GitHub release first; publish its catalog only after the
+assets are downloadable and their byte counts and SHA-256 digests match.
